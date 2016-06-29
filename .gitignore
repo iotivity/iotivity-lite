@@ -1,3 +1,6 @@
 port/linux/client
 port/linux/server
 port/linux/obj/
+port/zephyr/outdir/
+*.o
+*.cmd
