@@ -44,7 +44,7 @@ finalize_hash(uint8 *buf) {
 #if DTLS_VERSION == 0xfeff
   unsigned char statebuf[sizeof(md5_state_t) + sizeof(SHA_CTX)];
 #elif DTLS_VERSION == 0xfefd
-  unsigned char statebuf[sizeof(SHA256_CTX)];
+  unsigned char statebuf[sizeof(dtls_sha256_ctx)];
 #endif
 
   if (!hs_hash[0])
@@ -213,7 +213,7 @@ handle_packet(const u_char *packet, int length) {
 #endif
   uint8 hash_buf[16 + SHA1_DIGEST_LENGTH];
 #elif DTLS_VERSION == 0xfefd
-  uint8 hash_buf[SHA256_DIGEST_LENGTH];
+  uint8 hash_buf[DTLS_SHA256_DIGEST_LENGTH];
 #endif
 #define verify_data_length 12
   int is_client;
