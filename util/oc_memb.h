@@ -44,8 +44,8 @@
  *
  */
 
-#ifndef MEMB_H_
-#define MEMB_H_
+#ifndef OC_MEMB_H
+#define OC_MEMB_H
 
 #define CC_CONCAT2(s1, s2) s1##s2
 /**
@@ -98,7 +98,7 @@ struct oc_memb
  * \param m A memory block previously declared with MEMB().
  */
 void
-oc_memb_init (struct oc_memb *m);
+oc_memb_init(struct oc_memb *m);
 
 /**
  * Allocate a memory block from a block of memory declared with MEMB().
@@ -106,7 +106,7 @@ oc_memb_init (struct oc_memb *m);
  * \param m A memory block previously declared with MEMB().
  */
 void *
-oc_memb_alloc (struct oc_memb *m);
+oc_memb_alloc(struct oc_memb *m);
 
 /**
  * Deallocate a memory block from a memory block previously declared
@@ -121,12 +121,12 @@ oc_memb_alloc (struct oc_memb *m);
  * point to a legal memory block.
  */
 char
-oc_memb_free (struct oc_memb *m, void *ptr);
+oc_memb_free(struct oc_memb *m, void *ptr);
 
 int
-oc_memb_inmemb (struct oc_memb *m, void *ptr);
+oc_memb_inmemb(struct oc_memb *m, void *ptr);
 
 int
-oc_memb_numfree (struct oc_memb *m);
+oc_memb_numfree(struct oc_memb *m);
 
-#endif /* MEMB_H_ */
+#endif /* OC_MEMB_H */

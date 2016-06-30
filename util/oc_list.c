@@ -51,7 +51,7 @@ struct list
  * \param list The list to be initialized.
  */
 void
-oc_list_init (oc_list_t list)
+oc_list_init(oc_list_t list)
 {
   *list = NULL;
 }
@@ -68,7 +68,7 @@ oc_list_init (oc_list_t list)
  * \sa oc_list_tail()
  */
 void *
-oc_list_head (oc_list_t list)
+oc_list_head(oc_list_t list)
 {
   return *list;
 }
@@ -86,7 +86,7 @@ oc_list_head (oc_list_t list)
  * \param src The source list.
  */
 void
-oc_list_copy (oc_list_t dest, oc_list_t src)
+oc_list_copy(oc_list_t dest, oc_list_t src)
 {
   *dest = *src;
 }
@@ -103,14 +103,13 @@ oc_list_copy (oc_list_t dest, oc_list_t src)
  * \sa oc_list_head()
  */
 void *
-oc_list_tail (oc_list_t list)
+oc_list_tail(oc_list_t list)
 {
   struct list *l;
 
-  if (*list == NULL)
-    {
-      return NULL;
-    }
+  if (*list == NULL) {
+    return NULL;
+  }
 
   for (l = *list; l->next != NULL; l = l->next)
     ;
@@ -130,37 +129,33 @@ oc_list_tail (oc_list_t list)
  *
  */
 void
-oc_list_add (oc_list_t list, void *item)
+oc_list_add(oc_list_t list, void *item)
 {
   struct list *l;
 
   /* Make sure not to add the same element twice */
-  oc_list_remove (list, item);
+  oc_list_remove(list, item);
 
   ((struct list *) item)->next = NULL;
 
-  l = oc_list_tail (list);
+  l = oc_list_tail(list);
 
-  if (l == NULL)
-    {
-      *list = item;
-    }
-  else
-    {
-      l->next = item;
-    }
+  if (l == NULL) {
+    *list = item;
+  }
+  else {
+    l->next = item;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
  * Add an item to the start of the list.
  */
 void
-oc_list_push (oc_list_t list, void *item)
+oc_list_push(oc_list_t list, void *item)
 {
-  /*  struct list *l;*/
-
   /* Make sure not to add the same element twice */
-  oc_list_remove (list, item);
+  oc_list_remove(list, item);
 
   ((struct list *) item)->next = *list;
   *list = item;
@@ -176,20 +171,18 @@ oc_list_push (oc_list_t list, void *item)
  *
  */
 void *
-oc_list_chop (oc_list_t list)
+oc_list_chop(oc_list_t list)
 {
   struct list *l, *r;
 
-  if (*list == NULL)
-    {
-      return NULL;
-    }
-  if (((struct list *) *list)->next == NULL)
-    {
-      l = *list;
-      *list = NULL;
-      return l;
-    }
+  if (*list == NULL) {
+    return NULL;
+  }
+  if (((struct list *) *list)->next == NULL) {
+    l = *list;
+    *list = NULL;
+    return l;
+  }
 
   for (l = *list; l->next->next != NULL; l = l->next)
     ;
@@ -211,14 +204,13 @@ oc_list_chop (oc_list_t list)
  */
 /*---------------------------------------------------------------------------*/
 void *
-oc_list_pop (oc_list_t list)
+oc_list_pop(oc_list_t list)
 {
   struct list *l;
   l = *list;
-  if (*list != NULL)
-    {
-      *list = ((struct list *) *list)->next;
-    }
+  if (*list != NULL) {
+    *list = ((struct list *) *list)->next;
+  }
 
   return l;
 }
@@ -234,35 +226,30 @@ oc_list_pop (oc_list_t list)
  */
 /*---------------------------------------------------------------------------*/
 void
-oc_list_remove (oc_list_t list, void *item)
+oc_list_remove(oc_list_t list, void *item)
 {
   struct list *l, *r;
 
-  if (*list == NULL)
-    {
-      return;
-    }
+  if (*list == NULL) {
+    return;
+  }
 
   r = NULL;
-  for (l = *list; l != NULL; l = l->next)
-    {
-      if (l == item)
-	{
-	  if (r == NULL)
-	    {
-	      /* First on list */
-	      *list = l->next;
-	    }
-	  else
-	    {
-	      /* Not first on list */
-	      r->next = l->next;
-	    }
-	  l->next = NULL;
-	  return;
-	}
-      r = l;
+  for (l = *list; l != NULL; l = l->next) {
+    if (l == item) {
+      if (r == NULL) {
+	/* First on list */
+	*list = l->next;
+      }
+      else {
+	/* Not first on list */
+	r->next = l->next;
+      }
+      l->next = NULL;
+      return;
     }
+    r = l;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -275,15 +262,14 @@ oc_list_remove (oc_list_t list, void *item)
  */
 /*---------------------------------------------------------------------------*/
 int
-oc_list_length (oc_list_t list)
+oc_list_length(oc_list_t list)
 {
   struct list *l;
   int n = 0;
 
-  for (l = *list; l != NULL; l = l->next)
-    {
-      ++n;
-    }
+  for (l = *list; l != NULL; l = l->next) {
+    ++n;
+  }
 
   return n;
 }
@@ -304,18 +290,16 @@ oc_list_length (oc_list_t list)
  *
  */
 void
-oc_list_insert (oc_list_t list, void *previtem, void *newitem)
+oc_list_insert(oc_list_t list, void *previtem, void *newitem)
 {
-  if (previtem == NULL)
-    {
-      oc_list_push (list, newitem);
-    }
-  else
-    {
+  if (previtem == NULL) {
+    oc_list_push(list, newitem);
+  }
+  else {
 
-      ((struct list *) newitem)->next = ((struct list *) previtem)->next;
-      ((struct list *) previtem)->next = newitem;
-    }
+    ((struct list *) newitem)->next = ((struct list *) previtem)->next;
+    ((struct list *) previtem)->next = newitem;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -329,7 +313,7 @@ oc_list_insert (oc_list_t list, void *previtem, void *newitem)
  *             lists.
  */
 void *
-oc_list_item_next (void *item)
+oc_list_item_next(void *item)
 {
   return item == NULL ? NULL : ((struct list *) item)->next;
 }

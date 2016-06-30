@@ -46,8 +46,8 @@
  *
  */
 
-#ifndef MMEM_H_
-#define MMEM_H_
+#ifndef OC_MMEM_H
+#define OC_MMEM_H
 
 #define OC_MMEM_PTR(m) (struct oc_mmem *)(m)->ptr
 
@@ -60,14 +60,16 @@ struct oc_mmem
 
 typedef enum
 {
-  BYTE_POOL, INT_POOL, DOUBLE_POOL
+  BYTE_POOL,
+  INT_POOL,
+  DOUBLE_POOL
 } pool;
 
 int
-oc_mmem_alloc (struct oc_mmem *m, unsigned int size, pool pool_type);
+oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type);
 void
-oc_mmem_free (struct oc_mmem *, pool pool_type);
+oc_mmem_free(struct oc_mmem *, pool pool_type);
 void
-oc_mmem_init (void);
+oc_mmem_init(void);
 
-#endif /* MMEM_H_ */
+#endif /* OC_MMEM_H */

@@ -60,8 +60,8 @@
  * @{
  */
 
-#ifndef TIMER_H_
-#define TIMER_H_
+#ifndef OC_TIMER_H
+#define OC_TIMER_H
 
 #include "port/oc_clock.h"
 
@@ -80,15 +80,14 @@ struct oc_timer
 };
 
 void
-oc_timer_set (struct oc_timer *t, oc_clock_time_t interval);
+oc_timer_set(struct oc_timer *t, oc_clock_time_t interval);
 void
-oc_timer_reset (struct oc_timer *t);
+oc_timer_reset(struct oc_timer *t);
 void
-oc_timer_restart (struct oc_timer *t);
+oc_timer_restart(struct oc_timer *t);
 int
-oc_timer_expired (struct oc_timer *t);
+oc_timer_expired(struct oc_timer *t);
 oc_clock_time_t
-oc_timer_remaining (struct oc_timer *t);
+oc_timer_remaining(struct oc_timer *t);
 
-#endif /* TIMER_H_ */
-
+#endif /* OC_TIMER_H */

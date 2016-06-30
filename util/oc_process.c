@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include "oc_process.h"
+#include "oc_buffer.h"
 
 /*
  * Pointer to the currently running process structure.
@@ -65,30 +66,30 @@ static volatile unsigned char poll_requested;
 #define OC_PROCESS_STATE_CALLED      2
 
 static void
-call_process (struct oc_process *p, oc_process_event_t ev, oc_process_data_t data);
+call_process(struct oc_process *p, oc_process_event_t ev,
+	     oc_process_data_t data);
 
 /*---------------------------------------------------------------------------*/
 oc_process_event_t
-oc_process_alloc_event (void)
+oc_process_alloc_event(void)
 {
   return lastevent++;
 }
 /*---------------------------------------------------------------------------*/
 void
-oc_process_start (struct oc_process *p, oc_process_data_t data)
+oc_process_start(struct oc_process *p, oc_process_data_t data)
 {
   struct oc_process *q;
 
   /* First make sure that we don't try to start a process that is
-   already running. */
+     already running. */
   for (q = oc_process_list; q != p && q != NULL; q = q->next)
     ;
 
   /* If we found the process on the process list, we bail out. */
-  if (q == p)
-    {
-      return;
-    }
+  if (q == p) {
+    return;
+  }
   /* Put on the procs list.*/
   p->next = oc_process_list;
   oc_process_list = p;
@@ -96,98 +97,86 @@ oc_process_start (struct oc_process *p, oc_process_data_t data)
   PT_INIT(&p->pt);
 
   /* Post a synchronous initialization event to the process. */
-  oc_process_post_synch (p, OC_PROCESS_EVENT_INIT, data);
+  oc_process_post_synch(p, OC_PROCESS_EVENT_INIT, data);
 }
 /*---------------------------------------------------------------------------*/
 static void
-exit_process (struct oc_process *p, struct oc_process *fromprocess)
+exit_process(struct oc_process *p, struct oc_process *fromprocess)
 {
   register struct oc_process *q;
   struct oc_process *old_current = oc_process_current;
 
   /* Make sure the process is in the process list before we try to
-   exit it. */
+     exit it. */
   for (q = oc_process_list; q != p && q != NULL; q = q->next)
     ;
-  if (q == NULL)
-    {
-      return;
+  if (q == NULL) {
+    return;
+  }
+
+  if (oc_process_is_running (p)) {
+    /* Process was running */
+    p->state = OC_PROCESS_STATE_NONE;
+
+    /*
+     * Post a synchronous event to all processes to inform them that
+     * this process is about to exit. This will allow services to
+     * deallocate state associated with this process.
+     */
+    for (q = oc_process_list; q != NULL; q = q->next) {
+      if (p != q) {
+	call_process(q, OC_PROCESS_EVENT_EXITED, (oc_process_data_t) p);
+      }
     }
 
-  if (oc_process_is_running (p))
-    {
-      /* Process was running */
-      p->state = OC_PROCESS_STATE_NONE;
-
-      /*
-       * Post a synchronous event to all processes to inform them that
-       * this process is about to exit. This will allow services to
-       * deallocate state associated with this process.
-       */
-      for (q = oc_process_list; q != NULL; q = q->next)
-	{
-	  if (p != q)
-	    {
-	      call_process (q, OC_PROCESS_EVENT_EXITED, (oc_process_data_t) p);
-	    }
-	}
-
-      if (p->thread != NULL && p != fromprocess)
-	{
-	  /* Post the exit event to the process that is about to exit. */
-	  oc_process_current = p;
-	  p->thread (&p->pt, OC_PROCESS_EVENT_EXIT, NULL);
-	}
+    if (p->thread != NULL && p != fromprocess) {
+      /* Post the exit event to the process that is about to exit. */
+      oc_process_current = p;
+      p->thread(&p->pt, OC_PROCESS_EVENT_EXIT, NULL);
     }
+  }
 
-  if (p == oc_process_list)
-    {
-      oc_process_list = oc_process_list->next;
+  if (p == oc_process_list) {
+    oc_process_list = oc_process_list->next;
+  }
+  else {
+    for (q = oc_process_list; q != NULL; q = q->next) {
+      if (q->next == p) {
+	q->next = p->next;
+	break;
+      }
     }
-  else
-    {
-      for (q = oc_process_list; q != NULL; q = q->next)
-	{
-	  if (q->next == p)
-	    {
-	      q->next = p->next;
-	      break;
-	    }
-	}
-    }
+  }
 
   oc_process_current = old_current;
 }
 /*---------------------------------------------------------------------------*/
 static void
-call_process (struct oc_process *p, oc_process_event_t ev, oc_process_data_t data)
+call_process(struct oc_process *p, oc_process_event_t ev, oc_process_data_t data)
 {
   int ret;
 
-  if ((p->state & OC_PROCESS_STATE_RUNNING) && p->thread != NULL)
-    {
-      oc_process_current = p;
-      p->state = OC_PROCESS_STATE_CALLED;
-      ret = p->thread (&p->pt, ev, data);
-      if (ret == PT_EXITED || ret == PT_ENDED || ev == OC_PROCESS_EVENT_EXIT)
-	{
-	  exit_process (p, p);
-	}
-      else
-	{
-	  p->state = OC_PROCESS_STATE_RUNNING;
-	}
+  if ((p->state & OC_PROCESS_STATE_RUNNING) && p->thread != NULL) {
+    oc_process_current = p;
+    p->state = OC_PROCESS_STATE_CALLED;
+    ret = p->thread(&p->pt, ev, data);
+    if (ret == PT_EXITED || ret == PT_ENDED || ev == OC_PROCESS_EVENT_EXIT) {
+      exit_process(p, p);
     }
+    else {
+      p->state = OC_PROCESS_STATE_RUNNING;
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
-oc_process_exit (struct oc_process *p)
+oc_process_exit(struct oc_process *p)
 {
-  exit_process (p, OC_PROCESS_CURRENT());
+  exit_process(p, OC_PROCESS_CURRENT());
 }
 /*---------------------------------------------------------------------------*/
 void
-oc_process_init (void)
+oc_process_init(void)
 {
   lastevent = OC_PROCESS_EVENT_MAX;
 
@@ -204,21 +193,19 @@ oc_process_init (void)
  */
 /*---------------------------------------------------------------------------*/
 static void
-do_poll (void)
+do_poll(void)
 {
   struct oc_process *p;
 
   poll_requested = 0;
   /* Call the processes that needs to be polled. */
-  for (p = oc_process_list; p != NULL; p = p->next)
-    {
-      if (p->needspoll)
-	{
-	  p->state = OC_PROCESS_STATE_RUNNING;
-	  p->needspoll = 0;
-	  call_process (p, OC_PROCESS_EVENT_POLL, NULL);
-	}
+  for (p = oc_process_list; p != NULL; p = p->next) {
+    if (p->needspoll) {
+      p->state = OC_PROCESS_STATE_RUNNING;
+      p->needspoll = 0;
+      call_process(p, OC_PROCESS_EVENT_POLL, NULL);
     }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -227,7 +214,7 @@ do_poll (void)
  */
 /*---------------------------------------------------------------------------*/
 static void
-do_event (void)
+do_event(void)
 {
   static oc_process_event_t ev;
   static oc_process_data_t data;
@@ -242,83 +229,76 @@ do_event (void)
    * call the poll handlers inbetween.
    */
 
-  if (nevents > 0)
-    {
+  if (nevents > 0) {
 
-      /* There are events that we should deliver. */
-      ev = events[fevent].ev;
+    /* There are events that we should deliver. */
+    ev = events[fevent].ev;
 
-      data = events[fevent].data;
-      receiver = events[fevent].p;
+    data = events[fevent].data;
+    receiver = events[fevent].p;
 
-      /* Since we have seen the new event, we move pointer upwards
+    /* Since we have seen the new event, we move pointer upwards
        and decrease the number of events. */
-      fevent = (fevent + 1) % OC_PROCESS_CONF_NUMEVENTS;
-      --nevents;
+    fevent = (fevent + 1) % OC_PROCESS_CONF_NUMEVENTS;
+    --nevents;
 
-      /* If this is a broadcast event, we deliver it to all events, in
+    /* If this is a broadcast event, we deliver it to all events, in
        order of their priority. */
-      if (receiver == OC_PROCESS_BROADCAST)
-	{
-	  for (p = oc_process_list; p != NULL; p = p->next)
-	    {
+    if (receiver == OC_PROCESS_BROADCAST) {
+      for (p = oc_process_list; p != NULL; p = p->next) {
 
-	      /* If we have been requested to poll a process, we do this in
-	       between processing the broadcast event. */
-	      if (poll_requested)
-		{
-		  do_poll ();
-		}
-	      call_process (p, ev, data);
-	    }
+	/* If we have been requested to poll a process, we do this in
+	   between processing the broadcast event. */
+	if (poll_requested) {
+	  do_poll();
 	}
-      else
-	{
-	  /* This is not a broadcast event, so we deliver it to the
-	   specified process. */
-	  /* If the event was an INIT event, we should also update the
-	   state of the process. */
-	  if (ev == OC_PROCESS_EVENT_INIT)
-	    {
-	      receiver->state = OC_PROCESS_STATE_RUNNING;
-	    }
-
-	  /* Make sure that the process actually is running. */
-	  call_process (receiver, ev, data);
-	}
+	call_process(p, ev, data);
+      }
     }
+    else {
+      /* This is not a broadcast event, so we deliver it to the
+	 specified process. */
+      /* If the event was an INIT event, we should also update the
+	 state of the process. */
+      if (ev == OC_PROCESS_EVENT_INIT) {
+	receiver->state = OC_PROCESS_STATE_RUNNING;
+      }
+
+      /* Make sure that the process actually is running. */
+      call_process(receiver, ev, data);
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_process_run (void)
+oc_process_run(void)
 {
   /* Process poll events. */
-  if (poll_requested)
-    {
-      do_poll ();
-    }
+  if (poll_requested) {
+    do_poll();
+  }
 
   /* Process one event from the queue */
-  do_event ();
+  do_event();
 
   return nevents + poll_requested;
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_process_nevents (void)
+oc_process_nevents(void)
 {
   return nevents + poll_requested;
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_process_post (struct oc_process *p, oc_process_event_t ev, oc_process_data_t data)
+oc_process_post(struct oc_process *p, oc_process_event_t ev, oc_process_data_t data)
 {
   static oc_process_num_events_t snum;
 
-  if (nevents == OC_PROCESS_CONF_NUMEVENTS)
-    {
-      return OC_PROCESS_ERR_FULL;
-    }
+  if (nevents == OC_PROCESS_CONF_NUMEVENTS) {
+    oc_message_unref(data);
+    return OC_PROCESS_ERR_FULL;
+  }
 
   snum = (oc_process_num_events_t) (fevent + nevents) % OC_PROCESS_CONF_NUMEVENTS;
   events[snum].ev = ev;
@@ -327,41 +307,38 @@ oc_process_post (struct oc_process *p, oc_process_event_t ev, oc_process_data_t 
   ++nevents;
 
 #if OC_PROCESS_CONF_STATS
-  if(nevents > process_maxevents)
-    {
-      process_maxevents = nevents;
-    }
+  if(nevents > process_maxevents) {
+    process_maxevents = nevents;
+  }
 #endif /* OC_PROCESS_CONF_STATS */
 
   return OC_PROCESS_ERR_OK;
 }
 /*---------------------------------------------------------------------------*/
 void
-oc_process_post_synch (struct oc_process *p, oc_process_event_t ev,
-		       oc_process_data_t data)
+oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
+		      oc_process_data_t data)
 {
   struct oc_process *caller = oc_process_current;
 
-  call_process (p, ev, data);
+  call_process(p, ev, data);
   oc_process_current = caller;
 }
 /*---------------------------------------------------------------------------*/
 void
-oc_process_poll (struct oc_process *p)
+oc_process_poll(struct oc_process *p)
 {
-  if (p != NULL)
-    {
-      if (p->state == OC_PROCESS_STATE_RUNNING
-	  || p->state == OC_PROCESS_STATE_CALLED)
-	{
-	  p->needspoll = 1;
-	  poll_requested = 1;
-	}
+  if (p != NULL) {
+    if (p->state == OC_PROCESS_STATE_RUNNING
+	|| p->state == OC_PROCESS_STATE_CALLED) {
+      p->needspoll = 1;
+      poll_requested = 1;
     }
+  }
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_process_is_running (struct oc_process *p)
+oc_process_is_running(struct oc_process *p)
 {
   return p->state != OC_PROCESS_STATE_NONE;
 }
