@@ -258,7 +258,7 @@ dsrv_log(log_t level, char *format, ...) {
   vfprintf(log_fd, format, ap);
   va_end(ap);
   fflush(log_fd);
-} 
+}
 #elif defined (HAVE_VPRINTF) /* WITH_CONTIKI */
 void 
 dsrv_log(log_t level, char *format, ...) {
