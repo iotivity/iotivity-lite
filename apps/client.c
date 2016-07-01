@@ -122,12 +122,12 @@ issue_requests()
 #include "port/oc_signal_main_loop.h"
 #include <string.h>
 
-static struct nano_timer idle_time;
+static struct nano_sem block;
 
 void
 oc_signal_main_loop()
 {
-  nano_task_timer_stop(&idle_time);
+  nano_sem_give(&block);
 }
 
 void
@@ -140,8 +140,7 @@ main()
 			  .requests_entry = issue_requests
   };
 
-  uint32_t dummy;
-  nano_timer_init(&idle_time, &dummy);
+  nano_sem_init(&block);
 
   int init = oc_main_init(&handler);
 
@@ -149,9 +148,11 @@ main()
 
   while (init) {
     next_event = oc_main_poll();
-    nano_task_timer_start(&idle_time, next_event - oc_clock_time());
-
-    nano_task_timer_test(&idle_time, TICKS_UNLIMITED);
+    if (next_event == 0)
+      next_event = TICKS_UNLIMITED;
+    else
+      next_event -= oc_clock_time();
+    nano_task_sem_take(&block, next_event);
   }
 
   oc_main_shutdown();
@@ -222,7 +223,7 @@ main()
 
   oc_main_shutdown();
 
-exit:
+  exit:
   return 0;
 }
 #endif /* __linux__ */
