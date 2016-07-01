@@ -14,13 +14,14 @@
 // limitations under the License.
 */
 
-#ifndef LOG_H_
-#define LOG_H_
+#ifndef OC_LOG_H
+#define OC_LOG_H
 
 #include <stdio.h>
+
 #define PRINT(...) printf(__VA_ARGS__)
 
-#define PRINTipaddr(endpoint) PRINT("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((endpoint).ipv6_addr.address)[0], ((endpoint).ipv6_addr.address)[1], ((endpoint).ipv6_addr.address)[2], ((endpoint).ipv6_addr.address)[3], ((endpoint).ipv6_addr.address)[4], ((endpoint).ipv6_addr.address)[5], ((endpoint).ipv6_addr.address)[6], ((endpoint).ipv6_addr.address)[7], ((endpoint).ipv6_addr.address)[8], ((endpoint).ipv6_addr.address)[9], ((endpoint).ipv6_addr.address)[10], ((endpoint).ipv6_addr.address)[11], ((endpoint).ipv6_addr.address)[12], ((endpoint).ipv6_addr.address)[13], ((endpoint).ipv6_addr.address)[14], ((endpoint).ipv6_addr.address)[15])
+#define PRINTipaddr(endpoint) PRINT("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d", ((endpoint).ipv6_addr.address)[0], ((endpoint).ipv6_addr.address)[1], ((endpoint).ipv6_addr.address)[2], ((endpoint).ipv6_addr.address)[3], ((endpoint).ipv6_addr.address)[4], ((endpoint).ipv6_addr.address)[5], ((endpoint).ipv6_addr.address)[6], ((endpoint).ipv6_addr.address)[7], ((endpoint).ipv6_addr.address)[8], ((endpoint).ipv6_addr.address)[9], ((endpoint).ipv6_addr.address)[10], ((endpoint).ipv6_addr.address)[11], ((endpoint).ipv6_addr.address)[12], ((endpoint).ipv6_addr.address)[13], ((endpoint).ipv6_addr.address)[14], ((endpoint).ipv6_addr.address)[15], (endpoint).ipv6_addr.port)
 
 #if DEBUG
 #define LOG(...) PRINT(__VA_ARGS__)
@@ -30,4 +31,4 @@
 #define LOGipaddr(endpoint)
 #endif
 
-#endif /* LOG_H_ */
+#endif /* OC_LOG_H */

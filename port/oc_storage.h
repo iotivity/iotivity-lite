@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_STORAGE_H_
-#define OC_STORAGE_H_
+#ifndef OC_STORAGE_H
+#define OC_STORAGE_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -24,4 +24,4 @@ void oc_storage_config(const char *store);
 void oc_storage_read(const char *store, uint8_t *buf, size_t *size);
 void oc_storage_write(const char *store, uint8_t *buf, size_t size);
 
-#endif /* OC_STORAGE_H_ */
+#endif /* OC_STORAGE_H */

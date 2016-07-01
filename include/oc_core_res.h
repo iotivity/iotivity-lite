@@ -19,20 +19,6 @@
 
 #include "oc_ri.h"
 
-typedef enum {
-  OCF_RES = 0,
-  OCF_P,
-#ifdef OC_SECURITY  
-  OCF_SEC_DOXM,
-  OCF_SEC_PSTAT,
-  OCF_SEC_ACL,
-  OCF_SEC_CRED,
-#endif  
-  __NUM_OC_CORE_RESOURCES__
-} oc_core_resource_t;
-
-#define NUM_OC_CORE_RESOURCES (__NUM_OC_CORE_RESOURCES__ + MAX_NUM_DEVICES)
-
 oc_string_t * oc_core_add_new_platform(const char *mfg_name);
 
 oc_string_t * oc_core_add_new_device(const char *uri,

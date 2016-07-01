@@ -41,6 +41,5 @@ oc_sec_doxm_t *oc_sec_get_doxm();
 void oc_sec_doxm_default();
 void get_doxm(oc_request_t *request,
 	      oc_interface_mask_t interface);
-void put_doxm(oc_request_t *request, oc_interface_mask_t interface);  
-
+void post_doxm(oc_request_t *request, oc_interface_mask_t interface);
 #endif /* OC_DOXM_H_ */

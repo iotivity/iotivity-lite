@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_ASSERT_H_
-#define OC_ASSERT_H_
+#ifndef OC_ASSERT_H
+#define OC_ASSERT_H
 
 #include "port/oc_log.h"
 
@@ -31,9 +31,9 @@ void abort_impl();
     abort_impl();							\
   } while(0)
 
-#define oc_assert(cond) do {						\
-    if (!(cond)) {							\
-      oc_abort("Assertion ("#cond") failed.");				\
+#define oc_assert(cond) do {			\
+    if (!(cond)) {				\
+      oc_abort("Assertion ("#cond") failed.");	\
     } } while(0)
-  
-#endif /* OC_ASSERT_H_ */
+
+#endif /* OC_ASSERT_H */

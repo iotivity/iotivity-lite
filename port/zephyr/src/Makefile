@@ -3,7 +3,7 @@ EXTRA_CFLAGS += -I${srctree}/net/ip/contiki
 EXTRA_CFLAGS += -I${srctree}/net/ip/contiki/os/lib
 EXTRA_CFLAGS += -I${srctree}/net/ip/contiki/os
 EXTRA_CFLAGS += -I${srctree}/net/ip
-EXTRA_CFLAGS += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DNDEBUG #-DOC_CLIENT -DOC_SECURITY
+EXTRA_CFLAGS += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DDEBUG #-DOC_CLIENT -DOC_SECURITY
 
 obj-y += ../../../apps/server.o
 
@@ -31,7 +31,7 @@ obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../api/oc_rep.o \
          ../../../api/oc_uuid.o \
          ../../../api/oc_core_res.o \
-         main.o \
+         ../../../api/oc_network_events.o \
          ipadapter.o \
          random.o \
          clock.o \

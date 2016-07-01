@@ -1,18 +1,18 @@
 /*
- // Copyright (c) 2016 Intel Corporation
- //
- // Licensed under the Apache License, Version 2.0 (the "License");
- // you may not use this file except in compliance with the License.
- // You may obtain a copy of the License at
- //
- //      http://www.apache.org/licenses/LICENSE-2.0
- //
- // Unless required by applicable law or agreed to in writing, software
- // distributed under the License is distributed on an "AS IS" BASIS,
- // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- // See the License for the specific language governing permissions and
- // limitations under the License.
- */
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
 
 #ifndef OC_HELPERS_H
 #define OC_HELPERS_H
@@ -53,10 +53,10 @@ void _oc_free_array(oc_array_t *ocarray, pool type);
 #define STRING_ARRAY_ITEM_MAX_LEN 24
 void _oc_alloc_string_array(oc_string_array_t *ocstringarray, uint8_t size);
 bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-		const char str[], uint8_t index);
+				     const char str[], uint8_t index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[]);
 void oc_join_string_array(oc_string_array_t *ocstringarray,
-		oc_string_t *ocstring);
+			  oc_string_t *ocstring);
 #define oc_new_string_array(ocstringarray, size) (_oc_alloc_string_array(ocstringarray, size))
 #define oc_free_string_array(ocstringarray) (oc_free_string(ocstringarray))
 #define oc_string_array_add_item(ocstringarray, str) (_oc_string_array_add_item(&(ocstringarray), str))
@@ -64,8 +64,5 @@ void oc_join_string_array(oc_string_array_t *ocstringarray,
 #define oc_string_array_set_item(ocstringarray, str, index) (_oc_copy_string_to_string_array(&(ocstringarray), str, index))
 #define oc_string_array_get_item_size(ocstringarray, index) (strlen((const char*)oc_string_array_get_item(ocstringarray, index)))
 #define oc_string_array_get_allocated_size(ocstringarray) ((ocstringarray).size/STRING_ARRAY_ITEM_MAX_LEN)
-
-#define code(block) do { block } while(0)
-
 
 #endif /* OC_HELPERS_H */

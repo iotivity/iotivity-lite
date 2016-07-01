@@ -14,17 +14,9 @@
 // limitations under the License.
 */
 
-#ifndef OC_UUID_H
-#define OC_UUID_H
+#ifndef OC_SIGNAL_MAIN_LOOP_H
+#define OC_SIGNAL_MAIN_LOOP_H
 
-#include <stdint.h>
+void oc_signal_main_loop();
 
-typedef struct {
-  uint8_t id[16];
-} oc_uuid_t;
-
-void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
-void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
-void oc_gen_uuid(oc_uuid_t *uuid);
-
-#endif /* OC_UUID_H */
+#endif /* OC_SIGNAL_MAIN_LOOP_H */

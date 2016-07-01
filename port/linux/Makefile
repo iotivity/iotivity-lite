@@ -46,10 +46,10 @@ obj/client/%.o: %.c
 
 server: output_dir ${OBJ_COMMON} ${OBJ_SERVER}
 	echo ${OBJ_COMMON}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server.c -DOC_SERVER ${CFLAGS} -lm
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server.c -DOC_SERVER ${CFLAGS} -lm -pthread
 
 client: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client.c -DOC_CLIENT ${CFLAGS} -lm
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
 temp_sensor: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread

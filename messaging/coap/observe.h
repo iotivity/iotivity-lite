@@ -1,18 +1,18 @@
 /*
- // Copyright (c) 2016 Intel Corporation
- //
- // Licensed under the Apache License, Version 2.0 (the "License");
- // you may not use this file except in compliance with the License.
- // You may obtain a copy of the License at
- //
- //      http://www.apache.org/licenses/LICENSE-2.0
- //
- // Unless required by applicable law or agreed to in writing, software
- // distributed under the License is distributed on an "AS IS" BASIS,
- // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- // See the License for the specific language governing permissions and
- // limitations under the License.
- */
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
 
 /*
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
@@ -45,8 +45,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef COAP_OBSERVE_H_
-#define COAP_OBSERVE_H_
+#ifndef OBSERVE_H
+#define OBSERVE_H
 
 #include "coap.h"
 #include "transactions.h"
@@ -58,35 +58,35 @@
 #define COAP_OBSERVER_URL_LEN 20
 
 typedef struct coap_observer {
-	struct coap_observer *next; /* for LIST */
+  struct coap_observer *next; /* for LIST */
 
-	oc_resource_t *resource;
+  oc_resource_t *resource;
 
-	char url[COAP_OBSERVER_URL_LEN];
-	oc_endpoint_t endpoint;
-	uint8_t token_len;
-	uint8_t token[COAP_TOKEN_LEN];
-	uint16_t last_mid;
+  char url[COAP_OBSERVER_URL_LEN];
+  oc_endpoint_t endpoint;
+  uint8_t token_len;
+  uint8_t token[COAP_TOKEN_LEN];
+  uint16_t last_mid;
 
-	int32_t obs_counter;
+  int32_t obs_counter;
 
-	struct oc_etimer retrans_timer;
-	uint8_t retrans_counter;
+  struct oc_etimer retrans_timer;
+  uint8_t retrans_counter;
 } coap_observer_t;
 
 oc_list_t coap_get_observers(void);
 void coap_remove_observer(coap_observer_t *o);
 int coap_remove_observer_by_client(oc_endpoint_t *endpoint);
 int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
-		size_t token_len);
+				  size_t token_len);
 int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri);
 int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
 
 int coap_notify_observers(oc_resource_t *resource,
-		oc_response_buffer_t *response_buf, oc_endpoint_t *endpoint);
+			  oc_response_buffer_t *response_buf, oc_endpoint_t *endpoint);
 //int coap_notify_observers_sub(oc_resource_t *resource, const char *subpath);
 
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-		oc_endpoint_t *endpoint);
+			 oc_endpoint_t *endpoint);
 
-#endif /* COAP_OBSERVE_H_ */
+#endif /* OBSERVE_H */

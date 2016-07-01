@@ -14,8 +14,8 @@
  // limitations under the License.
  */
 
-#ifndef EVENTS_H_
-#define EVENTS_H_
+#ifndef OC_EVENTS_H
+#define OC_EVENTS_H
 
 #include "util/oc_process.h"
 
@@ -24,11 +24,11 @@ typedef enum {
   UDP_TO_DTLS_EVENT,
   INIT_DTLS_CONN_EVENT,
   RI_TO_DTLS_EVENT,
-  INBOUND_RI_EVENT,  
+  INBOUND_RI_EVENT,
   OUTBOUND_NETWORK_EVENT,
   __NUM_OC_EVENT_TYPES__
 } oc_events_t;
 
 oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__ ];
 
-#endif /* EVENTS_H_ */
+#endif /* OC_EVENTS_H */

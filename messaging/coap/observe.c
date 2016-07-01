@@ -62,7 +62,7 @@ uint64_t observe_counter = 3;
 /*---------------------------------------------------------------------------*/
 OC_LIST(observers_list);
 OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
-  
+
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -164,7 +164,7 @@ int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri)
        && (obs->url == uri
 	   || memcmp(obs->url, uri,
 		     strlen(
-			    obs->url))
+		       obs->url))
 	   == 0)) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
@@ -180,7 +180,7 @@ int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
   int removed = 0;
   coap_observer_t *obs = NULL;
   LOG("Unregistering observers for request MID %u\n", mid);
-  
+
   for(obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
       obs = obs->next) {
     if(memcmp(&obs->endpoint, endpoint, sizeof(*endpoint)) == 0
@@ -261,10 +261,10 @@ int coap_notify_observers(oc_resource_t *resource,
       if((transaction = coap_new_transaction(coap_get_mid(),
 					     &obs->endpoint))) {
 	memcpy(
-	       transaction->message->data
-	       + COAP_MAX_HEADER_SIZE,
-	       response_buf->buffer,
-	       response_buf->response_length);
+	  transaction->message->data
+	  + COAP_MAX_HEADER_SIZE,
+	  response_buf->buffer,
+	  response_buf->response_length);
 
 	/* update last MID for RST matching */
 	obs->last_mid = transaction->mid;
@@ -301,8 +301,8 @@ int coap_notify_observers(oc_resource_t *resource,
 
 	transaction->message->length =
 	  coap_serialize_message(
-				 notification,
-				 transaction->message->data);
+	    notification,
+	    transaction->message->data);
 
 	coap_send_transaction(transaction);
       }

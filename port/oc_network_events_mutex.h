@@ -14,17 +14,13 @@
 // limitations under the License.
 */
 
-#ifndef OC_UUID_H
-#define OC_UUID_H
+#ifndef OC_NETWORK_EVENTS_MUTEX_H
+#define OC_NETWORK_EVENTS_MUTEX_H
 
-#include <stdint.h>
+void oc_network_event_handler_mutex_init();
 
-typedef struct {
-  uint8_t id[16];
-} oc_uuid_t;
+void oc_network_event_handler_mutex_lock();
 
-void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
-void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
-void oc_gen_uuid(oc_uuid_t *uuid);
+void oc_network_event_handler_mutex_unlock();
 
-#endif /* OC_UUID_H */
+#endif /* OC_NETWORK_EVENTS_MUTEX_H */

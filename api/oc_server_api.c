@@ -55,7 +55,7 @@ oc_add_device()
   }
   else
     oc_stack_errno |= 0x03;
-  oc_free_string(&temp_buffer); 
+  oc_free_string(&temp_buffer);
 }
 
 void
@@ -63,7 +63,7 @@ oc_new_platform(const char *mfg_name)
 {
   payload = oc_core_add_new_platform(mfg_name);
   if (!payload)
-    oc_stack_errno |= 0x01;  
+    oc_stack_errno |= 0x01;
 }
 
 void
@@ -299,8 +299,4 @@ oc_notify_observers(oc_resource_t *resource)
 {
   return coap_notify_observers(resource, NULL, NULL);
 }
-
 #endif /* OC_SERVER */
-
-
-

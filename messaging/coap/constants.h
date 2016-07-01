@@ -45,8 +45,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef ER_COAP_CONSTANTS_H_
-#define ER_COAP_CONSTANTS_H_
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
 
 #define COAP_DEFAULT_PORT                    5683
 
@@ -171,4 +171,4 @@ typedef enum {
   APPLICATION_CBOR = 60
 } coap_content_format_t;
 
-#endif /* ER_COAP_CONSTANTS_H_ */
+#endif /* CONSTANTS_H */

@@ -26,7 +26,7 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
   int i, j = 0, k = 1;
   uint8_t c = 0;
-  
+
   for (i = 0; i < strlen(str); i++) {
     if (str[i] == '-')
       continue;
@@ -51,7 +51,7 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
       case 69:
       case 101:
 	c |= 0x0e;
-	break;	
+	break;
       case 70:
       case 102:
 	c |= 0x0f;
@@ -64,10 +64,10 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
       uuid->id[j++] = c;
       c = 0;
     }
-    else 
+    else
       c = c << 4;
     k++;
-  }     
+  }
 }
 
 void
@@ -87,7 +87,7 @@ oc_uuid_to_str(const oc_uuid_t* uuid, char *buffer, int buflen) {
       j += 2;
     }
   }
-  
+
   buffer[j++] = '\0';
 }
 
@@ -95,15 +95,15 @@ void
 oc_gen_uuid(oc_uuid_t *uuid) {
   int i;
   uint16_t r;
-  
+
   for (i = 0; i < 8; i++) {
-    r = oc_random_rand();	
+    r = oc_random_rand();
     memcpy((uint8_t*)&uuid->id[i * 2], (uint8_t*)&r, sizeof(r));
   }
-  
+
   /*  From RFC 4122
       Set the two most significant bits of the
-      clock_seq_hi_and_reserved (8th octect) to 
+      clock_seq_hi_and_reserved (8th octect) to
       zero and one, respectively.
   */
   uuid->id[8] &= 0x3f;
@@ -111,7 +111,7 @@ oc_gen_uuid(oc_uuid_t *uuid) {
 
   /*  From RFC 4122
       Set the four most significant bits of the
-      time_hi_and_version field (6th octect) to the 
+      time_hi_and_version field (6th octect) to the
       4-bit version number from (0 1 0 0 => type 4)
       Section 4.1.3.
   */

@@ -184,8 +184,8 @@ static size_t coap_serialize_array_option(unsigned int number,
 	temp_length = part_end - part_start;
 
 	i += coap_set_option_header(
-				    number - current_number,
-				    temp_length, &buffer[i]);
+	  number - current_number,
+	  temp_length, &buffer[i]);
 	memcpy(&buffer[i], part_start, temp_length);
 	i += temp_length;
 
@@ -409,7 +409,7 @@ size_t coap_serialize_message(void *packet, uint8_t *buffer)
       coap_pkt->buffer[3],
       coap_pkt->buffer[4],
       coap_pkt->buffer[5], coap_pkt->buffer[6], coap_pkt->buffer[7]
-      );
+     );
   return (option - buffer) + coap_pkt->payload_len; /* packet length */
 }
 /*---------------------------------------------------------------------------*/
@@ -454,7 +454,7 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->token_len, coap_pkt->token[0], coap_pkt->token[1],
       coap_pkt->token[2], coap_pkt->token[3], coap_pkt->token[4],
       coap_pkt->token[5], coap_pkt->token[6], coap_pkt->token[7]
-      ); /*FIXME always prints 8 bytes */
+     ); /*FIXME always prints 8 bytes */
 
   /* parse options */
   memset(coap_pkt->options, 0, sizeof(coap_pkt->options));
@@ -519,13 +519,13 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       case COAP_OPTION_CONTENT_FORMAT:
 	coap_pkt->content_format =
 	  coap_parse_int_option(
-				current_option,
-				option_length);
+	    current_option,
+	    option_length);
 	LOG("Content-Format [%u]\n", coap_pkt->content_format);
 	break;
       case COAP_OPTION_MAX_AGE:
 	coap_pkt->max_age = coap_parse_int_option(
-						  current_option, option_length);
+	  current_option, option_length);
 	LOG("Max-Age [%lu]\n", (unsigned long)coap_pkt->max_age);
 	break;
 #if 0
@@ -538,12 +538,12 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	    coap_pkt->etag_len, coap_pkt->etag[0], coap_pkt->etag[1],
 	    coap_pkt->etag[2], coap_pkt->etag[3], coap_pkt->etag[4],
 	    coap_pkt->etag[5], coap_pkt->etag[6], coap_pkt->etag[7]
-	    ); /*FIXME always prints 8 bytes */
+	   ); /*FIXME always prints 8 bytes */
 	break;
 #endif
       case COAP_OPTION_ACCEPT:
 	coap_pkt->accept = coap_parse_int_option(
-						 current_option, option_length);
+	  current_option, option_length);
 	LOG("Accept [%u]\n", coap_pkt->accept);
 	break;
 #if 0
@@ -559,7 +559,7 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	    coap_pkt->if_match[3], coap_pkt->if_match[4],
 	    coap_pkt->if_match[5], coap_pkt->if_match[6],
 	    coap_pkt->if_match[7]
-	    ); /* FIXME always prints 8 bytes */
+	   ); /* FIXME always prints 8 bytes */
 	break;
       case COAP_OPTION_IF_NONE_MATCH:
 	coap_pkt->if_none_match = 1;
@@ -597,26 +597,26 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	break;
       case COAP_OPTION_URI_PORT:
 	coap_pkt->uri_port = coap_parse_int_option(
-						   current_option, option_length);
+	  current_option, option_length);
 	LOG("Uri-Port [%u]\n", coap_pkt->uri_port);
 	break;
 #endif
       case COAP_OPTION_URI_PATH:
 	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
 	coap_merge_multi_option(
-				(char **)&(coap_pkt->uri_path),
-				&(coap_pkt->uri_path_len),
-				current_option, option_length,
-				'/');
+	  (char **)&(coap_pkt->uri_path),
+	  &(coap_pkt->uri_path_len),
+	  current_option, option_length,
+	  '/');
 	LOG("Uri-Path [%.*s]\n", (int)coap_pkt->uri_path_len, coap_pkt->uri_path);
 	break;
       case COAP_OPTION_URI_QUERY:
 	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
 	coap_merge_multi_option(
-				(char **)&(coap_pkt->uri_query),
-				&(coap_pkt->uri_query_len),
-				current_option, option_length,
-				'&');
+	  (char **)&(coap_pkt->uri_query),
+	  &(coap_pkt->uri_query_len),
+	  current_option, option_length,
+	  '&');
 	LOG("Uri-Query [%.*s]\n", (int)coap_pkt->uri_query_len,
 	    coap_pkt->uri_query);
 	break;
@@ -624,32 +624,32 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       case COAP_OPTION_LOCATION_PATH:
 	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
 	coap_merge_multi_option(
-				(char **)&(coap_pkt->location_path),
-				&(coap_pkt->location_path_len),
-				current_option, option_length,
-				'/');
+	  (char **)&(coap_pkt->location_path),
+	  &(coap_pkt->location_path_len),
+	  current_option, option_length,
+	  '/');
 	LOG("Location-Path [%.*s]\n", (int)coap_pkt->location_path_len,
 	    coap_pkt->location_path);
 	break;
       case COAP_OPTION_LOCATION_QUERY:
 	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
 	coap_merge_multi_option(
-				(char **)&(coap_pkt->location_query),
-				&(coap_pkt->location_query_len),
-				current_option, option_length,
-				'&');
+	  (char **)&(coap_pkt->location_query),
+	  &(coap_pkt->location_query_len),
+	  current_option, option_length,
+	  '&');
 	LOG("Location-Query [%.*s]\n", (int)coap_pkt->location_query_len,
 	    coap_pkt->location_query);
 	break;
 #endif
       case COAP_OPTION_OBSERVE:
 	coap_pkt->observe = coap_parse_int_option(
-						  current_option, option_length);
+	  current_option, option_length);
 	LOG("Observe [%lu]\n", (unsigned long)coap_pkt->observe);
 	break;
       case COAP_OPTION_BLOCK2:
 	coap_pkt->block2_num = coap_parse_int_option(
-						     current_option, option_length);
+	  current_option, option_length);
 	coap_pkt->block2_more = (coap_pkt->block2_num
 				 & 0x08) >> 3;
 	coap_pkt->block2_size =
@@ -668,7 +668,7 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	break;
       case COAP_OPTION_BLOCK1:
 	coap_pkt->block1_num = coap_parse_int_option(
-						     current_option, option_length);
+	  current_option, option_length);
 	coap_pkt->block1_more = (coap_pkt->block1_num
 				 & 0x08) >> 3;
 	coap_pkt->block1_size =
@@ -687,12 +687,12 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	break;
       case COAP_OPTION_SIZE2:
 	coap_pkt->size2 = coap_parse_int_option(
-						current_option, option_length);
+	  current_option, option_length);
 	LOG("Size2 [%lu]\n", (unsigned long)coap_pkt->size2);
 	break;
       case COAP_OPTION_SIZE1:
 	coap_pkt->size1 = coap_parse_int_option(
-						current_option, option_length);
+	  current_option, option_length);
 	LOG("Size1 [%lu]\n", (unsigned long)coap_pkt->size1);
 	break;
       default:

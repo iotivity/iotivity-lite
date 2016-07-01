@@ -45,8 +45,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef COAP_SEPARATE_H_
-#define COAP_SEPARATE_H_
+#ifndef SEPARATE_H
+#define SEPARATE_H
 
 #include "coap.h"
 #include "transactions.h"
@@ -80,4 +80,4 @@ void coap_separate_resume(void *response, coap_separate_t *separate_store,
 void coap_separate_clear(oc_slow_response_t *slow_response,
 			 coap_separate_t *separate_store);
 
-#endif /* COAP_SEPARATE_H_ */
+#endif /* SEPARATE_H */

@@ -14,16 +14,14 @@
 // limitations under the License.
 */
 
-#ifndef OCCONNECTIVITY_H
-#define OCCONNECTIVITY_H
+#ifndef OC_CONNECTIVITY_H
+#define OC_CONNECTIVITY_H
 
 #include <stdint.h>
 #include "config.h"
 #include "util/oc_process.h"
 #include "port/oc_log.h"
-
-#define COAP_PORT_UNSECURED (5683)
-#define ALL_COAP_NODES_V6 "FF02::FD"
+#include "oc_network_events.h"
 
 typedef struct {
   uint16_t port;
@@ -38,18 +36,16 @@ typedef struct {
 
 typedef struct {
   enum transport_flags {
-    IP = 1 << 0,         // IPv6
-    GATT = 1 << 1,       // GATT over BLE
-    MULTICAST = 1 << 2,
-    SECURED = 1 << 3
+    IP = 1 << 0,
+    GATT = 1 << 1,
+    IPSP = 1 << 2,
+    MULTICAST = 1 << 3,
+    SECURED = 1 << 4
   } flags;
 
   union {
-    /// IPv6 address of the peer.
     oc_ipv6_addr_t ipv6_addr;
-
-    /// BLE address of the GATT peer.
-    oc_le_addr_t gatt_addr;
+    oc_le_addr_t bt_addr;
   };
 } oc_endpoint_t;
 
@@ -60,23 +56,17 @@ typedef struct {
 
 typedef struct oc_message_s {
   struct oc_message_s *next;
-  
-  uint8_t ref_count;
-  
   oc_endpoint_t endpoint;
-
   size_t length;
-
+  uint8_t ref_count;
   uint8_t data[MAX_PAYLOAD_SIZE];
 } oc_message_t;
 
 void oc_send_buffer(oc_message_t * message);
 
-#if POLL_NETWORK
-void oc_poll_network();
-#endif
-
+#ifdef OC_SECURITY
 uint16_t oc_connectivity_get_dtls_port();
+#endif /* OC_SECURITY */
 
 int oc_connectivity_init();
 
@@ -84,5 +74,4 @@ void oc_connectivity_shutdown();
 
 void oc_send_multicast_message(oc_message_t *message);
 
-#endif /* OCCONNECTIVITY_H */
-
+#endif /* OC_CONNECTIVITY_H */

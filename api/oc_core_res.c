@@ -21,7 +21,7 @@
 #include "security/oc_pstat.h"
 
 static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
-struct oc_device_info_t {  
+struct oc_device_info_t {
   oc_uuid_t uuid;
   oc_string_t payload;
 } oc_device_info[MAX_NUM_DEVICES];
@@ -37,20 +37,20 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   oc_rep_start_array((*parent), if);
   if (interface & OC_IF_LL) {
     oc_rep_add_text_string(if, OC_RSRVD_IF_LL);
-  }								
+  }
   if (interface & OC_IF_B) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_B);    
-  }								
+    oc_rep_add_text_string(if, OC_RSRVD_IF_B);
+  }
   if (interface & OC_IF_R) {
     oc_rep_add_text_string(if, OC_RSRVD_IF_R);
-  }								
-  if (interface & OC_IF_RW) {					
+  }
+  if (interface & OC_IF_RW) {
     oc_rep_add_text_string(if, OC_RSRVD_IF_RW);
-  }								
-  if (interface & OC_IF_A) {					
+  }
+  if (interface & OC_IF_A) {
     oc_rep_add_text_string(if, OC_RSRVD_IF_A);
-  }								
-  if (interface & OC_IF_S) {					
+  }
+  if (interface & OC_IF_S) {
     oc_rep_add_text_string(if, OC_RSRVD_IF_S);
   }
   oc_rep_add_text_string(if, OC_RSRVD_IF_BASELINE);
@@ -65,14 +65,14 @@ oc_core_device_handler(oc_request_t *request,
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size =
     oc_string_len(oc_device_info[request->resource->device].payload);
-  
+
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
       oc_status_code(INTERNAL_SERVER_ERROR);
     return;
   }
-  
+
   switch (interface) {
   case OC_IF_DEFAULT:
   case OC_IF_R:
@@ -99,11 +99,11 @@ oc_core_add_new_device(const char *uri,
 		       const char *name,
 		       const char *spec_version,
 		       const char *data_model_version)
-{  
+{
   if (device_count == MAX_NUM_DEVICES)
     return false;
 
-  /* Once provisioned, UUID is retrieved from the credential store. 
+  /* Once provisioned, UUID is retrieved from the credential store.
      If not yet provisioned, a default is generated in the security
      layer.
   */
@@ -116,33 +116,33 @@ oc_core_add_new_device(const char *uri,
 #endif
 
   int ocf_d = NUM_OC_CORE_RESOURCES - 1 - device_count;
-  
+
   /* Construct device resource */
   oc_core_populate_resource(ocf_d, uri, rt, OC_IF_R | OC_IF_BASELINE,
 			       OC_ACTIVE | OC_DISCOVERABLE,
 			       oc_core_device_handler,
 			       0, 0, 0, device_count);
 
-  /* Encoding device resource payload */  
-  oc_alloc_string(&temp_buffer, MAX_DEVICE_PAYLOAD_SIZE);  
+  /* Encoding device resource payload */
+  oc_alloc_string(&temp_buffer, MAX_DEVICE_PAYLOAD_SIZE);
   oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_DEVICE_PAYLOAD_SIZE);
-  
+
   oc_rep_start_root_object();
-  
+
   oc_rep_set_string_array(root, rt, core_resources[ocf_d].types);
   oc_core_encode_interfaces_mask(oc_rep_object(root),
 				 core_resources[ocf_d].interfaces);
   oc_rep_set_uint(root, p, core_resources[ocf_d].properties);
-  
+
   char uuid[37];
-  oc_uuid_to_str(&oc_device_info[device_count].uuid, uuid, 37);  
-  oc_rep_set_text_string(root, di, uuid);  
+  oc_uuid_to_str(&oc_device_info[device_count].uuid, uuid, 37);
+  oc_rep_set_text_string(root, di, uuid);
   oc_rep_set_text_string(root, n, name);
   oc_rep_set_text_string(root, icv, spec_version);
-  oc_rep_set_text_string(root, dmv, data_model_version);  
-  
+  oc_rep_set_text_string(root, dmv, data_model_version);
+
   device_count++;
-  
+
   return &oc_device_info[device_count - 1].payload;
 }
 
@@ -153,14 +153,14 @@ oc_core_platform_handler(oc_request_t *request,
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size = oc_string_len(oc_platform_payload);
-  
+
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
       oc_status_code(INTERNAL_SERVER_ERROR);
     return;
   }
-  
+
   switch (interface) {
   case OC_IF_DEFAULT:
   case OC_IF_R:
@@ -179,16 +179,16 @@ oc_core_add_new_platform(const char *mfg_name)
 {
   if (oc_string_len(oc_platform_payload) > 0)
     return NULL;
-  
+
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, OC_RSRVD_PLATFORM_URI, "oic.wk.p",
 			    OC_IF_R | OC_IF_BASELINE,
 			    OC_ACTIVE | OC_DISCOVERABLE,
 			    oc_core_platform_handler,
 			    0, 0, 0, 0);
-  
+
   /* Encoding platform resource payload */
-  oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);  
+  oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);
   oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_PLATFORM_PAYLOAD_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
@@ -200,11 +200,11 @@ oc_core_add_new_platform(const char *mfg_name)
   oc_uuid_t uuid; /*fix uniqueness of platform id?? */
   oc_gen_uuid(&uuid);
   char uuid_str[37];
-  
-  oc_uuid_to_str(&uuid, uuid_str, 37);  
+
+  oc_uuid_to_str(&uuid, uuid_str, 37);
   oc_rep_set_text_string(root, pi, uuid_str);
   oc_rep_set_text_string(root, mnmn, mfg_name);
-  
+
   return &oc_platform_payload;
 }
 
@@ -225,7 +225,7 @@ oc_core_populate_resource(int type,
   oc_new_string(&r->uri, uri);
   r->properties = properties;
   oc_new_string_array(&r->types, 1);
-  oc_string_array_add_item(r->types, rt);  
+  oc_string_array_add_item(r->types, rt);
   r->interfaces = interfaces;
   r->get_handler = get;
   r->put_handler = put;
@@ -241,7 +241,7 @@ oc_core_get_device_id(int device)
 
 oc_resource_t *
 oc_core_get_resource_by_index(int type)
-{  
+{
   return &core_resources[type];
 }
 

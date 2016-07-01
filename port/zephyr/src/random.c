@@ -17,17 +17,22 @@
 #include <drivers/system_timer.h>
 #include "port/oc_random.h"
 
-void oc_random_init(unsigned short seed)
+void
+oc_random_init(unsigned short seed)
 {
+
 }
 
-unsigned short oc_random_rand(void)
+unsigned short
+oc_random_rand(void)
 {
   return (unsigned short)sys_cycle_get_32();	
 }
 
-void oc_random_destroy()
+void
+oc_random_destroy()
 {
+
 }
 
 

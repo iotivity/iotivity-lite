@@ -51,7 +51,7 @@ oc_sec_encode_pstat()
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   oc_rep_start_root_object();
   oc_rep_set_uint(root, cm, pstat.cm);
-  oc_rep_set_uint(root, tm, pstat.tm);    
+  oc_rep_set_uint(root, tm, pstat.tm);
   oc_rep_set_int(root, om, pstat.om);
   oc_rep_set_int(root, sm, pstat.sm);
   oc_rep_set_boolean(root, isop, pstat.isop);
@@ -79,14 +79,14 @@ oc_sec_decode_pstat(oc_rep_t *rep)
       else if (strncmp(oc_string(rep->name), "om", 2) == 0)
 	pstat.om = rep->value_int;
       else if (strncmp(oc_string(rep->name), "sm", 2) == 0)
-	pstat.sm = rep->value_int;      
+	pstat.sm = rep->value_int;
       break;
     case STRING:
       if (strncmp(oc_string(rep->name), "deviceuuid", 10) == 0)
 	oc_str_to_uuid(oc_string(rep->value_string), &doxm->deviceuuid);
       else if (strncmp(oc_string(rep->name), "rowneruuid", 10) == 0)
-	oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid); 
-      break;      
+	oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
+      break;
     default:
       break;
     }
@@ -109,7 +109,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface)
 }
 
 void
-put_pstat(oc_request_t *request, oc_interface_mask_t interface)
+post_pstat(oc_request_t *request, oc_interface_mask_t interface)
 {
   oc_sec_decode_pstat(request->request_payload);
   oc_send_response(request, CHANGED);

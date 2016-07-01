@@ -34,29 +34,35 @@ int oc_rep_finalize();
 #define oc_rep_object(name) &name ## _map
 #define oc_rep_array(name) &name ## _array
 
-#define oc_rep_set_double(object, key, value)				\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_double(&object ## _map, value)
+#define oc_rep_set_double(object, key, value)	do {			\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_double(&object ## _map, value);		\
+  } while(0)
 
-#define oc_rep_set_int(object, key, value)				\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_int(&object ## _map, value)
+#define oc_rep_set_int(object, key, value)	do {			\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_int(&object ## _map, value);			\
+  } while(0)
 
-#define oc_rep_set_uint(object, key, value)				\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_uint(&object ## _map, value)
+#define oc_rep_set_uint(object, key, value)	do {			\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_uint(&object ## _map, value);			\
+  } while(0)
 
-#define oc_rep_set_boolean(object, key, value)				\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_boolean(&object ## _map, value)
+#define oc_rep_set_boolean(object, key, value)	do {			\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_boolean(&object ## _map, value);		\
+  } while(0)
 
-#define oc_rep_set_text_string(object, key, value)			\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_text_string(&object ## _map, value, strlen(value))
+#define oc_rep_set_text_string(object, key, value)	do {		\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_text_string(&object ## _map, value, strlen(value)); \
+  } while(0)
 
-#define oc_rep_set_byte_string(object, key, value)			\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  g_err |= cbor_encode_byte_string(&object ## _map, value, strlen(value))
+#define oc_rep_set_byte_string(object, key, value)	do {		\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    g_err |= cbor_encode_byte_string(&object ## _map, value, strlen(value)); \
+  } while(0)
 
 #define oc_rep_start_array(parent, key)		do {			\
   CborEncoder key ## _array;						\
@@ -86,7 +92,7 @@ int oc_rep_finalize();
 
 #define oc_rep_set_key(parent, key)				\
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
-				   
+
 #define oc_rep_set_array(object, key)					\
   g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
   oc_rep_start_array(object ## _map, key)
@@ -105,55 +111,59 @@ int oc_rep_finalize();
 #define oc_rep_object_array_start_item(key)	\
   oc_rep_start_object(key ## _array, key)
 
-#define oc_rep_object_array_end_item(key) \
+#define oc_rep_object_array_end_item(key)	\
   oc_rep_end_object(key ## _array, key)
 
-#define oc_rep_set_object(object, key)                         \
+#define oc_rep_set_object(object, key)					\
   g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
   oc_rep_start_object(object ## _map, key)
 
-#define oc_rep_close_object(object, key) \
+#define oc_rep_close_object(object, key)	\
   oc_rep_end_object(object ## _map, key)
 
-#define oc_rep_set_int_array(object, key, values, length)		\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  CborEncoder key ## _value_array;					\
-  g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
-  int i;								\
-  for (i = 0; i < length; i++) {					\
-    g_err |= cbor_encode_int(&key ## _value_array, values[i]);		\
-  }									\
-  g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array)
+#define oc_rep_set_int_array(object, key, values, length)	do {	\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    CborEncoder key ## _value_array;					\
+    g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
+    int i;								\
+    for (i = 0; i < length; i++) {					\
+      g_err |= cbor_encode_int(&key ## _value_array, values[i]);	\
+    }									\
+    g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array); \
+  } while(0)
 
-#define oc_rep_set_bool_array(object, key, values, length)		\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  CborEncoder key ## _value_array;					\
-  g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
-  int i;								\
-  for (i = 0; i < length; i++) {					\
-    g_err |= cbor_encode_boolean(&key ## _value_array, values[i]);	\
-  }									\
-  g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array)
+#define oc_rep_set_bool_array(object, key, values, length)	do {	\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    CborEncoder key ## _value_array;					\
+    g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
+    int i;								\
+    for (i = 0; i < length; i++) {					\
+      g_err |= cbor_encode_boolean(&key ## _value_array, values[i]);	\
+    }									\
+    g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array); \
+  } while(0)
 
-#define oc_rep_set_double_array(object, key, values, length)		\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  CborEncoder key ## _value_array;					\
-  g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
-  int i;								\
-  for (i = 0; i < length; i++) {					\
-    g_err |= cbor_encode_floating_point(&key ## _value_array, CborDoubleType, &values[i]); \
-  }									\
-  g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array)
+#define oc_rep_set_double_array(object, key, values, length)	do {	\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    CborEncoder key ## _value_array;					\
+    g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, length); \
+    int i;								\
+    for (i = 0; i < length; i++) {					\
+      g_err |= cbor_encode_floating_point(&key ## _value_array, CborDoubleType, &values[i]); \
+    }									\
+    g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array); \
+  } while(0)
 
-#define oc_rep_set_string_array(object, key, values)			\
-  g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
-  CborEncoder key ## _value_array;					\
-  g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, oc_string_array_get_allocated_size(values)); \
-  int i;								\
-  for (i = 0; i < oc_string_array_get_allocated_size(values); i++) {	\
-    g_err |= cbor_encode_text_string(&key ## _value_array, oc_string_array_get_item(values, i), oc_string_array_get_item_size(values, i)); \
-  }									\
-  g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array)
+#define oc_rep_set_string_array(object, key, values)	do {		\
+    g_err |= cbor_encode_text_string(&object ## _map, #key, strlen(#key)); \
+    CborEncoder key ## _value_array;					\
+    g_err |= cbor_encoder_create_array(&object ## _map, &key ## _value_array, oc_string_array_get_allocated_size(values)); \
+    int i;								\
+    for (i = 0; i < oc_string_array_get_allocated_size(values); i++) {	\
+      g_err |= cbor_encode_text_string(&key ## _value_array, oc_string_array_get_item(values, i), oc_string_array_get_item_size(values, i)); \
+    }									\
+    g_err |= cbor_encoder_close_container(&object ## _map, &key ## _value_array); \
+  } while(0)
 
 typedef enum {
   NIL = 0,
@@ -173,7 +183,7 @@ typedef enum {
 } oc_rep_value_type_t;
 
 typedef struct oc_rep_s {
-  oc_rep_value_type_t type;  
+  oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;
   union {
