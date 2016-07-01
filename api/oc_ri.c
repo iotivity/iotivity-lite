@@ -298,7 +298,7 @@ oc_ri_add_resource(oc_resource_t *resource)
 void
 oc_ri_add_timed_event_callback_ticks(void *cb_data,
 				     oc_trigger_t event_callback,
-				     uint16_t ticks)
+				     oc_clock_time_t ticks)
 {
   oc_event_callback_t *event_cb =
     (oc_event_callback_t*)oc_memb_alloc(&event_callbacks_s);
@@ -620,22 +620,22 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
   }
   else
 #endif
-  if(response_buffer.code == IGNORE) {
-    erbium_status_code = CLEAR_TRANSACTION;
-  }
-  else {
-#ifdef OC_SERVER
-    if ((method == OC_PUT || method == OC_POST) &&
-	response_buffer.code == oc_status_code(OK))
-      coap_notify_observers(cur_resource, NULL, NULL);
-#endif
-    if (response_buffer.response_length) {
-      coap_set_payload(response, response_buffer.buffer,
-		       response_buffer.response_length);
-      coap_set_header_content_format(response, APPLICATION_CBOR);
+    if(response_buffer.code == IGNORE) {
+      erbium_status_code = CLEAR_TRANSACTION;
     }
-    coap_set_status_code(response, response_buffer.code);
-  }
+    else {
+#ifdef OC_SERVER
+      if ((method == OC_PUT || method == OC_POST) &&
+	  response_buffer.code == oc_status_code(OK))
+	coap_notify_observers(cur_resource, NULL, NULL);
+#endif
+      if (response_buffer.response_length) {
+	coap_set_payload(response, response_buffer.buffer,
+			 response_buffer.response_length);
+	coap_set_header_content_format(response, APPLICATION_CBOR);
+      }
+      coap_set_status_code(response, response_buffer.code);
+    }
   return success;
 }
 
@@ -695,13 +695,13 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
   oc_client_cb_t *cb = oc_list_head(client_cbs);
   int i;
   /*
-        if con then send ack and process as above
-            -empty ack sent from below by engine
-        if ack with piggyback then process as above
-            -processed below
-        if ack and empty then it is slow response, and keep cb
-            -handled by separate flag
-        if ack is for block then store data and pass to client
+    if con then send ack and process as above
+    -empty ack sent from below by engine
+    if ack with piggyback then process as above
+    -processed below
+    if ack and empty then it is slow response, and keep cb
+    -handled by separate flag
+    if ack is for block then store data and pass to client
   */
 
   unsigned int content_format = APPLICATION_CBOR;
@@ -721,7 +721,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
       }
 
       /* Check code, translate to oc_status_code, store
-       Check observe option:
+	 Check observe option:
          if no observe option, set to -1, else store observe seq
       */
       oc_client_response_t client_response;
@@ -885,90 +885,90 @@ oc_ri_process_discovery_payload(uint8_t *payload,
     }
     device_map = array->value_object;
     while (device_map != NULL) {
-	switch (device_map->type) {
-	case OBJECT_ARRAY: {
-	  oc_rep_t *links = device_map->value_object_array;
-	  while (links != NULL) {
-	    switch (links->type) {
-	    case OBJECT: {
-	      oc_rep_t *resource_info = links->value_object;
-	      while (resource_info != NULL) {
-		switch (resource_info->type) {
-		case STRING:
-		  uri = resource_info->value_string;
-		  break;
-		case STRING_ARRAY:
-		  if (oc_string_len(resource_info->name) == 2 &&
-		      strncmp(oc_string(resource_info->name), "rt", 2)
-		      == 0)
-		    types = resource_info->value_array;
-		  else {
-		    interfaces = 0;
-		    int i;
-		    for (i = 0;
-			 i < oc_string_array_get_allocated_size(resource_info->value_array);
-			 i++) {
-		      interfaces |= get_interface_mask(oc_string_array_get_item(resource_info->value_array, i), oc_string_array_get_item_size(resource_info->value_array, i));
-		    }
-		  }
-		  break;
-		case OBJECT: {
-		  oc_rep_t *policy_info = resource_info->value_object;
-		  while (policy_info != NULL) {
-		    if (policy_info->type == INT &&
-			oc_string_len(policy_info->name) == 4 &&
-			strncmp(oc_string(policy_info->name), "port", 4) == 0)
-		      dtls_port = policy_info->value_int;
-		    if (policy_info->type == BOOL &&
-			oc_string_len(policy_info->name) == 3 &&
-			strncmp(oc_string(policy_info->name), "sec", 3) == 0)
-		      secure = true;
-		    policy_info = policy_info->next;
+      switch (device_map->type) {
+      case OBJECT_ARRAY: {
+	oc_rep_t *links = device_map->value_object_array;
+	while (links != NULL) {
+	  switch (links->type) {
+	  case OBJECT: {
+	    oc_rep_t *resource_info = links->value_object;
+	    while (resource_info != NULL) {
+	      switch (resource_info->type) {
+	      case STRING:
+		uri = resource_info->value_string;
+		break;
+	      case STRING_ARRAY:
+		if (oc_string_len(resource_info->name) == 2 &&
+		    strncmp(oc_string(resource_info->name), "rt", 2)
+		    == 0)
+		  types = resource_info->value_array;
+		else {
+		  interfaces = 0;
+		  int i;
+		  for (i = 0;
+		       i < oc_string_array_get_allocated_size(resource_info->value_array);
+		       i++) {
+		    interfaces |= get_interface_mask(oc_string_array_get_item(resource_info->value_array, i), oc_string_array_get_item_size(resource_info->value_array, i));
 		  }
 		}
-		  break;
-		default:
-		  break;
+		break;
+	      case OBJECT: {
+		oc_rep_t *policy_info = resource_info->value_object;
+		while (policy_info != NULL) {
+		  if (policy_info->type == INT &&
+		      oc_string_len(policy_info->name) == 4 &&
+		      strncmp(oc_string(policy_info->name), "port", 4) == 0)
+		    dtls_port = policy_info->value_int;
+		  if (policy_info->type == BOOL &&
+		      oc_string_len(policy_info->name) == 3 &&
+		      strncmp(oc_string(policy_info->name), "sec", 3) == 0)
+		    secure = true;
+		  policy_info = policy_info->next;
 		}
-		resource_info = resource_info->next;
 	      }
-	      if (secure) {
-		handle.endpoint.ipv6_addr.port = dtls_port;
-		handle.endpoint.flags |= SECURED;
+		break;
+	      default:
+		break;
 	      }
-	      else {
-		handle.endpoint.ipv6_addr.port = default_port;
-		handle.endpoint.flags &= ~SECURED;
-	      }
+	      resource_info = resource_info->next;
+	    }
+	    if (secure) {
+	      handle.endpoint.ipv6_addr.port = dtls_port;
+	      handle.endpoint.flags |= SECURED;
+	    }
+	    else {
+	      handle.endpoint.ipv6_addr.port = default_port;
+	      handle.endpoint.flags &= ~SECURED;
+	    }
 
-	      if (handler(oc_string(di),
-			  oc_string(uri),
-			  types,
-			  interfaces,
-			  &handle) ==
-		  OC_STOP_DISCOVERY) {
-		ret = OC_STOP_DISCOVERY;
-		goto done;
-	      }
-	      dtls_port = 0;
-	      secure = false;
+	    if (handler(oc_string(di),
+			oc_string(uri),
+			types,
+			interfaces,
+			&handle) ==
+		OC_STOP_DISCOVERY) {
+	      ret = OC_STOP_DISCOVERY;
+	      goto done;
 	    }
-	      break;
-	    default:
-	      break;
-	    }
-	    links = links->next;
+	    dtls_port = 0;
+	    secure = false;
 	  }
+	    break;
+	  default:
+	    break;
+	  }
+	  links = links->next;
 	}
-	  break;
-	default:
-	  break;
-	}
-	device_map = device_map->next;
+      }
+	break;
+      default:
+	break;
+      }
+      device_map = device_map->next;
     }
     array = array->next;
   }
- done:
+  done:
   oc_free_rep(rep);
   return ret;
 }
