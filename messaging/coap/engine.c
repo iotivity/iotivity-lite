@@ -62,9 +62,9 @@
 OC_PROCESS(coap_engine, "CoAP Engine");
 
 extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
-				      uint8_t *buffer, uint16_t buffer_size,
-				      int32_t *offset,
-				      oc_endpoint_t *endpoint);
+					     uint8_t *buffer, uint16_t buffer_size,
+					     int32_t *offset,
+					     oc_endpoint_t *endpoint);
 
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
@@ -210,25 +210,25 @@ int coap_receive(oc_message_t *msg)
 		  response->code =
 		    BAD_OPTION_4_02;
 		  coap_set_payload(
-				   response,
-				   "BlockOutOfScope",
-				   15); /* a const char str[] and sizeof(str) produces larger code size */
+		    response,
+		    "BlockOutOfScope",
+		    15); /* a const char str[] and sizeof(str) produces larger code size */
 		} else {
 		  coap_set_header_block2(
-					 response,
-					 block_num,
-					 response->payload_len
-					 - block_offset
-					 > block_size,
-					 block_size);
+		    response,
+		    block_num,
+		    response->payload_len
+		    - block_offset
+		    > block_size,
+		    block_size);
 		  coap_set_payload(
-				   response,
-				   response->payload
-				   + block_offset,
-				   MIN(
-				       response->payload_len
-				       - block_offset,
-				       block_size));
+		    response,
+		    response->payload
+		    + block_offset,
+		    MIN(
+		      response->payload_len
+		      - block_offset,
+		      block_size));
 		} /* if(valid offset) */
 
 		/* resource provides chunk-wise data */
@@ -236,20 +236,20 @@ int coap_receive(oc_message_t *msg)
 		LOG("\tBlockwise: blockwise resource, new offset %d\n",
 		    new_offset);
 		coap_set_header_block2(
-				       response,
-				       block_num,
-				       new_offset
-				       != -1
-				       || response->payload_len
-				       > block_size,
-				       block_size);
+		  response,
+		  block_num,
+		  new_offset
+		  != -1
+		  || response->payload_len
+		  > block_size,
+		  block_size);
 
 		if(response->payload_len
 		   > block_size) {
 		  coap_set_payload(
-				   response,
-				   response->payload,
-				   block_size);
+		    response,
+		    response->payload,
+		    block_size);
 		}
 	      } /* if(resource aware of blockwise) */
 
@@ -260,17 +260,17 @@ int coap_receive(oc_message_t *msg)
 		 COAP_MAX_BLOCK_SIZE);
 
 	      coap_set_header_block2(
-				     response,
-				     0,
-				     new_offset
-				     != -1,
-				     COAP_MAX_BLOCK_SIZE);
+		response,
+		0,
+		new_offset
+		!= -1,
+		COAP_MAX_BLOCK_SIZE);
 	      coap_set_payload(
-			       response,
-			       response->payload,
-			       MIN(
-				   response->payload_len,
-				   COAP_MAX_BLOCK_SIZE));
+		response,
+		response->payload,
+		MIN(
+		  response->payload_len,
+		  COAP_MAX_BLOCK_SIZE));
 	    } /* blockwise transfer handling */
 	  } /* no errors/hooks */
 	  /* successful service callback */
@@ -279,8 +279,8 @@ int coap_receive(oc_message_t *msg)
 	if(erbium_status_code == NO_ERROR) {
 	  if((transaction->message->length =
 	      coap_serialize_message(
-				     response,
-				     transaction->message->data))
+		response,
+		transaction->message->data))
 	     == 0) {
 	    erbium_status_code =
 	      PACKET_SERIALIZATION_ERROR;
@@ -332,12 +332,14 @@ int coap_receive(oc_message_t *msg)
   else if (erbium_status_code == EMPTY_ACK_RESPONSE) {
     coap_init_message(message, COAP_TYPE_ACK, 0,
 		      message->mid);
-    oc_message_t *response = oc_allocate_message(); //fix if cannot alloc message
-    memcpy(&response->endpoint, &msg->endpoint,
-	   sizeof(msg->endpoint));
-    response->length = coap_serialize_message(message,
-					      response->data);
-    coap_send_message(response);
+    oc_message_t *response = oc_allocate_message();
+    if (response) {
+      memcpy(&response->endpoint, &msg->endpoint,
+	     sizeof(msg->endpoint));
+      response->length = coap_serialize_message(message,
+						response->data);
+      coap_send_message(response);
+    }
   }
 #endif /* OC_CLIENT */
 #ifdef OC_SERVER
@@ -349,12 +351,14 @@ int coap_receive(oc_message_t *msg)
     coap_init_message(message, reply_type, SERVICE_UNAVAILABLE_5_03,
 		      message->mid);
 
-    oc_message_t *response = oc_allocate_message(); //fix if cannot alloc message
-    memcpy(&response->endpoint, &msg->endpoint,
-	   sizeof(msg->endpoint));
-    response->length = coap_serialize_message(message,
-					      response->data);
-    coap_send_message(response);
+    oc_message_t *response = oc_allocate_message();
+    if (response) {
+      memcpy(&response->endpoint, &msg->endpoint,
+	     sizeof(msg->endpoint));
+      response->length = coap_serialize_message(message,
+						response->data);
+      coap_send_message(response);
+    }
   }
 #endif /* OC_SERVER */
 

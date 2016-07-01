@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OCCOAP_H_
-#define OCCOAP_H_
+#ifndef OC_COAP_H
+#define OC_COAP_H
 
 #include "util/oc_list.h"
 #include "separate.h"
@@ -34,4 +34,4 @@ typedef struct oc_response_buffer_s {
   int code;
 } oc_response_buffer_t;
 
-#endif /* OCCOAP_H_ */
+#endif /* OC_COAP_H */

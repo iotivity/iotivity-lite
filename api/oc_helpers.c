@@ -126,7 +126,7 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
   bool success = false;
   int i;
   for(i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
-    if(strlen((const char*)oc_string_array_get_item( *ocstringarray, i)) == 0) {	    
+    if(strlen((const char*)oc_string_array_get_item( *ocstringarray, i)) == 0) {
       success = oc_string_array_set_item(*ocstringarray, str, i);
       break;
     }
@@ -135,7 +135,6 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
 }
 
 void
-
 oc_join_string_array(oc_string_array_t *ocstringarray,
 		     oc_string_t *ocstring)
 {
@@ -167,4 +166,3 @@ oc_join_string_array(oc_string_array_t *ocstringarray,
   }
   strcpy((char*)oc_string(*ocstring) + len, "");
 }
-

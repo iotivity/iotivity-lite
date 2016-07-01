@@ -84,6 +84,20 @@ typedef enum {
   OC_IF_S = 1 << 7,
 } oc_interface_mask_t;
 
+typedef enum {
+  OCF_RES = 0,
+  OCF_P,
+#ifdef OC_SECURITY
+  OCF_SEC_DOXM,
+  OCF_SEC_PSTAT,
+  OCF_SEC_ACL,
+  OCF_SEC_CRED,
+#endif
+  __NUM_OC_CORE_RESOURCES__
+} oc_core_resource_t;
+
+#define NUM_OC_CORE_RESOURCES (__NUM_OC_CORE_RESOURCES__ + MAX_NUM_DEVICES)
+
 typedef struct oc_resource_s oc_resource_t;
 
 typedef struct {
@@ -134,7 +148,9 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
 					  oc_trigger_t event_callback,
 					  uint16_t ticks);
 
-#define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback, seconds) code(oc_ri_add_timed_event_callback_ticks(cb_data,  event_callback, seconds * OC_CLOCK_SECOND);)
+#define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback, seconds) do { \
+    oc_ri_add_timed_event_callback_ticks(cb_data,  event_callback, seconds * OC_CLOCK_SECOND); \
+  } while(0)
 
 int oc_status_code(oc_status_t key);
 
@@ -142,17 +158,17 @@ oc_resource_t * oc_ri_get_app_resource_by_uri(const char *uri);
 
 oc_resource_t * oc_ri_get_app_resources();
 
-#ifdef OC_SERVER  
+#ifdef OC_SERVER
 oc_resource_t * oc_ri_alloc_resource();
 bool oc_ri_add_resource(oc_resource_t *resource);
 void oc_ri_delete_resource(oc_resource_t *resource);
 #endif
 
 int oc_ri_get_query_nth_key_value(const char *query, int query_len,
-					 char **key, int *key_len,
-					 char **value, int *value_len,
-					 int n);
+				  char **key, int *key_len,
+				  char **value, int *value_len,
+				  int n);
 int oc_ri_get_query_value(const char *query, int query_len,
 			  const char *key, char **value);
-  
+
 #endif /* OC_RI_H */

@@ -16,23 +16,18 @@
 
 #include <stdio.h>
 #include <stdint.h>
+
 #include "port/oc_connectivity.h"
 #include "port/oc_clock.h"
 #include "port/oc_assert.h"
+
 #include "util/oc_process.h"
 #include "util/oc_etimer.h"
+
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
-#include "oc_ri.h"
-#include "oc_main.h"
 
-#ifdef OC_SERVER
-#include "oc_server.h"
-#endif /* OC_SERVER */
-
-#ifdef OC_CLIENT
-#include "oc_client.h"
-#endif /* OC_CLIENT */
+#include "oc_api.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_dtls.h"
@@ -41,26 +36,30 @@
 static int initialized, terminate;
 
 int
-oc_main_init()
+oc_main_init(oc_handler_t *handler)
 {
   extern int oc_stack_errno;
+
   oc_ri_init();
 
-#ifdef OC_SECURITY  
-  fetch_credentials();//Sets device id
+#ifdef OC_SECURITY
+  handler->get_credentials();
+
   oc_sec_load_pstat();
   oc_sec_load_doxm();
   oc_sec_load_cred();
-  oc_sec_dtls_init_context();  
+
+  oc_sec_dtls_init_context();
 #endif
 
+  oc_network_event_handler_mutex_init();
   initialized = oc_connectivity_init();
-    
-  app_init();
 
-#ifdef OC_SERVER    
-  register_resources();
-#endif 
+  handler->init();
+
+#ifdef OC_SERVER
+  handler->register_resources();
+#endif
 
 #ifdef OC_SECURITY
   oc_sec_create_svr();
@@ -68,44 +67,28 @@ oc_main_init()
 #endif
 
   initialized = (initialized && !oc_stack_errno)?1:0;
-  
+
   if (initialized)
     PRINT("oc_main: Stack successfully initialized\n");
   else
     oc_abort("oc_main: Error in stack initialization\n");
-      
-#ifdef OC_CLIENT 
+
+#ifdef OC_CLIENT
   if (initialized)
-    issue_requests();
-#endif      
-  
+    handler->requests_entry();
+#endif
+
   return initialized;
 }
 
-void
-oc_main_loop()
-{
-  if(!initialized)
-    oc_main_init();
-  while(initialized && !terminate) {
-    oc_etimer_request_poll();
-    while(oc_process_run()) {
-#if POLL_NETWORK
-      oc_poll_network();
-#endif
-      oc_etimer_request_poll();
-    }
-  }
-}
-
-void
+oc_clock_time_t
 oc_main_poll()
 {
-#if POLL_NETWORK
-  oc_poll_network();
-#endif
-  oc_etimer_request_poll();
-  oc_process_run();
+  oc_clock_time_t ticks_until_next_event = oc_etimer_request_poll();
+  while (oc_process_run()) {
+    ticks_until_next_event = oc_etimer_request_poll();
+  }
+  return ticks_until_next_event;
 }
 
 void
@@ -117,8 +100,7 @@ oc_main_shutdown()
 #ifdef OC_SECURITY /* fix ensure this gets executed on constraied platforms */
   oc_sec_dump_state();
 #endif
-  
+
   terminate = 1;
   initialized = 0;
 }
-

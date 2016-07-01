@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include "util/oc_memb.h"
 #include "messaging/coap/engine.h"
+#include "port/oc_signal_main_loop.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_dtls.h"
@@ -35,6 +36,8 @@ oc_allocate_message()
 {
   oc_message_t *message = (oc_message_t*)oc_memb_alloc(&oc_buffers_s);
   if (message) {
+    message->length = 0;
+    message->next = 0;
     message->ref_count = 1;
     LOG("buffer: Allocated TX/RX buffer; num free: %d\n",
 	oc_memb_numfree(&oc_buffers_s));
@@ -69,15 +72,17 @@ oc_recv_message(oc_message_t *message)
 {
   oc_process_post(&message_buffer_handler,
 		  oc_events[INBOUND_NETWORK_EVENT],
-		  message);  
+		  message);
 }
 
 void
 oc_send_message(oc_message_t *message)
-{ 
+{
   oc_process_post(&message_buffer_handler,
 		  oc_events[OUTBOUND_NETWORK_EVENT],
-		  message);    
+		  message);
+
+  oc_signal_main_loop();
 }
 
 OC_PROCESS_THREAD(message_buffer_handler, ev, data)
@@ -86,9 +91,9 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
   LOG("Started buffer handler process\n");
   while(1) {
     OC_PROCESS_YIELD();
-    
+
     if(ev == oc_events[INBOUND_NETWORK_EVENT]) {
-#ifdef OC_SECURITY      
+#ifdef OC_SECURITY
       uint8_t b = (uint8_t)((oc_message_t*)data)->data[0];
       if (b > 19 && b < 64) {
 	LOG("Inbound network event: encrypted request\n");
@@ -107,40 +112,43 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       oc_process_post(&coap_engine,
 		      oc_events[INBOUND_RI_EVENT],
 		      data);
-#endif      
+#endif
     } else if(ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
       oc_message_t *message = (oc_message_t*)data;
-      
-      if(message->endpoint.flags & MULTICAST) {
-	LOG("Outbound network event: multicast request\n");	
-	oc_send_multicast_message(message);
-	oc_message_unref(message);	
-      }
-#ifdef OC_SECURITY      
-      else if (message->endpoint.flags & SECURED) {
-	LOG("Outbound network event: forwarding to DTLS\n");
 
-	if (!oc_sec_dtls_connected(&message->endpoint)) {
-	  LOG("Posting INIT_DTLS_CONN_EVENT\n");
-	  oc_process_post(&oc_dtls_handler,
-			  oc_events[INIT_DTLS_CONN_EVENT],
-			  data);	
-	}
-	else {
-	  LOG("Posting RI_TO_DTLS_EVENT\n");
-	  oc_process_post(&oc_dtls_handler,
-			  oc_events[RI_TO_DTLS_EVENT],
-			  data);
-	}
-      }
-#endif      
-      else {
-	LOG("Outbound network event: unicast message\n");	
-	oc_send_buffer(message);
+#ifdef OC_CLIENT
+      if(message->endpoint.flags & MULTICAST) {
+	LOG("Outbound network event: multicast request\n");
+	oc_send_multicast_message(message);
 	oc_message_unref(message);
       }
+      else
+#endif
+#ifdef OC_SECURITY
+	if (message->endpoint.flags & SECURED) {
+	  LOG("Outbound network event: forwarding to DTLS\n");
+
+	  if (!oc_sec_dtls_connected(&message->endpoint)) {
+	    LOG("Posting INIT_DTLS_CONN_EVENT\n");
+	    oc_process_post(&oc_dtls_handler,
+			    oc_events[INIT_DTLS_CONN_EVENT],
+			    data);
+	  }
+	  else {
+	    LOG("Posting RI_TO_DTLS_EVENT\n");
+	    oc_process_post(&oc_dtls_handler,
+			    oc_events[RI_TO_DTLS_EVENT],
+			    data);
+	  }
+	}
+	else
+#endif
+	  {
+	    LOG("Outbound network event: unicast message\n");
+	    oc_send_buffer(message);
+	    oc_message_unref(message);
+	  }
     }
   }
   OC_PROCESS_END();
 }
-

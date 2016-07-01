@@ -47,37 +47,39 @@ typedef oc_discovery_flags_t (oc_discovery_cb_t)(const char *,
 						 oc_interface_mask_t,
 						 oc_server_handle_t*);
 
-typedef void (*oc_response_handler_t)(oc_client_response_t*);
+						typedef void (*oc_response_handler_t)(oc_client_response_t*);
 
-typedef struct oc_client_cb_s {
-  struct oc_client_cb_s *next;
-  oc_string_t uri;
-  uint8_t token[COAP_TOKEN_LEN];
-  uint8_t token_len;
-  uint16_t mid;
-  
-  oc_server_handle_t server;
+						typedef struct oc_client_cb_s {
+						  struct oc_client_cb_s *next;
+						  oc_string_t uri;
+						  uint8_t token[COAP_TOKEN_LEN];
+						  uint8_t token_len;
+						  uint16_t mid;
 
-  void *handler;
+						  oc_server_handle_t server;
 
-  bool discovery;
-  int32_t observe_seq;
-  oc_clock_time_t timestamp;
-  oc_qos_t qos;
-  oc_method_t method;
-} oc_client_cb_t;
+						  void *handler;
+
+						  bool discovery;
+						  int32_t observe_seq;
+						  oc_clock_time_t timestamp;
+						  oc_qos_t qos;
+						  oc_method_t method;
+						} oc_client_cb_t;
 
 bool oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint);
 
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
 				      oc_server_handle_t *server,
 				      oc_method_t method,
-				      void *handler,			
+				      void *handler,
 				      oc_qos_t qos);
 
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri,
 				    oc_server_handle_t *server,
 				    oc_method_t method);
+
+void oc_ri_remove_client_cb_by_mid(uint16_t mid);
 
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload,

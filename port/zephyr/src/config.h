@@ -17,30 +17,33 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* Time resolution */
+#include <stdint.h>
+typedef uint32_t oc_clock_time_t;
+#include <zephyr.h>
+#define OC_CLOCK_CONF_SECOND (sys_clock_ticks_per_sec)
+
+#define OC_BYTES_POOL_SIZE (1024)
+#define OC_INTS_POOL_SIZE (16)
+#define OC_DOUBLES_POOL_SIZE (16)
+
 /* Server-side parameters */
 /* Maximum number of server resources */
-#define MAX_APP_RESOURCES (3)
+#define MAX_APP_RESOURCES (1)
 
 /* Client-side parameters */
 
 /* Common paramters */
 /* Maximum number of concurrent requests */
-#define MAX_NUM_CONCURRENT_REQUESTS (2)
+#define MAX_NUM_CONCURRENT_REQUESTS (3)
 
 #define EST_NUM_REP_OBJECTS (70)
-
-/* Time resolution */
-#include <zephyr.h>
-#define OC_CLOCK_CONF_SECOND (sys_clock_ticks_per_sec)
-
-/* Connectivity */
-#define POLL_NETWORK 1
 
 /* Maximum size of request/response PDUs */
 #define MAX_PAYLOAD_SIZE (512)
 
 /* Number of send/receive buffers */
-#define NUM_TX_RX_BUFFERS MAX_NUM_CONCURRENT_REQUESTS
+#define NUM_TX_RX_BUFFERS (MAX_NUM_CONCURRENT_REQUESTS + 1)
 
 /* Number of devices on the OCF platform */
 #define MAX_NUM_DEVICES (1)
@@ -56,6 +59,6 @@
 
 #define MAX_DTLS_PEERS (1)
 
-#define DTLS_INACTIVITY_TIMEOUT (10)
+#define DTLS_INACTIVITY_TIMEOUT (30)
 
 #endif /* CONFIG_H */

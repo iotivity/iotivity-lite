@@ -15,23 +15,24 @@
  */
 
 #ifdef OC_SECURITY
-
 #include "port/oc_storage.h"
 
 //TODO:
-void oc_storage_config(const char *path)
+void
+oc_storage_config(const char *path)
 {
 
 }
 
-void oc_storage_read(const char *store, uint8_t *buf, size_t *size)
+void
+oc_storage_read(const char *store, uint8_t *buf, size_t *size)
 {
   *size = 0;
 }
 
-void oc_storage_write(const char *store, uint8_t *buf, size_t size)
+void
+oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
 
 }
-
 #endif /* OC_SECURITY */

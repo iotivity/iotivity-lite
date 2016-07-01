@@ -14,10 +14,34 @@
 // limitations under the License.
 */
 
-#ifndef OCAPI_H
-#define OCAPI_H
+#ifndef OC_API_H
+#define OC_API_H
 
 #include "oc_ri.h"
+#include "port/oc_signal_main_loop.h"
+#include "port/oc_storage.h"
+
+typedef struct {
+  void (*init)(void);
+
+#ifdef OC_SECURITY
+  void (*get_credentials)(void);
+#endif /* OC_SECURITY */
+
+#ifdef OC_SERVER
+  void (*register_resources)(void);
+#endif /* OC_SERVER */
+
+#ifdef OC_CLIENT
+  void (*requests_entry)(void);
+#endif /* OC_CLIENT */
+} oc_handler_t;
+
+int oc_main_init(oc_handler_t *handler);
+
+oc_clock_time_t oc_main_poll();
+
+void oc_main_shutdown();
 
 void oc_new_device(const char *uri, const char *rt,
 		   const char *name, const char *spec_version,
@@ -125,7 +149,10 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
 
 /** API for setting handlers for interrupts */
 
-#define oc_signal_interrupt_handler(name) (oc_process_poll(&(name ## _interrupt)))
+#define oc_signal_interrupt_handler(name) do {	\
+    oc_process_poll(&(name ## _interrupt));	\
+    oc_signal_main_loop();			\
+  } while(0)
 
 #define oc_activate_interrupt_handler(name) (oc_process_start(&(name ## _interrupt), 0))
 
@@ -141,4 +168,4 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
     OC_PROCESS_END();							\
   }
 
-#endif /* OCAPI_H */
+#endif /* OC_API_H */

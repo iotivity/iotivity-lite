@@ -18,23 +18,28 @@
 #include <math.h>
 #include <unistd.h>
 #include "port/oc_clock.h"
+#include "port/oc_log.h"
 
-void oc_clock_init(void)
+void
+oc_clock_init()
 {
 
 }
 
-oc_clock_time_t oc_clock_time(void)
+oc_clock_time_t
+oc_clock_time()
 {
   oc_clock_time_t time = 0;
   struct timespec t;
   if(clock_gettime(CLOCK_REALTIME, &t) != -1) {
-    time = (int)(t.tv_sec * 10) + (int)ceil(t.tv_nsec / 1.e08);
+    time = (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
+      (oc_clock_time_t)ceil(t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
   }
   return time;
 }
 
-unsigned long oc_clock_seconds(void)
+unsigned long
+oc_clock_seconds()
 {
   struct timespec t;
   if(clock_gettime(CLOCK_REALTIME, &t) != -1) {
@@ -43,12 +48,8 @@ unsigned long oc_clock_seconds(void)
   return 0;
 }
 
-void oc_clock_wait(oc_clock_time_t t)
+void
+oc_clock_wait(oc_clock_time_t t)
 {
-  usleep(t * 1.e05);
-}
-
-void oc_clock_delay_usec(uint16_t dt)
-{
-  usleep(dt);
+  usleep(t * 1.e03);
 }

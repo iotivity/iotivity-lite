@@ -37,13 +37,13 @@ oc_sec_doxm_default()
   oc_gen_uuid(deviceuuid);
   memcpy(&doxm.deviceuuid, deviceuuid, sizeof(oc_uuid_t));
   memset(doxm.devowneruuid.id, 0, 16);
-  memset(doxm.rowneruuid.id, 0, 16);  
+  memset(doxm.rowneruuid.id, 0, 16);
 }
 
 void
 oc_sec_encode_doxm()
 {
-  int oxms[1] = {0};    
+  int oxms[1] = {0};
   char uuid[37];
   oc_rep_start_root_object();
   oc_rep_set_int_array(root, oxms, oxms, 1);
@@ -70,7 +70,7 @@ get_doxm(oc_request_t *request,
 	 oc_interface_mask_t interface)
 {
   switch (interface) {
-  case OC_IF_BASELINE:   
+  case OC_IF_BASELINE:
   case OC_IF_DEFAULT:
     {
       char *q;
@@ -99,7 +99,7 @@ oc_sec_decode_doxm(oc_rep_t *rep)
       if (strncmp(oc_string(rep->name), "owned", 5) == 0)
 	doxm.owned = rep->value_boolean;
       else if (strncmp(oc_string(rep->name), "dpc", 3) == 0)
-	doxm.dpc = rep->value_boolean;    
+	doxm.dpc = rep->value_boolean;
       break;
     case INT:
       if (strncmp(oc_string(rep->name), "oxmsel", 6) == 0)
@@ -113,17 +113,17 @@ oc_sec_decode_doxm(oc_rep_t *rep)
       else if (strncmp(oc_string(rep->name), "devowneruuid", 12) == 0)
         oc_str_to_uuid(oc_string(rep->value_string), &doxm.devowneruuid);
       else if (strncmp(oc_string(rep->name), "rowneruuid", 10) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm.rowneruuid);	
-      break;      
+        oc_str_to_uuid(oc_string(rep->value_string), &doxm.rowneruuid);
+      break;
     default:
       break;
     }
     rep = rep->next;
-  }  
+  }
 }
 
 void
-put_doxm(oc_request_t *request, oc_interface_mask_t interface)
+post_doxm(oc_request_t *request, oc_interface_mask_t interface)
 {
   oc_sec_decode_doxm(request->request_payload);
   oc_send_response(request, CHANGED);

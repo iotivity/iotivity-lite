@@ -15,7 +15,6 @@
 */
 
 #ifdef OC_SECURITY
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,26 +34,26 @@ void oc_storage_config(const char *store)
 void oc_storage_read(const char *store, uint8_t *buf, size_t *size)
 {
   FILE *fp = 0;
-  if (path_set) {    
+  if (path_set) {
     strncpy(store_path + store_path_len, store, strlen(store));
     strncpy(store_path + store_path_len + strlen(store), (const char*)"", 1);
     fp = fopen(store_path, "rb");
   }
-  if (fp) {    
-    int read_size;    
+  if (fp) {
+    int read_size;
     read_size = fread(buf, 1, *size, fp);
 
     *size = read_size;
     fclose(fp);
   }
   else
-    *size = 0;  
+    *size = 0;
 }
 
 void oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
-  if (path_set) {    
+  if (path_set) {
     strncpy(store_path + store_path_len, store, strlen(store));
     strncpy(store_path + store_path_len + strlen(store), (const char*)"", 1);
     fp = fopen(store_path, "wb");
@@ -64,5 +63,4 @@ void oc_storage_write(const char *store, uint8_t *buf, size_t size)
     fclose(fp);
   }
 }
-
-#endif
+#endif /* OC_SECURITY */

@@ -46,8 +46,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef ER_COAP_H_
-#define ER_COAP_H_
+#ifndef COAP_H
+#define COAP_H
 
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
@@ -165,27 +165,27 @@ typedef struct {
 	coap_pkt->field[5],						\
 	coap_pkt->field[6],						\
 	coap_pkt->field[7]						\
-	); /* FIXME always prints 8 bytes */				\
+       ); /* FIXME always prints 8 bytes */				\
     option += coap_serialize_array_option(number, current_number, option, coap_pkt->field, coap_pkt->field##_len, '\0'); \
     current_number = number;						\
   }
 #define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text)	\
   if(IS_OPTION(coap_pkt, number)) {					\
-				   LOG(text " [%.*s]\n", (int)coap_pkt->field##_len, coap_pkt->field); \
-				   option += coap_serialize_array_option(number, current_number, option, (uint8_t *)coap_pkt->field, coap_pkt->field##_len, splitter); \
-				   current_number = number;		\
-				   }
+    LOG(text " [%.*s]\n", (int)coap_pkt->field##_len, coap_pkt->field); \
+    option += coap_serialize_array_option(number, current_number, option, (uint8_t *)coap_pkt->field, coap_pkt->field##_len, splitter); \
+    current_number = number;						\
+  }
 #define COAP_SERIALIZE_BLOCK_OPTION(number, field, text)		\
   if(IS_OPTION(coap_pkt, number))					\
     {									\
-     LOG(text " [%lu%s (%u B/blk)]\n", (unsigned long)coap_pkt->field##_num, coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size); \
-     uint32_t block = coap_pkt->field##_num << 4;			\
-     if(coap_pkt->field##_more) { block |= 0x8; }			\
-     block |= 0xF & coap_log_2(coap_pkt->field##_size / 16);		\
-     LOG(text " encoded: 0x%lX\n", (unsigned long)block);		\
-     option += coap_serialize_int_option(number, current_number, option, block); \
-     current_number = number;						\
-     }
+      LOG(text " [%lu%s (%u B/blk)]\n", (unsigned long)coap_pkt->field##_num, coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size); \
+      uint32_t block = coap_pkt->field##_num << 4;			\
+      if(coap_pkt->field##_more) { block |= 0x8; }			\
+      block |= 0xF & coap_log_2(coap_pkt->field##_size / 16);		\
+      LOG(text " encoded: 0x%lX\n", (unsigned long)block);		\
+      option += coap_serialize_int_option(number, current_number, option, block); \
+      current_number = number;						\
+    }
 
 /* to store error code and human-readable payload */
 extern coap_status_t erbium_status_code;
@@ -271,4 +271,4 @@ int coap_set_header_size1(void *packet, uint32_t size);
 int coap_get_payload(void *packet, const uint8_t **payload);
 int coap_set_payload(void *packet, const void *payload, size_t length);
 
-#endif /* ER_COAP_H_ */
+#endif /* COAP_H */

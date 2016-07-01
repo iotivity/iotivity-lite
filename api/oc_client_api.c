@@ -19,7 +19,8 @@
 #include "messaging/coap/transactions.h"
 
 #ifdef OC_CLIENT
-#define DISCOVERY_CB_TIMEOUT_SECS (30)
+#define OC_CLIENT_CB_TIMEOUT_SECS COAP_RESPONSE_TIMEOUT
+
 static oc_message_t *message;
 static coap_transaction_t *transaction;
 coap_packet_t request[1];
@@ -61,9 +62,9 @@ dispatch_coap_request()
 static bool
 prepare_coap_request(oc_client_cb_t *cb,
 		     oc_string_t *query)
-{  
+{
   coap_message_type_t type = COAP_TYPE_NON;
-  
+
   if (cb->qos == HIGH_QOS) {
     type = COAP_TYPE_CON;
     transaction = coap_new_transaction(cb->mid, &cb->server.endpoint);
@@ -78,22 +79,30 @@ prepare_coap_request(oc_client_cb_t *cb,
     memcpy(&message->endpoint, &cb->server.endpoint, sizeof(oc_endpoint_t));
     oc_rep_new(message->data + COAP_MAX_HEADER_SIZE, COAP_MAX_BLOCK_SIZE);
   }
-    
+
   coap_init_message(request, type, cb->method, cb->mid);
 
   coap_set_header_accept(request, APPLICATION_CBOR);
-  
-  coap_set_token(request, cb->token, cb->token_len);  
+
+  coap_set_token(request, cb->token, cb->token_len);
 
   coap_set_header_uri_path(request, oc_string(cb->uri));
 
   if (cb->observe_seq != -1)
     coap_set_header_observe(request, cb->observe_seq);
-  
-  if (query && oc_string_len(*query)) 
+
+  if (query && oc_string_len(*query))
     coap_set_header_uri_query(request, oc_string(*query));
-  
-  return true;  
+
+  if (cb->observe_seq == -1 && cb->qos == LOW_QOS) {
+    extern oc_event_callback_retval_t oc_ri_remove_client_cb(void* data);
+
+    oc_set_delayed_callback(cb,
+			    &oc_ri_remove_client_cb,
+			    OC_CLIENT_CB_TIMEOUT_SECS);
+  }
+
+  return true;
 }
 
 bool
@@ -111,7 +120,7 @@ oc_do_delete(const char *uri,
     return false;
 
   bool status = false;
-  
+
   status = prepare_coap_request(cb,
 				NULL);
 
@@ -137,7 +146,7 @@ oc_do_get(const char *uri,
     return false;
 
   bool status = false;
-  
+
   if (query && strlen(query)) {
     oc_string_t q;
     oc_concat_strings(&q, "?", query);
@@ -172,7 +181,7 @@ oc_init_put(const char *uri,
     return false;
 
   bool status = false;
-  
+
   if (query && strlen(query)) {
     oc_string_t q;
     oc_concat_strings(&q, "?", query);
@@ -184,7 +193,7 @@ oc_init_put(const char *uri,
     status = prepare_coap_request(cb,
 				  NULL);
   }
-  
+
   return status;
 }
 
@@ -202,9 +211,9 @@ oc_init_post(const char *uri,
 					     qos);
   if (!cb)
     return false;
-  
+
   bool status = false;
-  
+
   if (query && strlen(query)) {
     oc_string_t q;
     oc_concat_strings(&q, "?", query);
@@ -216,7 +225,7 @@ oc_init_post(const char *uri,
     status = prepare_coap_request(cb,
 				  NULL);
   }
-  
+
   return status;
 }
 
@@ -248,9 +257,9 @@ oc_do_observe(const char *uri,
     return false;
 
   cb->observe_seq = 0;
-  
+
   bool status = false;
-  
+
   if (query && strlen(query)) {
     oc_string_t q;
     oc_concat_strings(&q, "?", query);
@@ -262,10 +271,10 @@ oc_do_observe(const char *uri,
     status = prepare_coap_request(cb,
 				  NULL);
   }
-    
+
   if (status)
     status = dispatch_coap_request();
-  
+
   return status;
 }
 
@@ -281,15 +290,15 @@ oc_stop_observe(const char *uri,
     return false;
 
   cb->observe_seq = 1;
-  
+
   bool status = false;
-  
+
   status = prepare_coap_request(cb,
 				NULL);
-  
+
   if (status)
     status = dispatch_coap_request();
-  
+
   return status;
 }
 
@@ -299,44 +308,37 @@ oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler)
   oc_make_ip_endpoint(mcast, IP | MULTICAST, 5683, 0xff, 0x02, 0, 0, 0,
 		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xfd);
   mcast.ipv6_addr.scope = 0;
-  
+
   oc_server_handle_t handle;
   memcpy(&handle.endpoint, &mcast, sizeof(oc_endpoint_t));
-  
+
   oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res",
 					     &handle,
 					     OC_GET,
 					     handler,
 					     LOW_QOS);
-  
+
   if (!cb)
     return false;
-  
+
   cb->discovery = true;
 
   bool status = false;
-  
+
   oc_string_t query;
-  
+
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&query, "if=oic.if.ll&rt=", rt);
   }
   else {
     oc_new_string(&query, "if=oic.if.ll");
-  }  
+  }
   status = prepare_coap_request(cb, &query);
   oc_free_string(&query);
-  
+
   if (status)
-    status = dispatch_coap_request();  
+    status = dispatch_coap_request();
 
-  extern oc_event_callback_retval_t oc_ri_stop_discovery_cb(void* data);
-
-  oc_set_delayed_callback(cb,
-			  &oc_ri_stop_discovery_cb,
-			  DISCOVERY_CB_TIMEOUT_SECS); 
-  
   return status;
 }
-
 #endif /* OC_CLIENT */

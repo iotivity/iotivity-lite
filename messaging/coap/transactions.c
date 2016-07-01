@@ -52,6 +52,10 @@
 #include "observe.h"
 #include "oc_buffer.h"
 
+#ifdef OC_CLIENT
+#include "oc_client_state.h"
+#endif /* OC_CLIENT */
+
 #ifdef OC_SECURITY
 #include "security/oc_dtls.h"
 #endif
@@ -121,13 +125,9 @@ void coap_send_transaction(coap_transaction_t *t)
 	     % (oc_clock_time_t)
 	     COAP_RESPONSE_TIMEOUT_BACKOFF_MASK );
 	LOG("Initial interval %d\n", t->retrans_timer.timer.interval);
-	//	LOG("Initial interval %d\n",
-	//  (float)t->retrans_timer.timer.interval / OC_CLOCK_SECOND);
       } else {
 	t->retrans_timer.timer.interval <<= 1; /* double */
 	LOG("Doubled %d\n", t->retrans_timer.timer.interval);
-	//	LOG("Doubled (%u) interval %f\n", t->retrans_counter,
-	//  (float)t->retrans_timer.timer.interval / OC_CLOCK_SECOND);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
@@ -147,13 +147,18 @@ void coap_send_transaction(coap_transaction_t *t)
       LOG("timeout.. so removing observers\n");
       /* handle observers */
       coap_remove_observer_by_client(&t->message->endpoint);
-#endif
+#endif /* OC_SERVER */
 
 #ifdef OC_SECURITY
-      if (t->message->endpoint.flags & SECURED) { //fix
+      if (t->message->endpoint.flags & SECURED) {
 	oc_sec_dtls_close_init(&t->message->endpoint);
       }
-#endif
+#endif /* OC_SECURITY */
+
+#ifdef OC_CLIENT
+      oc_ri_remove_client_cb_by_mid(t->mid);
+#endif /* OC_CLIENT */
+
       coap_clear_transaction(t);
     }
   } else {

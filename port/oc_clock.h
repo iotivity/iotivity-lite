@@ -45,23 +45,21 @@
  *
  */
 
-#ifndef CLOCK_H_
-#define CLOCK_H_
+#ifndef OC_CLOCK_H
+#define OC_CLOCK_H
 
 #include <stdint.h>
 #include "config.h"
-
-typedef uint32_t oc_clock_time_t;
 
 /**
  * A second, measured in system clock time.
  *
  * \hideinitializer
  */
-#ifdef OC_CLOCK_CONF_SECOND
-#define OC_CLOCK_SECOND OC_CLOCK_CONF_SECOND
+#ifndef OC_CLOCK_CONF_SECOND
+#error "Please define OC_CLOCK_CONF_SECOND in config.h"
 #else
-#define OC_CLOCK_SECOND (oc_clock_time_t)100
+#define OC_CLOCK_SECOND OC_CLOCK_CONF_SECOND
 #endif
 
 /**
@@ -99,12 +97,4 @@ unsigned long oc_clock_seconds(void);
  */
 void oc_clock_wait(oc_clock_time_t t);
 
-/**
- * Delay a given number of microseconds.
- * \param dt   How many microseconds to delay.
- *
- * \note Interrupts could increase the delay by a variable amount.
- */
-void oc_clock_delay_usec(uint16_t dt);
-
-#endif /* CLOCK_H_ */
+#endif /* OC_CLOCK_H */
