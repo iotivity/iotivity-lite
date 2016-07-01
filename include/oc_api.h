@@ -126,16 +126,16 @@ bool oc_init_put(const char *uri,
 bool oc_do_put();
 
 bool oc_init_post(const char *uri,
-		 oc_server_handle_t *server,
-		 const char *query,		  
-		 oc_response_handler_t handler,
-		 oc_qos_t qos);
+		  oc_server_handle_t *server,
+		  const char *query,
+		  oc_response_handler_t handler,
+		  oc_qos_t qos);
 
 bool oc_do_post();
 
 bool oc_do_observe(const char *uri,
 		   oc_server_handle_t *server,
-		   const char *query,		   
+		   const char *query,
 		   oc_response_handler_t handler,
 		   oc_qos_t qos);
 
@@ -156,16 +156,16 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
 
 #define oc_activate_interrupt_handler(name) (oc_process_start(&(name ## _interrupt), 0))
 
-#define oc_set_interrupt_handler(name, handler)				\
-  OC_PROCESS(name ## _interrupt, "");					\
-  OC_PROCESS_THREAD(name ## _interrupt, ev, data)			\
-  {									\
-    OC_PROCESS_POLLHANDLER(handler());					\
-    OC_PROCESS_BEGIN();							\
-    while (oc_process_is_running(&(name ## _interrupt))) {		\
-      OC_PROCESS_YIELD();						\
-    }									\
-    OC_PROCESS_END();							\
+#define oc_set_interrupt_handler(name, handler)			\
+  OC_PROCESS(name ## _interrupt, "");				\
+  OC_PROCESS_THREAD(name ## _interrupt, ev, data)		\
+  {								\
+    OC_PROCESS_POLLHANDLER(handler());				\
+    OC_PROCESS_BEGIN();						\
+    while (oc_process_is_running(&(name ## _interrupt))) {	\
+      OC_PROCESS_YIELD();					\
+    }								\
+    OC_PROCESS_END();						\
   }
 
 #endif /* OC_API_H */

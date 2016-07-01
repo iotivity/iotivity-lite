@@ -146,10 +146,10 @@ void oc_ri_shutdown();
 
 void oc_ri_add_timed_event_callback_ticks(void *cb_data,
 					  oc_trigger_t event_callback,
-					  uint16_t ticks);
+					  oc_clock_time_t ticks);
 
 #define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback, seconds) do { \
-    oc_ri_add_timed_event_callback_ticks(cb_data,  event_callback, seconds * OC_CLOCK_SECOND); \
+    oc_ri_add_timed_event_callback_ticks(cb_data,  event_callback, (oc_clock_time_t)(seconds * OC_CLOCK_SECOND)); \
   } while(0)
 
 int oc_status_code(oc_status_t key);
