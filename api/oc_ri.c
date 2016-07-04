@@ -863,7 +863,7 @@ oc_ri_process_discovery_payload(uint8_t *payload,
   di.ptr = 0;
   bool secure = false;
   uint16_t dtls_port = 0, default_port = endpoint->ipv6_addr.port;
-  oc_string_array_t types;
+  oc_string_array_t types = { };
   oc_interface_mask_t interfaces = 0;
   oc_server_handle_t handle;
   memcpy(&handle.endpoint, endpoint, sizeof(oc_endpoint_t));
