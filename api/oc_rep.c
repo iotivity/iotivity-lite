@@ -35,7 +35,7 @@ oc_rep_new(uint8_t *out_payload, int size)
 }
 
 int
-oc_rep_finalize()
+oc_rep_finalize(void)
 {
   int size = g_encoder.ptr - g_buf;
   oc_rep_reset();
@@ -45,13 +45,13 @@ oc_rep_finalize()
 }
 
 void
-oc_rep_reset()
+oc_rep_reset(void)
 {
   g_encoder = g_empty;
 }
 
 static oc_rep_t *
-_alloc_rep()
+_alloc_rep(void)
 {
   oc_rep_t *rep = oc_memb_alloc(&rep_objects);
 #ifdef DEBUG   

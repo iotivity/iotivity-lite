@@ -88,7 +88,7 @@ oc_core_device_handler(oc_request_t *request,
 }
 
 int
-oc_core_get_num_devices()
+oc_core_get_num_devices(void)
 {
   return device_count;
 }

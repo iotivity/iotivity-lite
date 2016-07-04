@@ -30,7 +30,7 @@ oc_random_rand(void)
 }
 
 void
-oc_random_destroy()
+oc_random_destroy(void)
 {
 
 }

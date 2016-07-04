@@ -24,7 +24,7 @@
 #include "port/oc_storage.h"
 
 void
-oc_sec_load_doxm()
+oc_sec_load_doxm(void)
 {
   size_t size = 512;
   uint8_t buf[size];
@@ -46,7 +46,7 @@ oc_sec_load_doxm()
 }
 
 void
-oc_sec_load_pstat()
+oc_sec_load_pstat(void)
 {
   size_t size = 512;
   uint8_t buf[size];
@@ -64,7 +64,7 @@ oc_sec_load_pstat()
 }
 
 void
-oc_sec_load_cred()
+oc_sec_load_cred(void)
 {
   size_t size = 1024;
   uint8_t buf[size];
@@ -79,7 +79,7 @@ oc_sec_load_cred()
 }
 
 void
-oc_sec_load_acl()
+oc_sec_load_acl(void)
 {
   size_t size = 1024;
   uint8_t buf[size];
@@ -99,7 +99,7 @@ oc_sec_load_acl()
 }
 
 void
-oc_sec_dump_state()
+oc_sec_dump_state(void)
 {
   uint8_t buf[1024];
 

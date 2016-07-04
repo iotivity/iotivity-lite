@@ -59,7 +59,7 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
 }
 
 void
-oc_sec_encode_acl()
+oc_sec_encode_acl(void)
 {
   int i, n;
   char uuid[37];
@@ -194,13 +194,13 @@ oc_sec_update_acl(oc_uuid_t *subjectuuid,
 }
 
 void
-oc_sec_acl_init()
+oc_sec_acl_init(void)
 {
   OC_LIST_STRUCT_INIT(&ac_list, subjects);  
 }
 
 void
-oc_sec_acl_default()
+oc_sec_acl_default(void)
 {
   bool success = true;
   int i;

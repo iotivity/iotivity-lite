@@ -70,26 +70,26 @@ net_buf_to_oc_message(struct net_buf *buf)
 static struct nano_sem sem;
 
 void
-oc_network_event_handler_mutex_init()
+oc_network_event_handler_mutex_init(void)
 {
   nano_sem_init(&sem);
   nano_sem_give(&sem);
 }
 
 void
-oc_network_event_handler_mutex_lock()
+oc_network_event_handler_mutex_lock(void)
 {
   nano_sem_take(&sem, TICKS_UNLIMITED);
 }
 
 void
-oc_network_event_handler_mutex_unlock()
+oc_network_event_handler_mutex_unlock(void)
 {
   nano_sem_give(&sem);
 }
 
 void
-multicast_recv()
+multicast_recv(void)
 {
   static struct net_buf *buf;
   while (!terminate) {
@@ -102,7 +102,7 @@ multicast_recv()
 }
 
 void
-server_recv()
+server_recv(void)
 {
   static struct net_buf *buf;
   while (!terminate) {
@@ -152,7 +152,7 @@ oc_send_buffer(oc_message_t * message)
 }
 
 int
-oc_connectivity_init()
+oc_connectivity_init(void)
 {
   net_init();
 
@@ -175,7 +175,7 @@ oc_connectivity_init()
 }
 
 void
-oc_connectivity_shutdown()
+oc_connectivity_shutdown(void)
 {
   terminate = 1;
   net_context_put(recv_ctx);
@@ -190,7 +190,7 @@ oc_send_multicast_message(oc_message_t *message)
 
 //TODO:
 uint16_t
-oc_connectivity_get_dtls_port()
+oc_connectivity_get_dtls_port(void)
 {
   return 0;
 }

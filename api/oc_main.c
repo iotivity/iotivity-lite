@@ -82,7 +82,7 @@ oc_main_init(oc_handler_t *handler)
 }
 
 oc_clock_time_t
-oc_main_poll()
+oc_main_poll(void)
 {
   oc_clock_time_t ticks_until_next_event = oc_etimer_request_poll();
   while (oc_process_run()) {
@@ -92,7 +92,7 @@ oc_main_poll()
 }
 
 void
-oc_main_shutdown()
+oc_main_shutdown(void)
 {
   oc_connectivity_shutdown();
   oc_ri_shutdown();

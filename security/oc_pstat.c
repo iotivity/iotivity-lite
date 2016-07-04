@@ -23,19 +23,19 @@
 static oc_sec_pstat_t pstat;
 
 oc_sec_pstat_t *
-oc_sec_get_pstat()
+oc_sec_get_pstat(void)
 {
   return &pstat;
 }
 
 bool
-oc_sec_provisioned()
+oc_sec_provisioned(void)
 {
   return pstat.isop;
 }
 
 void
-oc_sec_pstat_default()
+oc_sec_pstat_default(void)
 {
   pstat.isop = false;
   pstat.cm = 2;
@@ -45,7 +45,7 @@ oc_sec_pstat_default()
 }
 
 void
-oc_sec_encode_pstat()
+oc_sec_encode_pstat(void)
 {
   char uuid[37];
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
