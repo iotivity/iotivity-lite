@@ -21,13 +21,13 @@
 #include "port/oc_log.h"
 
 void
-oc_clock_init()
+oc_clock_init(void)
 {
 
 }
 
 oc_clock_time_t
-oc_clock_time()
+oc_clock_time(void)
 {
   oc_clock_time_t time = 0;
   struct timespec t;
@@ -39,7 +39,7 @@ oc_clock_time()
 }
 
 unsigned long
-oc_clock_seconds()
+oc_clock_seconds(void)
 {
   struct timespec t;
   if(clock_gettime(CLOCK_REALTIME, &t) != -1) {

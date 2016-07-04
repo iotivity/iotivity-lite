@@ -32,7 +32,7 @@ OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
 OC_MEMB(oc_buffers_s, oc_message_t, NUM_TX_RX_BUFFERS);
 
 oc_message_t *
-oc_allocate_message()
+oc_allocate_message(void)
 {
   oc_message_t *message = (oc_message_t*)oc_memb_alloc(&oc_buffers_s);
   if (message) {

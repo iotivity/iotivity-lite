@@ -26,7 +26,7 @@ static coap_transaction_t *transaction;
 coap_packet_t request[1];
 
 static bool
-dispatch_coap_request()
+dispatch_coap_request(void)
 {
   int response_length = oc_rep_finalize();
   if (!transaction) {
@@ -230,13 +230,13 @@ oc_init_post(const char *uri,
 }
 
 bool
-oc_do_put()
+oc_do_put(void)
 {
   return dispatch_coap_request();
 }
 
 bool
-oc_do_post()
+oc_do_post(void)
 {
   return dispatch_coap_request();
 }

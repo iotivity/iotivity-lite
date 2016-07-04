@@ -47,14 +47,14 @@ int secure_sock = -1;
 uint16_t dtls_port = 0;
 
 uint16_t
-oc_connectivity_get_dtls_port()
+oc_connectivity_get_dtls_port(void)
 {
   return dtls_port;
 }
 #endif /* OC_SECURITY */
 
 void
-oc_network_event_handler_mutex_init()
+oc_network_event_handler_mutex_init(void)
 {
   if (pthread_mutex_init(&mutex, NULL) != 0) {
     LOG("ERROR initializing network event handler mutex\n");
@@ -62,19 +62,19 @@ oc_network_event_handler_mutex_init()
 }
 
 void
-oc_network_event_handler_mutex_lock()
+oc_network_event_handler_mutex_lock(void)
 {
   pthread_mutex_lock(&mutex);
 }
 
 void
-oc_network_event_handler_mutex_unlock()
+oc_network_event_handler_mutex_unlock(void)
 {
   pthread_mutex_unlock(&mutex);
 }
 
 void *
-network_event_thread()
+network_event_thread(void)
 {
   struct sockaddr_in6 *c = (struct sockaddr_in6*)&client;
   size_t len = sizeof(client);
@@ -223,7 +223,7 @@ oc_send_multicast_message(oc_message_t *message)
 #endif /* OC_CLIENT */
 
 int
-oc_connectivity_init()
+oc_connectivity_init(void)
 {
   memset(&mcast, 0, sizeof(struct sockaddr_storage));
   memset(&server, 0, sizeof(struct sockaddr_storage));
@@ -325,7 +325,7 @@ oc_connectivity_init()
 }
 
 void
-oc_connectivity_shutdown()
+oc_connectivity_shutdown(void)
 {
   terminate = 1;
 

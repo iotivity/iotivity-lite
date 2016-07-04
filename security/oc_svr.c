@@ -31,7 +31,7 @@
 
 /* check resource properties */
 void
-oc_sec_create_svr()
+oc_sec_create_svr(void)
 {
   oc_core_populate_resource(OCF_SEC_DOXM, "/oic/sec/doxm", "oic.sec.doxm",
 			    OC_IF_BASELINE,

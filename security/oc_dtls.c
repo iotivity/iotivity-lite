@@ -328,7 +328,7 @@ oc_sec_dtls_recv_message(oc_message_t *message)
 /* Fetch persisted SVR from app by this time */
 
 void
-oc_sec_dtls_init_context() {
+oc_sec_dtls_init_context(void) {
   dtls_init();
   ocf_dtls_context = dtls_new_context(NULL);
 

@@ -23,7 +23,7 @@
 OC_LIST(network_events);
 
 static void
-oc_process_network_event()
+oc_process_network_event(void)
 {
   oc_network_event_handler_mutex_lock();
   oc_message_t *head = (oc_message_t *)oc_list_pop(network_events);
