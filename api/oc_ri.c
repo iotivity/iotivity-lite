@@ -482,7 +482,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
     char *iface;
     int if_len = oc_ri_get_query_value(uri_query, uri_query_len,
 				       "if", &iface);
-    if (if_len) {
+    if (if_len != -1) {
       interface |= get_interface_mask(iface, if_len);
     }
   }
