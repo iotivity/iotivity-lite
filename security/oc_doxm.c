@@ -27,7 +27,7 @@ static oc_sec_doxm_t doxm;
 //Fix.. multiple devices.. how many doxms, when we retrieve
 //credentials, how do we correlate between creds and devices?
 void
-oc_sec_doxm_default()
+oc_sec_doxm_default(void)
 {
   doxm.oxmsel = 0;
   doxm.sct = 1;
@@ -41,7 +41,7 @@ oc_sec_doxm_default()
 }
 
 void
-oc_sec_encode_doxm()
+oc_sec_encode_doxm(void)
 {
   int oxms[1] = {0};
   char uuid[37];
@@ -60,7 +60,7 @@ oc_sec_encode_doxm()
 }
 
 oc_sec_doxm_t *
-oc_sec_get_doxm()
+oc_sec_get_doxm(void)
 {
   return &doxm;
 }

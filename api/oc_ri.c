@@ -64,7 +64,7 @@ int oc_stack_errno;
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__ ];
 
 static void
-set_mpro_status_codes()
+set_mpro_status_codes(void)
 {
   /* OK_200 */
   oc_coap_status_codes[OK] = CONTENT_2_05;
@@ -114,7 +114,7 @@ set_mpro_status_codes()
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resources()
+oc_ri_get_app_resources(void)
 {
   return oc_list_head(app_resources);
 }
@@ -183,7 +183,7 @@ oc_ri_get_query_value(const char *query, int query_len,
 }
 
 static void
-allocate_events()
+allocate_events(void)
 {
   int i = 0;
   for(i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
@@ -192,7 +192,7 @@ allocate_events()
 }
 
 static void
-start_processes()
+start_processes(void)
 {
   allocate_events();
   oc_process_start(&oc_etimer_process, NULL);
@@ -208,7 +208,7 @@ start_processes()
 }
 
 static void
-stop_processes()
+stop_processes(void)
 {
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&timed_callback_events);
@@ -237,7 +237,7 @@ oc_ri_get_app_resource_by_uri(const char *uri)
 #endif
 
 void
-oc_ri_init()
+oc_ri_init(void)
 {
   oc_random_init(0); //Fix: allow user to seed RNG.
   oc_clock_init();
@@ -258,7 +258,7 @@ oc_ri_init()
 }
 
 void
-oc_ri_shutdown()
+oc_ri_shutdown(void)
 {
   oc_random_destroy();
   stop_processes();
@@ -266,7 +266,7 @@ oc_ri_shutdown()
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_alloc_resource()
+oc_ri_alloc_resource(void)
 {
   return oc_memb_alloc(&app_resources_s);
 }
@@ -359,7 +359,7 @@ poll_event_callback_timers(oc_list_t list,
 }
 
 static void
-check_event_callbacks()
+check_event_callbacks(void)
 {
 #ifdef OC_SERVER
   poll_event_callback_timers(observe_callbacks, &event_callbacks_s);

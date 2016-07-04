@@ -42,7 +42,7 @@ oc_new_device(const char *uri, const char *rt,
 }
 
 void
-oc_add_device()
+oc_add_device(void)
 {
   if (oc_stack_errno)
     return;
@@ -67,7 +67,7 @@ oc_new_platform(const char *mfg_name)
 }
 
 void
-oc_add_platform()
+oc_add_platform(void)
 {
    oc_add_device();
 }
@@ -80,7 +80,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 }
 
 static int
-response_length()
+response_length(void)
 {
   int size = oc_rep_finalize();
   return (size <= 2)?0:size;

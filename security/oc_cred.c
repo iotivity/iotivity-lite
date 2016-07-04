@@ -54,7 +54,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid) {
 }
 
 void
-oc_sec_encode_cred()
+oc_sec_encode_cred(void)
 {
   oc_sec_cred_t *creds = oc_list_head(creds_l);
   char uuid[37];

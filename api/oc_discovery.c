@@ -176,7 +176,7 @@ oc_core_discovery_handler(oc_request_t *request,
 }
 
 void
-oc_create_discovery_resource()
+oc_create_discovery_resource(void)
 {
   oc_core_populate_resource(OCF_RES, "/oic/res", "oic.wk.res",
 			    OC_IF_LL | OC_IF_BASELINE,

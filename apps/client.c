@@ -116,7 +116,7 @@ discovery(const char *di,
 }
 
 void
-issue_requests()
+issue_requests(void)
 {
   oc_do_ip_discovery("oic.r.light", &discovery);
 }
@@ -131,13 +131,13 @@ issue_requests()
 static struct nano_sem block;
 
 void
-oc_signal_main_loop()
+oc_signal_main_loop(void)
 {
   nano_sem_give(&block);
 }
 
 void
-main()
+main(void)
 {
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
@@ -178,7 +178,7 @@ struct timespec ts;
 int quit = 0;
 
 void
-oc_signal_main_loop()
+oc_signal_main_loop(void)
 {
   pthread_cond_signal(&cv);
 }
@@ -191,7 +191,7 @@ handle_signal(int signal)
 }
 
 int
-main()
+main(void)
 {
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
