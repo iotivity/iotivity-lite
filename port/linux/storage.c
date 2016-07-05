@@ -20,44 +20,62 @@
 #include <string.h>
 #include "port/oc_storage.h"
 
-char store_path[64];
+#define STORE_PATH_SIZE 64
+
+char store_path[STORE_PATH_SIZE];
 int store_path_len;
 bool path_set = false;
 
-void oc_storage_config(const char *store)
+void
+oc_storage_config(const char *store)
 {
   store_path_len = strlen(store);
+  if (store_path_len >= STORE_PATH_SIZE)
+    return;
+
   strncpy(store_path, store, store_path_len);
   path_set = true;
 }
 
-void oc_storage_read(const char *store, uint8_t *buf, size_t *size)
+void
+oc_storage_read(const char *store, uint8_t *buf, size_t *size)
 {
   FILE *fp = 0;
-  if (path_set) {
-    strncpy(store_path + store_path_len, store, strlen(store));
-    strncpy(store_path + store_path_len + strlen(store), (const char*)"", 1);
-    fp = fopen(store_path, "rb");
-  }
+  size_t store_len = strlen(store);
+
+  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+    goto err;
+
+  strncpy(store_path + store_path_len, store, store_len);
+  store_path[store_path_len + store_len] = '\0';
+  fp = fopen(store_path, "rb");
+
   if (fp) {
-    int read_size;
+    size_t read_size;
     read_size = fread(buf, 1, *size, fp);
 
     *size = read_size;
     fclose(fp);
+    return;
   }
-  else
-    *size = 0;
+
+err:
+  *size = 0;
 }
 
-void oc_storage_write(const char *store, uint8_t *buf, size_t size)
+void
+oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
-  FILE *fp = 0;
-  if (path_set) {
-    strncpy(store_path + store_path_len, store, strlen(store));
-    strncpy(store_path + store_path_len + strlen(store), (const char*)"", 1);
-    fp = fopen(store_path, "wb");
-  }
+  FILE *fp;
+  size_t store_len = strlen(store);
+
+  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+    return;
+
+  strncpy(store_path + store_path_len, store, store_len);
+  store_path[store_path_len + store_len] = '\0';
+  fp = fopen(store_path, "wb");
+
   if (fp) {
     fwrite(buf, 1, size, fp);
     fclose(fp);
