@@ -30,7 +30,6 @@ struct oc_device_info_t {
 } oc_device_info[MAX_NUM_DEVICES];
 static int device_count;
 static oc_string_t oc_platform_payload;
-oc_string_t temp_buffer;
 
 void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
@@ -96,16 +95,35 @@ oc_core_get_num_devices(void)
   return device_count;
 }
 
+static int
+finalize_payload(oc_string_t *temp_buffer, oc_string_t *payload)
+{
+  oc_rep_end_root_object();
+  int size = oc_rep_finalize();
+  if (size != -1) {
+    oc_alloc_string(payload, size);
+    memcpy(oc_cast(*payload, uint8_t), oc_cast(*temp_buffer, uint8_t), size);
+    oc_free_string(temp_buffer);
+    return 1;
+  }
+
+  oc_free_string(temp_buffer);
+  return -1;
+}
+
 oc_string_t *
 oc_core_add_new_device(const char *uri,
-		       const char *rt,
-		       const char *name,
-		       const char *spec_version,
-		       const char *data_model_version)
+                       const char *rt,
+                       const char *name,
+                       const char *spec_version,
+                       const char *data_model_version,
+                       oc_core_add_device_cb_t add_device_cb,
+                       void *data)
 {
   if (device_count == MAX_NUM_DEVICES)
     return false;
 
+  oc_string_t temp_buffer;
   /* Once provisioned, UUID is retrieved from the credential store.
      If not yet provisioned, a default is generated in the security
      layer.
@@ -144,9 +162,12 @@ oc_core_add_new_device(const char *uri,
   oc_rep_set_text_string(root, icv, spec_version);
   oc_rep_set_text_string(root, dmv, data_model_version);
 
-  device_count++;
+  if (add_device_cb)
+    add_device_cb(data);
+  if (!finalize_payload(&temp_buffer, &oc_device_info[device_count].payload))
+      return NULL;
 
-  return &oc_device_info[device_count - 1].payload;
+  return &oc_device_info[device_count++].payload;
 }
 
 void
@@ -178,11 +199,13 @@ oc_core_platform_handler(oc_request_t *request,
 }
 
 oc_string_t *
-oc_core_add_new_platform(const char *mfg_name)
+oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
+                      void *data)
 {
   if (oc_platform_payload.size > 0)
     return NULL;
 
+  oc_string_t temp_buffer;
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, OC_RSRVD_PLATFORM_URI, "oic.wk.p",
 			    OC_IF_R | OC_IF_BASELINE,
@@ -207,6 +230,12 @@ oc_core_add_new_platform(const char *mfg_name)
   oc_uuid_to_str(&uuid, uuid_str, 37);
   oc_rep_set_text_string(root, pi, uuid_str);
   oc_rep_set_text_string(root, mnmn, mfg_name);
+
+  if (init_cb)
+      init_cb(data);
+
+  if (!finalize_payload(&temp_buffer, &oc_platform_payload))
+      return NULL;
 
   return &oc_platform_payload;
 }
