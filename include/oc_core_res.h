@@ -19,13 +19,20 @@
 
 #include "oc_ri.h"
 
-oc_string_t * oc_core_add_new_platform(const char *mfg_name);
+typedef void (*oc_core_init_platform_cb_t)(void *data);
+typedef void (*oc_core_add_device_cb_t)(void *data);
+
+oc_string_t * oc_core_init_platform(const char *mfg_name,
+                                    oc_core_init_platform_cb_t init_cb,
+                                    void *data);
 
 oc_string_t * oc_core_add_new_device(const char *uri,
-				     const char *rt,
-				     const char *name,
-				     const char *spec_version,
-				     const char *data_model_version);
+                                     const char *rt,
+                                     const char *name,
+                                     const char *spec_version,
+                                     const char *data_model_version,
+                                     oc_core_add_device_cb_t add_device_cb,
+                                     void *data);
 
 int oc_core_get_num_devices(void);
 

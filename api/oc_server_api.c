@@ -21,8 +21,6 @@
 #include "oc_api.h"
 #include "oc_constants.h"
 
-static oc_string_t *payload;
-
 extern int oc_stack_errno;
 //TODO:
 //0x01: Couldnt add platform
@@ -30,46 +28,27 @@ extern int oc_stack_errno;
 //0x03: CBOR error
 
 void
-oc_new_device(const char *uri, const char *rt,
-	      const char *name, const char *spec_version,
-	      const char *data_model_version)
+oc_add_device(const char *uri, const char *rt,
+              const char *name, const char *spec_version,
+              const char *data_model_version, oc_add_device_cb_t add_device_cb,
+              void *data)
 {
-  payload = oc_core_add_new_device(uri, rt, name,
-				   spec_version,
-				   data_model_version);
+  oc_string_t *payload;
+
+  payload = oc_core_add_new_device(uri, rt, name, spec_version,
+                                   data_model_version, add_device_cb, data);
   if (!payload)
     oc_stack_errno |= 0x02;
 }
 
 void
-oc_add_device(void)
+oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, void *data)
 {
-  if (oc_stack_errno)
-    return;
-  extern oc_string_t temp_buffer;
-  oc_rep_end_root_object();
-  int size = oc_rep_finalize();
-  if (size != -1) {
-    oc_alloc_string(payload, size);
-    memcpy(oc_cast(*payload, uint8_t), oc_cast(temp_buffer, uint8_t), size);
-  }
-  else
-    oc_stack_errno |= 0x03;
-  oc_free_string(&temp_buffer);
-}
+  oc_string_t *payload;
 
-void
-oc_new_platform(const char *mfg_name)
-{
-  payload = oc_core_add_new_platform(mfg_name);
+  payload = oc_core_init_platform(mfg_name, init_platform_cb, data);
   if (!payload)
     oc_stack_errno |= 0x01;
-}
-
-void
-oc_add_platform(void)
-{
-   oc_add_device();
 }
 
 int
