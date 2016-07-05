@@ -37,25 +37,26 @@ typedef struct {
 #endif /* OC_CLIENT */
 } oc_handler_t;
 
+typedef void (*oc_init_platform_cb_t)(void *data);
+typedef void (*oc_add_device_cb_t)(void *data);
+
 int oc_main_init(oc_handler_t *handler);
 
 oc_clock_time_t oc_main_poll();
 
 void oc_main_shutdown();
 
-void oc_new_device(const char *uri, const char *rt,
+void oc_add_device(const char *uri, const char *rt,
 		   const char *name, const char *spec_version,
-		   const char *data_model_version);
+		   const char *data_model_version, oc_add_device_cb_t add_device_cb,
+		   void *data);
 
 #define oc_set_custom_device_property(prop, value) oc_rep_set_text_string(root, prop, value)
 
-void oc_add_device();
-
-void oc_new_platform(const char *mfg_name);
+void oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, void *data);
 
 #define oc_set_custom_platform_property(prop, value) oc_rep_set_text_string(root, prop, value)
 
-void oc_add_platform();
 
 /** Server side */
 oc_resource_t *oc_new_resource(const char *uri, uint8_t num_resource_types,
