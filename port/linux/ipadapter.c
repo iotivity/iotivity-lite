@@ -77,7 +77,7 @@ void *
 network_event_thread()
 {
   struct sockaddr_in6 *c = (struct sockaddr_in6*)&client;
-  size_t len = sizeof(client);
+  socklen_t len = sizeof(client);
 
   fd_set rfds, setfds;
 
