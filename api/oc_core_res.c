@@ -64,7 +64,7 @@ oc_core_device_handler(oc_request_t *request,
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size =
-    oc_string_len(oc_device_info[request->resource->device].payload);
+    oc_device_info[request->resource->device].payload.size;
 
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
@@ -152,7 +152,7 @@ oc_core_platform_handler(oc_request_t *request,
 {
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
-  int payload_size = oc_string_len(oc_platform_payload);
+  int payload_size = oc_platform_payload.size;
 
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
@@ -177,7 +177,7 @@ oc_core_platform_handler(oc_request_t *request,
 oc_string_t *
 oc_core_add_new_platform(const char *mfg_name)
 {
-  if (oc_string_len(oc_platform_payload) > 0)
+  if (oc_platform_payload.size > 0)
     return NULL;
 
   /* Populating resource obuject */
