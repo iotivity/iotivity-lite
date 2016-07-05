@@ -19,14 +19,18 @@
 static bool light_state = false;
 
 void
+set_device_custom_property(void *data)
+{
+  oc_set_custom_device_property(purpose, "desk lamp");
+}
+
+void
 app_init(void)
 {
-  oc_new_platform("Intel");
-  oc_add_platform();
+  oc_init_platform("Intel", NULL, NULL);
 
-  oc_new_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0");
-  oc_set_custom_device_property(purpose, "desk lamp");
-  oc_add_device();
+  oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
+                set_device_custom_property, NULL);
 }
 
 #ifdef OC_SECURITY

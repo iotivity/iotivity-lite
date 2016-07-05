@@ -17,13 +17,17 @@
 #include "oc_api.h"
 
 void
+set_device_custom_property(void *data)
+{
+  oc_set_custom_device_property(purpose, "operate lamp");
+}
+
+void
 app_init(void)
 {
-  oc_new_platform("Apple");
-  oc_add_platform();
-  oc_new_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0");
-  oc_set_custom_device_property(purpose, "operate lamp");
-  oc_add_device();
+  oc_init_platform("Apple", NULL, NULL);
+  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                set_device_custom_property, NULL);
 }
 
 #ifdef OC_SECURITY
