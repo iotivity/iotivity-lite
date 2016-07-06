@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void oc_storage_config(const char *store);
-void oc_storage_read(const char *store, uint8_t *buf, size_t *size);
-void oc_storage_write(const char *store, uint8_t *buf, size_t size);
+int oc_storage_config(const char *store);
+ssize_t oc_storage_read(const char *store, uint8_t *buf, size_t size);
+ssize_t oc_storage_write(const char *store, uint8_t *buf, size_t size);
 
 #endif /* OC_STORAGE_H */
