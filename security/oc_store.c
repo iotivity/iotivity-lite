@@ -31,7 +31,7 @@ oc_sec_load_doxm(void)
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
-    oc_storage_read("/doxm", buf, &size);
+    oc_storage_read("/doxm", buf, size);
     oc_parse_rep(buf, size, &rep);
     oc_sec_decode_doxm(rep);
     oc_free_rep(rep);
@@ -48,12 +48,13 @@ oc_sec_load_doxm(void)
 void
 oc_sec_load_pstat(void)
 {
+  ssize_t ret;
   size_t size = 512;
   uint8_t buf[size];
   oc_rep_t *rep;
 
-  oc_storage_read("/pstat", buf, &size);
-  if (size > 0) {
+  ret = oc_storage_read("/pstat", buf, size);
+  if (ret > 0) {
     oc_parse_rep(buf, size, &rep);
     oc_sec_decode_pstat(rep);
     oc_free_rep(rep);
@@ -66,13 +67,16 @@ oc_sec_load_pstat(void)
 void
 oc_sec_load_cred(void)
 {
+  ssize_t ret;
   size_t size = 1024;
   uint8_t buf[size];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
-    oc_storage_read("/cred", buf, &size);
-    oc_parse_rep(buf, size, &rep);
+    ret = oc_storage_read("/cred", buf, size);
+    if (ret < 0)
+      return;
+    oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_cred(rep, NULL);
     oc_free_rep(rep);
   }
@@ -82,14 +86,17 @@ void
 oc_sec_load_acl(void)
 {
   size_t size = 1024;
+  ssize_t ret;
   uint8_t buf[size];
   oc_rep_t *rep;
 
   oc_sec_acl_init(); //Initialize list of subjects
 
   if (oc_sec_provisioned()) {
-    oc_storage_read("/acl", buf, &size);
-    oc_parse_rep(buf, size, &rep);
+    ret = oc_storage_read("/acl", buf, size);
+    if (ret < 0)
+      return;
+    oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_acl(rep);
     oc_free_rep(rep);
   }
