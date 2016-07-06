@@ -14,6 +14,7 @@
  // limitations under the License.
  */
 
+#define OC_SECURITY 1
 #ifdef OC_SECURITY
 
 #include <zephyr.h>
@@ -54,7 +55,7 @@ align_power2(unsigned int value)
  * For arduino 101 internal flash it will be:
  * W25QXXDV,4096,256
  */
-void
+int
 oc_storage_config(const char *path)
 {
   char *aux, device_name[16];
@@ -62,17 +63,17 @@ oc_storage_config(const char *path)
 
   aux = strstr(path, ",");
   if (!aux)
-    return;
+    return -EINVAL;
 
   if (aux - path > sizeof(device_name) -1)
-    return;
+    return -EINVAL;
 
   memcpy(device_name, path, aux - path);
   device_name[aux - path] = '\0';
 
   flash_device = device_get_binding((char *)path);
   if (!flash_device)
-    return;
+    return -EINVAL;
 
 #define PARSE_VALUE(_var) \
   do { \
@@ -91,18 +92,19 @@ oc_storage_config(const char *path)
   PARSE_VALUE(max_rw_size);
 #undef PARSE_VALUE
 
-  return;
+  return 0;
 
 err:
   flash_device = NULL;
+  return -errno;
 }
 
 /*
  * store should contains the memory position to read.
  * The value should be multiple of the flash sector size.
  */
-void
-oc_storage_read(const char *store, uint8_t *buf, size_t *size)
+ssize_t
+oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   int r;
   size_t mem_offset, times = 0, extra = 0;
@@ -110,15 +112,15 @@ oc_storage_read(const char *store, uint8_t *buf, size_t *size)
   errno = 0;
   mem_offset = strtoul(store, NULL, 0);
   if (errno != 0)
-    return;
+    return -errno;
 
-  times = *size / max_rw_size;
-  extra = *size % max_rw_size;
+  times = size / max_rw_size;
+  extra = size % max_rw_size;
 
   if (!(times || extra)) {
-    r = flash_read(flash_device, mem_offset, buf, *size);
+    r = flash_read(flash_device, mem_offset, buf, size);
     if (r < 0)
-      goto err;
+      return r;
   } else {
     size_t off = 0;
 
@@ -126,7 +128,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t *size)
       r = flash_read(flash_device, mem_offset + off,
         buf + off, max_rw_size);
       if (r < 0)
-        goto err;
+        return r;
       off += max_rw_size;
       times--;
     }
@@ -135,21 +137,18 @@ oc_storage_read(const char *store, uint8_t *buf, size_t *size)
       r = flash_read(flash_device, mem_offset + off,
         buf + off, extra);
       if (r < 0)
-        goto err;
+        return r;
     }
   }
 
-  return;
-
-err:
-  *size = 0;
+  return size;
 }
 
 /*
  * store should contains the memory position to write.
  * The value should be multiple of the flash sector size.
  */
-void
+ssize_t
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
   int r = 0;
@@ -158,11 +157,11 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   errno = 0;
   mem_offset = strtoul(store, NULL, 0);
   if (errno != 0)
-    return;
+    return -errno;
 
   r = flash_write_protection_set(flash_device, false);
   if (r < 0)
-    return;
+    return r;
 
   times = size / max_rw_size;
   extra = size % max_rw_size;
@@ -175,27 +174,27 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
 
   r = flash_erase(flash_device, mem_offset, erase_value);
   if (r < 0)
-    return;
+    return r;
 
   if (!(times || extra)) {
     r = flash_write_protection_set(flash_device, false);
     if (r < 0)
-      return;
+      return r;
 
     r = flash_write(flash_device, mem_offset, buf, size);
     if (r < 0)
-      return;
+      return r;
   } else {
     size_t off = 0;
 
     while (times) {
       r = flash_write_protection_set(flash_device, false);
       if (r < 0)
-        return;
+        return r;
 
       r = flash_write(flash_device, mem_offset + off, buf + off, max_rw_size);
       if (r < 0)
-        return;
+        return r;
       off += max_rw_size;
       times--;
     }
@@ -203,13 +202,15 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
     if (extra) {
       r = flash_write_protection_set(flash_device, false);
       if (r < 0)
-        return;
+        return r;
 
       r = flash_write(flash_device, mem_offset + off, buf + off, extra);
       if (r < 0)
-        return;
+        return r;
     }
   }
+
+  return size;
 }
 
 #endif /* OC_SECURITY */
