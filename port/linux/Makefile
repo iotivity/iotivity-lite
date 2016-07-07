@@ -3,7 +3,7 @@ CC=gcc
 DTLS=../../deps/tinydtls/ccm.c deps/tinydtls/hmac.c deps/tinydtls/netq.c deps/tinydtls/peer.c deps/tinydtls/dtls_time.c deps/tinydtls/session.c deps/tinydtls/sha2/sha2.c deps/tinydtls/ecc/ecc.c deps/tinydtls/aes/rijndael.c deps/tinydtls/crypto.c deps/tinydtls/dtls.c
 DTLSFLAGS=-DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
 
-CBOR=../../deps/tinycbor/cborencoder.c deps/tinycbor/cborencoder_close_container_checked.c deps/tinycbor/cborparser.c
+CBOR=../../deps/tinycbor/src/cborencoder.c deps/src/tinycbor/cborencoder_close_container_checked.c deps/src/tinycbor/cborparser.c
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
@@ -14,7 +14,7 @@ CFLAGS=-fno-asynchronous-unwind-tables -fno-omit-frame-pointer -Wall -Wno-format
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DDEBUG -g

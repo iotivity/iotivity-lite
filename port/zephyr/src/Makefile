@@ -7,9 +7,9 @@ EXTRA_CFLAGS += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTL
 
 obj-y += ../../../apps/server.o
 
-obj-y += ../../../deps/tinycbor/cborencoder_close_container_checked.o \
-         ../../../deps/tinycbor/cborencoder.o \
-         ../../../deps/tinycbor/cborparser.o \
+obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
+         ../../../deps/tinycbor/src/cborencoder.o \
+         ../../../deps/tinycbor/src/cborparser.o \
          ../../../messaging/coap/engine.o \
          ../../../messaging/coap/coap.o \
          ../../../messaging/coap/transactions.o \
