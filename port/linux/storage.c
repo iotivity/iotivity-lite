@@ -41,7 +41,7 @@ oc_storage_config(const char *store)
   return 0;
 }
 
-ssize_t
+long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
@@ -61,7 +61,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   return size;
 }
 
-ssize_t
+long
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp;
