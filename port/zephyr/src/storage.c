@@ -14,7 +14,6 @@
  // limitations under the License.
  */
 
-#define OC_SECURITY 1
 #ifdef OC_SECURITY
 
 #include <zephyr.h>
