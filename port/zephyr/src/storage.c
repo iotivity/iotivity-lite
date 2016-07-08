@@ -103,7 +103,7 @@ err:
  * store should contains the memory position to read.
  * The value should be multiple of the flash sector size.
  */
-ssize_t
+long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   int r;
@@ -148,7 +148,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
  * store should contains the memory position to write.
  * The value should be multiple of the flash sector size.
  */
-ssize_t
+long
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
   int r = 0;

@@ -48,7 +48,7 @@ oc_sec_load_doxm(void)
 void
 oc_sec_load_pstat(void)
 {
-  ssize_t ret;
+  long ret;
   size_t size = 512;
   uint8_t buf[size];
   oc_rep_t *rep;
@@ -67,7 +67,7 @@ oc_sec_load_pstat(void)
 void
 oc_sec_load_cred(void)
 {
-  ssize_t ret;
+  long ret;
   size_t size = 1024;
   uint8_t buf[size];
   oc_rep_t *rep;
@@ -86,7 +86,7 @@ void
 oc_sec_load_acl(void)
 {
   size_t size = 1024;
-  ssize_t ret;
+  long ret;
   uint8_t buf[size];
   oc_rep_t *rep;
 
