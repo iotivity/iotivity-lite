@@ -21,7 +21,7 @@
 #include <stddef.h>
 
 int oc_storage_config(const char *store);
-ssize_t oc_storage_read(const char *store, uint8_t *buf, size_t size);
-ssize_t oc_storage_write(const char *store, uint8_t *buf, size_t size);
+long oc_storage_read(const char *store, uint8_t *buf, size_t size);
+long oc_storage_write(const char *store, uint8_t *buf, size_t size);
 
 #endif /* OC_STORAGE_H */
