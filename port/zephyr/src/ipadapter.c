@@ -171,7 +171,7 @@ oc_connectivity_init(void)
 
   LOG("Successfully initialized connectivity\n");
 
-  return 1;
+  return 0;
 }
 
 void
