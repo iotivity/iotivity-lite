@@ -53,7 +53,7 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint)
     LOG("\n\noc_sec_dtls: removed peer\n\n");
     oc_list_remove(dtls_peers, peer);
     oc_memb_free(&dtls_peers_s, peer);
-  } 
+  }
 }
 
 oc_event_callback_retval_t
@@ -68,14 +68,14 @@ oc_sec_dtls_inactive(void* data)
       LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
     }
-    else if (time < 2 * DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {      
+    else if (time < 2 * DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Initiating connection close\n\n");
       oc_sec_dtls_close_init(data);
       return CONTINUE;
     }
     else {
       LOG("\n\noc_sec_dtls: Completing connection close\n\n");
-      oc_sec_dtls_close_finish(data);      
+      oc_sec_dtls_close_finish(data);
     }
   }
   else {
@@ -102,7 +102,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
 
       oc_ri_add_timed_event_callback_seconds(&peer->session.addr,
 					     oc_sec_dtls_inactive,
-					     DTLS_INACTIVITY_TIMEOUT);      
+					     DTLS_INACTIVITY_TIMEOUT);
     }
   }
   return peer;
@@ -128,10 +128,10 @@ oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint)
 }
 
 /*
-   Called back from DTLS state machine following decryption so
-   application can read incoming message.
-   Following function packages up incoming data into a messaage
-   to forward up to CoAP
+  Called back from DTLS state machine following decryption so
+  application can read incoming message.
+  Following function packages up incoming data into a messaage
+  to forward up to CoAP
 */
 static int
 oc_sec_dtls_get_decrypted_message(struct dtls_context_t *ctx,
@@ -163,15 +163,15 @@ oc_sec_dtls_init_connection(oc_message_t *message)
 }
 
 /*
-   Called from app layer via buffer.c to post OCF responses...
-   Message routed to this function on spoting SECURE flag in
-   endpoint structure. This would've already been set on receipt
-   of the request (to which this the current message is the response)
-   We call dtls_write(...) to feed response data through the
-   DTLS state machine leading up to the encrypted send callback below.
+  Called from app layer via buffer.c to post OCF responses...
+  Message routed to this function on spoting SECURE flag in
+  endpoint structure. This would've already been set on receipt
+  of the request (to which this the current message is the response)
+  We call dtls_write(...) to feed response data through the
+  DTLS state machine leading up to the encrypted send callback below.
 
-   Message sent here may have been flagged to get freed OR
-   may have been stored for retransmissions.
+  Message sent here may have been flagged to get freed OR
+  may have been stored for retransmissions.
 */
 int
 oc_sec_dtls_send_message(oc_message_t *message)
@@ -182,7 +182,7 @@ oc_sec_dtls_send_message(oc_message_t *message)
     ret = dtls_write(ocf_dtls_context, &peer->session, message->data,
 		     message->length);
   }
-  oc_message_unref(message);  
+  oc_message_unref(message);
   return ret;
 }
 
@@ -202,7 +202,7 @@ oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
   memcpy(&message.endpoint, &session->addr, sizeof(oc_endpoint_t));
   memcpy(message.data, buf, len);
   message.length = len;
-  oc_send_buffer(&message); 
+  oc_send_buffer(&message);
   if (otm) {
     //hack to comply with IoTivity's provisioning tool, only
     //performed once during OTM.
@@ -213,9 +213,9 @@ oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
 }
 
 /*
-   This is called once during the handshake process over normal
-   operation.
-   OwnerPSK woud've been generated previously during provisioning.
+  This is called once during the handshake process over normal
+  operation.
+  OwnerPSK woud've been generated previously during provisioning.
 */
 static int
 oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx,
@@ -238,10 +238,9 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx,
   case DTLS_PSK_KEY: {
     LOG("key\n");
     oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t*)desc);
-    if (cred != NULL) {
-      oc_sec_dtls_peer_t *peer =
-	oc_sec_dtls_get_peer((oc_endpoint_t*)&session->addr);
-
+    oc_sec_dtls_peer_t *peer =
+      oc_sec_dtls_get_peer((oc_endpoint_t*)&session->addr);
+    if (cred != NULL && peer != NULL) {
       memcpy(&peer->uuid, (oc_uuid_t*)desc, 16);
       memcpy(result, cred->key, 16);
       return 16;
@@ -260,7 +259,7 @@ oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
 		   dtls_alert_level_t level, unsigned short code)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&session->addr);
-  if (level == 0 && code == DTLS_EVENT_CONNECTED) {
+  if (peer && level == 0 && code == DTLS_EVENT_CONNECTED) {
     peer->connected = true;
     oc_message_t *m = oc_list_pop(peer->send_queue);
     while (m != NULL) {
@@ -272,7 +271,7 @@ oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
     oc_sec_dtls_close_finish(&session->addr);
   }
   return 0;
-} 
+}
 
 static dtls_handler_t dtls_cb = {
   .write = oc_sec_dtls_send_encrypted_message,
@@ -296,16 +295,16 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint,
     dtls_prf_with_current_keyblock(ocf_dtls_context, &peer->session,
 				   oxm, oxm_len,
 				   server_uuid, server_uuid_len,
-				   obt_uuid, obt_uuid_len,  
+				   obt_uuid, obt_uuid_len,
 				   (uint8_t*)key, key_len);
     otm = true;
   }
 }
 
 /*
-   Message received from the wire, routed here via buffer.c
-   based on examination of the 1st byte proving it is DTLS.
-   Data sent to dtls_handle_message(...) for decryption.
+  Message received from the wire, routed here via buffer.c
+  based on examination of the 1st byte proving it is DTLS.
+  Data sent to dtls_handle_message(...) for decryption.
 */
 static void
 oc_sec_dtls_recv_message(oc_message_t *message)
@@ -320,7 +319,7 @@ oc_sec_dtls_recv_message(oc_message_t *message)
       peer->timestamp = oc_clock_time();
     }
   }
-  oc_message_unref(message);  
+  oc_message_unref(message);
 }
 
 /* If not owned, select anon_ECDH cipher and enter ready for OTM state */
@@ -358,7 +357,7 @@ oc_sec_dtls_close_init(oc_endpoint_t *endpoint)
 	m = oc_list_pop(p->send_queue);
       }
     }
-  }      
+  }
 }
 
 void
@@ -376,18 +375,18 @@ oc_sec_dtls_close_finish(oc_endpoint_t *endpoint)
       LOG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
       oc_message_unref(m);
       m = oc_list_pop(p->send_queue);
-    }    
-    oc_sec_dtls_remove_peer(endpoint);    
+    }
+    oc_sec_dtls_remove_peer(endpoint);
   }
-} 
+}
 
 OC_PROCESS_THREAD(oc_dtls_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
-  
+
   while (1) {
     OC_PROCESS_YIELD();
-    
+
     if (ev == oc_events[UDP_TO_DTLS_EVENT]) {
       oc_sec_dtls_recv_message(data);
     }
@@ -395,7 +394,7 @@ OC_PROCESS_THREAD(oc_dtls_handler, ev, data)
       oc_sec_dtls_init_connection(data);
     }
     else if (ev == oc_events[RI_TO_DTLS_EVENT]) {
-      oc_sec_dtls_send_message(data);      
+      oc_sec_dtls_send_message(data);
     }
   }
 
