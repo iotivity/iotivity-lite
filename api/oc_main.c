@@ -32,7 +32,6 @@
 #include "security/oc_dtls.h"
 #endif /* OC_SECURITY */
 
-static int terminate;
 static bool initialized = false;
 
 int
@@ -116,6 +115,5 @@ oc_main_shutdown(void)
   oc_sec_dump_state();
 #endif
 
-  terminate = 1;
   initialized = false;
 }
