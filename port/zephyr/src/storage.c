@@ -27,8 +27,34 @@
 
 #include "port/oc_storage.h"
 
-struct device *flash_device;
-size_t flash_sector_size, max_rw_size;
+#ifndef OC_MEMORY_KEY_NUMBER
+#define OC_MEMORY_KEY_NUMBER 4
+#endif
+
+#ifndef OC_MEMORY_KEY_SIZE
+#define OC_MEMORY_KEY_SIZE 1
+#endif
+
+#ifndef OC_MEMORY_KEY_NAME_SIZE
+#define OC_MEMORY_KEY_NAME_SIZE 64
+#endif
+
+#define OC_MEMMAP_KEY {0xab, 0xcd, 0xef}
+
+#define OC_MEMMAP_CLOSER_ERASABLE_SECTOR(_pos)                                 \
+  (_pos * (_pos / memmap.sector_size))
+
+struct memmap_key {
+  uint8_t key[OC_MEMORY_KEY_SIZE];
+  size_t offset;
+  size_t size;
+};
+
+static struct {
+  struct device *flash;
+  size_t sector_size, max_rw_size;
+  struct memmap_key keys[OC_MEMORY_KEY_NUMBER];
+} memmap;
 
 static unsigned int
 align_power2(unsigned int value)
@@ -45,6 +71,81 @@ align_power2(unsigned int value)
   return (unsigned int)1 << ((sizeof(value) * 8) - left_zeros);
 }
 
+static size_t
+find_next_available_sector(void)
+{
+  size_t times;
+  uint8_t key[] = OC_MEMMAP_KEY;
+
+  times = (sizeof(memmap.keys) + sizeof(key)) / memmap.sector_size;
+  if ((sizeof(memmap.keys) + sizeof(key)) % memmap.sector_size)
+    times++;
+
+  return times * memmap.sector_size;
+}
+
+static int
+storage_init(size_t initial_offset)
+{
+  int r;
+  uint8_t key[] = OC_MEMMAP_KEY;
+  size_t times, extra, off = 0;
+  size_t first_available_sector = find_next_available_sector();
+
+  for (r = 0; r < sizeof(memmap.keys) / sizeof(memmap.keys[0]); r++) {
+    memmap.keys[r].offset = first_available_sector + (r * memmap.sector_size);
+    memmap.keys[r].size = memmap.sector_size * OC_MEMORY_KEY_SIZE;
+  }
+
+  r = flash_write_protection_set(memmap.flash, false);
+  if (r < 0)
+    return r;
+
+  r = flash_erase(memmap.flash,
+    OC_MEMMAP_CLOSER_ERASABLE_SECTOR(initial_offset), memmap.sector_size);
+  if (r < 0)
+    return r;
+
+  times = (sizeof(memmap.keys) + sizeof(key)) / memmap.max_rw_size;
+  extra = (sizeof(memmap.keys) + sizeof(key)) % memmap.max_rw_size;
+
+  while (times) {
+    r = flash_write_protection_set(memmap.flash, false);
+    if (r < 0)
+      return r;
+
+    if (!off) {
+      uint8_t buf[memmap.max_rw_size];
+
+      memcpy(buf, key, sizeof(key));
+      memcpy(buf + sizeof(key), memmap.keys, memmap.max_rw_size - sizeof(key));
+
+      r = flash_write(memmap.flash, initial_offset, buf, memmap.max_rw_size);
+    } else {
+      r = flash_write(memmap.flash, initial_offset + off,
+                      (uint8_t *)memmap.keys + off - sizeof(key),
+                      memmap.max_rw_size);
+    }
+
+    off += memmap.max_rw_size;
+    if (r < 0)
+      return r;
+    times--;
+  }
+
+  if (extra) {
+    r = flash_write_protection_set(memmap.flash, false);
+    if (r < 0)
+      return r;
+    r = flash_write(memmap.flash, initial_offset + off,
+                    (uint8_t *)memmap.keys + off - sizeof(key), extra);
+    if (r < 0)
+      return r;
+  }
+
+  return 0;
+}
+
 /*
  * It expects the device name, flash sector size and
  * maximum read/write size separated by comma:
@@ -59,6 +160,9 @@ oc_storage_config(const char *path)
 {
   char *aux, device_name[16];
   unsigned int size;
+  size_t initial_offset;
+  uint8_t key[] = OC_MEMMAP_KEY;
+  int r;
 
   aux = strstr(path, ",");
   if (!aux)
@@ -70,8 +174,8 @@ oc_storage_config(const char *path)
   memcpy(device_name, path, aux - path);
   device_name[aux - path] = '\0';
 
-  flash_device = device_get_binding((char *)path);
-  if (!flash_device)
+  memmap.flash = device_get_binding((char *)device_name);
+  if (!memmap.flash)
     return -EINVAL;
 
 #define PARSE_VALUE(_var) \
@@ -82,20 +186,83 @@ oc_storage_config(const char *path)
     size = strtoul(aux + 1, NULL, 0); \
     if (errno) \
       goto err; \
-    _var = align_power2(size / 2 + 1); \
+    _var = size; \
     path = aux + 1; \
     aux = strstr(path, ","); \
   } while (0)
 
-  PARSE_VALUE(flash_sector_size);
-  PARSE_VALUE(max_rw_size);
+#define PARSE_VALUE_ALIGNED(_var) \
+  do { \
+    PARSE_VALUE(_var); \
+    _var = align_power2(size / 2 + 1); \
+  } while (0)
+
+  PARSE_VALUE_ALIGNED(memmap.sector_size);
+  PARSE_VALUE_ALIGNED(memmap.max_rw_size);
+  PARSE_VALUE(initial_offset);
 #undef PARSE_VALUE
+#undef PARSE_VALUE_ALIGNED
+
+  /*
+   * Read the initial record to check the position
+   * and size of the keys.
+   */
+  r = flash_read(memmap.flash, initial_offset, &key, sizeof(key));
+  if (r < 0)
+    goto err;
+
+  if (memcmp(key, (void *)&((uint8_t []) OC_MEMMAP_KEY), sizeof(key))) {
+    r = storage_init(initial_offset);
+    if (r < 0)
+      goto err;
+  } else {
+    size_t times, extra, off = 0;
+
+    times = sizeof(memmap.keys) / memmap.max_rw_size;
+    extra = sizeof(memmap.keys) % memmap.max_rw_size;
+
+    while (times) {
+      r = flash_read(memmap.flash, initial_offset + sizeof(key) + off,
+                     (uint8_t *)memmap.keys + off, memmap.max_rw_size);
+      if (r < 0)
+        goto err;
+      off += memmap.max_rw_size;
+      times--;
+    }
+    if (extra) {
+      r = flash_read(memmap.flash, initial_offset + sizeof(key) + off,
+                     (uint8_t *)memmap.keys + off, extra);
+      if (r < 0)
+        goto err;
+    }
+  }
 
   return 0;
 
 err:
-  flash_device = NULL;
+  memmap.flash = NULL;
   return -errno;
+}
+
+static struct memmap_key *
+find_key(const char *store)
+{
+  int i, empty_pos = -1;
+
+  for (i = 0; i < sizeof(memmap.keys) / sizeof(memmap.keys[0]); i++) {
+    if (!strcmp(memmap.keys[i].key, store)) {
+      return &memmap.keys[i];
+    } else if (memmap.keys[i].key[0] == '0') {
+      empty_pos = i;
+    }
+  }
+
+  if (empty_pos != -1) {
+    strncpy(memmap.keys[empty_pos].key, store, OC_MEMORY_KEY_SIZE);
+    return &memmap.keys[empty_pos];
+  }
+
+  return NULL;
 }
 
 /*
@@ -106,34 +273,34 @@ long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   int r;
-  size_t mem_offset, times = 0, extra = 0;
+  struct memmap_key *key;
+  size_t times = 0, extra = 0;
 
-  errno = 0;
-  mem_offset = strtoul(store, NULL, 0);
-  if (errno != 0)
-    return -errno;
+  times = size / memmap.max_rw_size;
+  extra = size % memmap.max_rw_size;
 
-  times = size / max_rw_size;
-  extra = size % max_rw_size;
+  key = find_key(store);
+  if (!key)
+    return -ENOENT;
 
   if (!(times || extra)) {
-    r = flash_read(flash_device, mem_offset, buf, size);
+    r = flash_read(memmap.flash, key->offset, buf, size);
     if (r < 0)
       return r;
   } else {
     size_t off = 0;
 
     while (times) {
-      r = flash_read(flash_device, mem_offset + off,
-        buf + off, max_rw_size);
+      r = flash_read(memmap.flash, key->offset + off,
+        buf + off, memmap.max_rw_size);
       if (r < 0)
         return r;
-      off += max_rw_size;
+      off += memmap.max_rw_size;
       times--;
     }
 
     if (extra) {
-      r = flash_read(flash_device, mem_offset + off,
+      r = flash_read(memmap.flash, key->offset + off,
         buf + off, extra);
       if (r < 0)
         return r;
@@ -151,59 +318,60 @@ long
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
   int r = 0;
-  size_t mem_offset, times = 0, extra = 0, erase_value = flash_sector_size;
+  struct memmap_key *key;
+  size_t times = 0, extra = 0, erase_value = memmap.sector_size;
 
-  errno = 0;
-  mem_offset = strtoul(store, NULL, 0);
-  if (errno != 0)
-    return -errno;
+  key = find_key(store);
+  if (!key)
+    return -ENOENT;
 
-  r = flash_write_protection_set(flash_device, false);
-  if (r < 0)
-    return r;
-
-  times = size / max_rw_size;
-  extra = size % max_rw_size;
+  times = size / memmap.max_rw_size;
+  extra = size % memmap.max_rw_size;
 
   if (times) {
     erase_value *= times;
     if (extra)
-      erase_value += flash_sector_size;
+      erase_value += memmap.sector_size;
   }
 
-  r = flash_erase(flash_device, mem_offset, erase_value);
+  r = flash_write_protection_set(memmap.flash, false);
+  if (r < 0) {
+    return r;
+  }
+
+  r = flash_erase(memmap.flash, key->offset, erase_value);
   if (r < 0)
     return r;
 
   if (!(times || extra)) {
-    r = flash_write_protection_set(flash_device, false);
+    r = flash_write_protection_set(memmap.flash, false);
     if (r < 0)
       return r;
 
-    r = flash_write(flash_device, mem_offset, buf, size);
+    r = flash_write(memmap.flash, key->offset, buf, size);
     if (r < 0)
       return r;
   } else {
     size_t off = 0;
 
     while (times) {
-      r = flash_write_protection_set(flash_device, false);
+      r = flash_write_protection_set(memmap.flash, false);
       if (r < 0)
         return r;
 
-      r = flash_write(flash_device, mem_offset + off, buf + off, max_rw_size);
+      r = flash_write(memmap.flash, key->offset + off, buf + off, memmap.max_rw_size);
       if (r < 0)
         return r;
-      off += max_rw_size;
+      off += memmap.max_rw_size;
       times--;
     }
 
     if (extra) {
-      r = flash_write_protection_set(flash_device, false);
+      r = flash_write_protection_set(memmap.flash, false);
       if (r < 0)
         return r;
 
-      r = flash_write(flash_device, mem_offset + off, buf + off, extra);
+      r = flash_write(memmap.flash, key->offset + off, buf + off, extra);
       if (r < 0)
         return r;
     }
