@@ -72,19 +72,19 @@ get_doxm(oc_request_t *request,
   switch (interface) {
   case OC_IF_BASELINE:
   case OC_IF_DEFAULT:
-    {
-      char *q;
-      int ql = oc_get_query_value(request, "owned", &q);
-      if (ql && ((doxm.owned == 1 && strncasecmp(q, "false", 5) == 0) ||
-		 (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
-	oc_ignore_request(request);
-      }
-      else {
-	oc_sec_encode_doxm();
-	oc_send_response(request, OK);
-      }
+  {
+    char *q;
+    int ql = oc_get_query_value(request, "owned", &q);
+    if (ql && ((doxm.owned == 1 && strncasecmp(q, "false", 5) == 0) ||
+	       (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
+      oc_ignore_request(request);
     }
-    break;
+    else {
+      oc_sec_encode_doxm();
+      oc_send_response(request, OK);
+    }
+  }
+  break;
   default:
     break;
   }
