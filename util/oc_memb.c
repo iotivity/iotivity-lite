@@ -40,7 +40,7 @@ void
 oc_memb_init(struct oc_memb *m)
 {
   memset(m->count, 0, m->num);
-  memset(m->mem, 0, m->size * m->num);
+  memset(m->mem, 0, (unsigned)m->size * (unsigned)m->num);
 }
 /*---------------------------------------------------------------------------*/
 void *
