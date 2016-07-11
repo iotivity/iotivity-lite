@@ -1,20 +1,6 @@
 /*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
-
-/*
+ * Copyright (c) 2016 Intel Corporation
+ *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
  *
@@ -208,17 +194,18 @@ int coap_notify_observers(oc_resource_t *resource,
     num_observers = resource->num_observers;
   }
   uint8_t buffer[COAP_MAX_BLOCK_SIZE];
-  oc_request_t request;
-  oc_response_t response;
+  oc_request_t request = {};
+  oc_response_t response = {};
   response.slow_response = 0;
   oc_response_buffer_t response_buffer;
-  if(!response_buf) {
+  if(!response_buf && resource) {
     LOG("coap_notify_observers: Issue GET request to resource\n");
     /* performing GET on the resource */
     response_buffer.buffer = buffer;
     response_buffer.buffer_size = COAP_MAX_BLOCK_SIZE;
     response_buffer.block_offset = NULL;
     response.response_buffer = &response_buffer;
+    request.resource = resource;
     request.response = &response;
     request.request_payload = NULL;
     oc_rep_new(buffer, COAP_MAX_BLOCK_SIZE);
@@ -258,8 +245,8 @@ int coap_notify_observers(oc_resource_t *resource,
     } else {
       LOG("coap_notify_observers: notifying observer\n");
       coap_transaction_t *transaction = NULL;
-      if((transaction = coap_new_transaction(coap_get_mid(),
-					     &obs->endpoint))) {
+      if(response_buf && (transaction = coap_new_transaction(coap_get_mid(),
+							     &obs->endpoint))) {
 	memcpy(
 	  transaction->message->data
 	  + COAP_MAX_HEADER_SIZE,
