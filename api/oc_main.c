@@ -24,12 +24,11 @@
 #include "util/oc_process.h"
 #include "util/oc_etimer.h"
 
-#include "security/oc_store.h"
-#include "security/oc_svr.h"
-
 #include "oc_api.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_store.h"
+#include "security/oc_svr.h"
 #include "security/oc_dtls.h"
 #endif /* OC_SECURITY */
 

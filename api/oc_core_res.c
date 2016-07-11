@@ -18,7 +18,10 @@
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "messaging/coap/oc_coap.h"
+
+#ifdef OC_SECURITY
 #include "security/oc_pstat.h"
+#endif /* OC_SECURITY */
 
 static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
 struct oc_device_info_t {

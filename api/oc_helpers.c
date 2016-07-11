@@ -157,7 +157,7 @@ oc_join_string_array(oc_string_array_t *ocstringarray,
       (const char*)oc_string_array_get_item(*ocstringarray, i);
     if (strlen(item)) {
       if(len > 0) {
-	strncpy((char*)oc_string(*ocstring) + len, " ", 1);
+	oc_string(*ocstring)[len] = ' ';
 	len++;
       }
       strncpy((char*)oc_string(*ocstring) + len, item, strlen(item));

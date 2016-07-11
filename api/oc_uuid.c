@@ -73,7 +73,8 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 void
 oc_uuid_to_str(const oc_uuid_t* uuid, char *buffer, int buflen) {
   int i, j = 0;
-  //Fix check buflen vs uuid size
+  if (buflen < 37)
+    return;
   for (i = 0; i < 16; i++) {
     switch(i) {
     case 4:
@@ -82,13 +83,11 @@ oc_uuid_to_str(const oc_uuid_t* uuid, char *buffer, int buflen) {
     case 10:
       snprintf(&buffer[j], 2, "-");
       j++;
-    default:
-      snprintf(&buffer[j], 3, "%02x", uuid->id[i]);
-      j += 2;
+      break;
     }
+    snprintf(&buffer[j], 3, "%02x", uuid->id[i]);
+    j += 2;
   }
-
-  buffer[j++] = '\0';
 }
 
 void
