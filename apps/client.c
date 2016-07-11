@@ -38,7 +38,8 @@ fetch_credentials(void)
 }
 #endif
 
-static char light_1[30];
+#define MAX_URI_LENGTH (30)
+static char light_1[MAX_URI_LENGTH];
 static oc_server_handle_t light_server;
 static bool light_state = false;
 
@@ -99,11 +100,16 @@ discovery(const char *di,
 	  oc_server_handle_t* server)
 {
   int i;
+  int uri_len = strlen(uri);
+  uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
+
   for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 11 && strncmp(t, "oic.r.light", 11) == 0) {
       memcpy(&light_server, server, sizeof(oc_server_handle_t));
-      strcpy(light_1, uri);
+
+      strncpy(light_1, uri, uri_len);
+      light_1[uri_len] = '\0';
 
       oc_do_observe(light_1, &light_server, NULL, &observe_light, LOW_QOS);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
