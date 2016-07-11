@@ -74,7 +74,7 @@ oc_network_event_handler_mutex_unlock(void)
 }
 
 void *
-network_event_thread(void)
+network_event_thread(void* data)
 {
   struct sockaddr_in6 *c = (struct sockaddr_in6*)&client;
   socklen_t len = sizeof(client);
