@@ -49,7 +49,7 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
 	groups[j] = t;
       }
     }
-  } 
+  }
   j = 0;
   for (i = 1; i < *n; i++) {
     if (groups[j] != groups[i])
@@ -120,8 +120,8 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
 #ifdef DEBUG
   char uuid[37];
   oc_uuid_to_str(subjectuuid, uuid, 37);
-#endif    
-  
+#endif
+
   while (ace != NULL) {
     if (strncmp(ace->subjectuuid.id, subjectuuid->id, 16) == 0)
       goto got_ace;
@@ -132,10 +132,10 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
     goto new_ace;
 
   LOG("Could not find ACE for subject %s\n", uuid);
-  
+
   goto done;
-  
- got_ace:
+
+  got_ace:
   LOG("Found ACE for subject %s\n", uuid);
   res = (oc_sec_acl_res_t*)oc_list_head(ace->resources);
 
@@ -149,30 +149,30 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
 
   if (create)
     goto new_res;
-  
+
   goto done;
-  
- new_ace:
+
+  new_ace:
   ace = oc_memb_alloc(&ace_l);
 
   if (!ace)
     goto done;
 
   LOG("Created new ACE for subject %s\n", uuid);
-  
+
   OC_LIST_STRUCT_INIT(ace, resources);
   strncpy(ace->subjectuuid.id, subjectuuid->id, 16);
   oc_list_add(ac_list.subjects, ace);
-  
- new_res:
+
+  new_res:
   res = oc_memb_alloc(&res_l);
   if (res) {
     res->resource = resource;
-    LOG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));  
+    LOG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
     oc_list_add(ace->resources, res);
   }
 
- done:
+  done:
   return res;
 }
 
@@ -189,14 +189,14 @@ oc_sec_update_acl(oc_uuid_t *subjectuuid,
   res->permissions = permissions;
 
   LOG("Added resource with permissions: %d\n", res->permissions);
-  
+
   return true;
 }
 
 void
 oc_sec_acl_init(void)
 {
-  OC_LIST_STRUCT_INIT(&ac_list, subjects);  
+  OC_LIST_STRUCT_INIT(&ac_list, subjects);
 }
 
 void
@@ -230,14 +230,14 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
 
   if (!res) { //Try Anonymous
-    res = oc_sec_acl_get_ace(&WILDCARD, resource, false);    
+    res = oc_sec_acl_get_ace(&WILDCARD, resource, false);
   }
 
   if (!res)
     return granted;
 
   LOG("Got permissions mask %d\n", res->permissions);
-  
+
   if (res->permissions & OC_PERM_CREATE ||
       res->permissions & OC_PERM_UPDATE) {
     switch (method) {
@@ -279,11 +279,11 @@ oc_sec_decode_acl(oc_rep_t *rep)
 {
   uint16_t permissions = 0;
   oc_uuid_t subjectuuid;
-  oc_rep_t *resources;
+  oc_rep_t *resources = 0;
   int len = 0;
   while (rep != NULL) {
     len = oc_string_len(rep->name);
-    switch (rep->type) {     
+    switch (rep->type) {
     case STRING:
       if (len == 10  &&
 	  strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
@@ -325,7 +325,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
 	      }
 	      ace = ace->next;
 	    }
-	    
+
 	    while (resources != NULL) {
 	      oc_rep_t *resource = resources->value_object;
 	      while (resource != NULL) {
@@ -336,17 +336,17 @@ oc_sec_decode_acl(oc_rep_t *rep)
 				  "href", 4) == 0) {
 		    oc_resource_t *res =
 		      oc_core_get_resource_by_uri(oc_string(resource->value_string));
-		    
+
 #ifdef OC_SERVER
-		    if (!res) 
+		    if (!res)
 		      res = oc_ri_get_app_resource_by_uri(oc_string(resource->value_string));
 #endif /* OC_SERVER */
-	     
+
 		    if (!res) {
 		      LOG("\n\noc_sec_acl_decode: could not find resource %s\n\n", oc_string(resource->value_string));
 		      return false;
 		    }
-		    
+
 		    if (!oc_sec_update_acl(&subjectuuid, res, permissions)) {
 		      LOG("\n\noc_sec_acl_decode: could not update ACE with resource %s permissions\n\n", oc_string(res->uri));
 		      return false;
@@ -359,7 +359,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
 		resource = resource->next;
 	      }
 	      resources = resources->next;
-	    }	    
+	    }
 	    aces = aces->next;
 	  }
 	}
@@ -367,7 +367,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
 	default:
 	  break;
 	}
-	aclist = aclist->next;	
+	aclist = aclist->next;
       }
     }
       break;
@@ -381,21 +381,21 @@ oc_sec_decode_acl(oc_rep_t *rep)
 
 /*
   {
-  "aclist": 
+  "aclist":
   {
-  "aces": 
-  [ 
-  {
-  "subjectuuid": "61646d69-6e44-6576-6963-655575696430", 
-  "resources": 
+  "aces":
   [
-  {"href": "/led/1", "rel": "", "rt": "", "if": ""}, 
+  {
+  "subjectuuid": "61646d69-6e44-6576-6963-655575696430",
+  "resources":
+  [
+  {"href": "/led/1", "rel": "", "rt": "", "if": ""},
   {"href": "/switch/1", "rel": "", "rt": "", "if": ""}
-  ], 
+  ],
   "permission": 31
   }
   ]
-  }, 
+  },
   "rowneruuid": "5cdf40b1-c12e-432b-67a2-aa79a3f08c59"
   }
 */
