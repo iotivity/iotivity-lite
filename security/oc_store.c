@@ -26,17 +26,21 @@
 void
 oc_sec_load_doxm(void)
 {
+  long ret = 0;
   size_t size = 512;
   uint8_t buf[size];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
-    oc_storage_read("/doxm", buf, size);
-    oc_parse_rep(buf, size, &rep);
-    oc_sec_decode_doxm(rep);
-    oc_free_rep(rep);
+    ret = oc_storage_read("/doxm", buf, size);
+    if (ret > 0) {
+      oc_parse_rep(buf, ret, &rep);
+      oc_sec_decode_doxm(rep);
+      oc_free_rep(rep);
+    }
   }
-  else {
+
+  if (ret <= 0) {
     oc_sec_doxm_default();
   }
 
@@ -48,18 +52,19 @@ oc_sec_load_doxm(void)
 void
 oc_sec_load_pstat(void)
 {
-  long ret;
+  long ret = 0;
   size_t size = 512;
   uint8_t buf[size];
   oc_rep_t *rep;
 
   ret = oc_storage_read("/pstat", buf, size);
   if (ret > 0) {
-    oc_parse_rep(buf, size, &rep);
+    oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_pstat(rep);
     oc_free_rep(rep);
   }
-  else {
+
+  if (ret <= 0) {
     oc_sec_pstat_default();
   }
 }
@@ -67,15 +72,17 @@ oc_sec_load_pstat(void)
 void
 oc_sec_load_cred(void)
 {
-  long ret;
+  long ret = 0;
   size_t size = 1024;
   uint8_t buf[size];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
     ret = oc_storage_read("/cred", buf, size);
-    if (ret < 0)
+
+    if (ret <= 0)
       return;
+
     oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_cred(rep, NULL);
     oc_free_rep(rep);
@@ -86,21 +93,22 @@ void
 oc_sec_load_acl(void)
 {
   size_t size = 1024;
-  long ret;
+  long ret = 0;
   uint8_t buf[size];
   oc_rep_t *rep;
 
-  oc_sec_acl_init(); //Initialize list of subjects
+  oc_sec_acl_init();
 
   if (oc_sec_provisioned()) {
     ret = oc_storage_read("/acl", buf, size);
-    if (ret < 0)
-      return;
-    oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_acl(rep);
-    oc_free_rep(rep);
+    if (ret > 0) {
+      oc_parse_rep(buf, ret, &rep);
+      oc_sec_decode_acl(rep);
+      oc_free_rep(rep);
+    }
   }
-  else {
+
+  if (ret <= 0) {
     oc_sec_acl_default();
   }
 }
@@ -114,29 +122,37 @@ oc_sec_dump_state(void)
   oc_rep_new(buf, 1024);
   oc_sec_encode_pstat();
   int size = oc_rep_finalize();
-  LOG ("oc_store: encoded pstat size %d\n", size);
-  oc_storage_write("/pstat", buf, size);
+  if (size > 0) {
+    LOG ("oc_store: encoded pstat size %d\n", size);
+    oc_storage_write("/pstat", buf, size);
+  }
 
   /* cred */
   oc_rep_new(buf, 1024);
   oc_sec_encode_cred();
   size = oc_rep_finalize();
-  LOG ("oc_store: encoded cred size %d\n", size);
-  oc_storage_write("/cred", buf, size);
+  if (size > 0) {
+    LOG ("oc_store: encoded cred size %d\n", size);
+    oc_storage_write("/cred", buf, size);
+  }
 
   /* doxm */
   oc_rep_new(buf, 1024);
   oc_sec_encode_doxm();
   size = oc_rep_finalize();
-  LOG ("oc_store: encoded doxm size %d\n", size);
-  oc_storage_write("/doxm", buf, size);
+  if (size > 0) {
+    LOG ("oc_store: encoded doxm size %d\n", size);
+    oc_storage_write("/doxm", buf, size);
+  }
 
   /* acl */
   oc_rep_new(buf, 1024);
   oc_sec_encode_acl();
   size = oc_rep_finalize();
-  LOG ("oc_store: encoded ACL size %d\n", size);
-  oc_storage_write("/acl", buf, size);
+  if (size > 0) {
+    LOG ("oc_store: encoded ACL size %d\n", size);
+    oc_storage_write("/acl", buf, size);
+  }
 }
 
 #endif /* OC_SECURITY */
