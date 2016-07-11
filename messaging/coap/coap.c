@@ -1,20 +1,6 @@
 /*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
-
-/*
+ * Copyright (c) 2016 Intel Corporation
+ *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
  *
@@ -74,7 +60,7 @@ static uint16_t coap_log_2(uint16_t value)
     result++;
   } while(value);
 
-  return result ? result - 1 : result;
+  return (result - 1);
 }
 /*---------------------------------------------------------------------------*/
 static uint32_t coap_parse_int_option(uint8_t *bytes, size_t length)
@@ -510,199 +496,198 @@ coap_status_t coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
     option_number += option_delta;
 
     if(option_number < COAP_OPTION_SIZE1) {
-
       LOG("OPTION %u (delta %u, len %zu): ", option_number, option_delta,
 	  option_length);
       SET_OPTION(coap_pkt, option_number);
+    }
 
-      switch(option_number) {
-      case COAP_OPTION_CONTENT_FORMAT:
-	coap_pkt->content_format =
-	  coap_parse_int_option(
-	    current_option,
-	    option_length);
-	LOG("Content-Format [%u]\n", coap_pkt->content_format);
-	break;
-      case COAP_OPTION_MAX_AGE:
-	coap_pkt->max_age = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Max-Age [%lu]\n", (unsigned long)coap_pkt->max_age);
-	break;
+    switch(option_number) {
+    case COAP_OPTION_CONTENT_FORMAT:
+      coap_pkt->content_format =
+	coap_parse_int_option(
+	  current_option,
+	  option_length);
+      LOG("Content-Format [%u]\n", coap_pkt->content_format);
+      break;
+    case COAP_OPTION_MAX_AGE:
+      coap_pkt->max_age = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Max-Age [%lu]\n", (unsigned long)coap_pkt->max_age);
+      break;
 #if 0
-      case COAP_OPTION_ETAG:
-	coap_pkt->etag_len = MIN(COAP_ETAG_LEN,
-				 option_length);
-	memcpy(coap_pkt->etag, current_option,
-	       coap_pkt->etag_len);
-	LOG("ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
-	    coap_pkt->etag_len, coap_pkt->etag[0], coap_pkt->etag[1],
-	    coap_pkt->etag[2], coap_pkt->etag[3], coap_pkt->etag[4],
-	    coap_pkt->etag[5], coap_pkt->etag[6], coap_pkt->etag[7]
-	   ); /*FIXME always prints 8 bytes */
-	break;
+    case COAP_OPTION_ETAG:
+      coap_pkt->etag_len = MIN(COAP_ETAG_LEN,
+			       option_length);
+      memcpy(coap_pkt->etag, current_option,
+	     coap_pkt->etag_len);
+      LOG("ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
+	  coap_pkt->etag_len, coap_pkt->etag[0], coap_pkt->etag[1],
+	  coap_pkt->etag[2], coap_pkt->etag[3], coap_pkt->etag[4],
+	  coap_pkt->etag[5], coap_pkt->etag[6], coap_pkt->etag[7]
+	 ); /*FIXME always prints 8 bytes */
+      break;
 #endif
-      case COAP_OPTION_ACCEPT:
-	coap_pkt->accept = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Accept [%u]\n", coap_pkt->accept);
-	break;
+    case COAP_OPTION_ACCEPT:
+      coap_pkt->accept = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Accept [%u]\n", coap_pkt->accept);
+      break;
 #if 0
-      case COAP_OPTION_IF_MATCH:
-	/* TODO support multiple ETags */
-	coap_pkt->if_match_len = MIN(COAP_ETAG_LEN,
-				     option_length);
-	memcpy(coap_pkt->if_match, current_option,
-	       coap_pkt->if_match_len);
-	LOG("If-Match %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
-	    coap_pkt->if_match_len, coap_pkt->if_match[0],
-	    coap_pkt->if_match[1], coap_pkt->if_match[2],
-	    coap_pkt->if_match[3], coap_pkt->if_match[4],
-	    coap_pkt->if_match[5], coap_pkt->if_match[6],
-	    coap_pkt->if_match[7]
-	   ); /* FIXME always prints 8 bytes */
-	break;
-      case COAP_OPTION_IF_NONE_MATCH:
-	coap_pkt->if_none_match = 1;
-	LOG("If-None-Match\n");
-	break;
+    case COAP_OPTION_IF_MATCH:
+      /* TODO support multiple ETags */
+      coap_pkt->if_match_len = MIN(COAP_ETAG_LEN,
+				   option_length);
+      memcpy(coap_pkt->if_match, current_option,
+	     coap_pkt->if_match_len);
+      LOG("If-Match %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
+	  coap_pkt->if_match_len, coap_pkt->if_match[0],
+	  coap_pkt->if_match[1], coap_pkt->if_match[2],
+	  coap_pkt->if_match[3], coap_pkt->if_match[4],
+	  coap_pkt->if_match[5], coap_pkt->if_match[6],
+	  coap_pkt->if_match[7]
+	 ); /* FIXME always prints 8 bytes */
+      break;
+    case COAP_OPTION_IF_NONE_MATCH:
+      coap_pkt->if_none_match = 1;
+      LOG("If-None-Match\n");
+      break;
 
-      case COAP_OPTION_PROXY_URI:
+    case COAP_OPTION_PROXY_URI:
 #if COAP_PROXY_OPTION_PROCESSING
-	coap_pkt->proxy_uri = (char *)current_option;
-	coap_pkt->proxy_uri_len = option_length;
+      coap_pkt->proxy_uri = (char *)current_option;
+      coap_pkt->proxy_uri_len = option_length;
 #endif
-	LOG("Proxy-Uri NOT IMPLEMENTED [%.*s]\n", (int)coap_pkt->proxy_uri_len,
-	    coap_pkt->proxy_uri);
-	coap_error_message =
-	  "This is a constrained server (Contiki)";
-	return PROXYING_NOT_SUPPORTED_5_05;
-	break;
-      case COAP_OPTION_PROXY_SCHEME:
+      LOG("Proxy-Uri NOT IMPLEMENTED [%.*s]\n", (int)coap_pkt->proxy_uri_len,
+	  coap_pkt->proxy_uri);
+      coap_error_message =
+	"This is a constrained server (Contiki)";
+      return PROXYING_NOT_SUPPORTED_5_05;
+      break;
+    case COAP_OPTION_PROXY_SCHEME:
 #if COAP_PROXY_OPTION_PROCESSING
-	coap_pkt->proxy_scheme = (char *)current_option;
-	coap_pkt->proxy_scheme_len = option_length;
+      coap_pkt->proxy_scheme = (char *)current_option;
+      coap_pkt->proxy_scheme_len = option_length;
 #endif
-	LOG("Proxy-Scheme NOT IMPLEMENTED [%.*s]\n",
-	    (int)coap_pkt->proxy_scheme_len, coap_pkt->proxy_scheme);
-	coap_error_message =
-	  "This is a constrained server (Contiki)";
-	return PROXYING_NOT_SUPPORTED_5_05;
-	break;
+      LOG("Proxy-Scheme NOT IMPLEMENTED [%.*s]\n",
+	  (int)coap_pkt->proxy_scheme_len, coap_pkt->proxy_scheme);
+      coap_error_message =
+	"This is a constrained server (Contiki)";
+      return PROXYING_NOT_SUPPORTED_5_05;
+      break;
 
-      case COAP_OPTION_URI_HOST:
-	coap_pkt->uri_host = (char *)current_option;
-	coap_pkt->uri_host_len = option_length;
-	LOG("Uri-Host [%.*s]\n", (int)coap_pkt->uri_host_len,
-	    coap_pkt->uri_host);
-	break;
-      case COAP_OPTION_URI_PORT:
-	coap_pkt->uri_port = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Uri-Port [%u]\n", coap_pkt->uri_port);
-	break;
+    case COAP_OPTION_URI_HOST:
+      coap_pkt->uri_host = (char *)current_option;
+      coap_pkt->uri_host_len = option_length;
+      LOG("Uri-Host [%.*s]\n", (int)coap_pkt->uri_host_len,
+	  coap_pkt->uri_host);
+      break;
+    case COAP_OPTION_URI_PORT:
+      coap_pkt->uri_port = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Uri-Port [%u]\n", coap_pkt->uri_port);
+      break;
 #endif
-      case COAP_OPTION_URI_PATH:
-	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
-	coap_merge_multi_option(
-	  (char **)&(coap_pkt->uri_path),
-	  &(coap_pkt->uri_path_len),
-	  current_option, option_length,
-	  '/');
-	LOG("Uri-Path [%.*s]\n", (int)coap_pkt->uri_path_len, coap_pkt->uri_path);
-	break;
-      case COAP_OPTION_URI_QUERY:
-	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
-	coap_merge_multi_option(
-	  (char **)&(coap_pkt->uri_query),
-	  &(coap_pkt->uri_query_len),
-	  current_option, option_length,
-	  '&');
-	LOG("Uri-Query [%.*s]\n", (int)coap_pkt->uri_query_len,
-	    coap_pkt->uri_query);
-	break;
+    case COAP_OPTION_URI_PATH:
+      /* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
+      coap_merge_multi_option(
+	(char **)&(coap_pkt->uri_path),
+	&(coap_pkt->uri_path_len),
+	current_option, option_length,
+	'/');
+      LOG("Uri-Path [%.*s]\n", (int)coap_pkt->uri_path_len, coap_pkt->uri_path);
+      break;
+    case COAP_OPTION_URI_QUERY:
+      /* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
+      coap_merge_multi_option(
+	(char **)&(coap_pkt->uri_query),
+	&(coap_pkt->uri_query_len),
+	current_option, option_length,
+	'&');
+      LOG("Uri-Query [%.*s]\n", (int)coap_pkt->uri_query_len,
+	  coap_pkt->uri_query);
+      break;
 #if 0
-      case COAP_OPTION_LOCATION_PATH:
-	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
-	coap_merge_multi_option(
-	  (char **)&(coap_pkt->location_path),
-	  &(coap_pkt->location_path_len),
-	  current_option, option_length,
-	  '/');
-	LOG("Location-Path [%.*s]\n", (int)coap_pkt->location_path_len,
-	    coap_pkt->location_path);
-	break;
-      case COAP_OPTION_LOCATION_QUERY:
-	/* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
-	coap_merge_multi_option(
-	  (char **)&(coap_pkt->location_query),
-	  &(coap_pkt->location_query_len),
-	  current_option, option_length,
-	  '&');
-	LOG("Location-Query [%.*s]\n", (int)coap_pkt->location_query_len,
-	    coap_pkt->location_query);
-	break;
+    case COAP_OPTION_LOCATION_PATH:
+      /* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
+      coap_merge_multi_option(
+	(char **)&(coap_pkt->location_path),
+	&(coap_pkt->location_path_len),
+	current_option, option_length,
+	'/');
+      LOG("Location-Path [%.*s]\n", (int)coap_pkt->location_path_len,
+	  coap_pkt->location_path);
+      break;
+    case COAP_OPTION_LOCATION_QUERY:
+      /* coap_merge_multi_option() operates in-place on the IPBUF, but final packet field should be const string -> cast to string */
+      coap_merge_multi_option(
+	(char **)&(coap_pkt->location_query),
+	&(coap_pkt->location_query_len),
+	current_option, option_length,
+	'&');
+      LOG("Location-Query [%.*s]\n", (int)coap_pkt->location_query_len,
+	  coap_pkt->location_query);
+      break;
 #endif
-      case COAP_OPTION_OBSERVE:
-	coap_pkt->observe = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Observe [%lu]\n", (unsigned long)coap_pkt->observe);
-	break;
-      case COAP_OPTION_BLOCK2:
-	coap_pkt->block2_num = coap_parse_int_option(
-	  current_option, option_length);
-	coap_pkt->block2_more = (coap_pkt->block2_num
-				 & 0x08) >> 3;
-	coap_pkt->block2_size =
-	  16
-	  << (coap_pkt->block2_num
-	      & 0x07);
-	coap_pkt->block2_offset =
-	  (coap_pkt->block2_num
-	   & ~0x0000000F)
-	  << (coap_pkt->block2_num
-	      & 0x07);
-	coap_pkt->block2_num >>= 4;
-	LOG("Block2 [%lu%s (%u B/blk)]\n",
-	    (unsigned long)coap_pkt->block2_num,
-	    coap_pkt->block2_more ? "+" : "", coap_pkt->block2_size);
-	break;
-      case COAP_OPTION_BLOCK1:
-	coap_pkt->block1_num = coap_parse_int_option(
-	  current_option, option_length);
-	coap_pkt->block1_more = (coap_pkt->block1_num
-				 & 0x08) >> 3;
-	coap_pkt->block1_size =
-	  16
-	  << (coap_pkt->block1_num
-	      & 0x07);
-	coap_pkt->block1_offset =
-	  (coap_pkt->block1_num
-	   & ~0x0000000F)
-	  << (coap_pkt->block1_num
-	      & 0x07);
-	coap_pkt->block1_num >>= 4;
-	LOG("Block1 [%lu%s (%u B/blk)]\n",
-	    (unsigned long)coap_pkt->block1_num,
-	    coap_pkt->block1_more ? "+" : "", coap_pkt->block1_size);
-	break;
-      case COAP_OPTION_SIZE2:
-	coap_pkt->size2 = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Size2 [%lu]\n", (unsigned long)coap_pkt->size2);
-	break;
-      case COAP_OPTION_SIZE1:
-	coap_pkt->size1 = coap_parse_int_option(
-	  current_option, option_length);
-	LOG("Size1 [%lu]\n", (unsigned long)coap_pkt->size1);
-	break;
-      default:
-	LOG("unknown (%u)\n", option_number);
-	/* check if critical (odd) */
-	if(option_number & 1) {
-	  coap_error_message =
-	    "Unsupported critical option";
-	  return BAD_OPTION_4_02;
-	}
+    case COAP_OPTION_OBSERVE:
+      coap_pkt->observe = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Observe [%lu]\n", (unsigned long)coap_pkt->observe);
+      break;
+    case COAP_OPTION_BLOCK2:
+      coap_pkt->block2_num = coap_parse_int_option(
+	current_option, option_length);
+      coap_pkt->block2_more = (coap_pkt->block2_num
+			       & 0x08) >> 3;
+      coap_pkt->block2_size =
+	16
+	<< (coap_pkt->block2_num
+	    & 0x07);
+      coap_pkt->block2_offset =
+	(coap_pkt->block2_num
+	 & ~0x0000000F)
+	<< (coap_pkt->block2_num
+	    & 0x07);
+      coap_pkt->block2_num >>= 4;
+      LOG("Block2 [%lu%s (%u B/blk)]\n",
+	  (unsigned long)coap_pkt->block2_num,
+	  coap_pkt->block2_more ? "+" : "", coap_pkt->block2_size);
+      break;
+    case COAP_OPTION_BLOCK1:
+      coap_pkt->block1_num = coap_parse_int_option(
+	current_option, option_length);
+      coap_pkt->block1_more = (coap_pkt->block1_num
+			       & 0x08) >> 3;
+      coap_pkt->block1_size =
+	16
+	<< (coap_pkt->block1_num
+	    & 0x07);
+      coap_pkt->block1_offset =
+	(coap_pkt->block1_num
+	 & ~0x0000000F)
+	<< (coap_pkt->block1_num
+	    & 0x07);
+      coap_pkt->block1_num >>= 4;
+      LOG("Block1 [%lu%s (%u B/blk)]\n",
+	  (unsigned long)coap_pkt->block1_num,
+	  coap_pkt->block1_more ? "+" : "", coap_pkt->block1_size);
+      break;
+    case COAP_OPTION_SIZE2:
+      coap_pkt->size2 = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Size2 [%lu]\n", (unsigned long)coap_pkt->size2);
+      break;
+    case COAP_OPTION_SIZE1:
+      coap_pkt->size1 = coap_parse_int_option(
+	current_option, option_length);
+      LOG("Size1 [%lu]\n", (unsigned long)coap_pkt->size1);
+      break;
+    default:
+      LOG("unknown (%u)\n", option_number);
+      /* check if critical (odd) */
+      if(option_number & 1) {
+	coap_error_message =
+	  "Unsupported critical option";
+	return BAD_OPTION_4_02;
       }
     }
     current_option += option_length;
