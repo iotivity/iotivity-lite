@@ -86,7 +86,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   int credid = 0, credtype = 0;
-  char subjectuuid[37];
+  char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
   oc_sec_cred_t *credobj;
   bool got_key = false;
@@ -161,7 +161,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 	  credobj->credtype = credtype;
 	  
 	  if (got_key) {
-	    strncpy(credobj->key, key, 16);
+	    memcpy(credobj->key, key, 16);
 	  }
 	  else {
 	    if (owner)
