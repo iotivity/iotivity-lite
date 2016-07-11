@@ -83,7 +83,7 @@ static int
 response_length()
 {
   int size = oc_rep_finalize();
-  return  (size >= 0 && size <= 2)?0:size;
+  return (size <= 2)?0:size;
 }
 
 void
@@ -278,8 +278,10 @@ oc_send_slow_response(oc_slow_response_t *handle,
 	if(cur->observe == 1) {
 	  coap_set_header_observe(response, 1);
 	}
-	coap_set_payload(response, handle->buffer,
-			 response_buffer.response_length);
+	if (response_buffer.response_length > 0) {
+	  coap_set_payload(response, handle->buffer,
+			   response_buffer.response_length);
+	}
 	t->message->length = coap_serialize_message(response,
 						    t->message->data);
 	coap_send_transaction(t);
