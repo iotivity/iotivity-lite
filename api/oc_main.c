@@ -58,7 +58,7 @@ oc_main_init(oc_handler_t *handler)
 
   oc_network_event_handler_mutex_init();
   ret = oc_connectivity_init();
-  if (ret != 1)
+  if (ret < 0)
     goto err;
 
   handler->init();
