@@ -32,12 +32,17 @@
 #include "security/oc_dtls.h"
 #endif /* OC_SECURITY */
 
-static int initialized, terminate;
+static int terminate;
+static bool initialized = false;
 
 int
 oc_main_init(oc_handler_t *handler)
 {
+  int ret;
   extern int oc_stack_errno;
+
+  if (initialized == true)
+    return 0;
 
   oc_ri_init();
 
@@ -52,7 +57,9 @@ oc_main_init(oc_handler_t *handler)
 #endif
 
   oc_network_event_handler_mutex_init();
-  initialized = oc_connectivity_init();
+  ret = oc_connectivity_init();
+  if (ret != 1)
+    goto err;
 
   handler->init();
 
@@ -65,19 +72,23 @@ oc_main_init(oc_handler_t *handler)
   oc_sec_load_acl();
 #endif
 
-  initialized = (initialized && !oc_stack_errno)?1:0;
+  if (oc_stack_errno != 0) {
+    ret = -oc_stack_errno;
+    goto err;
+  }
 
-  if (initialized)
-    PRINT("oc_main: Stack successfully initialized\n");
-  else
-    oc_abort("oc_main: Error in stack initialization\n");
+  PRINT("oc_main: Stack successfully initialized\n");
 
 #ifdef OC_CLIENT
-  if (initialized)
-    handler->requests_entry();
+  handler->requests_entry();
 #endif
 
-  return initialized;
+  initialized = true;
+  return 0;
+
+err:
+  oc_abort("oc_main: Error in stack initialization\n");
+  return ret;
 }
 
 oc_clock_time_t
@@ -93,6 +104,11 @@ oc_main_poll()
 void
 oc_main_shutdown()
 {
+  if (initialized == false) {
+    PRINT("tiny_ocf is not initialized\n");
+    return;
+  }
+
   oc_connectivity_shutdown();
   oc_ri_shutdown();
 
@@ -101,5 +117,5 @@ oc_main_shutdown()
 #endif
 
   terminate = 1;
-  initialized = 0;
+  initialized = false;
 }
