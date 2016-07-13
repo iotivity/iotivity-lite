@@ -7,3 +7,5 @@ port/linux/obj/
 port/zephyr/outdir/
 *.o
 *.cmd
+.clang-format
+_clang-format
