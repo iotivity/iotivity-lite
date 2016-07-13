@@ -1,0 +1,15 @@
+Both tools, pre-commit and check-style, use clang-format to fix the code style.
+
+In order to use the tools one should copy the file "_clang-format" to the
+project's root dir. This file contains the description of the iotivity-constrained code
+style and will be used by clang-format.
+
+The check-style tool can fix the code style of the project's file or only print
+the changes. If no parameter is given the files are automatically fixed, to only
+print the changes the option "-p" should be given.
+
+The pre-commit tool is a git hook that fix the code style of the commmit
+automatically.  To use this tool one have to copy this file to
+<project-root-dir>/.git/hooks/
+
+

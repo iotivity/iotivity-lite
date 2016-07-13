@@ -1,0 +1,81 @@
+#!/usr/bin/env python2
+
+# Copyright(c) 2016 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0(the "License")
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import argparse
+import difflib
+import os
+import re
+import string
+import subprocess
+import sys
+
+
+def get_root_dir():
+    cmd = ['git', 'rev-parse', '--show-toplevel']
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+            stderr=None, stdin=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        return None
+    return stdout.splitlines()[0]
+
+def get_files():
+    files = None
+    cmd = ['git', 'ls-files']
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+            stderr=None, stdin=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        return None
+    return list(filter(lambda x: x.endswith(b".c") or x.endswith(b".h"), stdout.splitlines()))
+
+def print_diff(filename, clang_output):
+    with open(filename) as f:
+        print "\n".join(difflib.unified_diff(map(lambda x: x[:-1], f.readlines()),
+            clang_output.splitlines(), fromfile=filename, tofile=filename))
+
+def check_style(files, only_print):
+    cmd = ['clang-format', '-style=file']
+
+    if not only_print:
+        cmd.append("-i")
+
+    for f in files:
+        cmd.append(f)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                stderr=None, stdin=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            sys.exit(process.returncode)
+
+        if only_print:
+            print_diff(f, stdout)
+        cmd.pop()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=
+                                     'Format the files in the repository according '
+                                     'with iotivity constrained code style.')
+    parser.add_argument('-p', action='store_true', default=False,
+                        help='Only print the changes')
+
+    args = parser.parse_args()
+    current_dir = os.getcwd()
+    root_dir = get_root_dir()
+
+    os.chdir(root_dir)
+    check_style(get_files(), args.p)
+    os.chdir(current_dir)
