@@ -1,11 +1,13 @@
-ccflags-y += ${PROJECTINCLUDE}
-EXTRA_CFLAGS += -I${srctree}/net/ip/contiki
-EXTRA_CFLAGS += -I${srctree}/net/ip/contiki/os/lib
-EXTRA_CFLAGS += -I${srctree}/net/ip/contiki/os
-EXTRA_CFLAGS += -I${srctree}/net/ip
-EXTRA_CFLAGS += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DDEBUG #-DOC_CLIENT -DOC_SECURITY
+#ccflags-y += ${PROJECTINCLUDE}
+ccflags-y += -I${ZEPHYR_BASE}/net/ip
+ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki
+ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os/lib
+ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os
+
+ccflags-y += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DNDEBUG #-DOC_SECURITY#-DOC_CLIENT
 
 obj-y += ../../../apps/server.o
+#obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
 
 obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../deps/tinycbor/src/cborencoder.o \
