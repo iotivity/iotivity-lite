@@ -150,22 +150,25 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
 /** API for setting handlers for interrupts */
 
 #define oc_signal_interrupt_handler(name) do {	\
-    oc_process_poll(&(name ## _interrupt));	\
+    oc_process_poll(&(name ## _interrupt_x));	\
     oc_signal_main_loop();			\
   } while(0)
 
-#define oc_activate_interrupt_handler(name) (oc_process_start(&(name ## _interrupt), 0))
+#define oc_activate_interrupt_handler(name) (oc_process_start(&(name ## _interrupt_x), 0))
 
-#define oc_set_interrupt_handler(name, handler)			\
-  OC_PROCESS(name ## _interrupt, "");				\
-  OC_PROCESS_THREAD(name ## _interrupt, ev, data)		\
-  {								\
-    OC_PROCESS_POLLHANDLER(handler());				\
-    OC_PROCESS_BEGIN();						\
-    while (oc_process_is_running(&(name ## _interrupt))) {	\
-      OC_PROCESS_YIELD();					\
-    }								\
-    OC_PROCESS_END();						\
-  }
+#define oc_define_interrupt_handler(name)				\
+  void name ## _interrupt_x_handler();					\
+  OC_PROCESS(name ## _interrupt_x, "");					\
+  OC_PROCESS_THREAD(name ## _interrupt_x, ev, data)			\
+  {									\
+    OC_PROCESS_POLLHANDLER(name ## _interrupt_x_handler());		\
+    OC_PROCESS_BEGIN();							\
+    while (oc_process_is_running(&(name ## _interrupt_x))) {		\
+      OC_PROCESS_YIELD();						\
+    }									\
+    OC_PROCESS_END();							\
+  }									\
+  void name ## _interrupt_x_handler()
+
 
 #endif /* OC_API_H */
