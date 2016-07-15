@@ -64,12 +64,12 @@ typedef enum {
   IGNORE
 } oc_status_t;
 
-typedef struct oc_slow_response_s oc_slow_response_t;
+typedef struct oc_separate_response_s oc_separate_response_t;
 
 typedef struct oc_response_buffer_s oc_response_buffer_t;
 
 typedef struct {
-  oc_slow_response_t *slow_response;
+  oc_separate_response_t *separate_response;
   oc_response_buffer_t *response_buffer;
 } oc_response_t;
 

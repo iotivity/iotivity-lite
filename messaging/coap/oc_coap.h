@@ -20,11 +20,11 @@
 #include "util/oc_list.h"
 #include "separate.h"
 
-typedef struct oc_slow_response_s {
+typedef struct oc_separate_response_s {
   OC_LIST_STRUCT(requests);
-  int in_process;
+  int active;
   uint8_t buffer[COAP_MAX_BLOCK_SIZE];
-} oc_slow_response_t;
+} oc_separate_response_t;
 
 typedef struct oc_response_buffer_s {
   uint8_t *buffer;

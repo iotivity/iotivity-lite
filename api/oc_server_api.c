@@ -221,29 +221,31 @@ oc_interate_query(oc_request_t *request, char **key, int *key_len,
 }
 
 void
-oc_indicate_slow_response(oc_request_t *request,
-			  oc_slow_response_t *response)
+oc_indicate_separate_response(oc_request_t *request,
+			      oc_separate_response_t *response)
 {
-  request->response->slow_response = response;
+  request->response->separate_response = response;
   oc_send_response(request, OK);
 }
 
 void
-oc_set_slow_response_buffer(oc_slow_response_t *handle)
+oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
   oc_rep_new(handle->buffer, COAP_MAX_BLOCK_SIZE); // check
 }
 
 void
-oc_send_slow_response(oc_slow_response_t *handle,
-		      oc_status_t response_code)
+oc_send_separate_response(oc_separate_response_t *handle,
+			  oc_status_t response_code)
 {
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
   response_buffer.response_length = response_length();
   response_buffer.code = oc_status_code(response_code);
+
   coap_separate_t *cur = oc_list_head(handle->requests), *next = NULL;
   coap_packet_t response[1];
+
   while(cur != NULL) {
     next = cur->next;
     if(cur->observe > 0) {
@@ -265,14 +267,19 @@ oc_send_slow_response(oc_slow_response_t *handle,
 						    t->message->data);
 	coap_send_transaction(t);
       }
+      coap_separate_clear(handle, cur);
     } else {
-      coap_notify_observers(NULL, &response_buffer,
-			    &cur->endpoint);
+      if (coap_notify_observers(NULL,
+				&response_buffer,
+				&cur->endpoint) == 0) {
+	coap_separate_clear(handle, cur);
+      }
     }
-    coap_separate_clear(handle, cur);
     cur = next;
   }
-  handle->in_process = 0;
+  if (oc_list_length(handle->requests) == 0) {
+    handle->active = 0;
+  }
 }
 
 int

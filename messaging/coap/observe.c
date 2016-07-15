@@ -196,9 +196,9 @@ int coap_notify_observers(oc_resource_t *resource,
   uint8_t buffer[COAP_MAX_BLOCK_SIZE];
   oc_request_t request = {};
   oc_response_t response = {};
-  response.slow_response = 0;
+  response.separate_response = 0;
   oc_response_buffer_t response_buffer;
-  if(!response_buf && resource) {
+  if(!response_buf && resource && (resource->properties & OC_PERIODIC)) {
     LOG("coap_notify_observers: Issue GET request to resource\n");
     /* performing GET on the resource */
     response_buffer.buffer = buffer;
@@ -226,7 +226,8 @@ int coap_notify_observers(oc_resource_t *resource,
 				     sizeof(oc_endpoint_t))
 		  == 0));
       obs = obs->next) {
-    if(response.slow_response != NULL
+    num_observers = obs->resource->num_observers;
+    if(response.separate_response != NULL
        && response_buf->code == oc_status_code(OK)) {
       coap_packet_t req[1];
       /*
@@ -239,9 +240,9 @@ int coap_notify_observers(oc_resource_t *resource,
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
       LOG("Resource is SLOW; creating separate response\n");
-      if(coap_separate_accept(req, response.slow_response,
-			      &obs->endpoint, 0))
-	response.slow_response->in_process = 1;
+      if(coap_separate_accept(req, response.separate_response,
+			      &obs->endpoint, 0) == 1)
+	response.separate_response->active = 1;
     } else {
       LOG("coap_notify_observers: notifying observer\n");
       coap_transaction_t *transaction = NULL;
