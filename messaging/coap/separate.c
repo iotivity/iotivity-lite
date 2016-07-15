@@ -42,7 +42,7 @@
 #include "transactions.h"
 #include "oc_buffer.h"
 
-OC_MEMB(slow_requests, coap_separate_t, MAX_APP_RESOURCES);
+OC_MEMB(separate_requests, coap_separate_t, 5); //FIX
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
@@ -59,21 +59,33 @@ OC_MEMB(slow_requests, coap_separate_t, MAX_APP_RESOURCES);
  * this function will respond with 5.03 Service Unavailable. The client can
  * then retry later.
  */
-int coap_separate_accept(void *request, oc_slow_response_t *slow_response,
-			 oc_endpoint_t *endpoint, int observe)
+int coap_separate_accept(void *request,
+			 oc_separate_response_t *separate_response,
+			 oc_endpoint_t *endpoint,
+			 int observe)
 {
-  if(slow_response->in_process == 0) {
-    OC_LIST_STRUCT_INIT(slow_response, requests);
+  if(separate_response->active == 0) {
+    OC_LIST_STRUCT_INIT(separate_response, requests);
   }
 
   coap_packet_t * const coap_req = (coap_packet_t *)request;
 
-  coap_separate_t *separate_store = oc_memb_alloc(&slow_requests);
+  for (coap_separate_t *item =
+	 oc_list_head(separate_response->requests);
+       item != NULL;
+       item = oc_list_item_next(separate_response->requests)) {
+    if (item->token_len == coap_req->token_len &&
+	memcmp(item->token, coap_req->token, item->token_len) == 0) {
+      return 0;
+    }
+  }
+
+  coap_separate_t *separate_store = oc_memb_alloc(&separate_requests);
 
   if(!separate_store)
     return 0;
 
-  oc_list_add(slow_response->requests, separate_store);
+  oc_list_add(separate_response->requests, separate_store);
 
   erbium_status_code = CLEAR_TRANSACTION;
   /* send separate ACK for CON */
@@ -95,7 +107,7 @@ int coap_separate_accept(void *request, oc_slow_response_t *slow_response,
 					       message->data);
       coap_send_message(message);
     } else {
-      coap_separate_clear(slow_response, separate_store);
+      coap_separate_clear(separate_response, separate_store);
       erbium_status_code = SERVICE_UNAVAILABLE_5_03;
       return 0;
     }
@@ -122,8 +134,10 @@ int coap_separate_accept(void *request, oc_slow_response_t *slow_response,
   return 1;
 }
 /*----------------------------------------------------------------------------*/
-void coap_separate_resume(void *response, coap_separate_t *separate_store,
-			  uint8_t code, uint16_t mid)
+void coap_separate_resume(void *response,
+			  coap_separate_t *separate_store,
+			  uint8_t code,
+			  uint16_t mid)
 {
   coap_init_message(response, separate_store->type, code, mid);
   if(separate_store->token_len) {
@@ -136,11 +150,11 @@ void coap_separate_resume(void *response, coap_separate_t *separate_store,
   }
 }
 /*---------------------------------------------------------------------------*/
-void coap_separate_clear(oc_slow_response_t *slow_response,
+void coap_separate_clear(oc_separate_response_t *separate_response,
 			 coap_separate_t *separate_store)
 {
-  oc_memb_free(&slow_requests, separate_store);
-  oc_list_remove(slow_response->requests, separate_store);
+  oc_list_remove(separate_response->requests, separate_store);
+  oc_memb_free(&separate_requests, separate_store);
 }
 
 #endif /* OC_SERVER */

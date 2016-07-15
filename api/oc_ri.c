@@ -464,7 +464,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
   response_buffer.block_offset = offset;
   response_buffer.code = 0;
   response_buffer.response_length = 0;
-  response_obj.slow_response = 0;
+  response_obj.separate_response = 0;
   response_obj.response_buffer = &response_buffer;
   request_obj.response = &response_obj;
   request_obj.request_payload = 0;
@@ -615,11 +615,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif
 
 #ifdef OC_SERVER
-  if (response_obj.slow_response != NULL) {
+  if (response_obj.separate_response != NULL) {
     if(coap_separate_accept(request,
-			    response_obj.slow_response, endpoint,
-			    observe))
-      response_obj.slow_response->in_process = 1;
+			    response_obj.separate_response, endpoint,
+			    observe) == 1)
+      response_obj.separate_response->active = 1;
   }
   else
 #endif
@@ -702,7 +702,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
     -empty ack sent from below by engine
     if ack with piggyback then process as above
     -processed below
-    if ack and empty then it is slow response, and keep cb
+    if ack and empty then it is a separate response, and keep cb
     -handled by separate flag
     if ack is for block then store data and pass to client
   */

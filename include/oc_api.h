@@ -18,6 +18,7 @@
 #define OC_API_H
 
 #include "oc_ri.h"
+#include "messaging/coap/oc_coap.h"
 #include "port/oc_signal_main_loop.h"
 #include "port/oc_storage.h"
 
@@ -91,13 +92,11 @@ void oc_send_response(oc_request_t *request,
 		      oc_status_t response_code);
 void oc_ignore_request(oc_request_t *request);
 
-void oc_indicate_slow_response(oc_request_t *request,
-			       oc_slow_response_t *response);
-
-void oc_set_slow_response_buffer(oc_slow_response_t *handle);
-
-void oc_send_slow_response(oc_slow_response_t *handle,
-			   oc_status_t response_code);
+void oc_indicate_separate_response(oc_request_t *request,
+				   oc_separate_response_t *response);
+void oc_set_separate_response_buffer(oc_separate_response_t *handle);
+void oc_send_separate_response(oc_separate_response_t *handle,
+			       oc_status_t response_code);
 
 int oc_notify_observers(oc_resource_t *resource);
 

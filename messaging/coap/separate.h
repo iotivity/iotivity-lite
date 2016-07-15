@@ -59,11 +59,15 @@ typedef struct coap_separate {
   oc_endpoint_t endpoint;
 } coap_separate_t;
 
-int coap_separate_accept(void *request, oc_slow_response_t *slow_response,
-			 oc_endpoint_t *endpoint, int observe);
-void coap_separate_resume(void *response, coap_separate_t *separate_store,
-			  uint8_t code, uint16_t mid);
-void coap_separate_clear(oc_slow_response_t *slow_response,
+int coap_separate_accept(void *request,
+			 oc_separate_response_t *separate_response,
+			 oc_endpoint_t *endpoint,
+			 int observe);
+void coap_separate_resume(void *response,
+			  coap_separate_t *separate_store,
+			  uint8_t code,
+			  uint16_t mid);
+void coap_separate_clear(oc_separate_response_t *separate_response,
 			 coap_separate_t *separate_store);
 
 #endif /* SEPARATE_H */
