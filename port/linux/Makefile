@@ -29,7 +29,7 @@ endif
 
 .PHONY: clean output_dir
 
-all: output_dir client server
+all: output_dir client server temp_sensor
 
 output_dir:
 	mkdir -p obj/server
@@ -51,5 +51,8 @@ server: output_dir ${OBJ_COMMON} ${OBJ_SERVER}
 client: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
+temp_sensor: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
+
 clean:
-	rm -rf obj server client
+	rm -rf obj server client temp_sensor
