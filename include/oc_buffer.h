@@ -22,7 +22,7 @@
 #include "port/oc_connectivity.h"
 
 OC_PROCESS_NAME(message_buffer_handler);
-oc_message_t *oc_allocate_message();
+oc_message_t *oc_allocate_message(void);
 void oc_message_add_ref(oc_message_t *message);
 void oc_message_unref(oc_message_t *message);
 

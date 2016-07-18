@@ -29,7 +29,7 @@ typedef struct oc_sec_cred_s {
   uint8_t key[16]; //Supports only 128-bit keys
 } oc_sec_cred_t;
 
-void oc_sec_encode_cred();
+void oc_sec_encode_cred(void);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner);
 oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid);
 oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid);

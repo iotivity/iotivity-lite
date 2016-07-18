@@ -49,10 +49,10 @@ typedef struct oc_sec_ace_s {
   oc_uuid_t subjectuuid;      
 } oc_sec_ace_t;
 
-void oc_sec_acl_default();
-void oc_sec_encode_acl();
+void oc_sec_acl_default(void);
+void oc_sec_encode_acl(void);
 bool oc_sec_decode_acl(oc_rep_t *rep);
-void oc_sec_acl_init();
+void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t interface);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 		      oc_endpoint_t *endpoint);

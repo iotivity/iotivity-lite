@@ -40,9 +40,9 @@ typedef struct {
 
 int oc_main_init(oc_handler_t *handler);
 
-oc_clock_time_t oc_main_poll();
+oc_clock_time_t oc_main_poll(void);
 
-void oc_main_shutdown();
+void oc_main_shutdown(void);
 
 void oc_new_device(const char *uri, const char *rt,
 		   const char *name, const char *spec_version,
@@ -122,7 +122,7 @@ bool oc_init_put(const char *uri,
 		 oc_response_handler_t handler,
 		 oc_qos_t qos);
 
-bool oc_do_put();
+bool oc_do_put(void);
 
 bool oc_init_post(const char *uri,
 		  oc_server_handle_t *server,
@@ -130,7 +130,7 @@ bool oc_init_post(const char *uri,
 		  oc_response_handler_t handler,
 		  oc_qos_t qos);
 
-bool oc_do_post();
+bool oc_do_post(void);
 
 bool oc_do_observe(const char *uri,
 		   oc_server_handle_t *server,
@@ -149,26 +149,26 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 
 /** API for setting handlers for interrupts */
 
-#define oc_signal_interrupt_handler(name) do {	\
-    oc_process_poll(&(name ## _interrupt_x));	\
-    oc_signal_main_loop();			\
-  } while(0)
+#define oc_signal_interrupt_handler(name)                                      \
+  do {                                                                         \
+    oc_process_poll(&(name##_interrupt_x));                                    \
+    oc_signal_main_loop();                                                     \
+  } while (0)
 
 #define oc_activate_interrupt_handler(name) (oc_process_start(&(name ## _interrupt_x), 0))
 
-#define oc_define_interrupt_handler(name)				\
-  void name ## _interrupt_x_handler();					\
-  OC_PROCESS(name ## _interrupt_x, "");					\
-  OC_PROCESS_THREAD(name ## _interrupt_x, ev, data)			\
-  {									\
-    OC_PROCESS_POLLHANDLER(name ## _interrupt_x_handler());		\
-    OC_PROCESS_BEGIN();							\
-    while (oc_process_is_running(&(name ## _interrupt_x))) {		\
-      OC_PROCESS_YIELD();						\
-    }									\
-    OC_PROCESS_END();							\
-  }									\
-  void name ## _interrupt_x_handler()
-
+#define oc_define_interrupt_handler(name)                                      \
+  void name##_interrupt_x_handler(void);                                       \
+  OC_PROCESS(name##_interrupt_x, "");                                          \
+  OC_PROCESS_THREAD(name##_interrupt_x, ev, data)                              \
+  {                                                                            \
+    OC_PROCESS_POLLHANDLER(name##_interrupt_x_handler());                      \
+    OC_PROCESS_BEGIN();                                                        \
+    while (oc_process_is_running(&(name##_interrupt_x))) {                     \
+      OC_PROCESS_YIELD();                                                      \
+    }                                                                          \
+    OC_PROCESS_END();                                                          \
+  }                                                                            \
+  void name##_interrupt_x_handler(void)
 
 #endif /* OC_API_H */

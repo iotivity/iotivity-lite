@@ -17,6 +17,6 @@
 #ifndef OC_SIGNAL_MAIN_LOOP_H
 #define OC_SIGNAL_MAIN_LOOP_H
 
-void oc_signal_main_loop();
+void oc_signal_main_loop(void);
 
 #endif /* OC_SIGNAL_MAIN_LOOP_H */
