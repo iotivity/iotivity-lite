@@ -23,13 +23,14 @@
 #include <stdlib.h>
 #define abort_impl() abort()
 #else
-void abort_impl();
+void abort_impl(void);
 #endif
 
-#define oc_abort(msg) do {						\
+#define oc_abort(msg)                                                          \
+  do {                                                                         \
     LOG("\n%s:%d:%s: error: %s\nAbort.\n", __FILE__, __LINE__, __func__, msg); \
-    abort_impl();							\
-  } while(0)
+    abort_impl();                                                              \
+  } while (0)
 
 #define oc_assert(cond) do {			\
     if (!(cond)) {				\

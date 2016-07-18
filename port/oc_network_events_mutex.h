@@ -17,10 +17,10 @@
 #ifndef OC_NETWORK_EVENTS_MUTEX_H
 #define OC_NETWORK_EVENTS_MUTEX_H
 
-void oc_network_event_handler_mutex_init();
+void oc_network_event_handler_mutex_init(void);
 
-void oc_network_event_handler_mutex_lock();
+void oc_network_event_handler_mutex_lock(void);
 
-void oc_network_event_handler_mutex_unlock();
+void oc_network_event_handler_mutex_unlock(void);
 
 #endif /* OC_NETWORK_EVENTS_MUTEX_H */

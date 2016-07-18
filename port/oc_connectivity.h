@@ -65,12 +65,12 @@ typedef struct oc_message_s {
 void oc_send_buffer(oc_message_t * message);
 
 #ifdef OC_SECURITY
-uint16_t oc_connectivity_get_dtls_port();
+uint16_t oc_connectivity_get_dtls_port(void);
 #endif /* OC_SECURITY */
 
-int oc_connectivity_init();
+int oc_connectivity_init(void);
 
-void oc_connectivity_shutdown();
+void oc_connectivity_shutdown(void);
 
 void oc_send_multicast_message(oc_message_t *message);
 

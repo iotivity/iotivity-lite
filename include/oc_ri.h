@@ -140,9 +140,9 @@ typedef struct oc_event_callback_s {
   void *data;
 } oc_event_callback_t;
 
-void oc_ri_init();
+void oc_ri_init(void);
 
-void oc_ri_shutdown();
+void oc_ri_shutdown(void);
 
 void oc_ri_add_timed_event_callback_ticks(void *cb_data,
 					  oc_trigger_t event_callback,
@@ -156,10 +156,10 @@ int oc_status_code(oc_status_t key);
 
 oc_resource_t * oc_ri_get_app_resource_by_uri(const char *uri);
 
-oc_resource_t * oc_ri_get_app_resources();
+oc_resource_t *oc_ri_get_app_resources(void);
 
 #ifdef OC_SERVER
-oc_resource_t * oc_ri_alloc_resource();
+oc_resource_t *oc_ri_alloc_resource(void);
 bool oc_ri_add_resource(oc_resource_t *resource);
 void oc_ri_delete_resource(oc_resource_t *resource);
 #endif

@@ -34,7 +34,7 @@ oc_string_t * oc_core_add_new_device(const char *uri,
                                      oc_core_add_device_cb_t add_device_cb,
                                      void *data);
 
-int oc_core_get_num_devices();
+int oc_core_get_num_devices(void);
 
 oc_uuid_t * oc_core_get_device_id(int device);
 

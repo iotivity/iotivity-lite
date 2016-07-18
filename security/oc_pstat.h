@@ -27,11 +27,11 @@ typedef struct {
   int sm;
 } oc_sec_pstat_t;
 
-bool oc_sec_provisioned();
+bool oc_sec_provisioned(void);
 void oc_sec_decode_pstat(oc_rep_t *rep);
-void oc_sec_encode_pstat();
-oc_sec_pstat_t *oc_sec_get_pstat();
-void oc_sec_pstat_default();
+void oc_sec_encode_pstat(void);
+oc_sec_pstat_t *oc_sec_get_pstat(void);
+void oc_sec_pstat_default(void);
 void get_pstat(oc_request_t *request, oc_interface_mask_t interface);
 void post_pstat(oc_request_t *request, oc_interface_mask_t interface);
 

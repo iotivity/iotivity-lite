@@ -17,6 +17,6 @@
 #ifndef OC_SVR_H
 #define OC_SVR_H
 
-void oc_sec_create_svr();
+void oc_sec_create_svr(void);
 
 #endif /* OC_SVR_H */
