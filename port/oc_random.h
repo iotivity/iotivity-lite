@@ -51,6 +51,6 @@ unsigned short oc_random_rand(void);
 /* Since random_rand casts to unsigned short, we'll use this maxmimum */
 #define RANDOM_RAND_MAX 65535U
 
-void oc_random_destroy();
+void oc_random_destroy(void);
 
 #endif /* OC_RANDOM_H */

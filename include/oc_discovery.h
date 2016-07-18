@@ -17,6 +17,6 @@
 #ifndef OC_DISCOVERY_H
 #define OC_DISCOVERY_H
 
-void oc_create_discovery_resource();
+void oc_create_discovery_resource(void);
 
 #endif /* OC_DISCOVERY_H */

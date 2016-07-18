@@ -17,10 +17,10 @@
 #ifndef OC_STORE_H_
 #define OC_STORE_H_
 
-void oc_sec_load_pstat();
-void oc_sec_load_doxm();
-void oc_sec_load_cred();
-void oc_sec_load_acl();
-void oc_sec_dump_state();
+void oc_sec_load_pstat(void);
+void oc_sec_load_doxm(void);
+void oc_sec_load_cred(void);
+void oc_sec_load_acl(void);
+void oc_sec_dump_state(void);
 
 #endif /* OC_STORE_H_ */
