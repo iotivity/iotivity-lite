@@ -16,7 +16,7 @@
 
 #include "oc_api.h"
 
-oc_separate_response_t temp_response;
+static oc_separate_response_t temp_response;
 static int temperature;
 
 oc_define_interrupt_handler(temp_sensor)
@@ -32,7 +32,7 @@ oc_define_interrupt_handler(temp_sensor)
   }
 }
 
-void
+static void
 app_init(void)
 {
   oc_activate_interrupt_handler(temp_sensor);
@@ -43,7 +43,7 @@ app_init(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 fetch_credentials(void)
 {
   oc_storage_config("./creds");
@@ -56,7 +56,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface)
   oc_indicate_separate_response(request, &temp_response);
 }
 
-void
+static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource("/temp/1", 1, 0);
@@ -80,7 +80,7 @@ register_resources(void)
 
 static char fiber_stack[512];
 
-void
+static void
 fake_sensor_fiber(void)
 {
   struct nano_timer timer;
