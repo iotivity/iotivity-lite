@@ -24,9 +24,9 @@
 
 #define STORE_PATH_SIZE 64
 
-char store_path[STORE_PATH_SIZE];
-int store_path_len;
-bool path_set = false;
+static char store_path[STORE_PATH_SIZE];
+static int store_path_len;
+static bool path_set = false;
 
 int
 oc_storage_config(const char *store)

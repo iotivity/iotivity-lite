@@ -16,13 +16,13 @@
 
 #include "oc_api.h"
 
-void
+static void
 set_device_custom_property(void *data)
 {
   oc_set_custom_device_property(purpose, "operate lamp");
 }
 
-void
+static void
 app_init(void)
 {
   oc_init_platform("Apple", NULL, NULL);
@@ -31,7 +31,7 @@ app_init(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 fetch_credentials(void)
 {
   oc_storage_config("./creds");
@@ -43,15 +43,15 @@ static char light_1[MAX_URI_LENGTH];
 static oc_server_handle_t light_server;
 static bool light_state = false;
 
-oc_event_callback_retval_t
-stop_observe(void* data)
+static oc_event_callback_retval_t
+stop_observe(void *data)
 {
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, &light_server);
   return DONE;
 }
 
-void
+static void
 put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
@@ -61,7 +61,7 @@ put_light(oc_client_response_t *data)
     PRINT("PUT response code %d\n", data->code);
 }
 
-void
+static void
 observe_light(oc_client_response_t *data)
 {
   PRINT("OBSERVE_light:\n");
@@ -92,12 +92,9 @@ observe_light(oc_client_response_t *data)
     PRINT("Could not init PUT\n");
 }
 
-oc_discovery_flags_t
-discovery(const char *di,
-	  const char *uri,
-	  oc_string_array_t types,
-	  oc_interface_mask_t interfaces,
-	  oc_server_handle_t* server)
+static oc_discovery_flags_t
+discovery(const char *di, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_server_handle_t *server)
 {
   int i;
   int uri_len = strlen(uri);
@@ -119,7 +116,7 @@ discovery(const char *di,
   return OC_CONTINUE_DISCOVERY;
 }
 
-void
+static void
 issue_requests(void)
 {
   oc_do_ip_discovery("oic.r.light", &discovery);
@@ -176,11 +173,10 @@ main(void)
 #include "port/oc_signal_main_loop.h"
 #include "port/oc_clock.h"
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-int quit = 0;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+static struct timespec ts;
+static int quit = 0;
 
 void
 oc_signal_main_loop(void)
@@ -188,7 +184,7 @@ oc_signal_main_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   oc_signal_main_loop();

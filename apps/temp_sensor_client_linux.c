@@ -16,7 +16,7 @@
 
 #include "oc_api.h"
 
-void
+static void
 app_init(void)
 {
   oc_init_platform("GE", NULL, NULL);
@@ -25,7 +25,7 @@ app_init(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 fetch_credentials(void)
 {
   oc_storage_config("./creds");
@@ -37,15 +37,15 @@ static char temp_1[MAX_URI_LENGTH];
 static oc_server_handle_t temp_sensor;
 static int temperature;
 
-oc_event_callback_retval_t
-stop_observe(void* data)
+static oc_event_callback_retval_t
+stop_observe(void *data)
 {
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(temp_1, &temp_sensor);
   return DONE;
 }
 
-void
+static void
 get_temp(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
@@ -63,12 +63,9 @@ get_temp(oc_client_response_t *data)
   }
 }
 
-oc_discovery_flags_t
-discovery(const char *di,
-	  const char *uri,
-	  oc_string_array_t types,
-	  oc_interface_mask_t interfaces,
-	  oc_server_handle_t* server)
+static oc_discovery_flags_t
+discovery(const char *di, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_server_handle_t *server)
 {
   int i;
   int uri_len = strlen(uri);
@@ -91,7 +88,7 @@ discovery(const char *di,
   return OC_CONTINUE_DISCOVERY;
 }
 
-void
+static void
 issue_requests(void)
 {
   oc_do_ip_discovery("oic.r.tempsensor", &discovery);
@@ -103,11 +100,10 @@ issue_requests(void)
 #include "port/oc_signal_main_loop.h"
 #include "port/oc_clock.h"
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-int quit = 0;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+static struct timespec ts;
+static int quit = 0;
 
 void
 oc_signal_main_loop(void)
@@ -115,7 +111,7 @@ oc_signal_main_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   oc_signal_main_loop();

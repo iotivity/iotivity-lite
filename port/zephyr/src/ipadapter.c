@@ -108,7 +108,7 @@ oc_network_event_handler_mutex_unlock(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 dtls_recv(void)
 {
   static struct net_buf *buf;
@@ -122,7 +122,7 @@ dtls_recv(void)
 }
 #endif /* OC_SECURITY */
 
-void
+static void
 multicast_recv(void)
 {
   static struct net_buf *buf;
@@ -135,7 +135,7 @@ multicast_recv(void)
   }
 }
 
-void
+static void
 server_recv(void)
 {
   static struct net_buf *buf;

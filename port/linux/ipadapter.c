@@ -35,16 +35,16 @@
 #define COAP_PORT_UNSECURED (5683)
 #define ALL_COAP_NODES_V6 "FF02::FD"
 
-pthread_t event_thread;
-pthread_mutex_t mutex;
+static pthread_t event_thread;
+static pthread_mutex_t mutex;
 
-struct sockaddr_storage mcast, server, client;
-int server_sock = -1, mcast_sock = -1, terminate;
+static struct sockaddr_storage mcast, server, client;
+static int server_sock = -1, mcast_sock = -1, terminate;
 
 #ifdef OC_SECURITY
-struct sockaddr_storage secure;
-int secure_sock = -1;
-uint16_t dtls_port = 0;
+static struct sockaddr_storage secure;
+static int secure_sock = -1;
+static uint16_t dtls_port = 0;
 
 uint16_t
 oc_connectivity_get_dtls_port(void)
@@ -73,8 +73,8 @@ oc_network_event_handler_mutex_unlock(void)
   pthread_mutex_unlock(&mutex);
 }
 
-void *
-network_event_thread(void* data)
+static void *
+network_event_thread(void *data)
 {
   struct sockaddr_in6 *c = (struct sockaddr_in6*)&client;
   socklen_t len = sizeof(client);

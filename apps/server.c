@@ -18,13 +18,13 @@
 
 static bool light_state = false;
 
-void
+static void
 set_device_custom_property(void *data)
 {
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-void
+static void
 app_init(void)
 {
   oc_init_platform("Intel", NULL, NULL);
@@ -34,7 +34,7 @@ app_init(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 fetch_credentials(void)
 {
   oc_storage_config("./creds");
@@ -85,7 +85,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
   light_state = state;
 }
 
-void
+static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource("/light/1", 1, 0);
@@ -154,11 +154,10 @@ main(void)
 #include "port/oc_signal_main_loop.h"
 #include "port/oc_clock.h"
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-int quit = 0;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+static struct timespec ts;
+static int quit = 0;
 
 void
 oc_signal_main_loop(void)
@@ -166,7 +165,7 @@ oc_signal_main_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   oc_signal_main_loop();
