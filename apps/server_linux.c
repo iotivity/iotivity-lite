@@ -15,7 +15,17 @@
 */
 
 #include "oc_api.h"
+#include "port/oc_clock.h"
+#include "port/oc_signal_main_loop.h"
 
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+static struct timespec ts;
+static int quit = 0;
 static bool light_state = false;
 
 static void
@@ -103,62 +113,6 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-#if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
-
-#include <zephyr.h>
-#include <sections.h>
-#include "port/oc_signal_main_loop.h"
-#include <string.h>
-
-static struct nano_sem block;
-
-void
-oc_signal_main_loop(void)
-{
-  nano_sem_give(&block);
-}
-
-void
-main(void)
-{
-  oc_handler_t handler = {.init = app_init,
-#ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
-			  .register_resources = register_resources
-  };
-
-  nano_sem_init(&block);
-
-  if (oc_main_init(&handler) < 0)
-    return;
-
-  oc_clock_time_t next_event;
-
-  while (true) {
-    next_event = oc_main_poll();
-    if (next_event == 0)
-      next_event = TICKS_UNLIMITED;
-    else
-      next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
-  }
-
-  oc_main_shutdown();
-}
-
-#elif defined(__linux__) /* Linux */
-#include <stdio.h>
-#include <signal.h>
-#include <pthread.h>
-#include "port/oc_signal_main_loop.h"
-#include "port/oc_clock.h"
-
-static pthread_mutex_t mutex;
-static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
-
 void
 oc_signal_main_loop(void)
 {
@@ -212,4 +166,3 @@ main(void)
   oc_main_shutdown();
   return 0;
 }
-#endif /* __linux__ */

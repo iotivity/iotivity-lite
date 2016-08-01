@@ -6,7 +6,7 @@ ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os
 
 ccflags-y += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DNDEBUG #-DOC_SECURITY#-DOC_CLIENT
 
-obj-y += ../../../apps/server.o
+obj-y += ../../../apps/server_zephyr.o
 #obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
 
 obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
