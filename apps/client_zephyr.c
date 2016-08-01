@@ -15,6 +15,17 @@
 */
 
 #include "oc_api.h"
+#include "port/oc_signal_main_loop.h"
+
+#include <sections.h>
+#include <string.h>
+#include <zephyr.h>
+
+#define MAX_URI_LENGTH (30)
+static char light_1[MAX_URI_LENGTH];
+static oc_server_handle_t light_server;
+static bool light_state = false;
+static struct nano_sem block;
 
 static void
 set_device_custom_property(void *data)
@@ -38,11 +49,6 @@ fetch_credentials(void)
 }
 #endif
 
-#define MAX_URI_LENGTH (30)
-static char light_1[MAX_URI_LENGTH];
-static oc_server_handle_t light_server;
-static bool light_state = false;
-
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
@@ -55,7 +61,7 @@ static void
 put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
-  if (data->code == CHANGED)
+  if (data->code == OK)
     PRINT("PUT response OK\n");
   else
     PRINT("PUT response code %d\n", data->code);
@@ -87,8 +93,7 @@ observe_light(oc_client_response_t *data)
       PRINT("Sent PUT request\n");
     else
       PRINT("Could not send PUT\n");
-  }
-  else
+  } else
     PRINT("Could not init PUT\n");
 }
 
@@ -98,7 +103,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 {
   int i;
   int uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
+  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
   for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
@@ -122,15 +127,6 @@ issue_requests(void)
   oc_do_ip_discovery("oic.r.light", &discovery);
 }
 
-#if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
-
-#include <zephyr.h>
-#include <sections.h>
-#include "port/oc_signal_main_loop.h"
-#include <string.h>
-
-static struct nano_sem block;
-
 void
 oc_signal_main_loop(void)
 {
@@ -142,10 +138,9 @@ main(void)
 {
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
+                          .requests_entry = issue_requests };
 
   nano_sem_init(&block);
 
@@ -165,70 +160,3 @@ main(void)
 
   oc_main_shutdown();
 }
-
-#elif defined(__linux__) /* Linux */
-#include <stdio.h>
-#include <signal.h>
-#include <pthread.h>
-#include "port/oc_signal_main_loop.h"
-#include "port/oc_clock.h"
-
-static pthread_mutex_t mutex;
-static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
-
-void
-oc_signal_main_loop(void)
-{
-  pthread_cond_signal(&cv);
-}
-
-static void
-handle_signal(int signal)
-{
-  oc_signal_main_loop();
-  quit = 1;
-}
-
-int
-main(void)
-{
-  int init;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-
-  oc_handler_t handler = {.init = app_init,
-#ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
-
-  oc_clock_time_t next_event;
-
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    }
-    else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
-
-  oc_main_shutdown();
-  return 0;
-}
-#endif /* __linux__ */
