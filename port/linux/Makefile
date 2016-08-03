@@ -18,6 +18,8 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DDEBUG -g
+else
+	CFLAGS += -Wl,--gc-sections
 endif
 
 ifeq ($(SECURE),1)
