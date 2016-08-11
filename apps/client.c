@@ -55,7 +55,7 @@ void
 put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
-  if (data->code == OK)
+  if (data->code == CHANGED)
     PRINT("PUT response OK\n");
   else
     PRINT("PUT response code %d\n", data->code);

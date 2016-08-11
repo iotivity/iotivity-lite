@@ -81,7 +81,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
     }
     rep = rep->next;
   }
-  oc_send_response(request, OK);
+  oc_send_response(request, CHANGED);
   light_state = state;
 }
 
