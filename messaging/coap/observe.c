@@ -326,7 +326,6 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
 	dup = coap_remove_observer_by_token(endpoint,
 					    coap_req->token,
 					    coap_req->token_len);
-	coap_set_header_observe(coap_res, 1);
       }
     }
   }
