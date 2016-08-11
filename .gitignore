@@ -1,4 +1,6 @@
 port/linux/client
 port/linux/server
 port/linux/temp_sensor
+port/linux/simpleclient
+port/linux/simpleserver
 port/linux/obj/
