@@ -3,7 +3,7 @@ CC=gcc
 DTLS=../../deps/tinydtls/ccm.c deps/tinydtls/hmac.c deps/tinydtls/netq.c deps/tinydtls/peer.c deps/tinydtls/dtls_time.c deps/tinydtls/session.c deps/tinydtls/sha2/sha2.c deps/tinydtls/ecc/ecc.c deps/tinydtls/aes/rijndael.c deps/tinydtls/crypto.c deps/tinydtls/dtls.c
 DTLSFLAGS=-DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
 
-CBOR=../../deps/tinycbor/src/cborencoder.c deps/src/tinycbor/cborencoder_close_container_checked.c deps/src/tinycbor/cborparser.c
+CBOR=../../deps/tinycbor/src/cborencoder.c deps/src/tinycbor/cborencoder_close_container_checked.c deps/src/tinycbor/cborparser.c #../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
@@ -29,7 +29,7 @@ endif
 
 .PHONY: clean output_dir
 
-all: output_dir client server temp_sensor
+all: output_dir client server temp_sensor simpleserver simpleclient
 
 output_dir:
 	mkdir -p obj/server
@@ -54,5 +54,11 @@ client: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
 temp_sensor: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
+simpleserver: output_dir ${OBJ_COMMON} ${OBJ_SERVER}
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/simpleserver.c -DOC_SERVER ${CFLAGS} -lm -pthread
+
+simpleclient: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/simpleclient.c -DOC_CLIENT ${CFLAGS} -lm -pthread
+
 clean:
-	rm -rf obj server client temp_sensor
+	rm -rf obj server client temp_sensor simpleserver simpleclient
