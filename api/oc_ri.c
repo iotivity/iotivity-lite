@@ -299,6 +299,23 @@ oc_ri_add_resource(oc_resource_t *resource)
 #endif /* OC_SERVER */
 
 void
+oc_ri_remove_timed_event_callback(void *cb_data,
+				  oc_trigger_t event_callback)
+{
+  oc_event_callback_t *event_cb =
+    (oc_event_callback_t*)oc_list_head(timed_callbacks);
+
+  while(event_cb != NULL) {
+    if (event_cb->data == cb_data && event_cb->callback == event_callback) {
+      oc_list_remove(timed_callbacks, event_cb);
+      oc_memb_free(&event_callbacks_s, event_cb);
+      break;
+    }
+    event_cb = event_cb->next;
+  }
+}
+
+void
 oc_ri_add_timed_event_callback_ticks(void *cb_data,
 				     oc_trigger_t event_callback,
 				     oc_clock_time_t ticks)
@@ -494,8 +511,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
   int payload_len = coap_get_payload(request, &payload);
   if(payload_len) {
     if (oc_parse_rep(payload, payload_len, &request_obj.request_payload)
-	!= 0)
+	!= 0) {
+      LOG("ocri: error parsing request payload\n");
       bad_request = true;
+    }
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -563,15 +582,15 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
     oc_free_rep(request_obj.request_payload);
   }
 
-  if(!cur_resource) {
+  if (bad_request) {
+    LOG("ocri: Bad Request\n");
+    response_buffer.code = oc_status_code(BAD_REQUEST);
+    success = false;
+  }
+  else if(!cur_resource) {
     LOG("ocri: Could not find resource\n");
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(NOT_FOUND);
-    success = false;
-  }
-  else if (bad_request) {
-    LOG("ocri: Bad Request\n");
-    response_buffer.code = oc_status_code(BAD_REQUEST);
     success = false;
   }
   else if(!method_impl) {
@@ -629,7 +648,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
     else {
 #ifdef OC_SERVER
       if ((method == OC_PUT || method == OC_POST) &&
-	  response_buffer.code == oc_status_code(OK))
+	  response_buffer.code < oc_status_code(BAD_REQUEST))
 	coap_notify_observers(cur_resource, NULL, NULL);
 #endif
       if (response_buffer.response_length) {
@@ -777,12 +796,15 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
       }
 
       /* check observe sequence number:
-	 if -1 or 1 then remove cb, else keep cb
+	 if -1 then remove cb, else keep cb
+         if it is an ACK for a separate response, keep cb
+         if it is a discovery response, keep cb so that it will last
+	 for the entirety of OC_CLIENT_CB_TIMEOUT_SECS
       */
-      if (client_response.observe_option != 0 &&
-	  client_response.observe_option < 2 &&
+      if (client_response.observe_option == -1 &&
 	  !separate &&
 	  !cb->discovery) {
+	oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
 	free_client_cb(cb);
       }
       else
@@ -920,12 +942,16 @@ oc_ri_process_discovery_payload(uint8_t *payload,
 		while (policy_info != NULL) {
 		  if (policy_info->type == INT &&
 		      oc_string_len(policy_info->name) == 4 &&
-		      strncmp(oc_string(policy_info->name), "port", 4) == 0)
+		      strncmp(oc_string(policy_info->name),
+			      "port", 4) == 0) {
 		    dtls_port = policy_info->value_int;
+		  }
 		  if (policy_info->type == BOOL &&
 		      oc_string_len(policy_info->name) == 3 &&
-		      strncmp(oc_string(policy_info->name), "sec", 3) == 0)
+		      strncmp(oc_string(policy_info->name), "sec", 3) == 0 &&
+		      policy_info->value_boolean == true) {
 		    secure = true;
+		  }
 		  policy_info = policy_info->next;
 		}
 	      }
