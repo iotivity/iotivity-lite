@@ -1,0 +1,4 @@
+[gerrit]
+host=gerrit.iotivity.org
+port=29418
+project=iotivity-constrained
