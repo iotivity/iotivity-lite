@@ -146,6 +146,7 @@ bool oc_stop_observe(const char *uri,
 
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
 			     uint16_t seconds);
+void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 
 /** API for setting handlers for interrupts */
 
