@@ -51,7 +51,7 @@ oc_sec_create_svr(void)
   oc_core_populate_resource(OCF_SEC_CRED, "/oic/sec/cred",
 			    "oic.sec.cred", OC_IF_BASELINE,
 			    OC_ACTIVE | OC_SECURE,
-			    0, put_cred, post_cred, 0,
+			    0, 0, post_cred, 0,
 			    0);
 }
 

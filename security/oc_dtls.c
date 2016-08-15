@@ -31,7 +31,6 @@ OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, MAX_DTLS_PEERS);
 OC_LIST(dtls_peers);
 
 static dtls_context_t *ocf_dtls_context;
-static bool otm = false;
 
 oc_sec_dtls_peer_t *
 oc_sec_dtls_get_peer(oc_endpoint_t *endpoint)
@@ -203,12 +202,6 @@ oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
   memcpy(message.data, buf, len);
   message.length = len;
   oc_send_buffer(&message);
-  if (otm) {
-    //hack to comply with IoTivity's provisioning tool, only
-    //performed once during OTM.
-    oc_send_buffer(&message);
-    otm = false;
-  }
   return len;
 }
 
@@ -297,7 +290,6 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint,
 				   server_uuid, server_uuid_len,
 				   obt_uuid, obt_uuid_len,
 				   (uint8_t*)key, key_len);
-    otm = true;
   }
 }
 
