@@ -82,12 +82,15 @@ post2_light(oc_client_response_t *data)
 {
   PRINT("POST2_light:\n");
   if (data->code == CHANGED)
-    PRINT("POST response OK\n");
+    PRINT("POST response: CHANGED\n");
+  else if (data->code == CREATED)
+    PRINT("POST response: CREATED\n");
   else
     PRINT("POST response code %d\n", data->code);
 
   oc_do_observe(a_light, &light_server, NULL, &observe_light, LOW_QOS);
-  oc_set_delayed_callback(NULL, &stop_observe, 10);
+  oc_set_delayed_callback(NULL, &stop_observe, 30);
+  PRINT("Sent OBSERVE request\n");
 }
 
 void
@@ -95,7 +98,9 @@ post_light(oc_client_response_t *data)
 {
   PRINT("POST_light:\n");
   if (data->code == CHANGED)
-    PRINT("POST response OK\n");
+    PRINT("POST response: CHANGED\n");
+  else if (data->code == CREATED)
+    PRINT("POST response: CREATED\n");
   else
     PRINT("POST response code %d\n", data->code);
 
@@ -107,33 +112,34 @@ post_light(oc_client_response_t *data)
     if (oc_do_post())
       PRINT("Sent POST request\n");
     else
-      PRINT("Could not send POST\n");
+      PRINT("Could not send POST request\n");
   }
   else
-    PRINT("Could not init POST\n");
+    PRINT("Could not init POST request\n");
 }
 
 void
 put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
-  if (data->code == CHANGED) {
-    PRINT("PUT response OK\n");
-    if (oc_init_post(a_light, &light_server, NULL, &post_light, LOW_QOS)) {
-      oc_rep_start_root_object();
-      oc_rep_set_boolean(root, state, false);
-      oc_rep_set_int(root, power, 105);
-      oc_rep_end_root_object();
-      if (oc_do_post())
-	PRINT("Sent POST request\n");
-      else
-	PRINT("Could not send POST\n");
-    }
-    else
-      PRINT("Could not init POST\n");
-  }
+
+  if (data->code == CHANGED)
+    PRINT("PUT response: CHANGED\n");
   else
     PRINT("PUT response code %d\n", data->code);
+
+  if (oc_init_post(a_light, &light_server, NULL, &post_light, LOW_QOS)) {
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, state, false);
+    oc_rep_set_int(root, power, 105);
+    oc_rep_end_root_object();
+    if (oc_do_post())
+      PRINT("Sent POST request\n");
+    else
+      PRINT("Could not send POST request\n");
+  }
+  else
+    PRINT("Could not init POST request\n");
 }
 
 void
@@ -173,10 +179,10 @@ get_light(oc_client_response_t *data)
     if (oc_do_put())
       PRINT("Sent PUT request\n");
     else
-      PRINT("Could not send PUT\n");
+      PRINT("Could not send PUT request\n");
   }
   else
-    PRINT("Could not init PUT\n");
+    PRINT("Could not init PUT request\n");
 }
 
 oc_discovery_flags_t
@@ -186,8 +192,6 @@ discovery(const char *di,
 	  oc_interface_mask_t interfaces,
 	  oc_server_handle_t* server)
 {
-  PRINT("DISCOVERY %s\n", uri);
-  PRINT("PORT %d\n", server->endpoint.ipv6_addr.port);
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
@@ -201,7 +205,7 @@ discovery(const char *di,
       a_light[uri_len] = '\0';
 
       oc_do_get(a_light, &light_server, NULL, &get_light, LOW_QOS);
-      PRINT("Sent GET\n");
+      PRINT("Sent GET request\n");
 
       return OC_STOP_DISCOVERY;
     }
