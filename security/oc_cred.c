@@ -34,7 +34,7 @@ oc_sec_cred_t *
 oc_sec_find_cred(oc_uuid_t *subjectuuid) {
   oc_sec_cred_t *cred = oc_list_head(creds_l);
   while (cred != NULL) {
-    if (strncmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {   
+    if (strncmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {
       return cred;
     }
     cred = cred->next;
@@ -50,7 +50,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid) {
     strncpy(cred->subjectuuid.id, subjectuuid->id, 16);
     oc_list_add(creds_l, cred);
   }
-  return cred; 
+  return cred;
 }
 
 void
@@ -64,7 +64,7 @@ oc_sec_encode_cred(void)
     oc_rep_object_array_start_item(creds);
     oc_rep_object_array_end_item(creds);
   }
-  while (creds != NULL) {  
+  while (creds != NULL) {
     oc_rep_object_array_start_item(creds);
     oc_rep_set_int(creds, credid, creds->credid);
     oc_rep_set_int(creds, credtype, creds->credtype);
@@ -73,10 +73,10 @@ oc_sec_encode_cred(void)
     oc_rep_set_object(creds, privatedata);
     oc_rep_set_byte_string(privatedata, data, creds->key);
     oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-    oc_rep_close_object(creds, privatedata);  
+    oc_rep_close_object(creds, privatedata);
     oc_rep_object_array_end_item(creds);
     creds = creds->next;
-  }  
+  }
   oc_rep_close_array(root, creds);
   oc_rep_end_root_object();
 }
@@ -94,12 +94,12 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
   uint8_t key[16];
   while (rep != NULL) {
     len = oc_string_len(rep->name);
-    switch (rep->type) {      
+    switch (rep->type) {
     case STRING:
       if (len == 10 &&
 	  strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
 	oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
-      }  
+      }
       break;
     case OBJECT_ARRAY: {
       oc_rep_t *creds_array = rep->value_object_array;
@@ -124,7 +124,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 	      strncpy(subjectuuid, oc_string(cred->value_string), oc_string_len(cred->value_string) + 1);
 	    }
 	    break;
-	  case OBJECT: { 
+	  case OBJECT: {
 	    oc_rep_t *data = cred->value_object;
 	    while (data != NULL) {
 	      switch (data->type) {
@@ -153,13 +153,13 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 	  break;
 	}
 	  cred = cred->next;
-	} 
+	}
 	if (valid_cred) {
 	  oc_str_to_uuid(subjectuuid, &subject);
 	  credobj = oc_sec_get_cred(&subject);
 	  credobj->credid = credid;
 	  credobj->credtype = credtype;
-	  
+
 	  if (got_key) {
 	    memcpy(credobj->key, key, 16);
 	  }
@@ -181,15 +181,15 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 }
 
 void
-put_cred(oc_request_t *request, oc_interface_mask_t interface)
+post_cred(oc_request_t *request, oc_interface_mask_t interface)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();  
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   oc_sec_cred_t *owner = NULL;
   bool success = oc_sec_decode_cred(request->request_payload,
 				    &owner);
   if (owner &&
-      strncmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) { 
-    oc_uuid_t *dev = oc_core_get_device_id(0); 
+      strncmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) {
+    oc_uuid_t *dev = oc_core_get_device_id(0);
     oc_sec_derive_owner_psk(request->origin, OXM_JUST_WORKS,
 			    strlen(OXM_JUST_WORKS),
 			    owner->subjectuuid.id,
@@ -197,20 +197,14 @@ put_cred(oc_request_t *request, oc_interface_mask_t interface)
 			    dev->id,
 			    16,
 			    owner->key,
-			    16);  
+			    16);
   }
   if (!success) {
     oc_send_response(request, BAD_REQUEST);
   }
   else {
-    oc_send_response(request, CREATED);
+    oc_send_response(request, CHANGED);
   }
-}
-
-void
-post_cred(oc_request_t *request, oc_interface_mask_t interface)
-{
-  put_cred(request, interface);
 }
 
 #endif /* OC_SECURITY */
