@@ -37,7 +37,7 @@ oc_rep_new(uint8_t *out_payload, int size)
 int
 oc_rep_finalize(void)
 {
-  int size = g_encoder.ptr - g_buf;
+  int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
   oc_rep_reset();
   if(g_err != CborNoError)
     return -1;
