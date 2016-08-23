@@ -62,6 +62,7 @@ register_resources(void)
   oc_resource_t *res = oc_new_resource("/temp/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.tempsensor");
   oc_resource_bind_resource_interface(res, OC_IF_R);
+  oc_resource_set_default_interface(res, OC_IF_R);
 
 #ifdef OC_SECURITY
   oc_resource_make_secure(res);
