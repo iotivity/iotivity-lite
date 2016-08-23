@@ -64,6 +64,7 @@ oc_sec_encode_acl(void)
   int i, n;
   char uuid[37];
   oc_rep_start_root_object();
+  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_ACL));
   oc_rep_set_object(root, aclist);
   oc_rep_set_array(aclist, aces);
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
