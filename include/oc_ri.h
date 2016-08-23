@@ -27,8 +27,7 @@ typedef enum {
   OC_GET = 1,
   OC_POST,
   OC_PUT,
-  OC_DELETE,
-  OC_OBSERVE
+  OC_DELETE
 } oc_method_t;
 
 typedef enum {
