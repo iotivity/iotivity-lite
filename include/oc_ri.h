@@ -174,4 +174,6 @@ int oc_ri_get_query_nth_key_value(const char *query, int query_len,
 int oc_ri_get_query_value(const char *query, int query_len,
 			  const char *key, char **value);
 
+oc_interface_mask_t oc_ri_get_interface_mask(char *iface, int if_len);
+
 #endif /* OC_RI_H */
