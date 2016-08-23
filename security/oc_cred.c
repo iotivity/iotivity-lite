@@ -59,6 +59,7 @@ oc_sec_encode_cred(void)
   oc_sec_cred_t *creds = oc_list_head(creds_l);
   char uuid[37];
   oc_rep_start_root_object();
+  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_CRED));
   oc_rep_set_array(root, creds);
   if (creds == NULL) {
     oc_rep_object_array_start_item(creds);

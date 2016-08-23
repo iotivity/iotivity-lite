@@ -46,6 +46,7 @@ oc_sec_encode_doxm(void)
   int oxms[1] = {0};
   char uuid[37];
   oc_rep_start_root_object();
+  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_DOXM));
   oc_rep_set_int_array(root, oxms, oxms, 1);
   oc_rep_set_int(root, oxmsel, doxm.oxmsel);
   oc_rep_set_int(root, sct, doxm.sct);
