@@ -50,6 +50,7 @@ oc_sec_encode_pstat(void)
   char uuid[37];
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   oc_rep_start_root_object();
+  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_PSTAT));
   oc_rep_set_uint(root, cm, pstat.cm);
   oc_rep_set_uint(root, tm, pstat.tm);
   oc_rep_set_int(root, om, pstat.om);
