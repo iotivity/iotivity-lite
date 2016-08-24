@@ -107,7 +107,7 @@ static int query_iterator;
 //FIX: validate uri
 oc_resource_t *
 oc_new_resource(const char *uri, uint8_t num_resource_types,
-		int device)
+                int device)
 {
   oc_resource_t *resource = oc_ri_alloc_resource();
   const char *start = uri;
