@@ -107,7 +107,7 @@ static int query_iterator;
 //FIX: validate uri
 oc_resource_t *
 oc_new_resource(const char *uri, uint8_t num_resource_types,
-		int device)
+                int device)
 {
   oc_resource_t *resource = oc_ri_alloc_resource();
   const char *start = uri;
@@ -117,6 +117,7 @@ oc_new_resource(const char *uri, uint8_t num_resource_types,
   strcpy((char*)oc_string(resource->uri) + end, (const char*)"");
   oc_new_string_array(&resource->types, num_resource_types);
   resource->interfaces = OC_IF_BASELINE;
+  resource->default_interface = OC_IF_BASELINE;
   resource->observe_period_seconds = 0;
   resource->properties = OC_ACTIVE;
   resource->num_observers = 0;
@@ -129,6 +130,13 @@ oc_resource_bind_resource_interface(oc_resource_t *resource,
 				    uint8_t interface)
 {
   resource->interfaces |= interface;
+}
+
+void
+oc_resource_set_default_interface(oc_resource_t *resource,
+                                  oc_interface_mask_t interface)
+{
+  resource->default_interface = interface;
 }
 
 void

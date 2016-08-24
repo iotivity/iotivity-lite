@@ -209,7 +209,7 @@ int coap_notify_observers(oc_resource_t *resource,
     request.response = &response;
     request.request_payload = NULL;
     oc_rep_new(buffer, COAP_MAX_BLOCK_SIZE);
-    resource->get_handler(&request, OC_IF_DEFAULT);
+    resource->get_handler(&request, resource->default_interface);
     response_buf = &response_buffer;
     if(response_buf->code == IGNORE) {
       LOG("coap_notify_observers: Resource ignored request\n");

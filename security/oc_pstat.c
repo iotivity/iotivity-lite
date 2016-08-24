@@ -98,7 +98,7 @@ void
 get_pstat(oc_request_t *request, oc_interface_mask_t interface)
 {
   switch (interface) {
-  case OC_IF_DEFAULT: {
+  case OC_IF_BASELINE: {
     oc_sec_encode_pstat();
     oc_send_response(request, OK);
   }

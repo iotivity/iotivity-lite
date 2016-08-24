@@ -460,42 +460,100 @@ get_interface_mask(char *iface, int if_len)
   return interface;
 }
 
+static bool
+does_interface_support_method(oc_resource_t *resource,
+                              oc_interface_mask_t interface,
+                              oc_method_t method)
+{
+  bool supported = true;
+  switch (interface) {
+    /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
+     * are RETRIEVE-only.
+     */
+  case OC_IF_LL:
+  case OC_IF_S:
+  case OC_IF_R:
+    if (method != OC_GET)
+      supported = false;
+    break;
+    /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
+     * support RETRIEVE, UPDATE.
+     * TODO: Refine logic below after adding logic that identifies
+     * and handles CREATE requests using PUT/POST.
+     */
+  case OC_IF_RW:
+  case OC_IF_B:
+  case OC_IF_BASELINE:
+    /* Per section 7.5.3 of the OCF Core spec, the following interface
+     * supports CREATE, RETRIEVE and UPDATE.
+     */
+  case OC_IF_A:
+    break;
+  }
+  return supported;
+}
+
 bool
-oc_ri_invoke_coap_entity_handler(void *request, void *response,
+oc_ri_invoke_coap_entity_handler(void *request,
+				 void *response,
 				 uint8_t *buffer,
-				 uint16_t buffer_size, int32_t *offset,
+				 uint16_t buffer_size,
+				 int32_t *offset,
 				 oc_endpoint_t *endpoint)
 {
+  /* Flags that capture status along various stages of processing
+   *  the request.
+   */
   bool method_impl = true, bad_request = false, success = true;
 
 #ifdef OC_SECURITY
-  bool granted = true;
+  bool authorized = true;
 #endif
-  coap_packet_t * const pkt = (coap_packet_t*)request;
+
+  /* Parsed CoAP PDU structure. */
+  coap_packet_t * const packet = (coap_packet_t*)request;
+
+  /* This function is a server-side entry point solely for requests.
+   *  Hence, "code" contains the CoAP method code.
+   */
+  oc_method_t method = packet->code;
+
+  /* Initialize request/response objects to be sent up to the app layer. */
   oc_request_t request_obj;
   oc_response_buffer_t response_buffer;
   oc_response_t response_obj;
-  oc_method_t method = pkt->code;
+
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = buffer_size;
   response_buffer.block_offset = offset;
   response_buffer.code = 0;
   response_buffer.response_length = 0;
+
   response_obj.separate_response = 0;
   response_obj.response_buffer = &response_buffer;
+
   request_obj.response = &response_obj;
   request_obj.request_payload = 0;
   request_obj.query_len = 0;
   request_obj.resource = 0;
   request_obj.origin = endpoint;
+
+  /* Initialize OCF interface selector. */
   oc_interface_mask_t interface = 0;
+
+  /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
   int uri_path_len = coap_get_header_uri_path(request, &uri_path);
+
+  /* Obtain query string from CoAP packet. */
   const char *uri_query;
   int uri_query_len = coap_get_header_uri_query(request, &uri_query);
+
   if(uri_query_len) {
     request_obj.query = uri_query;
     request_obj.query_len = uri_query_len;
+
+    /* Check if query string includes interface selection. */
     char *iface;
     int if_len = oc_ri_get_query_value(uri_query, uri_query_len,
 				       "if", &iface);
@@ -504,12 +562,16 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
     }
   }
 
-  if (interface == 0)
-    interface = OC_IF_DEFAULT;
-
+  /* Obtain handle to buffer containing the serialized payload */
   const uint8_t *payload;
   int payload_len = coap_get_payload(request, &payload);
   if(payload_len) {
+    /* Attempt to parse request payload using tinyCBOR via oc_rep helper
+     * functions. The result of this parse is a tree of oc_rep_t structures
+     * which will reflect the schema of the payload.
+     * Any failures while parsing the payload is viewed as an erroneous
+     * request and results in a 4.00 response being sent.
+     */
     if (oc_parse_rep(payload, payload_len, &request_obj.request_payload)
 	!= 0) {
       LOG("ocri: error parsing request payload\n");
@@ -519,6 +581,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 
   oc_resource_t *resource, *cur_resource = NULL;
 
+  /* If there were no errors thus far, attempt to locate the specific
+   * resource object that will handle the request using the request uri.
+   */
+  /* Check against list of declared core resources.
+   */
   if (!bad_request) {
     int i;
     for(i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
@@ -551,59 +618,105 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif
 
   if (cur_resource) {
-    oc_rep_new(buffer, buffer_size);
-    if ((interface & ~(cur_resource->interfaces | OC_IF_DEFAULT)) > 0) {
+    /* If there was no interface selection, pick the "default interface". */
+    if (interface == 0)
+      interface = cur_resource->default_interface;
+
+    /* Found the matching resource object. Now verify that:
+     * 1) the selected interface is one that is supported by
+     *    the resource, and,
+     * 2) the selected interface supports the request method.
+     *
+     * If not, return a 4.00 response.
+     */
+    if (((interface & ~cur_resource->interfaces) != 0) ||
+	!does_interface_support_method(cur_resource,
+				       interface,
+				       method))
       bad_request = true;
-    }
+  }
+
+  if (cur_resource && !bad_request) {
+    /* Process a request against a valid resource, request payload, and
+     * interface.
+     */
+
+    /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
+     * points to memory allocated in the messaging layer for the "CoAP
+     * Transaction" to service this request.
+     */
+    oc_rep_new(buffer, buffer_size);
+
 #ifdef OC_SECURITY
-    else if ((cur_resource->properties & OC_SECURE) &&
-	     !oc_sec_check_acl(method, cur_resource, endpoint)) {
-      granted = false;
+    /* If cur_resource is a coaps:// resource, then query ACL to check if
+     * the requestor (the subject) is authorized to issue this request to
+     * the resource.
+     */
+    if ((cur_resource->properties & OC_SECURE) &&
+	!oc_sec_check_acl(method, cur_resource, endpoint)) {
+      authorized = false;
     }
+    else
 #endif
-    else {
-      if(method == OC_GET && cur_resource->get_handler) {
-	cur_resource->get_handler(&request_obj, interface);
+      {
+	/* Invoke a specific request handler for the resource
+         * based on the request method. If the resource has not
+         * implemented that method, then return a 4.05 response.
+         */
+	if(method == OC_GET && cur_resource->get_handler) {
+	  cur_resource->get_handler(&request_obj, interface);
+	}
+	else if(method == OC_POST && cur_resource->post_handler) {
+	  cur_resource->post_handler(&request_obj, interface);
+	}
+	else if(method == OC_PUT && cur_resource->put_handler) {
+	  cur_resource->put_handler(&request_obj, interface);
+	}
+	else if(method == OC_DELETE && cur_resource->delete_handler) {
+	  cur_resource->delete_handler(&request_obj, interface);
+	}
+	else {
+	  method_impl = false;
+	}
       }
-      else if(method == OC_POST && cur_resource->post_handler) {
-	cur_resource->post_handler(&request_obj, interface);
-      }
-      else if(method == OC_PUT && cur_resource->put_handler) {
-	cur_resource->put_handler(&request_obj, interface);
-      }
-      else if(method == OC_DELETE && cur_resource->delete_handler) {
-	cur_resource->delete_handler(&request_obj, interface);
-      }
-      else {
-	method_impl = false;
-      }
-    }
   }
 
   if(payload_len) {
+    /* To the extent that the request payload was parsed, free the
+     * payload structure (and return its memory to the pool).
+     */
     oc_free_rep(request_obj.request_payload);
   }
 
   if (bad_request) {
-    LOG("ocri: Bad Request\n");
+    LOG("ocri: Bad request\n");
+    /* Return a 4.00 response */
     response_buffer.code = oc_status_code(BAD_REQUEST);
     success = false;
   }
   else if(!cur_resource) {
     LOG("ocri: Could not find resource\n");
+    /* Return a 4.04 response if the requested resource was not found */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(NOT_FOUND);
     success = false;
   }
   else if(!method_impl) {
     LOG("ocri: Could not find method\n");
+    /* Return a 4.05 response if the resource does not implement the
+     * request method.
+     */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(METHOD_NOT_ALLOWED);
     success = false;
   }
 #ifdef OC_SECURITY
-  else if (!granted) {
-    LOG("ocri: Forbidden request\n");
+  else if (!authorized) {
+    LOG("ocri: Subject not authorized\n");
+    /* If the requestor (subject) does not have access granted via an
+     * access control entry in the ACL, then it is not authorized to
+     * access the resource. A 4.03 response is sent.
+     */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(FORBIDDEN);
     success = false;
@@ -611,18 +724,36 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif
 
 #ifdef OC_SERVER
+  /* If a GET request was successfully processed, then check its
+   *  observe option.
+   */
   uint32_t observe = 2;
   if(success && coap_get_header_observe(request, &observe)) {
+    /* Check if the resource is OBSERVABLE */
     if(cur_resource->properties & OC_OBSERVABLE) {
+      /* If the observe option is set to 0, make an attempt to add the
+       * requesting client as an observer.
+       */
       if(observe == 0) {
 	if(coap_observe_handler(request, response,
 				cur_resource, endpoint) == 0) {
+	  /* If the resource is marked as periodic observable it means
+           * it must be polled internally for updates (which would lead to
+           * notifications being sent). If so, add the resource to a list of
+           * periodic GET callbacks to utilize the framework's internal
+           * polling mechanism.
+           */
 	  if(cur_resource->properties
 	     & OC_PERIODIC) {
 	    add_periodic_observe_callback(cur_resource);
 	  }
 	}
       }
+      /* If the observe option is set to 1, make an attempt to remove
+       * the requesting client from the list of observers. In addition,
+       * remove the resource from the list periodic GET callbacks if it
+       * is periodic observable.
+       */
       else if(observe == 1) {
 	if(coap_observe_handler(request, response,
 				cur_resource, endpoint) > 0) {
@@ -636,7 +767,20 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif
 
 #ifdef OC_SERVER
+  /* The presence of a separate response handle here indicates a
+   * successful handling of the request by a slow resource.
+   */
   if (response_obj.separate_response != NULL) {
+    /* Attempt to register a client request to the separate response tracker
+     * and pass in the observe option (if present) or the value 2 as
+     * determined by the code block above. Values 0 and 1 result in their
+     * expected behaviors whereas 2 indicates an absence of an observe
+     * option and hence a one-off request.
+     * Following a successful registration, the separate response tracker
+     * is flagged as "active". In this way, the function that later executes
+     * out-of-band upon availability of the resource state knows it must
+     * send out a response with it.
+     */
     if(coap_separate_accept(request,
 			    response_obj.separate_response, endpoint,
 			    observe) == 1)
@@ -645,10 +789,18 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
   else
 #endif
     if(response_buffer.code == IGNORE) {
+      /* If the server-side logic chooses to reject a request, it sends
+       * below a response code of IGNORE, which results in the messaging
+       * layer freeing the CoAP transaction associated with the request.
+       */
       erbium_status_code = CLEAR_TRANSACTION;
     }
     else {
 #ifdef OC_SERVER
+      /* If the recently handled request was a PUT/POST, it conceivably
+       * altered the resource state, so attempt to notify all observers
+       * of that resource with the change.
+       */
       if ((method == OC_PUT || method == OC_POST) &&
 	  response_buffer.code < oc_status_code(BAD_REQUEST))
 	coap_notify_observers(cur_resource, NULL, NULL);
@@ -658,6 +810,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
 			 response_buffer.response_length);
 	coap_set_header_content_format(response, APPLICATION_CBOR);
       }
+      /* response_buffer.code at this point contains a valid CoAP status
+       *  code.
+       */
       coap_set_status_code(response, response_buffer.code);
     }
   return success;

@@ -71,7 +71,6 @@ get_doxm(oc_request_t *request,
 {
   switch (interface) {
   case OC_IF_BASELINE:
-  case OC_IF_DEFAULT:
   {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
