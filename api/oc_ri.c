@@ -460,6 +460,39 @@ oc_ri_get_interface_mask(char *iface, int if_len)
   return interface;
 }
 
+static bool
+does_interface_support_method(oc_resource_t *resource,
+                              oc_interface_mask_t interface,
+                              oc_method_t method)
+{
+  bool supported = true;
+  switch (interface) {
+    /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
+     * are RETRIEVE-only.
+     */
+  case OC_IF_LL:
+  case OC_IF_S:
+  case OC_IF_R:
+    if (method != OC_GET)
+      supported = false;
+    break;
+    /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
+     * support RETRIEVE, UPDATE.
+     * TODO: Refine logic below after adding logic that identifies
+     * and handles CREATE requests using PUT/POST.
+     */
+  case OC_IF_RW:
+  case OC_IF_B:
+  case OC_IF_BASELINE:
+    /* Per section 7.5.3 of the OCF Core spec, the following interface
+     * supports CREATE, RETRIEVE and UPDATE.
+     */
+  case OC_IF_A:
+    break;
+  }
+  return supported;
+}
+
 bool
 oc_ri_invoke_coap_entity_handler(void *request,
 				 void *response,
@@ -474,7 +507,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
   bool method_impl = true, bad_request = false, success = true;
 
 #ifdef OC_SECURITY
-  bool granted = true;
+  bool authorized = true;
 #endif
 
   /* Parsed CoAP PDU structure. */
@@ -529,9 +562,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
     }
   }
 
-  if (interface == 0)
-    interface = OC_IF_DEFAULT;
-
+  /* Obtain handle to buffer containing the serialized payload */
   const uint8_t *payload;
   int payload_len = coap_get_payload(request, &payload);
   if(payload_len) {
@@ -587,33 +618,67 @@ oc_ri_invoke_coap_entity_handler(void *request,
 #endif
 
   if (cur_resource) {
-    oc_rep_new(buffer, buffer_size);
-    if ((interface & ~(cur_resource->interfaces | OC_IF_DEFAULT)) > 0) {
+    /* If there was no interface selection, pick the "default interface". */
+    if (interface == 0)
+      interface = cur_resource->default_interface;
+
+    /* Found the matching resource object. Now verify that:
+     * 1) the selected interface is one that is supported by
+     *    the resource, and,
+     * 2) the selected interface supports the request method.
+     *
+     * If not, return a 4.00 response.
+     */
+    if (((interface & ~cur_resource->interfaces) != 0) ||
+	!does_interface_support_method(cur_resource,
+				       interface,
+				       method))
       bad_request = true;
-    }
+  }
+
+  if (cur_resource && !bad_request) {
+    /* Process a request against a valid resource, request payload, and
+     * interface.
+     */
+
+    /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
+     * points to memory allocated in the messaging layer for the "CoAP
+     * Transaction" to service this request.
+     */
+    oc_rep_new(buffer, buffer_size);
+
 #ifdef OC_SECURITY
-    else if ((cur_resource->properties & OC_SECURE) &&
-	     !oc_sec_check_acl(method, cur_resource, endpoint)) {
-      granted = false;
+    /* If cur_resource is a coaps:// resource, then query ACL to check if
+     * the requestor (the subject) is authorized to issue this request to
+     * the resource.
+     */
+    if ((cur_resource->properties & OC_SECURE) &&
+	!oc_sec_check_acl(method, cur_resource, endpoint)) {
+      authorized = false;
     }
+    else
 #endif
-    else {
-      if(method == OC_GET && cur_resource->get_handler) {
-	cur_resource->get_handler(&request_obj, interface);
+      {
+	/* Invoke a specific request handler for the resource
+         * based on the request method. If the resource has not
+         * implemented that method, then return a 4.05 response.
+         */
+	if(method == OC_GET && cur_resource->get_handler) {
+	  cur_resource->get_handler(&request_obj, interface);
+	}
+	else if(method == OC_POST && cur_resource->post_handler) {
+	  cur_resource->post_handler(&request_obj, interface);
+	}
+	else if(method == OC_PUT && cur_resource->put_handler) {
+	  cur_resource->put_handler(&request_obj, interface);
+	}
+	else if(method == OC_DELETE && cur_resource->delete_handler) {
+	  cur_resource->delete_handler(&request_obj, interface);
+	}
+	else {
+	  method_impl = false;
+	}
       }
-      else if(method == OC_POST && cur_resource->post_handler) {
-	cur_resource->post_handler(&request_obj, interface);
-      }
-      else if(method == OC_PUT && cur_resource->put_handler) {
-	cur_resource->put_handler(&request_obj, interface);
-      }
-      else if(method == OC_DELETE && cur_resource->delete_handler) {
-	cur_resource->delete_handler(&request_obj, interface);
-      }
-      else {
-	method_impl = false;
-      }
-    }
   }
 
   if(payload_len) {
@@ -646,8 +711,12 @@ oc_ri_invoke_coap_entity_handler(void *request,
     success = false;
   }
 #ifdef OC_SECURITY
-  else if (!granted) {
-    LOG("ocri: Forbidden request\n");
+  else if (!authorized) {
+    LOG("ocri: Subject not authorized\n");
+    /* If the requestor (subject) does not have access granted via an
+     * access control entry in the ACL, then it is not authorized to
+     * access the resource. A 4.03 response is sent.
+     */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(FORBIDDEN);
     success = false;

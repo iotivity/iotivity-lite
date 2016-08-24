@@ -49,7 +49,6 @@ get_light(oc_request_t *request, oc_interface_mask_t interface)
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-  case OC_IF_DEFAULT:
   case OC_IF_RW:
     oc_rep_set_boolean(root, state, state);
     oc_rep_set_int(root, power, power);
@@ -105,6 +104,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "core.light");
   oc_resource_bind_resource_type(res, "core.brightlight");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
+  oc_resource_set_default_interface(res, OC_IF_RW);
 
 #ifdef OC_SECURITY
   oc_resource_make_secure(res);

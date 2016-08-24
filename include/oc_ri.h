@@ -74,7 +74,6 @@ typedef struct {
 } oc_response_t;
 
 typedef enum {
-  OC_IF_DEFAULT = 1 << 0,
   OC_IF_BASELINE = 1 << 1,
   OC_IF_LL = 1 << 2,
   OC_IF_B = 1 << 3,
@@ -117,6 +116,7 @@ typedef struct oc_resource_s {
   oc_string_t uri;
   oc_string_array_t types;
   oc_interface_mask_t interfaces;
+  oc_interface_mask_t default_interface;
   oc_resource_properties_t properties;
   oc_request_handler_t get_handler;
   oc_request_handler_t put_handler;
