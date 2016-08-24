@@ -81,7 +81,7 @@ get_doxm(oc_request_t *request,
     }
     else {
       oc_sec_encode_doxm();
-      oc_send_response(request, OK);
+      oc_send_response(request, OC_STATUS_OK);
     }
   }
   break;
@@ -126,7 +126,7 @@ void
 post_doxm(oc_request_t *request, oc_interface_mask_t interface)
 {
   oc_sec_decode_doxm(request->request_payload);
-  oc_send_response(request, CHANGED);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 #endif /* OC_SECURITY */

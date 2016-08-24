@@ -62,7 +62,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface)
     break;
   }
   oc_rep_end_root_object();
-  oc_send_response(request, OK);
+  oc_send_response(request, OC_STATUS_OK);
   PRINT("Light state %d\n", light_state);
 }
 
@@ -80,13 +80,13 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
       PRINT("value: %d\n", state);
       break;
     default:
-      oc_send_response(request, BAD_REQUEST);
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
       return;
       break;
     }
     rep = rep->next;
   }
-  oc_send_response(request, OK);
+  oc_send_response(request, OC_STATUS_OK);
   light_state = state;
 }
 

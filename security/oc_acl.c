@@ -404,9 +404,9 @@ void
 post_acl(oc_request_t *request, oc_interface_mask_t interface)
 {
   if (oc_sec_decode_acl(request->request_payload))
-    oc_send_response(request, CREATED);
+    oc_send_response(request, OC_STATUS_CREATED);
   else
-    oc_send_response(request, INTERNAL_SERVER_ERROR);
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
 }
 
 #endif /* OC_SECURITY */

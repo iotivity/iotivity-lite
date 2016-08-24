@@ -211,7 +211,7 @@ int coap_notify_observers(oc_resource_t *resource,
     oc_rep_new(buffer, COAP_MAX_BLOCK_SIZE);
     resource->get_handler(&request, resource->default_interface);
     response_buf = &response_buffer;
-    if(response_buf->code == IGNORE) {
+    if(response_buf->code == OC_IGNORE) {
       LOG("coap_notify_observers: Resource ignored request\n");
       return num_observers;
     }
@@ -228,7 +228,7 @@ int coap_notify_observers(oc_resource_t *resource,
       obs = obs->next) {
     num_observers = obs->resource->num_observers;
     if(response.separate_response != NULL
-       && response_buf->code == oc_status_code(OK)) {
+       && response_buf->code == oc_status_code(OC_STATUS_OK)) {
       coap_packet_t req[1];
       /*
 	req->block1_num = 0;

@@ -58,7 +58,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface)
     break;
   }
   oc_rep_end_root_object();
-  oc_send_response(request, OK);
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
@@ -82,13 +82,13 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
       oc_new_string(&name, oc_string(rep->value_string));
       break;
     default:
-      oc_send_response(request, BAD_REQUEST);
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
       return;
       break;
     }
     rep = rep->next;
   }
-  oc_send_response(request, CHANGED);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
