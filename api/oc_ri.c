@@ -533,7 +533,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response,
   }
 
 #ifdef OC_SERVER
-  if(!cur_resource & !bad_request) {
+  /* Check against list of declared application resources.
+   */
+  if(!cur_resource && !bad_request) {
     for(resource = oc_ri_get_app_resources();
 	resource;
 	resource = resource->next) {
