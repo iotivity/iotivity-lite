@@ -64,6 +64,8 @@ oc_resource_t *oc_new_resource(const char *uri, uint8_t num_resource_types,
 			       int device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
 					 uint8_t interface);
+void oc_resource_set_default_interface(oc_resource_t *resource,
+                                       oc_interface_mask_t interface);
 void oc_resource_bind_resource_type(oc_resource_t *resource,
 				    const char *type);
 
