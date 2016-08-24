@@ -77,7 +77,7 @@ oc_send_response(oc_request_t *request,
 void
 oc_ignore_request(oc_request_t *request)
 {
-  request->response->response_buffer->code = IGNORE;
+  request->response->response_buffer->code = OC_IGNORE;
 }
 
 void
@@ -239,7 +239,7 @@ oc_indicate_separate_response(oc_request_t *request,
 			      oc_separate_response_t *response)
 {
   request->response->separate_response = response;
-  oc_send_response(request, OK);
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 void

@@ -28,7 +28,7 @@ oc_define_interrupt_handler(temp_sensor)
     oc_rep_set_int(root, temp, temperature);
     oc_rep_end_root_object();
 
-    oc_send_separate_response(&temp_response, OK);
+    oc_send_separate_response(&temp_response, OC_STATUS_OK);
   }
 }
 

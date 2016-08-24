@@ -201,10 +201,10 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface)
 			    16);
   }
   if (!success) {
-    oc_send_response(request, BAD_REQUEST);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   else {
-    oc_send_response(request, CHANGED);
+    oc_send_response(request, OC_STATUS_CHANGED);
   }
 }
 

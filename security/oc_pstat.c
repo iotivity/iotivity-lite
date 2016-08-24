@@ -102,7 +102,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface)
   switch (interface) {
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat();
-    oc_send_response(request, OK);
+    oc_send_response(request, OC_STATUS_OK);
   }
     break;
   default:
@@ -114,7 +114,7 @@ void
 post_pstat(oc_request_t *request, oc_interface_mask_t interface)
 {
   oc_sec_decode_pstat(request->request_payload);
-  oc_send_response(request, CHANGED);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 #endif /* OC_SECURITY */

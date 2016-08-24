@@ -170,11 +170,11 @@ oc_core_discovery_handler(oc_request_t *request,
 
   if(matches && response_length) {
     request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(OK);
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   }
   else {
     /* There were rt/if selections and there were no matches, so ignore */
-    request->response->response_buffer->code = IGNORE;
+    request->response->response_buffer->code = OC_IGNORE;
   }
 }
 

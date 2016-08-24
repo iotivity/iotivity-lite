@@ -67,48 +67,48 @@ static void
 set_mpro_status_codes(void)
 {
   /* OK_200 */
-  oc_coap_status_codes[OK] = CONTENT_2_05;
+  oc_coap_status_codes[OC_STATUS_OK] = CONTENT_2_05;
   /* CREATED_201 */
-  oc_coap_status_codes[CREATED] = CREATED_2_01;
+  oc_coap_status_codes[OC_STATUS_CREATED] = CREATED_2_01;
   /* NO_CONTENT_204 */
-  oc_coap_status_codes[CHANGED] = CHANGED_2_04;
+  oc_coap_status_codes[OC_STATUS_CHANGED] = CHANGED_2_04;
   /* NO_CONTENT_204 */
-  oc_coap_status_codes[DELETED] = DELETED_2_02;
+  oc_coap_status_codes[OC_STATUS_DELETED] = DELETED_2_02;
   /* NOT_MODIFIED_304 */
-  oc_coap_status_codes[NOT_MODIFIED] = VALID_2_03;
+  oc_coap_status_codes[OC_STATUS_NOT_MODIFIED] = VALID_2_03;
   /* BAD_REQUEST_400 */
-  oc_coap_status_codes[BAD_REQUEST] = BAD_REQUEST_4_00;
+  oc_coap_status_codes[OC_STATUS_BAD_REQUEST] = BAD_REQUEST_4_00;
   /* UNAUTHORIZED_401 */
-  oc_coap_status_codes[UNAUTHORIZED] = UNAUTHORIZED_4_01;
+  oc_coap_status_codes[OC_STATUS_UNAUTHORIZED] = UNAUTHORIZED_4_01;
   /* BAD_REQUEST_400 */
-  oc_coap_status_codes[BAD_OPTION] = BAD_OPTION_4_02;
+  oc_coap_status_codes[OC_STATUS_BAD_OPTION] = BAD_OPTION_4_02;
   /* FORBIDDEN_403 */
-  oc_coap_status_codes[FORBIDDEN] = FORBIDDEN_4_03;
+  oc_coap_status_codes[OC_STATUS_FORBIDDEN] = FORBIDDEN_4_03;
   /* NOT_FOUND_404 */
-  oc_coap_status_codes[NOT_FOUND] = NOT_FOUND_4_04;
+  oc_coap_status_codes[OC_STATUS_NOT_FOUND] = NOT_FOUND_4_04;
   /* METHOD_NOT_ALLOWED_405 */
-  oc_coap_status_codes[METHOD_NOT_ALLOWED] = METHOD_NOT_ALLOWED_4_05;
+  oc_coap_status_codes[OC_STATUS_METHOD_NOT_ALLOWED] = METHOD_NOT_ALLOWED_4_05;
   /* NOT_ACCEPTABLE_406 */
-  oc_coap_status_codes[NOT_ACCEPTABLE] = NOT_ACCEPTABLE_4_06;
+  oc_coap_status_codes[OC_STATUS_NOT_ACCEPTABLE] = NOT_ACCEPTABLE_4_06;
   /* REQUEST_ENTITY_TOO_LARGE_413 */
-  oc_coap_status_codes[REQUEST_ENTITY_TOO_LARGE] =
+  oc_coap_status_codes[OC_STATUS_REQUEST_ENTITY_TOO_LARGE] =
     REQUEST_ENTITY_TOO_LARGE_4_13;
   /* UNSUPPORTED_MEDIA_TYPE_415 */
-  oc_coap_status_codes[UNSUPPORTED_MEDIA_TYPE] =
+  oc_coap_status_codes[OC_STATUS_UNSUPPORTED_MEDIA_TYPE] =
     UNSUPPORTED_MEDIA_TYPE_4_15;
   /* INTERNAL_SERVER_ERROR_500 */
-  oc_coap_status_codes[INTERNAL_SERVER_ERROR] =
+  oc_coap_status_codes[OC_STATUS_INTERNAL_SERVER_ERROR] =
     INTERNAL_SERVER_ERROR_5_00;
   /* NOT_IMPLEMENTED_501 */
-  oc_coap_status_codes[NOT_IMPLEMENTED] = NOT_IMPLEMENTED_5_01;
+  oc_coap_status_codes[OC_STATUS_NOT_IMPLEMENTED] = NOT_IMPLEMENTED_5_01;
   /* BAD_GATEWAY_502 */
-  oc_coap_status_codes[BAD_GATEWAY] = BAD_GATEWAY_5_02;
+  oc_coap_status_codes[OC_STATUS_BAD_GATEWAY] = BAD_GATEWAY_5_02;
   /* SERVICE_UNAVAILABLE_503 */
-  oc_coap_status_codes[SERVICE_UNAVAILABLE] = SERVICE_UNAVAILABLE_5_03;
+  oc_coap_status_codes[OC_STATUS_SERVICE_UNAVAILABLE] = SERVICE_UNAVAILABLE_5_03;
   /* GATEWAY_TIMEOUT_504 */
-  oc_coap_status_codes[GATEWAY_TIMEOUT] = GATEWAY_TIMEOUT_5_04;
+  oc_coap_status_codes[OC_STATUS_GATEWAY_TIMEOUT] = GATEWAY_TIMEOUT_5_04;
   /* INTERNAL_SERVER_ERROR_500 */
-  oc_coap_status_codes[PROXYING_NOT_SUPPORTED] =
+  oc_coap_status_codes[OC_STATUS_PROXYING_NOT_SUPPORTED] =
     PROXYING_NOT_SUPPORTED_5_05;
 }
 
@@ -691,14 +691,14 @@ oc_ri_invoke_coap_entity_handler(void *request,
   if (bad_request) {
     LOG("ocri: Bad request\n");
     /* Return a 4.00 response */
-    response_buffer.code = oc_status_code(BAD_REQUEST);
+    response_buffer.code = oc_status_code(OC_STATUS_BAD_REQUEST);
     success = false;
   }
   else if(!cur_resource) {
     LOG("ocri: Could not find resource\n");
     /* Return a 4.04 response if the requested resource was not found */
     response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code(NOT_FOUND);
+    response_buffer.code = oc_status_code(OC_STATUS_NOT_FOUND);
     success = false;
   }
   else if(!method_impl) {
@@ -707,7 +707,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
      * request method.
      */
     response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code(METHOD_NOT_ALLOWED);
+    response_buffer.code = oc_status_code(OC_STATUS_METHOD_NOT_ALLOWED);
     success = false;
   }
 #ifdef OC_SECURITY
@@ -718,7 +718,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
      * access the resource. A 4.03 response is sent.
      */
     response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code(FORBIDDEN);
+    response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
     success = false;
   }
 #endif
@@ -788,7 +788,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
   }
   else
 #endif
-    if(response_buffer.code == IGNORE) {
+    if(response_buffer.code == OC_IGNORE) {
       /* If the server-side logic chooses to reject a request, it sends
        * below a response code of IGNORE, which results in the messaging
        * layer freeing the CoAP transaction associated with the request.
@@ -802,7 +802,7 @@ oc_ri_invoke_coap_entity_handler(void *request,
        * of that resource with the change.
        */
       if ((method == OC_PUT || method == OC_POST) &&
-	  response_buffer.code < oc_status_code(BAD_REQUEST))
+	  response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
 	coap_notify_observers(cur_resource, NULL, NULL);
 #endif
       if (response_buffer.response_length) {

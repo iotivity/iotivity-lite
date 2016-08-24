@@ -71,7 +71,7 @@ oc_core_device_handler(oc_request_t *request,
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
-      oc_status_code(INTERNAL_SERVER_ERROR);
+      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -81,7 +81,7 @@ oc_core_device_handler(oc_request_t *request,
     memcpy(buffer, oc_cast(oc_device_info[request->resource->device].payload,
 					  uint8_t), payload_size);
     request->response->response_buffer->response_length = payload_size;
-    request->response->response_buffer->code = oc_status_code(OK);
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
     break;
   default:
     break;
@@ -180,7 +180,7 @@ oc_core_platform_handler(oc_request_t *request,
   if (buffer_size < payload_size) {
     request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
-      oc_status_code(INTERNAL_SERVER_ERROR);
+      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -189,7 +189,7 @@ oc_core_platform_handler(oc_request_t *request,
   case OC_IF_BASELINE:
     memcpy(buffer, oc_cast(oc_platform_payload, uint8_t), payload_size);
     request->response->response_buffer->response_length = payload_size;
-    request->response->response_buffer->code = oc_status_code(OK);
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
     break;
   default:
     break;

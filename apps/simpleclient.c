@@ -81,9 +81,9 @@ void
 post2_light(oc_client_response_t *data)
 {
   PRINT("POST2_light:\n");
-  if (data->code == CHANGED)
+  if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");
-  else if (data->code == CREATED)
+  else if (data->code == OC_STATUS_CREATED)
     PRINT("POST response: CREATED\n");
   else
     PRINT("POST response code %d\n", data->code);
@@ -97,9 +97,9 @@ void
 post_light(oc_client_response_t *data)
 {
   PRINT("POST_light:\n");
-  if (data->code == CHANGED)
+  if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");
-  else if (data->code == CREATED)
+  else if (data->code == OC_STATUS_CREATED)
     PRINT("POST response: CREATED\n");
   else
     PRINT("POST response code %d\n", data->code);
@@ -123,7 +123,7 @@ put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
 
-  if (data->code == CHANGED)
+  if (data->code == OC_STATUS_CHANGED)
     PRINT("PUT response: CHANGED\n");
   else
     PRINT("PUT response code %d\n", data->code);
