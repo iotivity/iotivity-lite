@@ -1,0 +1,7 @@
+Code-Review+2: Thiago Macieira <thiago.macieira@intel.com>
+Verified+1: Thiago Macieira <thiago.macieira@intel.com>
+Submitted-by: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-at: Thu, 25 Aug 2016 01:16:50 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/10827
+Project: iotivity-constrained
+Branch: refs/heads/master
