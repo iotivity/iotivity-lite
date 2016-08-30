@@ -42,7 +42,7 @@
 
 /* The number of concurrent messages that can be stored for retransmission in the transaction layer. */
 #ifndef COAP_MAX_OPEN_TRANSACTIONS
-#define COAP_MAX_OPEN_TRANSACTIONS     (NUM_TX_RX_BUFFERS)
+#define COAP_MAX_OPEN_TRANSACTIONS (MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OPEN_TRANSACTIONS */
 
 /* Maximum number of failed request attempts before action */
@@ -57,7 +57,7 @@
 
 /* Number of observer slots (each takes abot xxx bytes) */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS    COAP_MAX_OPEN_TRANSACTIONS - 1
+#define COAP_MAX_OBSERVERS (MAX_APP_RESOURCES + MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OBSERVERS */
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to check client. */

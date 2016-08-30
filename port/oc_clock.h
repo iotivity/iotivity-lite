@@ -58,10 +58,10 @@
  *
  * \hideinitializer
  */
-#ifndef OC_CLOCK_CONF_SECOND
-#error "Please define OC_CLOCK_CONF_SECOND in config.h"
+#ifndef OC_CLOCK_CONF_TICKS_PER_SECOND
+#error "Please define OC_CLOCK_CONF_TICKS_PER_SECOND in config.h"
 #else
-#define OC_CLOCK_SECOND OC_CLOCK_CONF_SECOND
+#define OC_CLOCK_SECOND OC_CLOCK_CONF_TICKS_PER_SECOND
 #endif
 
 /**

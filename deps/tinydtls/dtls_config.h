@@ -44,16 +44,27 @@
 #include "contiki-net.h"
 
 #include "contiki-conf.h"
-#endif /* CONTIKI */
+#else /* CONTIKI */
+#include "platform-specific/config-ocf.h"
+#endif /* WITH_OCF */
+
 /* global constants for constrained devices running Contiki */
 #ifndef DTLS_PEER_MAX
 /** The maximum number DTLS peers (i.e. sessions). */
-#  define DTLS_PEER_MAX 1
+#ifdef WITH_OCF
+#define DTLS_PEER_MAX (MAX_DTLS_PEERS)
+#else /* WITH_OCF */
+#define DTLS_PEER_MAX 1
+#endif /* CONTIKI */
 #endif
 
 #ifndef DTLS_HANDSHAKE_MAX
 /** The maximum number of concurrent DTLS handshakes. */
-#  define DTLS_HANDSHAKE_MAX 1
+#ifdef WITH_OCF
+#define DTLS_HANDSHAKE_MAX (MAX_DTLS_PEERS)
+#else /* WITH_OCF */
+#define DTLS_HANDSHAKE_MAX 1
+#endif /* CONTIKI */
 #endif
 
 #ifndef DTLS_SECURITY_MAX
@@ -221,7 +232,3 @@
 #endif /* CONTIKI_TARGET_MINIMAL_NET */
 
 #endif /* CONTIKI */
-
-#ifdef WITH_OCF
-#include "platform-specific/config-ocf.h"
-#endif /* WITH_OCF */
