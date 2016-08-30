@@ -42,7 +42,7 @@
 #include "transactions.h"
 #include "oc_buffer.h"
 
-OC_MEMB(separate_requests, coap_separate_t, 5); //FIX
+OC_MEMB(separate_requests, coap_separate_t, MAX_NUM_CONCURRENT_REQUESTS);
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/

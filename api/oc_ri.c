@@ -55,7 +55,14 @@ OC_MEMB(client_cbs_s, oc_client_cb_t, MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* OC_CLIENT */
 
 OC_LIST(timed_callbacks);
-OC_MEMB(event_callbacks_s, oc_event_callback_t, 3 * MAX_APP_RESOURCES);
+#ifdef OC_SERVER
+OC_MEMB(event_callbacks_s, oc_event_callback_t, NUM_OC_CORE_RESOURCES +
+                                                  MAX_APP_RESOURCES +
+                                                  MAX_NUM_CONCURRENT_REQUESTS);
+#else  /* OC_SERVER */
+OC_MEMB(event_callbacks_s, oc_event_callback_t,
+        NUM_OC_CORE_RESOURCES + MAX_NUM_CONCURRENT_REQUESTS);
+#endif /* OC_CLIENT */
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
 
 //TODO: Define and use a  complete set of error codes.
