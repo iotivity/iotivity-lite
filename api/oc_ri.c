@@ -416,22 +416,27 @@ remove_periodic_observe_callback(oc_resource_t *resource)
   }
 }
 
-static void
+static bool
 add_periodic_observe_callback(oc_resource_t *resource)
 {
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
 
-  if(!event_cb)
-    {
-      event_cb = (oc_event_callback_t*)oc_memb_alloc(&event_callbacks_s);
-      event_cb->data = resource;
-      event_cb->callback = periodic_observe_handler;
-      OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
-      oc_etimer_set(&event_cb->timer,
-		    resource->observe_period_seconds * OC_CLOCK_SECOND);
-      OC_PROCESS_CONTEXT_END(&timed_callback_events);
-      oc_list_add(observe_callbacks, event_cb);
-    }
+  if (!event_cb) {
+    event_cb = (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
+
+    if (!event_cb)
+      return false;
+
+    event_cb->data = resource;
+    event_cb->callback = periodic_observe_handler;
+    OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+    oc_etimer_set(&event_cb->timer,
+                  resource->observe_period_seconds * OC_CLOCK_SECOND);
+    OC_PROCESS_CONTEXT_END(&timed_callback_events);
+    oc_list_add(observe_callbacks, event_cb);
+  }
+
+  return true;
 }
 #endif
 
@@ -738,32 +743,40 @@ oc_ri_invoke_coap_entity_handler(void *request,
        * requesting client as an observer.
        */
       if(observe == 0) {
-	if(coap_observe_handler(request, response,
-				cur_resource, endpoint) == 0) {
-	  /* If the resource is marked as periodic observable it means
+        if (coap_observe_handler(request, response, cur_resource, endpoint) ==
+            0) {
+          /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
            * notifications being sent). If so, add the resource to a list of
            * periodic GET callbacks to utilize the framework's internal
            * polling mechanism.
            */
-	  if(cur_resource->properties
-	     & OC_PERIODIC) {
-	    add_periodic_observe_callback(cur_resource);
-	  }
-	}
+          bool set_observe_option = true;
+          if (cur_resource->properties & OC_PERIODIC) {
+            if (!add_periodic_observe_callback(cur_resource)) {
+              set_observe_option = false;
+              coap_remove_observer_by_token(endpoint, packet->token,
+                                            packet->token_len);
+            }
+          }
+
+          if (set_observe_option) {
+            coap_set_header_observe(response, 0);
+          }
+        }
       }
       /* If the observe option is set to 1, make an attempt to remove
        * the requesting client from the list of observers. In addition,
        * remove the resource from the list periodic GET callbacks if it
        * is periodic observable.
        */
-      else if(observe == 1) {
-	if(coap_observe_handler(request, response,
-				cur_resource, endpoint) > 0) {
-	  if(cur_resource->properties & OC_PERIODIC) {
-	    remove_periodic_observe_callback(cur_resource);
-	  }
-	}
+      else if (observe == 1) {
+        if (coap_observe_handler(request, response, cur_resource, endpoint) >
+            0) {
+          if (cur_resource->properties & OC_PERIODIC) {
+            remove_periodic_observe_callback(cur_resource);
+          }
+        }
       }
     }
   }
