@@ -14,16 +14,16 @@
 // limitations under the License.
 */
 
-#include <zephyr.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+#include <zephyr.h>
 
+#include "oc_buffer.h"
+#include "port/oc_connectivity.h"
 #include <net/ip_buf.h>
 #include <net/net_core.h>
 #include <net/net_socket.h>
-#include "port/oc_connectivity.h"
-#include "oc_buffer.h"
 
 #define RECV_FIBER_STACK_SIZE 600
 
@@ -37,17 +37,24 @@ static char stack3[RECV_FIBER_STACK_SIZE];
 #define NODE_PORT (53810)
 #define COAP_PORT_UNSECURED (5683)
 
-static struct net_addr node_addr = { .in6_addr = IN6ADDR_ANY_INIT,
-				     .family = AF_INET6 };
+static struct net_addr node_addr = {.in6_addr = IN6ADDR_ANY_INIT,
+                                    .family = AF_INET6 };
 static struct net_context *recv_ctx = NULL;
 
-#define COAP_ALL_NODES_LL { { { 0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xfd } } }
-static struct net_addr coap_wk = { .in6_addr = COAP_ALL_NODES_LL,
-				   .family = AF_INET6 };
+#define COAP_ALL_NODES_LL                                                      \
+  {                                                                            \
+    {                                                                          \
+      {                                                                        \
+        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xfd                \
+      }                                                                        \
+    }                                                                          \
+  }
+static struct net_addr coap_wk = {.in6_addr = COAP_ALL_NODES_LL,
+                                  .family = AF_INET6 };
 static struct net_context *multicast_ctx = NULL;
 
-static struct net_addr ipv6_any = { .in6_addr = IN6ADDR_ANY_INIT,
-				    .family = AF_INET6 };
+static struct net_addr ipv6_any = {.in6_addr = IN6ADDR_ANY_INIT,
+                                   .family = AF_INET6 };
 static struct net_context *peer_ctx = NULL;
 
 #ifdef OC_SECURITY
@@ -71,12 +78,10 @@ net_buf_to_oc_message(struct net_buf *buf, bool secure)
     else
       message->endpoint.flags = IP;
 
-    memcpy(message->endpoint.ipv6_addr.address,
-	   NET_BUF_IP(buf)->srcipaddr.u8,
-	   16);
+    memcpy(message->endpoint.ipv6_addr.address, NET_BUF_IP(buf)->srcipaddr.u8,
+           16);
     message->endpoint.ipv6_addr.scope = 0;
-    message->endpoint.ipv6_addr.port =
-      uip_ntohs(NET_BUF_UDP(buf)->srcport);
+    message->endpoint.ipv6_addr.port = uip_ntohs(NET_BUF_UDP(buf)->srcport);
 
     PRINT("Incoming message from: ");
     PRINTipaddr(message->endpoint);
@@ -164,13 +169,12 @@ get_response_context(oc_endpoint_t *remote)
     local_port = DTLS_PORT;
 #endif /* OC_SECURITY */
 
-  peer_ctx = net_context_get(IPPROTO_UDP,
-			     &peer_addr, remote->ipv6_addr.port,
-			     &node_addr, local_port);
+  peer_ctx = net_context_get(IPPROTO_UDP, &peer_addr, remote->ipv6_addr.port,
+                             &node_addr, local_port);
 }
 
 void
-oc_send_buffer(oc_message_t * message)
+oc_send_buffer(oc_message_t *message)
 {
   PRINT("Outgoing message to: ");
   PRINTipaddr(message->endpoint);
@@ -186,7 +190,7 @@ oc_send_buffer(oc_message_t * message)
       memcpy(ptr, message->data, message->length);
       ip_buf_appdatalen(buf) = message->length;
       if (net_send(buf) < 0) {
-	ip_buf_unref(buf);
+        ip_buf_unref(buf);
       }
     }
   }
@@ -197,28 +201,23 @@ oc_connectivity_init(void)
 {
   net_init();
 
-  recv_ctx = net_context_get(IPPROTO_UDP,
-			     &ipv6_any, 0,
-			     &node_addr, NODE_PORT);
-  multicast_ctx = net_context_get(IPPROTO_UDP,
-				  &ipv6_any, 0,
-				  &coap_wk, COAP_PORT_UNSECURED);
+  recv_ctx = net_context_get(IPPROTO_UDP, &ipv6_any, 0, &node_addr, NODE_PORT);
+  multicast_ctx =
+    net_context_get(IPPROTO_UDP, &ipv6_any, 0, &coap_wk, COAP_PORT_UNSECURED);
 
 #ifdef OC_SECURITY
-  dtls_ctx = net_context_get(IPPROTO_UDP,
-			     &ipv6_any, 0,
-			     &node_addr, DTLS_PORT);
+  dtls_ctx = net_context_get(IPPROTO_UDP, &ipv6_any, 0, &node_addr, DTLS_PORT);
 #endif /* OC_SECURITY */
 
   task_fiber_start(&stack1[0], RECV_FIBER_STACK_SIZE,
-		   (nano_fiber_entry_t)server_recv, 0, 0, 7, 0);
+                   (nano_fiber_entry_t)server_recv, 0, 0, 7, 0);
 
   task_fiber_start(&stack2[0], RECV_FIBER_STACK_SIZE,
-		   (nano_fiber_entry_t)multicast_recv, 0, 0, 7, 0);
+                   (nano_fiber_entry_t)multicast_recv, 0, 0, 7, 0);
 
 #ifdef OC_SECURITY
   task_fiber_start(&stack3[0], RECV_FIBER_STACK_SIZE,
-		   (nano_fiber_entry_t)dtls_recv, 0, 0, 7, 0);
+                   (nano_fiber_entry_t)dtls_recv, 0, 0, 7, 0);
 #endif /* OC_SECURITY */
 
   LOG("Successfully initialized connectivity\n");

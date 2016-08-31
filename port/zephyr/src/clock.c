@@ -19,7 +19,6 @@
 void
 oc_clock_init(void)
 {
-
 }
 
 oc_clock_time_t

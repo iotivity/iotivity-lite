@@ -14,12 +14,12 @@
 // limitations under the License.
 */
 
+#include "oc_uuid.h"
+#include "port/oc_random.h"
+#include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
-#include <ctype.h>
-#include "port/oc_random.h"
-#include "oc_uuid.h"
 
 void
 oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
@@ -30,53 +30,52 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
   for (i = 0; i < strlen(str); i++) {
     if (str[i] == '-')
       continue;
-    else if (isalpha(str[i]))  {
+    else if (isalpha(str[i])) {
       switch (str[i]) {
       case 65:
       case 97:
-	c |= 0x0a;
-	break;
+        c |= 0x0a;
+        break;
       case 66:
       case 98:
-	c |= 0x0b;
-	break;
+        c |= 0x0b;
+        break;
       case 67:
       case 99:
-	c |= 0x0c;
-	break;
+        c |= 0x0c;
+        break;
       case 68:
       case 100:
-	c |= 0x0d;
-	break;
+        c |= 0x0d;
+        break;
       case 69:
       case 101:
-	c |= 0x0e;
-	break;
+        c |= 0x0e;
+        break;
       case 70:
       case 102:
-	c |= 0x0f;
-	break;
+        c |= 0x0f;
+        break;
       }
-    }
-    else
+    } else
       c |= str[i] - 48;
     if ((j + 1) * 2 == k) {
       uuid->id[j++] = c;
       c = 0;
-    }
-    else
+    } else
       c = c << 4;
     k++;
   }
 }
 
 void
-oc_uuid_to_str(const oc_uuid_t* uuid, char *buffer, int buflen) {
+oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
+{
   int i, j = 0;
   if (buflen < 37)
     return;
   for (i = 0; i < 16; i++) {
-    switch(i) {
+    switch (i) {
     case 4:
     case 6:
     case 8:
@@ -91,13 +90,14 @@ oc_uuid_to_str(const oc_uuid_t* uuid, char *buffer, int buflen) {
 }
 
 void
-oc_gen_uuid(oc_uuid_t *uuid) {
+oc_gen_uuid(oc_uuid_t *uuid)
+{
   int i;
   uint16_t r;
 
   for (i = 0; i < 8; i++) {
     r = oc_random_rand();
-    memcpy((uint8_t*)&uuid->id[i * 2], (uint8_t*)&r, sizeof(r));
+    memcpy((uint8_t *)&uuid->id[i * 2], (uint8_t *)&r, sizeof(r));
   }
 
   /*  From RFC 4122

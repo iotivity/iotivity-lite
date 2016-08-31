@@ -44,18 +44,10 @@ struct oc_mmem
   void *ptr;
 };
 
-typedef enum
-{
-  BYTE_POOL,
-  INT_POOL,
-  DOUBLE_POOL
-} pool;
+typedef enum { BYTE_POOL, INT_POOL, DOUBLE_POOL } pool;
 
-int
-oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type);
-void
-oc_mmem_free(struct oc_mmem *, pool pool_type);
-void
-oc_mmem_init(void);
+int oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type);
+void oc_mmem_free(struct oc_mmem *, pool pool_type);
+void oc_mmem_init(void);
 
 #endif /* OC_MMEM_H */

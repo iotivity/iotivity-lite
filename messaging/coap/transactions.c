@@ -31,12 +31,12 @@
  * This file is part of the Contiki operating system.
  */
 
-#include <string.h>
-#include "util/oc_memb.h"
-#include "util/oc_list.h"
 #include "transactions.h"
 #include "observe.h"
 #include "oc_buffer.h"
+#include "util/oc_list.h"
+#include "util/oc_memb.h"
+#include <string.h>
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
@@ -55,7 +55,8 @@ static struct oc_process *transaction_handler_process = NULL;
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void coap_register_as_transaction_handler()
+void
+coap_register_as_transaction_handler()
 {
   transaction_handler_process = OC_PROCESS_CURRENT();
 }
@@ -64,21 +65,21 @@ coap_transaction_t *
 coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
-  if(t) {
+  if (t) {
     oc_message_t *message = oc_allocate_message();
-    if(message) {
-      LOG("Created new transaction %d %d\n", mid,
-	  message->length);
+    if (message) {
+      LOG("Created new transaction %d %d\n", mid, message->length);
       t->mid = mid;
       t->retrans_counter = 0;
 
       t->message = message;
 
       /* save client address */
-      memcpy(&t->message->endpoint, endpoint,
-	     sizeof(oc_endpoint_t));
+      memcpy(&t->message->endpoint, endpoint, sizeof(oc_endpoint_t));
 
-      oc_list_add(transactions_list, t); /* list itself makes sure same element is not added twice */
+      oc_list_add(
+        transactions_list,
+        t); /* list itself makes sure same element is not added twice */
     } else {
       oc_memb_free(&transactions_memb, t);
       t = NULL;
@@ -89,31 +90,32 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 }
 
 /*---------------------------------------------------------------------------*/
-void coap_send_transaction(coap_transaction_t *t)
+void
+coap_send_transaction(coap_transaction_t *t)
 {
   LOG("Sending transaction %u\n", t->mid);
   bool confirmable = false;
 
-  confirmable = (COAP_TYPE_CON
-		 == ((COAP_HEADER_TYPE_MASK & t->message->data[0])
-		     >> COAP_HEADER_TYPE_POSITION)) ?
-    true : false;
+  confirmable =
+    (COAP_TYPE_CON == ((COAP_HEADER_TYPE_MASK & t->message->data[0]) >>
+                       COAP_HEADER_TYPE_POSITION))
+      ? true
+      : false;
 
-  if(confirmable) {
-    if(t->retrans_counter < COAP_MAX_RETRANSMIT) {
+  if (confirmable) {
+    if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
       LOG("Keeping transaction %u\n", t->mid);
 
-      if(t->retrans_counter == 0) {
-	t->retrans_timer.timer.interval =
-	  COAP_RESPONSE_TIMEOUT_TICKS
-	  + (oc_random_rand()
-	     % (oc_clock_time_t)
-	     COAP_RESPONSE_TIMEOUT_BACKOFF_MASK );
-	LOG("Initial interval %d\n", t->retrans_timer.timer.interval);
+      if (t->retrans_counter == 0) {
+        t->retrans_timer.timer.interval =
+          COAP_RESPONSE_TIMEOUT_TICKS +
+          (oc_random_rand() %
+           (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
+        LOG("Initial interval %d\n", t->retrans_timer.timer.interval);
       } else {
-	t->retrans_timer.timer.interval <<= 1; /* double */
-	LOG("Doubled %d\n", t->retrans_timer.timer.interval);
+        t->retrans_timer.timer.interval <<= 1; /* double */
+        LOG("Doubled %d\n", t->retrans_timer.timer.interval);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
@@ -137,7 +139,7 @@ void coap_send_transaction(coap_transaction_t *t)
 
 #ifdef OC_SECURITY
       if (t->message->endpoint.flags & SECURED) {
-	oc_sec_dtls_close_init(&t->message->endpoint);
+        oc_sec_dtls_close_init(&t->message->endpoint);
       }
 #endif /* OC_SECURITY */
 
@@ -155,9 +157,10 @@ void coap_send_transaction(coap_transaction_t *t)
   }
 }
 /*---------------------------------------------------------------------------*/
-void coap_clear_transaction(coap_transaction_t *t)
+void
+coap_clear_transaction(coap_transaction_t *t)
 {
-  if(t) {
+  if (t) {
     LOG("Freeing transaction %u: %p\n", t->mid, t);
 
     oc_etimer_stop(&t->retrans_timer);
@@ -171,9 +174,9 @@ coap_get_transaction_by_mid(uint16_t mid)
 {
   coap_transaction_t *t = NULL;
 
-  for(t = (coap_transaction_t *)oc_list_head(transactions_list); t;
-      t = t->next) {
-    if(t->mid == mid) {
+  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
+       t = t->next) {
+    if (t->mid == mid) {
       LOG("Found transaction for MID %u: %p\n", t->mid, t);
       return t;
     }
@@ -182,13 +185,14 @@ coap_get_transaction_by_mid(uint16_t mid)
 }
 
 /*---------------------------------------------------------------------------*/
-void coap_check_transactions()
+void
+coap_check_transactions()
 {
   coap_transaction_t *t = NULL;
 
-  for(t = (coap_transaction_t *)oc_list_head(transactions_list); t;
-      t = t->next) {
-    if(oc_etimer_expired(&t->retrans_timer)) {
+  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
+       t = t->next) {
+    if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
       LOG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
       coap_send_transaction(t);

@@ -32,15 +32,14 @@
  *
  */
 
+#include "oc_mmem.h"
+#include "config.h"
+#include "oc_list.h"
+#include "port/oc_log.h"
 #include <stdint.h>
 #include <string.h>
-#include "port/oc_log.h"
-#include "oc_mmem.h"
-#include "oc_list.h"
-#include "config.h"
 
-#if !defined(OC_BYTES_POOL_SIZE) ||		\
-  !defined(OC_INTS_POOL_SIZE) ||		\
+#if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
   !defined(OC_DOUBLES_POOL_SIZE)
 #error "Please define byte, int, double pool sizes in config.h"
 #endif /* ...POOL_SIZE */
@@ -100,28 +99,24 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
   if (m->next != NULL) {
     switch (pool_type) {
     case BYTE_POOL:
-      memmove(m->ptr,
-	      m->next->ptr,
-	      &bytes[OC_BYTES_POOL_SIZE - avail_bytes]
-	      - (unsigned char *) m->next->ptr);
+      memmove(m->ptr, m->next->ptr, &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
+                                      (unsigned char *)m->next->ptr);
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
-	      &ints[OC_INTS_POOL_SIZE - avail_ints]
-	      - (int64_t *) m->next->ptr);
+              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int64_t *)m->next->ptr);
       break;
     case DOUBLE_POOL:
-      memmove(m->ptr,
-	      m->next->ptr,
-	      &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles]
-	      - (double *) m->next->ptr);
+      memmove(m->ptr, m->next->ptr,
+              &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles] -
+                (double *)m->next->ptr);
       break;
     default:
       return;
       break;
     }
     for (n = m->next; n != NULL; n = n->next) {
-      n->ptr = (void *) ((char *) n->ptr - m->size);
+      n->ptr = (void *)((char *)n->ptr - m->size);
     }
   }
 

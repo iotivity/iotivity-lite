@@ -22,5 +22,3 @@
 #define assert oc_assert
 
 #endif
-
-

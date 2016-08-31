@@ -98,8 +98,7 @@ observe_light(oc_client_response_t *data)
       PRINT("Sent PUT request\n");
     else
       PRINT("Could not send PUT\n");
-  }
-  else
+  } else
     PRINT("Could not init PUT\n");
 }
 
@@ -109,7 +108,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 {
   int i;
   int uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
+  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
   for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
@@ -158,10 +157,9 @@ main(void)
 
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
+                          .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
@@ -174,8 +172,7 @@ main(void)
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
-    }
-    else {
+    } else {
       ts.tv_sec = (next_event / OC_CLOCK_SECOND);
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);

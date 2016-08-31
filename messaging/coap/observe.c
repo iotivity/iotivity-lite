@@ -35,14 +35,14 @@
 
 #ifdef OC_SERVER
 
+#include "observe.h"
+#include "util/oc_memb.h"
 #include <stdio.h>
 #include <string.h>
-#include "util/oc_memb.h"
-#include "observe.h"
 
-#include "oc_ri.h"
 #include "oc_coap.h"
 #include "oc_rep.h"
+#include "oc_ri.h"
 /*-------------------*/
 uint64_t observe_counter = 3;
 /*---------------------------------------------------------------------------*/
@@ -52,19 +52,19 @@ OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static int add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
-			const uint8_t *token, size_t token_len,
-			const char *uri,
-			int uri_len)
+static int
+add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
+             const uint8_t *token, size_t token_len, const char *uri,
+             int uri_len)
 {
   /* Remove existing observe relationship, if any. */
   int dup = coap_remove_observer_by_uri(endpoint, uri);
 
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
-  if(o) {
+  if (o) {
     int max = sizeof(o->url) - 1;
-    if(max > uri_len) {
+    if (max > uri_len) {
       max = uri_len;
     }
     memcpy(o->url, uri, max);
@@ -77,8 +77,8 @@ static int add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     o->resource = resource;
     resource->num_observers++;
     LOG("Adding observer (%u/%u) for /%s [0x%02X%02X]\n",
-	oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS,
-	o->url, o->token[0], o->token[1]);
+        oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS, o->url,
+        o->token[0], o->token[1]);
     oc_list_add(observers_list, o);
     return dup;
   }
@@ -87,7 +87,8 @@ static int add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 /*---------------------------------------------------------------------------*/
 /*- Removal -----------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void coap_remove_observer(coap_observer_t *o)
+void
+coap_remove_observer(coap_observer_t *o)
 {
   LOG("Removing observer for /%s [0x%02X%02X]\n", o->url, o->token[0],
       o->token[1]);
@@ -95,7 +96,8 @@ void coap_remove_observer(coap_observer_t *o)
   oc_list_remove(observers_list, o);
 }
 /*---------------------------------------------------------------------------*/
-int coap_remove_observer_by_client(oc_endpoint_t *endpoint)
+int
+coap_remove_observer_by_client(oc_endpoint_t *endpoint)
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
@@ -116,8 +118,9 @@ int coap_remove_observer_by_client(oc_endpoint_t *endpoint)
   return removed;
 }
 /*---------------------------------------------------------------------------*/
-int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
-				  size_t token_len)
+int
+coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
+                              size_t token_len)
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
@@ -138,7 +141,8 @@ int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
   return removed;
 }
 /*---------------------------------------------------------------------------*/
-int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri)
+int
+coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri)
 {
   LOG("Unregistering observers for resource uri /%s", uri);
   int removed = 0;
@@ -158,16 +162,17 @@ int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri)
   return removed;
 }
 /*---------------------------------------------------------------------------*/
-int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
+int
+coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
 {
   int removed = 0;
   coap_observer_t *obs = NULL;
   LOG("Unregistering observers for request MID %u\n", mid);
 
-  for(obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
-      obs = obs->next) {
-    if(memcmp(&obs->endpoint, endpoint, sizeof(*endpoint)) == 0
-       && obs->last_mid == mid) {
+  for (obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
+       obs = obs->next) {
+    if (memcmp(&obs->endpoint, endpoint, sizeof(*endpoint)) == 0 &&
+        obs->last_mid == mid) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
@@ -180,12 +185,14 @@ int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
 /*---------------------------------------------------------------------------*/
 /*- Notification ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-int coap_notify_observers(oc_resource_t *resource,
-			  oc_response_buffer_t *response_buf, oc_endpoint_t *endpoint)
+int
+coap_notify_observers(oc_resource_t *resource,
+                      oc_response_buffer_t *response_buf,
+                      oc_endpoint_t *endpoint)
 {
   int num_observers = 0;
-  if(resource) {
-    if(!resource->num_observers) {
+  if (resource) {
+    if (!resource->num_observers) {
       LOG("coap_notify_observers: no observers; returning\n");
       return 0;
     }
@@ -196,7 +203,7 @@ int coap_notify_observers(oc_resource_t *resource,
   oc_response_t response = {};
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
-  if(!response_buf && resource && (resource->properties & OC_PERIODIC)) {
+  if (!response_buf && resource && (resource->properties & OC_PERIODIC)) {
     LOG("coap_notify_observers: Issue GET request to resource\n");
     /* performing GET on the resource */
     response_buffer.buffer = buffer;
@@ -209,7 +216,7 @@ int coap_notify_observers(oc_resource_t *resource,
     oc_rep_new(buffer, COAP_MAX_BLOCK_SIZE);
     resource->get_handler(&request, resource->default_interface);
     response_buf = &response_buffer;
-    if(response_buf->code == OC_IGNORE) {
+    if (response_buf->code == OC_IGNORE) {
       LOG("coap_notify_observers: Resource ignored request\n");
       return num_observers;
     }
@@ -217,95 +224,84 @@ int coap_notify_observers(oc_resource_t *resource,
 
   coap_observer_t *obs = NULL;
   /* iterate over observers */
-  for(obs = (coap_observer_t *)oc_list_head(observers_list);
-      obs && ((resource && obs->resource == resource)
-	      || (endpoint && memcmp(&obs->endpoint,
-				     endpoint,
-				     sizeof(oc_endpoint_t))
-		  == 0));
-      obs = obs->next) {
+  for (obs = (coap_observer_t *)oc_list_head(observers_list);
+       obs && ((resource && obs->resource == resource) ||
+               (endpoint &&
+                memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0));
+       obs = obs->next) {
     num_observers = obs->resource->num_observers;
-    if(response.separate_response != NULL
-       && response_buf->code == oc_status_code(OC_STATUS_OK)) {
+    if (response.separate_response != NULL &&
+        response_buf->code == oc_status_code(OC_STATUS_OK)) {
       coap_packet_t req[1];
       /*
-	req->block1_num = 0;
-	req->block1_size = 0;
-	req->block2_num = 0;
-	req->block2_size = 0;
+  req->block1_num = 0;
+  req->block1_size = 0;
+  req->block2_num = 0;
+  req->block2_size = 0;
       */
       coap_init_message(req, COAP_TYPE_NON, CONTENT_2_05, 0);
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
       LOG("Resource is SLOW; creating separate response\n");
-      if(coap_separate_accept(req, response.separate_response,
-			      &obs->endpoint, 0) == 1)
-	response.separate_response->active = 1;
+      if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
+                               0) == 1)
+        response.separate_response->active = 1;
     } else {
       LOG("coap_notify_observers: notifying observer\n");
       coap_transaction_t *transaction = NULL;
-      if(response_buf && (transaction = coap_new_transaction(coap_get_mid(),
-							     &obs->endpoint))) {
-	memcpy(
-	  transaction->message->data
-	  + COAP_MAX_HEADER_SIZE,
-	  response_buf->buffer,
-	  response_buf->response_length);
+      if (response_buf && (transaction = coap_new_transaction(
+                             coap_get_mid(), &obs->endpoint))) {
+        memcpy(transaction->message->data + COAP_MAX_HEADER_SIZE,
+               response_buf->buffer, response_buf->response_length);
 
-	/* update last MID for RST matching */
-	obs->last_mid = transaction->mid;
+        /* update last MID for RST matching */
+        obs->last_mid = transaction->mid;
 
-	/* prepare response */
-	/* build notification */
-	coap_packet_t notification[1]; /* this way the packet can be treated as pointer as usual */
-	coap_init_message(notification, COAP_TYPE_NON,
-			  CONTENT_2_05, 0);
+        /* prepare response */
+        /* build notification */
+        coap_packet_t notification
+          [1]; /* this way the packet can be treated as pointer as usual */
+        coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
 
-	notification->mid = transaction->mid;
-	if(obs->obs_counter
-	   % COAP_OBSERVE_REFRESH_INTERVAL
-	   == 0) {
-	  LOG("coap_observe_notify: forcing CON notification to check for client liveness\n");
-	  notification->type = COAP_TYPE_CON;
-	}
-	coap_set_payload(notification,
-			 response_buf->buffer,
-			 response_buf->response_length);
-	coap_set_status_code(notification,
-			     response_buf->code);
-	if(notification->code < BAD_REQUEST_4_00
-	   && obs->resource->num_observers) {
-	  coap_set_header_observe(notification,
-				  (obs->obs_counter)++);
-	  observe_counter++;
-	} else {
-	  coap_set_header_observe(notification,
-				  1);
-	}
-	coap_set_token(notification, obs->token,
-		       obs->token_len);
+        notification->mid = transaction->mid;
+        if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
+          LOG("coap_observe_notify: forcing CON notification to check for "
+              "client liveness\n");
+          notification->type = COAP_TYPE_CON;
+        }
+        coap_set_payload(notification, response_buf->buffer,
+                         response_buf->response_length);
+        coap_set_status_code(notification, response_buf->code);
+        if (notification->code < BAD_REQUEST_4_00 &&
+            obs->resource->num_observers) {
+          coap_set_header_observe(notification, (obs->obs_counter)++);
+          observe_counter++;
+        } else {
+          coap_set_header_observe(notification, 1);
+        }
+        coap_set_token(notification, obs->token, obs->token_len);
 
-	transaction->message->length =
-	  coap_serialize_message(
-	    notification,
-	    transaction->message->data);
+        transaction->message->length =
+          coap_serialize_message(notification, transaction->message->data);
 
-	coap_send_transaction(transaction);
+        coap_send_transaction(transaction);
       }
     }
   }
   return num_observers;
 }
 /*---------------------------------------------------------------------------*/
-int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-			 oc_endpoint_t *endpoint)
+int
+coap_observe_handler(void *request, void *response, oc_resource_t *resource,
+                     oc_endpoint_t *endpoint)
 {
-  coap_packet_t * const coap_req = (coap_packet_t *)request;
-  coap_packet_t * const coap_res = (coap_packet_t *)response;
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_packet_t *const coap_res = (coap_packet_t *)response;
   int dup = -1;
-  if(coap_req->code == COAP_GET && coap_res->code < 128) { /* GET request and response without error code */
-    if(IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
-      if(coap_req->observe == 0) {
+  if (coap_req->code == COAP_GET &&
+      coap_res->code < 128) { /* GET request and response without error code */
+    if (IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
+      if (coap_req->observe == 0) {
         dup =
           add_observer(resource, endpoint, coap_req->token, coap_req->token_len,
                        coap_req->uri_path, coap_req->uri_path_len);

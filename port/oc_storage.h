@@ -17,8 +17,8 @@
 #ifndef OC_STORAGE_H
 #define OC_STORAGE_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 int oc_storage_config(const char *store);
 long oc_storage_read(const char *store, uint8_t *buf, size_t size);

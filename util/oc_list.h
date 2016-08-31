@@ -73,9 +73,9 @@
  *
  * \param name The name of the list.
  */
-#define OC_LIST(name)							\
-  static void *OC_LIST_CONCAT(name,_list) = NULL;			\
-  static oc_list_t name = (oc_list_t)&OC_LIST_CONCAT(name,_list)
+#define OC_LIST(name)                                                          \
+  static void *OC_LIST_CONCAT(name, _list) = NULL;                             \
+  static oc_list_t name = (oc_list_t)&OC_LIST_CONCAT(name, _list)
 
 /**
  * Declare a linked list inside a structure declaraction.
@@ -95,8 +95,8 @@
  *
  * \param name The name of the list.
  */
-#define OC_LIST_STRUCT(name)			\
-  void *OC_LIST_CONCAT(name,_list);		\
+#define OC_LIST_STRUCT(name)                                                   \
+  void *OC_LIST_CONCAT(name, _list);                                           \
   oc_list_t name
 
 /**
@@ -109,48 +109,36 @@
  * \param struct_ptr A pointer to the struct
  * \param name The name of the list.
  */
-#define OC_LIST_STRUCT_INIT(struct_ptr, name)				\
-  do {									\
-    (struct_ptr)->name = &((struct_ptr)->OC_LIST_CONCAT(name,_list));   \
-    (struct_ptr)->OC_LIST_CONCAT(name,_list) = NULL;                    \
-    oc_list_init((struct_ptr)->name);                                   \
-  } while(0)
+#define OC_LIST_STRUCT_INIT(struct_ptr, name)                                  \
+  do {                                                                         \
+    (struct_ptr)->name = &((struct_ptr)->OC_LIST_CONCAT(name, _list));         \
+    (struct_ptr)->OC_LIST_CONCAT(name, _list) = NULL;                          \
+    oc_list_init((struct_ptr)->name);                                          \
+  } while (0)
 
 /**
  * The linked list type.
  *
  */
-typedef void ** oc_list_t;
+typedef void **oc_list_t;
 
-void
-oc_list_init(oc_list_t list);
-void *
-oc_list_head(oc_list_t list);
-void *
-oc_list_tail(oc_list_t list);
-void *
-oc_list_pop(oc_list_t list);
-void
-oc_list_push(oc_list_t list, void *item);
+void oc_list_init(oc_list_t list);
+void *oc_list_head(oc_list_t list);
+void *oc_list_tail(oc_list_t list);
+void *oc_list_pop(oc_list_t list);
+void oc_list_push(oc_list_t list, void *item);
 
-void *
-oc_list_chop(oc_list_t list);
+void *oc_list_chop(oc_list_t list);
 
-void
-oc_list_add(oc_list_t list, void *item);
-void
-oc_list_remove(oc_list_t list, void *item);
+void oc_list_add(oc_list_t list, void *item);
+void oc_list_remove(oc_list_t list, void *item);
 
-int
-oc_list_length(oc_list_t list);
+int oc_list_length(oc_list_t list);
 
-void
-oc_list_copy(oc_list_t dest, oc_list_t src);
+void oc_list_copy(oc_list_t dest, oc_list_t src);
 
-void
-oc_list_insert(oc_list_t list, void *previtem, void *newitem);
+void oc_list_insert(oc_list_t list, void *previtem, void *newitem);
 
-void *
-oc_list_item_next(void *item);
+void *oc_list_item_next(void *item);
 
 #endif /* OC_LIST_H */

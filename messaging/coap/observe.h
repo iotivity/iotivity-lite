@@ -43,7 +43,8 @@
 
 #define COAP_OBSERVER_URL_LEN 20
 
-typedef struct coap_observer {
+typedef struct coap_observer
+{
   struct coap_observer *next; /* for LIST */
 
   oc_resource_t *resource;
@@ -64,15 +65,16 @@ oc_list_t coap_get_observers(void);
 void coap_remove_observer(coap_observer_t *o);
 int coap_remove_observer_by_client(oc_endpoint_t *endpoint);
 int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
-				  size_t token_len);
+                                  size_t token_len);
 int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri);
 int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
 
 int coap_notify_observers(oc_resource_t *resource,
-			  oc_response_buffer_t *response_buf, oc_endpoint_t *endpoint);
-//int coap_notify_observers_sub(oc_resource_t *resource, const char *subpath);
+                          oc_response_buffer_t *response_buf,
+                          oc_endpoint_t *endpoint);
+// int coap_notify_observers_sub(oc_resource_t *resource, const char *subpath);
 
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-			 oc_endpoint_t *endpoint);
+                         oc_endpoint_t *endpoint);
 
 #endif /* OBSERVE_H */

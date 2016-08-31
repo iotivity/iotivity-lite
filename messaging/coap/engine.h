@@ -35,9 +35,9 @@
 #define ENGINE_H
 
 #include "coap.h"
-#include "transactions.h"
 #include "observe.h"
 #include "separate.h"
+#include "transactions.h"
 
 OC_PROCESS_NAME(coap_engine);
 

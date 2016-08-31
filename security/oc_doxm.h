@@ -17,15 +17,16 @@
 #ifndef OC_DOXM_H_
 #define OC_DOXM_H_
 
-#include "port/oc_log.h"
 #include "oc_uuid.h"
-#include "util/oc_memb.h"
+#include "port/oc_log.h"
 #include "util/oc_list.h"
+#include "util/oc_memb.h"
 
-#include <stdbool.h>
 #include "oc_ri.h"
+#include <stdbool.h>
 
-typedef struct {
+typedef struct
+{
   int oxmsel;
   int sct;
   bool owned;

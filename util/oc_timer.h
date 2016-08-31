@@ -79,15 +79,10 @@ struct oc_timer
   oc_clock_time_t interval;
 };
 
-void
-oc_timer_set(struct oc_timer *t, oc_clock_time_t interval);
-void
-oc_timer_reset(struct oc_timer *t);
-void
-oc_timer_restart(struct oc_timer *t);
-int
-oc_timer_expired(struct oc_timer *t);
-oc_clock_time_t
-oc_timer_remaining(struct oc_timer *t);
+void oc_timer_set(struct oc_timer *t, oc_clock_time_t interval);
+void oc_timer_reset(struct oc_timer *t);
+void oc_timer_restart(struct oc_timer *t);
+int oc_timer_expired(struct oc_timer *t);
+oc_clock_time_t oc_timer_remaining(struct oc_timer *t);
 
 #endif /* OC_TIMER_H */

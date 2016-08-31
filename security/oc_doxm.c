@@ -16,16 +16,16 @@
 
 #ifdef OC_SECURITY
 
-#include <stddef.h>
-#include <strings.h>
 #include "oc_doxm.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include <stddef.h>
+#include <strings.h>
 
 static oc_sec_doxm_t doxm;
 
-//Fix.. multiple devices.. how many doxms, when we retrieve
-//credentials, how do we correlate between creds and devices?
+// Fix.. multiple devices.. how many doxms, when we retrieve
+// credentials, how do we correlate between creds and devices?
 void
 oc_sec_doxm_default(void)
 {
@@ -43,7 +43,7 @@ oc_sec_doxm_default(void)
 void
 oc_sec_encode_doxm(void)
 {
-  int oxms[1] = {0};
+  int oxms[1] = { 0 };
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_DOXM));
@@ -67,24 +67,20 @@ oc_sec_get_doxm(void)
 }
 
 void
-get_doxm(oc_request_t *request,
-	 oc_interface_mask_t interface)
+get_doxm(oc_request_t *request, oc_interface_mask_t interface)
 {
   switch (interface) {
-  case OC_IF_BASELINE:
-  {
+  case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
     if (ql && ((doxm.owned == 1 && strncasecmp(q, "false", 5) == 0) ||
-	       (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
+               (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       oc_ignore_request(request);
-    }
-    else {
+    } else {
       oc_sec_encode_doxm();
       oc_send_response(request, OC_STATUS_OK);
     }
-  }
-  break;
+  } break;
   default:
     break;
   }
@@ -93,19 +89,19 @@ get_doxm(oc_request_t *request,
 void
 oc_sec_decode_doxm(oc_rep_t *rep)
 {
-  while(rep != NULL) {
-    switch(rep->type) {
+  while (rep != NULL) {
+    switch (rep->type) {
     case BOOL:
       if (strncmp(oc_string(rep->name), "owned", 5) == 0)
-	doxm.owned = rep->value_boolean;
+        doxm.owned = rep->value_boolean;
       else if (strncmp(oc_string(rep->name), "dpc", 3) == 0)
-	doxm.dpc = rep->value_boolean;
+        doxm.dpc = rep->value_boolean;
       break;
     case INT:
       if (strncmp(oc_string(rep->name), "oxmsel", 6) == 0)
-	doxm.oxmsel = rep->value_int;
+        doxm.oxmsel = rep->value_int;
       else if (strncmp(oc_string(rep->name), "sct", 3) == 0)
-	doxm.sct = rep->value_int;
+        doxm.sct = rep->value_int;
       break;
     case STRING:
       if (strncmp(oc_string(rep->name), "deviceuuid", 10) == 0)
