@@ -306,24 +306,13 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
   if(coap_req->code == COAP_GET && coap_res->code < 128) { /* GET request and response without error code */
     if(IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
       if(coap_req->observe == 0) {
-	dup = add_observer(resource, endpoint,
-			   coap_req->token,
-			   coap_req->token_len,
-			   coap_req->uri_path,
-			   coap_req->uri_path_len);
-	if(dup >= 0) {
-	  coap_set_header_observe(coap_res, 0);
-	} else { //Fix
-	  coap_res->code =
-	    SERVICE_UNAVAILABLE_5_03;
-	  coap_set_payload(coap_res,
-			   "TooManyObservers", 16);
-	}
-      } else if(coap_req->observe == 1) {
-	/* remove client if it is currently observe */
-	dup = coap_remove_observer_by_token(endpoint,
-					    coap_req->token,
-					    coap_req->token_len);
+        dup =
+          add_observer(resource, endpoint, coap_req->token, coap_req->token_len,
+                       coap_req->uri_path, coap_req->uri_path_len);
+      } else if (coap_req->observe == 1) {
+        /* remove client if it is currently observe */
+        dup = coap_remove_observer_by_token(endpoint, coap_req->token,
+                                            coap_req->token_len);
       }
     }
   }
