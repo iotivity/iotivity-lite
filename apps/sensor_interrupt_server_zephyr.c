@@ -21,7 +21,7 @@ static int temperature;
 
 oc_define_interrupt_handler(temp_sensor)
 {
-  if(temp_response.active) {
+  if (temp_response.active) {
     oc_set_separate_response_buffer(&temp_response);
 
     oc_rep_start_root_object();
@@ -38,8 +38,8 @@ app_init(void)
   oc_activate_interrupt_handler(temp_sensor);
   oc_init_platform("GE", NULL, NULL);
 
-  oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor",
-		"1.0", "1.0", NULL, NULL);
+  oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor", "1.0",
+                "1.0", NULL, NULL);
 }
 
 #ifdef OC_SECURITY
@@ -74,10 +74,10 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-#include <zephyr.h>
-#include <sections.h>
 #include "port/oc_signal_main_loop.h"
+#include <sections.h>
 #include <string.h>
+#include <zephyr.h>
 
 static char fiber_stack[512];
 
@@ -88,7 +88,7 @@ fake_sensor_fiber(void)
   nano_timer_init(&timer, NULL);
   temperature = 3;
 
-  while(1) {
+  while (1) {
     temperature++;
     oc_signal_interrupt_handler(temp_sensor);
 
@@ -110,18 +110,17 @@ main(void)
 {
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .register_resources = register_resources
-  };
+                          .register_resources = register_resources };
 
   nano_sem_init(&block);
 
   if (oc_main_init(&handler) < 0)
     return;
 
-  task_fiber_start(&fiber_stack[0], 512,
-		   (nano_fiber_entry_t)fake_sensor_fiber, 0, 0, 7, 0);
+  task_fiber_start(&fiber_stack[0], 512, (nano_fiber_entry_t)fake_sensor_fiber,
+                   0, 0, 7, 0);
 
   oc_clock_time_t next_event;
 

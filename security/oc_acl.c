@@ -16,21 +16,22 @@
 
 #ifdef OC_SECURITY
 
+#include "oc_acl.h"
+#include "config.h"
+#include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_dtls.h"
+#include "oc_rep.h"
 #include <stddef.h>
 #include <strings.h>
-#include "config.h"
-#include "oc_core_res.h"
-#include "oc_acl.h"
-#include "oc_rep.h"
-#include "oc_api.h"
-#include "oc_dtls.h"
 
-#define MAX_NUM_RES_PERM_PAIRS (NUM_OC_CORE_RESOURCES +			\
-				(MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
+#define MAX_NUM_RES_PERM_PAIRS                                                 \
+  (NUM_OC_CORE_RESOURCES + (MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_SUBJECTS + 1);
 OC_MEMB(res_l, oc_sec_acl_res_t, MAX_NUM_RES_PERM_PAIRS);
-static oc_uuid_t WILDCARD = {.id = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-static oc_sec_acl_t ac_list = {0};
+static oc_uuid_t WILDCARD = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                     0, 0 } };
+static oc_sec_acl_t ac_list = { 0 };
 
 static void
 get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
@@ -44,9 +45,9 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
   for (i = 0; i < (*n - 1); i++) {
     for (j = (i + 1); j < *n; j++) {
       if (groups[i] > groups[j]) {
-	uint16_t t = groups[i];
-	groups[i] = groups[j];
-	groups[j] = t;
+        uint16_t t = groups[i];
+        groups[i] = groups[j];
+        groups[j] = t;
       }
     }
   }
@@ -55,7 +56,7 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
     if (groups[j] != groups[i])
       groups[++j] = groups[i];
   }
-  *n = j+1;
+  *n = j + 1;
 }
 
 void
@@ -72,11 +73,10 @@ oc_sec_encode_acl(void)
     if (strncmp(sub->subjectuuid.id, WILDCARD.id, 16) == 0) {
       uuid[0] = '*';
       uuid[1] = '\0';
-    }
-    else {
+    } else {
       oc_uuid_to_str(&sub->subjectuuid, uuid, 37);
     }
-    LOG ("oc_sec_acl_encode: subject %s\n", uuid);
+    LOG("oc_sec_acl_encode: subject %s\n", uuid);
     n = oc_list_length(sub->resources);
     uint16_t groups[n];
     get_sub_perm_groups(sub, groups, &n);
@@ -87,16 +87,18 @@ oc_sec_encode_acl(void)
       oc_rep_set_array(aces, resources);
       oc_sec_acl_res_t *res = oc_list_head(sub->resources);
       while (res != NULL) {
-	if (res->permissions == groups[i]) {
-	  LOG("oc_sec_acl_encode: adding resource %s\n", oc_string(res->resource->uri));
-	  oc_rep_object_array_start_item(resources);
-	  oc_rep_set_text_string(resources, href, oc_string(res->resource->uri));
-	  oc_rep_set_text_string(resources, rel, "");
-	  oc_rep_set_text_string(resources, rt, "");
-	  oc_rep_set_text_string(resources, if, "");
-	  oc_rep_object_array_end_item(resources);
-	}
-	res = res->next;
+        if (res->permissions == groups[i]) {
+          LOG("oc_sec_acl_encode: adding resource %s\n",
+              oc_string(res->resource->uri));
+          oc_rep_object_array_start_item(resources);
+          oc_rep_set_text_string(resources, href,
+                                 oc_string(res->resource->uri));
+          oc_rep_set_text_string(resources, rel, "");
+          oc_rep_set_text_string(resources, rt, "");
+          oc_rep_set_text_string(resources, if, "");
+          oc_rep_object_array_end_item(resources);
+        }
+        res = res->next;
       }
       oc_rep_close_array(aces, resources);
       oc_rep_object_array_end_item(aces);
@@ -111,11 +113,9 @@ oc_sec_encode_acl(void)
 }
 
 static oc_sec_acl_res_t *
-oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
-		   oc_resource_t *resource,
-		   bool create)
+oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource, bool create)
 {
-  oc_sec_ace_t *ace = (oc_sec_ace_t*)oc_list_head(ac_list.subjects);
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(ac_list.subjects);
   oc_sec_acl_res_t *res = NULL;
 
 #ifdef DEBUG
@@ -136,13 +136,14 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
 
   goto done;
 
-  got_ace:
+got_ace:
   LOG("Found ACE for subject %s\n", uuid);
-  res = (oc_sec_acl_res_t*)oc_list_head(ace->resources);
+  res = (oc_sec_acl_res_t *)oc_list_head(ace->resources);
 
   while (res != NULL) {
     if (res->resource == resource) {
-      LOG("Found permissions mask for resource %s in ACE\n", oc_string(res->resource->uri));
+      LOG("Found permissions mask for resource %s in ACE\n",
+          oc_string(res->resource->uri));
       goto done;
     }
     res = oc_list_item_next(res);
@@ -153,7 +154,7 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
 
   goto done;
 
-  new_ace:
+new_ace:
   ace = oc_memb_alloc(&ace_l);
 
   if (!ace)
@@ -165,7 +166,7 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
   strncpy(ace->subjectuuid.id, subjectuuid->id, 16);
   oc_list_add(ac_list.subjects, ace);
 
-  new_res:
+new_res:
   res = oc_memb_alloc(&res_l);
   if (res) {
     res->resource = resource;
@@ -173,14 +174,13 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid,
     oc_list_add(ace->resources, res);
   }
 
-  done:
+done:
   return res;
 }
 
 static bool
-oc_sec_update_acl(oc_uuid_t *subjectuuid,
-		  oc_resource_t *resource,
-		  uint16_t permissions)
+oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
+                  uint16_t permissions)
 {
   oc_sec_acl_res_t *res = oc_sec_acl_get_ace(subjectuuid, resource, true);
 
@@ -220,17 +220,17 @@ oc_sec_acl_default(void)
 
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-		 oc_endpoint_t *endpoint)
+                 oc_endpoint_t *endpoint)
 {
   bool granted = false;
   oc_sec_acl_res_t *res = NULL;
-  oc_uuid_t *identity = (oc_uuid_t*)oc_sec_dtls_get_peer_uuid(endpoint);
+  oc_uuid_t *identity = (oc_uuid_t *)oc_sec_dtls_get_peer_uuid(endpoint);
 
   if (identity) {
     res = oc_sec_acl_get_ace(identity, resource, false);
   }
 
-  if (!res) { //Try Anonymous
+  if (!res) { // Try Anonymous
     res = oc_sec_acl_get_ace(&WILDCARD, resource, false);
   }
 
@@ -239,8 +239,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
   LOG("Got permissions mask %d\n", res->permissions);
 
-  if (res->permissions & OC_PERM_CREATE ||
-      res->permissions & OC_PERM_UPDATE) {
+  if (res->permissions & OC_PERM_CREATE || res->permissions & OC_PERM_UPDATE) {
     switch (method) {
     case OC_PUT:
     case OC_POST:
@@ -286,92 +285,93 @@ oc_sec_decode_acl(oc_rep_t *rep)
     len = oc_string_len(rep->name);
     switch (rep->type) {
     case STRING:
-      if (len == 10  &&
-	  strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
-	oc_str_to_uuid(oc_string(rep->value_string), &ac_list.rowneruuid);
+      if (len == 10 && strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
+        oc_str_to_uuid(oc_string(rep->value_string), &ac_list.rowneruuid);
       }
       break;
     case OBJECT: {
       oc_rep_t *aclist = rep->value_object;
       while (aclist != NULL) {
-	switch (aclist->type) {
-	case OBJECT_ARRAY: {
-	  oc_rep_t *aces = aclist->value_object_array;
-	  while (aces != NULL) {
-	    oc_rep_t *ace = aces->value_object;
-	    while (ace != NULL) {
-	      len = oc_string_len(ace->name);
-	      switch (ace->type) {
-	      case STRING:
-		if (len == 11 &&
-		    strncmp(oc_string(ace->name), "subjectuuid", 11) == 0) {
-		  if (strncmp(oc_string(ace->value_string), "*", 1) == 0)
-		    strncpy(subjectuuid.id, WILDCARD.id, 16);
-		  else
-		    oc_str_to_uuid(oc_string(ace->value_string), &subjectuuid);
-		}
-		break;
-	      case INT:
-		if (len == 10 &&
-		    strncmp(oc_string(ace->name), "permission", 10) == 0)
-		  permissions = ace->value_int;
-		break;
-	      case OBJECT_ARRAY:
-		if (len == 9 &&
-		    strncmp(oc_string(ace->name), "resources", 9) == 0)
-		  resources = ace->value_object_array;
-		break;
-	      default:
-		break;
-	      }
-	      ace = ace->next;
-	    }
+        switch (aclist->type) {
+        case OBJECT_ARRAY: {
+          oc_rep_t *aces = aclist->value_object_array;
+          while (aces != NULL) {
+            oc_rep_t *ace = aces->value_object;
+            while (ace != NULL) {
+              len = oc_string_len(ace->name);
+              switch (ace->type) {
+              case STRING:
+                if (len == 11 &&
+                    strncmp(oc_string(ace->name), "subjectuuid", 11) == 0) {
+                  if (strncmp(oc_string(ace->value_string), "*", 1) == 0)
+                    strncpy(subjectuuid.id, WILDCARD.id, 16);
+                  else
+                    oc_str_to_uuid(oc_string(ace->value_string), &subjectuuid);
+                }
+                break;
+              case INT:
+                if (len == 10 &&
+                    strncmp(oc_string(ace->name), "permission", 10) == 0)
+                  permissions = ace->value_int;
+                break;
+              case OBJECT_ARRAY:
+                if (len == 9 &&
+                    strncmp(oc_string(ace->name), "resources", 9) == 0)
+                  resources = ace->value_object_array;
+                break;
+              default:
+                break;
+              }
+              ace = ace->next;
+            }
 
-	    while (resources != NULL) {
-	      oc_rep_t *resource = resources->value_object;
-	      while (resource != NULL) {
-		switch (resource->type) {
-		case STRING:
-		  if (oc_string_len(resource->name) == 4 &&
-		      strncasecmp(oc_string(resource->name),
-				  "href", 4) == 0) {
-		    oc_resource_t *res =
-		      oc_core_get_resource_by_uri(oc_string(resource->value_string));
+            while (resources != NULL) {
+              oc_rep_t *resource = resources->value_object;
+              while (resource != NULL) {
+                switch (resource->type) {
+                case STRING:
+                  if (oc_string_len(resource->name) == 4 &&
+                      strncasecmp(oc_string(resource->name), "href", 4) == 0) {
+                    oc_resource_t *res = oc_core_get_resource_by_uri(
+                      oc_string(resource->value_string));
 
 #ifdef OC_SERVER
-		    if (!res)
-		      res = oc_ri_get_app_resource_by_uri(oc_string(resource->value_string));
+                    if (!res)
+                      res = oc_ri_get_app_resource_by_uri(
+                        oc_string(resource->value_string));
 #endif /* OC_SERVER */
 
-		    if (!res) {
-		      LOG("\n\noc_sec_acl_decode: could not find resource %s\n\n", oc_string(resource->value_string));
-		      return false;
-		    }
+                    if (!res) {
+                      LOG(
+                        "\n\noc_sec_acl_decode: could not find resource %s\n\n",
+                        oc_string(resource->value_string));
+                      return false;
+                    }
 
-		    if (!oc_sec_update_acl(&subjectuuid, res, permissions)) {
-		      LOG("\n\noc_sec_acl_decode: could not update ACE with resource %s permissions\n\n", oc_string(res->uri));
-		      return false;
-		    }
-		  }
-		  break;
-		default:
-		  break;
-		}
-		resource = resource->next;
-	      }
-	      resources = resources->next;
-	    }
-	    aces = aces->next;
-	  }
-	}
-	  break;
-	default:
-	  break;
-	}
-	aclist = aclist->next;
+                    if (!oc_sec_update_acl(&subjectuuid, res, permissions)) {
+                      LOG("\n\noc_sec_acl_decode: could not update ACE with "
+                          "resource %s permissions\n\n",
+                          oc_string(res->uri));
+                      return false;
+                    }
+                  }
+                  break;
+                default:
+                  break;
+                }
+                resource = resource->next;
+              }
+              resources = resources->next;
+            }
+            aces = aces->next;
+          }
+        } break;
+        default:
+          break;
+        }
+        aclist = aclist->next;
       }
-    }
-      break;
+    } break;
     default:
       break;
     }

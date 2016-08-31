@@ -19,7 +19,8 @@
 
 #include "oc_ri.h"
 
-typedef struct {
+typedef struct
+{
   bool isop;
   int cm;
   int tm;

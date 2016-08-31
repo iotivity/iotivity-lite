@@ -77,12 +77,12 @@
  * \param num The total number of memory chunks in the block.
  *
  */
-#define OC_MEMB(name, structure, num) \
-		static char CC_CONCAT(name,_memb_count)[num]; \
-		static structure CC_CONCAT(name,_memb_mem)[num]; \
-		static struct oc_memb name = {sizeof(structure), num, \
-				CC_CONCAT(name,_memb_count), \
-				(void *)CC_CONCAT(name,_memb_mem)}
+#define OC_MEMB(name, structure, num)                                          \
+  static char CC_CONCAT(name, _memb_count)[num];                               \
+  static structure CC_CONCAT(name, _memb_mem)[num];                            \
+  static struct oc_memb name = { sizeof(structure), num,                       \
+                                 CC_CONCAT(name, _memb_count),                 \
+                                 (void *)CC_CONCAT(name, _memb_mem) }
 
 struct oc_memb
 {
@@ -97,16 +97,14 @@ struct oc_memb
  *
  * \param m A memory block previously declared with MEMB().
  */
-void
-oc_memb_init(struct oc_memb *m);
+void oc_memb_init(struct oc_memb *m);
 
 /**
  * Allocate a memory block from a block of memory declared with MEMB().
  *
  * \param m A memory block previously declared with MEMB().
  */
-void *
-oc_memb_alloc(struct oc_memb *m);
+void *oc_memb_alloc(struct oc_memb *m);
 
 /**
  * Deallocate a memory block from a memory block previously declared
@@ -120,13 +118,10 @@ oc_memb_alloc(struct oc_memb *m);
  * if successfully deallocated) or -1 if the pointer "ptr" did not
  * point to a legal memory block.
  */
-char
-oc_memb_free(struct oc_memb *m, void *ptr);
+char oc_memb_free(struct oc_memb *m, void *ptr);
 
-int
-oc_memb_inmemb(struct oc_memb *m, void *ptr);
+int oc_memb_inmemb(struct oc_memb *m, void *ptr);
 
-int
-oc_memb_numfree(struct oc_memb *m);
+int oc_memb_numfree(struct oc_memb *m);
 
 #endif /* OC_MEMB_H */

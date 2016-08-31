@@ -49,7 +49,7 @@
 #endif /* NULL */
 
 typedef unsigned char oc_process_event_t;
-typedef void * oc_process_data_t;
+typedef void *oc_process_data_t;
 typedef unsigned char oc_process_num_events_t;
 
 /**
@@ -63,7 +63,7 @@ typedef unsigned char oc_process_num_events_t;
  *             This value is returned to indicate that an operation
  *             was successful.
  */
-#define OC_PROCESS_ERR_OK        0
+#define OC_PROCESS_ERR_OK 0
 /**
  * \brief      Return value indicating that the event queue was full.
  *
@@ -71,26 +71,26 @@ typedef unsigned char oc_process_num_events_t;
  *             that the event queue was full and that an event could
  *             not be posted.
  */
-#define OC_PROCESS_ERR_FULL      1
+#define OC_PROCESS_ERR_FULL 1
 /* @} */
 
-#define OC_PROCESS_NONE          NULL
+#define OC_PROCESS_NONE NULL
 
 #ifndef OC_PROCESS_CONF_NUMEVENTS
 #define OC_PROCESS_CONF_NUMEVENTS 10
 #endif /* OC_PROCESS_CONF_NUMEVENTS */
 
-#define OC_PROCESS_EVENT_NONE            0x80
-#define OC_PROCESS_EVENT_INIT            0x81
-#define OC_PROCESS_EVENT_POLL            0x82
-#define OC_PROCESS_EVENT_EXIT            0x83
+#define OC_PROCESS_EVENT_NONE 0x80
+#define OC_PROCESS_EVENT_INIT 0x81
+#define OC_PROCESS_EVENT_POLL 0x82
+#define OC_PROCESS_EVENT_EXIT 0x83
 #define OC_PROCESS_EVENT_SERVICE_REMOVED 0x84
-#define OC_PROCESS_EVENT_CONTINUE        0x85
-#define OC_PROCESS_EVENT_MSG             0x86
-#define OC_PROCESS_EVENT_EXITED          0x87
-#define OC_PROCESS_EVENT_TIMER           0x88
-#define OC_PROCESS_EVENT_COM             0x89
-#define OC_PROCESS_EVENT_MAX             0x8a
+#define OC_PROCESS_EVENT_CONTINUE 0x85
+#define OC_PROCESS_EVENT_MSG 0x86
+#define OC_PROCESS_EVENT_EXITED 0x87
+#define OC_PROCESS_EVENT_TIMER 0x88
+#define OC_PROCESS_EVENT_COM 0x89
+#define OC_PROCESS_EVENT_MAX 0x8a
 
 #define OC_PROCESS_BROADCAST NULL
 #define OC_PROCESS_ZOMBIE ((struct oc_process *)0x1)
@@ -109,7 +109,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_BEGIN()             PT_BEGIN(process_pt)
+#define OC_PROCESS_BEGIN() PT_BEGIN(process_pt)
 
 /**
  * Define the end of a process.
@@ -120,7 +120,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_END()               PT_END(process_pt)
+#define OC_PROCESS_END() PT_END(process_pt)
 
 /**
  * Wait for an event to be posted to the process.
@@ -130,7 +130,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_WAIT_EVENT()        OC_PROCESS_YIELD()
+#define OC_PROCESS_WAIT_EVENT() OC_PROCESS_YIELD()
 
 /**
  * Wait for an event to be posted to the process, with an extra
@@ -153,7 +153,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_YIELD()             PT_YIELD(process_pt)
+#define OC_PROCESS_YIELD() PT_YIELD(process_pt)
 
 /**
  * Yield the currently running process until a condition occurs.
@@ -167,7 +167,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_YIELD_UNTIL(c)      PT_YIELD_UNTIL(process_pt, c)
+#define OC_PROCESS_YIELD_UNTIL(c) PT_YIELD_UNTIL(process_pt, c)
 
 /**
  * Wait for a condition to occur.
@@ -181,15 +181,15 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_WAIT_UNTIL(c)       PT_WAIT_UNTIL(process_pt, c)
-#define OC_PROCESS_WAIT_WHILE(c)       PT_WAIT_WHILE(process_pt, c)
+#define OC_PROCESS_WAIT_UNTIL(c) PT_WAIT_UNTIL(process_pt, c)
+#define OC_PROCESS_WAIT_WHILE(c) PT_WAIT_WHILE(process_pt, c)
 
 /**
  * Exit the currently running process.
  *
  * \hideinitializer
  */
-#define OC_PROCESS_EXIT()              PT_EXIT(process_pt)
+#define OC_PROCESS_EXIT() PT_EXIT(process_pt)
 
 /**
  * Spawn a protothread from the process.
@@ -200,7 +200,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_PT_SPAWN(pt, thread)   PT_SPAWN(process_pt, pt, thread)
+#define OC_PROCESS_PT_SPAWN(pt, thread) PT_SPAWN(process_pt, pt, thread)
 
 /**
  * Yield the process for a short while.
@@ -210,10 +210,11 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_PAUSE()             do {				\
-    process_post(OC_PROCESS_CURRENT(), OC_PROCESS_EVENT_CONTINUE, NULL); \
-    OC_PROCESS_WAIT_EVENT_UNTIL(ev == OC_PROCESS_EVENT_CONTINUE);	\
-  } while(0)
+#define OC_PROCESS_PAUSE()                                                     \
+  do {                                                                         \
+    process_post(OC_PROCESS_CURRENT(), OC_PROCESS_EVENT_CONTINUE, NULL);       \
+    OC_PROCESS_WAIT_EVENT_UNTIL(ev == OC_PROCESS_EVENT_CONTINUE);              \
+  } while (0)
 
 /** @} end of protothread functions */
 
@@ -231,19 +232,25 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_POLLHANDLER(handler) if(ev == OC_PROCESS_EVENT_POLL) { handler; }
+#define OC_PROCESS_POLLHANDLER(handler)                                        \
+  if (ev == OC_PROCESS_EVENT_POLL) {                                           \
+    handler;                                                                   \
+  }
 
-  /**
-   * Specify an action when a process exits.
-   *
-   * \note This declaration must come immediately before the
-   * OC_PROCESS_BEGIN() macro.
-   *
-   * \param handler The action to be performed.
-   *
-   * \hideinitializer
-   */
-#define OC_PROCESS_EXITHANDLER(handler) if(ev == OC_PROCESS_EVENT_EXIT) { handler; }
+/**
+ * Specify an action when a process exits.
+ *
+ * \note This declaration must come immediately before the
+ * OC_PROCESS_BEGIN() macro.
+ *
+ * \param handler The action to be performed.
+ *
+ * \hideinitializer
+ */
+#define OC_PROCESS_EXITHANDLER(handler)                                        \
+  if (ev == OC_PROCESS_EVENT_EXIT) {                                           \
+    handler;                                                                   \
+  }
 
 /** @} */
 
@@ -262,10 +269,9 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#define OC_PROCESS_THREAD(name, ev, data) 				\
-  static PT_THREAD(process_thread_##name(struct pt *process_pt,		\
-					 oc_process_event_t ev,		\
-					 oc_process_data_t data))
+#define OC_PROCESS_THREAD(name, ev, data)                                      \
+  static PT_THREAD(process_thread_##name(                                      \
+    struct pt *process_pt, oc_process_event_t ev, oc_process_data_t data))
 
 /**
  * Declare the name of a process.
@@ -291,15 +297,13 @@ typedef unsigned char oc_process_num_events_t;
  * \hideinitializer
  */
 #if OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
-#define OC_PROCESS(name, strname)			\
-  OC_PROCESS_THREAD(name, ev, data);			\
-  struct oc_process name = { NULL,		        \
-			     process_thread_##name }
+#define OC_PROCESS(name, strname)                                              \
+  OC_PROCESS_THREAD(name, ev, data);                                           \
+  struct oc_process name = { NULL, process_thread_##name }
 #else
-#define OC_PROCESS(name, strname)			\
-  OC_PROCESS_THREAD(name, ev, data);			\
-  struct oc_process name = { NULL, strname,		\
-			     process_thread_##name }
+#define OC_PROCESS(name, strname)                                              \
+  OC_PROCESS_THREAD(name, ev, data);                                           \
+  struct oc_process name = { NULL, strname, process_thread_##name }
 #endif
 
 /** @} */
@@ -313,7 +317,7 @@ struct oc_process
   const char *name;
 #define OC_PROCESS_NAME_STRING(process) (process)->name
 #endif
-  PT_THREAD((* thread)(struct pt *, oc_process_event_t, oc_process_data_t));
+  PT_THREAD((*thread)(struct pt *, oc_process_event_t, oc_process_data_t));
   struct pt pt;
   unsigned char state, needspoll;
 };
@@ -332,8 +336,7 @@ struct oc_process
  * process
  *
  */
-void
-oc_process_start(struct oc_process *p, oc_process_data_t data);
+void oc_process_start(struct oc_process *p, oc_process_data_t data);
 
 /**
  * Post an asynchronous event.
@@ -356,9 +359,8 @@ oc_process_start(struct oc_process *p, oc_process_data_t data);
  * \retval OC_PROCESS_ERR_FULL The event queue was full and the event could
  * not be posted.
  */
-int
-oc_process_post(struct oc_process *p, oc_process_event_t ev,
-		oc_process_data_t data);
+int oc_process_post(struct oc_process *p, oc_process_event_t ev,
+                    oc_process_data_t data);
 
 /**
  * Post a synchronous event to a process.
@@ -370,9 +372,8 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
  * \param data A pointer to additional data that is posted together
  * with the event.
  */
-void
-oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
-		      oc_process_data_t data);
+void oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
+                           oc_process_data_t data);
 
 /**
  * \brief      Cause a process to exit
@@ -384,8 +385,7 @@ oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
  *
  * \sa OC_PROCESS_CURRENT()
  */
-void
-oc_process_exit(struct oc_process *p);
+void oc_process_exit(struct oc_process *p);
 
 /**
  * Get a pointer to the currently running process.
@@ -420,8 +420,9 @@ extern struct oc_process *oc_process_current;
  * \sa OC_PROCESS_CONTEXT_END()
  * \sa OC_PROCESS_CURRENT()
  */
-#define OC_PROCESS_CONTEXT_BEGIN(p) {				\
-  struct oc_process *tmp_current = OC_PROCESS_CURRENT();	\
+#define OC_PROCESS_CONTEXT_BEGIN(p)                                            \
+  {                                                                            \
+    struct oc_process *tmp_current = OC_PROCESS_CURRENT();                     \
   oc_process_current = p
 
 /**
@@ -434,7 +435,9 @@ extern struct oc_process *oc_process_current;
  *
  * \sa OC_PROCESS_CONTEXT_START()
  */
-#define OC_PROCESS_CONTEXT_END(p) oc_process_current = tmp_current; }
+#define OC_PROCESS_CONTEXT_END(p)                                              \
+  oc_process_current = tmp_current;                                            \
+  }
 
 /**
  * \brief      Allocate a global event number.
@@ -447,8 +450,7 @@ extern struct oc_process *oc_process_current;
  * \note       There currently is no way to deallocate an allocated event
  *             number.
  */
-oc_process_event_t
-oc_process_alloc_event(void);
+oc_process_event_t oc_process_alloc_event(void);
 
 /** @} */
 
@@ -465,8 +467,7 @@ oc_process_alloc_event(void);
  *
  * \param p A pointer to the process' process structure.
  */
-void
-oc_process_poll(struct oc_process *p);
+void oc_process_poll(struct oc_process *p);
 
 /** @} */
 
@@ -481,8 +482,7 @@ oc_process_poll(struct oc_process *p);
  *             This function initializes the process module and should
  *             be called by the system boot-up code.
  */
-void
-oc_process_init(void);
+void oc_process_init(void);
 
 /**
  * Run the system once - call poll handlers and process one event.
@@ -497,8 +497,7 @@ oc_process_init(void);
  * \return The number of events that are currently waiting in the
  * event queue.
  */
-int
-oc_process_run(void);
+int oc_process_run(void);
 
 /**
  * Check if a process is running.
@@ -509,8 +508,7 @@ oc_process_run(void);
  * \retval Non-zero if the process is running.
  * \retval Zero if the process is not running.
  */
-int
-oc_process_is_running(struct oc_process *p);
+int oc_process_is_running(struct oc_process *p);
 
 /**
  *  Number of events waiting to be processed.
@@ -518,8 +516,7 @@ oc_process_is_running(struct oc_process *p);
  * \return The number of events that are currently waiting to be
  * processed.
  */
-int
-oc_process_nevents(void);
+int oc_process_nevents(void);
 
 /** @} */
 

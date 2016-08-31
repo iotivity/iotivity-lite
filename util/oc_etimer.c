@@ -51,15 +51,14 @@ update_time(void)
 
   if (timerlist == NULL) {
     next_expiration = 0;
-  }
-  else {
+  } else {
     now = oc_clock_time();
     t = timerlist;
     /* Must calculate distance to next time into account due to wraps */
     tdist = t->timer.start + t->timer.interval - now;
     for (t = t->next; t != NULL; t = t->next) {
       if (t->timer.start + t->timer.interval - now < tdist) {
-	tdist = t->timer.start + t->timer.interval - now;
+        tdist = t->timer.start + t->timer.interval - now;
       }
     }
     next_expiration = now + tdist;
@@ -81,55 +80,50 @@ OC_PROCESS_THREAD(oc_etimer_process, ev, data)
       struct oc_process *p = data;
 
       while (timerlist != NULL && timerlist->p == p) {
-	timerlist = timerlist->next;
+        timerlist = timerlist->next;
       }
 
       if (timerlist != NULL) {
-	t = timerlist;
-	while (t->next != NULL) {
-	  if (t->next->p == p) {
-	    t->next = t->next->next;
-	  }
-	  else
-	    t = t->next;
-	}
+        t = timerlist;
+        while (t->next != NULL) {
+          if (t->next->p == p) {
+            t->next = t->next->next;
+          } else
+            t = t->next;
+        }
       }
       continue;
-    }
-    else if (ev != OC_PROCESS_EVENT_POLL) {
+    } else if (ev != OC_PROCESS_EVENT_POLL) {
       continue;
     }
 
-    again:
+  again:
 
     u = NULL;
 
     for (t = timerlist; t != NULL; t = t->next) {
       if (oc_timer_expired(&t->timer)) {
-	if (oc_process_post(t->p, OC_PROCESS_EVENT_TIMER,
-			    t) == OC_PROCESS_ERR_OK) {
+        if (oc_process_post(t->p, OC_PROCESS_EVENT_TIMER, t) ==
+            OC_PROCESS_ERR_OK) {
 
-	  /* Reset the process ID of the event timer, to signal that the
-	     etimer has expired. This is later checked in the
-	     oc_etimer_expired() function. */
-	  t->p = OC_PROCESS_NONE;
-	  if (u != NULL) {
-	    u->next = t->next;
-	  }
-	  else {
-	    timerlist = t->next;
-	  }
-	  t->next = NULL;
-	  update_time();
-	  goto again;
-	}
-	else {
-	  oc_etimer_request_poll();
-	}
+          /* Reset the process ID of the event timer, to signal that the
+             etimer has expired. This is later checked in the
+             oc_etimer_expired() function. */
+          t->p = OC_PROCESS_NONE;
+          if (u != NULL) {
+            u->next = t->next;
+          } else {
+            timerlist = t->next;
+          }
+          t->next = NULL;
+          update_time();
+          goto again;
+        } else {
+          oc_etimer_request_poll();
+        }
       }
       u = t;
     }
-
   }
 
   OC_PROCESS_END();
@@ -152,10 +146,10 @@ add_timer(struct oc_etimer *timer)
   if (timer->p != OC_PROCESS_NONE) {
     for (t = timerlist; t != NULL; t = t->next) {
       if (t == timer) {
-	/* Timer already on list, bail out. */
-	timer->p = OC_PROCESS_CURRENT();
-	update_time();
-	return;
+        /* Timer already on list, bail out. */
+        timer->p = OC_PROCESS_CURRENT();
+        update_time();
+        return;
       }
     }
   }
@@ -177,7 +171,7 @@ oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval)
 /*---------------------------------------------------------------------------*/
 void
 oc_etimer_reset_with_new_interval(struct oc_etimer *et,
-				  oc_clock_time_t interval)
+                                  oc_clock_time_t interval)
 {
   oc_timer_reset(&et->timer);
   et->timer.interval = interval;
@@ -244,8 +238,7 @@ oc_etimer_stop(struct oc_etimer *et)
   if (et == timerlist) {
     timerlist = timerlist->next;
     update_time();
-  }
-  else {
+  } else {
     /* Else walk through the list and try to find the item before the
        et timer. */
     for (t = timerlist; t != NULL && t->next != et; t = t->next)
@@ -253,8 +246,8 @@ oc_etimer_stop(struct oc_etimer *et)
 
     if (t != NULL) {
       /* We've found the item before the event timer that we are about
-	 to remove. We point the items next pointer to the event after
-	 the removed item. */
+   to remove. We point the items next pointer to the event after
+   the removed item. */
       t->next = et->next;
 
       update_time();

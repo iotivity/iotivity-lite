@@ -16,9 +16,9 @@
 
 #ifdef OC_SECURITY
 
-#include <zephyr.h>
-#include <flash.h>
 #include <device.h>
+#include <flash.h>
+#include <zephyr.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -39,18 +39,23 @@
 #define OC_MEMORY_KEY_NAME_SIZE 64
 #endif
 
-#define OC_MEMMAP_KEY {0xab, 0xcd, 0xef}
+#define OC_MEMMAP_KEY                                                          \
+  {                                                                            \
+    0xab, 0xcd, 0xef                                                           \
+  }
 
 #define OC_MEMMAP_CLOSER_ERASABLE_SECTOR(_pos)                                 \
   (_pos * (_pos / memmap.sector_size))
 
-struct memmap_key {
+struct memmap_key
+{
   uint8_t key[OC_MEMORY_KEY_SIZE];
   size_t offset;
   size_t size;
 };
 
-static struct {
+static struct
+{
   struct device *flash;
   size_t sector_size, max_rw_size;
   struct memmap_key keys[OC_MEMORY_KEY_NUMBER];
@@ -101,8 +106,9 @@ storage_init(size_t initial_offset)
   if (r < 0)
     return r;
 
-  r = flash_erase(memmap.flash,
-    OC_MEMMAP_CLOSER_ERASABLE_SECTOR(initial_offset), memmap.sector_size);
+  r =
+    flash_erase(memmap.flash, OC_MEMMAP_CLOSER_ERASABLE_SECTOR(initial_offset),
+                memmap.sector_size);
   if (r < 0)
     return r;
 
@@ -168,7 +174,7 @@ oc_storage_config(const char *path)
   if (!aux)
     return -EINVAL;
 
-  if (aux - path > sizeof(device_name) -1)
+  if (aux - path > sizeof(device_name) - 1)
     return -EINVAL;
 
   memcpy(device_name, path, aux - path);
@@ -178,23 +184,23 @@ oc_storage_config(const char *path)
   if (!memmap.flash)
     return -EINVAL;
 
-#define PARSE_VALUE(_var) \
-  do { \
-    if (!aux) \
-      goto err; \
-    errno = 0; \
-    size = strtoul(aux + 1, NULL, 0); \
-    if (errno) \
-      goto err; \
-    _var = size; \
-    path = aux + 1; \
-    aux = strstr(path, ","); \
+#define PARSE_VALUE(_var)                                                      \
+  do {                                                                         \
+    if (!aux)                                                                  \
+      goto err;                                                                \
+    errno = 0;                                                                 \
+    size = strtoul(aux + 1, NULL, 0);                                          \
+    if (errno)                                                                 \
+      goto err;                                                                \
+    _var = size;                                                               \
+    path = aux + 1;                                                            \
+    aux = strstr(path, ",");                                                   \
   } while (0)
 
-#define PARSE_VALUE_ALIGNED(_var) \
-  do { \
-    PARSE_VALUE(_var); \
-    _var = align_power2(size / 2 + 1); \
+#define PARSE_VALUE_ALIGNED(_var)                                              \
+  do {                                                                         \
+    PARSE_VALUE(_var);                                                         \
+    _var = align_power2(size / 2 + 1);                                         \
   } while (0)
 
   PARSE_VALUE_ALIGNED(memmap.sector_size);
@@ -211,7 +217,7 @@ oc_storage_config(const char *path)
   if (r < 0)
     goto err;
 
-  if (memcmp(key, (void *)&((uint8_t []) OC_MEMMAP_KEY), sizeof(key))) {
+  if (memcmp(key, (void *)&((uint8_t[])OC_MEMMAP_KEY), sizeof(key))) {
     r = storage_init(initial_offset);
     if (r < 0)
       goto err;
@@ -291,8 +297,8 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     size_t off = 0;
 
     while (times) {
-      r = flash_read(memmap.flash, key->offset + off,
-        buf + off, memmap.max_rw_size);
+      r = flash_read(memmap.flash, key->offset + off, buf + off,
+                     memmap.max_rw_size);
       if (r < 0)
         return r;
       off += memmap.max_rw_size;
@@ -300,8 +306,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     }
 
     if (extra) {
-      r = flash_read(memmap.flash, key->offset + off,
-        buf + off, extra);
+      r = flash_read(memmap.flash, key->offset + off, buf + off, extra);
       if (r < 0)
         return r;
     }
@@ -359,7 +364,8 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
       if (r < 0)
         return r;
 
-      r = flash_write(memmap.flash, key->offset + off, buf + off, memmap.max_rw_size);
+      r = flash_write(memmap.flash, key->offset + off, buf + off,
+                      memmap.max_rw_size);
       if (r < 0)
         return r;
       off += memmap.max_rw_size;

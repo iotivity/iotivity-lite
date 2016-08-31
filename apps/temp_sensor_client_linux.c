@@ -20,8 +20,8 @@ static void
 app_init(void)
 {
   oc_init_platform("GE", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub", "1.0",
-		"1.0", NULL, NULL);
+  oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub", "1.0", "1.0",
+                NULL, NULL);
 }
 
 #ifdef OC_SECURITY
@@ -69,7 +69,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 {
   int i;
   int uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
+  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
   for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
@@ -94,11 +94,11 @@ issue_requests(void)
   oc_do_ip_discovery("oic.r.tempsensor", &discovery);
 }
 
-#include <stdio.h>
-#include <signal.h>
-#include <pthread.h>
-#include "port/oc_signal_main_loop.h"
 #include "port/oc_clock.h"
+#include "port/oc_signal_main_loop.h"
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -129,10 +129,9 @@ main(void)
 
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
+                          .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
@@ -146,8 +145,7 @@ main(void)
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
-    }
-    else {
+    } else {
       ts.tv_sec = (next_event / OC_CLOCK_SECOND);
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);

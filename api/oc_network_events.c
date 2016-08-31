@@ -15,10 +15,10 @@
 */
 
 #include "oc_network_events.h"
-#include "util/oc_list.h"
 #include "oc_buffer.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_signal_main_loop.h"
+#include "util/oc_list.h"
 
 OC_LIST(network_events);
 

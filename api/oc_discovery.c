@@ -18,60 +18,56 @@
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
-#include "oc_core_res.h"
-#include "oc_api.h"
 #include "messaging/coap/oc_coap.h"
+#include "oc_api.h"
+#include "oc_core_res.h"
 
 static bool
-filter_resource(oc_resource_t *resource,
-		const char *rt,
-		int rt_len, CborEncoder *links)
+filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
+                CborEncoder *links)
 {
   int i;
   bool match = true;
-  if(rt_len > 0) {
+  if (rt_len > 0) {
     match = false;
-    for(i = 0; i < oc_string_array_get_allocated_size(resource->types);
-	i++) {
+    for (i = 0; i < oc_string_array_get_allocated_size(resource->types); i++) {
       int size = oc_string_array_get_item_size(resource->types, i);
       const char *t =
-	(const char*)oc_string_array_get_item(resource->types, i);
-      if(rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        (const char *)oc_string_array_get_item(resource->types, i);
+      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
         match = true;
-	break;
+        break;
       }
     }
   }
 
-  if(!match) {
+  if (!match) {
     return false;
   }
 
   oc_rep_start_object(*links, res);
 
-  //uri
+  // uri
   oc_rep_set_text_string(res, href, oc_string(resource->uri));
 
-  //rt
+  // rt
   oc_rep_set_array(res, rt);
-  for(i = 0; i < oc_string_array_get_allocated_size(resource->types);
-      i++) {
+  for (i = 0; i < oc_string_array_get_allocated_size(resource->types); i++) {
     int size = oc_string_array_get_item_size(resource->types, i);
-    const char *t =
-      (const char*)oc_string_array_get_item(resource->types, i);
+    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
       oc_rep_add_text_string(rt, t);
   }
   oc_rep_close_array(res, rt);
 
-  //if
+  // if
   oc_core_encode_interfaces_mask(oc_rep_object(res), resource->interfaces);
 
-  //p
+  // p
   oc_rep_set_object(res, p);
   oc_rep_set_uint(p, bm, resource->properties & ~OC_PERIODIC);
 #ifdef OC_SECURITY
-  if(resource->properties & OC_SECURE) {
+  if (resource->properties & OC_SECURE) {
     oc_rep_set_boolean(p, sec, true);
     oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
   }
@@ -84,8 +80,8 @@ filter_resource(oc_resource_t *resource,
 }
 
 static int
-process_device_object(CborEncoder *device, const char *uuid,
-		      const char *rt, int rt_len)
+process_device_object(CborEncoder *device, const char *uuid, const char *rt,
+                      int rt_len)
 {
   int dev, matches = 0;
   oc_rep_start_object(*device, links);
@@ -93,11 +89,13 @@ process_device_object(CborEncoder *device, const char *uuid,
   oc_rep_set_array(links, links);
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_P), rt, rt_len,
-		      oc_rep_array(links)))
+                      oc_rep_array(links)))
     matches++;
 
   for (dev = 0; dev < oc_core_get_num_devices(); dev++) {
-    if (filter_resource(oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 - dev), rt, rt_len, oc_rep_array(links)))
+    if (filter_resource(
+          oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 - dev), rt,
+          rt_len, oc_rep_array(links)))
       matches++;
   }
 
@@ -114,9 +112,8 @@ process_device_object(CborEncoder *device, const char *uuid,
 #endif
 
 #ifdef OC_SECURITY
-  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM),
-		      rt, rt_len,
-		      oc_rep_array(links)))
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM), rt, rt_len,
+                      oc_rep_array(links)))
     matches++;
 #endif
 
@@ -127,52 +124,42 @@ process_device_object(CborEncoder *device, const char *uuid,
 }
 
 static void
-oc_core_discovery_handler(oc_request_t *request,
-			  oc_interface_mask_t interface)
+oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface)
 {
   char *rt = NULL;
   int rt_len = 0, matches = 0;
-  if(request->query_len) {
-    rt_len = oc_ri_get_query_value(request->query, request->query_len,
-				   "rt", &rt);
+  if (request->query_len) {
+    rt_len =
+      oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
   }
 
   char uuid[37];
   oc_uuid_to_str(oc_core_get_device_id(0), uuid, 37);
 
   switch (interface) {
-  case OC_IF_LL:
-  {
+  case OC_IF_LL: {
     oc_rep_start_links_array();
-    matches =
-      process_device_object(oc_rep_array(links),
-			    uuid, rt, rt_len);
+    matches = process_device_object(oc_rep_array(links), uuid, rt, rt_len);
     oc_rep_end_links_array();
-  }
-  break;
-  case OC_IF_BASELINE:
-  {
+  } break;
+  case OC_IF_BASELINE: {
     oc_rep_start_root_object();
     oc_process_baseline_interface(request->resource);
     oc_rep_set_array(root, links);
-    matches =
-      process_device_object(oc_rep_array(links),
-			    uuid, rt, rt_len);
+    matches = process_device_object(oc_rep_array(links), uuid, rt, rt_len);
     oc_rep_close_array(root, links);
     oc_rep_end_root_object();
-  }
-  break;
+  } break;
   default:
     break;
   }
 
   int response_length = oc_rep_finalize();
 
-  if(matches && response_length) {
+  if (matches && response_length) {
     request->response->response_buffer->response_length = response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  }
-  else {
+  } else {
     /* There were rt/if selections and there were no matches, so ignore */
     request->response->response_buffer->code = OC_IGNORE;
   }
@@ -182,18 +169,15 @@ void
 oc_create_discovery_resource(void)
 {
   oc_core_populate_resource(OCF_RES, "/oic/res", "oic.wk.res",
-			    OC_IF_LL | OC_IF_BASELINE, OC_IF_LL,
-			    OC_ACTIVE,
-			    oc_core_discovery_handler, 0, 0, 0,
-			    0);
+                            OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, OC_ACTIVE,
+                            oc_core_discovery_handler, 0, 0, 0, 0);
 }
 
 #ifdef OC_CLIENT
 oc_discovery_flags_t
-oc_ri_process_discovery_payload(uint8_t *payload,
-				int len,
-				oc_discovery_cb_t *handler,
-				oc_endpoint_t *endpoint)
+oc_ri_process_discovery_payload(uint8_t *payload, int len,
+                                oc_discovery_cb_t *handler,
+                                oc_endpoint_t *endpoint)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
   oc_string_t uri;
@@ -202,7 +186,7 @@ oc_ri_process_discovery_payload(uint8_t *payload,
   di.ptr = 0;
   bool secure = false;
   uint16_t dtls_port = 0, default_port = endpoint->ipv6_addr.port;
-  oc_string_array_t types = { };
+  oc_string_array_t types = {};
   oc_interface_mask_t interfaces = 0;
   oc_server_handle_t handle;
   memcpy(&handle.endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -216,12 +200,12 @@ oc_ri_process_discovery_payload(uint8_t *payload,
     while (device_map != NULL) {
       switch (device_map->type) {
       case STRING:
-	if (oc_string_len(device_map->name) == 2 &&
-	    strncmp(oc_string(device_map->name), "di", 2) == 0)
-	  di = device_map->value_string;
-	break;
+        if (oc_string_len(device_map->name) == 2 &&
+            strncmp(oc_string(device_map->name), "di", 2) == 0)
+          di = device_map->value_string;
+        break;
       default:
-	break;
+        break;
       }
       device_map = device_map->next;
     }
@@ -229,92 +213,85 @@ oc_ri_process_discovery_payload(uint8_t *payload,
     while (device_map != NULL) {
       switch (device_map->type) {
       case OBJECT_ARRAY: {
-	oc_rep_t *links = device_map->value_object_array;
-	while (links != NULL) {
-	  switch (links->type) {
-	  case OBJECT: {
-	    oc_rep_t *resource_info = links->value_object;
-	    while (resource_info != NULL) {
-	      switch (resource_info->type) {
-	      case STRING:
-		uri = resource_info->value_string;
-		break;
-	      case STRING_ARRAY:
-		if (oc_string_len(resource_info->name) == 2 &&
-		    strncmp(oc_string(resource_info->name), "rt", 2)
-		    == 0)
-		  types = resource_info->value_array;
-		else {
-		  interfaces = 0;
-		  int i;
-		  for (i = 0;
-		       i < oc_string_array_get_allocated_size(resource_info->value_array);
-		       i++) {
-		    interfaces |= oc_ri_get_interface_mask(oc_string_array_get_item(resource_info->value_array, i), oc_string_array_get_item_size(resource_info->value_array, i));
-		  }
-		}
-		break;
-	      case OBJECT: {
-		oc_rep_t *policy_info = resource_info->value_object;
-		while (policy_info != NULL) {
-		  if (policy_info->type == INT &&
-		      oc_string_len(policy_info->name) == 4 &&
-		      strncmp(oc_string(policy_info->name),
-			      "port", 4) == 0) {
-		    dtls_port = policy_info->value_int;
-		  }
-		  if (policy_info->type == BOOL &&
-		      oc_string_len(policy_info->name) == 3 &&
-		      strncmp(oc_string(policy_info->name), "sec", 3) == 0 &&
-		      policy_info->value_boolean == true) {
-		    secure = true;
-		  }
-		  policy_info = policy_info->next;
-		}
-	      }
-		break;
-	      default:
-		break;
-	      }
-	      resource_info = resource_info->next;
-	    }
-	    if (secure) {
-	      handle.endpoint.ipv6_addr.port = dtls_port;
-	      handle.endpoint.flags |= SECURED;
-	    }
-	    else {
-	      handle.endpoint.ipv6_addr.port = default_port;
-	      handle.endpoint.flags &= ~SECURED;
-	    }
+        oc_rep_t *links = device_map->value_object_array;
+        while (links != NULL) {
+          switch (links->type) {
+          case OBJECT: {
+            oc_rep_t *resource_info = links->value_object;
+            while (resource_info != NULL) {
+              switch (resource_info->type) {
+              case STRING:
+                uri = resource_info->value_string;
+                break;
+              case STRING_ARRAY:
+                if (oc_string_len(resource_info->name) == 2 &&
+                    strncmp(oc_string(resource_info->name), "rt", 2) == 0)
+                  types = resource_info->value_array;
+                else {
+                  interfaces = 0;
+                  int i;
+                  for (i = 0; i < oc_string_array_get_allocated_size(
+                                    resource_info->value_array);
+                       i++) {
+                    interfaces |= oc_ri_get_interface_mask(
+                      oc_string_array_get_item(resource_info->value_array, i),
+                      oc_string_array_get_item_size(resource_info->value_array,
+                                                    i));
+                  }
+                }
+                break;
+              case OBJECT: {
+                oc_rep_t *policy_info = resource_info->value_object;
+                while (policy_info != NULL) {
+                  if (policy_info->type == INT &&
+                      oc_string_len(policy_info->name) == 4 &&
+                      strncmp(oc_string(policy_info->name), "port", 4) == 0) {
+                    dtls_port = policy_info->value_int;
+                  }
+                  if (policy_info->type == BOOL &&
+                      oc_string_len(policy_info->name) == 3 &&
+                      strncmp(oc_string(policy_info->name), "sec", 3) == 0 &&
+                      policy_info->value_boolean == true) {
+                    secure = true;
+                  }
+                  policy_info = policy_info->next;
+                }
+              } break;
+              default:
+                break;
+              }
+              resource_info = resource_info->next;
+            }
+            if (secure) {
+              handle.endpoint.ipv6_addr.port = dtls_port;
+              handle.endpoint.flags |= SECURED;
+            } else {
+              handle.endpoint.ipv6_addr.port = default_port;
+              handle.endpoint.flags &= ~SECURED;
+            }
 
-	    if (handler(oc_string(di),
-			oc_string(uri),
-			types,
-			interfaces,
-			&handle) ==
-		OC_STOP_DISCOVERY) {
-	      ret = OC_STOP_DISCOVERY;
-	      goto done;
-	    }
-	    dtls_port = 0;
-	    secure = false;
-	  }
-	    break;
-	  default:
-	    break;
-	  }
-	  links = links->next;
-	}
-      }
-	break;
+            if (handler(oc_string(di), oc_string(uri), types, interfaces,
+                        &handle) == OC_STOP_DISCOVERY) {
+              ret = OC_STOP_DISCOVERY;
+              goto done;
+            }
+            dtls_port = 0;
+            secure = false;
+          } break;
+          default:
+            break;
+          }
+          links = links->next;
+        }
+      } break;
       default:
-	break;
+        break;
       }
       device_map = device_map->next;
     }
     array = array->next;
   }
-  done:
+done:
   oc_free_rep(rep);
   return ret;
 }

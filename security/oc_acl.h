@@ -17,12 +17,12 @@
 #ifndef OC_ACL_H_
 #define OC_ACL_H_
 
-#include <stdbool.h>
-#include "port/oc_log.h"
-#include "oc_uuid.h"
 #include "oc_ri.h"
-#include "util/oc_memb.h"
+#include "oc_uuid.h"
+#include "port/oc_log.h"
 #include "util/oc_list.h"
+#include "util/oc_memb.h"
+#include <stdbool.h>
 
 typedef enum {
   OC_PERM_CREATE = (1 << 0),
@@ -32,21 +32,24 @@ typedef enum {
   OC_PERM_NOTIFY = (1 << 4)
 } oc_sec_acl_permissions_mask_t;
 
-typedef struct {
+typedef struct
+{
   OC_LIST_STRUCT(subjects);
   oc_uuid_t rowneruuid;
 } oc_sec_acl_t;
 
-typedef struct oc_sec_acl_res_s {
+typedef struct oc_sec_acl_res_s
+{
   struct oc_sec_acl_res_s *next;
   oc_resource_t *resource;
   uint16_t permissions;
 } oc_sec_acl_res_t;
 
-typedef struct oc_sec_ace_s {
+typedef struct oc_sec_ace_s
+{
   struct oc_sec_ace_s *next;
   OC_LIST_STRUCT(resources);
-  oc_uuid_t subjectuuid;      
+  oc_uuid_t subjectuuid;
 } oc_sec_ace_t;
 
 void oc_sec_acl_default(void);
@@ -55,6 +58,6 @@ bool oc_sec_decode_acl(oc_rep_t *rep);
 void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t interface);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-		      oc_endpoint_t *endpoint);
+                      oc_endpoint_t *endpoint);
 
 #endif /* OC_ACL_H_ */

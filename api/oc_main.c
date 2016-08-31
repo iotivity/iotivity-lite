@@ -14,22 +14,22 @@
 // limitations under the License.
 */
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
-#include "port/oc_connectivity.h"
-#include "port/oc_clock.h"
 #include "port/oc_assert.h"
+#include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
 
-#include "util/oc_process.h"
 #include "util/oc_etimer.h"
+#include "util/oc_process.h"
 
 #include "oc_api.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_dtls.h"
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
-#include "security/oc_dtls.h"
 #endif /* OC_SECURITY */
 
 static bool initialized = false;

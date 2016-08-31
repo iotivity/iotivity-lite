@@ -76,9 +76,9 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
   PRINT("PUT_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
-  while(rep != NULL) {
+  while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
-    switch(rep->type) {
+    switch (rep->type) {
     case BOOL:
       state = rep->value_boolean;
       PRINT("value: %d\n", state);
@@ -138,10 +138,9 @@ main(void)
 
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .register_resources = register_resources
-  };
+                          .register_resources = register_resources };
 
   oc_clock_time_t next_event;
 
@@ -149,13 +148,12 @@ main(void)
   if (init < 0)
     return init;
 
-  while(quit != 1) {
+  while (quit != 1) {
     next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
-    }
-    else {
+    } else {
       ts.tv_sec = (next_event / OC_CLOCK_SECOND);
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);

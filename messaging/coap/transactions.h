@@ -34,18 +34,25 @@
 #ifndef TRANSACTIONS_H
 #define TRANSACTIONS_H
 
-#include "util/oc_etimer.h"
 #include "coap.h"
+#include "util/oc_etimer.h"
 
 /*
- * Modulo mask (thus +1) for a random number to get the tick number for the random
- * retransmission time between COAP_RESPONSE_TIMEOUT and COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
+ * Modulo mask (thus +1) for a random number to get the tick number for the
+ * random
+ * retransmission time between COAP_RESPONSE_TIMEOUT and
+ * COAP_RESPONSE_TIMEOUT*COAP_RESPONSE_RANDOM_FACTOR.
  */
-#define COAP_RESPONSE_TIMEOUT_TICKS         (OC_CLOCK_SECOND * COAP_RESPONSE_TIMEOUT)
-#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK  (long)((OC_CLOCK_SECOND * COAP_RESPONSE_TIMEOUT * ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) + 0.5) + 1
+#define COAP_RESPONSE_TIMEOUT_TICKS (OC_CLOCK_SECOND * COAP_RESPONSE_TIMEOUT)
+#define COAP_RESPONSE_TIMEOUT_BACKOFF_MASK                                     \
+  (long)((OC_CLOCK_SECOND * COAP_RESPONSE_TIMEOUT *                            \
+          ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) +                        \
+         0.5) +                                                                \
+    1
 
 /* container for transactions with message buffer and retransmission info */
-typedef struct coap_transaction {
+typedef struct coap_transaction
+{
   struct coap_transaction *next; /* for LIST */
 
   uint16_t mid;
@@ -57,8 +64,7 @@ typedef struct coap_transaction {
 
 void coap_register_as_transaction_handler(void);
 
-coap_transaction_t *coap_new_transaction(uint16_t mid,
-					 oc_endpoint_t *endpoint);
+coap_transaction_t *coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint);
 
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
