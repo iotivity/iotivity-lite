@@ -16,11 +16,11 @@
 
 #ifdef OC_SECURITY
 #include "oc_store.h"
-#include "oc_cred.h"
-#include "oc_pstat.h"
-#include "oc_doxm.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
+#include "oc_cred.h"
+#include "oc_doxm.h"
+#include "oc_pstat.h"
 #include "port/oc_storage.h"
 
 void
@@ -123,7 +123,7 @@ oc_sec_dump_state(void)
   oc_sec_encode_pstat();
   int size = oc_rep_finalize();
   if (size > 0) {
-    LOG ("oc_store: encoded pstat size %d\n", size);
+    LOG("oc_store: encoded pstat size %d\n", size);
     oc_storage_write("/pstat", buf, size);
   }
 
@@ -132,7 +132,7 @@ oc_sec_dump_state(void)
   oc_sec_encode_cred();
   size = oc_rep_finalize();
   if (size > 0) {
-    LOG ("oc_store: encoded cred size %d\n", size);
+    LOG("oc_store: encoded cred size %d\n", size);
     oc_storage_write("/cred", buf, size);
   }
 
@@ -141,7 +141,7 @@ oc_sec_dump_state(void)
   oc_sec_encode_doxm();
   size = oc_rep_finalize();
   if (size > 0) {
-    LOG ("oc_store: encoded doxm size %d\n", size);
+    LOG("oc_store: encoded doxm size %d\n", size);
     oc_storage_write("/doxm", buf, size);
   }
 
@@ -150,7 +150,7 @@ oc_sec_dump_state(void)
   oc_sec_encode_acl();
   size = oc_rep_finalize();
   if (size > 0) {
-    LOG ("oc_store: encoded ACL size %d\n", size);
+    LOG("oc_store: encoded ACL size %d\n", size);
     oc_storage_write("/acl", buf, size);
   }
 }

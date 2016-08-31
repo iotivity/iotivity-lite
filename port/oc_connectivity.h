@@ -17,25 +17,29 @@
 #ifndef OC_CONNECTIVITY_H
 #define OC_CONNECTIVITY_H
 
-#include <stdint.h>
 #include "config.h"
-#include "util/oc_process.h"
-#include "port/oc_log.h"
 #include "oc_network_events.h"
+#include "port/oc_log.h"
+#include "util/oc_process.h"
+#include <stdint.h>
 
-typedef struct {
+typedef struct
+{
   uint16_t port;
   uint8_t address[16];
   uint8_t scope;
 } oc_ipv6_addr_t;
 
-typedef struct {
+typedef struct
+{
   uint8_t type;
   uint8_t address[6];
 } oc_le_addr_t;
 
-typedef struct {
-  enum transport_flags {
+typedef struct
+{
+  enum transport_flags
+  {
     IP = 1 << 0,
     GATT = 1 << 1,
     IPSP = 1 << 2,
@@ -43,18 +47,20 @@ typedef struct {
     SECURED = 1 << 4
   } flags;
 
-  union {
+  union
+  {
     oc_ipv6_addr_t ipv6_addr;
     oc_le_addr_t bt_addr;
   };
 } oc_endpoint_t;
 
-#define oc_make_ip_endpoint(__name__, __flags__, __port__, ...)		\
-  oc_endpoint_t __name__ = { .flags = __flags__ ,			\
-			     .ipv6_addr = {.port = __port__,		\
-					   .address = {__VA_ARGS__}}}
+#define oc_make_ip_endpoint(__name__, __flags__, __port__, ...)                \
+  oc_endpoint_t __name__ = {.flags = __flags__,                                \
+                            .ipv6_addr = {.port = __port__,                    \
+                                          .address = { __VA_ARGS__ } } }
 
-typedef struct oc_message_s {
+typedef struct oc_message_s
+{
   struct oc_message_s *next;
   oc_endpoint_t endpoint;
   size_t length;
@@ -62,7 +68,7 @@ typedef struct oc_message_s {
   uint8_t data[MAX_PAYLOAD_SIZE];
 } oc_message_t;
 
-void oc_send_buffer(oc_message_t * message);
+void oc_send_buffer(oc_message_t *message);
 
 #ifdef OC_SECURITY
 uint16_t oc_connectivity_get_dtls_port(void);

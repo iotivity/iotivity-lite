@@ -32,9 +32,11 @@ void abort_impl(void);
     abort_impl();                                                              \
   } while (0)
 
-#define oc_assert(cond) do {			\
-    if (!(cond)) {				\
-      oc_abort("Assertion ("#cond") failed.");	\
-    } } while(0)
+#define oc_assert(cond)                                                        \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      oc_abort("Assertion (" #cond ") failed.");                               \
+    }                                                                          \
+  } while (0)
 
 #endif /* OC_ASSERT_H */

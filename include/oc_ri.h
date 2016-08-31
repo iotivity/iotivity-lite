@@ -18,17 +18,12 @@
 #define OC_RI_H
 
 #include "config.h"
-#include "port/oc_connectivity.h"
-#include "util/oc_etimer.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"
+#include "port/oc_connectivity.h"
+#include "util/oc_etimer.h"
 
-typedef enum {
-  OC_GET = 1,
-  OC_POST,
-  OC_PUT,
-  OC_DELETE
-} oc_method_t;
+typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE } oc_method_t;
 
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
@@ -67,7 +62,8 @@ typedef struct oc_separate_response_s oc_separate_response_t;
 
 typedef struct oc_response_buffer_s oc_response_buffer_t;
 
-typedef struct {
+typedef struct
+{
   oc_separate_response_t *separate_response;
   oc_response_buffer_t *response_buffer;
 } oc_response_t;
@@ -98,7 +94,8 @@ typedef enum {
 
 typedef struct oc_resource_s oc_resource_t;
 
-typedef struct {
+typedef struct
+{
   oc_endpoint_t *origin;
   oc_resource_t *resource;
   const char *query;
@@ -107,9 +104,10 @@ typedef struct {
   oc_response_t *response;
 } oc_request_t;
 
-typedef void (*oc_request_handler_t)(oc_request_t*, oc_interface_mask_t);
+typedef void (*oc_request_handler_t)(oc_request_t *, oc_interface_mask_t);
 
-typedef struct oc_resource_s {
+typedef struct oc_resource_s
+{
   struct oc_resource_s *next;
   int device;
   oc_string_t uri;
@@ -125,14 +123,12 @@ typedef struct oc_resource_s {
   uint8_t num_observers;
 } oc_resource_t;
 
-typedef enum {
-  DONE = 0,
-  CONTINUE
-} oc_event_callback_retval_t;
+typedef enum { DONE = 0, CONTINUE } oc_event_callback_retval_t;
 
-typedef oc_event_callback_retval_t (*oc_trigger_t)(void*);
+typedef oc_event_callback_retval_t (*oc_trigger_t)(void *);
 
-typedef struct oc_event_callback_s {
+typedef struct oc_event_callback_s
+{
   struct oc_event_callback_s *next;
   struct oc_etimer timer;
   oc_trigger_t callback;
@@ -144,19 +140,22 @@ void oc_ri_init(void);
 void oc_ri_shutdown(void);
 
 void oc_ri_add_timed_event_callback_ticks(void *cb_data,
-					  oc_trigger_t event_callback,
-					  oc_clock_time_t ticks);
+                                          oc_trigger_t event_callback,
+                                          oc_clock_time_t ticks);
 
-#define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback, seconds) do { \
-    oc_ri_add_timed_event_callback_ticks(cb_data,  event_callback, (oc_clock_time_t)(seconds * OC_CLOCK_SECOND)); \
-  } while(0)
+#define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback,        \
+                                               seconds)                        \
+  do {                                                                         \
+    oc_ri_add_timed_event_callback_ticks(                                      \
+      cb_data, event_callback, (oc_clock_time_t)(seconds * OC_CLOCK_SECOND));  \
+  } while (0)
 
 void oc_ri_remove_timed_event_callback(void *cb_data,
-				       oc_trigger_t event_callback);
+                                       oc_trigger_t event_callback);
 
 int oc_status_code(oc_status_t key);
 
-oc_resource_t * oc_ri_get_app_resource_by_uri(const char *uri);
+oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri);
 
 oc_resource_t *oc_ri_get_app_resources(void);
 
@@ -166,12 +165,11 @@ bool oc_ri_add_resource(oc_resource_t *resource);
 void oc_ri_delete_resource(oc_resource_t *resource);
 #endif
 
-int oc_ri_get_query_nth_key_value(const char *query, int query_len,
-				  char **key, int *key_len,
-				  char **value, int *value_len,
-				  int n);
-int oc_ri_get_query_value(const char *query, int query_len,
-			  const char *key, char **value);
+int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
+                                  int *key_len, char **value, int *value_len,
+                                  int n);
+int oc_ri_get_query_value(const char *query, int query_len, const char *key,
+                          char **value);
 
 oc_interface_mask_t oc_ri_get_interface_mask(char *iface, int if_len);
 

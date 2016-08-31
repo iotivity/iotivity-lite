@@ -14,31 +14,34 @@
 // limitations under the License.
 */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
 #include "port/oc_random.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 static int urandom_fd;
 
-void oc_random_init(unsigned short seed)
+void
+oc_random_init(unsigned short seed)
 {
   urandom_fd = open("/dev/urandom", O_RDONLY);
 }
 
-unsigned short oc_random_rand(void)
+unsigned short
+oc_random_rand(void)
 {
   unsigned short rand = 0;
   int ret = read(urandom_fd, &rand, sizeof(rand));
-  if(ret != -1) {
+  if (ret != -1) {
     return rand;
   }
   return 0;
 }
 
-void oc_random_destroy()
+void
+oc_random_destroy()
 {
   close(urandom_fd);
 }

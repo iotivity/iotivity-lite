@@ -16,15 +16,15 @@
 
 #ifdef OC_SECURITY
 
-#include "config.h"
-#include "oc_cred.h"
-#include "oc_acl.h"
-#include "oc_pstat.h"
-#include "oc_svr.h"
 #include "oc_dtls.h"
+#include "api/oc_events.h"
+#include "config.h"
+#include "oc_acl.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
-#include "api/oc_events.h"
+#include "oc_cred.h"
+#include "oc_pstat.h"
+#include "oc_svr.h"
 
 OC_PROCESS(oc_dtls_handler, "DTLS Process");
 OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, MAX_DTLS_PEERS);
@@ -56,7 +56,7 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint)
 }
 
 oc_event_callback_retval_t
-oc_sec_dtls_inactive(void* data)
+oc_sec_dtls_inactive(void *data)
 {
   LOG("\n\noc_sec_dtls: DTLS inactivity callback\n\n");
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(data);
@@ -66,18 +66,15 @@ oc_sec_dtls_inactive(void* data)
     if (time < DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
-    }
-    else if (time < 2 * DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
+    } else if (time < 2 * DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Initiating connection close\n\n");
       oc_sec_dtls_close_init(data);
       return CONTINUE;
-    }
-    else {
+    } else {
       LOG("\n\noc_sec_dtls: Completing connection close\n\n");
       oc_sec_dtls_close_finish(data);
     }
-  }
-  else {
+  } else {
     LOG("\n\noc_sec_dtls: Could not find peer\n\n");
     LOG("oc_sec_dtls: Num active peers %d\n", oc_list_length(dtls_peers));
   }
@@ -99,9 +96,8 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
       peer->connected = false;
       oc_list_add(dtls_peers, peer);
 
-      oc_ri_add_timed_event_callback_seconds(&peer->session.addr,
-					     oc_sec_dtls_inactive,
-					     DTLS_INACTIVITY_TIMEOUT);
+      oc_ri_add_timed_event_callback_seconds(
+        &peer->session.addr, oc_sec_dtls_inactive, DTLS_INACTIVITY_TIMEOUT);
     }
   }
   return peer;
@@ -134,9 +130,7 @@ oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint)
 */
 static int
 oc_sec_dtls_get_decrypted_message(struct dtls_context_t *ctx,
-				  session_t *session,
-				  uint8_t *buf,
-				  size_t len)
+                                  session_t *session, uint8_t *buf, size_t len)
 {
   oc_message_t *message = oc_allocate_message();
   if (message) {
@@ -156,8 +150,7 @@ oc_sec_dtls_init_connection(oc_message_t *message)
     LOG("\n\noc_dtls: Initializing DTLS connection\n\n");
     dtls_connect(ocf_dtls_context, &peer->session);
     oc_list_add(peer->send_queue, message);
-  }
-  else
+  } else
     oc_message_unref(message);
 }
 
@@ -179,7 +172,7 @@ oc_sec_dtls_send_message(oc_message_t *message)
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&message->endpoint);
   if (peer) {
     ret = dtls_write(ocf_dtls_context, &peer->session, message->data,
-		     message->length);
+                     message->length);
   }
   oc_message_unref(message);
   return ret;
@@ -193,9 +186,7 @@ oc_sec_dtls_send_message(oc_message_t *message)
 */
 static int
 oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
-				   session_t *session,
-				   uint8_t *buf,
-				   size_t len)
+                                   session_t *session, uint8_t *buf, size_t len)
 {
   oc_message_t message;
   memcpy(&message.endpoint, &session->addr, sizeof(oc_endpoint_t));
@@ -211,36 +202,31 @@ oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
   OwnerPSK woud've been generated previously during provisioning.
 */
 static int
-oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx,
-			  const session_t *session,
-			  dtls_credentials_type_t type,
-			  const unsigned char *desc,
-			  size_t desc_len,
-			  unsigned char *result,
-			  size_t result_length)
+oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx, const session_t *session,
+                          dtls_credentials_type_t type,
+                          const unsigned char *desc, size_t desc_len,
+                          unsigned char *result, size_t result_length)
 {
   switch (type) {
   case DTLS_PSK_IDENTITY:
-  case DTLS_PSK_HINT:{
+  case DTLS_PSK_HINT: {
     LOG("Identity\n");
     oc_uuid_t *uuid = oc_core_get_device_id(0);
     memcpy(result, uuid->id, 16);
     return 16;
-  }
-    break;
+  } break;
   case DTLS_PSK_KEY: {
     LOG("key\n");
-    oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t*)desc);
+    oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t *)desc);
     oc_sec_dtls_peer_t *peer =
-      oc_sec_dtls_get_peer((oc_endpoint_t*)&session->addr);
+      oc_sec_dtls_get_peer((oc_endpoint_t *)&session->addr);
     if (cred != NULL && peer != NULL) {
-      memcpy(&peer->uuid, (oc_uuid_t*)desc, 16);
+      memcpy(&peer->uuid, (oc_uuid_t *)desc, 16);
       memcpy(result, cred->key, 16);
       return 16;
     }
     return 0;
-  }
-    break;
+  } break;
   default:
     break;
   }
@@ -249,7 +235,7 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx,
 
 int
 oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
-		   dtls_alert_level_t level, unsigned short code)
+                   dtls_alert_level_t level, unsigned short code)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&session->addr);
   if (peer && level == 0 && code == DTLS_EVENT_CONNECTED) {
@@ -259,37 +245,29 @@ oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
       oc_sec_dtls_send_message(m);
       m = oc_list_pop(peer->send_queue);
     }
-  }
-  else if (level == 2) {
+  } else if (level == 2) {
     oc_sec_dtls_close_finish(&session->addr);
   }
   return 0;
 }
 
-static dtls_handler_t dtls_cb = {
-  .write = oc_sec_dtls_send_encrypted_message,
-  .read  = oc_sec_dtls_get_decrypted_message,
-  .event = oc_sec_dtls_events,
-  .get_psk_info = oc_sec_dtls_get_owner_psk
-};
+static dtls_handler_t dtls_cb = {.write = oc_sec_dtls_send_encrypted_message,
+                                 .read = oc_sec_dtls_get_decrypted_message,
+                                 .event = oc_sec_dtls_events,
+                                 .get_psk_info = oc_sec_dtls_get_owner_psk };
 
 void
-oc_sec_derive_owner_psk(oc_endpoint_t *endpoint,
-			const char* oxm,
-			const size_t oxm_len,
-			const char *server_uuid,
-			const size_t server_uuid_len,
-			const char *obt_uuid,
-			const size_t obt_uuid_len,
-			uint8_t *key,
-			const size_t key_len) {
+oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const char *oxm,
+                        const size_t oxm_len, const char *server_uuid,
+                        const size_t server_uuid_len, const char *obt_uuid,
+                        const size_t obt_uuid_len, uint8_t *key,
+                        const size_t key_len)
+{
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
   if (peer) {
-    dtls_prf_with_current_keyblock(ocf_dtls_context, &peer->session,
-				   oxm, oxm_len,
-				   server_uuid, server_uuid_len,
-				   obt_uuid, obt_uuid_len,
-				   (uint8_t*)key, key_len);
+    dtls_prf_with_current_keyblock(
+      ocf_dtls_context, &peer->session, oxm, oxm_len, server_uuid,
+      server_uuid_len, obt_uuid, obt_uuid_len, (uint8_t *)key, key_len);
   }
 }
 
@@ -303,11 +281,11 @@ oc_sec_dtls_recv_message(oc_message_t *message)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_add_peer(&message->endpoint);
   if (peer) {
-    int ret = dtls_handle_message(ocf_dtls_context, &peer->session, message->data, message->length);
+    int ret = dtls_handle_message(ocf_dtls_context, &peer->session,
+                                  message->data, message->length);
     if (ret != 0) {
       oc_sec_dtls_close_finish(&message->endpoint);
-    }
-    else {
+    } else {
       peer->timestamp = oc_clock_time();
     }
   }
@@ -319,15 +297,15 @@ oc_sec_dtls_recv_message(oc_message_t *message)
 /* Fetch persisted SVR from app by this time */
 
 void
-oc_sec_dtls_init_context(void) {
+oc_sec_dtls_init_context(void)
+{
   dtls_init();
   ocf_dtls_context = dtls_new_context(NULL);
 
   if (oc_sec_provisioned()) {
     LOG("\n\noc_sec_dtls: Device in normal operation state\n\n");
     dtls_select_cipher(ocf_dtls_context, TLS_PSK_WITH_AES_128_CCM_8);
-  }
-  else {
+  } else {
     LOG("\n\noc_sec_dtls: Device in ready for OTM state\n\n");
     dtls_enables_anon_ecdh(ocf_dtls_context, DTLS_CIPHER_ENABLE);
   }
@@ -344,9 +322,9 @@ oc_sec_dtls_close_init(oc_endpoint_t *endpoint)
       dtls_close(ocf_dtls_context, &p->session);
       oc_message_t *m = oc_list_pop(p->send_queue);
       while (m != NULL) {
-	LOG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
-	oc_message_unref(m);
-	m = oc_list_pop(p->send_queue);
+        LOG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
+        oc_message_unref(m);
+        m = oc_list_pop(p->send_queue);
       }
     }
   }
@@ -381,11 +359,9 @@ OC_PROCESS_THREAD(oc_dtls_handler, ev, data)
 
     if (ev == oc_events[UDP_TO_DTLS_EVENT]) {
       oc_sec_dtls_recv_message(data);
-    }
-    else if (ev == oc_events[INIT_DTLS_CONN_EVENT]) {
+    } else if (ev == oc_events[INIT_DTLS_CONN_EVENT]) {
       oc_sec_dtls_init_connection(data);
-    }
-    else if (ev == oc_events[RI_TO_DTLS_EVENT]) {
+    } else if (ev == oc_events[RI_TO_DTLS_EVENT]) {
       oc_sec_dtls_send_message(data);
     }
   }

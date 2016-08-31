@@ -136,14 +136,13 @@ oc_list_add(oc_list_t list, void *item)
   /* Make sure not to add the same element twice */
   oc_list_remove(list, item);
 
-  ((struct list *) item)->next = NULL;
+  ((struct list *)item)->next = NULL;
 
   l = oc_list_tail(list);
 
   if (l == NULL) {
     *list = item;
-  }
-  else {
+  } else {
     l->next = item;
   }
 }
@@ -157,7 +156,7 @@ oc_list_push(oc_list_t list, void *item)
   /* Make sure not to add the same element twice */
   oc_list_remove(list, item);
 
-  ((struct list *) item)->next = *list;
+  ((struct list *)item)->next = *list;
   *list = item;
 }
 /*---------------------------------------------------------------------------*/
@@ -178,7 +177,7 @@ oc_list_chop(oc_list_t list)
   if (*list == NULL) {
     return NULL;
   }
-  if (((struct list *) *list)->next == NULL) {
+  if (((struct list *)*list)->next == NULL) {
     l = *list;
     *list = NULL;
     return l;
@@ -209,7 +208,7 @@ oc_list_pop(oc_list_t list)
   struct list *l;
   l = *list;
   if (*list != NULL) {
-    *list = ((struct list *) *list)->next;
+    *list = ((struct list *)*list)->next;
   }
 
   return l;
@@ -238,12 +237,11 @@ oc_list_remove(oc_list_t list, void *item)
   for (l = *list; l != NULL; l = l->next) {
     if (l == item) {
       if (r == NULL) {
-	/* First on list */
-	*list = l->next;
-      }
-      else {
-	/* Not first on list */
-	r->next = l->next;
+        /* First on list */
+        *list = l->next;
+      } else {
+        /* Not first on list */
+        r->next = l->next;
       }
       l->next = NULL;
       return;
@@ -294,11 +292,10 @@ oc_list_insert(oc_list_t list, void *previtem, void *newitem)
 {
   if (previtem == NULL) {
     oc_list_push(list, newitem);
-  }
-  else {
+  } else {
 
-    ((struct list *) newitem)->next = ((struct list *) previtem)->next;
-    ((struct list *) previtem)->next = newitem;
+    ((struct list *)newitem)->next = ((struct list *)previtem)->next;
+    ((struct list *)previtem)->next = newitem;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -315,6 +312,6 @@ oc_list_insert(oc_list_t list, void *previtem, void *newitem)
 void *
 oc_list_item_next(void *item)
 {
-  return item == NULL ? NULL : ((struct list *) item)->next;
+  return item == NULL ? NULL : ((struct list *)item)->next;
 }
 /*---------------------------------------------------------------------------*/

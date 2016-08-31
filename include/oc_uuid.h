@@ -19,7 +19,8 @@
 
 #include <stdint.h>
 
-typedef struct {
+typedef struct
+{
   uint8_t id[16];
 } oc_uuid_t;
 

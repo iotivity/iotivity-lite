@@ -17,9 +17,9 @@
 #ifdef OC_SECURITY
 
 #include "oc_pstat.h"
-#include "oc_doxm.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_doxm.h"
 
 static oc_sec_pstat_t pstat;
 
@@ -68,26 +68,26 @@ void
 oc_sec_decode_pstat(oc_rep_t *rep)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
-  while(rep != NULL) {
-    switch(rep->type) {
+  while (rep != NULL) {
+    switch (rep->type) {
     case BOOL:
       pstat.isop = rep->value_boolean;
       break;
     case INT:
       if (strncmp(oc_string(rep->name), "cm", 2) == 0)
-	pstat.cm = rep->value_int;
+        pstat.cm = rep->value_int;
       else if (strncmp(oc_string(rep->name), "tm", 2) == 0)
-	pstat.tm = rep->value_int;
+        pstat.tm = rep->value_int;
       else if (strncmp(oc_string(rep->name), "om", 2) == 0)
-	pstat.om = rep->value_int;
+        pstat.om = rep->value_int;
       else if (strncmp(oc_string(rep->name), "sm", 2) == 0)
-	pstat.sm = rep->value_int;
+        pstat.sm = rep->value_int;
       break;
     case STRING:
       if (strncmp(oc_string(rep->name), "deviceuuid", 10) == 0)
-	oc_str_to_uuid(oc_string(rep->value_string), &doxm->deviceuuid);
+        oc_str_to_uuid(oc_string(rep->value_string), &doxm->deviceuuid);
       else if (strncmp(oc_string(rep->name), "rowneruuid", 10) == 0)
-	oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
+        oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
       break;
     default:
       break;
@@ -103,8 +103,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface)
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat();
     oc_send_response(request, OC_STATUS_OK);
-  }
-    break;
+  } break;
   default:
     break;
   }

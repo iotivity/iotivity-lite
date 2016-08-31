@@ -50,8 +50,8 @@
 #ifndef OC_CLOCK_H
 #define OC_CLOCK_H
 
-#include <stdint.h>
 #include "config.h"
+#include <stdint.h>
 
 /**
  * A second, measured in system clock time.

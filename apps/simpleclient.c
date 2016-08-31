@@ -20,8 +20,8 @@ void
 app_init(void)
 {
   oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
-                NULL, NULL);
+  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0", NULL,
+                NULL);
 }
 
 #ifdef OC_SECURITY
@@ -41,7 +41,7 @@ static int power;
 static oc_string_t name;
 
 oc_event_callback_retval_t
-stop_observe(void* data)
+stop_observe(void *data)
 {
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(a_light, &light_server);
@@ -67,7 +67,7 @@ observe_light(oc_client_response_t *data)
     case STRING:
       PRINT("%s\n", oc_string(rep->value_string));
       if (oc_string_len(name))
-	oc_free_string(&name);
+        oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value_string));
       break;
     default:
@@ -113,8 +113,7 @@ post_light(oc_client_response_t *data)
       PRINT("Sent POST request\n");
     else
       PRINT("Could not send POST request\n");
-  }
-  else
+  } else
     PRINT("Could not init POST request\n");
 }
 
@@ -137,8 +136,7 @@ put_light(oc_client_response_t *data)
       PRINT("Sent POST request\n");
     else
       PRINT("Could not send POST request\n");
-  }
-  else
+  } else
     PRINT("Could not init POST request\n");
 }
 
@@ -161,7 +159,7 @@ get_light(oc_client_response_t *data)
     case STRING:
       PRINT("%s\n", oc_string(rep->value_string));
       if (oc_string_len(name))
-	oc_free_string(&name);
+        oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value_string));
       break;
     default:
@@ -180,21 +178,17 @@ get_light(oc_client_response_t *data)
       PRINT("Sent PUT request\n");
     else
       PRINT("Could not send PUT request\n");
-  }
-  else
+  } else
     PRINT("Could not init PUT request\n");
 }
 
 oc_discovery_flags_t
-discovery(const char *di,
-	  const char *uri,
-	  oc_string_array_t types,
-	  oc_interface_mask_t interfaces,
-	  oc_server_handle_t* server)
+discovery(const char *di, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_server_handle_t *server)
 {
   int i;
   int uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH)?MAX_URI_LENGTH-1:uri_len;
+  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
   for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
@@ -221,10 +215,10 @@ issue_requests(void)
 
 #if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
 
-#include <zephyr.h>
-#include <sections.h>
 #include "port/oc_signal_main_loop.h"
+#include <sections.h>
 #include <string.h>
+#include <zephyr.h>
 
 static struct nano_sem block;
 
@@ -239,10 +233,9 @@ main(void)
 {
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
+                          .requests_entry = issue_requests };
 
   nano_sem_init(&block);
 
@@ -264,11 +257,11 @@ main(void)
 }
 
 #elif defined(__linux__) /* Linux */
-#include <stdio.h>
-#include <signal.h>
-#include <pthread.h>
-#include "port/oc_signal_main_loop.h"
 #include "port/oc_clock.h"
+#include "port/oc_signal_main_loop.h"
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
 
 pthread_mutex_t mutex;
 pthread_cond_t cv;
@@ -301,10 +294,9 @@ main(void)
 
   oc_handler_t handler = {.init = app_init,
 #ifdef OC_SECURITY
-			  .get_credentials = fetch_credentials,
+                          .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-			  .requests_entry = issue_requests
-  };
+                          .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
@@ -317,8 +309,7 @@ main(void)
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
-    }
-    else {
+    } else {
       ts.tv_sec = (next_event / OC_CLOCK_SECOND);
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);

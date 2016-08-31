@@ -17,16 +17,17 @@
 #ifndef OC_CRED_H_
 #define OC_CRED_H_
 
-#include <stdint.h>
-#include "oc_uuid.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
+#include <stdint.h>
 
-typedef struct oc_sec_cred_s {
+typedef struct oc_sec_cred_s
+{
   struct oc_sec_cred_s *next;
   int credid;
   int credtype;
   oc_uuid_t subjectuuid;
-  uint8_t key[16]; //Supports only 128-bit keys
+  uint8_t key[16]; // Supports only 128-bit keys
 } oc_sec_cred_t;
 
 void oc_sec_encode_cred(void);
