@@ -98,19 +98,21 @@ void coap_remove_observer(coap_observer_t *o)
 int coap_remove_observer_by_client(oc_endpoint_t *endpoint)
 {
   int removed = 0;
-  coap_observer_t *obs = NULL;
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
+
   LOG("Unregistering observers for client at: ");
   LOGipaddr(*endpoint);
-  for(obs = (coap_observer_t *)oc_list_head(observers_list); obs;
-      obs = obs->next) {
-    if(memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t))
-       == 0) {
+
+  while (obs) {
+    next = obs->next;
+    if (memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
     }
+    obs = next;
   }
-  LOG("Removed %d entries\n", removed);
+  LOG("Removed %d observers\n", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -118,22 +120,21 @@ int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
 				  size_t token_len)
 {
   int removed = 0;
-  coap_observer_t *obs = NULL;
-  LOG("Unregistering observers for request token 0x%02X%02X\n", token[0], token[1]);
-  obs = (coap_observer_t *)oc_list_head(observers_list);
-  while(obs) {
-    if(memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0
-       && obs->token_len == token_len
-       && memcmp(obs->token, token, token_len) == 0) {
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
+  LOG("Unregistering observers for request token 0x%02X%02X\n", token[0],
+      token[1]);
+  while (obs) {
+    if (memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0 &&
+        obs->token_len == token_len &&
+        memcmp(obs->token, token, token_len) == 0) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
-      obs = (coap_observer_t *)oc_list_head(observers_list);
-      continue;
+      break;
     }
     obs = obs->next;
   }
-  LOG("Removed %d entries\n", removed);
+  LOG("Removed %d observers\n", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -141,23 +142,19 @@ int coap_remove_observer_by_uri(oc_endpoint_t *endpoint, const char *uri)
 {
   LOG("Unregistering observers for resource uri /%s", uri);
   int removed = 0;
-  coap_observer_t *obs = NULL;
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
 
-  for(obs = (coap_observer_t *)oc_list_head(observers_list); obs;
-      obs = obs->next) {
-    if(((memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t))
-	 == 0))
-       && (obs->url == uri
-	   || memcmp(obs->url, uri,
-		     strlen(
-		       obs->url))
-	   == 0)) {
+  while (obs) {
+    next = obs->next;
+    if (((memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0)) &&
+        (obs->url == uri || memcmp(obs->url, uri, strlen(obs->url)) == 0)) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
     }
+    obs = next;
   }
-  LOG("Removed %d entries\n", removed);
+  LOG("Removed %d observers\n", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -174,9 +171,10 @@ int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
+      break;
     }
   }
-  LOG("Removed %d entries\n", removed);
+  LOG("Removed %d observers\n", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
