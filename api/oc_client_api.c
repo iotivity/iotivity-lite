@@ -103,10 +103,11 @@ prepare_coap_request(oc_client_cb_t *cb, oc_string_t *query)
 
 bool
 oc_do_delete(const char *uri, oc_server_handle_t *server,
-             oc_response_handler_t handler, oc_qos_t qos)
+             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_DELETE, handler, qos);
+    oc_ri_alloc_client_cb(uri, server, OC_DELETE, handler, qos, user_data);
+
   if (!cb)
     return false;
 
@@ -122,9 +123,10 @@ oc_do_delete(const char *uri, oc_server_handle_t *server,
 
 bool
 oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
-          oc_response_handler_t handler, oc_qos_t qos)
+          oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, server, OC_GET, handler, qos);
+  oc_client_cb_t *cb =
+    oc_ri_alloc_client_cb(uri, server, OC_GET, handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -147,9 +149,10 @@ oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
 
 bool
 oc_init_put(const char *uri, oc_server_handle_t *server, const char *query,
-            oc_response_handler_t handler, oc_qos_t qos)
+            oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, server, OC_PUT, handler, qos);
+  oc_client_cb_t *cb =
+    oc_ri_alloc_client_cb(uri, server, OC_PUT, handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -169,10 +172,10 @@ oc_init_put(const char *uri, oc_server_handle_t *server, const char *query,
 
 bool
 oc_init_post(const char *uri, oc_server_handle_t *server, const char *query,
-             oc_response_handler_t handler, oc_qos_t qos)
+             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_POST, handler, qos);
+    oc_ri_alloc_client_cb(uri, server, OC_POST, handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -204,9 +207,10 @@ oc_do_post(void)
 
 bool
 oc_do_observe(const char *uri, oc_server_handle_t *server, const char *query,
-              oc_response_handler_t handler, oc_qos_t qos)
+              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, server, OC_GET, handler, qos);
+  oc_client_cb_t *cb =
+    oc_ri_alloc_client_cb(uri, server, OC_GET, handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -260,7 +264,7 @@ oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler)
   memcpy(&handle.endpoint, &mcast, sizeof(oc_endpoint_t));
 
   oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb("/oic/res", &handle, OC_GET, handler, LOW_QOS);
+    oc_ri_alloc_client_cb("/oic/res", &handle, OC_GET, handler, LOW_QOS, NULL);
 
   if (!cb)
     return false;
