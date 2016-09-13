@@ -88,7 +88,7 @@ post2_light(oc_client_response_t *data)
   else
     PRINT("POST response code %d\n", data->code);
 
-  oc_do_observe(a_light, &light_server, NULL, &observe_light, LOW_QOS);
+  oc_do_observe(a_light, &light_server, NULL, &observe_light, NULL, LOW_QOS);
   oc_set_delayed_callback(NULL, &stop_observe, 30);
   PRINT("Sent OBSERVE request\n");
 }
@@ -104,7 +104,7 @@ post_light(oc_client_response_t *data)
   else
     PRINT("POST response code %d\n", data->code);
 
-  if (oc_init_post(a_light, &light_server, NULL, &post2_light, LOW_QOS)) {
+  if (oc_init_post(a_light, &light_server, NULL, &post2_light, NULL, LOW_QOS)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, true);
     oc_rep_set_int(root, power, 55);
@@ -127,7 +127,7 @@ put_light(oc_client_response_t *data)
   else
     PRINT("PUT response code %d\n", data->code);
 
-  if (oc_init_post(a_light, &light_server, NULL, &post_light, LOW_QOS)) {
+  if (oc_init_post(a_light, &light_server, NULL, &post_light, NULL, LOW_QOS)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, false);
     oc_rep_set_int(root, power, 105);
@@ -168,7 +168,7 @@ get_light(oc_client_response_t *data)
     rep = rep->next;
   }
 
-  if (oc_init_put(a_light, &light_server, NULL, &put_light, LOW_QOS)) {
+  if (oc_init_put(a_light, &light_server, NULL, &put_light, NULL, LOW_QOS)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, true);
     oc_rep_set_int(root, power, 15);
@@ -198,7 +198,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
-      oc_do_get(a_light, &light_server, NULL, &get_light, LOW_QOS);
+      oc_do_get(a_light, &light_server, NULL, &get_light, NULL, LOW_QOS);
       PRINT("Sent GET request\n");
 
       return OC_STOP_DISCOVERY;

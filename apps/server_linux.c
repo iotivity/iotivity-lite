@@ -81,7 +81,16 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
     switch (rep->type) {
     case BOOL:
       state = rep->value_boolean;
-      PRINT("value: %d\n", state);
+      PRINT("boolean value: %d\n", state);
+      break;
+    case STRING:
+      PRINT("string value: %s\n", oc_string(rep->value_string));
+      break;
+    case INT:
+      PRINT("int value: %d\n", rep->value_int);
+      break;
+    case DOUBLE:
+      PRINT("number value: %lf\n", rep->value_double);
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
