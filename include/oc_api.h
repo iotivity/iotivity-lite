@@ -109,25 +109,25 @@ int oc_notify_observers(oc_resource_t *resource);
 bool oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler);
 
 bool oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
-               oc_response_handler_t handler, oc_qos_t qos);
+               oc_response_handler_t handler, void* user_data, oc_qos_t qos);
 
 bool oc_do_delete(const char *uri, oc_server_handle_t *server,
-                  oc_response_handler_t handler, oc_qos_t qos);
+                  oc_response_handler_t handler, void *user_data, oc_qos_t qos);
 
 bool oc_init_put(const char *uri, oc_server_handle_t *server, const char *query,
-                 oc_response_handler_t handler, oc_qos_t qos);
+                 oc_response_handler_t handler, void *user_data, oc_qos_t qos);
 
 bool oc_do_put(void);
 
 bool oc_init_post(const char *uri, oc_server_handle_t *server,
                   const char *query, oc_response_handler_t handler,
-                  oc_qos_t qos);
+                  void *user_data, oc_qos_t qos);
 
 bool oc_do_post(void);
 
 bool oc_do_observe(const char *uri, oc_server_handle_t *server,
                    const char *query, oc_response_handler_t handler,
-                   oc_qos_t qos);
+                   void *user_data, oc_qos_t qos);
 
 bool oc_stop_observe(const char *uri, oc_server_handle_t *server);
 
