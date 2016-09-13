@@ -90,7 +90,7 @@ observe_light(oc_client_response_t *data)
     rep = rep->next;
   }
 
-  if (oc_init_put(light_1, &light_server, NULL, &put_light, LOW_QOS)) {
+  if (oc_init_put(light_1, &light_server, NULL, &put_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, !light_state);
     oc_rep_end_root_object();
@@ -118,7 +118,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       strncpy(light_1, uri, uri_len);
       light_1[uri_len] = '\0';
 
-      oc_do_observe(light_1, &light_server, NULL, &observe_light, LOW_QOS);
+      oc_do_observe(light_1, &light_server, NULL, &observe_light, LOW_QOS, NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
       return OC_STOP_DISCOVERY;
     }

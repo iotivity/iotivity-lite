@@ -888,7 +888,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
       oc_client_response_t client_response;
       client_response.observe_option = -1;
       client_response.payload = 0;
-
+      client_response.user_data = cb->user_data;
       for (i = 0; i < __NUM_OC_STATUS_CODES__; i++) {
         if (oc_coap_status_codes[i] == pkt->code) {
           client_response.code = i;
@@ -969,7 +969,8 @@ oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
 
 oc_client_cb_t *
 oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
-                      oc_method_t method, void *handler, oc_qos_t qos)
+                      oc_method_t method, void *handler,
+                      oc_qos_t qos, void *user_data)
 {
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
   if (!cb)
@@ -980,6 +981,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
   cb->method = method;
   cb->qos = qos;
   cb->handler = handler;
+  cb->user_data = user_data;
   cb->token_len = 8;
   int i = 0;
   uint16_t r;
