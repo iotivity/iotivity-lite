@@ -28,6 +28,7 @@ typedef struct
   oc_rep_t *payload;
   oc_status_t code;
   int observe_option;
+  void *user_data;
 } oc_client_response_t;
 
 typedef struct
@@ -59,6 +60,8 @@ typedef struct oc_client_cb_s
 
   void *handler;
 
+  void *user_data;
+
   bool discovery;
   int32_t observe_seq;
   oc_clock_time_t timestamp;
@@ -71,7 +74,7 @@ bool oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint);
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
                                       oc_server_handle_t *server,
                                       oc_method_t method, void *handler,
-                                      oc_qos_t qos);
+                                      oc_qos_t qos, void *user_data);
 
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
                                     oc_method_t method);

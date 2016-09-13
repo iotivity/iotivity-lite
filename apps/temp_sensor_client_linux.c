@@ -79,7 +79,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       strncpy(temp_1, uri, uri_len);
       temp_1[uri_len] = '\0';
 
-      oc_do_observe(temp_1, &temp_sensor, NULL, &get_temp, HIGH_QOS);
+      oc_do_observe(temp_1, &temp_sensor, NULL, &get_temp, HIGH_QOS, NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
 
       return OC_STOP_DISCOVERY;
