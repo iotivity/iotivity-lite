@@ -177,7 +177,7 @@ oc_create_discovery_resource(void)
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
                                 oc_discovery_cb_t *handler,
-                                oc_endpoint_t *endpoint)
+                                oc_endpoint_t *endpoint, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
   oc_string_t uri;
@@ -271,7 +271,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             }
 
             if (handler(oc_string(di), oc_string(uri), types, interfaces,
-                        &handle) == OC_STOP_DISCOVERY) {
+                        &handle, user_data) == OC_STOP_DISCOVERY) {
               ret = OC_STOP_DISCOVERY;
               goto done;
             }

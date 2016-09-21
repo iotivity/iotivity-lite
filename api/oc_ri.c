@@ -906,7 +906,8 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
       if (payload_len) {
         if (cb->discovery) {
           if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
-                                              endpoint) == OC_STOP_DISCOVERY) {
+                                              endpoint, cb->user_data) ==
+              OC_STOP_DISCOVERY) {
             oc_ri_remove_client_cb(cb);
           }
         } else {
