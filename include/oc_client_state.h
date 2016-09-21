@@ -44,7 +44,7 @@ typedef enum {
 typedef oc_discovery_flags_t(oc_discovery_cb_t)(const char *, const char *,
                                                 oc_string_array_t,
                                                 oc_interface_mask_t,
-                                                oc_server_handle_t *);
+                                                oc_server_handle_t *, void *);
 
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
 
@@ -83,7 +83,8 @@ void oc_ri_remove_client_cb_by_mid(uint16_t mid);
 
 oc_discovery_flags_t oc_ri_process_discovery_payload(uint8_t *payload, int len,
                                                      oc_discovery_cb_t *handler,
-                                                     oc_endpoint_t *endpoint);
+                                                     oc_endpoint_t *endpoint,
+                                                     void *user_data);
 
 bool oc_ri_send_rst(oc_endpoint_t *endpoint, uint8_t *token, uint8_t token_len,
                     uint16_t mid);

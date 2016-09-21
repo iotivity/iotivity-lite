@@ -106,7 +106,8 @@ int oc_notify_observers(oc_resource_t *resource);
 /** Client side */
 #include "oc_client_state.h"
 
-bool oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler);
+bool oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler,
+                        void *user_data);
 
 bool oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
