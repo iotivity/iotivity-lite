@@ -9,10 +9,10 @@
 #ifndef _DTLS_NETQ_H_
 #define _DTLS_NETQ_H_
 
-#include "tinydtls.h"
-#include "global.h"
 #include "dtls.h"
 #include "dtls_time.h"
+#include "global.h"
+#include "tinydtls.h"
 
 /**
  * \defgroup netq Network Packet Queue
@@ -29,38 +29,42 @@
 #endif
 #endif
 
-/** 
+/**
  * Datagrams in the netq_t structure have a fixed maximum size of
- * DTLS_MAX_BUF to simplify memory management on constrained nodes. */ 
+ * DTLS_MAX_BUF to simplify memory management on constrained nodes. */
 typedef unsigned char netq_packet_t[DTLS_MAX_BUF];
 
-typedef struct netq_t {
+typedef struct netq_t
+{
   struct netq_t *next;
 
-  clock_time_t t;	        /**< when to send PDU for the next time */
-  unsigned int timeout;		/**< randomized timeout value */
+  clock_time_t t;       /**< when to send PDU for the next time */
+  unsigned int timeout; /**< randomized timeout value */
 
-  dtls_peer_t *peer;		/**< remote address */
+  dtls_peer_t *peer; /**< remote address */
   uint16_t epoch;
   uint8_t type;
-  unsigned char retransmit_cnt;	/**< retransmission counter, will be removed when zero */
+  unsigned char
+    retransmit_cnt; /**< retransmission counter, will be removed when zero */
 
-  size_t length;		/**< actual length of data */
+  size_t length; /**< actual length of data */
 #if !defined(WITH_CONTIKI) && !defined(WITH_OCF)
-  unsigned char data[];		/**< the datagram to send */
+  unsigned char data[]; /**< the datagram to send */
 #else
-  netq_packet_t data;		/**< the datagram to send */
+  netq_packet_t data; /**< the datagram to send */
 #endif
 } netq_t;
 
 #if !defined(WITH_CONTIKI) && !defined(WITH_OCF)
-static inline void netq_init()
-{ }
-#else /* !WITH_CONTIKI && !WITH_OCF */
+static inline void
+netq_init()
+{
+}
+#else  /* !WITH_CONTIKI && !WITH_OCF */
 void netq_init();
 #endif /* WITH_CONTIKI || WITH_OCF */
 
-/** 
+/**
  * Adds a node to the given queue, ordered by their time-stamp t.
  * This function returns @c 0 on error, or non-zero if @p node has
  * been added successfully.
@@ -83,7 +87,7 @@ netq_t *netq_node_new(size_t size);
 
 /**
  * Returns a pointer to the first item in given queue or NULL if
- * empty. 
+ * empty.
  */
 netq_t *netq_head(list_t queue);
 

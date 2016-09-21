@@ -99,7 +99,8 @@ observe_light(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server)
+          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+          void *user_handle)
 {
   int i;
   int uri_len = strlen(uri);
@@ -125,7 +126,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-  oc_do_ip_discovery("oic.r.light", &discovery);
+  oc_do_ip_discovery("oic.r.light", &discovery, NULL);
 }
 
 void

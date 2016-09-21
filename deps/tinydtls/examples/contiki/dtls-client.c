@@ -27,9 +27,9 @@
  *
  */
 
-#include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+#include "contiki.h"
 
 #include "dev/serial-line.h"
 
@@ -55,11 +55,11 @@
 #define PSK_ID_MAXLEN 32
 #define PSK_MAXLEN 32
 #define PSK_DEFAULT_IDENTITY "Client_identity"
-#define PSK_DEFAULT_KEY      "secretPSK"
+#define PSK_DEFAULT_KEY "secretPSK"
 #endif /* DTLS_PSK */
 
-#define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
-#define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[UIP_LLIPH_LEN])
+#define UIP_IP_BUF ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
+#define UIP_UDP_BUF ((struct uip_udp_hdr *)&uip_buf[UIP_LLIPH_LEN])
 
 #define MAX_PAYLOAD_LEN 120
 
@@ -69,25 +69,26 @@ static char buf[200];
 static size_t buflen = 0;
 
 static const unsigned char ecdsa_priv_key[] = {
-			0x41, 0xC1, 0xCB, 0x6B, 0x51, 0x24, 0x7A, 0x14,
-			0x43, 0x21, 0x43, 0x5B, 0x7A, 0x80, 0xE7, 0x14,
-			0x89, 0x6A, 0x33, 0xBB, 0xAD, 0x72, 0x94, 0xCA,
-			0x40, 0x14, 0x55, 0xA1, 0x94, 0xA9, 0x49, 0xFA};
+  0x41, 0xC1, 0xCB, 0x6B, 0x51, 0x24, 0x7A, 0x14, 0x43, 0x21, 0x43,
+  0x5B, 0x7A, 0x80, 0xE7, 0x14, 0x89, 0x6A, 0x33, 0xBB, 0xAD, 0x72,
+  0x94, 0xCA, 0x40, 0x14, 0x55, 0xA1, 0x94, 0xA9, 0x49, 0xFA
+};
 
 static const unsigned char ecdsa_pub_key_x[] = {
-			0x36, 0xDF, 0xE2, 0xC6, 0xF9, 0xF2, 0xED, 0x29,
-			0xDA, 0x0A, 0x9A, 0x8F, 0x62, 0x68, 0x4E, 0x91,
-			0x63, 0x75, 0xBA, 0x10, 0x30, 0x0C, 0x28, 0xC5,
-			0xE4, 0x7C, 0xFB, 0xF2, 0x5F, 0xA5, 0x8F, 0x52};
+  0x36, 0xDF, 0xE2, 0xC6, 0xF9, 0xF2, 0xED, 0x29, 0xDA, 0x0A, 0x9A,
+  0x8F, 0x62, 0x68, 0x4E, 0x91, 0x63, 0x75, 0xBA, 0x10, 0x30, 0x0C,
+  0x28, 0xC5, 0xE4, 0x7C, 0xFB, 0xF2, 0x5F, 0xA5, 0x8F, 0x52
+};
 
 static const unsigned char ecdsa_pub_key_y[] = {
-			0x71, 0xA0, 0xD4, 0xFC, 0xDE, 0x1A, 0xB8, 0x78,
-			0x5A, 0x3C, 0x78, 0x69, 0x35, 0xA7, 0xCF, 0xAB,
-			0xE9, 0x3F, 0x98, 0x72, 0x09, 0xDA, 0xED, 0x0B,
-			0x4F, 0xAB, 0xC3, 0x6F, 0xC7, 0x72, 0xF8, 0x29};
+  0x71, 0xA0, 0xD4, 0xFC, 0xDE, 0x1A, 0xB8, 0x78, 0x5A, 0x3C, 0x78,
+  0x69, 0x35, 0xA7, 0xCF, 0xAB, 0xE9, 0x3F, 0x98, 0x72, 0x09, 0xDA,
+  0xED, 0x0B, 0x4F, 0xAB, 0xC3, 0x6F, 0xC7, 0x72, 0xF8, 0x29
+};
 
 static void
-try_send(struct dtls_context_t *ctx, session_t *dst) {
+try_send(struct dtls_context_t *ctx, session_t *dst)
+{
   int res;
   res = dtls_write(ctx, dst, (uint8 *)buf, buflen);
   if (res >= 0) {
@@ -97,8 +98,9 @@ try_send(struct dtls_context_t *ctx, session_t *dst) {
 }
 
 static int
-read_from_peer(struct dtls_context_t *ctx, 
-	       session_t *session, uint8 *data, size_t len) {
+read_from_peer(struct dtls_context_t *ctx, session_t *session, uint8 *data,
+               size_t len)
+{
   size_t i;
   for (i = 0; i < len; i++)
     PRINTF("%c", data[i]);
@@ -106,8 +108,9 @@ read_from_peer(struct dtls_context_t *ctx,
 }
 
 static int
-send_to_peer(struct dtls_context_t *ctx, 
-	     session_t *session, uint8 *data, size_t len) {
+send_to_peer(struct dtls_context_t *ctx, session_t *session, uint8 *data,
+             size_t len)
+{
 
   struct uip_udp_conn *conn = (struct uip_udp_conn *)dtls_get_app_data(ctx);
 
@@ -145,10 +148,10 @@ static size_t psk_key_length = sizeof(PSK_DEFAULT_KEY) - 1;
  * session. */
 static int
 get_psk_info(struct dtls_context_t *ctx UNUSED_PARAM,
-	    const session_t *session UNUSED_PARAM,
-	    dtls_credentials_type_t type,
-	    const unsigned char *id, size_t id_len,
-	    unsigned char *result, size_t result_length) {
+             const session_t *session UNUSED_PARAM,
+             dtls_credentials_type_t type, const unsigned char *id,
+             size_t id_len, unsigned char *result, size_t result_length)
+{
 
   switch (type) {
   case DTLS_PSK_IDENTITY:
@@ -180,26 +183,23 @@ get_psk_info(struct dtls_context_t *ctx UNUSED_PARAM,
 
 #ifdef DTLS_ECC
 static int
-get_ecdsa_key(struct dtls_context_t *ctx,
-	      const session_t *session,
-	      const dtls_ecdsa_key_t **result) {
-  static const dtls_ecdsa_key_t ecdsa_key = {
-    .curve = DTLS_ECDH_CURVE_SECP256R1,
-    .priv_key = ecdsa_priv_key,
-    .pub_key_x = ecdsa_pub_key_x,
-    .pub_key_y = ecdsa_pub_key_y
-  };
+get_ecdsa_key(struct dtls_context_t *ctx, const session_t *session,
+              const dtls_ecdsa_key_t **result)
+{
+  static const dtls_ecdsa_key_t ecdsa_key = {.curve = DTLS_ECDH_CURVE_SECP256R1,
+                                             .priv_key = ecdsa_priv_key,
+                                             .pub_key_x = ecdsa_pub_key_x,
+                                             .pub_key_y = ecdsa_pub_key_y };
 
   *result = &ecdsa_key;
   return 0;
 }
 
 static int
-verify_ecdsa_key(struct dtls_context_t *ctx,
-		 const session_t *session,
-		 const unsigned char *other_pub_x,
-		 const unsigned char *other_pub_y,
-		 size_t key_size) {
+verify_ecdsa_key(struct dtls_context_t *ctx, const session_t *session,
+                 const unsigned char *other_pub_x,
+                 const unsigned char *other_pub_y, size_t key_size)
+{
   return 0;
 }
 #endif /* DTLS_ECC */
@@ -208,10 +208,11 @@ PROCESS(udp_server_process, "UDP server process");
 AUTOSTART_PROCESSES(&udp_server_process);
 /*---------------------------------------------------------------------------*/
 static void
-dtls_handle_read(dtls_context_t *ctx) {
+dtls_handle_read(dtls_context_t *ctx)
+{
   static session_t session;
 
-  if(uip_newdata()) {
+  if (uip_newdata()) {
     uip_ipaddr_copy(&session.addr, &UIP_IP_BUF->srcipaddr);
     session.port = UIP_UDP_BUF->srcport;
     session.size = sizeof(session.addr) + sizeof(session.port);
@@ -232,10 +233,10 @@ print_local_addresses(void)
   uint8_t state;
 
   PRINTF("Client IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+  for (i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+    if (uip_ds6_if.addr_list[i].isused &&
+        (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       PRINTF("\n");
     }
@@ -248,28 +249,29 @@ set_connection_address(uip_ipaddr_t *ipaddr)
 #define _QUOTEME(x) #x
 #define QUOTEME(x) _QUOTEME(x)
 #ifdef UDP_CONNECTION_ADDR
-  if(uiplib_ipaddrconv(QUOTEME(UDP_CONNECTION_ADDR), ipaddr) == 0) {
-    PRINTF("UDP client failed to parse address '%s'\n", QUOTEME(UDP_CONNECTION_ADDR));
+  if (uiplib_ipaddrconv(QUOTEME(UDP_CONNECTION_ADDR), ipaddr) == 0) {
+    PRINTF("UDP client failed to parse address '%s'\n",
+           QUOTEME(UDP_CONNECTION_ADDR));
   }
 #elif UIP_CONF_ROUTER
-  uip_ip6addr(ipaddr,0xaaaa,0,0,0,0x0200,0x0000,0x0000,0x0001);
+  uip_ip6addr(ipaddr, 0xaaaa, 0, 0, 0, 0x0200, 0x0000, 0x0000, 0x0001);
 #else
-  uip_ip6addr(ipaddr,0xfe80,0,0,0,0x6466,0x6666,0x6666,0x6666);
+  uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x6466, 0x6666, 0x6666, 0x6666);
 #endif /* UDP_CONNECTION_ADDR */
 }
 
 void
-init_dtls(session_t *dst) {
-  static dtls_handler_t cb = {
-    .write = send_to_peer,
-    .read  = read_from_peer,
-    .event = NULL,
+init_dtls(session_t *dst)
+{
+  static dtls_handler_t cb = {.write = send_to_peer,
+                              .read = read_from_peer,
+                              .event = NULL,
 #ifdef DTLS_PSK
-    .get_psk_info = get_psk_info,
+                              .get_psk_info = get_psk_info,
 #endif /* DTLS_PSK */
 #ifdef DTLS_ECC
-    .get_ecdsa_key = get_ecdsa_key,
-    .verify_ecdsa_key = verify_ecdsa_key
+                              .get_ecdsa_key = get_ecdsa_key,
+                              .verify_ecdsa_key = verify_ecdsa_key
 #endif /* DTLS_ECC */
   };
   PRINTF("DTLS client started\n");
@@ -312,26 +314,26 @@ PROCESS_THREAD(udp_server_process, ev, data)
     PROCESS_EXIT();
   }
 
-  while(1) {
+  while (1) {
     PROCESS_YIELD();
-    if(ev == tcpip_event) {
+    if (ev == tcpip_event) {
       dtls_handle_read(dtls_context);
     } else if (ev == serial_line_event_message) {
       register size_t len = min(strlen(data), sizeof(buf) - buflen);
       memcpy(buf + buflen, data, len);
       buflen += len;
       if (buflen < sizeof(buf) - 1)
-	buf[buflen++] = '\n';	/* serial event does not contain LF */
+        buf[buflen++] = '\n'; /* serial event does not contain LF */
     }
 
     if (buflen) {
       if (!connected)
-	connected = dtls_connect(dtls_context, &dst) >= 0;
-      
+        connected = dtls_connect(dtls_context, &dst) >= 0;
+
       try_send(dtls_context, &dst);
     }
   }
-  
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

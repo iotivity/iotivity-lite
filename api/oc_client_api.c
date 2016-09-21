@@ -254,7 +254,7 @@ oc_stop_observe(const char *uri, oc_server_handle_t *server)
 }
 
 bool
-oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler)
+oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler, void *user_handle)
 {
   oc_make_ip_endpoint(mcast, IP | MULTICAST, 5683, 0xff, 0x02, 0, 0, 0, 0, 0, 0,
                       0, 0, 0, 0, 0, 0, 0, 0xfd);
@@ -263,8 +263,8 @@ oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler)
   oc_server_handle_t handle;
   memcpy(&handle.endpoint, &mcast, sizeof(oc_endpoint_t));
 
-  oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb("/oic/res", &handle, OC_GET, handler, LOW_QOS, NULL);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", &handle, OC_GET,
+                                             handler, LOW_QOS, user_handle);
 
   if (!cb)
     return false;

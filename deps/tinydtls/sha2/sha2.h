@@ -1,7 +1,7 @@
 /*
  * FILE:	sha2.h
  * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
- * 
+ *
  * Copyright (c) 2000-2001, Aaron D. Gifford
  * All rights reserved.
  *
@@ -16,7 +16,7 @@
  * 3. Neither the name of the copyright holder nor the names of contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTOR(S) ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -39,32 +39,29 @@
 extern "C" {
 #endif
 
-
 /*
  * Import u_intXX_t size_t type definitions from system headers.  You
  * may need to change this, or define these things yourself in this
  * file.
  */
-#include <sys/types.h>
 #include "dtls_config.h"
+#include <sys/types.h>
 #ifdef SHA2_USE_INTTYPES_H
 
 #include <inttypes.h>
 
 #endif /* SHA2_USE_INTTYPES_H */
 
-
 /*** SHA-256/384/512 Various Length Definitions ***********************/
-#define DTLS_SHA256_BLOCK_LENGTH		64
-#define DTLS_SHA256_DIGEST_LENGTH		32
-#define DTLS_SHA256_DIGEST_STRING_LENGTH	(DTLS_SHA256_DIGEST_LENGTH * 2 + 1)
-#define DTLS_SHA384_BLOCK_LENGTH		128
-#define DTLS_SHA384_DIGEST_LENGTH		48
-#define DTLS_SHA384_DIGEST_STRING_LENGTH	(DTLS_SHA384_DIGEST_LENGTH * 2 + 1)
-#define DTLS_SHA512_BLOCK_LENGTH		128
-#define DTLS_SHA512_DIGEST_LENGTH		64
-#define DTLS_SHA512_DIGEST_STRING_LENGTH	(DTLS_SHA512_DIGEST_LENGTH * 2 + 1)
-
+#define DTLS_SHA256_BLOCK_LENGTH 64
+#define DTLS_SHA256_DIGEST_LENGTH 32
+#define DTLS_SHA256_DIGEST_STRING_LENGTH (DTLS_SHA256_DIGEST_LENGTH * 2 + 1)
+#define DTLS_SHA384_BLOCK_LENGTH 128
+#define DTLS_SHA384_DIGEST_LENGTH 48
+#define DTLS_SHA384_DIGEST_STRING_LENGTH (DTLS_SHA384_DIGEST_LENGTH * 2 + 1)
+#define DTLS_SHA512_BLOCK_LENGTH 128
+#define DTLS_SHA512_DIGEST_LENGTH 64
+#define DTLS_SHA512_DIGEST_STRING_LENGTH (DTLS_SHA512_DIGEST_LENGTH * 2 + 1)
 
 /*** SHA-256/384/512 Context Structures *******************************/
 /* NOTE: If your architecture does not define either u_intXX_t types or
@@ -84,7 +81,7 @@ typedef unsigned long long u_int64_t;	/* 8-bytes (64-bits) */
  *
  *   #include <inttypes.h>
  *
- * If you choose to use <inttypes.h> then please define: 
+ * If you choose to use <inttypes.h> then please define:
  *
  *   #define SHA2_USE_INTTYPES_H
  *
@@ -94,34 +91,37 @@ typedef unsigned long long u_int64_t;	/* 8-bytes (64-bits) */
  */
 #ifdef SHA2_USE_INTTYPES_H
 
-typedef struct _dtls_sha256_ctx {
-	uint32_t	state[8];
-	uint64_t	bitcount;
-	uint8_t	buffer[DTLS_SHA256_BLOCK_LENGTH];
+typedef struct _dtls_sha256_ctx
+{
+  uint32_t state[8];
+  uint64_t bitcount;
+  uint8_t buffer[DTLS_SHA256_BLOCK_LENGTH];
 } dtls_sha256_ctx;
-typedef struct _dtls_sha512_ctx {
-	uint64_t	state[8];
-	uint64_t	bitcount[2];
-	uint8_t	buffer[DTLS_SHA512_BLOCK_LENGTH];
+typedef struct _dtls_sha512_ctx
+{
+  uint64_t state[8];
+  uint64_t bitcount[2];
+  uint8_t buffer[DTLS_SHA512_BLOCK_LENGTH];
 } dtls_sha512_ctx;
 
 #else /* SHA2_USE_INTTYPES_H */
 
-typedef struct _dtls_sha256_ctx {
-	u_int32_t	state[8];
-	u_int64_t	bitcount;
-	u_int8_t	buffer[DTLS_SHA256_BLOCK_LENGTH];
+typedef struct _dtls_sha256_ctx
+{
+  u_int32_t state[8];
+  u_int64_t bitcount;
+  u_int8_t buffer[DTLS_SHA256_BLOCK_LENGTH];
 } dtls_sha256_ctx;
-typedef struct _dtls_sha512_ctx {
-	u_int64_t	state[8];
-	u_int64_t	bitcount[2];
-	u_int8_t	buffer[DTLS_SHA512_BLOCK_LENGTH];
+typedef struct _dtls_sha512_ctx
+{
+  u_int64_t state[8];
+  u_int64_t bitcount[2];
+  u_int8_t buffer[DTLS_SHA512_BLOCK_LENGTH];
 } dtls_sha512_ctx;
 
 #endif /* SHA2_USE_INTTYPES_H */
 
 typedef dtls_sha512_ctx dtls_sha384_ctx;
-
 
 /*** SHA-256/384/512 Function Prototypes ******************************/
 #ifndef NOPROTO
@@ -129,52 +129,64 @@ typedef dtls_sha512_ctx dtls_sha384_ctx;
 
 #ifdef WITH_SHA256
 void dtls_sha256_init(dtls_sha256_ctx *);
-void dtls_sha256_update(dtls_sha256_ctx*, const uint8_t*, size_t);
-void dtls_sha256_final(uint8_t[DTLS_SHA256_DIGEST_LENGTH], dtls_sha256_ctx*);
-char* dtls_sha256_end(dtls_sha256_ctx*, char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
-char* dtls_sha256_data(const uint8_t*, size_t, char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
+void dtls_sha256_update(dtls_sha256_ctx *, const uint8_t *, size_t);
+void dtls_sha256_final(uint8_t[DTLS_SHA256_DIGEST_LENGTH], dtls_sha256_ctx *);
+char *dtls_sha256_end(dtls_sha256_ctx *,
+                      char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
+char *dtls_sha256_data(const uint8_t *, size_t,
+                       char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
 #endif
 
 #ifdef WITH_SHA384
-void dtls_sha384_init(dtls_sha384_ctx*);
-void dtls_sha384_update(dtls_sha384_ctx*, const uint8_t*, size_t);
-void dtls_sha384_final(uint8_t[DTLS_SHA384_DIGEST_LENGTH], SHA384_CTX*);
-char* dtls_sha384_end(dtls_sha384_ctx*, char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
-char* dtls_sha384_data(const uint8_t*, size_t, char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
+void dtls_sha384_init(dtls_sha384_ctx *);
+void dtls_sha384_update(dtls_sha384_ctx *, const uint8_t *, size_t);
+void dtls_sha384_final(uint8_t[DTLS_SHA384_DIGEST_LENGTH], SHA384_CTX *);
+char *dtls_sha384_end(dtls_sha384_ctx *,
+                      char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
+char *dtls_sha384_data(const uint8_t *, size_t,
+                       char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
 #endif
 
 #ifdef WITH_SHA512
-void dtls_sha512_init(dtls_sha512_ctx*);
-void dtls_sha512_update(dtls_sha512_ctx*, const uint8_t*, size_t);
-void dtls_sha512_final(uint8_t[DTLS_SHA512_DIGEST_LENGTH], dtls_sha512_ctx*);
-char* dtls_sha512_end(dtls_sha512_ctx*, char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
-char* dtls_sha512_data(const uint8_t*, size_t, char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
+void dtls_sha512_init(dtls_sha512_ctx *);
+void dtls_sha512_update(dtls_sha512_ctx *, const uint8_t *, size_t);
+void dtls_sha512_final(uint8_t[DTLS_SHA512_DIGEST_LENGTH], dtls_sha512_ctx *);
+char *dtls_sha512_end(dtls_sha512_ctx *,
+                      char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
+char *dtls_sha512_data(const uint8_t *, size_t,
+                       char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
 #endif
 
 #else /* SHA2_USE_INTTYPES_H */
 
 #ifdef WITH_SHA256
 void dtls_sha256_init(dtls_sha256_ctx *);
-void dtls_sha256_update(dtls_sha256_ctx*, const u_int8_t*, size_t);
-void dtls_sha256_final(u_int8_t[DTLS_SHA256_DIGEST_LENGTH], dtls_sha256_ctx*);
-char* dtls_sha256_end(dtls_sha256_ctx*, char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
-char* dtls_sha256_data(const u_int8_t*, size_t, char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
+void dtls_sha256_update(dtls_sha256_ctx *, const u_int8_t *, size_t);
+void dtls_sha256_final(u_int8_t[DTLS_SHA256_DIGEST_LENGTH], dtls_sha256_ctx *);
+char *dtls_sha256_end(dtls_sha256_ctx *,
+                      char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
+char *dtls_sha256_data(const u_int8_t *, size_t,
+                       char[DTLS_SHA256_DIGEST_STRING_LENGTH]);
 #endif
 
 #ifdef WITH_SHA384
-void dtls_sha384_init(dtls_sha384_ctx*);
-void dtls_sha384_update(dtls_sha384_ctx*, const u_int8_t*, size_t);
-void dtls_sha384_final(u_int8_t[DTLS_SHA384_DIGEST_LENGTH], dtls_sha384_ctx*);
-char* dtls_sha384_end(dtls_sha384_ctx*, char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
-char* dtls_sha384_data(const u_int8_t*, size_t, char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
+void dtls_sha384_init(dtls_sha384_ctx *);
+void dtls_sha384_update(dtls_sha384_ctx *, const u_int8_t *, size_t);
+void dtls_sha384_final(u_int8_t[DTLS_SHA384_DIGEST_LENGTH], dtls_sha384_ctx *);
+char *dtls_sha384_end(dtls_sha384_ctx *,
+                      char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
+char *dtls_sha384_data(const u_int8_t *, size_t,
+                       char[DTLS_SHA384_DIGEST_STRING_LENGTH]);
 #endif
 
 #ifdef WITH_SHA512
-void dtls_sha512_init(dtls_sha512_ctx*);
-void dtls_sha512_update(dtls_sha512_ctx*, const u_int8_t*, size_t);
-void dtls_sha512_final(u_int8_t[DTLS_SHA512_DIGEST_LENGTH], dtls_sha512_ctx*);
-char* dtls_sha512_end(dtls_sha512_ctx*, char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
-char* dtls_sha512_data(const u_int8_t*, size_t, char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
+void dtls_sha512_init(dtls_sha512_ctx *);
+void dtls_sha512_update(dtls_sha512_ctx *, const u_int8_t *, size_t);
+void dtls_sha512_final(u_int8_t[DTLS_SHA512_DIGEST_LENGTH], dtls_sha512_ctx *);
+char *dtls_sha512_end(dtls_sha512_ctx *,
+                      char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
+char *dtls_sha512_data(const u_int8_t *, size_t,
+                       char[DTLS_SHA512_DIGEST_STRING_LENGTH]);
 #endif
 
 #endif /* SHA2_USE_INTTYPES_H */
@@ -185,31 +197,30 @@ char* dtls_sha512_data(const u_int8_t*, size_t, char[DTLS_SHA512_DIGEST_STRING_L
 void dtls_sha256_init();
 void dtls_sha256_update();
 void dtls_sha256_final();
-char* dtls_sha256_end();
-char* dtls_sha256_data();
+char *dtls_sha256_end();
+char *dtls_sha256_data();
 #endif
 
 #ifdef WITH_SHA384
 void dtls_sha384_init();
 void dtls_sha384_update();
 void dtls_sha384_final();
-char* dtls_sha384_end();
-char* dtls_sha384_data();
+char *dtls_sha384_end();
+char *dtls_sha384_data();
 #endif
 
 #ifdef WITH_SHA512
 void dtls_sha512_init();
 void dtls_sha512_update();
 void dtls_sha512_final();
-char* dtls_sha512_end();
-char* dtls_sha512_data();
+char *dtls_sha512_end();
+char *dtls_sha512_data();
 #endif
 
 #endif /* NOPROTO */
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #endif /* __SHA2_H__ */
-
