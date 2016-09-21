@@ -77,66 +77,74 @@
  */
 
 typedef void **list_t;
-struct list {
+struct list
+{
   struct list *next;
 };
 
 #define LIST_CONCAT(s1, s2) s1##s2
 
-#define LIST_STRUCT(name)			\
-  void *LIST_CONCAT(name, _list);		\
+#define LIST_STRUCT(name)                                                      \
+  void *LIST_CONCAT(name, _list);                                              \
   list_t name
 
-#define LIST_STRUCT_INIT(struct_ptr, name)  {				\
-    (struct_ptr)->name = &((struct_ptr)->LIST_CONCAT(name,_list));	\
-    (struct_ptr)->LIST_CONCAT(name,_list) = NULL;			\
+#define LIST_STRUCT_INIT(struct_ptr, name)                                     \
+  {                                                                            \
+    (struct_ptr)->name = &((struct_ptr)->LIST_CONCAT(name, _list));            \
+    (struct_ptr)->LIST_CONCAT(name, _list) = NULL;                             \
   }
 
 static inline void *
-list_head(list_t list) {
+list_head(list_t list)
+{
   return *list;
 }
 
-static inline void 
-list_remove(list_t list, void *item) {
+static inline void
+list_remove(list_t list, void *item)
+{
   LL_DELETE(*(struct list **)list, (struct list *)item);
 }
 
-static inline void 
-list_add(list_t list, void *item) {
+static inline void
+list_add(list_t list, void *item)
+{
   list_remove(list, item);
   LL_APPEND(*(struct list **)list, (struct list *)item);
 }
 
-static inline void 
-list_push(list_t list, void *item) {
+static inline void
+list_push(list_t list, void *item)
+{
   LL_PREPEND(*(struct list **)list, (struct list *)item);
 }
 
 static inline void *
-list_pop(list_t list) {
+list_pop(list_t list)
+{
   struct list *l;
   l = *list;
-  if(l)
+  if (l)
     list_remove(list, l);
-  
+
   return l;
 }
 
 static inline void
-list_insert(list_t list, void *previtem, void *newitem) {
-  if(previtem == NULL) {
+list_insert(list_t list, void *previtem, void *newitem)
+{
+  if (previtem == NULL) {
     list_push(list, newitem);
   } else {
     ((struct list *)newitem)->next = ((struct list *)previtem)->next;
     ((struct list *)previtem)->next = newitem;
-  } 
+  }
 }
 
 static inline void *
 list_item_next(void *item)
 {
-  return item == NULL? NULL: ((struct list *)item)->next;
+  return item == NULL ? NULL : ((struct list *)item)->next;
 }
 
 #else /* !WITH_CONTIKI && !WITH_OCF */
@@ -155,4 +163,3 @@ typedef oc_list_t list_t;
 #endif /* WITH_CONTIKI || WITH_OCF */
 
 #endif /* _DTLS_LIST_H_ */
-

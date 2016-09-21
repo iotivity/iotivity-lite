@@ -23,22 +23,25 @@
  * SOFTWARE.
  */
 
-#include "global.h"
 #include "peer.h"
 #include "debug.h"
+#include "global.h"
 
 #if !defined(WITH_CONTIKI) && !defined(WITH_OCF)
-void peer_init()
+void
+peer_init()
 {
 }
 
 static inline dtls_peer_t *
-dtls_malloc_peer() {
+dtls_malloc_peer()
+{
   return (dtls_peer_t *)malloc(sizeof(dtls_peer_t));
 }
 
 void
-dtls_free_peer(dtls_peer_t *peer) {
+dtls_free_peer(dtls_peer_t *peer)
+{
   dtls_handshake_free(peer->handshake_params);
   dtls_security_free(peer->security_params[0]);
   dtls_security_free(peer->security_params[1]);
@@ -50,17 +53,20 @@ dtls_free_peer(dtls_peer_t *peer) {
 MEMB(peer_storage, dtls_peer_t, DTLS_PEER_MAX);
 
 void
-peer_init() {
+peer_init()
+{
   memb_init(&peer_storage);
 }
 
 static inline dtls_peer_t *
-dtls_malloc_peer() {
+dtls_malloc_peer()
+{
   return memb_alloc(&peer_storage);
 }
 
 void
-dtls_free_peer(dtls_peer_t *peer) {
+dtls_free_peer(dtls_peer_t *peer)
+{
   dtls_handshake_free(peer->handshake_params);
   dtls_security_free(peer->security_params[0]);
   dtls_security_free(peer->security_params[1]);
@@ -71,17 +77,20 @@ dtls_free_peer(dtls_peer_t *peer) {
 OC_MEMB(peer_storage, dtls_peer_t, DTLS_PEER_MAX);
 
 void
-peer_init() {
+peer_init()
+{
   oc_memb_init(&peer_storage);
 }
 
 static inline dtls_peer_t *
-dtls_malloc_peer() {
+dtls_malloc_peer()
+{
   return oc_memb_alloc(&peer_storage);
 }
 
 void
-dtls_free_peer(dtls_peer_t *peer) {
+dtls_free_peer(dtls_peer_t *peer)
+{
   dtls_handshake_free(peer->handshake_params);
   dtls_security_free(peer->security_params[0]);
   dtls_security_free(peer->security_params[1]);
@@ -91,7 +100,8 @@ dtls_free_peer(dtls_peer_t *peer) {
 #endif /* WITH_CONTIKI || WITH_OCF */
 
 dtls_peer_t *
-dtls_new_peer(const session_t *session) {
+dtls_new_peer(const session_t *session)
+{
   dtls_peer_t *peer;
 
   peer = dtls_malloc_peer();
@@ -105,7 +115,8 @@ dtls_new_peer(const session_t *session) {
       return NULL;
     }
 
-    dtls_dsrv_log_addr(DTLS_LOG_DEBUG, "dtls_new_peer", (const struct __session_t *)session);
+    dtls_dsrv_log_addr(DTLS_LOG_DEBUG, "dtls_new_peer",
+                       (const struct __session_t *)session);
   }
 
   return peer;

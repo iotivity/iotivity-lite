@@ -50,11 +50,11 @@
 #include "port/oc_clock.h"
 #define CLOCK_SECOND OC_CLOCK_SECOND
 #endif /* WITH_OCF */
-#else /* WITH_CONTIKI || WITH_OCF */
+#else  /* WITH_CONTIKI || WITH_OCF */
 #include <time.h>
 
 #ifndef CLOCK_SECOND
-# define CLOCK_SECOND 1000
+#define CLOCK_SECOND 1000
 #endif /* CLOCK_SECOND */
 
 typedef uint32_t clock_time_t;
@@ -64,7 +64,6 @@ typedef uint32_t clock_time_t;
 typedef oc_clock_time_t clock_time_t;
 #endif /* WITH_OCF */
 typedef clock_time_t dtls_tick_t;
-
 
 #ifndef DTLS_TICKS_PER_SECOND
 #define DTLS_TICKS_PER_SECOND CLOCK_SECOND

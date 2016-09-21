@@ -3,10 +3,10 @@
  * Copyright (C) 2010--2012 Olaf Bergmann <bergmann@tzi.org>
  *
  * This file is part of the library tinydtls. Please see
- * README for terms of use. 
+ * README for terms of use.
  */
 
-/** 
+/**
  * @file prng.h
  * @brief Pseudo Random Numbers
  */
@@ -16,7 +16,7 @@
 
 #include "tinydtls.h"
 
-/** 
+/**
  * @defgroup prng Pseudo Random Numbers
  * @{
  */
@@ -30,15 +30,17 @@
  * a better PRNG on your specific platform.
  */
 static inline int
-dtls_prng(unsigned char *buf, size_t len) {
+dtls_prng(unsigned char *buf, size_t len)
+{
   while (len--)
     *buf++ = rand() & 0xFF;
   return 1;
 }
 
 static inline void
-dtls_prng_init(unsigned short seed) {
-	srand(seed);
+dtls_prng_init(unsigned short seed)
+{
+  srand(seed);
 }
 #else /* !WITH_CONTIKI && !WITH_OCF */
 #include <string.h>
@@ -52,7 +54,7 @@ dtls_prng_init(unsigned short seed) {
 static inline int
 dtls_prng(unsigned char *buf, size_t len)
 {
-	return contiki_prng_impl(buf, len);
+  return contiki_prng_impl(buf, len);
 }
 #else /* WITH_CONTIKI && HAVE_PRNG */
 /**
@@ -61,10 +63,11 @@ dtls_prng(unsigned char *buf, size_t len)
  * a better PRNG on your specific platform.
  */
 static inline int
-dtls_prng(unsigned char *buf, size_t len) {
+dtls_prng(unsigned char *buf, size_t len)
+{
 #ifdef WITH_CONTIKI
   unsigned short v = random_rand();
-#else /* WITH_CONTIKI */
+#else  /* WITH_CONTIKI */
   unsigned short v = oc_random_rand();
 #endif /* WITH_OCF */
   while (len > sizeof(v)) {
@@ -73,7 +76,7 @@ dtls_prng(unsigned char *buf, size_t len) {
     buf += sizeof(v);
 #ifdef WITH_CONTIKI
     v = random_rand();
-#else /* WITH_CONTIKI */
+#else  /* WITH_CONTIKI */
     v = oc_random_rand();
 #endif /* WITH_OCF */
   }
@@ -84,11 +87,12 @@ dtls_prng(unsigned char *buf, size_t len) {
 #endif /* !HAVE_PRNG */
 
 static inline void
-dtls_prng_init(unsigned short seed) {
+dtls_prng_init(unsigned short seed)
+{
 #ifdef WITH_CONTIKI
-	random_init(seed);
-#else /* WITH_CONTIKI */
-	oc_random_init(seed);
+  random_init(seed);
+#else  /* WITH_CONTIKI */
+  oc_random_init(seed);
 #endif /* WITH_OCF */
 }
 #endif /* WITH_CONTIKI || WITH_OCF */

@@ -60,7 +60,7 @@ typedef unsigned char uint48[6];
 #else /* DTLS_ECC */
 #define DTLS_MAX_BUF 100
 #endif /* !DTLS_ECC */
-#else /* WITH_CONTIKI || WITH_OCF */
+#else  /* WITH_CONTIKI || WITH_OCF */
 #define DTLS_MAX_BUF 1400
 #endif /* !(WITH_CONTIKI || WITH_OCF) */
 #endif /* DTLS_MAX_BUF */
@@ -72,54 +72,58 @@ typedef unsigned char uint48[6];
 
 /** Known cipher suites.*/
 typedef enum {
-  TLS_NULL_WITH_NULL_NULL = 0x0000,   /**< NULL cipher  */
-  TLS_ECDH_anon_WITH_AES_128_CBC_SHA_256 = 0xFF00, /**< OCF Vendor Specific Ciphersuite */
+  TLS_NULL_WITH_NULL_NULL = 0x0000, /**< NULL cipher  */
+  TLS_ECDH_anon_WITH_AES_128_CBC_SHA_256 =
+    0xFF00,                            /**< OCF Vendor Specific Ciphersuite */
   TLS_PSK_WITH_AES_128_CCM_8 = 0xC0A8, /**< see RFC 6655 */
   TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA_256 = 0xC037, /**< see RFC 5489 */
-  TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 = 0xC0AE /**< see RFC 7251 */
+  TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 = 0xC0AE      /**< see RFC 7251 */
 } dtls_cipher_t;
 
 typedef enum {
-    DTLS_CIPHER_DISABLE = 0,
-    DTLS_CIPHER_ENABLE = 1
+  DTLS_CIPHER_DISABLE = 0,
+  DTLS_CIPHER_ENABLE = 1
 } dtls_cipher_enable_t;
 
 /** Known compression suites.*/
 typedef enum {
-  TLS_COMPRESSION_NULL = 0x0000		/* NULL compression */
+  TLS_COMPRESSION_NULL = 0x0000 /* NULL compression */
 } dtls_compression_t;
 
-#define TLS_EXT_ELLIPTIC_CURVES		10 /* see RFC 4492 */
-#define TLS_EXT_EC_POINT_FORMATS	11 /* see RFC 4492 */
-#define TLS_EXT_SIG_HASH_ALGO		13 /* see RFC 5246 */
-#define TLS_EXT_CLIENT_CERTIFICATE_TYPE	19 /* see RFC 7250 */
-#define TLS_EXT_SERVER_CERTIFICATE_TYPE	20 /* see RFC 7250 */
-#define TLS_EXT_ENCRYPT_THEN_MAC	22 /* see RFC 7366 */
+#define TLS_EXT_ELLIPTIC_CURVES 10         /* see RFC 4492 */
+#define TLS_EXT_EC_POINT_FORMATS 11        /* see RFC 4492 */
+#define TLS_EXT_SIG_HASH_ALGO 13           /* see RFC 5246 */
+#define TLS_EXT_CLIENT_CERTIFICATE_TYPE 19 /* see RFC 7250 */
+#define TLS_EXT_SERVER_CERTIFICATE_TYPE 20 /* see RFC 7250 */
+#define TLS_EXT_ENCRYPT_THEN_MAC 22        /* see RFC 7366 */
 
-/* see http://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-3 */
-#define TLS_CERT_TYPE_X509              0 /* see RFC 6091 */
-#define TLS_CERT_TYPE_RAW_PUBLIC_KEY    2 /* see RFC 7250 */
+/* see
+ * http://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-3
+ */
+#define TLS_CERT_TYPE_X509 0           /* see RFC 6091 */
+#define TLS_CERT_TYPE_RAW_PUBLIC_KEY 2 /* see RFC 7250 */
 
+#define TLS_EXT_ELLIPTIC_CURVES_SECP256R1 23 /* see RFC 4492 */
 
-#define TLS_EXT_ELLIPTIC_CURVES_SECP256R1	23 /* see RFC 4492 */
+#define TLS_EXT_EC_POINT_FORMATS_UNCOMPRESSED 0 /* see RFC 4492 */
 
-#define TLS_EXT_EC_POINT_FORMATS_UNCOMPRESSED	0 /* see RFC 4492 */
+#define TLS_EC_CURVE_TYPE_NAMED_CURVE 3 /* see RFC 4492 */
 
-#define TLS_EC_CURVE_TYPE_NAMED_CURVE		3 /* see RFC 4492 */
+#define TLS_CLIENT_CERTIFICATE_TYPE_ECDSA_SIGN 64 /* see RFC 4492 */
 
-#define TLS_CLIENT_CERTIFICATE_TYPE_ECDSA_SIGN	64 /* see RFC 4492 */
-
-#define TLS_EXT_SIG_HASH_ALGO_SHA256		4 /* see RFC 5246 */
-#define TLS_EXT_SIG_HASH_ALGO_ECDSA		3 /* see RFC 5246 */
+#define TLS_EXT_SIG_HASH_ALGO_SHA256 4 /* see RFC 5246 */
+#define TLS_EXT_SIG_HASH_ALGO_ECDSA 3  /* see RFC 5246 */
 
 /**
  * XORs \p n bytes byte-by-byte starting at \p y to the memory area
  * starting at \p x. */
 static inline void
-memxor(unsigned char *x, const unsigned char *y, size_t n) {
-  while(n--) {
+memxor(unsigned char *x, const unsigned char *y, size_t n)
+{
+  while (n--) {
     *x ^= *y;
-    x++; y++;
+    x++;
+    y++;
   }
 }
 
@@ -134,7 +138,8 @@ memxor(unsigned char *x, const unsigned char *y, size_t n) {
  * \return \c 1 if \p a and \p b are equal, \c 0 otherwise.
  */
 static inline int
-equals(unsigned char *a, unsigned char *b, size_t len) {
+equals(unsigned char *a, unsigned char *b, size_t len)
+{
   int result = 1;
   while (len--) {
     result &= (*a++ == *b++);
@@ -146,7 +151,8 @@ equals(unsigned char *a, unsigned char *b, size_t len) {
 #define dtls_fls(i) fls(i)
 #else
 static inline int
-dtls_fls(unsigned int i) {
+dtls_fls(unsigned int i)
+{
   int n;
   for (n = 0; i; n++)
     i >>= 1;

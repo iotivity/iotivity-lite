@@ -28,13 +28,14 @@
 
 #include <string.h>
 
-#include "tinydtls.h"
 #include "global.h"
+#include "tinydtls.h"
 
 #if defined(WITH_CONTIKI) || defined(WITH_OCF)
 #ifdef WITH_CONTIKI
 #include "ip/uip.h"
-typedef struct {
+typedef struct
+{
   unsigned char size;
   uip_ipaddr_t addr;
   unsigned short port;
@@ -42,34 +43,37 @@ typedef struct {
 } session_t;
 #else /* WITH_CONTIKI */
 #include "port/oc_connectivity.h"
-typedef struct {
+typedef struct
+{
   unsigned char size;
   oc_endpoint_t addr;
 } session_t;
 #endif /* WITH_OCF */
-#else /* WITH_CONTIKI || WITH_OCF */
+#else  /* WITH_CONTIKI || WITH_OCF */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
-typedef struct {
-  socklen_t size;		/**< size of addr */
-  union {
-    struct sockaddr     sa;
+typedef struct
+{
+  socklen_t size; /**< size of addr */
+  union
+  {
+    struct sockaddr sa;
     struct sockaddr_storage st;
-    struct sockaddr_in  sin;
+    struct sockaddr_in sin;
     struct sockaddr_in6 sin6;
   } addr;
   uint8_t ifindex;
 } session_t;
 #endif /* !(WITH_CONTIKI || WITH_OCF) */
 
-/** 
+/**
  * Resets the given session_t object @p sess to its default
  * values.  In particular, the member rlen must be initialized to the
  * available size for storing addresses.
- * 
+ *
  * @param sess The session_t object to initialize.
  */
 void dtls_session_init(session_t *sess);

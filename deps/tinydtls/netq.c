@@ -6,16 +6,16 @@
  * LICENSE for terms of use.
  */
 
-#include "dtls_config.h"
-#include "debug.h"
 #include "netq.h"
+#include "debug.h"
+#include "dtls_config.h"
 
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #else
 #ifndef assert
 //#warning "assertions are disabled"
-#  define assert(x)
+#define assert(x)
 #endif
 #endif
 
@@ -25,12 +25,14 @@
 #include <stdlib.h>
 
 static inline netq_t *
-netq_malloc_node(size_t size) {
+netq_malloc_node(size_t size)
+{
   return (netq_t *)malloc(sizeof(netq_t) + size);
 }
 
 static inline void
-netq_free_node(netq_t *node) {
+netq_free_node(netq_t *node)
+{
   free(node);
 }
 
@@ -43,17 +45,20 @@ netq_free_node(netq_t *node) {
 MEMB(netq_storage, netq_t, NETQ_MAXCNT);
 
 static inline netq_t *
-netq_malloc_node(size_t size) {
+netq_malloc_node(size_t size)
+{
   return (netq_t *)memb_alloc(&netq_storage);
 }
 
 static inline void
-netq_free_node(netq_t *node) {
+netq_free_node(netq_t *node)
+{
   memb_free(&netq_storage, node);
 }
 
 void
-netq_init() {
+netq_init()
+{
   memb_init(&netq_storage);
 }
 #else /* WITH_CONTIKI */
@@ -62,31 +67,35 @@ netq_init() {
 OC_MEMB(netq_storage, netq_t, NETQ_MAXCNT);
 
 static inline netq_t *
-netq_malloc_node(size_t size) {
+netq_malloc_node(size_t size)
+{
   return (netq_t *)oc_memb_alloc(&netq_storage);
 }
 
 static inline void
-netq_free_node(netq_t *node) {
+netq_free_node(netq_t *node)
+{
   oc_memb_free(&netq_storage, node);
 }
 
 void
-netq_init() {
+netq_init()
+{
   oc_memb_init(&netq_storage);
 }
 #endif /* WITH_OCF */
 #endif /* WITH_CONTIKI || WITH_OCF */
 
-int 
-netq_insert_node(list_t queue, netq_t *node) {
+int
+netq_insert_node(list_t queue, netq_t *node)
+{
   netq_t *p;
 
   assert(queue);
   assert(node);
 
   p = (netq_t *)list_head(queue);
-  while(p && p->t <= node->t && list_item_next(p))
+  while (p && p->t <= node->t && list_item_next(p))
     p = list_item_next(p);
 
   if (p)
@@ -98,7 +107,8 @@ netq_insert_node(list_t queue, netq_t *node) {
 }
 
 netq_t *
-netq_head(list_t queue) {
+netq_head(list_t queue)
+{
   if (!queue)
     return NULL;
 
@@ -106,7 +116,8 @@ netq_head(list_t queue) {
 }
 
 netq_t *
-netq_next(netq_t *p) {
+netq_next(netq_t *p)
+{
   if (!p)
     return NULL;
 
@@ -114,14 +125,17 @@ netq_next(netq_t *p) {
 }
 
 void
-netq_remove(list_t queue, netq_t *p) {
+netq_remove(list_t queue, netq_t *p)
+{
   if (!queue || !p)
     return;
 
   list_remove(queue, p);
 }
 
-netq_t *netq_pop_first(list_t queue) {
+netq_t *
+netq_pop_first(list_t queue)
+{
   if (!queue)
     return NULL;
 
@@ -129,7 +143,8 @@ netq_t *netq_pop_first(list_t queue) {
 }
 
 netq_t *
-netq_node_new(size_t size) {
+netq_node_new(size_t size)
+{
   netq_t *node;
   node = netq_malloc_node(size);
 
@@ -141,21 +156,22 @@ netq_node_new(size_t size) {
   if (node)
     memset(node, 0, sizeof(netq_t));
 
-  return node;  
+  return node;
 }
 
-void 
-netq_node_free(netq_t *node) {
+void
+netq_node_free(netq_t *node)
+{
   if (node)
     netq_free_node(node);
 }
 
-void 
-netq_delete_all(list_t queue) {
+void
+netq_delete_all(list_t queue)
+{
   netq_t *p;
   if (queue) {
-    while((p = list_pop(queue)))
-      netq_free_node(p); 
+    while ((p = list_pop(queue)))
+      netq_free_node(p);
   }
 }
-

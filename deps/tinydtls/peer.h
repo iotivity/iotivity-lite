@@ -33,55 +33,61 @@
 
 #include <sys/types.h>
 
-#include "tinydtls.h"
 #include "global.h"
 #include "session.h"
+#include "tinydtls.h"
 
-#include "state.h"
 #include "crypto.h"
+#include "state.h"
 
 #if !defined(WITH_CONTIKI) && !defined(WITH_OCF)
 #include "uthash.h"
 #endif /* !WITH_CONTIKI && !WITH_OCF */
 
-typedef enum { DTLS_CLIENT=0, DTLS_SERVER } dtls_peer_type;
+typedef enum { DTLS_CLIENT = 0, DTLS_SERVER } dtls_peer_type;
 
-/** 
+/**
  * Holds security parameters, local state and the transport address
  * for each peer. */
-typedef struct dtls_peer_t {
+typedef struct dtls_peer_t
+{
 #if !defined(WITH_CONTIKI) && !defined(WITH_OCF)
   UT_hash_handle hh;
-#else /* !WITH_CONTIKI && !WITH_OCF */
+#else  /* !WITH_CONTIKI && !WITH_OCF */
   struct dtls_peer_t *next;
 #endif /* WITH_CONTIKI || WITH_OCF */
 
-  session_t session;	     /**< peer address and local interface */
+  session_t session; /**< peer address and local interface */
 
-  dtls_peer_type role;       /**< denotes if this host is DTLS_CLIENT or DTLS_SERVER */
-  dtls_state_t state;        /**< DTLS engine state */
+  dtls_peer_type
+    role;             /**< denotes if this host is DTLS_CLIENT or DTLS_SERVER */
+  dtls_state_t state; /**< DTLS engine state */
 
   dtls_security_parameters_t *security_params[2];
   dtls_handshake_parameters_t *handshake_params;
 } dtls_peer_t;
 
-static inline dtls_security_parameters_t *dtls_security_params_epoch(dtls_peer_t *peer, uint16_t epoch)
+static inline dtls_security_parameters_t *
+dtls_security_params_epoch(dtls_peer_t *peer, uint16_t epoch)
 {
   if (peer->security_params[0] && peer->security_params[0]->epoch == epoch) {
     return peer->security_params[0];
-  } else if (peer->security_params[1] && peer->security_params[1]->epoch == epoch) {
+  } else if (peer->security_params[1] &&
+             peer->security_params[1]->epoch == epoch) {
     return peer->security_params[1];
   } else {
     return NULL;
   }
 }
 
-static inline dtls_security_parameters_t *dtls_security_params(dtls_peer_t *peer)
+static inline dtls_security_parameters_t *
+dtls_security_params(dtls_peer_t *peer)
 {
   return peer->security_params[0];
 }
 
-static inline dtls_security_parameters_t *dtls_security_params_next(dtls_peer_t *peer)
+static inline dtls_security_parameters_t *
+dtls_security_params_next(dtls_peer_t *peer)
 {
   if (peer->security_params[1])
     dtls_security_free(peer->security_params[1]);
@@ -94,10 +100,11 @@ static inline dtls_security_parameters_t *dtls_security_params_next(dtls_peer_t 
   return peer->security_params[1];
 }
 
-static inline void dtls_security_params_free_other(dtls_peer_t *peer)
+static inline void
+dtls_security_params_free_other(dtls_peer_t *peer)
 {
-  dtls_security_parameters_t * security0 = peer->security_params[0];
-  dtls_security_parameters_t * security1 = peer->security_params[1];
+  dtls_security_parameters_t *security0 = peer->security_params[0];
+  dtls_security_parameters_t *security1 = peer->security_params[1];
 
   if (!security0 || !security1 || security0->epoch < security1->epoch)
     return;
@@ -106,9 +113,10 @@ static inline void dtls_security_params_free_other(dtls_peer_t *peer)
   peer->security_params[1] = NULL;
 }
 
-static inline void dtls_security_params_switch(dtls_peer_t *peer)
+static inline void
+dtls_security_params_switch(dtls_peer_t *peer)
 {
-  dtls_security_parameters_t * security = peer->security_params[1];
+  dtls_security_parameters_t *security = peer->security_params[1];
 
   peer->security_params[1] = peer->security_params[0];
   peer->security_params[0] = security;
@@ -133,7 +141,9 @@ dtls_peer_t *dtls_new_peer(const session_t *session);
 void dtls_free_peer(dtls_peer_t *peer);
 
 /** Returns the current state of @p peer. */
-static inline dtls_state_t dtls_peer_state(const dtls_peer_t *peer) {
+static inline dtls_state_t
+dtls_peer_state(const dtls_peer_t *peer)
+{
   return peer->state;
 }
 
@@ -141,7 +151,9 @@ static inline dtls_state_t dtls_peer_state(const dtls_peer_t *peer) {
  * Checks if given @p peer is connected. This function returns
  * @c 1 if connected, or @c 0 otherwise.
  */
-static inline int dtls_peer_is_connected(const dtls_peer_t *peer) {
+static inline int
+dtls_peer_is_connected(const dtls_peer_t *peer)
+{
   return peer->state == DTLS_STATE_CONNECTED;
 }
 
