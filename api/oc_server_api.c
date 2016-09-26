@@ -175,24 +175,28 @@ oc_deactivate_resource(oc_resource_t *resource)
 
 void
 oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
-                                oc_request_handler_t handler)
+                                oc_request_callback_t callback, void *user_data)
 {
+  oc_request_handler_t *handler = NULL;
   switch (method) {
   case OC_GET:
-    resource->get_handler = handler;
+    handler = &resource->get_handler;
     break;
   case OC_POST:
-    resource->post_handler = handler;
+    handler = &resource->post_handler;
     break;
   case OC_PUT:
-    resource->put_handler = handler;
+    handler = &resource->put_handler;
     break;
   case OC_DELETE:
-    resource->delete_handler = handler;
+    handler = &resource->delete_handler;
     break;
   default:
     break;
   }
+
+  handler->cb = callback;
+  handler->user_data = user_data;
 }
 
 bool

@@ -67,7 +67,7 @@ oc_sec_get_doxm(void)
 }
 
 void
-get_doxm(oc_request_t *request, oc_interface_mask_t interface)
+get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   switch (interface) {
   case OC_IF_BASELINE: {
@@ -119,7 +119,7 @@ oc_sec_decode_doxm(oc_rep_t *rep)
 }
 
 void
-post_doxm(oc_request_t *request, oc_interface_mask_t interface)
+post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   oc_sec_decode_doxm(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);

@@ -124,7 +124,8 @@ process_device_object(CborEncoder *device, const char *uuid, const char *rt,
 }
 
 static void
-oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface)
+oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
+                          void *data)
 {
   char *rt = NULL;
   int rt_len = 0, matches = 0;

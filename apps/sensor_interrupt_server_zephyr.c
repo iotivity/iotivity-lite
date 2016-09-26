@@ -51,7 +51,7 @@ fetch_credentials(void)
 #endif
 
 static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface)
+get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   oc_indicate_separate_response(request, &temp_response);
 }
@@ -70,7 +70,7 @@ register_resources(void)
 
   oc_resource_set_discoverable(res);
   oc_resource_set_observable(res);
-  oc_resource_set_request_handler(res, OC_GET, get_temp);
+  oc_resource_set_request_handler(res, OC_GET, get_temp, NULL);
   oc_add_resource(res);
 }
 

@@ -39,7 +39,7 @@ fetch_credentials(void)
 #endif
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface)
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   ++power;
 
@@ -61,7 +61,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface)
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface)
+put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   PRINT("PUT_light:\n");
   oc_rep_t *rep = request->request_payload;
@@ -91,9 +91,10 @@ put_light(oc_request_t *request, oc_interface_mask_t interface)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface)
+post_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
 {
-  put_light(request, interface);
+  put_light(request, interface, user_data);
 }
 
 void
@@ -111,9 +112,9 @@ register_resources(void)
 
   oc_resource_set_discoverable(res);
   oc_resource_set_periodic_observable(res, 1);
-  oc_resource_set_request_handler(res, OC_GET, get_light);
-  oc_resource_set_request_handler(res, OC_PUT, put_light);
-  oc_resource_set_request_handler(res, OC_POST, post_light);
+  oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
+  oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
+  oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
 }
 

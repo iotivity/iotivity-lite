@@ -46,7 +46,7 @@ oc_resource_t *oc_core_get_resource_by_uri(const char *uri);
 void oc_core_populate_resource(
   int type, const char *uri, const char *rt, oc_interface_mask_t interfaces,
   oc_interface_mask_t default_interface, oc_resource_properties_t properties,
-  oc_request_handler_t get, oc_request_handler_t put, oc_request_handler_t post,
-  oc_request_handler_t delete, int device);
+  oc_request_callback_t get, oc_request_callback_t put,
+  oc_request_callback_t post, oc_request_callback_t delete, int device);
 
 #endif /* OC_CORE_RES_H */

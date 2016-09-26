@@ -48,7 +48,7 @@ fetch_credentials(void)
 #endif
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface)
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
@@ -67,7 +67,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface)
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface)
+put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   PRINT("PUT_light:\n");
   bool state = false;
@@ -104,8 +104,8 @@ register_resources(void)
 
   oc_resource_set_discoverable(res);
   oc_resource_set_periodic_observable(res, 1);
-  oc_resource_set_request_handler(res, OC_GET, get_light);
-  oc_resource_set_request_handler(res, OC_PUT, put_light);
+  oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
+  oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_add_resource(res);
 }
 
