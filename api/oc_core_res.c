@@ -61,7 +61,8 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 }
 
 static void
-oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface)
+oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
+                       void *data)
 {
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
@@ -166,7 +167,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 }
 
 void
-oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface)
+oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
+                         void *data)
 {
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
@@ -237,9 +239,9 @@ oc_core_populate_resource(int type, const char *uri, const char *rt,
                           oc_interface_mask_t interfaces,
                           oc_interface_mask_t default_interface,
                           oc_resource_properties_t properties,
-                          oc_request_handler_t get, oc_request_handler_t put,
-                          oc_request_handler_t post,
-                          oc_request_handler_t delete, int device)
+                          oc_request_callback_t get, oc_request_callback_t put,
+                          oc_request_callback_t post,
+                          oc_request_callback_t delete, int device)
 {
   oc_resource_t *r = &core_resources[type];
   r->device = device;
@@ -249,10 +251,10 @@ oc_core_populate_resource(int type, const char *uri, const char *rt,
   oc_string_array_add_item(r->types, rt);
   r->interfaces = interfaces;
   r->default_interface = default_interface;
-  r->get_handler = get;
-  r->put_handler = put;
-  r->post_handler = post;
-  r->delete_handler = delete;
+  r->get_handler.cb = get;
+  r->put_handler.cb = put;
+  r->post_handler.cb = post;
+  r->delete_handler.cb = delete;
 }
 
 oc_uuid_t *

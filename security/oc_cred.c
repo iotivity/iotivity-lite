@@ -179,7 +179,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 }
 
 void
-post_cred(oc_request_t *request, oc_interface_mask_t interface)
+post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   oc_sec_cred_t *owner = NULL;

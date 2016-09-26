@@ -40,6 +40,7 @@ void oc_sec_decode_doxm(oc_rep_t *rep);
 void oc_sec_encode_doxm(void);
 oc_sec_doxm_t *oc_sec_get_doxm(void);
 void oc_sec_doxm_default(void);
-void get_doxm(oc_request_t *request, oc_interface_mask_t interface);
-void post_doxm(oc_request_t *request, oc_interface_mask_t interface);
+void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
+void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
+               void *data);
 #endif /* OC_DOXM_H_ */

@@ -33,7 +33,9 @@ void oc_sec_decode_pstat(oc_rep_t *rep);
 void oc_sec_encode_pstat(void);
 oc_sec_pstat_t *oc_sec_get_pstat(void);
 void oc_sec_pstat_default(void);
-void get_pstat(oc_request_t *request, oc_interface_mask_t interface);
-void post_pstat(oc_request_t *request, oc_interface_mask_t interface);
+void get_pstat(oc_request_t *request, oc_interface_mask_t interface,
+               void *data);
+void post_pstat(oc_request_t *request, oc_interface_mask_t interface,
+                void *data);
 
 #endif /* OC_PSTAT_H_ */

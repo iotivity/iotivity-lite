@@ -401,7 +401,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
   }
 */
 void
-post_acl(oc_request_t *request, oc_interface_mask_t interface)
+post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   if (oc_sec_decode_acl(request->request_payload))
     oc_send_response(request, OC_STATUS_CREATED);

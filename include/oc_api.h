@@ -82,7 +82,8 @@ void oc_resource_set_periodic_observable(oc_resource_t *resource,
                                          uint16_t seconds);
 void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
-                                     oc_request_handler_t handler);
+                                     oc_request_callback_t callback,
+                                     void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
 void oc_deactivate_resource(oc_resource_t *resource);

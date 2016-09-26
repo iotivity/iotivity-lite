@@ -34,7 +34,8 @@ void oc_sec_encode_cred(void);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner);
 oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid);
 oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid);
-void put_cred(oc_request_t *request, oc_interface_mask_t interface);
-void post_cred(oc_request_t *request, oc_interface_mask_t interface);
+void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
+void post_cred(oc_request_t *request, oc_interface_mask_t interface,
+               void *data);
 
 #endif /* OC_CRED_H_ */

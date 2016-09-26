@@ -104,7 +104,14 @@ typedef struct
   oc_response_t *response;
 } oc_request_t;
 
-typedef void (*oc_request_handler_t)(oc_request_t *, oc_interface_mask_t);
+typedef void (*oc_request_callback_t)(oc_request_t *, oc_interface_mask_t,
+                                      void *);
+
+typedef struct oc_request_handler_s
+{
+  oc_request_callback_t cb;
+  void *user_data;
+} oc_request_handler_t;
 
 typedef struct oc_resource_s
 {

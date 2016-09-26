@@ -281,8 +281,8 @@ oc_ri_add_resource(oc_resource_t *resource)
 {
   bool valid = true;
 
-  if (!resource->get_handler && !resource->put_handler &&
-      !resource->post_handler && !resource->delete_handler)
+  if (!resource->get_handler.cb && !resource->put_handler.cb &&
+      !resource->post_handler.cb && !resource->delete_handler.cb)
     valid = false;
 
   if (resource->properties & OC_PERIODIC &&
@@ -647,14 +647,18 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
              * based on the request method. If the resource has not
              * implemented that method, then return a 4.05 response.
              */
-      if (method == OC_GET && cur_resource->get_handler) {
-        cur_resource->get_handler(&request_obj, interface);
-      } else if (method == OC_POST && cur_resource->post_handler) {
-        cur_resource->post_handler(&request_obj, interface);
-      } else if (method == OC_PUT && cur_resource->put_handler) {
-        cur_resource->put_handler(&request_obj, interface);
-      } else if (method == OC_DELETE && cur_resource->delete_handler) {
-        cur_resource->delete_handler(&request_obj, interface);
+      if (method == OC_GET && cur_resource->get_handler.cb) {
+        cur_resource->get_handler.cb(&request_obj, interface,
+                                     cur_resource->get_handler.user_data);
+      } else if (method == OC_POST && cur_resource->post_handler.cb) {
+        cur_resource->post_handler.cb(&request_obj, interface,
+                                      cur_resource->post_handler.user_data);
+      } else if (method == OC_PUT && cur_resource->put_handler.cb) {
+        cur_resource->put_handler.cb(&request_obj, interface,
+                                     cur_resource->put_handler.user_data);
+      } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
+        cur_resource->delete_handler.cb(&request_obj, interface,
+                                        cur_resource->delete_handler.user_data);
       } else {
         method_impl = false;
       }

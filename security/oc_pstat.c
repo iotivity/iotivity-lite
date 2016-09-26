@@ -97,7 +97,7 @@ oc_sec_decode_pstat(oc_rep_t *rep)
 }
 
 void
-get_pstat(oc_request_t *request, oc_interface_mask_t interface)
+get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   switch (interface) {
   case OC_IF_BASELINE: {
@@ -110,7 +110,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface)
 }
 
 void
-post_pstat(oc_request_t *request, oc_interface_mask_t interface)
+post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   oc_sec_decode_pstat(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);
