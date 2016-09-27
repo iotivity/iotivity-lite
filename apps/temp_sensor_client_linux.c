@@ -24,14 +24,6 @@ app_init(void)
                 NULL, NULL);
 }
 
-#ifdef OC_SECURITY
-static void
-fetch_credentials(void)
-{
-  oc_storage_config("./creds");
-}
-#endif
-
 #define MAX_URI_LENGTH (30)
 static char temp_1[MAX_URI_LENGTH];
 static oc_server_handle_t temp_sensor;
@@ -129,9 +121,6 @@ main(void)
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
