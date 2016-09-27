@@ -120,15 +120,14 @@ register_resources(void)
 
 #if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
 
-#include "port/oc_signal_main_loop.h"
 #include <sections.h>
 #include <string.h>
 #include <zephyr.h>
 
 static struct nano_sem block;
 
-void
-oc_signal_main_loop(void)
+static void
+signal_event_loop(void)
 {
   nano_sem_give(&block);
 }
@@ -136,11 +135,13 @@ oc_signal_main_loop(void)
 void
 main(void)
 {
-  oc_handler_t handler = {.init = app_init,
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
-                          .get_credentials = fetch_credentials,
+                                       .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-                          .register_resources = register_resources };
+                                       .register_resources =
+                                         register_resources };
 
   nano_sem_init(&block);
 
@@ -163,7 +164,6 @@ main(void)
 
 #elif defined(__linux__) /* Linux */
 #include "port/oc_clock.h"
-#include "port/oc_signal_main_loop.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -174,8 +174,8 @@ struct timespec ts;
 
 int quit = 0;
 
-void
-oc_signal_main_loop(void)
+static void
+signal_event_loop(void)
 {
   pthread_cond_signal(&cv);
 }
@@ -183,7 +183,7 @@ oc_signal_main_loop(void)
 void
 handle_signal(int signal)
 {
-  oc_signal_main_loop();
+  signal_event_loop();
   quit = 1;
 }
 
@@ -197,11 +197,13 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  oc_handler_t handler = {.init = app_init,
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
-                          .get_credentials = fetch_credentials,
+                                       .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-                          .register_resources = register_resources };
+                                       .register_resources =
+                                         register_resources };
 
   oc_clock_time_t next_event;
 

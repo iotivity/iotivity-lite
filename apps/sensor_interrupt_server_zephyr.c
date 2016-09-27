@@ -74,7 +74,6 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-#include "port/oc_signal_main_loop.h"
 #include <sections.h>
 #include <string.h>
 #include <zephyr.h>
@@ -99,8 +98,8 @@ fake_sensor_fiber(void)
 
 static struct nano_sem block;
 
-void
-oc_signal_main_loop(void)
+static void
+signal_event_loop(void)
 {
   nano_sem_give(&block);
 }
@@ -108,11 +107,13 @@ oc_signal_main_loop(void)
 void
 main(void)
 {
-  oc_handler_t handler = {.init = app_init,
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
-                          .get_credentials = fetch_credentials,
+                                       .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-                          .register_resources = register_resources };
+                                       .register_resources =
+                                         register_resources };
 
   nano_sem_init(&block);
 
