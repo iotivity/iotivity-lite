@@ -1,10 +1,8 @@
-#ccflags-y += ${PROJECTINCLUDE}
 ccflags-y += -I${ZEPHYR_BASE}/net/ip
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os/lib
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os
-
-ccflags-y += -I. -I../../../include -I../../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../../deps/tinydtls -DOC_SERVER -DNDEBUG #-DOC_SECURITY#-DOC_CLIENT
+ccflags-y +=-I. -I../../include -I../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DOC_SERVER -DNDEBUG #-DOC_SECURITY#-DOC_CLIENT
 
 obj-y += ../../../apps/server_zephyr.o
 #obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
