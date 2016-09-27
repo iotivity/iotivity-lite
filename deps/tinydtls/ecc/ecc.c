@@ -334,14 +334,15 @@ int uECC_get_pubkey_impl(const uint8_t p_key_handle[uECC_BYTES], uint8_t p_publi
 #include <string.h>
 static int default_RNG(uint8_t *p_dest, unsigned p_size)
 {
-    size_t p_left = p_size;
-    unsigned short r;
-    while(p_left > 0) {
-        r = oc_random_rand();
-        memcpy(p_dest + (p_size - p_left), &r, sizeof(r));
-        p_left -= sizeof(r);
-    }
-    return 1;
+  size_t p_left = p_size;
+  unsigned int r = oc_random_value();
+  while (p_left > sizeof(r)) {
+    memcpy(p_dest + (p_size - p_left), &r, sizeof(r));
+    p_left -= sizeof(r);
+    r = oc_random_value();
+  }
+  memcpy(p_dest + (p_size - p_left), &r, p_left);
+  return 1;
 }
 
 #elif (defined(_WIN32) || defined(_WIN64))
