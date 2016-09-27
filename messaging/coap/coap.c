@@ -263,7 +263,7 @@ void
 coap_init_connection()
 {
   /* initialize transaction ID */
-  current_mid = oc_random_rand();
+  current_mid = (uint16_t)(oc_random_rand() % 65536U);
 }
 /*---------------------------------------------------------------------------*/
 uint16_t

@@ -238,7 +238,7 @@ oc_ri_get_app_resource_by_uri(const char *uri)
 void
 oc_ri_init(void)
 {
-  oc_random_init(0); // Fix: allow user to seed RNG.
+  oc_random_init();
   oc_clock_init();
   set_mpro_status_codes();
 
@@ -989,7 +989,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
   cb->user_data = user_data;
   cb->token_len = 8;
   int i = 0;
-  uint16_t r;
+  uint32_t r;
   while (i < cb->token_len) {
     r = oc_random_rand();
     memcpy(cb->token + i, &r, sizeof(r));

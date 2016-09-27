@@ -93,11 +93,11 @@ void
 oc_gen_uuid(oc_uuid_t *uuid)
 {
   int i;
-  uint16_t r;
+  uint32_t r;
 
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < 4; i++) {
     r = oc_random_rand();
-    memcpy((uint8_t *)&uuid->id[i * 2], (uint8_t *)&r, sizeof(r));
+    memcpy((uint8_t *)&uuid->id[i * 4], (uint8_t *)&r, sizeof(r));
   }
 
   /*  From RFC 4122

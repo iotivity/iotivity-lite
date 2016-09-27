@@ -24,15 +24,15 @@
 static int urandom_fd;
 
 void
-oc_random_init(unsigned short seed)
+oc_random_init(void)
 {
   urandom_fd = open("/dev/urandom", O_RDONLY);
 }
 
-unsigned short
+unsigned int
 oc_random_rand(void)
 {
-  unsigned short rand = 0;
+  unsigned int rand = 0;
   int ret = read(urandom_fd, &rand, sizeof(rand));
   if (ret != -1) {
     return rand;
