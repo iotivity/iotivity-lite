@@ -33,6 +33,7 @@
 #endif /* OC_SECURITY */
 
 static bool initialized = false;
+static oc_handler_t *app_callbacks;
 
 int
 oc_main_init(oc_handler_t *handler)
@@ -43,10 +44,12 @@ oc_main_init(oc_handler_t *handler)
   if (initialized == true)
     return 0;
 
+  app_callbacks = handler;
+
   oc_ri_init();
 
 #ifdef OC_SECURITY
-  handler->get_credentials();
+  app_callbacks->get_credentials();
 
   oc_sec_load_pstat();
   oc_sec_load_doxm();
@@ -60,10 +63,10 @@ oc_main_init(oc_handler_t *handler)
   if (ret < 0)
     goto err;
 
-  handler->init();
+  app_callbacks->init();
 
 #ifdef OC_SERVER
-  handler->register_resources();
+  app_callbacks->register_resources();
 #endif
 
 #ifdef OC_SECURITY
@@ -79,7 +82,7 @@ oc_main_init(oc_handler_t *handler)
   PRINT("oc_main: Stack successfully initialized\n");
 
 #ifdef OC_CLIENT
-  handler->requests_entry();
+  app_callbacks->requests_entry();
 #endif
 
   initialized = true;
@@ -115,5 +118,13 @@ oc_main_shutdown(void)
   oc_sec_dump_state();
 #endif
 
+  app_callbacks = NULL;
   initialized = false;
+}
+
+void
+_oc_signal_event_loop(void)
+{
+  if (app_callbacks)
+    app_callbacks->signal_event_loop();
 }
