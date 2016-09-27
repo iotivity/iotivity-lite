@@ -76,8 +76,8 @@ void oc_process_baseline_interface(oc_resource_t *resource);
 void oc_resource_make_secure(oc_resource_t *resource);
 #endif /* OC_SECURITY */
 
-void oc_resource_set_discoverable(oc_resource_t *resource);
-void oc_resource_set_observable(oc_resource_t *resource);
+void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
+void oc_resource_set_observable(oc_resource_t *resource, bool state);
 void oc_resource_set_periodic_observable(oc_resource_t *resource,
                                          uint16_t seconds);
 void oc_resource_set_request_handler(oc_resource_t *resource,

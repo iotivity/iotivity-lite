@@ -68,8 +68,8 @@ register_resources(void)
   oc_resource_make_secure(res);
 #endif
 
-  oc_resource_set_discoverable(res);
-  oc_resource_set_observable(res);
+  oc_resource_set_discoverable(res, true);
+  oc_resource_set_observable(res, true);
   oc_resource_set_request_handler(res, OC_GET, get_temp, NULL);
   oc_add_resource(res);
 }
