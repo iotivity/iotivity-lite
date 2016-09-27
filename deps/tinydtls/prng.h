@@ -65,7 +65,7 @@ dtls_prng(unsigned char *buf, size_t len) {
 #ifdef WITH_CONTIKI
   unsigned short v = random_rand();
 #else /* WITH_CONTIKI */
-  unsigned short v = oc_random_rand();
+  unsigned int v = oc_random_rand();
 #endif /* WITH_OCF */
   while (len > sizeof(v)) {
     memcpy(buf, &v, sizeof(v));
@@ -87,9 +87,7 @@ static inline void
 dtls_prng_init(unsigned short seed) {
 #ifdef WITH_CONTIKI
 	random_init(seed);
-#else /* WITH_CONTIKI */
-	oc_random_init(seed);
-#endif /* WITH_OCF */
+#endif /* WITH_CONTIKI */
 }
 #endif /* WITH_CONTIKI || WITH_OCF */
 
