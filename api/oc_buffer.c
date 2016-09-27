@@ -15,7 +15,7 @@
 */
 
 #include "messaging/coap/engine.h"
-#include "port/oc_signal_main_loop.h"
+#include "oc_signal_event_loop.h"
 #include "util/oc_memb.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -79,7 +79,7 @@ oc_send_message(oc_message_t *message)
   oc_process_post(&message_buffer_handler, oc_events[OUTBOUND_NETWORK_EVENT],
                   message);
 
-  oc_signal_main_loop();
+  _oc_signal_event_loop();
 }
 
 OC_PROCESS_THREAD(message_buffer_handler, ev, data)

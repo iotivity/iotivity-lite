@@ -16,8 +16,8 @@
 
 #include "oc_network_events.h"
 #include "oc_buffer.h"
+#include "oc_signal_event_loop.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_signal_main_loop.h"
 #include "util/oc_list.h"
 
 OC_LIST(network_events);
@@ -53,5 +53,5 @@ oc_network_event(oc_message_t *message)
   oc_network_event_handler_mutex_unlock();
 
   oc_process_poll(&(oc_network_events));
-  oc_signal_main_loop();
+  _oc_signal_event_loop();
 }

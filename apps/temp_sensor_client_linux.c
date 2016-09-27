@@ -96,7 +96,6 @@ issue_requests(void)
 }
 
 #include "port/oc_clock.h"
-#include "port/oc_signal_main_loop.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -107,7 +106,7 @@ static struct timespec ts;
 static int quit = 0;
 
 void
-oc_signal_main_loop(void)
+signal_event_loop(void)
 {
   pthread_cond_signal(&cv);
 }
@@ -115,7 +114,7 @@ oc_signal_main_loop(void)
 static void
 handle_signal(int signal)
 {
-  oc_signal_main_loop();
+  signal_event_loop();
   quit = 1;
 }
 
@@ -128,11 +127,12 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  oc_handler_t handler = {.init = app_init,
+  static oc_handler_t handler = {.init = app_init,
+                                 .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
-                          .get_credentials = fetch_credentials,
+                                 .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-                          .requests_entry = issue_requests };
+                                 .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
