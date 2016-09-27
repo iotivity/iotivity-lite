@@ -15,7 +15,6 @@
 */
 
 #include "oc_api.h"
-#include "port/oc_signal_main_loop.h"
 
 #include <sections.h>
 #include <string.h>
@@ -129,8 +128,8 @@ issue_requests(void)
   oc_do_ip_discovery("oic.r.light", &discovery, NULL);
 }
 
-void
-oc_signal_main_loop(void)
+static void
+signal_event_loop(void)
 {
   nano_sem_give(&block);
 }
@@ -138,11 +137,12 @@ oc_signal_main_loop(void)
 void
 main(void)
 {
-  oc_handler_t handler = {.init = app_init,
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
-                          .get_credentials = fetch_credentials,
+                                       .get_credentials = fetch_credentials,
 #endif /* OC_SECURITY */
-                          .requests_entry = issue_requests };
+                                       .requests_entry = issue_requests };
 
   nano_sem_init(&block);
 

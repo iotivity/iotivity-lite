@@ -14,9 +14,9 @@
 // limitations under the License.
 */
 
-#ifndef OC_SIGNAL_MAIN_LOOP_H
-#define OC_SIGNAL_MAIN_LOOP_H
+#ifndef OC_SIGNAL_EVENT_LOOP_H
+#define OC_SIGNAL_EVENT_LOOP_H
 
-void oc_signal_main_loop(void);
+void _oc_signal_event_loop(void);
 
-#endif /* OC_SIGNAL_MAIN_LOOP_H */
+#endif /* OC_SIGNAL_EVENT_LOOP_H */

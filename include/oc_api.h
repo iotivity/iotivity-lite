@@ -19,12 +19,13 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_ri.h"
-#include "port/oc_signal_main_loop.h"
+#include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 
 typedef struct
 {
   void (*init)(void);
+  void (*signal_event_loop)(void);
 
 #ifdef OC_SECURITY
   void (*get_credentials)(void);
@@ -42,10 +43,8 @@ typedef struct
 typedef void (*oc_init_platform_cb_t)(void *data);
 typedef void (*oc_add_device_cb_t)(void *data);
 
-int oc_main_init(oc_handler_t *handler);
-
+int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
-
 void oc_main_shutdown(void);
 
 void oc_add_device(const char *uri, const char *rt, const char *name,
@@ -144,7 +143,7 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 #define oc_signal_interrupt_handler(name)                                      \
   do {                                                                         \
     oc_process_poll(&(name##_interrupt_x));                                    \
-    oc_signal_main_loop();                                                     \
+    _oc_signal_event_loop();                                                   \
   } while (0)
 
 #define oc_activate_interrupt_handler(name)                                    \
