@@ -48,9 +48,9 @@ oc_main_init(oc_handler_t *handler)
 
   oc_ri_init();
 
-#ifdef OC_SECURITY
-  app_callbacks->get_credentials();
+  app_callbacks->init();
 
+#ifdef OC_SECURITY
   oc_sec_load_pstat();
   oc_sec_load_doxm();
   oc_sec_load_cred();
@@ -62,8 +62,6 @@ oc_main_init(oc_handler_t *handler)
   ret = oc_connectivity_init();
   if (ret < 0)
     goto err;
-
-  app_callbacks->init();
 
 #ifdef OC_SERVER
   app_callbacks->register_resources();

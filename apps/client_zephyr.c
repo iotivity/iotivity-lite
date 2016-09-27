@@ -40,14 +40,6 @@ app_init(void)
                 set_device_custom_property, NULL);
 }
 
-#ifdef OC_SECURITY
-static void
-fetch_credentials(void)
-{
-  oc_storage_config("./creds");
-}
-#endif
-
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
@@ -139,9 +131,6 @@ main(void)
 {
   static oc_handler_t handler = {.init = app_init,
                                  .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                 .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                  .requests_entry = issue_requests };
 
   nano_sem_init(&block);
