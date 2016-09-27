@@ -27,10 +27,6 @@ typedef struct
   void (*init)(void);
   void (*signal_event_loop)(void);
 
-#ifdef OC_SECURITY
-  void (*get_credentials)(void);
-#endif /* OC_SECURITY */
-
 #ifdef OC_SERVER
   void (*register_resources)(void);
 #endif /* OC_SERVER */

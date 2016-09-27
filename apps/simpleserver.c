@@ -28,15 +28,11 @@ app_init(void)
   oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
 
   oc_new_string(&name, "John's Light");
-}
 
 #ifdef OC_SECURITY
-void
-fetch_credentials(void)
-{
   oc_storage_config("./creds");
+#endif /* OC_SECURITY */
 }
-#endif
 
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
@@ -137,9 +133,6 @@ main(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                        .register_resources =
                                          register_resources };
 
@@ -199,9 +192,6 @@ main(void)
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                        .register_resources =
                                          register_resources };
 
