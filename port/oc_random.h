@@ -38,18 +38,14 @@
  * Initialize the pseudo-random generator.
  *
  */
-void oc_random_init(unsigned short seed);
+void oc_random_init(void);
 
 /*
- * Calculate a pseudo random number between 0 and 65535.
+ * Calculate a pseudo random number.
  *
- * \return A pseudo-random number between 0 and 65535.
+ * \return A pseudo-random number.
  */
-unsigned short oc_random_rand(void);
-
-/* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX */
-/* Since random_rand casts to unsigned short, we'll use this maxmimum */
-#define RANDOM_RAND_MAX 65535U
+unsigned int oc_random_value(void);
 
 void oc_random_destroy(void);
 

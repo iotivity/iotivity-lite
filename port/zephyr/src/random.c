@@ -18,14 +18,15 @@
 #include <drivers/system_timer.h>
 
 void
-oc_random_init(unsigned short seed)
+oc_random_init(void)
 {
 }
 
-unsigned short
-oc_random_rand(void)
+// FIXME: Update below to interface with desired PRNG implementation
+unsigned int
+oc_random_value(void)
 {
-  return (unsigned short)sys_cycle_get_32();
+  return (unsigned int)sys_cycle_get_32();
 }
 
 void
