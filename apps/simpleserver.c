@@ -28,15 +28,11 @@ app_init(void)
   oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
 
   oc_new_string(&name, "John's Light");
-}
 
 #ifdef OC_SECURITY
-void
-fetch_credentials(void)
-{
   oc_storage_config("./creds");
+#endif /* OC_SECURITY */
 }
-#endif
 
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
@@ -135,6 +131,7 @@ signal_event_loop(void)
 void
 main(void)
 {
+<<<<<<< HEAD
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
@@ -142,6 +139,11 @@ main(void)
 #endif /* OC_SECURITY */
                                        .register_resources =
                                          register_resources };
+=======
+  static oc_handler_t handler = {.init = app_init,
+                                 .signal_event_loop = signal_event_loop,
+                                 .register_resources = register_resources };
+>>>>>>> e23fc34... Remove the “get_credentials” callback from oc_handler_t
 
   nano_sem_init(&block);
 
@@ -197,6 +199,7 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
+<<<<<<< HEAD
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
 #ifdef OC_SECURITY
@@ -204,6 +207,11 @@ main(void)
 #endif /* OC_SECURITY */
                                        .register_resources =
                                          register_resources };
+=======
+  static oc_handler_t handler = {.init = app_init,
+                                 .signal_event_loop = signal_event_loop,
+                                 .register_resources = register_resources };
+>>>>>>> e23fc34... Remove the “get_credentials” callback from oc_handler_t
 
   oc_clock_time_t next_event;
 

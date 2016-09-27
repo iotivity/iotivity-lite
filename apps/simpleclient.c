@@ -22,15 +22,11 @@ app_init(void)
   oc_init_platform("Apple", NULL, NULL);
   oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0", NULL,
                 NULL);
-}
 
 #ifdef OC_SECURITY
-void
-fetch_credentials(void)
-{
   oc_storage_config("./creds");
+#endif /* OC_SECURITY */
 }
-#endif
 
 #define MAX_URI_LENGTH (30)
 static char a_light[MAX_URI_LENGTH];
@@ -233,9 +229,6 @@ main(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                        .requests_entry = issue_requests };
 
   nano_sem_init(&block);
@@ -294,9 +287,6 @@ main(void)
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;

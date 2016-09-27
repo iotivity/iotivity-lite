@@ -42,14 +42,6 @@ app_init(void)
                 "1.0", NULL, NULL);
 }
 
-#ifdef OC_SECURITY
-static void
-fetch_credentials(void)
-{
-  oc_storage_config("./creds");
-}
-#endif
-
 static void
 get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
@@ -109,11 +101,7 @@ main(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-#ifdef OC_SECURITY
-                                       .get_credentials = fetch_credentials,
-#endif /* OC_SECURITY */
-                                       .register_resources =
-                                         register_resources };
+                                       .register_resources = register_resources };
 
   nano_sem_init(&block);
 
