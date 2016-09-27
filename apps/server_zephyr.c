@@ -102,7 +102,7 @@ register_resources(void)
   oc_resource_make_secure(res);
 #endif
 
-  oc_resource_set_discoverable(res);
+  oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
   oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);

@@ -149,15 +149,21 @@ oc_resource_make_secure(oc_resource_t *resource)
 #endif /* OC_SECURITY */
 
 void
-oc_resource_set_discoverable(oc_resource_t *resource)
+oc_resource_set_discoverable(oc_resource_t *resource, bool state)
 {
-  resource->properties |= OC_DISCOVERABLE;
+  if (state)
+    resource->properties |= OC_DISCOVERABLE;
+  else
+    resource->properties &= ~OC_DISCOVERABLE;
 }
 
 void
-oc_resource_set_observable(oc_resource_t *resource)
+oc_resource_set_observable(oc_resource_t *resource, bool state)
 {
-  resource->properties |= OC_OBSERVABLE;
+  if (state)
+    resource->properties |= OC_OBSERVABLE;
+  else
+    resource->properties &= ~(OC_OBSERVABLE | OC_PERIODIC);
 }
 
 void
