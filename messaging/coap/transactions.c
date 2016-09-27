@@ -110,7 +110,7 @@ coap_send_transaction(coap_transaction_t *t)
       if (t->retrans_counter == 0) {
         t->retrans_timer.timer.interval =
           COAP_RESPONSE_TIMEOUT_TICKS +
-          (oc_random_rand() %
+          (oc_random_value() %
            (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
         LOG("Initial interval %d\n", t->retrans_timer.timer.interval);
       } else {
