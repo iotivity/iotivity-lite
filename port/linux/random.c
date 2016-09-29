@@ -15,6 +15,7 @@
 */
 
 #include "port/oc_random.h"
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -34,10 +35,8 @@ oc_random_value(void)
 {
   unsigned int rand = 0;
   int ret = read(urandom_fd, &rand, sizeof(rand));
-  if (ret != -1) {
-    return rand;
-  }
-  return 0;
+  assert(ret != -1);
+  return rand;
 }
 
 void
