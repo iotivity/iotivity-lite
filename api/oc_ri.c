@@ -66,6 +66,8 @@ int oc_stack_errno;
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
 
+oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
+
 static void
 set_mpro_status_codes(void)
 {
