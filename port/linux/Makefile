@@ -1,9 +1,9 @@
 CC=gcc
 
-DTLS=../../deps/tinydtls/ccm.c deps/tinydtls/hmac.c deps/tinydtls/netq.c deps/tinydtls/peer.c deps/tinydtls/dtls_time.c deps/tinydtls/session.c deps/tinydtls/sha2/sha2.c deps/tinydtls/ecc/ecc.c deps/tinydtls/aes/rijndael.c deps/tinydtls/crypto.c deps/tinydtls/dtls.c
+DTLS=../../deps/tinydtls/ccm.c ../../deps/tinydtls/hmac.c ../../deps/tinydtls/netq.c ../../deps/tinydtls/peer.c ../../deps/tinydtls/dtls_time.c ../../deps/tinydtls/session.c ../../deps/tinydtls/sha2/sha2.c ../../deps/tinydtls/ecc/ecc.c ../../deps/tinydtls/aes/rijndael.c ../../deps/tinydtls/crypto.c ../../deps/tinydtls/dtls.c
 DTLSFLAGS=-DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
 
-CBOR=../../deps/tinycbor/src/cborencoder.c deps/src/tinycbor/cborencoder_close_container_checked.c deps/src/tinycbor/cborparser.c #../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
+CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c #../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
