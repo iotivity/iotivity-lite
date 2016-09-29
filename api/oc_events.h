@@ -29,6 +29,6 @@ typedef enum {
   __NUM_OC_EVENT_TYPES__
 } oc_events_t;
 
-oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
+extern oc_process_event_t oc_events[];
 
 #endif /* OC_EVENTS_H */
