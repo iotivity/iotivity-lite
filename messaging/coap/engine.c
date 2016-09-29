@@ -75,7 +75,7 @@ coap_receive(oc_message_t *msg)
 
 /*TODO duplicates suppression, if required by application */
 
-#if DEBUG
+#if OC_DEBUG
     LOG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u\n",
         message->version, message->token[0], message->token[1], message->mid);
     switch (message->type) {
@@ -99,7 +99,7 @@ coap_receive(oc_message_t *msg)
     /* handle requests */
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
-#if DEBUG
+#if OC_DEBUG
       switch (message->code) {
       case COAP_GET:
         LOG("  method: GET\n");

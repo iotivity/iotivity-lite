@@ -17,7 +17,7 @@ OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DDEBUG -g
+	CFLAGS += -DOC_DEBUG -g
 else
 	CFLAGS += -Wl,--gc-sections
 endif
