@@ -1,0 +1,15 @@
+Set RIOTBASE path in the Makefile.
+
+Apply riot_build.patch to RIOTBASE/. It disables -Wpedantic, -Werror
+and few other warnings.
+
+export BOARD=native && make CLIENT=1 (or make SERVER=1)
+(Add DEBUG=1 for debug output)
+This builds the client_riot/server_riot samples.
+
+Setup a tap interface:
+sudo ip tuntap add tap0 mode tap user ${USER}
+sudo ip link set tap0 up
+
+Run the application:
+bin/native/ocf_app.elf tap0
