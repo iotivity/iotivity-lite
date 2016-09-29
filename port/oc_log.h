@@ -35,7 +35,7 @@
     ((endpoint).ipv6_addr.address)[14], ((endpoint).ipv6_addr.address)[15],    \
     (endpoint).ipv6_addr.port)
 
-#if DEBUG
+#if OC_DEBUG
 #define LOG(...) PRINT(__VA_ARGS__)
 #define LOGipaddr(endpoint) PRINTipaddr(endpoint)
 #else

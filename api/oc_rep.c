@@ -54,7 +54,7 @@ static oc_rep_t *
 _alloc_rep(void)
 {
   oc_rep_t *rep = oc_memb_alloc(&rep_objects);
-#ifdef DEBUG
+#ifdef OC_DEBUG
   oc_assert(rep != NULL);
 #endif
   return rep;

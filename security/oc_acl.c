@@ -118,7 +118,7 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource, bool create)
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(ac_list.subjects);
   oc_sec_acl_res_t *res = NULL;
 
-#ifdef DEBUG
+#ifdef OC_DEBUG
   char uuid[37];
   oc_uuid_to_str(subjectuuid, uuid, 37);
 #endif
