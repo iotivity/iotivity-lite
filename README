@@ -4,8 +4,8 @@ IoTivity-Constrained is an open-source software stack and library that
 implements the Open Connectivity Foundation (OCF) standards for the
 Internet of Things (IoT).
 
-It was designed specifically to build IoT applications for resource-constrained
-hardware and software environments. It targets the wide range of
+It was designed to build IoT applications for resource-constrained
+hardware and software environments. It targets the wide array of
 embedded devices using low-power and low-cost MCUs that will proliferate the
 IoT landscape.
 
@@ -16,6 +16,7 @@ Contents
 - Pull dependencies
 - Building sample applications on Linux
 - Building sample applications on Zephyr
+- Building sample applications on RIOT OS and Contiki
 - Framework configuration
 
 IoTivity-Constrained Architecture
@@ -23,12 +24,12 @@ IoTivity-Constrained Architecture
 
              OCF Applications (apps/*)
             //////////////////////////
+            |  OCF Application APIs  |
+            |   (include/oc_api.h)   |
+            **************************
   OCF       |  Client   //   Server  |
  Roles      |      Intermediate      |
-            **************************
-            |  OCF Application APIs  |
-            |   (include/oc_api.h)   |               Platform abstraction
-        \   **************************                    Interfaces
+        \   **************************               Platform abstraction
 Cross-   \  | Memory     | Resource  |                    (port/*.h)
 Platform    | Management | Model     |             ************************
 Core     /  **************************  - - - -\   |  Persistent  |  RNG  |
@@ -50,7 +51,7 @@ Core     /  **************************  - - - -\   |  Persistent  |  RNG  |
                                                   - - - - - - - - - - - - - -
                                               (port/linux/*, port/zephyr/*,...)
 
-It addresses the following design goals:
+It's architecture addresses the following design goals:
 
 1) Laying down constraints: This is achieved through build-time
 configuration of a set of parameters that constrain the number of serviceable
@@ -61,25 +62,22 @@ application.
 2) Determinism: All memory is statically allocated, and requests fail
 gracefully whenever a workload exceeds the set constraints.
 
-3) OCF-compliant common core: IoTivity-Constrained will be employed on diverse
-hardware-software environments, while the OCF standards independently evolve.
-The framework architecture is therefore decoupled into a platform-agnostic
-common core which will be maintained for OCF compliance with a set of
-interfaces into implementations of platform-specific code. This decoupling
-isolates all of the OCF and application layer functionality from the
-platform/environment specific code that varies per deployment.
-In this way, a vendor may based on their requirements choose to deploy
-IoTivity-Constrained with their choice of hardware and software environment
-while utilizing the common core.
+3) Common core: IoTivity-Constrained will be employed on diverse
+hardware-software environments.
+The architecture is therefore decoupled into a cross-platform
+common core with a set of interfaces into implementations of
+platform-specific code. This decoupling isolates all of the OCF standards
+related functionality from lower-level platform/environment specific
+code, that varies per deployment.
 
-4) Platform abstraction interfaces: These are a collection of headers with a
+4) Platform abstraction: These are a collection of interfaces with a
 key set of hooks that elicit a contract from implementations. The core
 framework talks via these interfaces to interact with platform specific
 functionality. Implementations may be built with any choice of embedded RTOS,
 network stack and hardware. Any such implementation then becomes a “port”.
-Ports currently exist for Linux and Zephyr.
+Ports currently exist for Linux, Zephyr, RIOT OS and Contiki.
 
-5) Being lightweight: The is achieved through tight coupling between stack
+5) Lightweight design: The is achieved through tight coupling between stack
 layers and avoiding modularity unless warranted.
 
 Project directory structure
@@ -91,7 +89,7 @@ and introspection layer, utility and helper functions to encode/decode to/from
 OCF’s data model, module for encoding and interpreting type 4 UUIDs, and
 handlers for the discovery, platform and device resources.
 
-messaging/coap/* contains an OCF-tailored CoAP implementation.
+messaging/coap/* contains a tailored CoAP implementation.
 
 security/* contains the handlers for secure core OCF resources.
 
@@ -107,10 +105,13 @@ include/oc_api.h contains client/server APIs.
 include/oc_rep.h contains helper functions to encode/decode to/from OCF’s
 data model.
 include/oc_helpers.h contains utility functions for allocating strings and
-arrays from the internal memory pools.
-port/*.h represents the platform abstraction interfaces.
+arrays from pre-allocated memory pools.
+
+port/*.h outlines the platform abstraction.
 port/linux/* contains an implementation of a Linux port.
 port/zephyr/* contains an implementation of a Zephyr port.
+port/riot/* contains an implementation of a RIOT OS port.
+port/contiki/* contains an implementation of a Contiki port.
 
 apps/* contains sample OCF applications.
 
@@ -153,10 +154,13 @@ in qemu.
 Now run any appropriate Linux client/server sample against the Zephyr sample
 to view the request/response flow.
 
+Building sample applications on RIOT OS and Contiki
+---------------------------------------------------
+Please refer to port/riot/README and port/contiki/README for instructions.
+
 Framework configuration
 -----------------------
 Build-time configuration options for an application are to be set in the file
 named config.h. This needs to be present in one of the include paths.
-Pre-populated configurations for the Linux/Zephyr samples are present in
-port/linux/config.h and port/zephyr/config.h.
-
+Pre-populated configurations for the samples for all targets are present
+in port/<platform>/config.h.
