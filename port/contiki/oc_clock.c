@@ -33,3 +33,9 @@ oc_clock_seconds(void)
 {
   return clock_seconds();
 }
+
+void
+oc_clock_wait(oc_clock_time_t t)
+{
+  clock_delay(t);
+}
