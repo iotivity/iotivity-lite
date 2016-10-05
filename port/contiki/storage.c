@@ -15,31 +15,72 @@
 */
 
 #ifdef OC_SECURITY
-// TODO:
+
 #include "port/oc_storage.h"
+
+#include <errno.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include <cfs/cfs.h>
+
+#define STORE_PATH_SIZE 64
+
+static char store_path[STORE_PATH_SIZE];
+static int store_path_len;
+static bool path_set = false;
 
 int
 oc_storage_config(const char *store)
 {
-  (void)store;
+  store_path_len = strlen(store);
+  if (store_path_len >= STORE_PATH_SIZE)
+    return -ENOENT;
+
+  strncpy(store_path, store, store_path_len);
+  path_set = true;
+
   return 0;
 }
 
 long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
-  (void)store;
-  (void)buf;
-  (void)size;
+  int fd;
+  size_t store_len = strlen(store);
+
+  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+    return -ENOENT;
+
+  strncpy(store_path + store_path_len, store, store_len);
+  store_path[store_path_len + store_len] = '\0';
+  fd = cfs_open(store_path, CFS_READ);
+  if (!fd)
+    return -EINVAL;
+
+  size = cfs_read(fd, buf, size);
+  cfs_close(fd);
   return size;
 }
 
 long
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
-  (void)store;
-  (void)buf;
-  (void)size;
+  int fd;
+  size_t store_len = strlen(store);
+
+  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+    return -ENOENT;
+
+  strncpy(store_path + store_path_len, store, store_len);
+  store_path[store_path_len + store_len] = '\0';
+  fd = cfs_open(store_path, CFS_WRITE);
+  if (!fd)
+    return -EINVAL;
+
+  size = cfs_write(fd, buf, size);
+  cfs_close(fd);
   return size;
 }
+
 #endif /* OC_SECURITY */
