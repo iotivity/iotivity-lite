@@ -5,6 +5,11 @@ port/linux/simpleclient
 port/linux/simpleserver
 port/linux/obj/
 port/zephyr/outdir/
+port/contiki/*.a
+port/contiki/*.map
+port/contiki/obj_native/
+port/contiki/*.native
+port/contiki/symbols.*
 *.o
 *.cmd
 .clang-format
