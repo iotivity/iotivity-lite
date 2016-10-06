@@ -18,7 +18,7 @@ BOARD_INSUFFICIENT_MEMORY := airfy-beacon chronos msb-430 msb-430h nrf51dongle \
 
 USEMODULE += gnrc_netdev_default
 USEMODULE += auto_init_gnrc_netif
-USENODULE += gnrc_ipv6
+USEMODULE += gnrc_ipv6
 USEMODULE += gnrc_conn_udp
 USEMODULE += pthread
 USEMODULE += gnrc_ndp_router
