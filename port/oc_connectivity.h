@@ -59,14 +59,14 @@ typedef struct
                             .ipv6_addr = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
 
-typedef struct oc_message_s
+struct oc_message_s
 {
   struct oc_message_s *next;
   oc_endpoint_t endpoint;
   size_t length;
   uint8_t ref_count;
   uint8_t data[MAX_PAYLOAD_SIZE];
-} oc_message_t;
+};
 
 void oc_send_buffer(oc_message_t *message);
 
