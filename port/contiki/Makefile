@@ -14,6 +14,9 @@ PROJECTDIRS += ./ ../../include ../../ ../../api ../../messaging/coap ../../apps
 
 PROJECT_SOURCEFILES += oc_buffer.c oc_discovery.c oc_main.c oc_ri.c oc_client_api.c oc_network_events.c oc_server_api.c oc_core_res.c oc_helpers.c oc_rep.c oc_uuid.c cborencoder.c cborencoder_close_container_checked.c cborparser.c oc_etimer.c oc_memb.c oc_process.c oc_list.c oc_mmem.c oc_timer.c coap.c separate.c engine.c transactions.c observe.c ipadapter.c oc_clock.c oc_random.c abort.c storage.c
 
+CONTIKI_WITH_RPL = 1
+CONTIKI_WITH_IPV6 = 1
+
 include $(CONTIKI)/Makefile.include
 
 CFLAGS += -std=gnu99 -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -Wall -Wno-format-zero-length -Wno-main -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -Wno-unused-but-set-variable -fno-reorder-functions -fno-defer-pop -Wno-pointer-sign -fno-strict-overflow -Werror=implicit-int -Wl,--gc-sections
