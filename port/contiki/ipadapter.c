@@ -46,7 +46,10 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     PRINT("\n");
 
     oc_network_event(message);
+    return;
   }
+
+  LOG("ipadapter: No free RX/TX buffers to handle incoming message\n");
 }
 
 static void
@@ -54,6 +57,7 @@ receive(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
         uint16_t sender_port, const uip_ipaddr_t *receiver_addr,
         uint16_t receiver_port, const uint8_t *data, uint16_t datalen)
 {
+  LOG("ipadapter: Incoming message from network...dispatch for processing\n");
   handle_incoming_message((uint8_t *)data, datalen, (uint8_t *)sender_addr,
                           sender_port);
 }
@@ -112,6 +116,7 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
 
   simple_udp_register(&server, OCF_SERVER_PORT_UNSECURED, NULL, 0, receive);
 
+  LOG("ipadapter: Initialized ip_adapter_process\n");
   while (ev != PROCESS_EVENT_EXIT) {
     PROCESS_WAIT_EVENT();
   }
