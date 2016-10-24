@@ -72,9 +72,9 @@ set_global_address(void)
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
   /*
-   * Joining the OCF multicast group at ff02::fd
+   * Joining the OCF multicast group at ff0x::158
    */
-  uip_ip6addr(&mcast, 0xff02, 0, 0, 0, 0, 0, 0, 0x00fd);
+  uip_ip6addr(&mcast, 0xff02, 0, 0, 0, 0, 0, 0, 0x0158);
   uip_ds6_maddr_t *rv = uip_ds6_maddr_add(&mcast);
   if (rv)
     LOG("Joined OCF multicast group\n");

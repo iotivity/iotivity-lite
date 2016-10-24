@@ -45,7 +45,7 @@ static struct net_context *recv_ctx = NULL;
   {                                                                            \
     {                                                                          \
       {                                                                        \
-        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xfd                \
+        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58             \
       }                                                                        \
     }                                                                          \
   }

@@ -33,7 +33,7 @@
 #include "port/oc_connectivity.h"
 
 #define COAP_PORT_UNSECURED (5683)
-#define ALL_COAP_NODES_V6 "FF02::FD"
+#define ALL_COAP_NODES_V6 "FF02::158"
 
 static pthread_t event_thread;
 static pthread_mutex_t mutex;
