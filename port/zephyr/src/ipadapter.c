@@ -35,21 +35,21 @@ static char stack3[RECV_FIBER_STACK_SIZE];
 #endif /* OC_SECURITY */
 
 #define NODE_PORT (53810)
-#define COAP_PORT_UNSECURED (5683)
+#define OCF_PORT_UNSECURED (5683)
 
 static struct net_addr node_addr = {.in6_addr = IN6ADDR_ANY_INIT,
                                     .family = AF_INET6 };
 static struct net_context *recv_ctx = NULL;
 
-#define COAP_ALL_NODES_LL                                                      \
+#define ALL_OCF_NODES                                                          \
   {                                                                            \
     {                                                                          \
       {                                                                        \
-        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xfd                \
+        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58             \
       }                                                                        \
     }                                                                          \
   }
-static struct net_addr coap_wk = {.in6_addr = COAP_ALL_NODES_LL,
+static struct net_addr coap_wk = {.in6_addr = ALL_OCF_NODES,
                                   .family = AF_INET6 };
 static struct net_context *multicast_ctx = NULL;
 
@@ -203,7 +203,7 @@ oc_connectivity_init(void)
 
   recv_ctx = net_context_get(IPPROTO_UDP, &ipv6_any, 0, &node_addr, NODE_PORT);
   multicast_ctx =
-    net_context_get(IPPROTO_UDP, &ipv6_any, 0, &coap_wk, COAP_PORT_UNSECURED);
+    net_context_get(IPPROTO_UDP, &ipv6_any, 0, &coap_wk, OCF_PORT_UNSECURED);
 
 #ifdef OC_SECURITY
   dtls_ctx = net_context_get(IPPROTO_UDP, &ipv6_any, 0, &node_addr, DTLS_PORT);

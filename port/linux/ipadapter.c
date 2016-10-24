@@ -32,8 +32,8 @@
 #include "oc_buffer.h"
 #include "port/oc_connectivity.h"
 
-#define COAP_PORT_UNSECURED (5683)
-#define ALL_COAP_NODES_V6 "FF02::FD"
+#define OCF_PORT_UNSECURED (5683)
+#define ALL_OCF_NODES "FF02::158"
 
 static pthread_t event_thread;
 static pthread_mutex_t mutex;
@@ -222,7 +222,7 @@ oc_connectivity_init(void)
 
   struct sockaddr_in6 *m = (struct sockaddr_in6 *)&mcast;
   m->sin6_family = AF_INET6;
-  m->sin6_port = htons(COAP_PORT_UNSECURED);
+  m->sin6_port = htons(OCF_PORT_UNSECURED);
   m->sin6_addr = in6addr_any;
 
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)&server;
@@ -261,8 +261,7 @@ oc_connectivity_init(void)
 
   struct ipv6_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
-  if (inet_pton(AF_INET6, ALL_COAP_NODES_V6, (void *)&mreq.ipv6mr_multiaddr) !=
-      1) {
+  if (inet_pton(AF_INET6, ALL_OCF_NODES, (void *)&mreq.ipv6mr_multiaddr) != 1) {
     LOG("ERROR setting mcast addr\n");
     return -1;
   }
