@@ -203,7 +203,7 @@ coap_notify_observers(oc_resource_t *resource,
   oc_response_t response = {};
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
-  if (!response_buf && resource && (resource->properties & OC_PERIODIC)) {
+  if (!response_buf && resource) {
     LOG("coap_notify_observers: Issue GET request to resource\n");
     /* performing GET on the resource */
     response_buffer.buffer = buffer;
