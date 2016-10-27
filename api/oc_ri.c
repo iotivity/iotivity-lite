@@ -367,6 +367,15 @@ check_event_callbacks(void)
 
 #ifdef OC_SERVER
 static oc_event_callback_retval_t
+oc_observe_notification_delayed(void *data)
+{
+  coap_notify_observers((oc_resource_t *)data, NULL, NULL);
+  return DONE;
+}
+#endif
+
+#ifdef OC_SERVER
+static oc_event_callback_retval_t
 periodic_observe_handler(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
@@ -792,7 +801,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if ((method == OC_PUT || method == OC_POST) &&
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-      coap_notify_observers(cur_resource, NULL, NULL);
+      oc_set_delayed_callback(cur_resource, &oc_observe_notification_delayed, 0);
 #endif
     if (response_buffer.response_length) {
       coap_set_payload(response, response_buffer.buffer,
