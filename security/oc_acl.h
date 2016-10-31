@@ -42,6 +42,8 @@ typedef struct oc_sec_acl_res_s
 {
   struct oc_sec_acl_res_s *next;
   oc_resource_t *resource;
+  oc_interface_mask_t interfaces;
+  bool wildcard;
   uint16_t permissions;
 } oc_sec_acl_res_t;
 
