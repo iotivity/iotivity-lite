@@ -344,8 +344,8 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 			    "If-None-Match");
 #endif
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_OBSERVE, observe, "Observe");
-#if 0
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_URI_PORT, uri_port, "Uri-Port");
+#if 0
   COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_LOCATION_PATH, location_path,
 			       '/', "Location-Path");
 #endif
@@ -582,12 +582,11 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       LOG("Uri-Host [%.*s]\n", (int)coap_pkt->uri_host_len,
 	  coap_pkt->uri_host);
       break;
+#endif
     case COAP_OPTION_URI_PORT:
-      coap_pkt->uri_port = coap_parse_int_option(
-	current_option, option_length);
+      coap_pkt->uri_port = coap_parse_int_option(current_option, option_length);
       LOG("Uri-Port [%u]\n", coap_pkt->uri_port);
       break;
-#endif
     case COAP_OPTION_URI_PATH:
       /* coap_merge_multi_option() operates in-place on the IPBUF, but final
        * packet field should be const string -> cast to string */
