@@ -100,6 +100,15 @@ int oc_rep_finalize(void);
 #define oc_rep_add_text_string(parent, value)                                  \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
+#define oc_rep_add_double(parent, value)                                       \
+  g_err |= cbor_encode_double(&parent##_array, value)
+
+#define oc_rep_add_int(parent, value)                                          \
+  g_err |= cbor_encode_int(&parent##_array, value)
+
+#define oc_rep_add_boolean(parent, value)                                      \
+  g_err |= cbor_encode_boolean(&parent##_array, value)
+
 #define oc_rep_set_key(parent, key)                                            \
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
 
