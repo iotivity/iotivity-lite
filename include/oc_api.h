@@ -81,7 +81,6 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
-void oc_deactivate_resource(oc_resource_t *resource);
 
 void oc_init_query_iterator(oc_request_t *request);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,

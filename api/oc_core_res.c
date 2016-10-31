@@ -137,7 +137,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   /* Construct device resource */
   oc_core_populate_resource(ocf_d, uri, rt, OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_ACTIVE | OC_DISCOVERABLE,
+                            OC_IF_BASELINE, OC_DISCOVERABLE,
                             oc_core_device_handler, 0, 0, 0, device_count);
 
   /* Encoding device resource payload */
@@ -202,10 +202,9 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   oc_string_t temp_buffer;
   /* Populating resource obuject */
-  oc_core_populate_resource(OCF_P, OC_RSRVD_PLATFORM_URI, "oic.wk.p",
-                            OC_IF_R | OC_IF_BASELINE, OC_IF_BASELINE,
-                            OC_ACTIVE | OC_DISCOVERABLE,
-                            oc_core_platform_handler, 0, 0, 0, 0);
+  oc_core_populate_resource(
+    OCF_P, OC_RSRVD_PLATFORM_URI, "oic.wk.p", OC_IF_R | OC_IF_BASELINE,
+    OC_IF_BASELINE, OC_DISCOVERABLE, oc_core_platform_handler, 0, 0, 0, 0);
 
   /* Encoding platform resource payload */
   oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);

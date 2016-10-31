@@ -170,7 +170,7 @@ void
 oc_create_discovery_resource(void)
 {
   oc_core_populate_resource(OCF_RES, "/oic/res", "oic.wk.res",
-                            OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, OC_ACTIVE,
+                            OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
                             oc_core_discovery_handler, 0, 0, 0, 0);
 }
 
