@@ -29,8 +29,8 @@
   (NUM_OC_CORE_RESOURCES + (MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_SUBJECTS + 1);
 OC_MEMB(res_l, oc_sec_acl_res_t, MAX_NUM_RES_PERM_PAIRS);
-static oc_uuid_t WILDCARD = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0, 0 } };
+static oc_uuid_t WILDCARD_SUB = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                         0, 0, 0 } };
 static oc_sec_acl_t ac_list = { 0 };
 
 static void
@@ -70,7 +70,7 @@ oc_sec_encode_acl(void)
   oc_rep_set_array(aclist, aces);
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
   while (sub != NULL) {
-    if (strncmp(sub->subjectuuid.id, WILDCARD.id, 16) == 0) {
+    if (strncmp(sub->subjectuuid.id, WILDCARD_SUB.id, 16) == 0) {
       uuid[0] = '*';
       uuid[1] = '\0';
     } else {
@@ -88,15 +88,26 @@ oc_sec_encode_acl(void)
       oc_sec_acl_res_t *res = oc_list_head(sub->resources);
       while (res != NULL) {
         if (res->permissions == groups[i]) {
-          LOG("oc_sec_acl_encode: adding resource %s\n",
-              oc_string(res->resource->uri));
-          oc_rep_object_array_start_item(resources);
-          oc_rep_set_text_string(resources, href,
-                                 oc_string(res->resource->uri));
-          oc_rep_set_text_string(resources, rel, "");
-          oc_rep_set_text_string(resources, rt, "");
-          oc_rep_set_text_string(resources, if, "");
-          oc_rep_object_array_end_item(resources);
+          // TODO: Check if we need to track rts in ACEs for resources
+          // The spec isn't clear on how they're used for access-control.
+          if (!res->wildcard) {
+            LOG("oc_sec_acl_encode: adding resource %s\n",
+                oc_string(res->resource->uri));
+            oc_rep_object_array_start_item(resources);
+            oc_rep_set_text_string(resources, href,
+                                   oc_string(res->resource->uri));
+            oc_core_encode_interfaces_mask(oc_rep_object(resources),
+                                           res->interfaces);
+            oc_rep_object_array_end_item(resources);
+          } else {
+            LOG("oc_sec_acl_encode: adding resource *\n");
+            oc_rep_object_array_start_item(resources);
+            oc_rep_set_text_string(resources, href, "*");
+            oc_rep_set_array(resources, if);
+            oc_rep_add_text_string(if, "*");
+            oc_rep_close_array(resources, if);
+            oc_rep_object_array_end_item(resources);
+          }
         }
         res = res->next;
       }
@@ -113,7 +124,8 @@ oc_sec_encode_acl(void)
 }
 
 static oc_sec_acl_res_t *
-oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource, bool create)
+oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource,
+                   bool wildcard, bool create)
 {
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(ac_list.subjects);
   oc_sec_acl_res_t *res = NULL;
@@ -141,9 +153,14 @@ got_ace:
   res = (oc_sec_acl_res_t *)oc_list_head(ace->resources);
 
   while (res != NULL) {
-    if (res->resource == resource) {
-      LOG("Found permissions mask for resource %s in ACE\n",
-          oc_string(res->resource->uri));
+    if (res->resource == resource || res->wildcard == true) {
+#ifdef OC_DEBUG
+      if (res->wildcard)
+        LOG("Found permissions mask for resource * in ACE\n");
+      else
+        LOG("Found permissions mask for resource %s in ACE\n",
+            oc_string(res->resource->uri));
+#endif
       goto done;
     }
     res = oc_list_item_next(res);
@@ -170,7 +187,13 @@ new_res:
   res = oc_memb_alloc(&res_l);
   if (res) {
     res->resource = resource;
-    LOG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
+    res->wildcard = wildcard;
+#ifdef OC_DEBUG
+    if (wildcard)
+      LOG("Adding new resource * to ACE\n");
+    else
+      LOG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
+#endif /* OC_DEBUG */
     oc_list_add(ace->resources, res);
   }
 
@@ -178,20 +201,23 @@ done:
   return res;
 }
 
-static bool
+static oc_sec_acl_res_t *
 oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
+                  bool wildcard, oc_interface_mask_t interfaces,
                   uint16_t permissions)
 {
-  oc_sec_acl_res_t *res = oc_sec_acl_get_ace(subjectuuid, resource, true);
+  oc_sec_acl_res_t *res =
+    oc_sec_acl_get_ace(subjectuuid, resource, wildcard, true);
 
   if (!res)
     return false;
 
+  res->interfaces = interfaces;
   res->permissions = permissions;
 
   LOG("Added resource with permissions: %d\n", res->permissions);
 
-  return true;
+  return res;
 }
 
 void
@@ -209,9 +235,11 @@ oc_sec_acl_default(void)
   for (i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
-      success &= oc_sec_update_acl(&WILDCARD, resource, 2);
+      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
+                                    OC_IF_BASELINE, 2) != NULL);
     else
-      success &= oc_sec_update_acl(&WILDCARD, resource, 6);
+      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
+                                    OC_IF_BASELINE, 6) != NULL);
   }
   LOG("ACL for core resources initialized %d\n", success);
   oc_uuid_t *device = oc_core_get_device_id(0);
@@ -227,11 +255,15 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   oc_uuid_t *identity = (oc_uuid_t *)oc_sec_dtls_get_peer_uuid(endpoint);
 
   if (identity) {
-    res = oc_sec_acl_get_ace(identity, resource, false);
+    res = oc_sec_acl_get_ace(identity, resource, false, false);
+
+    if (!res) {
+      res = oc_sec_acl_get_ace(identity, resource, true, false);
+    }
   }
 
   if (!res) { // Try Anonymous
-    res = oc_sec_acl_get_ace(&WILDCARD, resource, false);
+    res = oc_sec_acl_get_ace(&WILDCARD_SUB, resource, false, false);
   }
 
   if (!res)
@@ -304,7 +336,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
                 if (len == 11 &&
                     strncmp(oc_string(ace->name), "subjectuuid", 11) == 0) {
                   if (strncmp(oc_string(ace->value_string), "*", 1) == 0)
-                    strncpy(subjectuuid.id, WILDCARD.id, 16);
+                    strncpy(subjectuuid.id, WILDCARD_SUB.id, 16);
                   else
                     oc_str_to_uuid(oc_string(ace->value_string), &subjectuuid);
                 }
@@ -327,12 +359,18 @@ oc_sec_decode_acl(oc_rep_t *rep)
 
             while (resources != NULL) {
               oc_rep_t *resource = resources->value_object;
+              bool wildcard = false;
+              oc_sec_acl_res_t *ace_res = NULL;
+              oc_resource_t *res = NULL;
+              oc_interface_mask_t interfaces = 0;
+              int i;
+
               while (resource != NULL) {
                 switch (resource->type) {
                 case STRING:
                   if (oc_string_len(resource->name) == 4 &&
                       strncasecmp(oc_string(resource->name), "href", 4) == 0) {
-                    oc_resource_t *res = oc_core_get_resource_by_uri(
+                    res = oc_core_get_resource_by_uri(
                       oc_string(resource->value_string));
 
 #ifdef OC_SERVER
@@ -342,23 +380,51 @@ oc_sec_decode_acl(oc_rep_t *rep)
 #endif /* OC_SERVER */
 
                     if (!res) {
-                      LOG(
-                        "\n\noc_sec_acl_decode: could not find resource %s\n\n",
-                        oc_string(resource->value_string));
-                      return false;
+                      if (strncmp(oc_string(resource->value_string), "*", 1) ==
+                          0)
+                        wildcard = true;
+                      else {
+                        LOG("\n\noc_sec_acl_decode: could not find resource "
+                            "%s\n\n",
+                            oc_string(resource->value_string));
+                        return false;
+                      }
                     }
-
-                    if (!oc_sec_update_acl(&subjectuuid, res, permissions)) {
-                      LOG("\n\noc_sec_acl_decode: could not update ACE with "
-                          "resource %s permissions\n\n",
-                          oc_string(res->uri));
-                      return false;
+                  }
+                  break;
+                case STRING_ARRAY:
+                  if (oc_string_len(resource->name) == 2 &&
+                      strncasecmp(oc_string(resource->name), "if", 2) == 0) {
+                    for (i = 0; i < oc_string_array_get_allocated_size(
+                                      resource->value_array);
+                         i++) {
+                      if (wildcard ||
+                          strncmp(
+                            oc_string_array_get_item(resource->value_array, i),
+                            "*", 1) == 0) {
+                        wildcard = true;
+                        break;
+                      }
+                      interfaces |= oc_ri_get_interface_mask(
+                        oc_string_array_get_item(resource->value_array, i),
+                        oc_string_array_get_item_size(resource->value_array,
+                                                      i));
                     }
                   }
                   break;
                 default:
                   break;
                 }
+
+                ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard,
+                                            interfaces, permissions);
+                if (ace_res == NULL) {
+                  LOG("\n\noc_sec_acl_decode: could not update ACE with "
+                      "resource %s permissions\n\n",
+                      oc_string(res->uri));
+                  return false;
+                }
+
                 resource = resource->next;
               }
               resources = resources->next;
@@ -390,8 +456,8 @@ oc_sec_decode_acl(oc_rep_t *rep)
   "subjectuuid": "61646d69-6e44-6576-6963-655575696430",
   "resources":
   [
-  {"href": "/led/1", "rel": "", "rt": "", "if": ""},
-  {"href": "/switch/1", "rel": "", "rt": "", "if": ""}
+  {"href": "/led/1", "rt": [...], "if": [...]},
+  {"href": "/switch/1", "rt": [...], "if": [...]}
   ],
   "permission": 31
   }
@@ -404,7 +470,7 @@ void
 post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   if (oc_sec_decode_acl(request->request_payload))
-    oc_send_response(request, OC_STATUS_CREATED);
+    oc_send_response(request, OC_STATUS_CHANGED);
   else
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
 }
