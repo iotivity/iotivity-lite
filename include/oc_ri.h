@@ -28,7 +28,6 @@ typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE } oc_method_t;
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
-  OC_ACTIVE = (1 << 2),
   OC_SECURE = (1 << 4),
   OC_PERIODIC = (1 << 6),
 } oc_resource_properties_t;

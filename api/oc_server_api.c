@@ -115,7 +115,7 @@ oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
   resource->interfaces = OC_IF_BASELINE;
   resource->default_interface = OC_IF_BASELINE;
   resource->observe_period_seconds = 0;
-  resource->properties = OC_ACTIVE;
+  resource->properties = 0;
   resource->num_observers = 0;
   resource->device = device;
   return resource;
@@ -171,12 +171,6 @@ oc_resource_set_periodic_observable(oc_resource_t *resource, uint16_t seconds)
 {
   resource->properties |= OC_OBSERVABLE | OC_PERIODIC;
   resource->observe_period_seconds = seconds;
-}
-
-void
-oc_deactivate_resource(oc_resource_t *resource)
-{
-  resource->properties ^= OC_ACTIVE;
 }
 
 void
