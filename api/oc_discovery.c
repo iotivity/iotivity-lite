@@ -65,7 +65,8 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
 
   // p
   oc_rep_set_object(res, p);
-  oc_rep_set_uint(p, bm, resource->properties & ~OC_PERIODIC);
+  oc_rep_set_uint(p, bm,
+                  (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
 #ifdef OC_SECURITY
   if (resource->properties & OC_SECURE) {
     oc_rep_set_boolean(p, sec, true);
@@ -80,30 +81,40 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
 }
 
 static int
-process_device_object(CborEncoder *device, const char *uuid, const char *rt,
-                      int rt_len)
+process_device_object(CborEncoder *device, const char *rt, int rt_len,
+                      int device_num, bool baseline)
 {
-  int dev, matches = 0;
+  int matches = 0;
+  char uuid[37];
+  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, 37);
+
   oc_rep_start_object(*device, links);
   oc_rep_set_text_string(links, di, uuid);
+
+  if (baseline) {
+    oc_resource_t *ocf_res = oc_core_get_resource_by_index(OCF_RES);
+    oc_rep_set_string_array(links, rt, ocf_res->types);
+    oc_core_encode_interfaces_mask(oc_rep_object(links), ocf_res->interfaces);
+    oc_rep_set_uint(links, p, ocf_res->properties);
+  }
+
   oc_rep_set_array(links, links);
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_P), rt, rt_len,
                       oc_rep_array(links)))
     matches++;
 
-  for (dev = 0; dev < oc_core_get_num_devices(); dev++) {
-    if (filter_resource(
-          oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 - dev), rt,
-          rt_len, oc_rep_array(links)))
-      matches++;
-  }
+  if (filter_resource(
+        oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 - device_num),
+        rt, rt_len, oc_rep_array(links)))
+    matches++;
 
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
 
-    if (!(resource->properties & OC_DISCOVERABLE))
+    if (resource->device != device_num ||
+        !(resource->properties & OC_DISCOVERABLE))
       continue;
 
     if (filter_resource(resource, rt, rt_len, oc_rep_array(links)))
@@ -128,28 +139,28 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
                           void *data)
 {
   char *rt = NULL;
-  int rt_len = 0, matches = 0;
+  int rt_len = 0, matches = 0, device;
   if (request->query_len) {
     rt_len =
       oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
   }
 
-  char uuid[37];
-  oc_uuid_to_str(oc_core_get_device_id(0), uuid, 37);
-
   switch (interface) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
-    matches = process_device_object(oc_rep_array(links), uuid, rt, rt_len);
+    for (device = 0; device < oc_core_get_num_devices(); device++) {
+      matches =
+        process_device_object(oc_rep_array(links), rt, rt_len, device, false);
+    }
     oc_rep_end_links_array();
   } break;
   case OC_IF_BASELINE: {
-    oc_rep_start_root_object();
-    oc_process_baseline_interface(request->resource);
-    oc_rep_set_array(root, links);
-    matches = process_device_object(oc_rep_array(links), uuid, rt, rt_len);
-    oc_rep_close_array(root, links);
-    oc_rep_end_root_object();
+    oc_rep_start_links_array();
+    for (device = 0; device < oc_core_get_num_devices(); device++) {
+      matches =
+        process_device_object(oc_rep_array(links), rt, rt_len, device, true);
+    }
+    oc_rep_end_links_array();
   } break;
   default:
     break;
