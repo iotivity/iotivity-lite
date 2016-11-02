@@ -914,6 +914,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
           if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
                                               endpoint, cb->user_data) ==
               OC_STOP_DISCOVERY) {
+            oc_remove_delayed_callback(cb, &oc_ri_remove_client_cb);
             oc_ri_remove_client_cb(cb);
           }
         } else {
