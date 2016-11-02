@@ -910,7 +910,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
           break;
         }
       }
-      coap_get_header_observe(pkt, &client_response.observe_option);
+      coap_get_header_observe(pkt, (uint32_t*)&client_response.observe_option);
 
       bool separate = false;
       /*
