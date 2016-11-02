@@ -801,7 +801,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if ((method == OC_PUT || method == OC_POST) &&
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-      oc_set_delayed_callback(cur_resource, &oc_observe_notification_delayed, 0);
+      oc_ri_add_timed_event_callback_ticks(cur_resource, &oc_observe_notification_delayed, 0);
 #endif
     if (response_buffer.response_length) {
       coap_set_payload(response, response_buffer.buffer,
@@ -923,8 +923,8 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
           if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
                                               endpoint, cb->user_data) ==
               OC_STOP_DISCOVERY) {
-            oc_remove_delayed_callback(cb, &oc_ri_remove_client_cb);
-            oc_ri_remove_client_cb(cb);
+            oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+            free_client_cb(cb);
           }
         } else {
           uint16_t err =
