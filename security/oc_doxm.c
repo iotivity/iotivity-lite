@@ -20,7 +20,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include <stddef.h>
-#include <strings.h>
+#include <string.h>
 
 static oc_sec_doxm_t doxm;
 
