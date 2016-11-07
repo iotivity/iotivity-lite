@@ -23,7 +23,7 @@
 #include "oc_dtls.h"
 #include "oc_rep.h"
 #include <stddef.h>
-#include <strings.h>
+#include <string.h>
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   (NUM_OC_CORE_RESOURCES + (MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
