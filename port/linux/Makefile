@@ -29,38 +29,48 @@ ifeq ($(SECURE),1)
 	VPATH += ../../security/:../../deps/tinydtls/:../../deps/tinydtls/aes/:../../deps/tinydtls/sha2/:../../deps/tinydtls/ecc/:
 endif
 
-.PHONY: clean output_dir
+all=server client temp_sensor simpleserver simpleclient
 
-all: output_dir client server temp_sensor simpleserver simpleclient
+install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 
-output_dir:
-	mkdir -p obj/server
-	mkdir -p obj/client
+.PHONY: clean
+
+all: ${all}
 
 obj/%.o: %.c
+	@mkdir -p $@D
 	${CC} -c -o $@ $< ${CFLAGS}
 
 obj/server/%.o: %.c
+	@mkdir -p $@D
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_SERVER
 
 obj/client/%.o: %.c
+	@mkdir -p $@D
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
-server: output_dir ${OBJ_COMMON} ${OBJ_SERVER}
+server: ${OBJ_COMMON} ${OBJ_SERVER}
 	echo ${OBJ_COMMON}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_linux.c -DOC_SERVER ${CFLAGS} -lm -pthread
 
-client: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
+client: ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
-temp_sensor: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
+temp_sensor: ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
-simpleserver: output_dir ${OBJ_COMMON} ${OBJ_SERVER}
+simpleserver: ${OBJ_COMMON} ${OBJ_SERVER}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/simpleserver.c -DOC_SERVER ${CFLAGS} -lm -pthread
 
-simpleclient: output_dir ${OBJ_COMMON} ${OBJ_CLIENT}
+simpleclient: ${OBJ_COMMON} ${OBJ_CLIENT}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/simpleclient.c -DOC_CLIENT ${CFLAGS} -lm -pthread
 
 clean:
-	rm -rf obj server client temp_sensor simpleserver simpleclient
+	rm -rf obj
+
+cleanall: clean
+	rm -rf ${all}
+
+install: ${all}
+	install -d ${install_bin_dir}
+	install $^ ${install_bin_dir}
