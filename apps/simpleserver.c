@@ -57,9 +57,9 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
-  PRINT("PUT_light:\n");
+  PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
@@ -87,10 +87,10 @@ put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface,
+put_light(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
-  put_light(request, interface, user_data);
+  post_light(request, interface, user_data);
 }
 
 void
