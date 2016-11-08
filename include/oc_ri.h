@@ -112,7 +112,7 @@ typedef struct oc_request_handler_s
   void *user_data;
 } oc_request_handler_t;
 
-typedef struct oc_resource_s
+struct oc_resource_s
 {
   struct oc_resource_s *next;
   int device;
@@ -127,7 +127,7 @@ typedef struct oc_resource_s
   oc_request_handler_t delete_handler;
   uint16_t observe_period_seconds;
   uint8_t num_observers;
-} oc_resource_t;
+};
 
 typedef enum { DONE = 0, CONTINUE } oc_event_callback_retval_t;
 
