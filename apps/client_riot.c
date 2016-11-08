@@ -52,13 +52,13 @@ stop_observe(void *data)
 }
 
 static void
-put_light(oc_client_response_t *data)
+post_light(oc_client_response_t *data)
 {
-  PRINT("PUT_light:\n");
+  PRINT("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("PUT response OK\n");
+    PRINT("POST response OK\n");
   else
-    PRINT("PUT response code %d\n", data->code);
+    PRINT("POST response code %d\n", data->code);
 }
 
 static void
@@ -79,16 +79,16 @@ observe_light(oc_client_response_t *data)
     rep = rep->next;
   }
 
-  if (oc_init_put(light_1, &light_server, NULL, &put_light, LOW_QOS, NULL)) {
+  if (oc_init_post(light_1, &light_server, NULL, &post_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, !light_state);
     oc_rep_end_root_object();
-    if (oc_do_put())
-      PRINT("Sent PUT request\n");
+    if (oc_do_post())
+      PRINT("Sent POST request\n");
     else
-      PRINT("Could not send PUT\n");
+      PRINT("Could not send POST\n");
   } else
-    PRINT("Could not init PUT\n");
+    PRINT("Could not init POST\n");
 }
 
 static oc_discovery_flags_t
