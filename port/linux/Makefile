@@ -15,6 +15,7 @@ OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
+LIBS?= -lm -pthread -lrt 
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g
@@ -51,19 +52,19 @@ obj/client/%.o: %.c
 
 server: ${OBJ_COMMON} ${OBJ_SERVER}
 	echo ${OBJ_COMMON}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_linux.c -DOC_SERVER ${CFLAGS} -lm -pthread
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_linux.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 temp_sensor: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} -lm -pthread
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 simpleserver: ${OBJ_COMMON} ${OBJ_SERVER}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/simpleserver.c -DOC_SERVER ${CFLAGS} -lm -pthread
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/simpleserver.c -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 simpleclient: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/simpleclient.c -DOC_CLIENT ${CFLAGS} -lm -pthread
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/simpleclient.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 clean:
 	rm -rf obj
