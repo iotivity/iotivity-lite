@@ -47,9 +47,9 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
-  PRINT("PUT_light:\n");
+  PRINT("POST_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -71,6 +71,13 @@ put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
+put_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
+  post_light(request, interface, user_data);
+}
+
+static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource("/light/1", 1, 0);
@@ -85,6 +92,7 @@ register_resources(void)
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
   oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
+  oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_add_resource(res);
 }
