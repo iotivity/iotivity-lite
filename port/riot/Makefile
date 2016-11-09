@@ -64,6 +64,10 @@ OBJ_FRAMEWORK = $(SRC:.c=.o)
 APPDEPS += ${OBJ_COMMON} ${OBJ_FRAMEWORK} ${APP_OBJ}
 
 include $(RIOTBASE)/Makefile.include
+#Disable Warnings as Errors
+WERROR = 0
+CFLAGS := $(filter-out -Werror=old-style-definition,$(CFLAGS))
+CFLAGS := $(filter-out -Wold-style-definition,$(CFLAGS))
 
 ${APP_OBJ}: ${APP_SRC}
 	${CC} -c -o $@ $< ${CFLAGS} ${INCLUDES}
