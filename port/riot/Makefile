@@ -66,6 +66,10 @@ APPDEPS += ${OBJ_COMMON} ${OBJ_FRAMEWORK} ${APP_OBJ}
 include $(RIOTBASE)/Makefile.include
 #Disable Warnings as Errors
 WERROR = 0
+CFLAGS := $(filter-out -Wall,$(CFLAGS))
+CFLAGS := $(filter-out -Werror,$(CFLAGS))
+CFLAGS := $(filter-out -Wextra,$(CFLAGS))
+CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 CFLAGS := $(filter-out -Werror=old-style-definition,$(CFLAGS))
 CFLAGS := $(filter-out -Wold-style-definition,$(CFLAGS))
 
