@@ -180,9 +180,9 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
 void
 oc_create_discovery_resource(void)
 {
-  oc_core_populate_resource(OCF_RES, "/oic/res", "oic.wk.res",
-                            OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
-                            oc_core_discovery_handler, 0, 0, 0, 0);
+  oc_core_populate_resource(OCF_RES, 0, "oic/res", OC_IF_LL | OC_IF_BASELINE,
+                            OC_IF_LL, 0, oc_core_discovery_handler, 0, 0, 0, 1,
+                            "oic.wk.res");
 }
 
 #ifdef OC_CLIENT

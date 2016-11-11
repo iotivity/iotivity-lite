@@ -23,6 +23,8 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
+#include <stdarg.h>
+
 static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
 struct oc_device_info_t
 {
@@ -136,9 +138,15 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   int ocf_d = NUM_OC_CORE_RESOURCES - 1 - device_count;
 
   /* Construct device resource */
-  oc_core_populate_resource(ocf_d, uri, rt, OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_DISCOVERABLE,
-                            oc_core_device_handler, 0, 0, 0, device_count);
+  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
+    oc_core_populate_resource(
+      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_BASELINE,
+      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
+  } else {
+    oc_core_populate_resource(
+      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_BASELINE,
+      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
+  }
 
   /* Encoding device resource payload */
   oc_alloc_string(&temp_buffer, MAX_DEVICE_PAYLOAD_SIZE);
@@ -202,9 +210,9 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   oc_string_t temp_buffer;
   /* Populating resource obuject */
-  oc_core_populate_resource(
-    OCF_P, OC_RSRVD_PLATFORM_URI, "oic.wk.p", OC_IF_R | OC_IF_BASELINE,
-    OC_IF_BASELINE, OC_DISCOVERABLE, oc_core_platform_handler, 0, 0, 0, 0);
+  oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
+                            OC_IF_BASELINE, OC_DISCOVERABLE,
+                            oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
   /* Encoding platform resource payload */
   oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);
@@ -234,20 +242,30 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 }
 
 void
-oc_core_populate_resource(int type, const char *uri, const char *rt,
+oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           oc_interface_mask_t interfaces,
                           oc_interface_mask_t default_interface,
                           oc_resource_properties_t properties,
                           oc_request_callback_t get, oc_request_callback_t put,
                           oc_request_callback_t post,
-                          oc_request_callback_t delete, int device)
+                          oc_request_callback_t delete, int num_resource_types,
+                          ...)
 {
-  oc_resource_t *r = &core_resources[type];
-  r->device = device;
-  oc_new_string(&r->uri, uri);
+  oc_resource_t *r = &core_resources[core_resource];
+  r->device = device_index;
+  const char *start = uri;
+  while (start[0] == '/')
+    start++;
+  oc_new_string(&r->uri, start);
   r->properties = properties;
-  oc_new_string_array(&r->types, 1);
-  oc_string_array_add_item(r->types, rt);
+  va_list rt_list;
+  int i;
+  va_start(rt_list, num_resource_types);
+  oc_new_string_array(&r->types, num_resource_types);
+  for (i = 0; i < num_resource_types; i++) {
+    oc_string_array_add_item(r->types, va_arg(rt_list, const char *));
+  }
+  va_end(rt_list);
   r->interfaces = interfaces;
   r->default_interface = default_interface;
   r->get_handler.cb = get;
