@@ -18,6 +18,11 @@
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
+
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER */
+
 #include "oc_core_res.h"
 
 extern int oc_stack_errno;
@@ -128,6 +133,28 @@ oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
   }
   return resource;
 }
+
+#if defined(OC_COLLECTIONS)
+oc_resource_t *
+oc_new_collection(const char *uri, uint8_t num_resource_types, int device)
+{
+  oc_collection_t *collection = oc_collection_alloc();
+  if (collection) {
+    collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
+    collection->default_interface = OC_IF_LL;
+    oc_populate_resource_object((oc_resource_t *)collection, uri,
+                                num_resource_types, device);
+  }
+  return (oc_resource_t *)collection;
+}
+
+bool
+oc_add_collection(oc_resource_t *collection)
+{
+  oc_resource_set_observable(collection, false);
+  return oc_collection_add((oc_collection_t *)collection);
+}
+#endif /* OC_COLLECTIONS */
 
 void
 oc_resource_bind_resource_interface(oc_resource_t *resource, uint8_t interface)

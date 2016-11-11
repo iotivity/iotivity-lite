@@ -1,0 +1,271 @@
+/*
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+
+#include "config.h"
+
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "oc_api.h"
+#include "oc_collection.h"
+#include "oc_core_res.h"
+#include "util/oc_memb.h"
+
+OC_MEMB(oc_collections_s, oc_collection_t, MAX_NUM_COLLECTIONS);
+OC_LIST(oc_collections);
+OC_MEMB(oc_links_s, oc_link_t, MAX_APP_RESOURCES);
+
+oc_collection_t *
+oc_collection_alloc()
+{
+  oc_collection_t *collection = oc_memb_alloc(&oc_collections_s);
+  if (collection) {
+    OC_LIST_STRUCT_INIT(collection, links);
+    return collection;
+  }
+  return NULL;
+}
+
+oc_link_t *
+oc_new_link(const char *href, int num_resource_types, int num_rel)
+{
+  oc_link_t *link = oc_memb_alloc(&oc_links_s);
+  if (link) {
+    const char *start = href;
+    while (start[0] == '/')
+      start++;
+    oc_new_string(&link->href, start);
+    link->resource = oc_ri_get_app_resource_by_uri(start);
+    if (num_resource_types > 0)
+      oc_new_string_array(&link->types, num_resource_types);
+    if (num_rel > 0)
+      oc_new_string_array(&link->rel, num_rel);
+    link->interfaces = OC_IF_BASELINE;
+  }
+  return link;
+}
+
+void
+oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
+{
+  oc_collection_t *c = (oc_collection_t *)collection;
+  oc_list_add(c->links, link);
+}
+
+void
+oc_link_set_if(oc_link_t *link, oc_interface_mask_t interfaces)
+{
+  link->interfaces |= interfaces;
+}
+
+void
+oc_link_add_rt(oc_link_t *link, const char *rt)
+{
+  oc_string_array_add_item(link->types, rt);
+}
+
+void
+oc_link_add_rel(oc_link_t *link, const char *rel)
+{
+  oc_string_array_add_item(link->rel, rel);
+}
+
+void
+oc_link_set_bp(oc_link_t *link, const char *key, const char *value)
+{
+  oc_new_string(&link->bp_key, key);
+  oc_new_string(&link->bp_value, value);
+}
+
+oc_collection_t *
+oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
+{
+  oc_collection_t *collection = oc_list_head(oc_collections);
+  while (collection != NULL) {
+    if (oc_string_len(collection->uri) == uri_path_len &&
+        strncmp(oc_string(collection->uri), uri_path, uri_path_len) == 0)
+      break;
+    collection = collection->next;
+  }
+  return collection;
+}
+
+bool
+oc_collection_add(oc_collection_t *collection)
+{
+  if (oc_list_length(collection->links) > 0) {
+    oc_list_add(oc_collections, collection);
+    return true;
+  }
+  return false;
+}
+
+static bool
+oc_collection_filter_rt(oc_link_t *link, const char *rt, int rt_len)
+{
+  bool match = true;
+  if (rt_len > 0) {
+    match = false;
+    int i;
+    for (i = 0; i < oc_string_array_get_allocated_size(link->types); i++) {
+      int size = oc_string_array_get_item_size(link->types, i);
+      const char *t = (const char *)oc_string_array_get_item(link->types, i);
+      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        match = true;
+        break;
+      }
+    }
+  }
+  return match;
+}
+
+bool
+oc_handle_collection_request(oc_method_t method, oc_request_t *request,
+                             oc_interface_mask_t interface)
+{
+  char *rt;
+  int rt_len =
+    oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
+  oc_collection_t *collection = (oc_collection_t *)request->resource;
+  oc_link_t *link = oc_list_head(collection->links);
+  switch (interface) {
+  case OC_IF_BASELINE: {
+    oc_rep_start_root_object();
+    oc_process_baseline_interface(request->resource);
+    oc_rep_set_array(root, links);
+    while (link != NULL) {
+      if (oc_collection_filter_rt(link, rt, rt_len)) {
+        oc_rep_object_array_start_item(links);
+        oc_rep_set_text_string(links, href, oc_string(link->href));
+        oc_rep_set_string_array(links, rt, link->types);
+        oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
+        if (oc_string_len(link->bp_key) > 0) {
+          oc_rep_set_object(links, bp);
+          oc_rep_set_text_string(bp, oc_string(link->bp_key),
+                                 oc_string(link->bp_value));
+          oc_rep_close_object(links, bp);
+        }
+        if (oc_string_len(link->rel))
+          oc_rep_set_text_string(links, rel, oc_string(link->rel));
+        oc_rep_object_array_end_item(links);
+      }
+      link = link->next;
+    }
+    oc_rep_close_array(root, links);
+    oc_rep_end_root_object();
+  } break;
+  case OC_IF_LL: {
+    oc_rep_start_links_array();
+    while (link != NULL) {
+      if (oc_collection_filter_rt(link, rt, rt_len)) {
+        oc_rep_object_array_start_item(links);
+        oc_rep_set_text_string(links, href, oc_string(link->href));
+        oc_rep_set_string_array(links, rt, link->types);
+        oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
+        if (oc_string_len(link->bp_key) > 0) {
+          oc_rep_set_object(links, bp);
+          oc_rep_set_text_string(bp, oc_string(link->bp_key),
+                                 oc_string(link->bp_value));
+          oc_rep_close_object(links, bp);
+        }
+        if (oc_string_array_get_allocated_size(link->rel) > 0)
+          oc_rep_set_string_array(links, rel, link->rel);
+        oc_rep_object_array_end_item(links);
+      }
+      link = link->next;
+    }
+    oc_rep_end_links_array();
+  } break;
+  case OC_IF_B: {
+    CborEncoder encoder;
+    oc_request_t rest_request = {};
+    oc_response_t response = {};
+    oc_response_buffer_t response_buffer;
+    oc_interface_mask_t bp_if;
+    response.response_buffer = &response_buffer;
+    rest_request.response = &response;
+    rest_request.request_payload = request->request_payload;
+    rest_request.origin = request->origin;
+    oc_rep_start_links_array();
+    memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+    while (link != NULL) {
+      if (link->resource) {
+        if (oc_collection_filter_rt(link, rt, rt_len)) {
+          oc_rep_object_array_start_item(links);
+          rest_request.query = 0;
+          rest_request.query_len = 0;
+          bp_if = link->resource->default_interface;
+          if (oc_string_len(link->bp_key) > 0) {
+            const char *key = oc_string(link->bp_key);
+            if (key[0] == 'q') {
+              rest_request.query = oc_string(link->bp_value);
+              rest_request.query_len = oc_string_len(link->bp_value);
+              char *iface;
+              int if_len = oc_ri_get_query_value(
+                rest_request.query, rest_request.query_len, "if", &iface);
+              if (if_len > 0)
+                bp_if = oc_ri_get_interface_mask(iface, if_len);
+            }
+          }
+          oc_rep_set_text_string(links, href, oc_string(link->href));
+          oc_rep_set_key(*oc_rep_object(links), "rep");
+          memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+          rest_request.resource = link->resource;
+          response_buffer.code = 0;
+          response_buffer.response_length = 0;
+          switch (method) {
+          case OC_GET:
+            if (link->resource->get_handler.cb)
+              link->resource->get_handler.cb(
+                &rest_request, bp_if, link->resource->get_handler.user_data);
+            break;
+          case OC_PUT:
+            if (link->resource->put_handler.cb)
+              link->resource->put_handler.cb(
+                &rest_request, bp_if, link->resource->get_handler.user_data);
+            break;
+          case OC_POST:
+            if (link->resource->post_handler.cb)
+              link->resource->post_handler.cb(
+                &rest_request, bp_if, link->resource->get_handler.user_data);
+            break;
+          case OC_DELETE:
+            if (link->resource->delete_handler.cb)
+              link->resource->delete_handler.cb(
+                &rest_request, bp_if, link->resource->get_handler.user_data);
+            break;
+          }
+          memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
+          oc_rep_object_array_end_item(links);
+        }
+      }
+      link = link->next;
+    }
+    memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
+    oc_rep_end_links_array();
+  } break;
+  default:
+    break;
+  }
+  oc_send_response(request, OC_STATUS_OK);
+  return true;
+}
+
+oc_collection_t *
+oc_collection_get_all()
+{
+  return (oc_collection_t *)oc_list_head(oc_collections);
+}
+
+#endif /* OC_COLLECTIONS && OC_SERVER */
