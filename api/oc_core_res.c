@@ -157,7 +157,6 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_rep_set_string_array(root, rt, core_resources[ocf_d].types);
   oc_core_encode_interfaces_mask(oc_rep_object(root),
                                  core_resources[ocf_d].interfaces);
-  oc_rep_set_uint(root, p, core_resources[ocf_d].properties);
 
   char uuid[37];
   oc_uuid_to_str(&oc_device_info[device_count].uuid, uuid, 37);
@@ -222,7 +221,6 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   oc_core_encode_interfaces_mask(oc_rep_object(root),
                                  core_resources[OCF_P].interfaces);
-  oc_rep_set_uint(root, p, core_resources[OCF_P].properties & ~OC_PERIODIC);
 
   oc_uuid_t uuid; /*fix uniqueness of platform id?? */
   oc_gen_uuid(&uuid);
