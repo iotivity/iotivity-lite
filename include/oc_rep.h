@@ -18,7 +18,6 @@
 #define OC_REP_H
 
 #include "deps/tinycbor/src/cbor.h"
-#include "oc_constants.h"
 #include "oc_helpers.h"
 #include <config.h>
 #include <stdbool.h>

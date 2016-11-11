@@ -448,20 +448,19 @@ oc_interface_mask_t
 oc_ri_get_interface_mask(char *iface, int if_len)
 {
   oc_interface_mask_t interface = 0;
-  if (OC_BASELINE_IF_LEN == if_len &&
-      strncmp(iface, OC_RSRVD_IF_BASELINE, if_len) == 0)
+  if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0)
     interface |= OC_IF_BASELINE;
-  if (OC_LL_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_LL, if_len) == 0)
+  if (9 == if_len && strncmp(iface, "oic.if.ll", if_len) == 0)
     interface |= OC_IF_LL;
-  if (OC_B_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_B, if_len) == 0)
+  if (8 == if_len && strncmp(iface, "oic.if.b", if_len) == 0)
     interface |= OC_IF_B;
-  if (OC_R_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_R, if_len) == 0)
+  if (8 == if_len && strncmp(iface, "oic.if.r", if_len) == 0)
     interface |= OC_IF_R;
-  if (OC_RW_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_RW, if_len) == 0)
+  if (9 == if_len && strncmp(iface, "oic.if.rw", if_len) == 0)
     interface |= OC_IF_RW;
-  if (OC_A_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_A, if_len) == 0)
+  if (8 == if_len && strncmp(iface, "oic.if.a", if_len) == 0)
     interface |= OC_IF_A;
-  if (OC_S_IF_LEN == if_len && strncmp(iface, OC_RSRVD_IF_S, if_len) == 0)
+  if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0)
     interface |= OC_IF_S;
   return interface;
 }

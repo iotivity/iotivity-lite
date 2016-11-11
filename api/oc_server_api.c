@@ -18,7 +18,6 @@
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
-#include "oc_constants.h"
 #include "oc_core_res.h"
 
 extern int oc_stack_errno;
