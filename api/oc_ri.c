@@ -37,6 +37,10 @@
 #include "oc_ri.h"
 #include "oc_uuid.h"
 
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER */
+
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
 #include "security/oc_dtls.h"
@@ -507,9 +511,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    */
   bool method_impl = true, bad_request = false, success = true;
 
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+  bool resource_is_collection = false;
+#endif /* OC_COLLECTIONS && OC_SERVER */
+
 #ifdef OC_SECURITY
   bool authorized = true;
-#endif
+#endif /* OC_SECURITY */
 
   /* Parsed CoAP PDU structure. */
   coap_packet_t *const packet = (coap_packet_t *)request;
@@ -611,8 +619,16 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         break;
       }
     }
+#if defined(OC_COLLECTIONS)
+    if (!cur_resource) {
+      request_obj.resource = cur_resource =
+        (oc_resource_t *)oc_get_collection_by_uri(uri_path, uri_path_len);
+      if (cur_resource)
+        resource_is_collection = true;
+    }
+#endif /* OC_COLLECTIONS */
   }
-#endif
+#endif /* OC_SERVER */
 
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
@@ -653,11 +669,19 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     } else
 #endif
     {
-      /* Invoke a specific request handler for the resource
-             * based on the request method. If the resource has not
-             * implemented that method, then return a 4.05 response.
-             */
-      if (method == OC_GET && cur_resource->get_handler.cb) {
+/* If cur_resource is a collection resource, invoke the framework's
+ * internal handler for collections.
+ */
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+      if (resource_is_collection) {
+        oc_handle_collection_request(method, &request_obj, interface);
+      } else
+#endif  /* OC_COLLECTIONS && OC_SERVER */
+        /* If cur_resource is a non-collection resource, invoke
+         * its handler for the requested method. If it has not
+         * implemented that method, then return a 4.05 response.
+         */
+        if (method == OC_GET && cur_resource->get_handler.cb) {
         cur_resource->get_handler.cb(&request_obj, interface,
                                      cur_resource->get_handler.user_data);
       } else if (method == OC_POST && cur_resource->post_handler.cb) {
@@ -800,7 +824,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if ((method == OC_PUT || method == OC_POST) &&
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-      oc_ri_add_timed_event_callback_ticks(cur_resource, &oc_observe_notification_delayed, 0);
+      oc_ri_add_timed_event_callback_ticks(cur_resource,
+                                           &oc_observe_notification_delayed, 0);
 #endif
     if (response_buffer.response_length) {
       coap_set_payload(response, response_buffer.buffer,
@@ -909,7 +934,7 @@ oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint)
           break;
         }
       }
-      coap_get_header_observe(pkt, (uint32_t*)&client_response.observe_option);
+      coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
 
       bool separate = false;
       /*
@@ -1027,8 +1052,3 @@ OC_PROCESS_THREAD(timed_callback_events, ev, data)
   }
   OC_PROCESS_END();
 }
-
-// TODO:
-// resource collections
-// if method accepted by interface selection
-// resources for presence based discovery

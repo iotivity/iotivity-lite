@@ -129,6 +129,9 @@ struct oc_resource_s
   uint8_t num_observers;
 };
 
+typedef struct oc_link_s oc_link_t;
+typedef struct oc_collection_s oc_collection_t;
+
 typedef enum { DONE = 0, CONTINUE } oc_event_callback_retval_t;
 
 typedef oc_event_callback_retval_t (*oc_trigger_t)(void *);

@@ -20,6 +20,11 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER */
+
 #include "oc_core_res.h"
 
 static bool
@@ -120,7 +125,20 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
     if (filter_resource(resource, rt, rt_len, oc_rep_array(links)))
       matches++;
   }
-#endif
+
+#if defined(OC_COLLECTIONS)
+  oc_collection_t *collection = oc_collection_get_all();
+  for (; collection; collection = collection->next) {
+    if (collection->device != device_num ||
+        !(collection->properties & OC_DISCOVERABLE))
+      continue;
+
+    if (filter_resource((oc_resource_t *)collection, rt, rt_len,
+                        oc_rep_array(links)))
+      matches++;
+  }
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
 
 #ifdef OC_SECURITY
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM), rt, rt_len,
