@@ -101,23 +101,33 @@ oc_process_baseline_interface(oc_resource_t *resource)
 #ifdef OC_SERVER
 static int query_iterator;
 
-// FIX: validate uri
-oc_resource_t *
-oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
+static void
+oc_populate_resource_object(oc_resource_t *resource, const char *uri,
+                            uint8_t num_resource_types, int device)
 {
-  oc_resource_t *resource = oc_ri_alloc_resource();
   const char *start = uri;
-  size_t end = strlen(uri);
+  while (start[0] == '/')
+    start++;
+  size_t end = strlen(uri) - (start - uri);
   oc_alloc_string(&resource->uri, end + 1);
   strncpy((char *)oc_string(resource->uri), start, end);
   strcpy((char *)oc_string(resource->uri) + end, (const char *)"");
   oc_new_string_array(&resource->types, num_resource_types);
-  resource->interfaces = OC_IF_BASELINE;
-  resource->default_interface = OC_IF_BASELINE;
-  resource->observe_period_seconds = 0;
   resource->properties = 0;
-  resource->num_observers = 0;
   resource->device = device;
+}
+
+oc_resource_t *
+oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
+{
+  oc_resource_t *resource = oc_ri_alloc_resource();
+  if (resource) {
+    resource->interfaces = OC_IF_BASELINE;
+    resource->default_interface = OC_IF_BASELINE;
+    resource->observe_period_seconds = 0;
+    resource->num_observers = 0;
+    oc_populate_resource_object(resource, uri, num_resource_types, device);
+  }
   return resource;
 }
 
