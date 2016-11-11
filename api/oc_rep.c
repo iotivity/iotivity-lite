@@ -38,16 +38,9 @@ int
 oc_rep_finalize(void)
 {
   int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
-  oc_rep_reset();
   if (g_err != CborNoError)
     return -1;
   return size;
-}
-
-void
-oc_rep_reset(void)
-{
-  g_encoder = g_empty;
 }
 
 static oc_rep_t *
