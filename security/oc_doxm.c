@@ -73,8 +73,8 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
-    if (ql && ((doxm.owned == 1 && strncasecmp(q, "false", 5) == 0) ||
-               (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
+    if (ql > 0 && ((doxm.owned == 1 && strncasecmp(q, "false", 5) == 0) ||
+                   (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       oc_ignore_request(request);
     } else {
       oc_sec_encode_doxm();
