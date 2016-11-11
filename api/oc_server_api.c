@@ -94,7 +94,6 @@ oc_process_baseline_interface(oc_resource_t *resource)
 {
   oc_rep_set_string_array(root, rt, resource->types);
   oc_core_encode_interfaces_mask(oc_rep_object(root), resource->interfaces);
-  oc_rep_set_uint(root, p, resource->properties & ~OC_PERIODIC);
 }
 
 #ifdef OC_SERVER
