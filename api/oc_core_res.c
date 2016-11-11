@@ -41,24 +41,24 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   oc_rep_set_key((*parent), "if");
   oc_rep_start_array((*parent), if);
   if (interface & OC_IF_LL) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_LL);
+    oc_rep_add_text_string(if, "oic.if.ll");
   }
   if (interface & OC_IF_B) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_B);
+    oc_rep_add_text_string(if, "oic.if.b");
   }
   if (interface & OC_IF_R) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_R);
+    oc_rep_add_text_string(if, "oic.if.r");
   }
   if (interface & OC_IF_RW) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_RW);
+    oc_rep_add_text_string(if, "oic.if.rw");
   }
   if (interface & OC_IF_A) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_A);
+    oc_rep_add_text_string(if, "oic.if.a");
   }
   if (interface & OC_IF_S) {
-    oc_rep_add_text_string(if, OC_RSRVD_IF_S);
+    oc_rep_add_text_string(if, "oic.if.s");
   }
-  oc_rep_add_text_string(if, OC_RSRVD_IF_BASELINE);
+  oc_rep_add_text_string(if, "oic.if.baseline");
   oc_rep_end_array((*parent), if);
 }
 
