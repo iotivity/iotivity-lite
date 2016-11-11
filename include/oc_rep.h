@@ -27,7 +27,6 @@ extern CborEncoder g_encoder, root_map, links_array;
 extern CborError g_err;
 
 void oc_rep_new(uint8_t *payload, int size);
-void oc_rep_reset(void);
 int oc_rep_finalize(void);
 
 #define oc_rep_object(name) &name##_map
