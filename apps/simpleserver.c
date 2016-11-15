@@ -28,10 +28,6 @@ app_init(void)
   oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
 
   oc_new_string(&name, "John's Light");
-
-#ifdef OC_SECURITY
-  oc_storage_config("./creds");
-#endif /* OC_SECURITY */
 }
 
 static void
@@ -198,6 +194,10 @@ main(void)
                                          register_resources };
 
   oc_clock_time_t next_event;
+
+#ifdef OC_SECURITY
+  oc_storage_config("./creds");
+#endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
   if (init < 0)
