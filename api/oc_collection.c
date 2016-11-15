@@ -42,11 +42,8 @@ oc_new_link(const char *href, int num_resource_types, int num_rel)
 {
   oc_link_t *link = oc_memb_alloc(&oc_links_s);
   if (link) {
-    const char *start = href;
-    while (start[0] == '/')
-      start++;
-    oc_new_string(&link->href, start);
-    link->resource = oc_ri_get_app_resource_by_uri(start);
+    oc_store_uri(href, &link->href);
+    link->resource = oc_ri_get_app_resource_by_uri(oc_string(link->href));
     if (num_resource_types > 0)
       oc_new_string_array(&link->types, num_resource_types);
     if (num_rel > 0)
@@ -93,8 +90,8 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
 {
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
-    if (oc_string_len(collection->uri) == uri_path_len &&
-        strncmp(oc_string(collection->uri), uri_path, uri_path_len) == 0)
+    if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
+        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0)
       break;
     collection = collection->next;
   }

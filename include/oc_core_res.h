@@ -43,6 +43,8 @@ oc_resource_t *oc_core_get_resource_by_index(int type);
 
 oc_resource_t *oc_core_get_resource_by_uri(const char *uri);
 
+void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
+
 void oc_core_populate_resource(
   int core_resource, int device_index, const char *uri,
   oc_interface_mask_t interfaces, oc_interface_mask_t default_interface,

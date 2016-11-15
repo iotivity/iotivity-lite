@@ -240,6 +240,19 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 }
 
 void
+oc_store_uri(const char *s_uri, oc_string_t *d_uri)
+{
+  if (s_uri[0] != '/') {
+    size_t s_len = strlen(s_uri);
+    oc_alloc_string(d_uri, s_len + 2);
+    memcpy((char *)oc_string(*d_uri) + 1, s_uri, s_len);
+    ((char *)oc_string(*d_uri))[0] = '/';
+    ((char *)oc_string(*d_uri))[s_len + 2] = '\0';
+  } else
+    oc_new_string(d_uri, s_uri);
+}
+
+void
 oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           oc_interface_mask_t interfaces,
                           oc_interface_mask_t default_interface,
@@ -251,10 +264,7 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
 {
   oc_resource_t *r = &core_resources[core_resource];
   r->device = device_index;
-  const char *start = uri;
-  while (start[0] == '/')
-    start++;
-  oc_new_string(&r->uri, start);
+  oc_store_uri(uri, &r->uri);
   r->properties = properties;
   va_list rt_list;
   int i;
