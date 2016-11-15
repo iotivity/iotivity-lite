@@ -27,8 +27,7 @@ struct oc_link_s
   oc_string_t href;
   oc_string_array_t types;
   oc_interface_mask_t interfaces;
-  oc_string_t bp_key;
-  oc_string_t bp_value;
+  oc_string_t bp;
   oc_string_array_t rel;
 };
 
