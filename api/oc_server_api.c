@@ -108,13 +108,7 @@ static void
 oc_populate_resource_object(oc_resource_t *resource, const char *uri,
                             uint8_t num_resource_types, int device)
 {
-  const char *start = uri;
-  while (start[0] == '/')
-    start++;
-  size_t end = strlen(uri) - (start - uri);
-  oc_alloc_string(&resource->uri, end + 1);
-  strncpy((char *)oc_string(resource->uri), start, end);
-  strcpy((char *)oc_string(resource->uri) + end, (const char *)"");
+  oc_store_uri(uri, &resource->uri);
   oc_new_string_array(&resource->types, num_resource_types);
   resource->properties = 0;
   resource->device = device;
