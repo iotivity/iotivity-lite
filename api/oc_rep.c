@@ -277,17 +277,23 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
       cur = &(*cur)->next;
     }
   } else if (cbor_value_is_array(&root_value)) {
-    err |= cbor_value_enter_container(&root_value, &map);
-    err |= cbor_value_enter_container(&map, &cur_value);
     *out_rep = 0;
-    oc_rep_t **cur = out_rep;
-    while (cbor_value_is_valid(&cur_value)) {
+    oc_rep_t **cur = out_rep, **kv;
+    err |= cbor_value_enter_container(&root_value, &map);
+    while (cbor_value_is_valid(&map)) {
       *cur = _alloc_rep();
       (*cur)->type = OBJECT;
-      oc_parse_rep_value(&cur_value, &(*cur)->value_object, &err);
-      err |= cbor_value_advance(&cur_value);
+      kv = &(*cur)->value_object;
+      err |= cbor_value_enter_container(&map, &cur_value);
+      while (cbor_value_is_valid(&cur_value)) {
+        oc_parse_rep_value(&cur_value, kv, &err);
+        err |= cbor_value_advance(&cur_value);
+        (*kv)->next = 0;
+        kv = &(*kv)->next;
+      }
       (*cur)->next = 0;
       cur = &(*cur)->next;
+      err |= cbor_value_advance(&map);
     }
   }
   return (uint16_t)err;
