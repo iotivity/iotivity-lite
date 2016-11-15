@@ -48,15 +48,15 @@ oc_main_init(const oc_handler_t *handler)
 
   oc_ri_init();
 
-  app_callbacks->init();
-
 #ifdef OC_SECURITY
   oc_sec_load_pstat();
   oc_sec_load_doxm();
   oc_sec_load_cred();
-
   oc_sec_dtls_init_context();
+  oc_sec_create_svr();
 #endif
+
+  app_callbacks->init();
 
   oc_network_event_handler_mutex_init();
   ret = oc_connectivity_init();
@@ -68,7 +68,6 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
-  oc_sec_create_svr();
   oc_sec_load_acl();
 #endif
 
