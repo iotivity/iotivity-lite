@@ -70,7 +70,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
 oc_resource_t *oc_new_collection(const char *uri, uint8_t num_resource_types,
                                  int device);
 oc_link_t *oc_new_link(const char *href, int num_resource_types, int num_rel);
-void oc_link_set_bp(oc_link_t *link, const char *key, const char *value);
+void oc_link_set_bp(oc_link_t *link, const char *bp);
 void oc_link_set_if(oc_link_t *link, oc_interface_mask_t interfaces);
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 void oc_link_add_rt(oc_link_t *link, const char *rt);

@@ -79,10 +79,9 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 void
-oc_link_set_bp(oc_link_t *link, const char *key, const char *value)
+oc_link_set_bp(oc_link_t *link, const char *bp)
 {
-  oc_new_string(&link->bp_key, key);
-  oc_new_string(&link->bp_value, value);
+  oc_new_string(&link->bp, bp);
 }
 
 oc_collection_t *
@@ -147,10 +146,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_text_string(links, href, oc_string(link->href));
         oc_rep_set_string_array(links, rt, link->types);
         oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
-        if (oc_string_len(link->bp_key) > 0) {
+        if (oc_string_len(link->bp) > 0) {
           oc_rep_set_object(links, bp);
-          oc_rep_set_text_string(bp, oc_string(link->bp_key),
-                                 oc_string(link->bp_value));
+          oc_rep_set_text_string(bp, q, oc_string(link->bp));
           oc_rep_close_object(links, bp);
         }
         if (oc_string_len(link->rel))
@@ -170,10 +168,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_text_string(links, href, oc_string(link->href));
         oc_rep_set_string_array(links, rt, link->types);
         oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
-        if (oc_string_len(link->bp_key) > 0) {
+        if (oc_string_len(link->bp) > 0) {
           oc_rep_set_object(links, bp);
-          oc_rep_set_text_string(bp, oc_string(link->bp_key),
-                                 oc_string(link->bp_value));
+          oc_rep_set_text_string(bp, q, oc_string(link->bp));
           oc_rep_close_object(links, bp);
         }
         if (oc_string_array_get_allocated_size(link->rel) > 0)
@@ -185,68 +182,98 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     oc_rep_end_links_array();
   } break;
   case OC_IF_B: {
-    CborEncoder encoder;
+    CborEncoder encoder, prev_link;
     oc_request_t rest_request = {};
     oc_response_t response = {};
     oc_response_buffer_t response_buffer;
     oc_interface_mask_t bp_if;
+    bool method_not_found = false;
+
     response.response_buffer = &response_buffer;
     rest_request.response = &response;
     rest_request.request_payload = request->request_payload;
     rest_request.origin = request->origin;
+
     oc_rep_start_links_array();
     memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+
     while (link != NULL) {
       if (link->resource) {
         if (oc_collection_filter_rt(link, rt, rt_len)) {
+          memcpy(&prev_link, &links_array, sizeof(CborEncoder));
           oc_rep_object_array_start_item(links);
+
           rest_request.query = 0;
           rest_request.query_len = 0;
           bp_if = link->resource->default_interface;
-          if (oc_string_len(link->bp_key) > 0) {
-            const char *key = oc_string(link->bp_key);
-            if (key[0] == 'q') {
-              rest_request.query = oc_string(link->bp_value);
-              rest_request.query_len = oc_string_len(link->bp_value);
-              char *iface;
-              int if_len = oc_ri_get_query_value(
-                rest_request.query, rest_request.query_len, "if", &iface);
-              if (if_len > 0)
-                bp_if = oc_ri_get_interface_mask(iface, if_len);
-            }
+          if (oc_string_len(link->bp) > 0) {
+            rest_request.query = oc_string(link->bp);
+            rest_request.query_len = oc_string_len(link->bp);
+            char *iface;
+            int if_len = oc_ri_get_query_value(
+              rest_request.query, rest_request.query_len, "if", &iface);
+            if (if_len > 0)
+              bp_if = oc_ri_get_interface_mask(iface, if_len);
           }
+
           oc_rep_set_text_string(links, href, oc_string(link->href));
           oc_rep_set_key(*oc_rep_object(links), "rep");
           memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+
+          int size_before = oc_rep_finalize();
           rest_request.resource = link->resource;
           response_buffer.code = 0;
           response_buffer.response_length = 0;
+          method_not_found = false;
+
           switch (method) {
           case OC_GET:
             if (link->resource->get_handler.cb)
               link->resource->get_handler.cb(
                 &rest_request, bp_if, link->resource->get_handler.user_data);
+            else
+              method_not_found = true;
             break;
           case OC_PUT:
             if (link->resource->put_handler.cb)
               link->resource->put_handler.cb(
                 &rest_request, bp_if, link->resource->get_handler.user_data);
+            else
+              method_not_found = true;
             break;
           case OC_POST:
             if (link->resource->post_handler.cb)
               link->resource->post_handler.cb(
                 &rest_request, bp_if, link->resource->get_handler.user_data);
+            else
+              method_not_found = true;
             break;
           case OC_DELETE:
             if (link->resource->delete_handler.cb)
               link->resource->delete_handler.cb(
                 &rest_request, bp_if, link->resource->get_handler.user_data);
+            else
+              method_not_found = true;
             break;
           }
+
+          if (method_not_found ||
+              response_buffer.code >= oc_status_code(OC_STATUS_BAD_REQUEST)) {
+            memcpy(&links_array, &prev_link, sizeof(CborEncoder));
+            goto next;
+          } else {
+            int size_after = oc_rep_finalize();
+            if (size_before == size_after) {
+              oc_rep_start_root_object();
+              oc_rep_end_root_object();
+            }
+          }
+
           memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
           oc_rep_object_array_end_item(links);
         }
       }
+    next:
       link = link->next;
     }
     memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
@@ -255,7 +282,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   default:
     break;
   }
+
   oc_send_response(request, OC_STATUS_OK);
+
   return true;
 }
 
