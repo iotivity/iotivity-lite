@@ -88,6 +88,10 @@ oc_link_set_bp(oc_link_t *link, const char *bp)
 oc_collection_t *
 oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
 {
+  while (uri_path[0] == '/') {
+    uri_path++;
+    uri_path_len--;
+  }
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
     if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
