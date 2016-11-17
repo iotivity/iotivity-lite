@@ -66,12 +66,9 @@ oc_sec_dtls_inactive(void *data)
     if (time < DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
-    } else if (time < 2 * DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
-      LOG("\n\noc_sec_dtls: Initiating connection close\n\n");
-      oc_sec_dtls_close_init(data);
-      return CONTINUE;
     } else {
-      LOG("\n\noc_sec_dtls: Completing connection close\n\n");
+      LOG("\n\noc_sec_dtls: Closing DTLS connection\n\n");
+      oc_sec_dtls_close_init(data);
       oc_sec_dtls_close_finish(data);
     }
   } else {
@@ -335,6 +332,7 @@ oc_sec_dtls_close_finish(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *p = oc_sec_dtls_get_peer(endpoint);
   if (p) {
+    oc_ri_remove_timed_event_callback(&p->session.addr, oc_sec_dtls_inactive);
     dtls_peer_t *peer = dtls_get_peer(ocf_dtls_context, &p->session);
     if (peer) {
       oc_list_remove(ocf_dtls_context->peers, peer);

@@ -156,10 +156,9 @@ got_ace:
     if (res->resource == resource || res->wildcard == true) {
 #ifdef OC_DEBUG
       if (res->wildcard)
-        LOG("Found permissions mask for resource * in ACE\n");
+        LOG("Found resource * in ACE\n");
       else
-        LOG("Found permissions mask for resource %s in ACE\n",
-            oc_string(res->resource->uri));
+        LOG("Found resource %s in ACE\n", oc_string(res->resource->uri));
 #endif
       goto done;
     }
@@ -215,7 +214,13 @@ oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
   res->interfaces = interfaces;
   res->permissions = permissions;
 
-  LOG("Added resource with permissions: %d\n", res->permissions);
+#ifdef OC_DEBUG
+  if (wildcard)
+    LOG("Setting permissions %d for resource *\n", res->permissions);
+  else
+    LOG("Setting permissions %d for resource %s\n", res->permissions,
+        oc_string(resource->uri));
+#endif /* OC_DEBUG */
 
   return res;
 }
@@ -417,17 +422,32 @@ oc_sec_decode_acl(oc_rep_t *rep)
                   break;
                 }
 
-                ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard,
-                                            interfaces, permissions);
-                if (ace_res == NULL) {
+                resource = resource->next;
+              }
+
+#ifdef OC_DEBUG
+              if (wildcard)
+                LOG("\n\noc_sec_acl_decode: Updating resource * in ACE\n");
+              else
+                LOG("\n\noc_sec_acl_decode: Updating resource %s in ACE\n",
+                    oc_string(res->uri));
+#endif /* OC_DEBUG */
+
+              ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard,
+                                          interfaces, permissions);
+              if (ace_res == NULL) {
+#ifdef OC_DEBUG
+                if (wildcard)
+                  LOG("\n\noc_sec_acl_decode: could not update ACE with "
+                      "resource * permissions\n\n");
+                else
                   LOG("\n\noc_sec_acl_decode: could not update ACE with "
                       "resource %s permissions\n\n",
                       oc_string(res->uri));
-                  return false;
-                }
-
-                resource = resource->next;
+#endif /* OC_DEBUG */
+                return false;
               }
+
               resources = resources->next;
             }
             aces = aces->next;
@@ -474,6 +494,13 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_CHANGED);
   else
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+}
+
+void
+get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
+{
+  oc_sec_encode_acl();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 #endif /* OC_SECURITY */
