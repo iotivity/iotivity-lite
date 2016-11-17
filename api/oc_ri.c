@@ -228,19 +228,19 @@ stop_processes(void)
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resource_by_uri(const char *uri)
+oc_ri_get_app_resource_by_uri(const char *uri, int uri_len)
 {
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if (oc_string_len(res->uri) == strlen(uri) &&
-        strncmp(uri, oc_string(res->uri), strlen(uri)) == 0)
+    if (oc_string_len(res->uri) == uri_len &&
+        strncmp(uri, oc_string(res->uri), uri_len) == 0)
       return res;
     res = res->next;
   }
 
 #ifdef OC_COLLECTIONS
   if (!res)
-    res = oc_get_collection_by_uri(uri, strlen(uri));
+    res = oc_get_collection_by_uri(uri, uri_len);
 #endif /* OC_COLLECTIONS */
 
   return res;

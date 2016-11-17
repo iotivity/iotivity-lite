@@ -376,7 +376,8 @@ oc_sec_decode_acl(oc_rep_t *rep)
 #ifdef OC_SERVER
                     if (!res)
                       res = oc_ri_get_app_resource_by_uri(
-                        oc_string(resource->value_string));
+                        oc_string(resource->value_string),
+                        oc_string_len(resource->value_string));
 #endif /* OC_SERVER */
 
                     if (!res) {

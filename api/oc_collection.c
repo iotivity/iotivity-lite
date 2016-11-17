@@ -43,7 +43,8 @@ oc_new_link(const char *href, int num_resource_types, int num_rel)
   oc_link_t *link = oc_memb_alloc(&oc_links_s);
   if (link) {
     oc_store_uri(href, &link->href);
-    link->resource = oc_ri_get_app_resource_by_uri(oc_string(link->href));
+    link->resource = oc_ri_get_app_resource_by_uri(oc_string(link->href),
+                                                   oc_string_len(link->href));
     if (num_resource_types > 0)
       oc_new_string_array(&link->types, num_resource_types);
     if (num_rel > 0)

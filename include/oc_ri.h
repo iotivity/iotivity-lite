@@ -164,7 +164,7 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
 
 int oc_status_code(oc_status_t key);
 
-oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri);
+oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len);
 
 oc_resource_t *oc_ri_get_app_resources(void);
 
