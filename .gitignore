@@ -3,6 +3,8 @@ port/linux/server
 port/linux/temp_sensor
 port/linux/simpleclient
 port/linux/simpleserver
+port/linux/server_collections_linux
+port/linux/client_collections_linux
 port/linux/obj/
 port/zephyr/outdir/
 port/contiki/*.a
