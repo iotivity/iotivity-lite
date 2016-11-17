@@ -317,6 +317,9 @@ oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
 
   while (event_cb != NULL) {
     if (event_cb->data == cb_data && event_cb->callback == event_callback) {
+      OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+      oc_etimer_stop(&event_cb->timer);
+      OC_PROCESS_CONTEXT_END(&timed_callback_events);
       oc_list_remove(timed_callbacks, event_cb);
       oc_memb_free(&event_callbacks_s, event_cb);
       break;
