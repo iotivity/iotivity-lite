@@ -237,6 +237,12 @@ oc_ri_get_app_resource_by_uri(const char *uri)
       return res;
     res = res->next;
   }
+
+#ifdef OC_COLLECTIONS
+  if (!res)
+    res = oc_get_collection_by_uri(uri, strlen(uri));
+#endif /* OC_COLLECTIONS */
+
   return res;
 }
 #endif
