@@ -247,7 +247,7 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
     oc_alloc_string(d_uri, s_len + 2);
     memcpy((char *)oc_string(*d_uri) + 1, s_uri, s_len);
     ((char *)oc_string(*d_uri))[0] = '/';
-    ((char *)oc_string(*d_uri))[s_len + 2] = '\0';
+    ((char *)oc_string(*d_uri))[s_len + 1] = '\0';
   } else
     oc_new_string(d_uri, s_uri);
 }
