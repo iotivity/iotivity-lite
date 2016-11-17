@@ -100,7 +100,6 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
     oc_resource_t *ocf_res = oc_core_get_resource_by_index(OCF_RES);
     oc_rep_set_string_array(links, rt, ocf_res->types);
     oc_core_encode_interfaces_mask(oc_rep_object(links), ocf_res->interfaces);
-    oc_rep_set_uint(links, p, ocf_res->properties);
   }
 
   oc_rep_set_array(links, links);
