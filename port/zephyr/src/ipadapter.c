@@ -91,31 +91,21 @@ net_buf_to_oc_message(struct net_buf *buf, bool secure)
   }
 }
 
-static struct nano_sem sem;
+static struct k_sem sem;
 
-void
-oc_network_event_handler_mutex_init(void)
-{
-  nano_sem_init(&sem);
-  nano_sem_give(&sem);
+void oc_network_event_handler_mutex_init(void) {
+  k_sem_init(&sem, 0, 1);
+  k_sem_give(&sem);
 }
 
-void
-oc_network_event_handler_mutex_lock(void)
-{
-  nano_sem_take(&sem, TICKS_UNLIMITED);
+void oc_network_event_handler_mutex_lock(void) {
+  k_sem_take(&sem, TICKS_UNLIMITED);
 }
 
-void
-oc_network_event_handler_mutex_unlock(void)
-{
-  nano_sem_give(&sem);
-}
+void oc_network_event_handler_mutex_unlock(void) { k_sem_give(&sem); }
 
 #ifdef OC_SECURITY
-static void
-dtls_recv(void)
-{
+static void dtls_recv(void *p1, void *p2, void *p3) {
   static struct net_buf *buf;
   while (!terminate) {
     buf = net_receive(dtls_ctx, TICKS_UNLIMITED);
@@ -127,9 +117,7 @@ dtls_recv(void)
 }
 #endif /* OC_SECURITY */
 
-static void
-multicast_recv(void)
-{
+static void multicast_recv(void *p1, void *p2, void *p3) {
   static struct net_buf *buf;
   while (!terminate) {
     buf = net_receive(multicast_ctx, TICKS_UNLIMITED);
@@ -140,9 +128,7 @@ multicast_recv(void)
   }
 }
 
-static void
-server_recv(void)
-{
+static void server_recv(void *p1, void *p2, void *p3) {
   static struct net_buf *buf;
   while (!terminate) {
     buf = net_receive(recv_ctx, TICKS_UNLIMITED);
@@ -209,15 +195,15 @@ oc_connectivity_init(void)
   dtls_ctx = net_context_get(IPPROTO_UDP, &ipv6_any, 0, &node_addr, DTLS_PORT);
 #endif /* OC_SECURITY */
 
-  task_fiber_start(&stack1[0], RECV_FIBER_STACK_SIZE,
-                   (nano_fiber_entry_t)server_recv, 0, 0, 7, 0);
+  k_thread_spawn(&stack1[0], RECV_FIBER_STACK_SIZE, server_recv, NULL, NULL,
+                 NULL, 7, 0, K_NO_WAIT);
 
-  task_fiber_start(&stack2[0], RECV_FIBER_STACK_SIZE,
-                   (nano_fiber_entry_t)multicast_recv, 0, 0, 7, 0);
+  k_thread_spawn(&stack2[0], RECV_FIBER_STACK_SIZE, multicast_recv, NULL, NULL,
+                 NULL, 7, 0, K_NO_WAIT);
 
 #ifdef OC_SECURITY
-  task_fiber_start(&stack3[0], RECV_FIBER_STACK_SIZE,
-                   (nano_fiber_entry_t)dtls_recv, 0, 0, 7, 0);
+  k_thread_spawn(&stack3[0], RECV_FIBER_STACK_SIZE, dtls_recv, NULL, NULL, NULL,
+                 7, 0, K_NO_WAIT);
 #endif /* OC_SECURITY */
 
   LOG("Successfully initialized connectivity\n");

@@ -1,4 +1,3 @@
-KERNEL_TYPE = nano
 BOARD ?= qemu_x86
 
 ifeq ($(SECURE),1)

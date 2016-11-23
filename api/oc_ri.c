@@ -17,6 +17,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <strings.h>
 
 #include "util/oc_etimer.h"
 #include "util/oc_list.h"

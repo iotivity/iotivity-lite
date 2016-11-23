@@ -20,7 +20,7 @@
 #include <string.h>
 #include <zephyr.h>
 
-static struct nano_sem block;
+static struct k_sem block;
 static bool light_state = false;
 
 static void
@@ -108,11 +108,7 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-static void
-signal_event_loop(void)
-{
-  nano_sem_give(&block);
-}
+static void signal_event_loop(void) { k_sem_give(&block); }
 
 void
 main(void)
@@ -121,7 +117,7 @@ main(void)
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources = register_resources };
 
-  nano_sem_init(&block);
+  k_sem_init(&block, 0, 1);
 
   if (oc_main_init(&handler) < 0)
     return;
@@ -134,7 +130,7 @@ main(void)
       next_event = TICKS_UNLIMITED;
     else
       next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
+    k_sem_take(&block, next_event);
   }
 
   oc_main_shutdown();
