@@ -260,14 +260,14 @@ coap_get_variable(const char *buffer, size_t length, const char *name,
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void
-coap_init_connection()
+coap_init_connection(void)
 {
   /* initialize transaction ID */
   current_mid = (uint16_t)oc_random_value();
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
-coap_get_mid()
+coap_get_mid(void)
 {
   return ++current_mid;
 }
