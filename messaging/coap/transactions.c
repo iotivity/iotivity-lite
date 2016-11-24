@@ -56,7 +56,7 @@ static struct oc_process *transaction_handler_process = NULL;
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void
-coap_register_as_transaction_handler()
+coap_register_as_transaction_handler(void)
 {
   transaction_handler_process = OC_PROCESS_CURRENT();
 }
@@ -186,7 +186,7 @@ coap_get_transaction_by_mid(uint16_t mid)
 
 /*---------------------------------------------------------------------------*/
 void
-coap_check_transactions()
+coap_check_transactions(void)
 {
   coap_transaction_t *t = NULL;
 
