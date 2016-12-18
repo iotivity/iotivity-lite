@@ -15,7 +15,7 @@
  */
 
 #include "port/oc_random.h"
-#include <drivers/system_timer.h>
+#include <drivers/rand32.h>
 
 void
 oc_random_init(void)
@@ -26,7 +26,7 @@ oc_random_init(void)
 unsigned int
 oc_random_value(void)
 {
-  return (unsigned int)sys_cycle_get_32();
+  return (unsigned int)sys_rand32_get();
 }
 
 void

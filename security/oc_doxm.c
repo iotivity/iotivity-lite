@@ -22,6 +22,8 @@
 #include <stddef.h>
 #include <string.h>
 
+extern int strncasecmp(const char *s1, const char *s2, size_t n);
+
 static oc_sec_doxm_t doxm;
 
 // Fix.. multiple devices.. how many doxms, when we retrieve

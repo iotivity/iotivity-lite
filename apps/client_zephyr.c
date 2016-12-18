@@ -24,7 +24,7 @@
 static char light_1[MAX_URI_LENGTH];
 static oc_server_handle_t light_server;
 static bool light_state = false;
-static struct nano_sem block;
+static struct k_sem block;
 
 static void
 set_device_custom_property(void *data)
@@ -123,7 +123,7 @@ issue_requests(void)
 static void
 signal_event_loop(void)
 {
-  nano_sem_give(&block);
+  k_sem_give(&block);
 }
 
 void
@@ -133,7 +133,7 @@ main(void)
                                        .signal_event_loop = signal_event_loop,
                                        .requests_entry = issue_requests };
 
-  nano_sem_init(&block);
+  k_sem_init(&block, 0, 1);
 
   if (oc_main_init(&handler) < 0)
     return;
@@ -143,10 +143,10 @@ main(void)
   while (true) {
     next_event = oc_main_poll();
     if (next_event == 0)
-      next_event = TICKS_UNLIMITED;
+      next_event = K_FOREVER;
     else
       next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
+    k_sem_take(&block, next_event);
   }
 
   oc_main_shutdown();

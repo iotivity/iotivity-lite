@@ -24,28 +24,17 @@ oc_clock_init(void)
 oc_clock_time_t
 oc_clock_time(void)
 {
-  return sys_tick_get_32();
+  return k_uptime_get();
 }
 
 unsigned long
 oc_clock_seconds(void)
 {
-  return oc_clock_time() / sys_clock_ticks_per_sec;
+  return (oc_clock_time() + OC_CLOCK_SECOND - 1) / OC_CLOCK_SECOND;
 }
 
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  switch (sys_execution_context_type_get()) {
-  case NANO_CTX_FIBER:
-    fiber_sleep(t);
-    break;
-#ifdef CONFIG_MICROKERNEL
-  case NANO_CTX_TASK:
-    task_sleep(t);
-    break;
-#endif
-  default:
-    return;
-  }
+  k_sleep(t);
 }

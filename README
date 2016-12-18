@@ -144,15 +144,16 @@ This should result in a complete build of the Zephyr kernel
 and subsystems, the IoTivity-Constrained framework, and the sample app.
 
 Clone the net-tools repository from gerrit.zephyrproject.org.
-Follow its README to set up a tun interface using the tunslip6 tool.
+Follow its README to set up a tap interface using loop-socat.sh and
+and loop-slip-tap.sh.
 This exposes a network interface on Linux to communicate with Zephyr’s
 IP stack and the sample app.
 
 Run “make qemu” from port/zephyr. This runs the chosen sample on Zephyr
 in qemu.
 
-Now run any appropriate Linux client/server sample against the Zephyr sample
-to view the request/response flow.
+Now run any appropriate Linux client/server sample against the Zephyr
+application to view the request/response flow.
 
 Building sample applications on RIOT OS and Contiki
 ---------------------------------------------------
