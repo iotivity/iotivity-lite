@@ -19,9 +19,9 @@
 
 /* Time resolution */
 #include <stdint.h>
-typedef uint32_t oc_clock_time_t;
+typedef uint64_t oc_clock_time_t;
 #include <zephyr.h>
-#define OC_CLOCK_CONF_TICKS_PER_SECOND (sys_clock_ticks_per_sec)
+#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
 
 #define OC_BYTES_POOL_SIZE (1024)
 #define OC_INTS_POOL_SIZE (16)

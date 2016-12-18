@@ -70,30 +70,39 @@ register_resources(void)
 #include <string.h>
 #include <zephyr.h>
 
-static char fiber_stack[512];
+static char thread_stack[512];
+static struct k_sem signal_interrupt;
 
 static void
-fake_sensor_fiber(void)
+signal_interrupt_thread(struct k_timer *timer)
 {
-  struct nano_timer timer;
-  nano_timer_init(&timer, NULL);
+  k_sem_give(&signal_interrupt);
+}
+
+static void
+fake_sensor_interrupts(void)
+{
+  struct k_timer timer;
+  k_timer_init(&timer, signal_interrupt_thread, NULL);
+  k_sem_init(&signal_interrupt, 0, 1);
+  k_timer_start(&timer, 0, 1000); /* Fire off an interrupt every 1s */
+
   temperature = 3;
 
   while (1) {
     temperature++;
     oc_signal_interrupt_handler(temp_sensor);
 
-    nano_fiber_timer_start(&timer, 2 * sys_clock_ticks_per_sec);
-    nano_fiber_timer_test(&timer, TICKS_UNLIMITED);
+    k_sem_take(&signal_interrupt, K_FOREVER);
   }
 }
 
-static struct nano_sem block;
+static struct k_sem block;
 
 static void
 signal_event_loop(void)
 {
-  nano_sem_give(&block);
+  k_sem_give(&block);
 }
 
 void
@@ -101,25 +110,27 @@ main(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources };
+                                       .register_resources =
+                                         register_resources };
 
-  nano_sem_init(&block);
+  k_sem_init(&block, 0, 1);
 
   if (oc_main_init(&handler) < 0)
     return;
 
-  task_fiber_start(&fiber_stack[0], 512, (nano_fiber_entry_t)fake_sensor_fiber,
-                   0, 0, 7, 0);
+  k_thread_spawn(&thread_stack[0], sizeof(thread_stack),
+                 (k_thread_entry_t)fake_sensor_interrupts, 0, 0, 0,
+                 K_PRIO_COOP(7), 0, K_NO_WAIT);
 
   oc_clock_time_t next_event;
 
   while (true) {
     next_event = oc_main_poll();
     if (next_event == 0)
-      next_event = TICKS_UNLIMITED;
+      next_event = K_FOREVER;
     else
       next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
+    k_sem_take(&block, next_event);
   }
 
   oc_main_shutdown();

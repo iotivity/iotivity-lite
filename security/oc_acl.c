@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <string.h>
 
+extern int strncasecmp(const char *s1, const char *s2, size_t n);
+
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   (NUM_OC_CORE_RESOURCES + (MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_SUBJECTS + 1);
