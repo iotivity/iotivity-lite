@@ -61,8 +61,8 @@ typedef unsigned char uint48[6];
 #define DTLS_MAX_BUF 100
 #endif                  /* !DTLS_ECC */
 #elif defined(WITH_OCF) /* WITH_CONTIKI */
-#include <config.h>
-#define DTLS_MAX_BUF (MAX_PAYLOAD_SIZE)
+#include <messaging/coap/coap.h>
+#define DTLS_MAX_BUF (2 * OC_BLOCK_SIZE)
 #else /* WITH_OCF */
 #define DTLS_MAX_BUF 1400
 #endif /* !(WITH_CONTIKI || WITH_OCF) */

@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -39,7 +53,6 @@
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
 
-/* OIC stack headers */
 #include "config.h"
 #include "oc_buffer.h"
 #include "port/oc_connectivity.h"
@@ -57,27 +70,6 @@
 #ifndef ABS
 #define ABS(n) (((n) < 0) ? -(n) : (n))
 #endif
-
-#define COAP_MAX_PACKET_SIZE (COAP_MAX_HEADER_SIZE + MAX_PAYLOAD_SIZE)
-
-/* MAX_PAYLOAD_SIZE can be different from 2^x so we need to get next lower 2^x
- * for COAP_MAX_BLOCK_SIZE */
-#ifndef COAP_MAX_BLOCK_SIZE
-#define COAP_MAX_BLOCK_SIZE                                                    \
-  (MAX_PAYLOAD_SIZE < 32                                                       \
-     ? 16                                                                      \
-     : (MAX_PAYLOAD_SIZE < 64                                                  \
-          ? 32                                                                 \
-          : (MAX_PAYLOAD_SIZE < 128                                            \
-               ? 64                                                            \
-               : (MAX_PAYLOAD_SIZE < 256                                       \
-                    ? 128                                                      \
-                    : (MAX_PAYLOAD_SIZE < 512                                  \
-                         ? 256                                                 \
-                         : (MAX_PAYLOAD_SIZE < 1024                            \
-                              ? 512                                            \
-                              : (MAX_PAYLOAD_SIZE < 2048 ? 1024 : 2048)))))))
-#endif /* COAP_MAX_BLOCK_SIZE */
 
 /* bitmap for set options */
 enum
@@ -191,7 +183,7 @@ typedef struct
   }
 
 /* to store error code and human-readable payload */
-extern coap_status_t erbium_status_code;
+extern coap_status_t coap_status_code;
 extern char *coap_error_message;
 
 void coap_init_connection(void);
@@ -251,7 +243,7 @@ int coap_set_header_uri_host(void *packet, const char *host);
 int coap_get_header_uri_path(
   void *packet,
   const char **path); /* in-place string might not be 0-terminated. */
-int coap_set_header_uri_path(void *packet, const char *path);
+int coap_set_header_uri_path(void *packet, const char *path, int path_len);
 
 int coap_get_header_uri_query(
   void *packet,

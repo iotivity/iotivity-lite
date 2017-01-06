@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -46,7 +60,7 @@
 /*---------------------------------------------------------------------------*/
 static uint16_t current_mid = 0;
 
-coap_status_t erbium_status_code = NO_ERROR;
+coap_status_t coap_status_code = NO_ERROR;
 char *coap_error_message = "";
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
@@ -338,7 +352,9 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   COAP_SERIALIZE_BYTE_OPTION(COAP_OPTION_IF_MATCH, if_match, "If-Match");
   COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_HOST, uri_host, '\0',
 			       "Uri-Host");
+#endif
   COAP_SERIALIZE_BYTE_OPTION(COAP_OPTION_ETAG, etag, "ETag");
+#if 0
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_IF_NONE_MATCH,
 			    content_format - coap_pkt-> content_format /* hack to get a zero field */,
 			    "If-None-Match");
@@ -462,9 +478,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->payload = ++current_option;
       coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
 
-      /* also for receiving, the Erbium upper bound is MAX_PAYLOAD_SIZE */
-      if (coap_pkt->payload_len > MAX_PAYLOAD_SIZE) {
-        coap_pkt->payload_len = MAX_PAYLOAD_SIZE;
+      if (coap_pkt->payload_len > OC_BLOCK_SIZE) {
+        coap_pkt->payload_len = OC_BLOCK_SIZE;
         /* null-terminate payload */
       }
       coap_pkt->payload[coap_pkt->payload_len] = '\0';
@@ -500,7 +515,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 
     option_number += option_delta;
 
-    if (option_number < COAP_OPTION_SIZE1) {
+    if (option_number <= COAP_OPTION_SIZE1) {
       LOG("OPTION %u (delta %u, len %zu): ", option_number, option_delta,
           option_length);
       SET_OPTION(coap_pkt, option_number);
@@ -516,10 +531,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->max_age = coap_parse_int_option(current_option, option_length);
       LOG("Max-Age [%lu]\n", (unsigned long)coap_pkt->max_age);
       break;
-#if 0
     case COAP_OPTION_ETAG:
-      coap_pkt->etag_len = MIN(COAP_ETAG_LEN,
-			       option_length);
+      coap_pkt->etag_len = MIN(COAP_ETAG_LEN, option_length);
       memcpy(coap_pkt->etag, current_option,
 	     coap_pkt->etag_len);
       LOG("ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
@@ -528,7 +541,6 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 	  coap_pkt->etag[5], coap_pkt->etag[6], coap_pkt->etag[7]
 	 ); /*FIXME always prints 8 bytes */
       break;
-#endif
     case COAP_OPTION_ACCEPT:
       coap_pkt->accept = coap_parse_int_option(current_option, option_length);
       LOG("Accept [%u]\n", coap_pkt->accept);
@@ -790,8 +802,8 @@ coap_set_header_max_age(void *packet, uint32_t age)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-#if 0
-int coap_get_header_etag(void *packet, const uint8_t **etag)
+int
+coap_get_header_etag(void *packet, const uint8_t **etag)
 {
   coap_packet_t * const coap_pkt = (coap_packet_t *)packet;
 
@@ -812,6 +824,7 @@ int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len)
   return coap_pkt->etag_len;
 }
 /*---------------------------------------------------------------------------*/
+#if 0
 /*FIXME support multiple ETags */
 int coap_get_header_if_match(void *packet, const uint8_t **etag)
 {
@@ -901,22 +914,22 @@ coap_get_header_uri_path(void *packet, const char **path)
   *path = coap_pkt->uri_path;
   return coap_pkt->uri_path_len;
 }
-#ifdef OC_CLIENT
 int
-coap_set_header_uri_path(void *packet, const char *path)
+coap_set_header_uri_path(void *packet, const char *path, int path_len)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  while (path[0] == '/')
+  while (path[0] == '/') {
     ++path;
+    --path_len;
+  }
 
   coap_pkt->uri_path = path;
-  coap_pkt->uri_path_len = strlen(path);
+  coap_pkt->uri_path_len = path_len;
 
   SET_OPTION(coap_pkt, COAP_OPTION_URI_PATH);
   return coap_pkt->uri_path_len;
 }
-#endif
 /*---------------------------------------------------------------------------*/
 int
 coap_get_header_uri_query(void *packet, const char **query)
@@ -1119,8 +1132,8 @@ coap_set_header_block1(void *packet, uint32_t num, uint8_t more, uint16_t size)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-#if 0
-int coap_get_header_size2(void *packet, uint32_t *size)
+int
+coap_get_header_size2(void *packet, uint32_t *size)
 {
   coap_packet_t * const coap_pkt = (coap_packet_t *)packet;
 
@@ -1157,7 +1170,6 @@ int coap_set_header_size1(void *packet, uint32_t size)
   SET_OPTION(coap_pkt, COAP_OPTION_SIZE1);
   return 1;
 }
-#endif
 /*---------------------------------------------------------------------------*/
 int
 coap_get_payload(void *packet, const uint8_t **payload)
@@ -1178,7 +1190,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->payload = (uint8_t *)payload;
-  coap_pkt->payload_len = MIN(MAX_PAYLOAD_SIZE, length);
+  coap_pkt->payload_len = MIN(OC_BLOCK_SIZE, length);
 
   return coap_pkt->payload_len;
 }

@@ -20,6 +20,9 @@
 #include "messaging/coap/constants.h"
 #include "oc_ri.h"
 #include <stdbool.h>
+#ifdef OC_BLOCK_WISE_SET_MTU
+#include "oc_blockwise.h"
+#endif /* OC_BLOCK_WISE_SET_MTU */
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
@@ -69,7 +72,14 @@ typedef struct oc_client_cb_s
   oc_method_t method;
 } oc_client_cb_t;
 
-bool oc_ri_invoke_client_cb(void *response, oc_endpoint_t *endpoint);
+#ifdef OC_BLOCK_WISE_SET_MTU
+bool oc_ri_invoke_client_cb(void *response,
+                            oc_blockwise_state_t *response_state,
+                            oc_client_cb_t *cb, oc_endpoint_t *endpoint);
+#else  /* OC_BLOCK_WISE_SET_MTU */
+bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
+                            oc_endpoint_t *endpoint);
+#endif /* !OC_BLOCK_WISE_SET_MTU */
 
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
                                       oc_server_handle_t *server,
@@ -78,6 +88,11 @@ oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
 
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
                                     oc_method_t method);
+
+oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
+                                              uint8_t token_len);
+
+oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
 void oc_ri_remove_client_cb_by_mid(uint16_t mid);
 

@@ -30,7 +30,7 @@ ifeq ($(SECURE),1)
 	VPATH += ../../security/:../../deps/tinydtls/:../../deps/tinydtls/aes/:../../deps/tinydtls/sha2/:../../deps/tinydtls/ecc/:
 endif
 
-all=server client temp_sensor simpleserver simpleclient client_collections_linux server_collections_linux
+all=server client temp_sensor simpleserver simpleclient client_collections_linux server_collections_linux server_block_linux client_block_linux
 
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 
@@ -71,6 +71,12 @@ client_collections_linux: ${OBJ_COMMON} ${OBJ_CLIENT}
 
 server_collections_linux: ${OBJ_COMMON} ${OBJ_SERVER}
 	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_collections_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_block_linux: ${OBJ_COMMON} ${OBJ_CLIENT}
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_block_linux.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+server_block_linux: ${OBJ_COMMON} ${OBJ_SERVER}
+	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_block_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
 
 clean:
 	rm -rf obj

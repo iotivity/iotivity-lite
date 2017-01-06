@@ -86,8 +86,10 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
-    memcpy(message->data, net_nbuf_appdata(buf), net_nbuf_appdatalen(buf));
-    message->length = net_nbuf_appdatalen(buf);
+    size_t bytes_read = net_nbuf_appdatalen(buf);
+    bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
+    memcpy(message->data, net_nbuf_appdata(buf), bytes_read);
+    message->length = bytes_read;
     if (user_data != NULL)
       message->endpoint.flags = IP | SECURED;
     else
