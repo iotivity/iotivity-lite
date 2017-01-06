@@ -60,7 +60,8 @@ observe_light(oc_client_response_t *data)
       PRINT("%s\n", oc_string(rep->value_string));
       if (oc_string_len(name))
         oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value_string),
+                    oc_string_len(rep->value_string));
       break;
     default:
       break;
@@ -152,7 +153,8 @@ get_light(oc_client_response_t *data)
       PRINT("%s\n", oc_string(rep->value_string));
       if (oc_string_len(name))
         oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value_string),
+                    oc_string_len(rep->value_string));
       break;
     default:
       break;

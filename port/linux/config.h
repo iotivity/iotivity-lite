@@ -8,9 +8,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
 
 /* Memory pool sizes */
-#define OC_BYTES_POOL_SIZE (2048)
-#define OC_INTS_POOL_SIZE (16)
-#define OC_DOUBLES_POOL_SIZE (16)
+#define OC_BYTES_POOL_SIZE (1500)
+#define OC_INTS_POOL_SIZE (400)
+#define OC_DOUBLES_POOL_SIZE (4)
 
 /* Server-side parameters */
 /* Maximum number of server resources */
@@ -20,14 +20,17 @@ typedef uint64_t oc_clock_time_t;
 #define MAX_NUM_COLLECTIONS (1)
 
 /* Common paramters */
+/* Limit MTU size to lower layers, enable block-wise transfers */
+#define OC_BLOCK_WISE_SET_MTU (400)
+
+/* Maximum size of request/response PDUs */
+#define OC_MAX_PDU_BUFFER_SIZE (1024)
+
 /* Maximum number of concurrent requests */
 #define MAX_NUM_CONCURRENT_REQUESTS (2)
 
 /* Estimated number of nodes in payload tree structure */
 #define EST_NUM_REP_OBJECTS (100)
-
-/* Maximum size of request/response PDUs */
-#define MAX_PAYLOAD_SIZE (612)
 
 /* Number of devices on the OCF platform */
 #define MAX_NUM_DEVICES (1)

@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -36,22 +50,43 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* OIC Stack headers */
 #include "api/oc_events.h"
 #include "oc_buffer.h"
 #include "oc_ri.h"
 
+#ifdef OC_BLOCK_WISE_SET_MTU
+#include "oc_blockwise.h"
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
-#endif
+#endif /* OC_CLIENT */
 
 OC_PROCESS(coap_engine, "CoAP Engine");
 
+#ifdef OC_BLOCK_WISE_SET_MTU
+extern bool oc_ri_invoke_coap_entity_handler(
+  void *request, void *response, oc_blockwise_state_t *request_state,
+  oc_blockwise_state_t *response_state, uint16_t block2_size,
+  oc_endpoint_t *endpoint);
+#else  /* OC_BLOCK_WISE_SET_MTU */
 extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              uint8_t *buffer,
-                                             uint16_t buffer_size,
-                                             int32_t *offset,
                                              oc_endpoint_t *endpoint);
+#endif /* !OC_BLOCK_WISE_SET_MTU */
+
+void
+coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
+{
+  coap_packet_t ack[1];
+  coap_init_message(ack, COAP_TYPE_ACK, 0, mid);
+  oc_message_t *ack_message = oc_allocate_message();
+  if (ack_message) {
+    memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
+    ack_message->length = coap_serialize_message(ack, ack_message->data);
+    coap_send_message(ack_message);
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
@@ -59,7 +94,7 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 int
 coap_receive(oc_message_t *msg)
 {
-  erbium_status_code = NO_ERROR;
+  coap_status_code = NO_ERROR;
 
   LOG("\n\nCoAP Engine: received datalen=%u \n", msg->length);
 
@@ -69,9 +104,19 @@ coap_receive(oc_message_t *msg)
   static coap_packet_t response[1];
   static coap_transaction_t *transaction = NULL;
 
-  erbium_status_code = coap_parse_message(message, msg->data, msg->length);
+  /* block options */
+  uint32_t block1_num = 0, block1_offset = 0, block2_num = 0, block2_offset = 0;
+  uint16_t block1_size = OC_BLOCK_SIZE, block2_size = OC_BLOCK_SIZE;
+  uint8_t block1_more = 0, block2_more = 0;
+  bool block1 = false, block2 = false;
 
-  if (erbium_status_code == NO_ERROR) {
+#ifdef OC_BLOCK_WISE_SET_MTU
+  oc_blockwise_state_t *request_buffer = 0, *response_buffer = 0;
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
+  coap_status_code = coap_parse_message(message, msg->data, msg->length);
+
+  if (coap_status_code == NO_ERROR) {
 
 /*TODO duplicates suppression, if required by application */
 
@@ -96,6 +141,24 @@ coap_receive(oc_message_t *msg)
     }
 #endif
 
+    /* extract block options */
+    if (coap_get_header_block1(message, &block1_num, &block1_more, &block1_size,
+                               &block1_offset))
+      block1 = true;
+    if (coap_get_header_block2(message, &block2_num, &block2_more, &block2_size,
+                               &block2_offset))
+      block2 = true;
+
+#ifdef OC_BLOCK_WISE_SET_MTU
+    block1_size = MIN(block1_size, OC_BLOCK_SIZE);
+    block2_size = MIN(block2_size, OC_BLOCK_SIZE);
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
+    transaction = coap_get_transaction_by_mid(message->mid);
+    if (transaction)
+      coap_clear_transaction(transaction);
+    transaction = NULL;
+
     /* handle requests */
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
@@ -117,127 +180,197 @@ coap_receive(oc_message_t *msg)
       LOG("  URL: %.*s\n", message->uri_path_len, message->uri_path);
       LOG("  Payload: %.*s\n", message->payload_len, message->payload);
 #endif
-      /* use transaction buffer for response to confirmable request */
-      if ((transaction = coap_new_transaction(message->mid, &msg->endpoint))) {
-        uint32_t block_num = 0;
-        uint16_t block_size = COAP_MAX_BLOCK_SIZE;
-        uint32_t block_offset = 0;
-        int32_t new_offset = 0;
 
-        /* prepare response */
-        if (message->type == COAP_TYPE_CON) {
-          /* reliable CON requests are answered with an ACK */
-          coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
-                            message->mid);
-        } else {
-          /* unreliable NON requests are answered with a NON as well */
-          coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
-                            coap_get_mid());
-          /* mirror token */
-        }
-        if (message->token_len) {
-          coap_set_token(response, message->token, message->token_len);
-          /* get offset for blockwise transfers */
-        }
-        if (coap_get_header_block2(message, &block_num, NULL, &block_size,
-                                   &block_offset)) {
-          LOG("\tBlockwise: block request %u (%u/%u) @ %u bytes\n", block_num,
-              block_size, COAP_MAX_BLOCK_SIZE, block_offset);
-          block_size = MIN(block_size, COAP_MAX_BLOCK_SIZE);
-          new_offset = block_offset;
-        }
+      /* create transaction for response */
+      transaction = coap_new_transaction(message->mid, &msg->endpoint);
 
-        /* invoke resource handler in RI layer */
-        if (oc_ri_invoke_coap_entity_handler(
-              message, response,
-              transaction->message->data + COAP_MAX_HEADER_SIZE, block_size,
-              &new_offset, &msg->endpoint)) {
+      if (transaction) {
 
-          if (erbium_status_code == NO_ERROR) {
-
-            /* TODO coap_handle_blockwise(request, response, start_offset,
-             * end_offset); */
-
-            /* resource is unaware of Block1 */
-            if (IS_OPTION(message, COAP_OPTION_BLOCK1) &&
-                response->code < BAD_REQUEST_4_00 &&
-                !IS_OPTION(response, COAP_OPTION_BLOCK1)) {
-              LOG("\tBlock1 option NOT IMPLEMENTED\n");
-
-              erbium_status_code = NOT_IMPLEMENTED_5_01;
-              coap_error_message = "NoBlock1Support";
-
-              /* client requested Block2 transfer */
-            } else if (IS_OPTION(message, COAP_OPTION_BLOCK2)) {
-
-              /* unchanged new_offset indicates that resource is unaware of
-               * blockwise transfer */
-              if (new_offset == block_offset) {
-                LOG("\tBlockwise: unaware resource with payload length %u/%u\n",
-                    response->payload_len, block_size);
-                if (block_offset >= response->payload_len) {
-                  LOG("\t\t: block_offset >= response->payload_len\n");
-
-                  response->code = BAD_OPTION_4_02;
-                  coap_set_payload(response, "BlockOutOfScope",
-                                   15); /* a const char str[] and sizeof(str)
-                                           produces larger code size */
-                } else {
-                  coap_set_header_block2(response, block_num,
-                                         response->payload_len - block_offset >
-                                           block_size,
-                                         block_size);
-                  coap_set_payload(
-                    response, response->payload + block_offset,
-                    MIN(response->payload_len - block_offset, block_size));
-                } /* if(valid offset) */
-
-                /* resource provides chunk-wise data */
-              } else {
-                LOG("\tBlockwise: blockwise resource, new offset %d\n",
-                    new_offset);
-                coap_set_header_block2(response, block_num,
-                                       new_offset != -1 ||
-                                         response->payload_len > block_size,
-                                       block_size);
-
-                if (response->payload_len > block_size) {
-                  coap_set_payload(response, response->payload, block_size);
-                }
-              } /* if(resource aware of blockwise) */
-
-              /* Resource requested Block2 transfer */
-            } else if (new_offset != 0) {
-              LOG("\tBlockwise: no block option for blockwise resource, using "
-                  "block size %u\n",
-                  COAP_MAX_BLOCK_SIZE);
-
-              coap_set_header_block2(response, 0, new_offset != -1,
-                                     COAP_MAX_BLOCK_SIZE);
-              coap_set_payload(response, response->payload,
-                               MIN(response->payload_len, COAP_MAX_BLOCK_SIZE));
-            } /* blockwise transfer handling */
-          }   /* no errors/hooks */
-          /* successful service callback */
-          /* serialize response */
-        }
-        if (erbium_status_code == NO_ERROR) {
-          if ((transaction->message->length = coap_serialize_message(
-                 response, transaction->message->data)) == 0) {
-            erbium_status_code = PACKET_SERIALIZATION_ERROR;
+        if (!block1 && !block2) {
+          if (message->type == COAP_TYPE_CON) {
+            coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
+                              message->mid);
+          } else {
+            coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
+                              coap_get_mid());
           }
         }
-      } else {
-        erbium_status_code = SERVICE_UNAVAILABLE_5_03;
-        coap_error_message = "NoFreeTraBuffer";
-      } /* if(transaction buffer) */
 
-      /* handle responses */
-    } else { // Fix this
+#ifdef OC_BLOCK_WISE_SET_MTU
+        const char *href;
+        int href_len = coap_get_header_uri_path(message, &href);
+        const uint8_t *incoming_block;
+        int incoming_block_len = coap_get_payload(message, &incoming_block);
+        if (block1) {
+          request_buffer = oc_blockwise_find_request_buffer(
+            href, href_len, &msg->endpoint, message->code);
+
+          if (!request_buffer)
+            request_buffer = oc_blockwise_alloc_request_buffer(
+              href, href_len, &msg->endpoint, message->code);
+
+          if (request_buffer) {
+            if (message->uri_query_len > 0) {
+              oc_blockwise_request_state_t *bwt_request_state =
+                (oc_blockwise_request_state_t *)request_buffer;
+              oc_new_string(&bwt_request_state->uri_query, message->uri_query,
+                            message->uri_query_len);
+            }
+            if (oc_blockwise_handle_block(
+                  request_buffer, block1_offset, incoming_block,
+                  MIN(incoming_block_len, block1_size))) {
+              if (block1_more) {
+                coap_init_message(response, COAP_TYPE_ACK, CONTINUE_2_31,
+                                  message->mid);
+                coap_set_header_block1(response, block1_num, block1_more,
+                                       block1_size);
+                request_buffer->ref_count = 1;
+                goto send_message;
+              } else {
+                coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
+                                  message->mid);
+                coap_set_header_block1(response, block1_num, block1_more,
+                                       block1_size);
+                request_buffer->payload_size =
+                  request_buffer->next_block_offset;
+                request_buffer->ref_count = 0;
+
+                response_buffer = oc_blockwise_find_response_buffer(
+                  href, href_len, &msg->endpoint, message->code);
+                if (!response_buffer) {
+                  response_buffer = oc_blockwise_alloc_response_buffer(
+                    href, href_len, &msg->endpoint, message->code);
+                  if (response_buffer)
+                    goto request_handler;
+                } else
+                  goto request_handler;
+              }
+            }
+          }
+          goto init_reset_message;
+        } else if (block2) {
+          response_buffer = oc_blockwise_find_response_buffer(
+            href, href_len, &msg->endpoint, message->code);
+          if (response_buffer) {
+            uint16_t payload_size = 0;
+            const void *payload = oc_blockwise_dispatch_block(
+              response_buffer, block2_offset, block2_size, &payload_size);
+            if (payload) {
+              uint8_t more = (response_buffer->next_block_offset <
+                              response_buffer->payload_size)
+                               ? 1
+                               : 0;
+              coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
+                                message->mid);
+              coap_set_payload(response, payload, payload_size);
+              coap_set_header_block2(response, block2_num, more, block2_size);
+              oc_blockwise_response_state_t *response_state =
+                (oc_blockwise_response_state_t *)response_buffer;
+              coap_set_header_etag(response, response_state->etag,
+                                   COAP_ETAG_LEN);
+              response_buffer->ref_count = more;
+              goto send_message;
+            }
+          } else {
+            if (block2_num == 0) {
+              response_buffer = oc_blockwise_alloc_response_buffer(
+                href, href_len, &msg->endpoint, message->code);
+              if (response_buffer) {
+                if (incoming_block_len > 0) {
+                  request_buffer = oc_blockwise_find_request_buffer(
+                    href, href_len, &msg->endpoint, message->code);
+                  if (!request_buffer) {
+                    request_buffer = oc_blockwise_alloc_request_buffer(
+                      href, href_len, &msg->endpoint, message->code);
+                    if (!(request_buffer && oc_blockwise_handle_block(
+                                              request_buffer, 0, incoming_block,
+                                              incoming_block_len))) {
+                      goto init_reset_message;
+                    }
+                    request_buffer->payload_size = incoming_block_len;
+                  }
+                }
+                goto request_handler;
+              }
+            }
+          }
+          goto init_reset_message;
+        } else {
+          if (incoming_block_len <= block1_size) {
+            response_buffer = oc_blockwise_alloc_response_buffer(
+              href, href_len, &msg->endpoint, message->code);
+            if (response_buffer) {
+              if (incoming_block_len > 0) {
+                request_buffer = oc_blockwise_alloc_request_buffer(
+                  href, href_len, &msg->endpoint, message->code);
+                if (!(request_buffer && oc_blockwise_handle_block(
+                                          request_buffer, 0, incoming_block,
+                                          incoming_block_len))) {
+                  goto init_reset_message;
+                }
+                request_buffer->payload_size = incoming_block_len;
+                request_buffer->ref_count = 0;
+              }
+              goto request_handler;
+            }
+          }
+          goto init_reset_message;
+        }
+#else  /* OC_BLOCK_WISE_SET_MTU */
+        if (block1 || block2) {
+          goto init_reset_message;
+        }
+#endif /* !OC_BLOCK_WISE_SET_MTU */
+#ifdef OC_BLOCK_WISE_SET_MTU
+      request_handler:
+        if (oc_ri_invoke_coap_entity_handler(message, response, request_buffer,
+                                             response_buffer, block2_size,
+                                             &msg->endpoint)) {
+#else  /* OC_BLOCK_WISE_SET_MTU */
+        if (oc_ri_invoke_coap_entity_handler(message, response,
+                                             transaction->message->data +
+                                               COAP_MAX_HEADER_SIZE,
+                                             &msg->endpoint)) {
+#endif /* !OC_BLOCK_WISE_SET_MTU */
+#ifdef OC_BLOCK_WISE_SET_MTU
+          uint16_t payload_size = 0;
+          const void *payload = oc_blockwise_dispatch_block(
+            response_buffer, 0, block2_size, &payload_size);
+          if (payload) {
+            coap_set_payload(response, payload, payload_size);
+          }
+          if (block2 || response_buffer->payload_size > block2_size) {
+            coap_set_header_block2(
+              response, 0,
+              (response_buffer->payload_size > block2_size) ? 1 : 0,
+              block2_size);
+            coap_set_header_size2(response, response_buffer->payload_size);
+            oc_blockwise_response_state_t *response_state =
+              (oc_blockwise_response_state_t *)response_buffer;
+            coap_set_header_etag(response, response_state->etag, COAP_ETAG_LEN);
+          } else {
+            response_buffer->ref_count = 0;
+          }
+#endif /* OC_BLOCK_WISE_SET_MTU */
+        }
+        if (response->code != 0)
+          goto send_message;
+      }
+    } else {
+#ifdef OC_CLIENT
+#ifdef OC_BLOCK_WISE_SET_MTU
+      uint16_t response_mid = coap_get_mid();
+#endif /* OC_BLOCK_WISE_SET_MTU */
+      oc_client_cb_t *client_cb = 0;
+      if (message->type != COAP_TYPE_RST) {
+        client_cb =
+          oc_ri_find_client_cb_by_token(message->token, message->token_len);
+      }
+#endif /* OC_CLIENT */
+
       if (message->type == COAP_TYPE_CON) {
-        erbium_status_code = EMPTY_ACK_RESPONSE;
+        coap_send_empty_ack(message->mid, &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
-        /* transactions are closed through lookup below */
       } else if (message->type == COAP_TYPE_RST) {
 #ifdef OC_SERVER
         /* cancel possible subscriptions */
@@ -245,61 +378,180 @@ coap_receive(oc_message_t *msg)
 #endif
       }
 
-      /* Open transaction now cleared for ACK since mid matches */
-      if ((transaction = coap_get_transaction_by_mid(message->mid))) {
+#ifdef OC_CLIENT
+#ifdef OC_BLOCK_WISE_SET_MTU
+      if (client_cb) {
+        request_buffer = oc_blockwise_find_request_buffer(
+          oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
+          &msg->endpoint, client_cb->method);
+        if (request_buffer)
+          request_buffer->client_cb = client_cb;
+      } else {
+        request_buffer = oc_blockwise_find_request_buffer_by_mid(message->mid);
+      }
+      if (request_buffer &&
+          (block1 || message->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
+        client_cb = (oc_client_cb_t *)request_buffer->client_cb;
+        uint16_t payload_size = 0;
+        const void *payload = 0;
+
+        if (block1) {
+          payload = oc_blockwise_dispatch_block(request_buffer,
+                                                block1_offset + block1_size,
+                                                block1_size, &payload_size);
+        } else {
+          uint32_t peer_mtu = 0;
+          if (coap_get_header_size1(message, (uint32_t *)&peer_mtu) == 1) {
+            block1_size = MIN(peer_mtu, OC_BLOCK_SIZE);
+          } else {
+            block1_size = OC_BLOCK_SIZE;
+          }
+          payload = oc_blockwise_dispatch_block(request_buffer, 0, block1_size,
+                                                &payload_size);
+          request_buffer->ref_count = 1;
+        }
+        if (payload) {
+          transaction = coap_new_transaction(response_mid, &msg->endpoint);
+          if (transaction) {
+            coap_init_message(response, COAP_TYPE_CON, client_cb->method,
+                              response_mid);
+            uint8_t more =
+              (request_buffer->next_block_offset < request_buffer->payload_size)
+                ? 1
+                : 0;
+            coap_set_header_uri_path(response, oc_string(client_cb->uri),
+                                     oc_string_len(client_cb->uri));
+            coap_set_payload(response, payload, payload_size);
+            if (block1) {
+              coap_set_header_block1(response, block1_num + 1, more,
+                                     block1_size);
+            } else {
+              coap_set_header_block1(response, 0, more, block1_size);
+              coap_set_header_size1(response, request_buffer->payload_size);
+            }
+            request_buffer->mid = response_mid;
+            goto send_message;
+          }
+        }
+      }
+
+      if (client_cb) {
+        response_buffer = oc_blockwise_find_response_buffer(
+          oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
+          &msg->endpoint, client_cb->method);
+        if (!response_buffer) {
+          response_buffer = oc_blockwise_alloc_response_buffer(
+            oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
+            &msg->endpoint, client_cb->method);
+        }
+        if (response_buffer) {
+          response_buffer->client_cb = client_cb;
+        }
+      } else {
+        response_buffer =
+          oc_blockwise_find_response_buffer_by_mid(message->mid);
+      }
+      if (response_buffer) {
+        client_cb = (oc_client_cb_t *)response_buffer->client_cb;
+        oc_blockwise_response_state_t *response_state =
+          (oc_blockwise_response_state_t *)response_buffer;
+        coap_get_header_observe(message,
+                                (uint32_t *)&response_state->observe_seq);
+
+        const uint8_t *incoming_block;
+        int incoming_block_len = coap_get_payload(message, &incoming_block);
+        if (oc_blockwise_handle_block(response_buffer, block2_offset,
+                                      incoming_block, incoming_block_len)) {
+          if (block2 && block2_more) {
+            transaction = coap_new_transaction(response_mid, &msg->endpoint);
+            if (transaction) {
+              coap_init_message(response, COAP_TYPE_CON, client_cb->method,
+                                response_mid);
+              response_buffer->mid = response_mid;
+              coap_set_header_block2(response, block2_num + 1, 0, block2_size);
+              coap_set_header_uri_path(response, oc_string(client_cb->uri),
+                                       oc_string_len(client_cb->uri));
+              goto send_message;
+            }
+          }
+          response_buffer->payload_size = response_buffer->next_block_offset;
+        }
+      }
+
+      if (request_buffer && request_buffer->ref_count == 0) {
+        oc_blockwise_free_request_buffer(request_buffer);
+        request_buffer = 0;
+      }
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
+      if (client_cb) {
+#ifdef OC_BLOCK_WISE_SET_MTU
+        oc_ri_invoke_client_cb(message, response_buffer, client_cb,
+                               &msg->endpoint);
+        goto free_blockwise_buffers;
+#else  /* OC_BLOCK_WISE_SET_MTU */
+        oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
+#endif /* OC_BLOCK_WISE_SET_MTU */
+      }
+#endif /* OC_CLIENT */
+    }
+  }
+
+init_reset_message:
+  coap_init_message(response, COAP_TYPE_RST, 0, message->mid);
+#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_CLIENT
+free_blockwise_buffers:
+#endif /* OC_CLIENT */
+  if (request_buffer) {
+    request_buffer->ref_count = 0;
+  }
+  if (response_buffer) {
+    response_buffer->ref_count = 0;
+  }
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
+send_message:
+  if (coap_status_code == NO_ERROR) {
+    if (transaction) {
+#ifdef OC_CLIENT
+      if (response->type != COAP_TYPE_RST && message->token_len) {
+        int i = 0;
+        uint32_t r;
+        while (i < COAP_TOKEN_LEN) {
+          r = oc_random_value();
+          memcpy(response->token + i, &r, sizeof(r));
+          i += sizeof(r);
+        }
+        response->token_len = i;
+      }
+#else  /* OC_CLIENT */
+      if (response->type != COAP_TYPE_RST && message->token_len)
+        coap_set_token(response, message->token, message->token_len);
+#endif /* !OC_CLIENT */
+
+      transaction->message->length =
+        coap_serialize_message(response, transaction->message->data);
+      if (transaction->message->length) {
+        coap_send_transaction(transaction);
+      } else {
         coap_clear_transaction(transaction);
       }
-      /* if(ACKed transaction) */
-      transaction = NULL;
-
-#ifdef OC_CLIENT // ACKs and RSTs sent to oc_ri.. RSTs cleared, ACKs sent to
-                 // client
-      oc_ri_invoke_client_cb(message, &msg->endpoint);
-#endif
-
-    } /* request or response */
-  }   /* parsed correctly */
-
-  /* if(parsed correctly) */
-  if (erbium_status_code == NO_ERROR) {
-    if (transaction) { // Server transactions sent from here
-      coap_send_transaction(transaction);
     }
-  } else if (erbium_status_code == CLEAR_TRANSACTION) {
-    LOG("Clearing transaction for manual response");
-    coap_clear_transaction(transaction); // used in server for separate response
-  }
-#ifdef OC_CLIENT
-  else if (erbium_status_code == EMPTY_ACK_RESPONSE) {
-    coap_init_message(message, COAP_TYPE_ACK, 0, message->mid);
-    oc_message_t *response = oc_allocate_message();
-    if (response) {
-      memcpy(&response->endpoint, &msg->endpoint, sizeof(msg->endpoint));
-      response->length = coap_serialize_message(message, response->data);
-      coap_send_message(response);
-    }
-  }
-#endif /* OC_CLIENT */
-#ifdef OC_SERVER
-  else { // framework errors handled here
-    coap_message_type_t reply_type = COAP_TYPE_RST;
-
+  } else if (coap_status_code == CLEAR_TRANSACTION) {
     coap_clear_transaction(transaction);
-
-    coap_init_message(message, reply_type, SERVICE_UNAVAILABLE_5_03,
-                      message->mid);
-
-    oc_message_t *response = oc_allocate_message();
-    if (response) {
-      memcpy(&response->endpoint, &msg->endpoint, sizeof(msg->endpoint));
-      response->length = coap_serialize_message(message, response->data);
-      coap_send_message(response);
-    }
   }
-#endif /* OC_SERVER */
 
-  /* if(new data) */
-  return erbium_status_code;
+#ifdef OC_BLOCK_WISE_SET_MTU
+  if (request_buffer && request_buffer->ref_count == 0) {
+    oc_blockwise_free_request_buffer(request_buffer);
+  }
+  if (response_buffer && response_buffer->ref_count == 0) {
+    oc_blockwise_free_response_buffer(response_buffer);
+  }
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
+  return coap_status_code;
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -24,14 +24,17 @@ struct oc_separate_response_s
 {
   OC_LIST_STRUCT(requests);
   int active;
-  uint8_t buffer[COAP_MAX_BLOCK_SIZE];
+#ifdef OC_BLOCK_WISE_SET_MTU
+  uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
+#else  /* OC_BLOCK_WISE_SET_MTU */
+  uint8_t buffer[OC_BLOCK_SIZE];
+#endif /* !OC_BLOCK_WISE_SET_MTU */
 };
 
 struct oc_response_buffer_s
 {
   uint8_t *buffer;
   uint16_t buffer_size;
-  int32_t *block_offset;
   uint16_t response_length;
   int code;
 };
