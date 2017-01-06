@@ -269,7 +269,11 @@ oc_indicate_separate_response(oc_request_t *request,
 void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
-  oc_rep_new(handle->buffer, COAP_MAX_BLOCK_SIZE); // check
+#ifdef OC_BLOCK_WISE_SET_MTU
+  oc_rep_new(handle->buffer, OC_BLOCK_WISE_BUFFER_SIZE);
+#else  /* OC_BLOCK_WISE_SET_MTU */
+  oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
+#endif /* !OC_BLOCK_WISE_SET_MTU */
 }
 
 void
@@ -296,13 +300,51 @@ oc_send_separate_response(oc_separate_response_t *handle,
         if (cur->observe == 1) {
           coap_set_header_observe(response, 1);
         }
-        if (response_buffer.response_length > 0) {
+
+#ifdef OC_BLOCK_WISE_SET_MTU
+        oc_blockwise_state_t *response_state = 0;
+        if (response_buffer.response_length > cur->block2_size) {
+          response_state = oc_blockwise_find_response_buffer(
+            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
+            cur->method);
+          if (response_state) {
+            goto clear_separate_store;
+          }
+          response_state = oc_blockwise_alloc_response_buffer(
+            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
+            cur->method);
+          if (!response_state) {
+            goto clear_separate_store;
+          }
+
+          memcpy(response_state->buffer, response_buffer.buffer,
+                 response_buffer.response_length);
+          response_state->payload_size = response_buffer.response_length;
+
+          uint16_t payload_size = 0;
+          const void *payload = oc_blockwise_dispatch_block(
+            response_state, 0, cur->block2_size, &payload_size);
+          if (payload) {
+            coap_set_payload(response, payload, payload_size);
+            coap_set_header_block2(response, 0, 1, cur->block2_size);
+            coap_set_header_size2(response, response_state->payload_size);
+            oc_blockwise_response_state_t *bwt_res_state =
+              (oc_blockwise_response_state_t *)response_state;
+            coap_set_header_etag(response, bwt_res_state->etag, COAP_ETAG_LEN);
+          }
+        } else
+#endif /* OC_BLOCK_WISE_SET_MTU */
+          if (response_buffer.response_length > 0) {
           coap_set_payload(response, handle->buffer,
                            response_buffer.response_length);
         }
+        coap_set_status_code(response, response_buffer.code);
         t->message->length = coap_serialize_message(response, t->message->data);
         coap_send_transaction(t);
       }
+#ifdef OC_BLOCK_WISE_SET_MTU
+    clear_separate_store:
+#endif /* OC_BLOCK_WISE_SET_MTU */
       coap_separate_clear(handle, cur);
     } else {
       if (coap_notify_observers(NULL, &response_buffer, &cur->endpoint) == 0) {

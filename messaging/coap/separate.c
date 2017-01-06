@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -59,9 +73,15 @@ OC_MEMB(separate_requests, coap_separate_t, MAX_NUM_CONCURRENT_REQUESTS);
  * this function will respond with 5.03 Service Unavailable. The client can
  * then retry later.
  */
+#ifdef OC_BLOCK_WISE_SET_MTU
+int
+coap_separate_accept(void *request, oc_separate_response_t *separate_response,
+                     oc_endpoint_t *endpoint, int observe, uint16_t block2_size)
+#else  /* OC_BLOCK_WISE_SET_MTU */
 int
 coap_separate_accept(void *request, oc_separate_response_t *separate_response,
                      oc_endpoint_t *endpoint, int observe)
+#endif /* OC_BLOCK_WISE_SET_MTU */
 {
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
@@ -84,7 +104,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
 
   oc_list_add(separate_response->requests, separate_store);
 
-  erbium_status_code = CLEAR_TRANSACTION;
+  coap_status_code = CLEAR_TRANSACTION;
   /* send separate ACK for CON */
   if (coap_req->type == COAP_TYPE_CON) {
     LOG("Sending ACK for separate response\n");
@@ -103,7 +123,6 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
       coap_send_message(message);
     } else {
       coap_separate_clear(separate_response, separate_store);
-      erbium_status_code = SERVICE_UNAVAILABLE_5_03;
       return 0;
     }
   }
@@ -115,13 +134,14 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   memcpy(separate_store->token, coap_req->token, coap_req->token_len);
   separate_store->token_len = coap_req->token_len;
 
-  separate_store->block1_num = coap_req->block1_num;
-  separate_store->block1_size = coap_req->block1_size;
+#ifdef OC_BLOCK_WISE_SET_MTU
+  if (coap_req->uri_path_len > 0)
+    oc_new_string(&separate_store->uri, coap_req->uri_path,
+                  coap_req->uri_path_len);
 
-  separate_store->block2_num = coap_req->block2_num;
-  separate_store->block2_size =
-    coap_req->block2_size > 0 ? MIN(COAP_MAX_BLOCK_SIZE, coap_req->block2_size)
-                              : COAP_MAX_BLOCK_SIZE;
+  separate_store->method = coap_req->code;
+  separate_store->block2_size = block2_size;
+#endif /* OC_BLOCK_WISE_SET_MTU */
 
   separate_store->observe = observe;
   return 1;
@@ -134,10 +154,6 @@ coap_separate_resume(void *response, coap_separate_t *separate_store,
   coap_init_message(response, separate_store->type, code, mid);
   if (separate_store->token_len) {
     coap_set_token(response, separate_store->token, separate_store->token_len);
-  }
-  if (separate_store->block1_size) {
-    coap_set_header_block1(response, separate_store->block1_num, 0,
-                           separate_store->block1_size);
   }
 }
 /*---------------------------------------------------------------------------*/

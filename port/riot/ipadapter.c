@@ -30,8 +30,8 @@ static volatile bool terminate;
 #define OCF_MCAST_PORT_UNSECURED (5683)
 #define OCF_SERVER_PORT_UNSECURED (56789)
 
-static uint8_t buffer1[MAX_PAYLOAD_SIZE];
-static uint8_t buffer2[MAX_PAYLOAD_SIZE];
+static uint8_t buffer1[OC_PDU_SIZE];
+static uint8_t buffer2[OC_PDU_SIZE];
 
 static char _recv_stack[THREAD_STACKSIZE_DEFAULT];
 static char _mcast_stack[THREAD_STACKSIZE_DEFAULT];
@@ -115,7 +115,7 @@ server_receive_thread(void *arg)
 
   while (!terminate) {
     PRINT("ipadapter: waiting for server requests...\n");
-    n = conn_udp_recvfrom(&conn, (char *)buffer1, MAX_PAYLOAD_SIZE, remote_addr,
+    n = conn_udp_recvfrom(&conn, (char *)buffer1, OC_PDU_SIZE, remote_addr,
                           &remote_addr_len, &remote_port);
     if (n < 0) {
       PRINT("ipadapter_server_recv: error in conn_udp_recvfrom().n=%u\n", n);
@@ -164,7 +164,7 @@ multicast_receive_thread(void *arg)
 
   while (!terminate) {
     PRINT("ipadapter: waiting for multicast requests...\n");
-    n = conn_udp_recvfrom(&conn, (char *)buffer2, MAX_PAYLOAD_SIZE, remote_addr,
+    n = conn_udp_recvfrom(&conn, (char *)buffer2, OC_PDU_SIZE, remote_addr,
                           &remote_addr_len, &remote_port);
     if (n < 0) {
       PRINT("ipadapter_multicast_recv: error in conn_udp_recvfrom().n=%u\n", n);

@@ -217,7 +217,7 @@ typedef struct oc_rep_s
   oc_string_t name;
   union
   {
-    int64_t value_int;
+    int value_int;
     bool value_boolean;
     double value_double;
     oc_string_t value_string;

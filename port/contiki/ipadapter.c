@@ -35,8 +35,10 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
-    memcpy(message->data, buffer, size);
-    message->length = size;
+    size_t bytes_read = size;
+    bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
+    memcpy(message->data, buffer, bytes_read);
+    message->length = bytes_read;
     message->endpoint.flags = IP;
     memcpy(message->endpoint.ipv6_addr.address, addr, 16);
     message->endpoint.ipv6_addr.port = port;

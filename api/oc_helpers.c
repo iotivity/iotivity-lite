@@ -22,13 +22,13 @@
 static bool mmem_initialized = false;
 
 static void
-oc_malloc(oc_handle_t *block, uint16_t num_bytes, pool pool_type)
+oc_malloc(oc_handle_t *block, uint16_t num_items, pool pool_type)
 {
   if (!mmem_initialized) {
     oc_mmem_init();
     mmem_initialized = true;
   }
-  oc_assert(oc_mmem_alloc(block, num_bytes, pool_type) > 0);
+  oc_assert(oc_mmem_alloc(block, num_items, pool_type) > 0);
 }
 
 static void
@@ -41,10 +41,10 @@ oc_free(oc_handle_t *block, pool pool_type)
 }
 
 void
-oc_new_string(oc_string_t *ocstring, const char str[])
+oc_new_string(oc_string_t *ocstring, const char *str, int str_len)
 {
-  oc_malloc(ocstring, strlen(str) + 1, BYTE_POOL);
-  memcpy(oc_string(*ocstring), (const uint8_t *)str, strlen(str));
+  oc_malloc(ocstring, str_len + 1, BYTE_POOL);
+  memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
   memcpy(oc_string(*ocstring) + strlen(str), (const uint8_t *)"", 1);
 }
 
@@ -75,13 +75,13 @@ _oc_new_array(oc_array_t *ocarray, uint8_t size, pool type)
 {
   switch (type) {
   case INT_POOL:
-    oc_malloc(ocarray, size * sizeof(int64_t), INT_POOL);
+    oc_malloc(ocarray, size, INT_POOL);
     break;
   case BYTE_POOL:
-    oc_malloc(ocarray, size * sizeof(bool), BYTE_POOL);
+    oc_malloc(ocarray, size, BYTE_POOL);
     break;
   case DOUBLE_POOL:
-    oc_malloc(ocarray, size * sizeof(double), DOUBLE_POOL);
+    oc_malloc(ocarray, size, DOUBLE_POOL);
     break;
   default:
     break;
