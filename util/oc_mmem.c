@@ -45,7 +45,7 @@
 #endif /* ...POOL_SIZE */
 
 static double doubles[OC_DOUBLES_POOL_SIZE];
-static int64_t ints[OC_INTS_POOL_SIZE];
+static int ints[OC_INTS_POOL_SIZE];
 static unsigned char bytes[OC_BYTES_POOL_SIZE];
 static unsigned int avail_bytes, avail_ints, avail_doubles;
 
@@ -104,7 +104,7 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
-              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int64_t *)m->next->ptr);
+              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int *)m->next->ptr);
       break;
     case DOUBLE_POOL:
       memmove(m->ptr, m->next->ptr,

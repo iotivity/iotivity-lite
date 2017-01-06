@@ -18,10 +18,45 @@
 #define OC_CONNECTIVITY_H
 
 #include "config.h"
+#include "messaging/coap/conf.h"
 #include "oc_network_events.h"
 #include "port/oc_log.h"
 #include "util/oc_process.h"
 #include <stdint.h>
+
+#ifndef OC_MAX_PDU_BUFFER_SIZE
+#error "Set OC_MAX_PDU_BUFFER_SIZE in config.h"
+#else /* !OC_MAX_PDU_BUFFER_SIZE */
+#if OC_MAX_PDU_BUFFER_SIZE < (COAP_MAX_HEADER_SIZE + 16)
+#error "OC_MAX_PDU_BUFFER_SIZE must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
+#endif /* OC_MAX_PDU_BUFFER_SIZE is too small */
+#endif /* OC_MAX_PDU_BUFFER_SIZE */
+
+#ifdef OC_BLOCK_WISE_SET_MTU
+#if OC_BLOCK_WISE_SET_MTU < (COAP_MAX_HEADER_SIZE + 16)
+#error "OC_BLOCK_WISE_SET_MTU must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
+#endif /* OC_BLOCK_WISE_SET_MTU is too small */
+#define OC_MAX_BLOCK_SIZE (OC_BLOCK_WISE_SET_MTU - COAP_MAX_HEADER_SIZE)
+#define OC_BLOCK_SIZE                                                          \
+  (OC_MAX_BLOCK_SIZE < 32                                                      \
+     ? 16                                                                      \
+     : (OC_MAX_BLOCK_SIZE < 64                                                 \
+          ? 32                                                                 \
+          : (OC_MAX_BLOCK_SIZE < 128                                           \
+               ? 64                                                            \
+               : (OC_MAX_BLOCK_SIZE < 256                                      \
+                    ? 128                                                      \
+                    : (OC_MAX_BLOCK_SIZE < 512                                 \
+                         ? 256                                                 \
+                         : (OC_MAX_BLOCK_SIZE < 1024                           \
+                              ? 512                                            \
+                              : (OC_MAX_BLOCK_SIZE < 2048 ? 1024 : 2048)))))))
+#define OC_BLOCK_WISE_BUFFER_SIZE                                              \
+  (OC_MAX_PDU_BUFFER_SIZE - COAP_MAX_HEADER_SIZE)
+#else /* OC_BLOCK_WISE_SET_MTU */
+#define OC_BLOCK_SIZE (OC_MAX_PDU_BUFFER_SIZE - COAP_MAX_HEADER_SIZE)
+#endif /* !OC_BLOCK_WISE_SET_MTU */
+#define OC_PDU_SIZE (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 
 typedef struct
 {
@@ -65,7 +100,7 @@ struct oc_message_s
   oc_endpoint_t endpoint;
   size_t length;
   uint8_t ref_count;
-  uint8_t data[MAX_PAYLOAD_SIZE];
+  uint8_t data[OC_PDU_SIZE];
 };
 
 void oc_send_buffer(oc_message_t *message);

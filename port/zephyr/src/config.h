@@ -32,14 +32,16 @@ typedef uint64_t oc_clock_time_t;
 #define MAX_APP_RESOURCES (1)
 
 /* Common paramters */
+//#define OC_BLOCK_WISE_SET_MTU (80)
+
+/* Maximum size of request/response PDUs */
+#define OC_MAX_PDU_BUFFER_SIZE (512)
+
 /* Maximum number of concurrent requests */
 #define MAX_NUM_CONCURRENT_REQUESTS (2)
 
 /* Estimated number of nodes in payload tree structure */
 #define EST_NUM_REP_OBJECTS (70)
-
-/* Maximum size of request/response PDUs */
-#define MAX_PAYLOAD_SIZE (512)
 
 /* Number of devices on the OCF platform */
 #define MAX_NUM_DEVICES (1)

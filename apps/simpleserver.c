@@ -27,7 +27,7 @@ app_init(void)
 
   oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
 
-  oc_new_string(&name, "John's Light");
+  oc_new_string(&name, "John's Light", 12);
 }
 
 static void
@@ -70,7 +70,8 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
       break;
     case STRING:
       oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value_string),
+                    oc_string_len(rep->value_string));
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);

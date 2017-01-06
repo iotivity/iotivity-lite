@@ -38,6 +38,11 @@ int
 oc_rep_finalize(void)
 {
   int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
+#ifdef OC_DEBUG
+  if (size < 0 && g_err == CborErrorOutOfMemory)
+    oc_abort("Insufficient memory: Increase OC_MAX_PDU_BUFFER_SIZE to "
+             "accomodate a larger payload\n");
+#endif /* OC_DEBUG */
   if (g_err != CborNoError)
     return -1;
   return size;
@@ -125,11 +130,13 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   oc_alloc_string(&cur->name, len);
   *err |= cbor_value_copy_text_string(value, (char *)oc_string(cur->name), &len,
                                       NULL);
+  if (*err != CborNoError)
+    return;
   *err |= cbor_value_advance(value);
   /* value */
   switch (value->type) {
   case CborIntegerType:
-    *err |= cbor_value_get_int64(value, &cur->value_int);
+    *err |= cbor_value_get_int(value, &cur->value_int);
     cur->type = INT;
     break;
   case CborBooleanType:
@@ -163,6 +170,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
       oc_parse_rep_value(&map, obj, err);
       (*obj)->next = 0;
       obj = &(*obj)->next;
+      if (*err != CborNoError)
+        return;
       *err |= cbor_value_advance(&map);
     }
     cur->type = OBJECT;
@@ -175,6 +184,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
       CborValue t = array;
       while (!cbor_value_at_end(&t)) {
         len++;
+        if (*err != CborNoError)
+          return;
         cbor_value_advance(&t);
       }
     }
@@ -186,8 +197,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           oc_new_int_array(&cur->value_array, len);
           cur->type = INT | ARRAY;
         }
-        *err |=
-          cbor_value_get_int64(&array, oc_int_array(cur->value_array) + k);
+        *err |= cbor_value_get_int(&array, oc_int_array(cur->value_array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
@@ -244,6 +254,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         while (!cbor_value_at_end(&map)) {
           oc_parse_rep_value(&map, obj, err);
           obj = &(*obj)->next;
+          if (*err != CborNoError)
+            return;
           *err |= cbor_value_advance(&map);
         }
         break;
@@ -251,6 +263,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         break;
       }
       k++;
+      if (*err != CborNoError)
+        return;
       *err |= cbor_value_advance(&array);
     }
     break;
@@ -273,6 +287,8 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
     oc_rep_t **cur = out_rep;
     while (cbor_value_is_valid(&cur_value)) {
       oc_parse_rep_value(&cur_value, cur, &err);
+      if (err != CborNoError)
+        return err;
       err |= cbor_value_advance(&cur_value);
       cur = &(*cur)->next;
     }
@@ -287,12 +303,16 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
       err |= cbor_value_enter_container(&map, &cur_value);
       while (cbor_value_is_valid(&cur_value)) {
         oc_parse_rep_value(&cur_value, kv, &err);
+        if (err != CborNoError)
+          return err;
         err |= cbor_value_advance(&cur_value);
         (*kv)->next = 0;
         kv = &(*kv)->next;
       }
       (*cur)->next = 0;
       cur = &(*cur)->next;
+      if (err != CborNoError)
+        return err;
       err |= cbor_value_advance(&map);
     }
   }

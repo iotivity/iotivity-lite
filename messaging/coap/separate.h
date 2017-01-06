@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -35,11 +49,9 @@
 #define SEPARATE_H
 
 #include "coap.h"
-#include "transactions.h"
-
-/* OIC stack headers */
 #include "oc_coap.h"
 #include "oc_ri.h"
+#include "transactions.h"
 
 typedef struct coap_separate
 {
@@ -49,20 +61,29 @@ typedef struct coap_separate
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
 
-  uint32_t block1_num;
-  uint16_t block1_size;
-
-  uint32_t block2_num;
   uint16_t block2_size;
 
   int32_t observe;
 
   oc_endpoint_t endpoint;
+
+#ifdef OC_BLOCK_WISE_SET_MTU
+  oc_method_t method;
+  oc_string_t uri;
+#endif /* OC_BLOCK_WISE_SET_MTU */
 } coap_separate_t;
 
+#ifdef OC_BLOCK_WISE_SET_MTU
+int coap_separate_accept(void *request,
+                         oc_separate_response_t *separate_response,
+                         oc_endpoint_t *endpoint, int observe,
+                         uint16_t block2_size);
+#else  /* OC_BLOCK_WISE_SET_MTU */
 int coap_separate_accept(void *request,
                          oc_separate_response_t *separate_response,
                          oc_endpoint_t *endpoint, int observe);
+#endif /* OC_BLOCK_WISE_SET_MTU */
+
 void coap_separate_resume(void *response, coap_separate_t *separate_store,
                           uint8_t code, uint16_t mid);
 void coap_separate_clear(oc_separate_response_t *separate_response,
