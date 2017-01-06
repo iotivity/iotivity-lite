@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -35,6 +49,7 @@
 #define CONF_H
 
 #include "config.h"
+#include "constants.h"
 
 /* Features that can be disabled to achieve smaller memory footprint */
 #define COAP_LINK_FORMAT_FILTERING 0
@@ -46,17 +61,17 @@
 #define COAP_MAX_OPEN_TRANSACTIONS (MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OPEN_TRANSACTIONS */
 
-/* Maximum number of failed request attempts before action */
-#ifndef COAP_MAX_ATTEMPTS
-#define COAP_MAX_ATTEMPTS 2
-#endif /* COAP_MAX_ATTEMPTS */
-
 /* Conservative size limit, as not all options have to be set at the same time.
  * Check when Proxy-Uri option is used */
 #ifndef COAP_MAX_HEADER_SIZE /*     Hdr                  CoF  If-Match         \
                                 Obs Blo strings   */
+
+#ifdef OC_BLOCK_WISE_SET_MTU
 #define COAP_MAX_HEADER_SIZE                                                   \
-  (4 + COAP_TOKEN_LEN + 3 + 1 + COAP_ETAG_LEN + 4 + 4 + 30) /* 65 */
+  (4 + COAP_TOKEN_LEN + 3 + COAP_ETAG_LEN + 4 + 4 + 30)
+#else /* OC_BLOCK_WISE_SET_MTU */
+#define COAP_MAX_HEADER_SIZE (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + 30)
+#endif /* !OC_BLOCK_WISE_SET_MTU */
 #endif /* COAP_MAX_HEADER_SIZE */
 
 /* Number of observer slots (each takes abot xxx bytes) */
@@ -66,6 +81,6 @@
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to
  * check client. */
-#define COAP_OBSERVE_REFRESH_INTERVAL 20
+#define COAP_OBSERVE_REFRESH_INTERVAL 5
 
 #endif /* CONF_H */

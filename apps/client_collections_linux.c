@@ -142,7 +142,7 @@ get_lights_oic_if_b(oc_client_response_t *data)
   if (!do_once)
     return;
 
-  PRINT("\nSending POST %s?if=oic.if.ll { state : true, counter : 200 }\n",
+  PRINT("\nSending POST %s?if=oic.if.b { state : true, counter : 200 }\n",
         lights);
 
   if (oc_init_post(lights, &lights_server, "if=oic.if.b", &post_lights_oic_if_b,

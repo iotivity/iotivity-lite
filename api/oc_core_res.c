@@ -249,7 +249,7 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
     ((char *)oc_string(*d_uri))[0] = '/';
     ((char *)oc_string(*d_uri))[s_len + 1] = '\0';
   } else
-    oc_new_string(d_uri, s_uri);
+    oc_new_string(d_uri, s_uri, strlen(s_uri));
 }
 
 void

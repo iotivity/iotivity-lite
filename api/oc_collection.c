@@ -82,7 +82,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 void
 oc_link_set_bp(oc_link_t *link, const char *bp)
 {
-  oc_new_string(&link->bp, bp);
+  oc_new_string(&link->bp, bp, strlen(bp));
 }
 
 oc_collection_t *

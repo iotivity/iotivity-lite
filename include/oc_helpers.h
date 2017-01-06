@@ -29,7 +29,7 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
 #define oc_string(ocstring) (oc_cast(ocstring, char))
 
-void oc_new_string(oc_string_t *ocstring, const char str[]);
+void oc_new_string(oc_string_t *ocstring, const char *str, int str_len);
 void oc_alloc_string(oc_string_t *ocstring, int size);
 void oc_free_string(oc_string_t *ocstring);
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
@@ -45,11 +45,11 @@ void _oc_free_array(oc_array_t *ocarray, pool type);
 #define oc_free_int_array(ocarray) (_oc_free_array(ocarray, INT_POOL))
 #define oc_free_bool_array(ocarray) (_oc_free_array(ocarray, BYTE_POOL))
 #define oc_free_double_array(ocarray) (_oc_free_array(ocarray, DOUBLE_POOL))
-#define oc_int_array_size(ocintarray) ((ocintarray).size / sizeof(int64_t))
+#define oc_int_array_size(ocintarray) ((ocintarray).size / sizeof(int))
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size / sizeof(bool))
 #define oc_double_array_size(ocdoublearray)                                    \
   ((ocdoublearray).size / sizeof(double))
-#define oc_int_array(ocintarray) (oc_cast(ocintarray, int64_t))
+#define oc_int_array(ocintarray) (oc_cast(ocintarray, int))
 #define oc_bool_array(ocboolarray) (oc_cast(ocboolarray, bool))
 #define oc_double_array(ocdoublearray) (oc_cast(ocdoublearray, double))
 

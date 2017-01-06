@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -35,11 +49,9 @@
 #define OBSERVE_H
 
 #include "coap.h"
+#include "oc_ri.h"
 #include "transactions.h"
 #include "util/oc_list.h"
-
-/* OIC stack headers */
-#include "oc_ri.h"
 
 #define COAP_OBSERVER_URL_LEN 20
 
@@ -54,6 +66,10 @@ typedef struct coap_observer
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
   uint16_t last_mid;
+
+#ifdef OC_BLOCK_WISE_SET_MTU
+  uint16_t block2_size;
+#endif /* OC_BLOCK_WISE_SET_MTU */
 
   int32_t obs_counter;
 
@@ -72,9 +88,12 @@ int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           oc_endpoint_t *endpoint);
-// int coap_notify_observers_sub(oc_resource_t *resource, const char *subpath);
 
+#ifdef OC_BLOCK_WISE_SET_MTU
+int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
+                         uint16_t block2_size, oc_endpoint_t *endpoint);
+#else  /* OC_BLOCK_WISE_SET_MTU */
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
-
+#endif /* !OC_BLOCK_WISE_SET_MTU */
 #endif /* OBSERVE_H */

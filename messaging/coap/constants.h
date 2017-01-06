@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+*/
+/*
  *
  * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
  * All rights reserved.
@@ -37,9 +51,21 @@
 #define COAP_DEFAULT_PORT 5683
 
 #define COAP_DEFAULT_MAX_AGE 60
-#define COAP_RESPONSE_TIMEOUT 2
-#define COAP_RESPONSE_RANDOM_FACTOR 1.5
-#define COAP_MAX_RETRANSMIT 4
+
+#define COAP_RESPONSE_TIMEOUT (2)
+#define COAP_RESPONSE_RANDOM_FACTOR (1.5)
+#define COAP_MAX_RETRANSMIT (4)
+
+/** COAP_RESPONSE_TIMEOUT * ((2 ** COAP_MAX_RETRANSMIT) - 1) *
+ * COAP_RESPONSE_RANDOM_FACTOR */
+#define OC_MAX_TRANSMIT_SPAN (45)
+
+#define OC_MAX_LATENCY (100)
+#define OC_PROCESSING_DELAY COAP_RESPONSE_TIMEOUT
+#define OC_MAX_RTT (2 * OC_MAX_LATENCY) + OC_PROCESSING_DELAY
+
+/** OC_MAX_TRANSMIT_SPAN + (2 * MAX_LATENCY) + PROCESSING_DELAY */
+#define OC_EXCHANGE_LIFETIME (247)
 
 #define COAP_HEADER_LEN                                                        \
   4 /* | version:0x03 type:0x0C tkl:0xF0 | code | mid:0x00FF | mid:0xFF00 | */
@@ -96,11 +122,9 @@ typedef enum {
   GATEWAY_TIMEOUT_5_04 = 164,        /* GATEWAY_TIMEOUT */
   PROXYING_NOT_SUPPORTED_5_05 = 165, /* PROXYING_NOT_SUPPORTED */
 
-  /* Erbium errors */
+  /* Stack errors */
   MEMORY_ALLOCATION_ERROR = 192,
   PACKET_SERIALIZATION_ERROR,
-
-  /* Erbium hooks */
   CLEAR_TRANSACTION,
   EMPTY_ACK_RESPONSE
 } coap_status_t;

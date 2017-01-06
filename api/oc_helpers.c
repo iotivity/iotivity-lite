@@ -41,10 +41,10 @@ oc_free(oc_handle_t *block, pool pool_type)
 }
 
 void
-oc_new_string(oc_string_t *ocstring, const char str[])
+oc_new_string(oc_string_t *ocstring, const char *str, int str_len)
 {
-  oc_malloc(ocstring, strlen(str) + 1, BYTE_POOL);
-  memcpy(oc_string(*ocstring), (const uint8_t *)str, strlen(str));
+  oc_malloc(ocstring, str_len + 1, BYTE_POOL);
+  memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
   memcpy(oc_string(*ocstring) + strlen(str), (const uint8_t *)"", 1);
 }
 
@@ -75,10 +75,10 @@ _oc_new_array(oc_array_t *ocarray, uint8_t size, pool type)
 {
   switch (type) {
   case INT_POOL:
-    oc_malloc(ocarray, size * sizeof(int64_t), INT_POOL);
+    oc_malloc(ocarray, size * sizeof(int), INT_POOL);
     break;
   case BYTE_POOL:
-    oc_malloc(ocarray, size * sizeof(bool), BYTE_POOL);
+    oc_malloc(ocarray, size * sizeof(uint8_t), BYTE_POOL);
     break;
   case DOUBLE_POOL:
     oc_malloc(ocarray, size * sizeof(double), DOUBLE_POOL);
