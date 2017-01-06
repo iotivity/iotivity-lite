@@ -26,7 +26,7 @@ oc_clock_init(void)
 oc_clock_time_t
 oc_clock_time(void)
 {
-  return (oc_clock_time_t)((xtimer_now64() + 999) / 1000);
+  return (oc_clock_time_t)((xtimer_now64().ticks64 + 999) / 1000);
 }
 
 unsigned long
