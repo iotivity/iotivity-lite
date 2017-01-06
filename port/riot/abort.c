@@ -2,6 +2,6 @@
 
 // TODO:
 void
-abort_impl(void)
+abort_impl()
 {
 }
