@@ -21,13 +21,18 @@
 #include <stdio.h>
 #include <string.h>
 
+/* This module implements the generation of type-4 UUIDs
+ * based on its specification in RFC 4122, along with routines
+ * to convert between their string and binary representations.
+ */
+
 void
 oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
   int i, j = 0, k = 1;
   uint8_t c = 0;
 
-  for (i = 0; i < strlen(str); i++) {
+  for (i = 0; i < 36; i++) {
     if (str[i] == '-')
       continue;
     else if (isalpha((int)str[i])) {
