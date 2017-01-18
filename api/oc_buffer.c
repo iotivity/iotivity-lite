@@ -41,8 +41,9 @@ oc_allocate_message(void)
     message->ref_count = 1;
     LOG("buffer: Allocated TX/RX buffer; num free: %d\n",
         oc_memb_numfree(&oc_buffers_s));
-  } else
+  } else {
     LOG("buffer: No free TX/RX buffers!\n");
+  }
   return message;
 }
 
