@@ -82,7 +82,7 @@ static uint32_t
 coap_parse_int_option(uint8_t *bytes, size_t length)
 {
   uint32_t var = 0;
-  int i = 0;
+  size_t i = 0;
 
   while (i < length) {
     var <<= 8;
@@ -177,7 +177,7 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
       array);
 
   if (split_char != '\0') {
-    int j;
+    size_t j;
     uint8_t *part_start = array;
     uint8_t *part_end = NULL;
     size_t temp_length;
