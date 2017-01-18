@@ -12,7 +12,7 @@ all: $(CONTIKI_PROJECT)
 
 PROJECTDIRS += ./ ../../include ../../ ../../api ../../messaging/coap ../../apps ../../deps/tinycbor/src ../../util
 
-PROJECT_SOURCEFILES += oc_buffer.c oc_discovery.c oc_main.c oc_ri.c oc_client_api.c oc_network_events.c oc_server_api.c oc_core_res.c oc_helpers.c oc_rep.c oc_uuid.c cborencoder.c cborencoder_close_container_checked.c cborparser.c oc_etimer.c oc_memb.c oc_process.c oc_list.c oc_mmem.c oc_timer.c coap.c separate.c engine.c transactions.c observe.c ipadapter.c oc_clock.c oc_random.c abort.c storage.c oc_blockwise.c
+PROJECT_SOURCEFILES += oc_buffer.c oc_discovery.c oc_main.c oc_ri.c oc_client_api.c oc_network_events.c oc_server_api.c oc_core_res.c oc_helpers.c oc_rep.c oc_uuid.c cborencoder.c cborencoder_close_container_checked.c cborparser.c oc_etimer.c oc_memb.c oc_process.c oc_list.c oc_mmem.c oc_timer.c coap.c separate.c engine.c transactions.c observe.c ipadapter.c oc_clock.c oc_random.c abort.c storage.c oc_blockwise.c oc_base64.c
 
 CONTIKI_WITH_RPL = 1
 CONTIKI_WITH_IPV6 = 1

@@ -47,6 +47,7 @@ obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../api/oc_core_res.o \
          ../../../api/oc_network_events.o \
          ../../../api/oc_blockwise.o \
+         ../../../api/oc_base64.o \
          ipadapter.o \
          random.o \
          clock.o \
