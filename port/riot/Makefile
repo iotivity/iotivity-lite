@@ -63,15 +63,12 @@ OBJ_COMMON = $(SRC_COMMON:.c=.o)
 OBJ_FRAMEWORK = $(SRC:.c=.o)
 APPDEPS += ${OBJ_COMMON} ${OBJ_FRAMEWORK} ${APP_OBJ}
 
-include $(RIOTBASE)/Makefile.include
-#Disable Warnings as Errors
+#Disable warnings as errors
 WERROR = 0
+include $(RIOTBASE)/Makefile.include
 CFLAGS := $(filter-out -Wall,$(CFLAGS))
-CFLAGS := $(filter-out -Werror,$(CFLAGS))
 CFLAGS := $(filter-out -Wextra,$(CFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
-CFLAGS := $(filter-out -Werror=old-style-definition,$(CFLAGS))
-CFLAGS := $(filter-out -Wold-style-definition,$(CFLAGS))
 
 ${APP_OBJ}: ${APP_SRC}
 	${CC} -c -o $@ $< ${CFLAGS} ${INCLUDES}
