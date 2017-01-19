@@ -22,17 +22,17 @@
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "port/oc_storage.h"
+#include <config.h>
 
 void
 oc_sec_load_doxm(void)
 {
   long ret = 0;
-  size_t size = 512;
-  uint8_t buf[size];
+  uint8_t buf[OC_MAX_PDU_BUFFER_SIZE];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
-    ret = oc_storage_read("/doxm", buf, size);
+    ret = oc_storage_read("/doxm", buf, OC_MAX_PDU_BUFFER_SIZE);
     if (ret > 0) {
       oc_parse_rep(buf, ret, &rep);
       oc_sec_decode_doxm(rep);
@@ -53,11 +53,10 @@ void
 oc_sec_load_pstat(void)
 {
   long ret = 0;
-  size_t size = 512;
-  uint8_t buf[size];
+  uint8_t buf[OC_MAX_PDU_BUFFER_SIZE];
   oc_rep_t *rep;
 
-  ret = oc_storage_read("/pstat", buf, size);
+  ret = oc_storage_read("/pstat", buf, OC_MAX_PDU_BUFFER_SIZE);
   if (ret > 0) {
     oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_pstat(rep);
@@ -73,12 +72,11 @@ void
 oc_sec_load_cred(void)
 {
   long ret = 0;
-  size_t size = 1024;
-  uint8_t buf[size];
+  uint8_t buf[OC_MAX_PDU_BUFFER_SIZE];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
-    ret = oc_storage_read("/cred", buf, size);
+    ret = oc_storage_read("/cred", buf, OC_MAX_PDU_BUFFER_SIZE);
 
     if (ret <= 0)
       return;
@@ -92,15 +90,14 @@ oc_sec_load_cred(void)
 void
 oc_sec_load_acl(void)
 {
-  size_t size = 1024;
   long ret = 0;
-  uint8_t buf[size];
+  uint8_t buf[OC_MAX_PDU_BUFFER_SIZE];
   oc_rep_t *rep;
 
   oc_sec_acl_init();
 
   if (oc_sec_provisioned()) {
-    ret = oc_storage_read("/acl", buf, size);
+    ret = oc_storage_read("/acl", buf, OC_MAX_PDU_BUFFER_SIZE);
     if (ret > 0) {
       oc_parse_rep(buf, ret, &rep);
       oc_sec_decode_acl(rep);
@@ -116,10 +113,10 @@ oc_sec_load_acl(void)
 void
 oc_sec_dump_state(void)
 {
-  uint8_t buf[1024];
+  uint8_t buf[OC_MAX_PDU_BUFFER_SIZE];
 
   /* pstat */
-  oc_rep_new(buf, 1024);
+  oc_rep_new(buf, OC_MAX_PDU_BUFFER_SIZE);
   oc_sec_encode_pstat();
   int size = oc_rep_finalize();
   if (size > 0) {
@@ -128,7 +125,7 @@ oc_sec_dump_state(void)
   }
 
   /* cred */
-  oc_rep_new(buf, 1024);
+  oc_rep_new(buf, OC_MAX_PDU_BUFFER_SIZE);
   oc_sec_encode_cred();
   size = oc_rep_finalize();
   if (size > 0) {
@@ -137,7 +134,7 @@ oc_sec_dump_state(void)
   }
 
   /* doxm */
-  oc_rep_new(buf, 1024);
+  oc_rep_new(buf, OC_MAX_PDU_BUFFER_SIZE);
   oc_sec_encode_doxm();
   size = oc_rep_finalize();
   if (size > 0) {
@@ -146,7 +143,7 @@ oc_sec_dump_state(void)
   }
 
   /* acl */
-  oc_rep_new(buf, 1024);
+  oc_rep_new(buf, OC_MAX_PDU_BUFFER_SIZE);
   oc_sec_encode_acl();
   size = oc_rep_finalize();
   if (size > 0) {
