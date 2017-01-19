@@ -795,10 +795,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     LOG("ocri: Subject not authorized\n");
     /* If the requestor (subject) does not have access granted via an
      * access control entry in the ACL, then it is not authorized to
-     * access the resource. A 4.03 response is sent.
+     * access the resource. A 4.01 response is sent.
      */
     response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
+    response_buffer.code = oc_status_code(OC_STATUS_UNAUTHORIZED);
   }
 #endif
   else {
