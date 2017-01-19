@@ -282,6 +282,7 @@ oc_sec_dtls_recv_message(oc_message_t *message)
                                   message->data, message->length);
     if (ret != 0) {
       oc_sec_dtls_close_finish(&message->endpoint);
+      oc_sec_dtls_remove_peer(&message->endpoint);
     } else {
       peer->timestamp = oc_clock_time();
     }

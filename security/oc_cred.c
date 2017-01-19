@@ -19,6 +19,7 @@
 #include "oc_cred.h"
 #include "config.h"
 #include "oc_api.h"
+#include "oc_base64.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
 #include "oc_dtls.h"
@@ -92,9 +93,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
   char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
   oc_sec_cred_t *credobj;
-  bool got_key = false;
+  bool got_key = false, raw_key = false, base64_key = false;
   int len = 0;
-  uint8_t key[16];
+  uint8_t key[24];
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
@@ -130,23 +131,45 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
             oc_rep_t *data = cred->value_object;
             while (data != NULL) {
               switch (data->type) {
+              case STRING: {
+                if (oc_string_len(data->name) == 8 &&
+                    strncmp("encoding", oc_string(data->name), 8) == 0) {
+                  if (oc_string_len(data->value_string) == 23 &&
+                      strncmp("oic.sec.encoding.base64",
+                              oc_string(data->value_string), 23) == 0) {
+                    base64_key = true;
+                  } else
+                    raw_key = true;
+                } else if (oc_string_len(data->name) == 4 &&
+                           strncmp(oc_string(data->name), "data", 4) == 0) {
+                  uint8_t *p = oc_cast(data->value_string, uint8_t);
+                  int size = oc_string_len(data->value_string);
+                  if (size == 0)
+                    goto next_item;
+                  if (size != 24)
+                    return false;
+                  got_key = true;
+                  memcpy(key, p, size);
+                }
+              } break;
               case BYTE_STRING: {
-                got_key = true;
-                int psk = 0;
                 uint8_t *p = oc_cast(data->value_string, uint8_t);
-                size_t size = oc_string_len(data->value_string);
-                if (size != 16) {
+                int size = oc_string_len(data->value_string);
+                if (size == 0)
+                  goto next_item;
+                if (size != 16)
                   return false;
-                }
-                while (psk < size) {
-                  key[psk] = p[psk];
-                  psk++;
-                }
+                got_key = true;
+                memcpy(key, p, 16);
               } break;
               default:
                 break;
               }
+            next_item:
               data = data->next;
+            }
+            if (got_key && base64_key) {
+              oc_base64_decode(key, 24);
             }
           } break;
           default:

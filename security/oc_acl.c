@@ -28,7 +28,7 @@
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
-  (NUM_OC_CORE_RESOURCES + (MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES))
+  ((MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES))
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_SUBJECTS + 1);
 OC_MEMB(res_l, oc_sec_acl_res_t, MAX_NUM_RES_PERM_PAIRS);
 static oc_uuid_t WILDCARD_SUB = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -244,6 +244,9 @@ oc_sec_acl_default(void)
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
       success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
                                     OC_IF_BASELINE, 2) != NULL);
+    else if (i == OCF_SEC_ACL)
+      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
+                                    OC_IF_BASELINE, 14) != NULL);
     else
       success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
                                     OC_IF_BASELINE, 6) != NULL);
@@ -311,6 +314,35 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
 
   return granted;
+}
+
+static bool
+oc_sec_remove_subject(const char *subject)
+{
+  bool removed = false;
+  oc_uuid_t subjectuuid;
+  oc_str_to_uuid(subject, &subjectuuid);
+
+  oc_sec_ace_t *sub = oc_list_head(ac_list.subjects), *next_sub = 0;
+  while (sub != NULL) {
+    next_sub = sub->next;
+    if (strncmp(subjectuuid.id, sub->subjectuuid.id, 16) == 0) {
+      oc_sec_acl_res_t *res = oc_list_head(sub->resources), *next_res = 0;
+      while (res != NULL) {
+        next_res = res->next;
+        oc_memb_free(&res_l, res);
+        oc_list_remove(sub->resources, res);
+        res = next_res;
+      }
+      oc_memb_free(&ace_l, sub);
+      oc_list_remove(ac_list.subjects, sub);
+      removed = true;
+      break;
+    }
+    sub = next_sub;
+  }
+
+  return removed;
 }
 
 bool
@@ -496,6 +528,18 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_CHANGED);
   else
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+}
+
+void
+delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
+{
+  char *subjectuuid = 0;
+  int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
+  if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
+    oc_send_response(request, OC_STATUS_DELETED);
+    return;
+  }
+  oc_send_response(request, OC_STATUS_NOT_FOUND);
 }
 
 void
