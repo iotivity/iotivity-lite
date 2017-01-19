@@ -21,7 +21,6 @@
 #include "util/oc_memb.h"
 
 OC_MEMB(rep_objects, oc_rep_t, EST_NUM_REP_OBJECTS);
-static const CborEncoder g_empty;
 static uint8_t *g_buf;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
@@ -163,8 +162,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
                                         &len, NULL);
     cur->type = STRING;
     break;
-  case CborMapType: /* when value is a map/object */ {
-    oc_rep_t **obj = &cur->value_object; // object points to list of properties
+  case CborMapType: {
+    oc_rep_t **obj = &cur->value_object;
     *err |= cbor_value_enter_container(value, &map);
     while (!cbor_value_at_end(&map)) {
       oc_parse_rep_value(&map, obj, err);
