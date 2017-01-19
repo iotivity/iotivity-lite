@@ -71,7 +71,10 @@ oc_sec_decode_pstat(oc_rep_t *rep)
   while (rep != NULL) {
     switch (rep->type) {
     case BOOL:
-      pstat.isop = rep->value_boolean;
+      if (oc_string_len(rep->name) == 4 &&
+          strncmp(oc_string(rep->name), "isop", 4) == 0) {
+        pstat.isop = rep->value_boolean;
+      }
       break;
     case INT:
       if (strncmp(oc_string(rep->name), "cm", 2) == 0)
