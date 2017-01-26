@@ -28,7 +28,7 @@
 #include "util/oc_memb.h"
 
 OC_LIST(creds_l);
-OC_MEMB(creds, oc_sec_cred_t, MAX_NUM_SUBJECTS + 1);
+OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 
 oc_sec_cred_t *

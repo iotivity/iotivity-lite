@@ -52,7 +52,7 @@
 #ifndef DTLS_PEER_MAX
 /** The maximum number DTLS peers (i.e. sessions). */
 #ifdef WITH_OCF
-#define DTLS_PEER_MAX (MAX_DTLS_PEERS)
+#define DTLS_PEER_MAX (OC_MAX_DTLS_PEERS)
 #else /* WITH_OCF */
 #define DTLS_PEER_MAX 1
 #endif /* CONTIKI */
@@ -61,7 +61,7 @@
 #ifndef DTLS_HANDSHAKE_MAX
 /** The maximum number of concurrent DTLS handshakes. */
 #ifdef WITH_OCF
-#define DTLS_HANDSHAKE_MAX (MAX_DTLS_PEERS)
+#define DTLS_HANDSHAKE_MAX (OC_MAX_DTLS_PEERS)
 #else /* WITH_OCF */
 #define DTLS_HANDSHAKE_MAX 1
 #endif /* CONTIKI */
