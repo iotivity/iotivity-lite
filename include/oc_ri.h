@@ -172,7 +172,11 @@ oc_resource_t *oc_ri_get_app_resources(void);
 oc_resource_t *oc_ri_alloc_resource(void);
 bool oc_ri_add_resource(oc_resource_t *resource);
 void oc_ri_delete_resource(oc_resource_t *resource);
-#endif
+
+#ifdef OC_MAX_NUM_COLLECTIONS
+#define OC_COLLECTIONS
+#endif /* OC_MAX_NUM_COLLECTIONS */
+#endif /* OC_SERVER */
 
 int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
                                   int *key_len, char **value, int *value_len,

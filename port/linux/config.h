@@ -16,8 +16,7 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (2)
 
-#define OC_COLLECTIONS
-#define MAX_NUM_COLLECTIONS (1)
+#define OC_MAX_NUM_COLLECTIONS (1)
 
 /* Common paramters */
 /* Limit MTU size to lower layers, enable block-wise transfers */
