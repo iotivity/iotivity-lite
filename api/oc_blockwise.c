@@ -14,7 +14,7 @@
 // limitations under the License.
 */
 
-#include <config.h>
+#include "config.h"
 #ifdef OC_BLOCK_WISE_SET_MTU
 #include "oc_blockwise.h"
 #include "port/oc_log.h"
