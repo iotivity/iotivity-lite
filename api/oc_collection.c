@@ -14,15 +14,14 @@
 // limitations under the License.
 */
 
-#include "config.h"
+#include "oc_collection.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_api.h"
-#include "oc_collection.h"
 #include "oc_core_res.h"
 #include "util/oc_memb.h"
 
-OC_MEMB(oc_collections_s, oc_collection_t, MAX_NUM_COLLECTIONS);
+OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);
 OC_LIST(oc_collections);
 OC_MEMB(oc_links_s, oc_link_t, MAX_APP_RESOURCES);
 
