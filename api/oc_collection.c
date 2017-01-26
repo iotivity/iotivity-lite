@@ -24,7 +24,7 @@
 
 OC_MEMB(oc_collections_s, oc_collection_t, MAX_NUM_COLLECTIONS);
 OC_LIST(oc_collections);
-OC_MEMB(oc_links_s, oc_link_t, MAX_APP_RESOURCES);
+OC_MEMB(oc_links_s, oc_link_t, OC_MAX_APP_RESOURCES);
 
 oc_collection_t *
 oc_collection_alloc(void)
