@@ -76,6 +76,7 @@ oc_network_event_handler_mutex_unlock(void)
 static void *
 network_event_thread(void *data)
 {
+  (void)data;
   struct sockaddr_in6 *c = (struct sockaddr_in6 *)&client;
   socklen_t len = sizeof(client);
 
@@ -127,10 +128,10 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
 
     common:
-      memcpy(message->endpoint.ipv6_addr.address, c->sin6_addr.s6_addr,
+      memcpy(message->endpoint.addr.ipv6.address, c->sin6_addr.s6_addr,
              sizeof(c->sin6_addr.s6_addr));
-      message->endpoint.ipv6_addr.scope = c->sin6_scope_id;
-      message->endpoint.ipv6_addr.port = ntohs(c->sin6_port);
+      message->endpoint.addr.ipv6.scope = c->sin6_scope_id;
+      message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
 
       PRINT("Incoming message from ");
       PRINTipaddr(message->endpoint);
@@ -152,11 +153,11 @@ oc_send_buffer(oc_message_t *message)
 
   struct sockaddr_storage receiver;
   struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
-  memcpy(r->sin6_addr.s6_addr, message->endpoint.ipv6_addr.address,
+  memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
          sizeof(r->sin6_addr.s6_addr));
   r->sin6_family = AF_INET6;
-  r->sin6_port = htons(message->endpoint.ipv6_addr.port);
-  r->sin6_scope_id = message->endpoint.ipv6_addr.scope;
+  r->sin6_port = htons(message->endpoint.addr.ipv6.port);
+  r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
   int send_sock = -1;
 
 #ifdef OC_SECURITY
@@ -173,7 +174,7 @@ oc_send_buffer(oc_message_t *message)
   int n = select(FD_SETSIZE, NULL, &wfds, NULL, NULL);
   if (n > 0) {
     int bytes_sent = 0, x;
-    while (bytes_sent < message->length) {
+    while (bytes_sent < (int)message->length) {
       x = sendto(send_sock, message->data + bytes_sent,
                  message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
                  sizeof(receiver));

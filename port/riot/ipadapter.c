@@ -70,8 +70,8 @@ oc_send_buffer(oc_message_t *message)
   PRINT("\n");
 
   conn_udp_sendto(message->data, message->length, local_addr, 16,
-                  message->endpoint.ipv6_addr.address, 16, AF_INET6,
-                  OCF_SERVER_PORT_UNSECURED, message->endpoint.ipv6_addr.port);
+                  message->endpoint.addr.ipv6.address, 16, AF_INET6,
+                  OCF_SERVER_PORT_UNSECURED, message->endpoint.addr.ipv6.port);
 }
 
 void
@@ -84,8 +84,8 @@ handle_incoming_message(uint8_t *buffer, int *size, uint8_t *addr,
     memcpy(message->data, buffer, *size);
     message->length = *size;
     message->endpoint.flags = IP;
-    memcpy(message->endpoint.ipv6_addr.address, addr, 16);
-    message->endpoint.ipv6_addr.port = *port;
+    memcpy(message->endpoint.addr.ipv6.address, addr, 16);
+    message->endpoint.addr.ipv6.port = *port;
 
     PRINT("Incoming message from ");
     PRINTipaddr(message->endpoint);

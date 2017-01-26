@@ -241,7 +241,7 @@ oc_delete_resource(oc_resource_t *resource)
 }
 
 void
-oc_init_query_iterator(oc_request_t *request)
+oc_init_query_iterator(void)
 {
   query_iterator = 0;
 }

@@ -14,12 +14,12 @@ endif
 
 ifeq ($(CLIENT),1)
 ccflags-y += -DOC_CLIENT
+obj-y += ../../../apps/client_zephyr.o
 else
 ccflags-y += -DOC_SERVER
-endif
-
 obj-y += ../../../apps/server_zephyr.o
 #obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
+endif
 
 obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../deps/tinycbor/src/cborencoder.o \

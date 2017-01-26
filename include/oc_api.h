@@ -92,7 +92,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
 
-void oc_init_query_iterator(oc_request_t *request);
+void oc_init_query_iterator(void);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,
                       char **value, int *value_len);
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
@@ -111,7 +111,7 @@ int oc_notify_observers(oc_resource_t *resource);
 /** Client side */
 #include "oc_client_state.h"
 
-bool oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler,
+bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
 
 bool oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
