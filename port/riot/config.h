@@ -48,7 +48,7 @@ typedef uint64_t oc_clock_time_t;
 #define MAX_PLATFORM_PAYLOAD_SIZE (256)
 
 /* Device payload size */
-#define MAX_DEVICE_PAYLOAD_SIZE (256)
+#define OC_MAX_DEVICE_PAYLOAD_SIZE (256)
 
 /* Security layer */
 /* Maximum number of authorized clients */
