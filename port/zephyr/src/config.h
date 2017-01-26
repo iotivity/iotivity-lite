@@ -38,7 +38,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_PDU_BUFFER_SIZE (512)
 
 /* Maximum number of concurrent requests */
-#define MAX_NUM_CONCURRENT_REQUESTS (2)
+#define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
 
 /* Estimated number of nodes in payload tree structure */
 #define EST_NUM_REP_OBJECTS (70)

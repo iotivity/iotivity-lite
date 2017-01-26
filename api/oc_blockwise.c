@@ -22,9 +22,9 @@
 #include "util/oc_memb.h"
 
 OC_MEMB(oc_blockwise_request_states_s, oc_blockwise_request_state_t,
-        MAX_NUM_CONCURRENT_REQUESTS);
+        OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_blockwise_response_states_s, oc_blockwise_response_state_t,
-        MAX_NUM_CONCURRENT_REQUESTS);
+        OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_LIST(oc_blockwise_requests);
 OC_LIST(oc_blockwise_responses);
 
