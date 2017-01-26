@@ -150,8 +150,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   /* Encoding device resource payload */
-  oc_alloc_string(&temp_buffer, MAX_DEVICE_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_DEVICE_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_DEVICE_PAYLOAD_SIZE);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEVICE_PAYLOAD_SIZE);
 
   oc_rep_start_root_object();
 
