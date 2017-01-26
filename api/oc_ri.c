@@ -59,13 +59,13 @@ OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 OC_LIST(client_cbs);
-OC_MEMB(client_cbs_s, oc_client_cb_t, MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* OC_CLIENT */
 
 OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
         NUM_OC_CORE_RESOURCES + OC_MAX_APP_RESOURCES +
-          MAX_NUM_CONCURRENT_REQUESTS * 2);
+          OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
 

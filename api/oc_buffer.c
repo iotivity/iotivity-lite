@@ -29,7 +29,7 @@
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
-OC_MEMB(oc_buffers_s, oc_message_t, (MAX_NUM_CONCURRENT_REQUESTS * 2));
+OC_MEMB(oc_buffers_s, oc_message_t, (OC_MAX_NUM_CONCURRENT_REQUESTS * 2));
 
 oc_message_t *
 oc_allocate_message(void)

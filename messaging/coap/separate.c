@@ -56,7 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 
-OC_MEMB(separate_requests, coap_separate_t, MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
