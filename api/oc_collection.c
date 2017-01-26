@@ -27,7 +27,7 @@ OC_LIST(oc_collections);
 OC_MEMB(oc_links_s, oc_link_t, MAX_APP_RESOURCES);
 
 oc_collection_t *
-oc_collection_alloc()
+oc_collection_alloc(void)
 {
   oc_collection_t *collection = oc_memb_alloc(&oc_collections_s);
   if (collection) {
@@ -94,7 +94,7 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
   }
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
-    if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
+    if ((int)oc_string_len(collection->uri) == (uri_path_len + 1) &&
         strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0)
       break;
     collection = collection->next;
@@ -119,7 +119,7 @@ oc_collection_filter_rt(oc_link_t *link, const char *rt, int rt_len)
   if (rt_len > 0) {
     match = false;
     int i;
-    for (i = 0; i < oc_string_array_get_allocated_size(link->types); i++) {
+    for (i = 0; i < (int)oc_string_array_get_allocated_size(link->types); i++) {
       int size = oc_string_array_get_item_size(link->types, i);
       const char *t = (const char *)oc_string_array_get_item(link->types, i);
       if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
@@ -188,8 +188,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   } break;
   case OC_IF_B: {
     CborEncoder encoder, prev_link;
-    oc_request_t rest_request = {};
-    oc_response_t response = {};
+    oc_request_t rest_request = { 0 };
+    oc_response_t response = { 0 };
     oc_response_buffer_t response_buffer;
     oc_interface_mask_t bp_if;
     bool method_not_found = false;
@@ -294,7 +294,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 }
 
 oc_collection_t *
-oc_collection_get_all()
+oc_collection_get_all(void)
 {
   return (oc_collection_t *)oc_list_head(oc_collections);
 }

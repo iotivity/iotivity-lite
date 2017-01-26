@@ -27,7 +27,7 @@ USEMODULE += gnrc_ipv6_router_default
 #USEMODULE += gnrc_rpl
 #USEMODULE += auto_init_gnrc_rpl
 
-CFLAGS = -std=gnu99 -I./ -I../../include/ -I../../ -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -Wall -Wno-format-zero-length -Wno-main -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -Wno-unused-but-set-variable -fno-reorder-functions -fno-defer-pop -Wno-pointer-sign -fno-strict-overflow -Werror=implicit-int
+CFLAGS = -std=gnu99 -I./ -I../../include/ -I../../ #-fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow
 
 CBOR = ../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c
 
@@ -63,12 +63,7 @@ OBJ_COMMON = $(SRC_COMMON:.c=.o)
 OBJ_FRAMEWORK = $(SRC:.c=.o)
 APPDEPS += ${OBJ_COMMON} ${OBJ_FRAMEWORK} ${APP_OBJ}
 
-#Disable warnings as errors
-WERROR = 0
 include $(RIOTBASE)/Makefile.include
-CFLAGS := $(filter-out -Wall,$(CFLAGS))
-CFLAGS := $(filter-out -Wextra,$(CFLAGS))
-CFLAGS := $(filter-out -pedantic,$(CFLAGS))
 
 ${APP_OBJ}: ${APP_SRC}
 	${CC} -c -o $@ $< ${CFLAGS} ${INCLUDES}

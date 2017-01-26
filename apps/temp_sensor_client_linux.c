@@ -32,6 +32,7 @@ static int temperature;
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
+  (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(temp_1, &temp_sensor);
   return DONE;
@@ -45,8 +46,8 @@ get_temp(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case INT:
-      PRINT("%d\n", rep->value_int);
-      temperature = rep->value_int;
+      PRINT("%d\n", rep->value.integer);
+      temperature = rep->value.integer;
       break;
     default:
       break;
@@ -60,11 +61,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 16 && strncmp(t, "oic.r.tempsensor", 16) == 0) {
       memcpy(&temp_sensor, server, sizeof(oc_server_handle_t));
@@ -108,6 +112,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

@@ -85,16 +85,16 @@ typedef struct
     SECURED = 1 << 4
   } flags;
 
-  union
+  union dev_addr
   {
-    oc_ipv6_addr_t ipv6_addr;
-    oc_le_addr_t bt_addr;
-  };
+    oc_ipv6_addr_t ipv6;
+    oc_le_addr_t bt;
+  } addr;
 } oc_endpoint_t;
 
 #define oc_make_ip_endpoint(__name__, __flags__, __port__, ...)                \
   oc_endpoint_t __name__ = {.flags = __flags__,                                \
-                            .ipv6_addr = {.port = __port__,                    \
+                            .addr.ipv6 = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
 
 struct oc_message_s

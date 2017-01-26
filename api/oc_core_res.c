@@ -66,6 +66,7 @@ static void
 oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
                        void *data)
 {
+  (void)data;
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size = oc_device_info[request->resource->device].payload.size;
@@ -177,6 +178,7 @@ void
 oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
                          void *data)
 {
+  (void)data;
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size = oc_platform_payload.size;

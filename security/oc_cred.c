@@ -36,7 +36,7 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid)
 {
   oc_sec_cred_t *cred = oc_list_head(creds_l);
   while (cred != NULL) {
-    if (strncmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {
+    if (memcmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {
       return cred;
     }
     cred = cred->next;
@@ -50,7 +50,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
   oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid);
   if (cred == NULL) {
     cred = oc_memb_alloc(&creds);
-    strncpy(cred->subjectuuid.id, subjectuuid->id, 16);
+    memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
     oc_list_add(creds_l, cred);
   }
   return cred;
@@ -75,7 +75,7 @@ oc_sec_encode_cred(void)
     oc_uuid_to_str(&creds->subjectuuid, uuid, 37);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
     oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, creds->key);
+    oc_rep_set_byte_string(privatedata, data, (const uint8_t *)creds->key);
     oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     oc_rep_close_object(creds, privatedata);
     oc_rep_object_array_end_item(creds);
@@ -93,57 +93,56 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
   char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
   oc_sec_cred_t *credobj;
-  bool got_key = false, raw_key = false, base64_key = false;
+  bool got_key = false, base64_key = false;
   int len = 0;
   uint8_t key[24];
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
     case STRING:
-      if (len == 10 && strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
+      if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm->rowneruuid);
       }
       break;
     case OBJECT_ARRAY: {
-      oc_rep_t *creds_array = rep->value_object_array;
+      oc_rep_t *creds_array = rep->value.object_array;
       while (creds_array != NULL) {
-        oc_rep_t *cred = creds_array->value_object;
+        oc_rep_t *cred = creds_array->value.object;
         bool valid_cred = false;
         while (cred != NULL) {
           len = oc_string_len(cred->name);
           valid_cred = true;
           switch (cred->type) {
           case INT:
-            if (len == 6 && strncmp(oc_string(cred->name), "credid", 6) == 0)
-              credid = cred->value_int;
+            if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0)
+              credid = cred->value.integer;
             else if (len == 8 &&
-                     strncmp(oc_string(cred->name), "credtype", 8) == 0)
-              credtype = cred->value_int;
+                     memcmp(oc_string(cred->name), "credtype", 8) == 0)
+              credtype = cred->value.integer;
             break;
           case STRING:
             if (len == 11 &&
-                strncmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
-              strncpy(subjectuuid, oc_string(cred->value_string),
-                      oc_string_len(cred->value_string) + 1);
+                memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
+              memcpy(subjectuuid, oc_string(cred->value.string),
+                     oc_string_len(cred->value.string) + 1);
             }
             break;
           case OBJECT: {
-            oc_rep_t *data = cred->value_object;
+            oc_rep_t *data = cred->value.object;
             while (data != NULL) {
               switch (data->type) {
               case STRING: {
                 if (oc_string_len(data->name) == 8 &&
-                    strncmp("encoding", oc_string(data->name), 8) == 0) {
-                  if (oc_string_len(data->value_string) == 23 &&
-                      strncmp("oic.sec.encoding.base64",
-                              oc_string(data->value_string), 23) == 0) {
+                    memcmp("encoding", oc_string(data->name), 8) == 0) {
+                  if (oc_string_len(data->value.string) == 23 &&
+                      memcmp("oic.sec.encoding.base64",
+                             oc_string(data->value.string), 23) == 0) {
                     base64_key = true;
-                  } else
-                    raw_key = true;
+                  }
                 } else if (oc_string_len(data->name) == 4 &&
-                           strncmp(oc_string(data->name), "data", 4) == 0) {
-                  uint8_t *p = oc_cast(data->value_string, uint8_t);
-                  int size = oc_string_len(data->value_string);
+                           memcmp(oc_string(data->name), "data", 4) == 0) {
+                  uint8_t *p = oc_cast(data->value.string, uint8_t);
+                  int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
                   if (size != 24)
@@ -153,8 +152,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
                 }
               } break;
               case BYTE_STRING: {
-                uint8_t *p = oc_cast(data->value_string, uint8_t);
-                int size = oc_string_len(data->value_string);
+                uint8_t *p = oc_cast(data->value.string, uint8_t);
+                int size = oc_string_len(data->value.string);
                 if (size == 0)
                   goto next_item;
                 if (size != 16)
@@ -204,12 +203,14 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
 void
 post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   oc_sec_cred_t *owner = NULL;
   bool success = oc_sec_decode_cred(request->request_payload, &owner);
-  if (owner && strncmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) {
+  if (owner && memcmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) {
     oc_uuid_t *dev = oc_core_get_device_id(0);
-    oc_sec_derive_owner_psk(request->origin, OXM_JUST_WORKS,
+    oc_sec_derive_owner_psk(request->origin, (const uint8_t *)OXM_JUST_WORKS,
                             strlen(OXM_JUST_WORKS), owner->subjectuuid.id, 16,
                             dev->id, 16, owner->key, 16);
   }

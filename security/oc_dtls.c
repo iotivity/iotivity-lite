@@ -129,6 +129,7 @@ static int
 oc_sec_dtls_get_decrypted_message(struct dtls_context_t *ctx,
                                   session_t *session, uint8_t *buf, size_t len)
 {
+  (void)ctx;
   oc_message_t *message = oc_allocate_message();
   if (message) {
     memcpy(&message->endpoint, &session->addr, sizeof(oc_endpoint_t));
@@ -185,6 +186,7 @@ static int
 oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
                                    session_t *session, uint8_t *buf, size_t len)
 {
+  (void)ctx;
   oc_message_t message;
   memcpy(&message.endpoint, &session->addr, sizeof(oc_endpoint_t));
   memcpy(message.data, buf, len);
@@ -204,6 +206,9 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx, const session_t *session,
                           const unsigned char *desc, size_t desc_len,
                           unsigned char *result, size_t result_length)
 {
+  (void)ctx;
+  (void)desc_len;
+  (void)result_length;
   switch (type) {
   case DTLS_PSK_IDENTITY:
   case DTLS_PSK_HINT: {
@@ -234,6 +239,7 @@ int
 oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
                    dtls_alert_level_t level, unsigned short code)
 {
+  (void)ctx;
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&session->addr);
   if (peer && level == 0 && code == DTLS_EVENT_CONNECTED) {
     peer->connected = true;
@@ -254,9 +260,9 @@ static dtls_handler_t dtls_cb = {.write = oc_sec_dtls_send_encrypted_message,
                                  .get_psk_info = oc_sec_dtls_get_owner_psk };
 
 void
-oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const char *oxm,
-                        const size_t oxm_len, const char *server_uuid,
-                        const size_t server_uuid_len, const char *obt_uuid,
+oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+                        const size_t oxm_len, const uint8_t *server_uuid,
+                        const size_t server_uuid_len, const uint8_t *obt_uuid,
                         const size_t obt_uuid_len, uint8_t *key,
                         const size_t key_len)
 {

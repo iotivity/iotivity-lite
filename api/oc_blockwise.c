@@ -79,7 +79,7 @@ oc_blockwise_alloc_response_buffer(const char *href, int href_len,
     int i = COAP_ETAG_LEN;
     uint32_t r = oc_random_value();
     while (i > 0) {
-      memcpy(buffer->etag, &r, MIN(sizeof(r), i));
+      memcpy(buffer->etag, &r, MIN((int)sizeof(r), i));
       i -= sizeof(r);
       r = oc_random_value();
     }

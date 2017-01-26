@@ -299,11 +299,11 @@ typedef unsigned char oc_process_num_events_t;
 #if OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
 #define OC_PROCESS(name, strname)                                              \
   OC_PROCESS_THREAD(name, ev, data);                                           \
-  struct oc_process name = { NULL, process_thread_##name }
+  struct oc_process name = { NULL, process_thread_##name, { 0 }, 0, 0 }
 #else
 #define OC_PROCESS(name, strname)                                              \
   OC_PROCESS_THREAD(name, ev, data);                                           \
-  struct oc_process name = { NULL, strname, process_thread_##name }
+  struct oc_process name = { NULL, strname, process_thread_##name, { 0 }, 0, 0 }
 #endif
 
 /** @} */

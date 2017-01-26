@@ -31,6 +31,7 @@ static int counter;
 static void
 set_device_custom_property(void *data)
 {
+  (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
@@ -46,6 +47,7 @@ app_init(void)
 static void
 get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_count:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -64,6 +66,7 @@ get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -84,13 +87,15 @@ static void
 post_light(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      light_state = rep->value_boolean;
+      light_state = rep->value.boolean;
       PRINT("value: %d\n", light_state);
       break;
     default:
@@ -109,6 +114,8 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
 static void
 put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   post_light(request, interface, user_data);
 }
 
@@ -179,6 +186,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

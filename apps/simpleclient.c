@@ -35,6 +35,7 @@ static oc_string_t name;
 oc_event_callback_retval_t
 stop_observe(void *data)
 {
+  (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(a_light, &light_server);
   return DONE;
@@ -49,19 +50,19 @@ observe_light(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      PRINT("%d\n", rep->value_boolean);
-      state = rep->value_boolean;
+      PRINT("%d\n", rep->value.boolean);
+      state = rep->value.boolean;
       break;
     case INT:
-      PRINT("%d\n", rep->value_int);
-      power = rep->value_int;
+      PRINT("%d\n", rep->value.integer);
+      power = rep->value.integer;
       break;
     case STRING:
-      PRINT("%s\n", oc_string(rep->value_string));
+      PRINT("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string),
-                    oc_string_len(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
       break;
     default:
       break;
@@ -142,19 +143,19 @@ get_light(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      PRINT("%d\n", rep->value_boolean);
-      state = rep->value_boolean;
+      PRINT("%d\n", rep->value.boolean);
+      state = rep->value.boolean;
       break;
     case INT:
-      PRINT("%d\n", rep->value_int);
-      power = rep->value_int;
+      PRINT("%d\n", rep->value.integer);
+      power = rep->value.integer;
       break;
     case STRING:
-      PRINT("%s\n", oc_string(rep->value_string));
+      PRINT("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string),
-                    oc_string_len(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
       break;
     default:
       break;
@@ -181,11 +182,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)user_data;
+  (void)interfaces;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       memcpy(&light_server, server, sizeof(oc_server_handle_t));
@@ -271,6 +275,7 @@ signal_event_loop(void)
 void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

@@ -94,9 +94,9 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
       message->endpoint.flags = IP | SECURED;
     else
       message->endpoint.flags = IP;
-    memcpy(message->endpoint.ipv6_addr.address, &NET_IPV6_BUF(buf)->src, 16);
-    message->endpoint.ipv6_addr.scope = 0;
-    message->endpoint.ipv6_addr.port = NET_UDP_BUF(buf)->src_port;
+    memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_BUF(buf)->src, 16);
+    message->endpoint.addr.ipv6.scope = 0;
+    message->endpoint.addr.ipv6.port = NET_UDP_BUF(buf)->src_port;
 
     PRINT("oc_network_receive: received %d bytes\n", message->length);
     PRINT("oc_network_receive: incoming message: ");
@@ -128,9 +128,9 @@ oc_send_buffer(oc_message_t *message)
   /* Populate destination address structure */
   struct sockaddr_in6 peer_addr;
   memcpy(peer_addr.sin6_addr.in6_u.u6_addr8,
-         message->endpoint.ipv6_addr.address, 16);
+         message->endpoint.addr.ipv6.address, 16);
   peer_addr.sin6_family = AF_INET6;
-  peer_addr.sin6_port = message->endpoint.ipv6_addr.port;
+  peer_addr.sin6_port = message->endpoint.addr.ipv6.port;
 
   /* Network buffer to hold data to be sent */
   struct net_buf *send_buf;
