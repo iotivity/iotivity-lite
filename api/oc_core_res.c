@@ -30,7 +30,7 @@ struct oc_device_info_t
 {
   oc_uuid_t uuid;
   oc_string_t payload;
-} oc_device_info[MAX_NUM_DEVICES];
+} oc_device_info[OC_MAX_NUM_DEVICES];
 static int device_count;
 static oc_string_t oc_platform_payload;
 
@@ -119,7 +119,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
-  if (device_count == MAX_NUM_DEVICES)
+  if (device_count == OC_MAX_NUM_DEVICES)
     return false;
 
   oc_string_t temp_buffer;

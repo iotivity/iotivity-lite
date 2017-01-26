@@ -43,7 +43,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_REP_OBJECTS (70)
 
 /* Number of devices on the OCF platform */
-#define MAX_NUM_DEVICES (1)
+#define OC_MAX_NUM_DEVICES (1)
 
 /* Platform payload size */
 #define MAX_PLATFORM_PAYLOAD_SIZE (256)
