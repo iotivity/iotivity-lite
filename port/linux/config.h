@@ -28,8 +28,8 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of concurrent requests */
 #define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
 
-/* Estimated number of nodes in payload tree structure */
-#define EST_NUM_REP_OBJECTS (100)
+/* Maximum number of nodes in a payload tree structure */
+#define OC_MAX_NUM_REP_OBJECTS (100)
 
 /* Number of devices on the OCF platform */
 #define MAX_NUM_DEVICES (1)

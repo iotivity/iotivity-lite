@@ -20,7 +20,7 @@
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
 
-OC_MEMB(rep_objects, oc_rep_t, EST_NUM_REP_OBJECTS);
+OC_MEMB(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 static uint8_t *g_buf;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
