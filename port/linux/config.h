@@ -35,7 +35,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_DEVICES (1)
 
 /* Platform payload size */
-#define MAX_PLATFORM_PAYLOAD_SIZE (256)
+#define OC_MAX_PLATFORM_PAYLOAD_SIZE (256)
 
 /* Device payload size */
 #define OC_MAX_DEVICE_PAYLOAD_SIZE (256)
