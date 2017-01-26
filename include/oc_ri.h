@@ -89,7 +89,7 @@ typedef enum {
   __NUM_OC_CORE_RESOURCES__
 } oc_core_resource_t;
 
-#define NUM_OC_CORE_RESOURCES (__NUM_OC_CORE_RESOURCES__ + MAX_NUM_DEVICES)
+#define NUM_OC_CORE_RESOURCES (__NUM_OC_CORE_RESOURCES__ + OC_MAX_NUM_DEVICES)
 
 typedef struct oc_resource_s oc_resource_t;
 
