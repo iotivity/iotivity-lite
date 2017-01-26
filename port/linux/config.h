@@ -42,12 +42,12 @@ typedef uint64_t oc_clock_time_t;
 
 /* Security layer */
 /* Maximum number of authorized clients */
-#define MAX_NUM_SUBJECTS (2)
+#define OC_MAX_NUM_SUBJECTS (2)
 
 /* Maximum number of concurrent DTLS sessions */
-#define MAX_DTLS_PEERS (1)
+#define OC_MAX_DTLS_PEERS (1)
 
 /* Max inactivity timeout before tearing down DTLS connection */
-#define DTLS_INACTIVITY_TIMEOUT (10)
+#define OC_DTLS_INACTIVITY_TIMEOUT (60)
 
 #endif /* CONFIG_H */

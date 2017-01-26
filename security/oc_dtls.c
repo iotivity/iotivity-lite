@@ -27,7 +27,7 @@
 #include "oc_svr.h"
 
 OC_PROCESS(oc_dtls_handler, "DTLS Process");
-OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, MAX_DTLS_PEERS);
+OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, OC_MAX_DTLS_PEERS);
 OC_LIST(dtls_peers);
 
 static dtls_context_t *ocf_dtls_context;
@@ -63,7 +63,7 @@ oc_sec_dtls_inactive(void *data)
   if (peer) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
-    if (time < DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
+    if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
     } else {
@@ -94,7 +94,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
       oc_list_add(dtls_peers, peer);
 
       oc_ri_add_timed_event_callback_seconds(
-        &peer->session.addr, oc_sec_dtls_inactive, DTLS_INACTIVITY_TIMEOUT);
+        &peer->session.addr, oc_sec_dtls_inactive, OC_DTLS_INACTIVITY_TIMEOUT);
     }
   }
   return peer;
