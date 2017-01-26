@@ -216,8 +216,8 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
   /* Encoding platform resource payload */
-  oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_PLATFORM_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_PLATFORM_PAYLOAD_SIZE);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_PLATFORM_PAYLOAD_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
 
