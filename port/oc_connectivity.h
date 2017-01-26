@@ -58,7 +58,11 @@
 #endif /* !OC_BLOCK_WISE_SET_MTU */
 enum
 {
+#ifdef OC_SECURITY
   OC_PDU_SIZE = (2 * OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#else  /* OC_SECURITY */
+  OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#endif /* !OC_SECURITY */
 };
 
 typedef struct
