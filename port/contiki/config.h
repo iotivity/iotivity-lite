@@ -30,7 +30,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Server-side parameters */
 /* Maximum number of server resources */
-#define MAX_APP_RESOURCES (1)
+#define OC_MAX_APP_RESOURCES (1)
 
 /* Common paramters */
 /* Maximum size of request/response PDUs */

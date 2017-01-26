@@ -53,7 +53,7 @@
 #ifdef OC_SERVER
 OC_LIST(app_resources);
 OC_LIST(observe_callbacks);
-OC_MEMB(app_resources_s, oc_resource_t, MAX_APP_RESOURCES);
+OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
@@ -64,7 +64,7 @@ OC_MEMB(client_cbs_s, oc_client_cb_t, MAX_NUM_CONCURRENT_REQUESTS);
 
 OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
-        NUM_OC_CORE_RESOURCES + MAX_APP_RESOURCES +
+        NUM_OC_CORE_RESOURCES + OC_MAX_APP_RESOURCES +
           MAX_NUM_CONCURRENT_REQUESTS * 2);
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");

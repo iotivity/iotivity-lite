@@ -76,7 +76,7 @@
 
 /* Number of observer slots (each takes abot xxx bytes) */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS (MAX_APP_RESOURCES + MAX_NUM_CONCURRENT_REQUESTS)
+#define COAP_MAX_OBSERVERS (OC_MAX_APP_RESOURCES + MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OBSERVERS */
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to
