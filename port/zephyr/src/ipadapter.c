@@ -27,7 +27,7 @@
 #include <net/net_core.h>
 #include <net/net_if.h>
 
-#if defined(CONFIG_NETWORKING_WITH_BT)
+#if defined(CONFIG_NET_L2_BLUETOOTH)
 #include <bluetooth/bluetooth.h>
 #include <gatt/ipss.h>
 #endif
@@ -162,7 +162,7 @@ oc_connectivity_init(void)
   static struct sockaddr_in6 dtls_addr6 = { 0 };
 #endif /* OC_SECURITY */
 
-#if defined(CONFIG_NETWORKING_WITH_BT)
+#if defined(CONFIG_NET_L2_BLUETOOTH)
   if (bt_enable(NULL)) {
     LOG("oc_connectivity_init: bluetooth initialization failed\n");
     return -1;
