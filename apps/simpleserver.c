@@ -103,11 +103,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "core.brightlight");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
   oc_resource_set_request_handler(res, OC_GET, get_light, NULL);

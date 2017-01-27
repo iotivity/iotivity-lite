@@ -101,6 +101,10 @@ oc_populate_resource_object(oc_resource_t *resource, const char *uri,
   oc_new_string_array(&resource->types, num_resource_types);
   resource->properties = 0;
   resource->device = device;
+
+#ifdef OC_SECURITY
+  resource->properties |= OC_SECURE;
+#endif /* OC_SECURITY */
 }
 
 oc_resource_t *
@@ -160,9 +164,9 @@ oc_resource_bind_resource_type(oc_resource_t *resource, const char *type)
 
 #ifdef OC_SECURITY
 void
-oc_resource_make_secure(oc_resource_t *resource)
+oc_resource_make_public(oc_resource_t *resource)
 {
-  resource->properties |= OC_SECURE;
+  resource->properties &= ~OC_SECURE;
 }
 #endif /* OC_SECURITY */
 
