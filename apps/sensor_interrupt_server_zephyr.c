@@ -32,14 +32,14 @@ oc_define_interrupt_handler(temp_sensor)
   }
 }
 
-static void
+static int
 app_init(void)
 {
   oc_activate_interrupt_handler(temp_sensor);
-  oc_init_platform("GE", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor", "1.0",
-                "1.0", NULL, NULL);
+  int ret = oc_init_platform("GE", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor",
+                       "1.0", "1.0", NULL, NULL);
+  return ret;
 }
 
 static void

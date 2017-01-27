@@ -27,13 +27,13 @@ static struct timespec ts;
 static int quit = 0;
 static int large_array[100];
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.array", "Large array generator", "1.0", "1.0",
-                NULL, NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.array", "Large array generator", "1.0",
+                       "1.0", NULL, NULL);
+  return ret;
 }
 
 static oc_separate_response_t array_response;

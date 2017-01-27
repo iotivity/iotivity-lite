@@ -18,12 +18,13 @@
 
 static bool light_state = false;
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0", NULL,
-                NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
+                       NULL, NULL);
+  return ret;
 }
 
 static void

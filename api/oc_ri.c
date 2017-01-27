@@ -69,9 +69,6 @@ OC_MEMB(event_callbacks_s, oc_event_callback_t,
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
 
-// TODO: Define and use a  complete set of error codes.
-int oc_stack_errno;
-
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];

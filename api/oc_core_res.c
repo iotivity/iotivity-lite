@@ -120,7 +120,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
   if (device_count == OC_MAX_NUM_DEVICES)
-    return false;
+    return NULL;
 
   oc_string_t temp_buffer;
 /* Once provisioned, UUID is retrieved from the credential store.
@@ -224,7 +224,7 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
   oc_core_encode_interfaces_mask(oc_rep_object(root),
                                  core_resources[OCF_P].interfaces);
 
-  oc_uuid_t uuid; /*fix uniqueness of platform id?? */
+  oc_uuid_t uuid;
   oc_gen_uuid(&uuid);
   char uuid_str[37];
 

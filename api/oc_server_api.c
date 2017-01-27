@@ -25,34 +25,24 @@
 
 #include "oc_core_res.h"
 
-extern int oc_stack_errno;
-// TODO:
-// 0x01: Couldnt add platform
-// 0x02: Couldnt add device
-// 0x03: CBOR error
-
-void
+int
 oc_add_device(const char *uri, const char *rt, const char *name,
               const char *spec_version, const char *data_model_version,
               oc_add_device_cb_t add_device_cb, void *data)
 {
-  oc_string_t *payload;
-
-  payload = oc_core_add_new_device(uri, rt, name, spec_version,
-                                   data_model_version, add_device_cb, data);
-  if (!payload)
-    oc_stack_errno |= 0x02;
+  if (!oc_core_add_new_device(uri, rt, name, spec_version, data_model_version,
+                              add_device_cb, data))
+    return -1;
+  return 0;
 }
 
-void
+int
 oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
                  void *data)
 {
-  oc_string_t *payload;
-
-  payload = oc_core_init_platform(mfg_name, init_platform_cb, data);
-  if (!payload)
-    oc_stack_errno |= 0x01;
+  if (!oc_core_init_platform(mfg_name, init_platform_cb, data))
+    return -1;
+  return 0;
 }
 
 int
@@ -71,7 +61,6 @@ response_length(void)
 void
 oc_send_response(oc_request_t *request, oc_status_t response_code)
 {
-  // FIX:: set errno if CBOR encoding failed.
   request->response->response_buffer->response_length = response_length();
   request->response->response_buffer->code = oc_status_code(response_code);
 }

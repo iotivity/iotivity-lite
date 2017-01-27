@@ -26,12 +26,13 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.large.array.reader", "Large array reader",
-                "1.0", "1.0", NULL, NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.large.array.reader",
+                       "Large array reader", "1.0", "1.0", NULL, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)

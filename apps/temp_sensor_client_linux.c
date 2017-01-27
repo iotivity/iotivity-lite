@@ -16,12 +16,13 @@
 
 #include "oc_api.h"
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("GE", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub", "1.0", "1.0",
-                NULL, NULL);
+  int ret = oc_init_platform("GE", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub", "1.0",
+                       "1.0", NULL, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)

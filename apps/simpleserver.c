@@ -20,14 +20,14 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
-
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |=
+    oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);
+  return ret;
 }
 
 static void
@@ -95,7 +95,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface,
   post_light(request, interface, user_data);
 }
 
-void
+static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource("/a/light", 2, 0);
