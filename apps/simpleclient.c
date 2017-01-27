@@ -16,12 +16,13 @@
 
 #include "oc_api.h"
 
-void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0", NULL,
-                NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                       NULL, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
@@ -32,7 +33,7 @@ static bool state;
 static int power;
 static oc_string_t name;
 
-oc_event_callback_retval_t
+static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
@@ -41,7 +42,7 @@ stop_observe(void *data)
   return DONE;
 }
 
-void
+static void
 observe_light(oc_client_response_t *data)
 {
   PRINT("OBSERVE_light:\n");
@@ -71,7 +72,7 @@ observe_light(oc_client_response_t *data)
   }
 }
 
-void
+static void
 post2_light(oc_client_response_t *data)
 {
   PRINT("POST2_light:\n");
@@ -87,7 +88,7 @@ post2_light(oc_client_response_t *data)
   PRINT("Sent OBSERVE request\n");
 }
 
-void
+static void
 post_light(oc_client_response_t *data)
 {
   PRINT("POST_light:\n");
@@ -111,7 +112,7 @@ post_light(oc_client_response_t *data)
     PRINT("Could not init POST request\n");
 }
 
-void
+static void
 put_light(oc_client_response_t *data)
 {
   PRINT("PUT_light:\n");
@@ -134,7 +135,7 @@ put_light(oc_client_response_t *data)
     PRINT("Could not init POST request\n");
 }
 
-void
+static void
 get_light(oc_client_response_t *data)
 {
   PRINT("GET_light:\n");
@@ -177,7 +178,7 @@ get_light(oc_client_response_t *data)
     PRINT("Could not init PUT request\n");
 }
 
-oc_discovery_flags_t
+static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
@@ -206,7 +207,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-void
+static void
 issue_requests(void)
 {
   oc_do_ip_discovery("core.light", &discovery, NULL);

@@ -31,12 +31,13 @@ set_device_custom_property(void *data)
   oc_set_custom_device_property(purpose, "operate lamp");
 }
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
-                set_device_custom_property, NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                       set_device_custom_property, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
