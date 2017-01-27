@@ -77,9 +77,7 @@ void oc_link_add_rt(oc_link_t *link, const char *rt);
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
 bool oc_add_collection(oc_resource_t *collection);
 
-#ifdef OC_SECURITY
-void oc_resource_make_secure(oc_resource_t *resource);
-#endif /* OC_SECURITY */
+void oc_resource_make_public(oc_resource_t *resource);
 
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 void oc_resource_set_observable(oc_resource_t *resource, bool state);

@@ -57,11 +57,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "oic.r.tempsensor");
   oc_resource_bind_resource_interface(res, OC_IF_R);
   oc_resource_set_default_interface(res, OC_IF_R);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_observable(res, true);
   oc_resource_set_request_handler(res, OC_GET, get_temp, NULL);

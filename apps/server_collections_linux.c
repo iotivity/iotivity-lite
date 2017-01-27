@@ -126,11 +126,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res1, "oic.r.light");
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
   oc_resource_set_default_interface(res1, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res1);
-#endif
-
   oc_resource_set_discoverable(res1, true);
   oc_resource_set_periodic_observable(res1, 1);
   oc_resource_set_request_handler(res1, OC_GET, get_light, NULL);
@@ -142,11 +137,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res2, "oic.r.counter");
   oc_resource_bind_resource_interface(res2, OC_IF_R);
   oc_resource_set_default_interface(res2, OC_IF_R);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res2);
-#endif
-
   oc_resource_set_discoverable(res2, true);
   oc_resource_set_periodic_observable(res2, 1);
   oc_resource_set_request_handler(res2, OC_GET, get_count, NULL);
@@ -156,10 +146,6 @@ register_resources(void)
   oc_resource_t *col = oc_new_collection("/lights", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(col);
-#endif
 
   oc_link_t *l1 = oc_new_link("/light/1", 1, 0);
   oc_link_set_if(l1, OC_IF_BASELINE | OC_IF_RW);
