@@ -83,7 +83,7 @@ handle_incoming_message(uint8_t *buffer, int *size, uint8_t *addr,
   if (message) {
     memcpy(message->data, buffer, *size);
     message->length = *size;
-    message->endpoint.flags = IP;
+    message->endpoint.flags = IPV6;
     memcpy(message->endpoint.addr.ipv6.address, addr, 16);
     message->endpoint.addr.ipv6.port = *port;
 
@@ -210,11 +210,11 @@ oc_connectivity_shutdown(void)
 
 #ifdef OC_CLIENT
 void
-oc_send_multicast_message(oc_message_t *message)
+oc_send_discovery_request(oc_message_t *message)
 {
   oc_send_buffer(message);
 }
-#endif
+#endif /* OC_CLIENT */
 
 // TODO:
 #ifdef OC_SECURITY

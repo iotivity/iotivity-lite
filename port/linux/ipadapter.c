@@ -106,7 +106,7 @@ network_event_thread(void *data)
       if (FD_ISSET(server_sock, &setfds)) {
         message->length = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
-        message->endpoint.flags = IP;
+        message->endpoint.flags = IPV6;
         FD_CLR(server_sock, &setfds);
         goto common;
       }
@@ -114,7 +114,7 @@ network_event_thread(void *data)
       if (FD_ISSET(mcast_sock, &setfds)) {
         message->length = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
-        message->endpoint.flags = IP;
+        message->endpoint.flags = IPV6;
         FD_CLR(mcast_sock, &setfds);
         goto common;
       }
@@ -123,7 +123,7 @@ network_event_thread(void *data)
       if (FD_ISSET(secure_sock, &setfds)) {
         message->length = recvfrom(secure_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
-        message->endpoint.flags = IP | SECURED;
+        message->endpoint.flags = IPV6 | SECURED;
       }
 #endif /* OC_SECURITY */
 
@@ -186,7 +186,7 @@ oc_send_buffer(oc_message_t *message)
 
 #ifdef OC_CLIENT
 void
-oc_send_multicast_message(oc_message_t *message)
+oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
   if (getifaddrs(&ifs) < 0) {

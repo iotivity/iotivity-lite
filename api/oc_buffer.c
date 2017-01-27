@@ -108,9 +108,9 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       oc_message_t *message = (oc_message_t *)data;
 
 #ifdef OC_CLIENT
-      if (message->endpoint.flags & MULTICAST) {
+      if (message->endpoint.flags & DISCOVERY) {
         LOG("Outbound network event: multicast request\n");
-        oc_send_multicast_message(message);
+        oc_send_discovery_request(message);
         oc_message_unref(message);
       } else
 #endif

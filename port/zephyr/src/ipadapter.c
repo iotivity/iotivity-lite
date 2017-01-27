@@ -91,9 +91,9 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
     memcpy(message->data, net_nbuf_appdata(buf), bytes_read);
     message->length = bytes_read;
     if (user_data != NULL)
-      message->endpoint.flags = IP | SECURED;
+      message->endpoint.flags = IPV6 | SECURED;
     else
-      message->endpoint.flags = IP;
+      message->endpoint.flags = IPV6;
     memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_BUF(buf)->src, 16);
     message->endpoint.addr.ipv6.scope = 0;
     message->endpoint.addr.ipv6.port = NET_UDP_BUF(buf)->src_port;
@@ -284,11 +284,13 @@ oc_connectivity_shutdown(void)
   net_context_put(mcast_recv6);
 }
 
+#ifdef OC_CLIENT
 void
-oc_send_multicast_message(oc_message_t *message)
+oc_send_discovery_request(oc_message_t *message)
 {
   oc_send_buffer(message);
 }
+#endif /* OC_CLIENT */
 
 #ifdef OC_SECURITY
 uint16_t

@@ -82,11 +82,11 @@ typedef struct
 {
   enum transport_flags
   {
-    IP = 1 << 0,
-    GATT = 1 << 1,
-    IPSP = 1 << 2,
-    MULTICAST = 1 << 3,
-    SECURED = 1 << 4
+    DISCOVERY = 1 << 0,
+    SECURED = 1 << 1,
+    IPV4 = 1 << 2,
+    IPV6 = 1 << 3,
+    GATT = 1 << 4
   } flags;
 
   union dev_addr
@@ -120,6 +120,6 @@ int oc_connectivity_init(void);
 
 void oc_connectivity_shutdown(void);
 
-void oc_send_multicast_message(oc_message_t *message);
+void oc_send_discovery_request(oc_message_t *message);
 
 #endif /* OC_CONNECTIVITY_H */
