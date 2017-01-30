@@ -29,7 +29,7 @@
 
 #if defined(CONFIG_NET_L2_BLUETOOTH)
 #include <bluetooth/bluetooth.h>
-#include <gatt/ipss.h>
+#include <ipss.h>
 #endif
 
 /* Server's receive socket */
