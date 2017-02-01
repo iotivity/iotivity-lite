@@ -27,7 +27,7 @@
 #include "oc_svr.h"
 
 OC_PROCESS(oc_dtls_handler, "DTLS Process");
-OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, MAX_DTLS_PEERS);
+OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, OC_MAX_DTLS_PEERS);
 OC_LIST(dtls_peers);
 
 static dtls_context_t *ocf_dtls_context;
@@ -63,7 +63,7 @@ oc_sec_dtls_inactive(void *data)
   if (peer) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
-    if (time < DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
+    if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
     } else {
@@ -94,7 +94,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
       oc_list_add(dtls_peers, peer);
 
       oc_ri_add_timed_event_callback_seconds(
-        &peer->session.addr, oc_sec_dtls_inactive, DTLS_INACTIVITY_TIMEOUT);
+        &peer->session.addr, oc_sec_dtls_inactive, OC_DTLS_INACTIVITY_TIMEOUT);
     }
   }
   return peer;
@@ -129,6 +129,7 @@ static int
 oc_sec_dtls_get_decrypted_message(struct dtls_context_t *ctx,
                                   session_t *session, uint8_t *buf, size_t len)
 {
+  (void)ctx;
   oc_message_t *message = oc_allocate_message();
   if (message) {
     memcpy(&message->endpoint, &session->addr, sizeof(oc_endpoint_t));
@@ -185,6 +186,7 @@ static int
 oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
                                    session_t *session, uint8_t *buf, size_t len)
 {
+  (void)ctx;
   oc_message_t message;
   memcpy(&message.endpoint, &session->addr, sizeof(oc_endpoint_t));
   memcpy(message.data, buf, len);
@@ -204,6 +206,9 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx, const session_t *session,
                           const unsigned char *desc, size_t desc_len,
                           unsigned char *result, size_t result_length)
 {
+  (void)ctx;
+  (void)desc_len;
+  (void)result_length;
   switch (type) {
   case DTLS_PSK_IDENTITY:
   case DTLS_PSK_HINT: {
@@ -234,6 +239,7 @@ int
 oc_sec_dtls_events(struct dtls_context_t *ctx, session_t *session,
                    dtls_alert_level_t level, unsigned short code)
 {
+  (void)ctx;
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&session->addr);
   if (peer && level == 0 && code == DTLS_EVENT_CONNECTED) {
     peer->connected = true;
@@ -254,9 +260,9 @@ static dtls_handler_t dtls_cb = {.write = oc_sec_dtls_send_encrypted_message,
                                  .get_psk_info = oc_sec_dtls_get_owner_psk };
 
 void
-oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const char *oxm,
-                        const size_t oxm_len, const char *server_uuid,
-                        const size_t server_uuid_len, const char *obt_uuid,
+oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+                        const size_t oxm_len, const uint8_t *server_uuid,
+                        const size_t server_uuid_len, const uint8_t *obt_uuid,
                         const size_t obt_uuid_len, uint8_t *key,
                         const size_t key_len)
 {

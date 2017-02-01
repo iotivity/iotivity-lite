@@ -20,7 +20,7 @@
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
 
-OC_MEMB(rep_objects, oc_rep_t, EST_NUM_REP_OBJECTS);
+OC_MEMB(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 static uint8_t *g_buf;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
@@ -72,26 +72,26 @@ oc_free_rep(oc_rep_t *rep)
   switch (rep->type) {
   case BYTE_STRING_ARRAY:
   case STRING_ARRAY:
-    oc_free_string_array(&rep->value_array);
+    oc_free_string_array(&rep->value.array);
     break;
   case BOOL_ARRAY:
-    oc_free_bool_array(&rep->value_array);
+    oc_free_bool_array(&rep->value.array);
     break;
   case DOUBLE_ARRAY:
-    oc_free_double_array(&rep->value_array);
+    oc_free_double_array(&rep->value.array);
     break;
   case INT_ARRAY:
-    oc_free_int_array(&rep->value_array);
+    oc_free_int_array(&rep->value.array);
     break;
   case BYTE_STRING:
   case STRING:
-    oc_free_string(&rep->value_string);
+    oc_free_string(&rep->value.string);
     break;
   case OBJECT:
-    oc_free_rep(rep->value_object);
+    oc_free_rep(rep->value.object);
     break;
   case OBJECT_ARRAY:
-    oc_free_rep(rep->value_object_array);
+    oc_free_rep(rep->value.object_array);
     break;
   default:
     break;
@@ -122,7 +122,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   *rep = _alloc_rep();
   oc_rep_t *cur = *rep, **prev = 0;
   cur->next = 0;
-  cur->value_object_array = 0;
+  cur->value.object_array = 0;
   /* key */
   *err |= cbor_value_calculate_string_length(value, &len);
   len++;
@@ -135,35 +135,35 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   /* value */
   switch (value->type) {
   case CborIntegerType:
-    *err |= cbor_value_get_int(value, &cur->value_int);
+    *err |= cbor_value_get_int(value, &cur->value.integer);
     cur->type = INT;
     break;
   case CborBooleanType:
-    *err |= cbor_value_get_boolean(value, &cur->value_boolean);
+    *err |= cbor_value_get_boolean(value, &cur->value.boolean);
     cur->type = BOOL;
     break;
   case CborDoubleType:
-    *err |= cbor_value_get_double(value, &cur->value_double);
+    *err |= cbor_value_get_double(value, &cur->value.double_p);
     cur->type = DOUBLE;
     break;
   case CborByteStringType:
     *err |= cbor_value_calculate_string_length(value, &len);
     len++;
-    oc_alloc_string(&cur->value_string, len);
+    oc_alloc_string(&cur->value.string, len);
     *err |= cbor_value_copy_byte_string(
-      value, oc_cast(cur->value_string, uint8_t), &len, NULL);
+      value, oc_cast(cur->value.string, uint8_t), &len, NULL);
     cur->type = BYTE_STRING;
     break;
   case CborTextStringType:
     *err |= cbor_value_calculate_string_length(value, &len);
     len++;
-    oc_alloc_string(&cur->value_string, len);
-    *err |= cbor_value_copy_text_string(value, oc_string(cur->value_string),
+    oc_alloc_string(&cur->value.string, len);
+    *err |= cbor_value_copy_text_string(value, oc_string(cur->value.string),
                                         &len, NULL);
     cur->type = STRING;
     break;
   case CborMapType: {
-    oc_rep_t **obj = &cur->value_object;
+    oc_rep_t **obj = &cur->value.object;
     *err |= cbor_value_enter_container(value, &map);
     while (!cbor_value_at_end(&map)) {
       oc_parse_rep_value(&map, obj, err);
@@ -193,61 +193,61 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
       switch (array.type) {
       case CborIntegerType:
         if (k == 0) {
-          oc_new_int_array(&cur->value_array, len);
+          oc_new_int_array(&cur->value.array, len);
           cur->type = INT | ARRAY;
         }
-        *err |= cbor_value_get_int(&array, oc_int_array(cur->value_array) + k);
+        *err |= cbor_value_get_int(&array, oc_int_array(cur->value.array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
-          oc_new_double_array(&cur->value_array, len);
+          oc_new_double_array(&cur->value.array, len);
           cur->type = DOUBLE | ARRAY;
         }
         *err |=
-          cbor_value_get_double(&array, oc_double_array(cur->value_array) + k);
+          cbor_value_get_double(&array, oc_double_array(cur->value.array) + k);
         break;
       case CborBooleanType:
         if (k == 0) {
-          oc_new_bool_array(&cur->value_array, len);
+          oc_new_bool_array(&cur->value.array, len);
           cur->type = BOOL | ARRAY;
         }
         *err |=
-          cbor_value_get_boolean(&array, oc_bool_array(cur->value_array) + k);
+          cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
         break;
       case CborByteStringType:
         if (k == 0) {
-          oc_new_string_array(&cur->value_array, len);
+          oc_new_string_array(&cur->value.array, len);
           cur->type = BYTE_STRING | ARRAY;
         }
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
         *err |= cbor_value_copy_byte_string(
-          &array, (uint8_t *)oc_string_array_get_item(cur->value_array, k),
+          &array, (uint8_t *)oc_string_array_get_item(cur->value.array, k),
           &len, NULL);
         break;
       case CborTextStringType:
         if (k == 0) {
-          oc_new_string_array(&cur->value_array, len);
+          oc_new_string_array(&cur->value.array, len);
           cur->type = STRING | ARRAY;
         }
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
         *err |= cbor_value_copy_text_string(
-          &array, (char *)oc_string_array_get_item(cur->value_array, k), &len,
+          &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
           NULL);
         break;
       case CborMapType:
         if (k == 0) {
           cur->type = OBJECT | ARRAY;
-          cur->value_object_array = _alloc_rep();
-          prev = &cur->value_object_array;
+          cur->value.object_array = _alloc_rep();
+          prev = &cur->value.object_array;
         } else {
           (*prev)->next = _alloc_rep();
           prev = &(*prev)->next;
         }
         (*prev)->type = OBJECT;
         (*prev)->next = 0;
-        oc_rep_t **obj = &(*prev)->value_object;
+        oc_rep_t **obj = &(*prev)->value.object;
         /* Process a series of properties that make up an object of the array */
         *err |= cbor_value_enter_container(&array, &map);
         while (!cbor_value_at_end(&map)) {
@@ -298,7 +298,7 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
     while (cbor_value_is_valid(&map)) {
       *cur = _alloc_rep();
       (*cur)->type = OBJECT;
-      kv = &(*cur)->value_object;
+      kv = &(*cur)->value.object;
       err |= cbor_value_enter_container(&map, &cur_value);
       while (cbor_value_is_valid(&cur_value)) {
         oc_parse_rep_value(&cur_value, kv, &err);

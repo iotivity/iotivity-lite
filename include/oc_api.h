@@ -24,7 +24,7 @@
 
 typedef struct
 {
-  void (*init)(void);
+  int (*init)(void);
   void (*signal_event_loop)(void);
 
 #ifdef OC_SERVER
@@ -43,15 +43,15 @@ int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
 
-void oc_add_device(const char *uri, const char *rt, const char *name,
-                   const char *spec_version, const char *data_model_version,
-                   oc_add_device_cb_t add_device_cb, void *data);
+int oc_add_device(const char *uri, const char *rt, const char *name,
+                  const char *spec_version, const char *data_model_version,
+                  oc_add_device_cb_t add_device_cb, void *data);
 
 #define oc_set_custom_device_property(prop, value)                             \
   oc_rep_set_text_string(root, prop, value)
 
-void oc_init_platform(const char *mfg_name,
-                      oc_init_platform_cb_t init_platform_cb, void *data);
+int oc_init_platform(const char *mfg_name,
+                     oc_init_platform_cb_t init_platform_cb, void *data);
 
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
@@ -77,9 +77,7 @@ void oc_link_add_rt(oc_link_t *link, const char *rt);
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
 bool oc_add_collection(oc_resource_t *collection);
 
-#ifdef OC_SECURITY
-void oc_resource_make_secure(oc_resource_t *resource);
-#endif /* OC_SECURITY */
+void oc_resource_make_public(oc_resource_t *resource);
 
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 void oc_resource_set_observable(oc_resource_t *resource, bool state);
@@ -92,7 +90,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
 
-void oc_init_query_iterator(oc_request_t *request);
+void oc_init_query_iterator(void);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,
                       char **value, int *value_len);
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
@@ -111,7 +109,7 @@ int oc_notify_observers(oc_resource_t *resource);
 /** Client side */
 #include "oc_client_state.h"
 
-bool oc_do_ip_discovery(const char *rt, oc_discovery_cb_t handler,
+bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
 
 bool oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,

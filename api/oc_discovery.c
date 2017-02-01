@@ -35,7 +35,8 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
   bool match = true;
   if (rt_len > 0) {
     match = false;
-    for (i = 0; i < oc_string_array_get_allocated_size(resource->types); i++) {
+    for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+         i++) {
       int size = oc_string_array_get_item_size(resource->types, i);
       const char *t =
         (const char *)oc_string_array_get_item(resource->types, i);
@@ -57,7 +58,8 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
 
   // rt
   oc_rep_set_array(res, rt);
-  for (i = 0; i < oc_string_array_get_allocated_size(resource->types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+       i++) {
     int size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
@@ -155,6 +157,7 @@ static void
 oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
                           void *data)
 {
+  (void)data;
   char *rt = NULL;
   int rt_len = 0, matches = 0, device;
   if (request->query_len) {
@@ -205,7 +208,7 @@ oc_create_discovery_resource(void)
 #ifdef OC_CLIENT
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
-                                oc_discovery_cb_t *handler,
+                                oc_discovery_handler_t handler,
                                 oc_endpoint_t *endpoint, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
@@ -214,8 +217,8 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_string_t di;
   di.ptr = 0;
   bool secure = false;
-  uint16_t dtls_port = 0, default_port = endpoint->ipv6_addr.port;
-  oc_string_array_t types = {};
+  uint16_t dtls_port = 0, default_port = endpoint->addr.ipv6.port;
+  oc_string_array_t types = { 0 };
   oc_interface_mask_t interfaces = 0;
   oc_server_handle_t handle;
   memcpy(&handle.endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -225,62 +228,62 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   if (s == 0)
     array = rep;
   while (array != NULL) {
-    oc_rep_t *device_map = array->value_object;
+    oc_rep_t *device_map = array->value.object;
     while (device_map != NULL) {
       switch (device_map->type) {
       case STRING:
         if (oc_string_len(device_map->name) == 2 &&
             strncmp(oc_string(device_map->name), "di", 2) == 0)
-          di = device_map->value_string;
+          di = device_map->value.string;
         break;
       default:
         break;
       }
       device_map = device_map->next;
     }
-    device_map = array->value_object;
+    device_map = array->value.object;
     while (device_map != NULL) {
       switch (device_map->type) {
       case OBJECT_ARRAY: {
-        oc_rep_t *links = device_map->value_object_array;
+        oc_rep_t *links = device_map->value.object_array;
         while (links != NULL) {
           switch (links->type) {
           case OBJECT: {
-            oc_rep_t *resource_info = links->value_object;
+            oc_rep_t *resource_info = links->value.object;
             while (resource_info != NULL) {
               switch (resource_info->type) {
               case STRING:
-                uri = resource_info->value_string;
+                uri = resource_info->value.string;
                 break;
               case STRING_ARRAY:
                 if (oc_string_len(resource_info->name) == 2 &&
                     strncmp(oc_string(resource_info->name), "rt", 2) == 0)
-                  types = resource_info->value_array;
+                  types = resource_info->value.array;
                 else {
                   interfaces = 0;
                   int i;
-                  for (i = 0; i < oc_string_array_get_allocated_size(
-                                    resource_info->value_array);
+                  for (i = 0; i < (int)oc_string_array_get_allocated_size(
+                                    resource_info->value.array);
                        i++) {
                     interfaces |= oc_ri_get_interface_mask(
-                      oc_string_array_get_item(resource_info->value_array, i),
-                      oc_string_array_get_item_size(resource_info->value_array,
+                      oc_string_array_get_item(resource_info->value.array, i),
+                      oc_string_array_get_item_size(resource_info->value.array,
                                                     i));
                   }
                 }
                 break;
               case OBJECT: {
-                oc_rep_t *policy_info = resource_info->value_object;
+                oc_rep_t *policy_info = resource_info->value.object;
                 while (policy_info != NULL) {
                   if (policy_info->type == INT &&
                       oc_string_len(policy_info->name) == 4 &&
                       strncmp(oc_string(policy_info->name), "port", 4) == 0) {
-                    dtls_port = policy_info->value_int;
+                    dtls_port = policy_info->value.integer;
                   }
                   if (policy_info->type == BOOL &&
                       oc_string_len(policy_info->name) == 3 &&
                       strncmp(oc_string(policy_info->name), "sec", 3) == 0 &&
-                      policy_info->value_boolean == true) {
+                      policy_info->value.boolean == true) {
                     secure = true;
                   }
                   policy_info = policy_info->next;
@@ -292,10 +295,10 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
               resource_info = resource_info->next;
             }
             if (secure) {
-              handle.endpoint.ipv6_addr.port = dtls_port;
+              handle.endpoint.addr.ipv6.port = dtls_port;
               handle.endpoint.flags |= SECURED;
             } else {
-              handle.endpoint.ipv6_addr.port = default_port;
+              handle.endpoint.addr.ipv6.port = default_port;
               handle.endpoint.flags &= ~SECURED;
             }
 

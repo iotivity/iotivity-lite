@@ -18,17 +18,19 @@
 
 static bool light_state = false;
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0", NULL,
-                NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
+                       NULL, NULL);
+  return ret;
 }
 
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -48,6 +50,8 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
@@ -55,7 +59,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      state = rep->value_boolean;
+      state = rep->value.boolean;
       PRINT("value: %d\n", state);
       break;
     default:

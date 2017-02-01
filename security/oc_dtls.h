@@ -27,11 +27,11 @@ OC_PROCESS_NAME(oc_dtls_handler);
 
 void oc_sec_dtls_close_init(oc_endpoint_t *endpoint);
 void oc_sec_dtls_close_finish(oc_endpoint_t *endpoint);
-void oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const char *oxm,
-                             const size_t oxm_len, const char *server_uuid,
-                             const size_t server_uuid_len, const char *obt_uuid,
-                             const size_t obt_uuid_len, uint8_t *key,
-                             const size_t key_len);
+void oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+                             const size_t oxm_len, const uint8_t *server_uuid,
+                             const size_t server_uuid_len,
+                             const uint8_t *obt_uuid, const size_t obt_uuid_len,
+                             uint8_t *key, const size_t key_len);
 void oc_sec_dtls_init_context(void);
 int oc_sec_dtls_send_message(oc_message_t *message);
 oc_uuid_t *oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint);

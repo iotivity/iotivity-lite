@@ -72,25 +72,25 @@ oc_sec_decode_pstat(oc_rep_t *rep)
     switch (rep->type) {
     case BOOL:
       if (oc_string_len(rep->name) == 4 &&
-          strncmp(oc_string(rep->name), "isop", 4) == 0) {
-        pstat.isop = rep->value_boolean;
+          memcmp(oc_string(rep->name), "isop", 4) == 0) {
+        pstat.isop = rep->value.boolean;
       }
       break;
     case INT:
-      if (strncmp(oc_string(rep->name), "cm", 2) == 0)
-        pstat.cm = rep->value_int;
-      else if (strncmp(oc_string(rep->name), "tm", 2) == 0)
-        pstat.tm = rep->value_int;
-      else if (strncmp(oc_string(rep->name), "om", 2) == 0)
-        pstat.om = rep->value_int;
-      else if (strncmp(oc_string(rep->name), "sm", 2) == 0)
-        pstat.sm = rep->value_int;
+      if (memcmp(oc_string(rep->name), "cm", 2) == 0)
+        pstat.cm = rep->value.integer;
+      else if (memcmp(oc_string(rep->name), "tm", 2) == 0)
+        pstat.tm = rep->value.integer;
+      else if (memcmp(oc_string(rep->name), "om", 2) == 0)
+        pstat.om = rep->value.integer;
+      else if (memcmp(oc_string(rep->name), "sm", 2) == 0)
+        pstat.sm = rep->value.integer;
       break;
     case STRING:
-      if (strncmp(oc_string(rep->name), "deviceuuid", 10) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm->deviceuuid);
-      else if (strncmp(oc_string(rep->name), "rowneruuid", 10) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm->rowneruuid);
+      if (memcmp(oc_string(rep->name), "deviceuuid", 10) == 0)
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm->deviceuuid);
+      else if (memcmp(oc_string(rep->name), "rowneruuid", 10) == 0)
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm->rowneruuid);
       break;
     default:
       break;
@@ -102,6 +102,7 @@ oc_sec_decode_pstat(oc_rep_t *rep)
 void
 get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)data;
   switch (interface) {
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat();
@@ -115,6 +116,8 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 void
 post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   oc_sec_decode_pstat(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);
 }

@@ -29,7 +29,7 @@
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
-OC_MEMB(oc_buffers_s, oc_message_t, (MAX_NUM_CONCURRENT_REQUESTS * 2));
+OC_MEMB(oc_buffers_s, oc_message_t, (OC_MAX_NUM_CONCURRENT_REQUESTS * 2));
 
 oc_message_t *
 oc_allocate_message(void)
@@ -108,9 +108,9 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       oc_message_t *message = (oc_message_t *)data;
 
 #ifdef OC_CLIENT
-      if (message->endpoint.flags & MULTICAST) {
+      if (message->endpoint.flags & DISCOVERY) {
         LOG("Outbound network event: multicast request\n");
-        oc_send_multicast_message(message);
+        oc_send_discovery_request(message);
         oc_message_unref(message);
       } else
 #endif

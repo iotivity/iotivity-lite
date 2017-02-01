@@ -18,12 +18,13 @@
 
 static bool got_discovery_response = false;
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0", NULL,
-                NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                       NULL, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
@@ -34,6 +35,7 @@ static bool light_state = false;
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
+  (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, &light_server);
   return DONE;
@@ -58,8 +60,8 @@ observe_light(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      PRINT("%d\n", rep->value_boolean);
-      light_state = rep->value_boolean;
+      PRINT("%d\n", rep->value.boolean);
+      light_state = rep->value.boolean;
       break;
     default:
       break;
@@ -84,6 +86,9 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
@@ -111,6 +116,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 static oc_event_callback_retval_t
 do_discovery(void *data)
 {
+  (void)data;
   if (got_discovery_response) {
     return DONE;
   }

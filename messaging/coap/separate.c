@@ -56,7 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 
-OC_MEMB(separate_requests, coap_separate_t, MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
@@ -117,7 +117,6 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     coap_set_token(ack, coap_req->token, coap_req->token_len);
     oc_message_t *message = oc_allocate_message();
     if (message != NULL) {
-      message->endpoint.flags = IP;
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
       message->length = coap_serialize_message(ack, message->data);
       coap_send_message(message);

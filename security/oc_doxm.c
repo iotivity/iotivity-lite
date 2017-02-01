@@ -71,6 +71,7 @@ oc_sec_get_doxm(void)
 void
 get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)data;
   switch (interface) {
   case OC_IF_BASELINE: {
     char *q;
@@ -94,24 +95,24 @@ oc_sec_decode_doxm(oc_rep_t *rep)
   while (rep != NULL) {
     switch (rep->type) {
     case BOOL:
-      if (strncmp(oc_string(rep->name), "owned", 5) == 0)
-        doxm.owned = rep->value_boolean;
-      else if (strncmp(oc_string(rep->name), "dpc", 3) == 0)
-        doxm.dpc = rep->value_boolean;
+      if (memcmp(oc_string(rep->name), "owned", 5) == 0)
+        doxm.owned = rep->value.boolean;
+      else if (memcmp(oc_string(rep->name), "dpc", 3) == 0)
+        doxm.dpc = rep->value.boolean;
       break;
     case INT:
-      if (strncmp(oc_string(rep->name), "oxmsel", 6) == 0)
-        doxm.oxmsel = rep->value_int;
-      else if (strncmp(oc_string(rep->name), "sct", 3) == 0)
-        doxm.sct = rep->value_int;
+      if (memcmp(oc_string(rep->name), "oxmsel", 6) == 0)
+        doxm.oxmsel = rep->value.integer;
+      else if (memcmp(oc_string(rep->name), "sct", 3) == 0)
+        doxm.sct = rep->value.integer;
       break;
     case STRING:
-      if (strncmp(oc_string(rep->name), "deviceuuid", 10) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm.deviceuuid);
-      else if (strncmp(oc_string(rep->name), "devowneruuid", 12) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm.devowneruuid);
-      else if (strncmp(oc_string(rep->name), "rowneruuid", 10) == 0)
-        oc_str_to_uuid(oc_string(rep->value_string), &doxm.rowneruuid);
+      if (memcmp(oc_string(rep->name), "deviceuuid", 10) == 0)
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm.deviceuuid);
+      else if (memcmp(oc_string(rep->name), "devowneruuid", 12) == 0)
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm.devowneruuid);
+      else if (memcmp(oc_string(rep->name), "rowneruuid", 10) == 0)
+        oc_str_to_uuid(oc_string(rep->value.string), &doxm.rowneruuid);
       break;
     default:
       break;
@@ -123,6 +124,8 @@ oc_sec_decode_doxm(oc_rep_t *rep)
 void
 post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   oc_sec_decode_doxm(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);
 }

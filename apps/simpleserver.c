@@ -20,19 +20,20 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
-
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |=
+    oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);
+  return ret;
 }
 
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   ++power;
 
   PRINT("GET_light:\n");
@@ -55,23 +56,25 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      state = rep->value_boolean;
+      state = rep->value.boolean;
       PRINT("value: %d\n", state);
       break;
     case INT:
-      power = rep->value_int;
+      power = rep->value.integer;
       PRINT("value: %d\n", power);
       break;
     case STRING:
       oc_free_string(&name);
-      oc_new_string(&name, oc_string(rep->value_string),
-                    oc_string_len(rep->value_string));
+      oc_new_string(&name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -87,10 +90,12 @@ static void
 put_light(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   post_light(request, interface, user_data);
 }
 
-void
+static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource("/a/light", 2, 0);
@@ -98,11 +103,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "core.brightlight");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
   oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
@@ -175,6 +175,7 @@ signal_event_loop(void)
 void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

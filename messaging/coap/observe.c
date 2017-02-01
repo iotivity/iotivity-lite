@@ -245,8 +245,8 @@ coap_notify_observers(oc_resource_t *resource,
   uint8_t buffer[OC_BLOCK_SIZE];
 #endif /* OC_BLOCK_WISE_SET_MTU */
 
-  oc_request_t request = {};
-  oc_response_t response = {};
+  oc_request_t request = { 0 };
+  oc_response_t response = { 0 };
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   if (!response_buf && resource) {

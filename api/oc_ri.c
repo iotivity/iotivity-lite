@@ -53,24 +53,21 @@
 #ifdef OC_SERVER
 OC_LIST(app_resources);
 OC_LIST(observe_callbacks);
-OC_MEMB(app_resources_s, oc_resource_t, MAX_APP_RESOURCES);
+OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 OC_LIST(client_cbs);
-OC_MEMB(client_cbs_s, oc_client_cb_t, MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* OC_CLIENT */
 
 OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
-        NUM_OC_CORE_RESOURCES + MAX_APP_RESOURCES +
-          MAX_NUM_CONCURRENT_REQUESTS * 2);
+        NUM_OC_CORE_RESOURCES + OC_MAX_APP_RESOURCES +
+          OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
-
-// TODO: Define and use a  complete set of error codes.
-int oc_stack_errno;
 
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
@@ -185,7 +182,7 @@ oc_ri_get_query_value(const char *query, int query_len, const char *key,
     if (next_pos == -1)
       return -1;
 
-    if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
+    if (kl == (int)strlen(key) && strncasecmp(key, k, kl) == 0) {
       found = vl;
       break;
     }
@@ -238,7 +235,7 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len)
 {
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if (oc_string_len(res->uri) == uri_len &&
+    if ((int)oc_string_len(res->uri) == uri_len &&
         strncmp(uri, oc_string(res->uri), uri_len) == 0)
       return res;
     res = res->next;
@@ -485,8 +482,7 @@ oc_ri_get_interface_mask(char *iface, int if_len)
 }
 
 static bool
-does_interface_support_method(oc_resource_t *resource,
-                              oc_interface_mask_t interface, oc_method_t method)
+does_interface_support_method(oc_interface_mask_t interface, oc_method_t method)
 {
   bool supported = true;
   switch (interface) {
@@ -556,6 +552,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_response_t response_obj;
 
 #ifdef OC_BLOCK_WISE_SET_MTU
+#ifndef OC_SERVER
+  (void)block2_size;
+#endif /* !OC_SERVER */
   response_buffer.buffer = response_state->buffer;
   response_buffer.buffer_size = OC_BLOCK_WISE_BUFFER_SIZE;
 #else  /* OC_BLOCK_WISE_SET_MTU */
@@ -653,7 +652,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int i;
     for (i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
       resource = oc_core_get_resource_by_index(i);
-      if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
+      if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
         request_obj.resource = cur_resource = resource;
@@ -668,7 +667,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   if (!cur_resource && !bad_request) {
     for (resource = oc_ri_get_app_resources(); resource;
          resource = resource->next) {
-      if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
+      if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
         request_obj.resource = cur_resource = resource;
@@ -699,7 +698,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * If not, return a 4.00 response.
      */
     if (((interface & ~cur_resource->interfaces) != 0) ||
-        !does_interface_support_method(cur_resource, interface, method)) {
+        !does_interface_support_method(interface, method)) {
       forbidden = true;
       bad_request = true;
     }
@@ -725,7 +724,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         !oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
     } else
-#endif
+#endif /* OC_SECURITY */
     {
 /* If cur_resource is a collection resource, invoke the framework's
  * internal handler for collections.
@@ -800,7 +799,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_UNAUTHORIZED);
   }
-#endif
+#endif /* OC_SECURITY */
   else {
     success = true;
   }
@@ -864,7 +863,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       }
     }
   }
-#endif
+#endif /* OC_SERVER */
 
 #ifdef OC_SERVER
   /* The presence of a separate response handle here indicates a
@@ -890,7 +889,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* !OC_BLOCK_WISE_SET_MTU */
       response_obj.separate_response->active = 1;
   } else
-#endif
+#endif /* OC_SERVER */
     if (response_buffer.code == OC_IGNORE) {
     /* If the server-side logic chooses to reject a request, it sends
      * below a response code of IGNORE, which results in the messaging
@@ -907,7 +906,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
       oc_ri_add_timed_event_callback_ticks(cur_resource,
                                            &oc_observe_notification_delayed, 0);
-#endif
+#endif /* OC_SERVER */
     if (response_buffer.response_length) {
 #ifdef OC_BLOCK_WISE_SET_MTU
       response_state->payload_size = response_buffer.response_length;
@@ -984,6 +983,7 @@ oc_ri_send_rst(oc_endpoint_t *endpoint, uint8_t *token, uint8_t token_len,
   coap_set_token(rst, token, token_len);
   oc_message_t *message = oc_allocate_message();
   if (message) {
+    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
     message->length = coap_serialize_message(rst, message->data);
     coap_send_message(message);
     return true;
@@ -1091,8 +1091,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* !OC_BLOCK_WISE_SET_MTU */
   if (payload_len) {
     if (cb->discovery) {
-      if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
-                                          endpoint,
+      if (oc_ri_process_discovery_payload(payload, payload_len,
+                                          cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
         free_client_cb(cb);
@@ -1101,16 +1101,18 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       uint16_t err =
         oc_parse_rep(payload, payload_len, &client_response.payload);
       if (err == 0) {
-        oc_response_handler_t handler = (oc_response_handler_t)cb->handler;
+        oc_response_handler_t handler =
+          (oc_response_handler_t)cb->handler.response;
         handler(&client_response);
       }
       oc_free_rep(client_response.payload);
     }
-  } else { // no payload
+  } else {
     if (pkt->type == COAP_TYPE_ACK && pkt->code == 0) {
       separate = true;
     } else if (!cb->discovery) {
-      oc_response_handler_t handler = (oc_response_handler_t)cb->handler;
+      oc_response_handler_t handler =
+        (oc_response_handler_t)cb->handler.response;
       handler(&client_response);
     }
   }
@@ -1152,8 +1154,8 @@ oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
 
 oc_client_cb_t *
 oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
-                      oc_method_t method, void *handler, oc_qos_t qos,
-                      void *user_data)
+                      oc_method_t method, oc_client_handler_t handler,
+                      oc_qos_t qos, void *user_data)
 {
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
   if (!cb)
@@ -1185,6 +1187,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
 
 OC_PROCESS_THREAD(timed_callback_events, ev, data)
 {
+  (void)data;
   OC_PROCESS_BEGIN();
   while (1) {
     OC_PROCESS_YIELD();

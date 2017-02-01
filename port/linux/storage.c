@@ -14,13 +14,13 @@
 // limitations under the License.
 */
 
+#include "port/oc_storage.h"
+
 #ifdef OC_SECURITY
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "port/oc_storage.h"
 
 #define STORE_PATH_SIZE 64
 

@@ -58,7 +58,11 @@
 #endif /* !OC_BLOCK_WISE_SET_MTU */
 enum
 {
+#ifdef OC_SECURITY
   OC_PDU_SIZE = (2 * OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#else  /* OC_SECURITY */
+  OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#endif /* !OC_SECURITY */
 };
 
 typedef struct
@@ -78,23 +82,23 @@ typedef struct
 {
   enum transport_flags
   {
-    IP = 1 << 0,
-    GATT = 1 << 1,
-    IPSP = 1 << 2,
-    MULTICAST = 1 << 3,
-    SECURED = 1 << 4
+    DISCOVERY = 1 << 0,
+    SECURED = 1 << 1,
+    IPV4 = 1 << 2,
+    IPV6 = 1 << 3,
+    GATT = 1 << 4
   } flags;
 
-  union
+  union dev_addr
   {
-    oc_ipv6_addr_t ipv6_addr;
-    oc_le_addr_t bt_addr;
-  };
+    oc_ipv6_addr_t ipv6;
+    oc_le_addr_t bt;
+  } addr;
 } oc_endpoint_t;
 
 #define oc_make_ip_endpoint(__name__, __flags__, __port__, ...)                \
   oc_endpoint_t __name__ = {.flags = __flags__,                                \
-                            .ipv6_addr = {.port = __port__,                    \
+                            .addr.ipv6 = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
 
 struct oc_message_s
@@ -116,6 +120,6 @@ int oc_connectivity_init(void);
 
 void oc_connectivity_shutdown(void);
 
-void oc_send_multicast_message(oc_message_t *message);
+void oc_send_discovery_request(oc_message_t *message);
 
 #endif /* OC_CONNECTIVITY_H */

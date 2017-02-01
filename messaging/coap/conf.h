@@ -58,7 +58,7 @@
 /* The number of concurrent messages that can be stored for retransmission in
  * the transaction layer. */
 #ifndef COAP_MAX_OPEN_TRANSACTIONS
-#define COAP_MAX_OPEN_TRANSACTIONS (MAX_NUM_CONCURRENT_REQUESTS)
+#define COAP_MAX_OPEN_TRANSACTIONS (OC_MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OPEN_TRANSACTIONS */
 
 /* Conservative size limit, as not all options have to be set at the same time.
@@ -76,7 +76,8 @@
 
 /* Number of observer slots (each takes abot xxx bytes) */
 #ifndef COAP_MAX_OBSERVERS
-#define COAP_MAX_OBSERVERS (MAX_APP_RESOURCES + MAX_NUM_CONCURRENT_REQUESTS)
+#define COAP_MAX_OBSERVERS                                                     \
+  (OC_MAX_APP_RESOURCES + OC_MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OBSERVERS */
 
 /* Interval in notifies in which NON notifies are changed to CON notifies to

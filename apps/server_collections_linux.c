@@ -31,21 +31,23 @@ static int counter;
 static void
 set_device_custom_property(void *data)
 {
+  (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
-                set_device_custom_property, NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
+                       set_device_custom_property, NULL);
+  return ret;
 }
 
 static void
 get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_count:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -64,6 +66,7 @@ get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -84,13 +87,15 @@ static void
 post_light(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      light_state = rep->value_boolean;
+      light_state = rep->value.boolean;
       PRINT("value: %d\n", light_state);
       break;
     default:
@@ -109,6 +114,8 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
 static void
 put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   post_light(request, interface, user_data);
 }
 
@@ -119,11 +126,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res1, "oic.r.light");
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
   oc_resource_set_default_interface(res1, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res1);
-#endif
-
   oc_resource_set_discoverable(res1, true);
   oc_resource_set_periodic_observable(res1, 1);
   oc_resource_set_request_handler(res1, OC_GET, get_light, NULL);
@@ -135,11 +137,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res2, "oic.r.counter");
   oc_resource_bind_resource_interface(res2, OC_IF_R);
   oc_resource_set_default_interface(res2, OC_IF_R);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res2);
-#endif
-
   oc_resource_set_discoverable(res2, true);
   oc_resource_set_periodic_observable(res2, 1);
   oc_resource_set_request_handler(res2, OC_GET, get_count, NULL);
@@ -149,10 +146,6 @@ register_resources(void)
   oc_resource_t *col = oc_new_collection("/lights", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(col);
-#endif
 
   oc_link_t *l1 = oc_new_link("/light/1", 1, 0);
   oc_link_set_if(l1, OC_IF_BASELINE | OC_IF_RW);
@@ -179,6 +172,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

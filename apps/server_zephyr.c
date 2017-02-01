@@ -26,21 +26,23 @@ static bool light_state = false;
 static void
 set_device_custom_property(void *data)
 {
+  (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
-                set_device_custom_property, NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
+                       set_device_custom_property, NULL);
+  return ret;
 }
 
 static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -60,6 +62,8 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
@@ -67,7 +71,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      state = rep->value_boolean;
+      state = rep->value.boolean;
       PRINT("value: %d\n", state);
       break;
     default:
@@ -85,6 +89,8 @@ static void
 put_light(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   post_light(request, interface, user_data);
 }
 
@@ -95,11 +101,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
   oc_resource_set_request_handler(res, OC_GET, get_light, NULL);

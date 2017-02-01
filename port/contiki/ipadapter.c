@@ -39,9 +39,9 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
     memcpy(message->data, buffer, bytes_read);
     message->length = bytes_read;
-    message->endpoint.flags = IP;
-    memcpy(message->endpoint.ipv6_addr.address, addr, 16);
-    message->endpoint.ipv6_addr.port = port;
+    message->endpoint.flags = IPV6;
+    memcpy(message->endpoint.addr.ipv6.address, addr, 16);
+    message->endpoint.addr.ipv6.port = port;
 
     PRINT("Incoming message from ");
     PRINTipaddr(message->endpoint);
@@ -134,8 +134,8 @@ oc_send_buffer(oc_message_t *message)
 
   simple_udp_sendto_port(
     &server, message->data, message->length,
-    (const uip_ipaddr_t *)message->endpoint.ipv6_addr.address,
-    message->endpoint.ipv6_addr.port);
+    (const uip_ipaddr_t *)message->endpoint.addr.ipv6.address,
+    message->endpoint.addr.ipv6.port);
 }
 
 int
@@ -153,7 +153,7 @@ oc_connectivity_shutdown(void)
 
 #ifdef OC_CLIENT
 void
-oc_send_multicast_message(oc_message_t *message)
+oc_send_discovery_request(oc_message_t *message)
 {
   oc_send_buffer(message);
 }

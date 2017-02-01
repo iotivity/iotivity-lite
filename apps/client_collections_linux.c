@@ -29,15 +29,17 @@ static int quit = 0;
 static void
 set_device_custom_property(void *data)
 {
+  (void)data;
   oc_set_custom_device_property(purpose, "operate lamp");
 }
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
-                set_device_custom_property, NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                       set_device_custom_property, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
@@ -59,23 +61,23 @@ post_lights_oic_if_b(oc_client_response_t *data)
 
   while (ll != NULL) {
     PRINT("\tLink:\n");
-    oc_rep_t *link = ll->value_object;
+    oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
       case STRING:
         PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value_string));
+              oc_string(link->value.string));
         break;
       case OBJECT: {
         PRINT("\t\tkey: %s value: { ", oc_string(link->name));
-        oc_rep_t *rep = link->value_object;
+        oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
           case BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value_int);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           case INT:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value_boolean);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           default:
             break;
@@ -106,23 +108,23 @@ get_lights_oic_if_b(oc_client_response_t *data)
 
   while (ll != NULL) {
     PRINT("\tLink:\n");
-    oc_rep_t *link = ll->value_object;
+    oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
       case STRING:
         PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value_string));
+              oc_string(link->value.string));
         break;
       case OBJECT: {
         PRINT("\t\tkey: %s value: { ", oc_string(link->name));
-        oc_rep_t *rep = link->value_object;
+        oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
           case BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value_int);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           case INT:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value_boolean);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           default:
             break;
@@ -169,30 +171,31 @@ get_lights_oic_if_ll(oc_client_response_t *data)
 
   while (ll != NULL) {
     PRINT("\tLink:\n");
-    oc_rep_t *link = ll->value_object;
+    oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       PRINT("\t\tkey: %s value: ", oc_string(link->name));
       switch (link->type) {
       case STRING:
-        PRINT("%s\n", oc_string(link->value_string));
+        PRINT("%s\n", oc_string(link->value.string));
         break;
       case STRING_ARRAY: {
         PRINT("[ ");
         int i;
-        for (i = 0; i < oc_string_array_get_allocated_size(link->value_array);
+        for (i = 0;
+             i < (int)oc_string_array_get_allocated_size(link->value.array);
              i++) {
-          PRINT(" %s ", oc_string_array_get_item(link->value_array, i));
+          PRINT(" %s ", oc_string_array_get_item(link->value.array, i));
         }
         PRINT(" ]\n");
       } break;
       case OBJECT: {
         PRINT("{ ");
-        oc_rep_t *rep = link->value_object;
+        oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           PRINT(" %s : ", oc_string(rep->name));
           switch (rep->type) {
           case STRING:
-            PRINT("%s ", oc_string(rep->value_string));
+            PRINT("%s ", oc_string(rep->value.string));
             break;
           default:
             break;
@@ -220,11 +223,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "oic.wk.col", 10) == 0) {
       memcpy(&lights_server, server, sizeof(oc_server_handle_t));
@@ -260,6 +266,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

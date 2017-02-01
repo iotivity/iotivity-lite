@@ -28,8 +28,8 @@
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
-  ((MAX_NUM_SUBJECTS + 1) * (MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES))
-OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_SUBJECTS + 1);
+  ((OC_MAX_NUM_SUBJECTS + 1) * (OC_MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES))
+OC_MEMB(ace_l, oc_sec_ace_t, OC_MAX_NUM_SUBJECTS + 1);
 OC_MEMB(res_l, oc_sec_acl_res_t, MAX_NUM_RES_PERM_PAIRS);
 static oc_uuid_t WILDCARD_SUB = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                          0, 0, 0 } };
@@ -72,7 +72,7 @@ oc_sec_encode_acl(void)
   oc_rep_set_array(aclist, aces);
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
   while (sub != NULL) {
-    if (strncmp(sub->subjectuuid.id, WILDCARD_SUB.id, 16) == 0) {
+    if (memcmp(sub->subjectuuid.id, WILDCARD_SUB.id, 16) == 0) {
       uuid[0] = '*';
       uuid[1] = '\0';
     } else {
@@ -138,7 +138,7 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource,
 #endif
 
   while (ace != NULL) {
-    if (strncmp(ace->subjectuuid.id, subjectuuid->id, 16) == 0)
+    if (memcmp(ace->subjectuuid.id, subjectuuid->id, 16) == 0)
       goto got_ace;
     ace = oc_list_item_next(ace);
   }
@@ -181,7 +181,7 @@ new_ace:
   LOG("Created new ACE for subject %s\n", uuid);
 
   OC_LIST_STRUCT_INIT(ace, resources);
-  strncpy(ace->subjectuuid.id, subjectuuid->id, 16);
+  memcpy(ace->subjectuuid.id, subjectuuid->id, 16);
   oc_list_add(ac_list.subjects, ace);
 
 new_res:
@@ -326,7 +326,7 @@ oc_sec_remove_subject(const char *subject)
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects), *next_sub = 0;
   while (sub != NULL) {
     next_sub = sub->next;
-    if (strncmp(subjectuuid.id, sub->subjectuuid.id, 16) == 0) {
+    if (memcmp(subjectuuid.id, sub->subjectuuid.id, 16) == 0) {
       oc_sec_acl_res_t *res = oc_list_head(sub->resources), *next_res = 0;
       while (res != NULL) {
         next_res = res->next;
@@ -356,39 +356,39 @@ oc_sec_decode_acl(oc_rep_t *rep)
     len = oc_string_len(rep->name);
     switch (rep->type) {
     case STRING:
-      if (len == 10 && strncmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
-        oc_str_to_uuid(oc_string(rep->value_string), &ac_list.rowneruuid);
+      if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
+        oc_str_to_uuid(oc_string(rep->value.string), &ac_list.rowneruuid);
       }
       break;
     case OBJECT: {
-      oc_rep_t *aclist = rep->value_object;
+      oc_rep_t *aclist = rep->value.object;
       while (aclist != NULL) {
         switch (aclist->type) {
         case OBJECT_ARRAY: {
-          oc_rep_t *aces = aclist->value_object_array;
+          oc_rep_t *aces = aclist->value.object_array;
           while (aces != NULL) {
-            oc_rep_t *ace = aces->value_object;
+            oc_rep_t *ace = aces->value.object;
             while (ace != NULL) {
               len = oc_string_len(ace->name);
               switch (ace->type) {
               case STRING:
                 if (len == 11 &&
-                    strncmp(oc_string(ace->name), "subjectuuid", 11) == 0) {
-                  if (strncmp(oc_string(ace->value_string), "*", 1) == 0)
-                    strncpy(subjectuuid.id, WILDCARD_SUB.id, 16);
+                    memcmp(oc_string(ace->name), "subjectuuid", 11) == 0) {
+                  if (memcmp(oc_string(ace->value.string), "*", 1) == 0)
+                    memcpy(subjectuuid.id, WILDCARD_SUB.id, 16);
                   else
-                    oc_str_to_uuid(oc_string(ace->value_string), &subjectuuid);
+                    oc_str_to_uuid(oc_string(ace->value.string), &subjectuuid);
                 }
                 break;
               case INT:
                 if (len == 10 &&
-                    strncmp(oc_string(ace->name), "permission", 10) == 0)
-                  permissions = ace->value_int;
+                    memcmp(oc_string(ace->name), "permission", 10) == 0)
+                  permissions = ace->value.integer;
                 break;
               case OBJECT_ARRAY:
                 if (len == 9 &&
-                    strncmp(oc_string(ace->name), "resources", 9) == 0)
-                  resources = ace->value_object_array;
+                    memcmp(oc_string(ace->name), "resources", 9) == 0)
+                  resources = ace->value.object_array;
                 break;
               default:
                 break;
@@ -397,7 +397,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
             }
 
             while (resources != NULL) {
-              oc_rep_t *resource = resources->value_object;
+              oc_rep_t *resource = resources->value.object;
               bool wildcard = false;
               oc_sec_acl_res_t *ace_res = NULL;
               oc_resource_t *res = NULL;
@@ -410,23 +410,23 @@ oc_sec_decode_acl(oc_rep_t *rep)
                   if (oc_string_len(resource->name) == 4 &&
                       strncasecmp(oc_string(resource->name), "href", 4) == 0) {
                     res = oc_core_get_resource_by_uri(
-                      oc_string(resource->value_string));
+                      oc_string(resource->value.string));
 
 #ifdef OC_SERVER
                     if (!res)
                       res = oc_ri_get_app_resource_by_uri(
-                        oc_string(resource->value_string),
-                        oc_string_len(resource->value_string));
+                        oc_string(resource->value.string),
+                        oc_string_len(resource->value.string));
 #endif /* OC_SERVER */
 
                     if (!res) {
-                      if (strncmp(oc_string(resource->value_string), "*", 1) ==
+                      if (memcmp(oc_string(resource->value.string), "*", 1) ==
                           0)
                         wildcard = true;
                       else {
                         LOG("\n\noc_sec_acl_decode: could not find resource "
                             "%s\n\n",
-                            oc_string(resource->value_string));
+                            oc_string(resource->value.string));
                         return false;
                       }
                     }
@@ -435,19 +435,19 @@ oc_sec_decode_acl(oc_rep_t *rep)
                 case STRING_ARRAY:
                   if (oc_string_len(resource->name) == 2 &&
                       strncasecmp(oc_string(resource->name), "if", 2) == 0) {
-                    for (i = 0; i < oc_string_array_get_allocated_size(
-                                      resource->value_array);
+                    for (i = 0; i < (int)oc_string_array_get_allocated_size(
+                                      resource->value.array);
                          i++) {
                       if (wildcard ||
-                          strncmp(
-                            oc_string_array_get_item(resource->value_array, i),
+                          memcmp(
+                            oc_string_array_get_item(resource->value.array, i),
                             "*", 1) == 0) {
                         wildcard = true;
                         break;
                       }
                       interfaces |= oc_ri_get_interface_mask(
-                        oc_string_array_get_item(resource->value_array, i),
-                        oc_string_array_get_item_size(resource->value_array,
+                        oc_string_array_get_item(resource->value.array, i),
+                        oc_string_array_get_item_size(resource->value.array,
                                                       i));
                     }
                   }
@@ -524,6 +524,8 @@ oc_sec_decode_acl(oc_rep_t *rep)
 void
 post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   if (oc_sec_decode_acl(request->request_payload))
     oc_send_response(request, OC_STATUS_CHANGED);
   else
@@ -533,6 +535,8 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 void
 delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   char *subjectuuid = 0;
   int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
   if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
@@ -545,6 +549,8 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 void
 get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
+  (void)interface;
+  (void)data;
   oc_sec_encode_acl();
   oc_send_response(request, OC_STATUS_OK);
 }

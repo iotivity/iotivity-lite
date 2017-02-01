@@ -32,19 +32,21 @@ oc_define_interrupt_handler(temp_sensor)
   }
 }
 
-static void
+static int
 app_init(void)
 {
   oc_activate_interrupt_handler(temp_sensor);
-  oc_init_platform("GE", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor", "1.0",
-                "1.0", NULL, NULL);
+  int ret = oc_init_platform("GE", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor",
+                       "1.0", "1.0", NULL, NULL);
+  return ret;
 }
 
 static void
 get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   oc_indicate_separate_response(request, &temp_response);
 }
 
@@ -55,11 +57,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "oic.r.tempsensor");
   oc_resource_bind_resource_interface(res, OC_IF_R);
   oc_resource_set_default_interface(res, OC_IF_R);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_observable(res, true);
   oc_resource_set_request_handler(res, OC_GET, get_temp, NULL);
