@@ -19,7 +19,7 @@ CONTIKI_WITH_IPV6 = 1
 
 include $(CONTIKI)/Makefile.include
 
-CFLAGS += -std=gnu99 -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -Wall -Wno-format-zero-length -Wno-main -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -Wno-unused-but-set-variable -fno-reorder-functions -fno-defer-pop -Wno-pointer-sign -fno-strict-overflow -Werror=implicit-int -Wl,--gc-sections
+CFLAGS += -std=gnu99 -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -Wl,--gc-sections
 
 ifeq ($(CLIENT),1)
 	CFLAGS += -DOC_CLIENT

@@ -39,7 +39,6 @@ int
 oc_main_init(const oc_handler_t *handler)
 {
   int ret;
-  extern int oc_stack_errno;
 
   if (initialized == true)
     return 0;
@@ -56,7 +55,9 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_create_svr();
 #endif
 
-  app_callbacks->init();
+  ret = app_callbacks->init();
+  if (ret < 0)
+    goto err;
 
   oc_network_event_handler_mutex_init();
   ret = oc_connectivity_init();
@@ -71,12 +72,7 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_load_acl();
 #endif
 
-  if (oc_stack_errno != 0) {
-    ret = -oc_stack_errno;
-    goto err;
-  }
-
-  PRINT("oc_main: Stack successfully initialized\n");
+  PRINT("oc_main: stack initialized\n");
 
 #ifdef OC_CLIENT
   app_callbacks->requests_entry();
@@ -86,7 +82,7 @@ oc_main_init(const oc_handler_t *handler)
   return 0;
 
 err:
-  oc_abort("oc_main: Error in stack initialization\n");
+  oc_abort("oc_main: error in stack initialization\n");
   return ret;
 }
 
@@ -104,7 +100,6 @@ void
 oc_main_shutdown(void)
 {
   if (initialized == false) {
-    PRINT("tiny_ocf is not initialized\n");
     return;
   }
 

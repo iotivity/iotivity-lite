@@ -65,7 +65,8 @@ int oc_rep_finalize(void);
 #define oc_rep_set_byte_string(object, key, value)                             \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
-    g_err |= cbor_encode_byte_string(&object##_map, value, strlen(value));     \
+    g_err |= cbor_encode_byte_string(&object##_map, value,                     \
+                                     strlen((const char *)value));             \
   } while (0)
 
 #define oc_rep_start_array(parent, key)                                        \
@@ -185,7 +186,7 @@ int oc_rep_finalize(void);
       cbor_encoder_create_array(&object##_map, &key##_value_array,             \
                                 oc_string_array_get_allocated_size(values));   \
     int i;                                                                     \
-    for (i = 0; i < oc_string_array_get_allocated_size(values); i++) {         \
+    for (i = 0; i < (int)oc_string_array_get_allocated_size(values); i++) {    \
       g_err |= cbor_encode_text_string(                                        \
         &key##_value_array, oc_string_array_get_item(values, i),               \
         oc_string_array_get_item_size(values, i));                             \
@@ -215,16 +216,16 @@ typedef struct oc_rep_s
   oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;
-  union
+  union oc_rep_value
   {
-    int value_int;
-    bool value_boolean;
-    double value_double;
-    oc_string_t value_string;
-    oc_array_t value_array;
-    struct oc_rep_s *value_object;
-    struct oc_rep_s *value_object_array;
-  };
+    int integer;
+    bool boolean;
+    double double_p;
+    oc_string_t string;
+    oc_array_t array;
+    struct oc_rep_s *object;
+    struct oc_rep_s *object_array;
+  } value;
 } oc_rep_t;
 
 uint16_t oc_parse_rep(const uint8_t *payload, uint16_t payload_size,

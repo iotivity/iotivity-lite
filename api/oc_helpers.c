@@ -123,7 +123,8 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
 {
   bool success = false;
   int i;
-  for (i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(*ocstringarray);
+       i++) {
     if (strlen((const char *)oc_string_array_get_item(*ocstringarray, i)) ==
         0) {
       success = oc_string_array_set_item(*ocstringarray, str, i);

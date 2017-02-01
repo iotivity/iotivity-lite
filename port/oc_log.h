@@ -25,15 +25,15 @@
   PRINT(                                                                       \
     "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%"    \
     "02x]:%d",                                                                 \
-    ((endpoint).ipv6_addr.address)[0], ((endpoint).ipv6_addr.address)[1],      \
-    ((endpoint).ipv6_addr.address)[2], ((endpoint).ipv6_addr.address)[3],      \
-    ((endpoint).ipv6_addr.address)[4], ((endpoint).ipv6_addr.address)[5],      \
-    ((endpoint).ipv6_addr.address)[6], ((endpoint).ipv6_addr.address)[7],      \
-    ((endpoint).ipv6_addr.address)[8], ((endpoint).ipv6_addr.address)[9],      \
-    ((endpoint).ipv6_addr.address)[10], ((endpoint).ipv6_addr.address)[11],    \
-    ((endpoint).ipv6_addr.address)[12], ((endpoint).ipv6_addr.address)[13],    \
-    ((endpoint).ipv6_addr.address)[14], ((endpoint).ipv6_addr.address)[15],    \
-    (endpoint).ipv6_addr.port)
+    ((endpoint).addr.ipv6.address)[0], ((endpoint).addr.ipv6.address)[1],      \
+    ((endpoint).addr.ipv6.address)[2], ((endpoint).addr.ipv6.address)[3],      \
+    ((endpoint).addr.ipv6.address)[4], ((endpoint).addr.ipv6.address)[5],      \
+    ((endpoint).addr.ipv6.address)[6], ((endpoint).addr.ipv6.address)[7],      \
+    ((endpoint).addr.ipv6.address)[8], ((endpoint).addr.ipv6.address)[9],      \
+    ((endpoint).addr.ipv6.address)[10], ((endpoint).addr.ipv6.address)[11],    \
+    ((endpoint).addr.ipv6.address)[12], ((endpoint).addr.ipv6.address)[13],    \
+    ((endpoint).addr.ipv6.address)[14], ((endpoint).addr.ipv6.address)[15],    \
+    (endpoint).addr.ipv6.port)
 
 #if OC_DEBUG
 #define LOG(...) PRINT(__VA_ARGS__)

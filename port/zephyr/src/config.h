@@ -29,7 +29,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Server-side parameters */
 /* Maximum number of server resources */
-#define MAX_APP_RESOURCES (1)
+#define OC_MAX_APP_RESOURCES (1)
 
 /* Common paramters */
 //#define OC_BLOCK_WISE_SET_MTU (80)
@@ -38,28 +38,28 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_PDU_BUFFER_SIZE (512)
 
 /* Maximum number of concurrent requests */
-#define MAX_NUM_CONCURRENT_REQUESTS (2)
+#define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
 
-/* Estimated number of nodes in payload tree structure */
-#define EST_NUM_REP_OBJECTS (70)
+/* Maximum number of nodes in a payload tree structure */
+#define OC_MAX_NUM_REP_OBJECTS (70)
 
 /* Number of devices on the OCF platform */
-#define MAX_NUM_DEVICES (1)
+#define OC_MAX_NUM_DEVICES (1)
 
 /* Platform payload size */
-#define MAX_PLATFORM_PAYLOAD_SIZE (256)
+#define OC_MAX_PLATFORM_PAYLOAD_SIZE (256)
 
 /* Device payload size */
-#define MAX_DEVICE_PAYLOAD_SIZE (256)
+#define OC_MAX_DEVICE_PAYLOAD_SIZE (256)
 
 /* Security layer */
 /* Maximum number of authorized clients */
-#define MAX_NUM_SUBJECTS (1)
+#define OC_MAX_NUM_SUBJECTS (1)
 
 /* Maximum number of concurrent DTLS sessions */
-#define MAX_DTLS_PEERS (1)
+#define OC_MAX_DTLS_PEERS (1)
 
 /* Max inactivity timeout before tearing down DTLS connection */
-#define DTLS_INACTIVITY_TIMEOUT (10)
+#define OC_DTLS_INACTIVITY_TIMEOUT (10)
 
 #endif /* CONFIG_H */

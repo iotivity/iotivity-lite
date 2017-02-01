@@ -44,12 +44,17 @@ typedef enum {
   OC_CONTINUE_DISCOVERY
 } oc_discovery_flags_t;
 
-typedef oc_discovery_flags_t(oc_discovery_cb_t)(const char *, const char *,
-                                                oc_string_array_t,
-                                                oc_interface_mask_t,
-                                                oc_server_handle_t *, void *);
+typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
+  const char *, const char *, oc_string_array_t, oc_interface_mask_t,
+  oc_server_handle_t *, void *);
 
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
+
+typedef union oc_client_handler_s
+{
+  oc_response_handler_t response;
+  oc_discovery_handler_t discovery;
+} oc_client_handler_t;
 
 typedef struct oc_client_cb_s
 {
@@ -58,13 +63,9 @@ typedef struct oc_client_cb_s
   uint8_t token[COAP_TOKEN_LEN];
   uint8_t token_len;
   uint16_t mid;
-
   oc_server_handle_t server;
-
-  void *handler;
-
+  oc_client_handler_t handler;
   void *user_data;
-
   bool discovery;
   int32_t observe_seq;
   oc_clock_time_t timestamp;
@@ -83,8 +84,9 @@ bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
                                       oc_server_handle_t *server,
-                                      oc_method_t method, void *handler,
-                                      oc_qos_t qos, void *user_data);
+                                      oc_method_t method,
+                                      oc_client_handler_t handler, oc_qos_t qos,
+                                      void *user_data);
 
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
                                     oc_method_t method);
@@ -96,10 +98,9 @@ oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
 void oc_ri_remove_client_cb_by_mid(uint16_t mid);
 
-oc_discovery_flags_t oc_ri_process_discovery_payload(uint8_t *payload, int len,
-                                                     oc_discovery_cb_t *handler,
-                                                     oc_endpoint_t *endpoint,
-                                                     void *user_data);
+oc_discovery_flags_t oc_ri_process_discovery_payload(
+  uint8_t *payload, int len, oc_discovery_handler_t handler,
+  oc_endpoint_t *endpoint, void *user_data);
 
 bool oc_ri_send_rst(oc_endpoint_t *endpoint, uint8_t *token, uint8_t token_len,
                     uint16_t mid);

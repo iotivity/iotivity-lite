@@ -37,6 +37,7 @@ oc_process_network_event(void)
 OC_PROCESS(oc_network_events, "");
 OC_PROCESS_THREAD(oc_network_events, ev, data)
 {
+  (void)data;
   OC_PROCESS_POLLHANDLER(oc_process_network_event());
   OC_PROCESS_BEGIN();
   while (oc_process_is_running(&(oc_network_events))) {

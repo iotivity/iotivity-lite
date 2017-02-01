@@ -27,13 +27,13 @@ static struct timespec ts;
 static int quit = 0;
 static int large_array[100];
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Intel", NULL, NULL);
-
-  oc_add_device("/oic/d", "oic.d.array", "Large array generator", "1.0", "1.0",
-                NULL, NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.array", "Large array generator", "1.0",
+                       "1.0", NULL, NULL);
+  return ret;
 }
 
 static oc_separate_response_t array_response;
@@ -41,6 +41,7 @@ static oc_separate_response_t array_response;
 static oc_event_callback_retval_t
 handle_array_response(void *data)
 {
+  (void)data;
   if (array_response.active) {
     oc_set_separate_response_buffer(&array_response);
     PRINT("GET_array:\n");
@@ -61,6 +62,8 @@ handle_array_response(void *data)
 static void
 get_array(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   oc_indicate_separate_response(request, &array_response);
   oc_set_delayed_callback(NULL, &handle_array_response, 5);
 }
@@ -69,6 +72,8 @@ static void
 post_array(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_array:\n");
   int i;
   oc_rep_t *rep = request->request_payload;
@@ -76,8 +81,8 @@ post_array(oc_request_t *request, oc_interface_mask_t interface,
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case INT_ARRAY: {
-      int *arr = oc_int_array(rep->value_array);
-      for (i = 0; i < oc_int_array_size(rep->value_array); i++) {
+      int *arr = oc_int_array(rep->value.array);
+      for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
         PRINT("(%d %d) ", i, arr[i]);
       }
       PRINT("\n");
@@ -97,11 +102,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res, "oic.r.array");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
-
-#ifdef OC_SECURITY
-  oc_resource_make_secure(res);
-#endif
-
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 5);
   oc_resource_set_request_handler(res, OC_GET, get_array, NULL);
@@ -120,6 +120,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

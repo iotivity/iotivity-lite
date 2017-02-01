@@ -30,7 +30,7 @@ struct oc_device_info_t
 {
   oc_uuid_t uuid;
   oc_string_t payload;
-} oc_device_info[MAX_NUM_DEVICES];
+} oc_device_info[OC_MAX_NUM_DEVICES];
 static int device_count;
 static oc_string_t oc_platform_payload;
 
@@ -66,6 +66,7 @@ static void
 oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
                        void *data)
 {
+  (void)data;
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size = oc_device_info[request->resource->device].payload.size;
@@ -118,8 +119,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
-  if (device_count == MAX_NUM_DEVICES)
-    return false;
+  if (device_count == OC_MAX_NUM_DEVICES)
+    return NULL;
 
   oc_string_t temp_buffer;
 /* Once provisioned, UUID is retrieved from the credential store.
@@ -149,8 +150,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   /* Encoding device resource payload */
-  oc_alloc_string(&temp_buffer, MAX_DEVICE_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_DEVICE_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_DEVICE_PAYLOAD_SIZE);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEVICE_PAYLOAD_SIZE);
 
   oc_rep_start_root_object();
 
@@ -177,6 +178,7 @@ void
 oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
                          void *data)
 {
+  (void)data;
   uint8_t *buffer = request->response->response_buffer->buffer;
   uint16_t buffer_size = request->response->response_buffer->buffer_size;
   int payload_size = oc_platform_payload.size;
@@ -214,15 +216,15 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
   /* Encoding platform resource payload */
-  oc_alloc_string(&temp_buffer, MAX_PLATFORM_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), MAX_PLATFORM_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_PLATFORM_PAYLOAD_SIZE);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_PLATFORM_PAYLOAD_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
 
   oc_core_encode_interfaces_mask(oc_rep_object(root),
                                  core_resources[OCF_P].interfaces);
 
-  oc_uuid_t uuid; /*fix uniqueness of platform id?? */
+  oc_uuid_t uuid;
   oc_gen_uuid(&uuid);
   char uuid_str[37];
 

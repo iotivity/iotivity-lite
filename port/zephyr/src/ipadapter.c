@@ -27,7 +27,7 @@
 #include <net/net_core.h>
 #include <net/net_if.h>
 
-#if defined(CONFIG_NETWORKING_WITH_BT)
+#if defined(CONFIG_NET_L2_BLUETOOTH)
 #include <bluetooth/bluetooth.h>
 #include <gatt/ipss.h>
 #endif
@@ -91,12 +91,12 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
     memcpy(message->data, net_nbuf_appdata(buf), bytes_read);
     message->length = bytes_read;
     if (user_data != NULL)
-      message->endpoint.flags = IP | SECURED;
+      message->endpoint.flags = IPV6 | SECURED;
     else
-      message->endpoint.flags = IP;
-    memcpy(message->endpoint.ipv6_addr.address, &NET_IPV6_BUF(buf)->src, 16);
-    message->endpoint.ipv6_addr.scope = 0;
-    message->endpoint.ipv6_addr.port = NET_UDP_BUF(buf)->src_port;
+      message->endpoint.flags = IPV6;
+    memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_BUF(buf)->src, 16);
+    message->endpoint.addr.ipv6.scope = 0;
+    message->endpoint.addr.ipv6.port = NET_UDP_BUF(buf)->src_port;
 
     PRINT("oc_network_receive: received %d bytes\n", message->length);
     PRINT("oc_network_receive: incoming message: ");
@@ -128,9 +128,9 @@ oc_send_buffer(oc_message_t *message)
   /* Populate destination address structure */
   struct sockaddr_in6 peer_addr;
   memcpy(peer_addr.sin6_addr.in6_u.u6_addr8,
-         message->endpoint.ipv6_addr.address, 16);
+         message->endpoint.addr.ipv6.address, 16);
   peer_addr.sin6_family = AF_INET6;
-  peer_addr.sin6_port = message->endpoint.ipv6_addr.port;
+  peer_addr.sin6_port = message->endpoint.addr.ipv6.port;
 
   /* Network buffer to hold data to be sent */
   struct net_buf *send_buf;
@@ -162,7 +162,7 @@ oc_connectivity_init(void)
   static struct sockaddr_in6 dtls_addr6 = { 0 };
 #endif /* OC_SECURITY */
 
-#if defined(CONFIG_NETWORKING_WITH_BT)
+#if defined(CONFIG_NET_L2_BLUETOOTH)
   if (bt_enable(NULL)) {
     LOG("oc_connectivity_init: bluetooth initialization failed\n");
     return -1;
@@ -284,11 +284,13 @@ oc_connectivity_shutdown(void)
   net_context_put(mcast_recv6);
 }
 
+#ifdef OC_CLIENT
 void
-oc_send_multicast_message(oc_message_t *message)
+oc_send_discovery_request(oc_message_t *message)
 {
   oc_send_buffer(message);
 }
+#endif /* OC_CLIENT */
 
 #ifdef OC_SECURITY
 uint16_t

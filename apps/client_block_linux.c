@@ -26,12 +26,13 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.large.array.reader", "Large array reader",
-                "1.0", "1.0", NULL, NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.large.array.reader",
+                       "Large array reader", "1.0", "1.0", NULL, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
@@ -52,6 +53,7 @@ post_array(oc_client_response_t *data)
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
+  (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(array_1, &array_server);
 
@@ -85,8 +87,8 @@ get_array(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case INT_ARRAY: {
-      int *arr = oc_int_array(rep->value_array);
-      for (i = 0; i < oc_int_array_size(rep->value_array); i++) {
+      int *arr = oc_int_array(rep->value.array);
+      for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
         PRINT("(%d %d) ", i, arr[i]);
       }
       PRINT("\n");
@@ -103,11 +105,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 11 && strncmp(t, "oic.r.array", 11) == 0) {
       memcpy(&array_server, server, sizeof(oc_server_handle_t));
@@ -140,6 +145,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

@@ -14,12 +14,20 @@ endif
 
 ifeq ($(CLIENT),1)
 ccflags-y += -DOC_CLIENT
+obj-y += ../../../apps/client_zephyr.o
 else
 ccflags-y += -DOC_SERVER
-endif
-
 obj-y += ../../../apps/server_zephyr.o
 #obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
+endif
+
+ifeq ($(CONFIG_NET_L2_BLUETOOTH),y)
+# TODO: Instead of using ipss sample module, implement Bluetooth init functionality.
+ccflags-y +=-I${ZEPHYR_BASE}/samples/bluetooth
+obj-y += ipss.o
+src/ipss.c: ${ZEPHYR_BASE}/samples/bluetooth/gatt/ipss.c
+	cp $< $@
+endif
 
 obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../deps/tinycbor/src/cborencoder.o \

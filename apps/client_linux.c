@@ -29,15 +29,17 @@ static int quit = 0;
 static void
 set_device_custom_property(void *data)
 {
+  (void)data;
   oc_set_custom_device_property(purpose, "operate lamp");
 }
 
-static void
+static int
 app_init(void)
 {
-  oc_init_platform("Apple", NULL, NULL);
-  oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
-                set_device_custom_property, NULL);
+  int ret = oc_init_platform("Apple", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
+                       set_device_custom_property, NULL);
+  return ret;
 }
 
 #define MAX_URI_LENGTH (30)
@@ -48,6 +50,7 @@ static bool light_state = false;
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
+  (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, &light_server);
   return DONE;
@@ -72,8 +75,8 @@ observe_light(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case BOOL:
-      PRINT("%d\n", rep->value_boolean);
-      light_state = rep->value_boolean;
+      PRINT("%d\n", rep->value.boolean);
+      light_state = rep->value.boolean;
       break;
     default:
       break;
@@ -98,11 +101,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_server_handle_t *server,
           void *user_data)
 {
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 11 && strncmp(t, "oic.r.light", 11) == 0) {
       memcpy(&light_server, server, sizeof(oc_server_handle_t));
@@ -136,6 +142,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }
