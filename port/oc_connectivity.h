@@ -74,6 +74,12 @@ typedef struct
 
 typedef struct
 {
+  uint16_t port;
+  uint8_t address[4];
+} oc_ipv4_addr_t;
+
+typedef struct
+{
   uint8_t type;
   uint8_t address[6];
 } oc_le_addr_t;
@@ -92,11 +98,16 @@ typedef struct
   union dev_addr
   {
     oc_ipv6_addr_t ipv6;
+    oc_ipv4_addr_t ipv4;
     oc_le_addr_t bt;
   } addr;
 } oc_endpoint_t;
 
-#define oc_make_ip_endpoint(__name__, __flags__, __port__, ...)                \
+#define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
+  oc_endpoint_t __name__ = {.flags = __flags__,                                \
+                            .addr.ipv4 = {.port = __port__,                    \
+                                          .address = { __VA_ARGS__ } } }
+#define oc_make_ipv6_endpoint(__name__, __flags__, __port__, ...)              \
   oc_endpoint_t __name__ = {.flags = __flags__,                                \
                             .addr.ipv6 = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
