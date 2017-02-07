@@ -28,6 +28,10 @@ ifeq ($(SECURE),1)
 	VPATH += ../../security/:../../deps/tinydtls/:../../deps/tinydtls/aes/:../../deps/tinydtls/sha2/:../../deps/tinydtls/ecc/:
 endif
 
+ifeq ($(IPV4),1)
+	CFLAGS += -DOC_IPV4
+endif
+
 all=server client temp_sensor simpleserver simpleclient client_collections_linux server_collections_linux server_block_linux client_block_linux
 
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
