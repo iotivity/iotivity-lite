@@ -7,6 +7,10 @@ port/linux/server_collections_linux
 port/linux/client_collections_linux
 port/linux/client_block_linux
 port/linux/server_block_linux
+port/linux/libiotivity-constrained-client.*
+port/linux/libiotivity-constrained-server.*
+port/linux/iotivity-constrained-server.pc
+port/linux/iotivity-constrained-client.pc
 port/linux/obj/
 port/zephyr/outdir/
 port/contiki/*.a
