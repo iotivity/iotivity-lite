@@ -134,10 +134,13 @@ oc_send_buffer(oc_message_t *message)
 
   /* Network buffer to hold data to be sent */
   struct net_buf *send_buf;
-  send_buf = net_nbuf_get_tx(udp_recv6);
-  NET_ASSERT(send_buf);
+  send_buf = net_nbuf_get_tx(udp_recv6, K_NO_WAIT);
+  if (!send_buf) {
+	  LOG("oc_send_buffer: cannot acquire send_buf\n");
+	  return;
+  }
 
-  bool status = net_nbuf_append(send_buf, message->length, message->data);
+  bool status = net_nbuf_append(send_buf, message->length, message->data, K_NO_WAIT);
   if (!status) {
     LOG("oc_send_buffer: cannot populate send_buf\n");
     return;
