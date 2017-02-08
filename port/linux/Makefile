@@ -1,4 +1,15 @@
-CC=gcc
+CC = gcc
+SED = sed
+INSTALL = install
+
+DESTDIR ?= /usr/local
+install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
+prefix = $(DESTDIR)
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
+includedir = $(prefix)/include
+pkgconfigdir = $(libdir)/pkgconfig
 
 DTLS=../../deps/tinydtls/ccm.c ../../deps/tinydtls/hmac.c ../../deps/tinydtls/netq.c ../../deps/tinydtls/peer.c ../../deps/tinydtls/dtls_time.c ../../deps/tinydtls/session.c ../../deps/tinydtls/sha2/sha2.c ../../deps/tinydtls/ecc/ecc.c ../../deps/tinydtls/aes/rijndael.c ../../deps/tinydtls/crypto.c ../../deps/tinydtls/dtls.c
 DTLSFLAGS=-DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
@@ -8,7 +19,9 @@ CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_c
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 
-CFLAGS=-fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall #-Wextra -Werror -pedantic #-Wl,-Map,client.map
+HEADERS = $(wildcard ../../include/*.h)
+
+CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall #-Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
@@ -32,13 +45,15 @@ ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
 endif
 
-all=server client temp_sensor simpleserver simpleclient client_collections_linux server_collections_linux server_block_linux client_block_linux
+SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+	  server_collections_linux server_block_linux client_block_linux
+CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
+		   libiotivity-constrained-server.so libiotivity-constrained-client.so
+PC = iotivity-constrained-client.pc iotivity-constrained-server.pc
 
-install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 .PHONY: clean
-
-all: ${all}
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -52,40 +67,73 @@ obj/client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
-server: ${OBJ_COMMON} ${OBJ_SERVER}
-	echo ${OBJ_COMMON}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
+libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
-client: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_linux.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
+libiotivity-constrained-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
 
-temp_sensor: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/temp_sensor_client_linux.c -DOC_CLIENT ${CFLAGS} ${LIBS}
+libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-simpleserver: ${OBJ_COMMON} ${OBJ_SERVER}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/simpleserver.c -DOC_SERVER ${CFLAGS}  ${LIBS}
+libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-simpleclient: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/simpleclient.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
+server: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_collections_linux: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_collections_linux.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-server_collections_linux: ${OBJ_COMMON} ${OBJ_SERVER}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_collections_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
+temp_sensor: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-client_block_linux: ${OBJ_COMMON} ${OBJ_CLIENT}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_CLIENT} ../../apps/client_block_linux.c -DOC_CLIENT ${CFLAGS}  ${LIBS}
+simpleserver: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-server_block_linux: ${OBJ_COMMON} ${OBJ_SERVER}
-	${CC} -o $@ ${OBJ_COMMON} ${OBJ_SERVER} ../../apps/server_block_linux.c -DOC_SERVER ${CFLAGS} ${LIBS}
+simpleclient: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+client_collections_linux: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+server_collections_linux: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_block_linux: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+server_block_linux: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
+	$(SED) > $@ < $< \
+		-e 's,@prefix@,$(prefix),' \
+		-e 's,@exec_prefix@,$(exec_prefix),' \
+		-e 's,@libdir@,$(libdir),' \
+		-e 's,@includedir@,$(includedir),'
+
+iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
+	$(SED) > $@ < $< \
+		-e 's,@prefix@,$(prefix),' \
+		-e 's,@exec_prefix@,$(exec_prefix),' \
+		-e 's,@libdir@,$(libdir),' \
+		-e 's,@includedir@,$(includedir),'
 
 clean:
-	rm -rf obj
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	rm -rf ${all}
+	rm -rf ${all} $(SAMPLES)
 
-install: ${all}
-	install -d ${install_bin_dir}
-	install $^ ${install_bin_dir}
+install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) -d $(libdir)
+	$(INSTALL) -d $(includedir)/iotivity-constrained
+	$(INSTALL) -d $(pkgconfigdir)
+	$(INSTALL) -m 644 $(HEADERS) $(includedir)/iotivity-constrained/
+	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
+	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
+# Installing the samples
+	$(INSTALL) -d ${install_bin_dir}
+	$(INSTALL) $(SAMPLES) ${install_bin_dir}
