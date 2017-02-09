@@ -49,6 +49,7 @@ oc_collection_t *oc_collection_alloc(void);
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
                                           int uri_path_len);
 oc_collection_t *oc_collection_get_all(void);
+bool oc_check_if_collection(oc_resource_t *resource);
 bool oc_collection_add(oc_collection_t *collection);
 
 #endif /* OC_COLLECTION_H */
