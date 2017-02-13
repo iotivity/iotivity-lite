@@ -20,6 +20,13 @@ SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
+HEADERS += ../../port/linux/config.h
+
+HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
+HEADERS_UTIL = $(wildcard ../../util/*.h)
+HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
+HEADERS_PORT = $(wildcard ../../port/*.h)
+HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall #-Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
@@ -130,8 +137,18 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
 	$(INSTALL) -d $(libdir)
 	$(INSTALL) -d $(includedir)/iotivity-constrained
+	$(INSTALL) -d $(includedir)/iotivity-constrained/port
+	$(INSTALL) -d $(includedir)/iotivity-constrained/util
+	$(INSTALL) -d $(includedir)/iotivity-constrained/util/pt
+	$(INSTALL) -d $(includedir)/iotivity-constrained/messaging/coap
+	$(INSTALL) -d $(includedir)/iotivity-constrained/deps/tinycbor/src/
 	$(INSTALL) -d $(pkgconfigdir)
 	$(INSTALL) -m 644 $(HEADERS) $(includedir)/iotivity-constrained/
+	$(INSTALL) -m 644 $(HEADERS_PORT) $(includedir)/iotivity-constrained/port
+	$(INSTALL) -m 644 $(HEADERS_UTIL) $(includedir)/iotivity-constrained/util
+	$(INSTALL) -m 644 $(HEADERS_UTIL_PT) $(includedir)/iotivity-constrained/util/pt
+	$(INSTALL) -m 644 $(HEADERS_COAP) $(includedir)/iotivity-constrained/messaging/coap
+	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-constrained/deps/tinycbor/src
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
 # Installing the samples
