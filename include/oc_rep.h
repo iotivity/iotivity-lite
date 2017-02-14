@@ -62,11 +62,10 @@ int oc_rep_finalize(void);
     g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));     \
   } while (0)
 
-#define oc_rep_set_byte_string(object, key, value)                             \
+#define oc_rep_set_byte_string(object, key, value, length)                     \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
-    g_err |= cbor_encode_byte_string(&object##_map, value,                     \
-                                     strlen((const char *)value));             \
+    g_err |= cbor_encode_byte_string(&object##_map, value, length);            \
   } while (0)
 
 #define oc_rep_start_array(parent, key)                                        \
