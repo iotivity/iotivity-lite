@@ -96,7 +96,7 @@ coap_receive(oc_message_t *msg)
 {
   coap_status_code = NO_ERROR;
 
-  LOG("\n\nCoAP Engine: received datalen=%u \n", msg->length);
+  OC_DBG("\n\nCoAP Engine: received datalen=%u \n", msg->length);
 
   /* static declaration reduces stack peaks and program code size */
   static coap_packet_t
@@ -121,20 +121,21 @@ coap_receive(oc_message_t *msg)
 /*TODO duplicates suppression, if required by application */
 
 #if OC_DEBUG
-    LOG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u\n",
-        message->version, message->token[0], message->token[1], message->mid);
+    OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u\n",
+           message->version, message->token[0], message->token[1],
+           message->mid);
     switch (message->type) {
     case COAP_TYPE_CON:
-      LOG("  type: CON\n");
+      OC_DBG("  type: CON\n");
       break;
     case COAP_TYPE_NON:
-      LOG("  type: NON\n");
+      OC_DBG("  type: NON\n");
       break;
     case COAP_TYPE_ACK:
-      LOG("  type: ACK\n");
+      OC_DBG("  type: ACK\n");
       break;
     case COAP_TYPE_RST:
-      LOG("  type: RST\n");
+      OC_DBG("  type: RST\n");
       break;
     default:
       break;
@@ -165,20 +166,20 @@ coap_receive(oc_message_t *msg)
 #if OC_DEBUG
       switch (message->code) {
       case COAP_GET:
-        LOG("  method: GET\n");
+        OC_DBG("  method: GET\n");
         break;
       case COAP_PUT:
-        LOG("  method: PUT\n");
+        OC_DBG("  method: PUT\n");
         break;
       case COAP_POST:
-        LOG("  method: POST\n");
+        OC_DBG("  method: POST\n");
         break;
       case COAP_DELETE:
-        LOG("  method: DELETE\n");
+        OC_DBG("  method: DELETE\n");
         break;
       }
-      LOG("  URL: %.*s\n", message->uri_path_len, message->uri_path);
-      LOG("  Payload: %.*s\n", message->payload_len, message->payload);
+      OC_DBG("  URL: %.*s\n", message->uri_path_len, message->uri_path);
+      OC_DBG("  Payload: %.*s\n", message->payload_len, message->payload);
 #endif
 
       /* create transaction for response */
