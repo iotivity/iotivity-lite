@@ -66,7 +66,7 @@ void
 oc_network_event_handler_mutex_init(void)
 {
   if (pthread_mutex_init(&mutex, NULL) != 0) {
-    LOG("ERROR initializing network event handler mutex\n");
+    OC_ERR("initializing network event handler mutex\n");
   }
 }
 
@@ -273,7 +273,7 @@ oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
   if (getifaddrs(&ifs) < 0) {
-    LOG("error querying interfaces: %d\n", errno);
+    OC_ERR("querying interfaces: %d\n", errno);
     goto done;
   }
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
@@ -286,8 +286,8 @@ oc_send_discovery_request(oc_message_t *message)
         int mif = addr->sin6_scope_id;
         if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
                        sizeof(mif)) == -1) {
-          LOG("ERROR setting socket option for default IPV6_MULTICAST_IF: %d\n",
-              errno);
+          OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
+                 errno);
           goto done;
         }
         oc_send_buffer(message);
@@ -298,8 +298,8 @@ oc_send_discovery_request(oc_message_t *message)
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
       if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                      sizeof(addr->sin_addr)) == -1) {
-        LOG("ERROR setting socket option for default IP_MULTICAST_IF: %d\n",
-            errno);
+        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d\n",
+               errno);
         goto done;
       }
       oc_send_buffer(message);
@@ -339,7 +339,7 @@ connectivity_ipv4_init(void)
 
   secure4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (secure4_sock < 0) {
-    LOG("ERROR creating secure IPv4 socket\n");
+    OC_ERR("creating secure IPv4 socket\n");
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -348,52 +348,52 @@ connectivity_ipv4_init(void)
   mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (server4_sock < 0 || mcast4_sock < 0) {
-    LOG("ERROR creating IPv4 server sockets\n");
+    OC_ERR("creating IPv4 server sockets\n");
     return -1;
   }
 
   if (bind(server4_sock, (struct sockaddr *)&server4, sizeof(server4)) == -1) {
-    LOG("ERROR binding server4 socket %d\n", errno);
+    OC_ERR("binding server4 socket %d\n", errno);
     return -1;
   }
 
   struct ip_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
   if (inet_pton(AF_INET, ALL_COAP_NODES_V4, (void *)&mreq.imr_multiaddr) != 1) {
-    LOG("ERROR setting mcast IPv4 addr\n");
+    OC_ERR("setting mcast IPv4 addr\n");
     return -1;
   }
   if (setsockopt(mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
-    LOG("ERROR setting mcast IPv4 join option %d\n", errno);
+    OC_ERR("setting mcast IPv4 join option %d\n", errno);
     return -1;
   }
 
   int reuse = 1;
-  if (setsockopt(mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ==
-      -1) {
-    LOG("ERROR setting reuseaddr IPv4 option %d\n", errno);
+  if (setsockopt(mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
+                 sizeof(reuse)) == -1) {
+    OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
   if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1) {
-    LOG("ERROR binding mcast IPv4 socket %d\n", errno);
+    OC_ERR("binding mcast IPv4 socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(secure4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
                  sizeof(reuse)) == -1) {
-    LOG("ERROR setting reuseaddr IPv4 option %d\n", errno);
+    OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
 
   if (bind(secure4_sock, (struct sockaddr *)&secure4, sizeof(secure4)) == -1) {
-    LOG("ERROR binding smcast IPv4 socket %d\n", errno);
+    OC_ERR("binding smcast IPv4 socket %d\n", errno);
     return -1;
   }
 #endif /* OC_SECURITY */
 
-  LOG("Successfully initialized IPv4 connectivity\n");
+  OC_DBG("Successfully initialized IPv4 connectivity\n");
 
   return 0;
 }
@@ -427,60 +427,60 @@ oc_connectivity_init(void)
   mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
   if (server_sock < 0 || mcast_sock < 0) {
-    LOG("ERROR creating server sockets\n");
+    OC_ERR("creating server sockets\n");
     return -1;
   }
 
 #ifdef OC_SECURITY
   secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (secure_sock < 0) {
-    LOG("ERROR creating secure socket\n");
+    OC_ERR("creating secure socket\n");
     return -1;
   }
 #endif /* OC_SECURITY */
 
   if (bind(server_sock, (struct sockaddr *)&server, sizeof(server)) == -1) {
-    LOG("ERROR binding server socket %d\n", errno);
+    OC_ERR("binding server socket %d\n", errno);
     return -1;
   }
 
   struct ipv6_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
   if (inet_pton(AF_INET6, ALL_OCF_NODES, (void *)&mreq.ipv6mr_multiaddr) != 1) {
-    LOG("ERROR setting mcast addr\n");
+    OC_ERR("setting mcast addr\n");
     return -1;
   }
   mreq.ipv6mr_interface = 0;
   if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
-    LOG("ERROR setting mcast join option %d\n", errno);
+    OC_ERR("setting mcast join option %d\n", errno);
     return -1;
   }
   int reuse = 1;
   if (setsockopt(mcast_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ==
       -1) {
-    LOG("ERROR setting reuseaddr option %d\n", errno);
+    OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
   if (bind(mcast_sock, (struct sockaddr *)&mcast, sizeof(mcast)) == -1) {
-    LOG("ERROR binding mcast socket %d\n", errno);
+    OC_ERR("binding mcast socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(secure_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
                  sizeof(reuse)) == -1) {
-    LOG("ERROR setting reuseaddr option %d\n", errno);
+    OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
   if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1) {
-    LOG("ERROR binding smcast socket %d\n", errno);
+    OC_ERR("binding smcast socket %d\n", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(secure);
   if (getsockname(secure_sock, (struct sockaddr *)&secure, &socklen) == -1) {
-    LOG("ERROR obtaining secure socket information %d\n", errno);
+    OC_ERR("obtaining secure socket information %d\n", errno);
     return -1;
   }
 
@@ -493,11 +493,11 @@ oc_connectivity_init(void)
 #endif
 
   if (pthread_create(&event_thread, NULL, &network_event_thread, NULL) != 0) {
-    LOG("ERROR creating network polling thread\n");
+    OC_ERR("creating network polling thread\n");
     return -1;
   }
 
-  LOG("Successfully initialized connectivity\n");
+  OC_DBG("Successfully initialized connectivity\n");
 
   return 0;
 }
@@ -517,5 +517,5 @@ oc_connectivity_shutdown(void)
   pthread_cancel(event_thread);
   pthread_join(event_thread, NULL);
 
-  LOG("oc_connectivity_shutdown\n");
+  OC_DBG("oc_connectivity_shutdown\n");
 }

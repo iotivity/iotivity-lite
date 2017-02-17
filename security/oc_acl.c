@@ -78,7 +78,7 @@ oc_sec_encode_acl(void)
     } else {
       oc_uuid_to_str(&sub->subjectuuid, uuid, 37);
     }
-    LOG("oc_sec_acl_encode: subject %s\n", uuid);
+    OC_DBG("oc_sec_acl_encode: subject %s\n", uuid);
     n = oc_list_length(sub->resources);
     uint16_t groups[n];
     get_sub_perm_groups(sub, groups, &n);
@@ -93,8 +93,8 @@ oc_sec_encode_acl(void)
           // TODO: Check if we need to track rts in ACEs for resources
           // The spec isn't clear on how they're used for access-control.
           if (!res->wildcard) {
-            LOG("oc_sec_acl_encode: adding resource %s\n",
-                oc_string(res->resource->uri));
+            OC_DBG("oc_sec_acl_encode: adding resource %s\n",
+                   oc_string(res->resource->uri));
             oc_rep_object_array_start_item(resources);
             oc_rep_set_text_string(resources, href,
                                    oc_string(res->resource->uri));
@@ -102,7 +102,7 @@ oc_sec_encode_acl(void)
                                            res->interfaces);
             oc_rep_object_array_end_item(resources);
           } else {
-            LOG("oc_sec_acl_encode: adding resource *\n");
+            OC_DBG("oc_sec_acl_encode: adding resource *\n");
             oc_rep_object_array_start_item(resources);
             oc_rep_set_text_string(resources, href, "*");
             oc_rep_set_array(resources, if);
@@ -132,7 +132,7 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource,
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(ac_list.subjects);
   oc_sec_acl_res_t *res = NULL;
 
-#ifdef OC_DEBUG
+#ifdef OC_DBG
   char uuid[37];
   oc_uuid_to_str(subjectuuid, uuid, 37);
 #endif
@@ -146,21 +146,21 @@ oc_sec_acl_get_ace(oc_uuid_t *subjectuuid, oc_resource_t *resource,
   if (create)
     goto new_ace;
 
-  LOG("Could not find ACE for subject %s\n", uuid);
+  OC_DBG("Could not find ACE for subject %s\n", uuid);
 
   goto done;
 
 got_ace:
-  LOG("Found ACE for subject %s\n", uuid);
+  OC_DBG("Found ACE for subject %s\n", uuid);
   res = (oc_sec_acl_res_t *)oc_list_head(ace->resources);
 
   while (res != NULL) {
     if (res->resource == resource || res->wildcard == true) {
-#ifdef OC_DEBUG
+#ifdef OC_DBG
       if (res->wildcard)
-        LOG("Found resource * in ACE\n");
+        OC_DBG("Found resource * in ACE\n");
       else
-        LOG("Found resource %s in ACE\n", oc_string(res->resource->uri));
+        OC_DBG("Found resource %s in ACE\n", oc_string(res->resource->uri));
 #endif
       goto done;
     }
@@ -178,7 +178,7 @@ new_ace:
   if (!ace)
     goto done;
 
-  LOG("Created new ACE for subject %s\n", uuid);
+  OC_DBG("Created new ACE for subject %s\n", uuid);
 
   OC_LIST_STRUCT_INIT(ace, resources);
   memcpy(ace->subjectuuid.id, subjectuuid->id, 16);
@@ -189,12 +189,12 @@ new_res:
   if (res) {
     res->resource = resource;
     res->wildcard = wildcard;
-#ifdef OC_DEBUG
+#ifdef OC_DBG
     if (wildcard)
-      LOG("Adding new resource * to ACE\n");
+      OC_DBG("Adding new resource * to ACE\n");
     else
-      LOG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
-#endif /* OC_DEBUG */
+      OC_DBG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
+#endif /* OC_DBG */
     oc_list_add(ace->resources, res);
   }
 
@@ -216,13 +216,13 @@ oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
   res->interfaces = interfaces;
   res->permissions = permissions;
 
-#ifdef OC_DEBUG
+#ifdef OC_DBG
   if (wildcard)
-    LOG("Setting permissions %d for resource *\n", res->permissions);
+    OC_DBG("Setting permissions %d for resource *\n", res->permissions);
   else
-    LOG("Setting permissions %d for resource %s\n", res->permissions,
-        oc_string(resource->uri));
-#endif /* OC_DEBUG */
+    OC_DBG("Setting permissions %d for resource %s\n", res->permissions,
+           oc_string(resource->uri));
+#endif /* OC_DBG */
 
   return res;
 }
@@ -251,7 +251,7 @@ oc_sec_acl_default(void)
       success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
                                     OC_IF_BASELINE, 6) != NULL);
   }
-  LOG("ACL for core resources initialized %d\n", success);
+  OC_DBG("ACL for core resources initialized %d\n", success);
   oc_uuid_t *device = oc_core_get_device_id(0);
   memcpy(&ac_list.rowneruuid, device, sizeof(oc_uuid_t));
 }
@@ -279,7 +279,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (!res)
     return granted;
 
-  LOG("Got permissions mask %d\n", res->permissions);
+  OC_DBG("Got permissions mask %d\n", res->permissions);
 
   if (res->permissions & OC_PERM_CREATE || res->permissions & OC_PERM_UPDATE) {
     switch (method) {
@@ -424,9 +424,9 @@ oc_sec_decode_acl(oc_rep_t *rep)
                           0)
                         wildcard = true;
                       else {
-                        LOG("\n\noc_sec_acl_decode: could not find resource "
-                            "%s\n\n",
-                            oc_string(resource->value.string));
+                        OC_DBG("\n\noc_sec_acl_decode: could not find resource "
+                               "%s\n\n",
+                               oc_string(resource->value.string));
                         return false;
                       }
                     }
@@ -459,26 +459,26 @@ oc_sec_decode_acl(oc_rep_t *rep)
                 resource = resource->next;
               }
 
-#ifdef OC_DEBUG
+#ifdef OC_DBG
               if (wildcard)
-                LOG("\n\noc_sec_acl_decode: Updating resource * in ACE\n");
+                OC_DBG("\n\noc_sec_acl_decode: Updating resource * in ACE\n");
               else
-                LOG("\n\noc_sec_acl_decode: Updating resource %s in ACE\n",
-                    oc_string(res->uri));
-#endif /* OC_DEBUG */
+                OC_DBG("\n\noc_sec_acl_decode: Updating resource %s in ACE\n",
+                       oc_string(res->uri));
+#endif /* OC_DBG */
 
               ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard,
                                           interfaces, permissions);
               if (ace_res == NULL) {
-#ifdef OC_DEBUG
+#ifdef OC_DBG
                 if (wildcard)
-                  LOG("\n\noc_sec_acl_decode: could not update ACE with "
-                      "resource * permissions\n\n");
+                  OC_DBG("\n\noc_sec_acl_decode: could not update ACE with "
+                         "resource * permissions\n\n");
                 else
-                  LOG("\n\noc_sec_acl_decode: could not update ACE with "
-                      "resource %s permissions\n\n",
-                      oc_string(res->uri));
-#endif /* OC_DEBUG */
+                  OC_DBG("\n\noc_sec_acl_decode: could not update ACE with "
+                         "resource %s permissions\n\n",
+                         oc_string(res->uri));
+#endif /* OC_DBG */
                 return false;
               }
 
