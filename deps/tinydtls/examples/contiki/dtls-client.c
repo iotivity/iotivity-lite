@@ -287,7 +287,7 @@ init_dtls(session_t *dst) {
   PRINT6ADDR(&dst->addr);
   PRINTF(":%d\n", uip_ntohs(dst->port));
 
-  dtls_set_log_level(DTLS_LOG_DEBUG);
+  dtls_set_log_level(DTLS_OC_DBG_DEBUG);
 
   dtls_context = dtls_new_context(client_conn);
   if (dtls_context)

@@ -136,13 +136,13 @@ oc_send_buffer(oc_message_t *message)
   struct net_buf *send_buf;
   send_buf = net_nbuf_get_tx(udp_recv6, K_NO_WAIT);
   if (!send_buf) {
-    LOG("oc_send_buffer: cannot acquire send_buf\n");
+    OC_WRN("oc_send_buffer: cannot acquire send_buf\n");
     return;
   }
 
   bool status = net_nbuf_append(send_buf, message->length, message->data, K_NO_WAIT);
   if (!status) {
-    LOG("oc_send_buffer: cannot populate send_buf\n");
+    OC_WRN("oc_send_buffer: cannot populate send_buf\n");
     return;
   }
 
@@ -150,7 +150,7 @@ oc_send_buffer(oc_message_t *message)
     send_buf, (struct sockaddr *)&peer_addr, sizeof(struct sockaddr_in6),
     udp_sent, 0, UINT_TO_POINTER(net_buf_frags_len(send_buf)), NULL);
   if (ret < 0) {
-    LOG("oc_send_buffer: cannot send data to peer (%d)\n", ret);
+    OC_WRN("oc_send_buffer: cannot send data to peer (%d)\n", ret);
     net_nbuf_unref(send_buf);
   }
 }
@@ -167,7 +167,7 @@ oc_connectivity_init(void)
 
 #if defined(CONFIG_NET_L2_BLUETOOTH)
   if (bt_enable(NULL)) {
-    LOG("oc_connectivity_init: bluetooth initialization failed\n");
+    OC_WRN("oc_connectivity_init: bluetooth initialization failed\n");
     return -1;
   }
   ipss_init();
@@ -191,70 +191,70 @@ oc_connectivity_init(void)
 
   ret = net_context_get(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &udp_recv6);
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot get UDP network context for server"
-        "receive (%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: cannot get UDP network context for server"
+           "receive (%d)\n",
+           ret);
     goto error;
   }
 
   ret = net_context_bind(udp_recv6, (struct sockaddr *)&my_addr6,
                          sizeof(struct sockaddr_in6));
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot bind UDP port %d to server's network"
-        "context (%d)\n",
-        ntohs(my_addr6.sin6_port), ret);
+    OC_WRN("oc_connectivity_init: cannot bind UDP port %d to server's network"
+           "context (%d)\n",
+           ntohs(my_addr6.sin6_port), ret);
     goto error;
   }
 
   ret = net_context_get(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &mcast_recv6);
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot get UDP network context for OCF"
-        "multicast receive (%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: cannot get UDP network context for OCF"
+           "multicast receive (%d)\n",
+           ret);
     goto error;
   }
 
   ret = net_context_bind(mcast_recv6, (struct sockaddr *)&mcast_addr6,
                          sizeof(struct sockaddr_in6));
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot bind OCF multicast network context"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: cannot bind OCF multicast network context"
+           "(%d)\n",
+           ret);
     goto error;
   }
 
 #ifdef OC_SECURITY
   ret = net_context_get(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &dtls_recv6);
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot get DTLS network context"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: cannot get DTLS network context"
+           "(%d)\n",
+           ret);
     goto error;
   }
 
   ret = net_context_bind(dtls_recv6, (struct sockaddr *)&dtls_addr6,
                          sizeof(struct sockaddr_in6));
   if (ret < 0) {
-    LOG("oc_connectivity_init: cannot bind DTLS network context"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: cannot bind DTLS network context"
+           "(%d)\n",
+           ret);
     goto error;
   }
 #endif /* OC_SECURITY */
 
   ret = net_context_recv(mcast_recv6, oc_network_receive, 0, NULL);
   if (ret < 0) {
-    LOG("oc_connectivity_init: net_context_recv error from multicast socket:"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: net_context_recv error from multicast socket:"
+           "(%d)\n",
+           ret);
     goto error;
   }
 
   ret = net_context_recv(udp_recv6, oc_network_receive, 0, NULL);
   if (ret < 0) {
-    LOG("oc_connectivity_init: net_context_recv error from server socket:"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: net_context_recv error from server socket:"
+           "(%d)\n",
+           ret);
     goto error;
   }
 
@@ -262,18 +262,18 @@ oc_connectivity_init(void)
   static uint16_t dtls_port = MY_DTLS_PORT;
   ret = net_context_recv(dtls_recv6, oc_network_receive, 0, &dtls_port);
   if (ret < 0) {
-    LOG("oc_connectivity_init: net_context_recv error from DTLS socket:"
-        "(%d)\n",
-        ret);
+    OC_WRN("oc_connectivity_init: net_context_recv error from DTLS socket:"
+           "(%d)\n",
+           ret);
     goto error;
   }
 #endif /* OC_SECURITY */
 
-  LOG("oc_connectivity_init: successfully initialized connectivity\n");
+  OC_DBG("oc_connectivity_init: successfully initialized connectivity\n");
   return 0;
 
 error:
-  LOG("oc_connectivity_init: failed to initialize connectivity\n");
+  OC_ERR("oc_connectivity_init: failed to initialize connectivity\n");
   return -1;
 }
 

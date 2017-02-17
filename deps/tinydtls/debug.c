@@ -48,9 +48,11 @@
 #include "global.h"
 #include "debug.h"
 
-static int maxlog = DTLS_LOG_WARN;	/* default maximum log level */
+static int maxlog = DTLS_OC_DBG_WARN; /* default maximum log level */
 
-const char *dtls_package_name() {
+const char *
+dtls_package_name()
+{
   return PACKAGE_NAME;
 }
 
@@ -71,13 +73,9 @@ dtls_set_log_level(log_t level) {
 /* this array has the same order as the type log_t */
 #ifdef __ANDROID__
 static android_LogPriority loglevels_android[] = {
-  ANDROID_LOG_FATAL,
-  ANDROID_LOG_ERROR,
-  ANDROID_LOG_ERROR,
-  ANDROID_LOG_WARN,
-  ANDROID_LOG_INFO,
-  ANDROID_LOG_INFO,
-  ANDROID_LOG_DEBUG
+  ANDROID_OC_DBG_FATAL, ANDROID_OC_DBG_ERROR, ANDROID_OC_DBG_ERROR,
+  ANDROID_OC_DBG_WARN,  ANDROID_OC_DBG_INFO,  ANDROID_OC_DBG_INFO,
+  ANDROID_OC_DBG_DEBUG
 };
 #else
 static char *loglevels[] = {
@@ -246,12 +244,12 @@ dsrv_log(log_t level, char *format, ...) {
   if (maxlog < level)
     return;
 
-  log_fd = level <= DTLS_LOG_CRIT ? stderr : stdout;
+  log_fd = level <= DTLS_OC_DBG_CRIT ? stderr : stdout;
 
-  if (print_timestamp(timebuf,sizeof(timebuf), time(NULL)))
+  if (print_timestamp(timebuf, sizeof(timebuf), time(NULL)))
     fprintf(log_fd, "%s ", timebuf);
 
-  if (level <= DTLS_LOG_DEBUG) 
+  if (level <= DTLS_OC_DBG_DEBUG)
     fprintf(log_fd, "%s ", loglevels[level]);
 
   va_start(ap, format);
@@ -271,7 +269,7 @@ dsrv_log(log_t level, char *format, ...) {
   if (print_timestamp(timebuf,sizeof(timebuf), clock_time()))
     PRINTF("%s ", timebuf);
 
-  if (level <= DTLS_LOG_DEBUG) 
+  if (level <= DTLS_OC_DBG_DEBUG)
     PRINTF("%s ", loglevels[level]);
 
   va_start(ap, format);
@@ -362,12 +360,12 @@ dtls_dsrv_hexdump_log(log_t level, const char *name, const unsigned char *buf, s
   if (maxlog < level)
     return;
 
-  log_fd = level <= DTLS_LOG_CRIT ? stderr : stdout;
+  log_fd = level <= DTLS_OC_DBG_CRIT ? stderr : stdout;
 
   if (print_timestamp(timebuf, sizeof(timebuf), time(NULL)))
     fprintf(log_fd, "%s ", timebuf);
 
-  if (level <= DTLS_LOG_DEBUG) 
+  if (level <= DTLS_OC_DBG_DEBUG)
     fprintf(log_fd, "%s ", loglevels[level]);
 
   if (extend) {
@@ -408,7 +406,7 @@ dtls_dsrv_hexdump_log(log_t level, const char *name, const unsigned char *buf, s
   if (print_timestamp(timebuf,sizeof(timebuf), clock_time()))
     PRINTF("%s ", timebuf);
 
-  if (level >= 0 && level <= DTLS_LOG_DEBUG) 
+  if (level >= 0 && level <= DTLS_OC_DBG_DEBUG)
     PRINTF("%s ", loglevels[level]);
 
   if (extend) {

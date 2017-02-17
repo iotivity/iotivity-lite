@@ -1824,7 +1824,8 @@ static void dtls_destroy_peer(dtls_context_t *ctx, dtls_peer_t *peer, int unlink
 #endif /* WITH_CONTIKI */
 #endif /* WITH_CONTIKI || WITH_OCF */
 
-    dtls_dsrv_log_addr(DTLS_LOG_DEBUG, "removed peer", (const struct __session_t *)&peer->session);
+    dtls_dsrv_log_addr(DTLS_OC_DBG_DEBUG, "removed peer",
+                       (const struct __session_t *)&peer->session);
   }
   dtls_free_peer(peer);
 }
@@ -4483,7 +4484,8 @@ dtls_handle_message(dtls_context_t *ctx,
 
   if (!peer) {
     dtls_debug("dtls_handle_message: PEER NOT FOUND\n");
-    dtls_dsrv_log_addr(DTLS_LOG_DEBUG, "peer addr", (const struct __session_t *)session);
+    dtls_dsrv_log_addr(DTLS_OC_DBG_DEBUG, "peer addr",
+                       (const struct __session_t *)session);
   } else {
     dtls_debug("dtls_handle_message: FOUND PEER\n");
   }

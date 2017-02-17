@@ -105,7 +105,8 @@ dtls_new_peer(const session_t *session) {
       return NULL;
     }
 
-    dtls_dsrv_log_addr(DTLS_LOG_DEBUG, "dtls_new_peer", (const struct __session_t *)session);
+    dtls_dsrv_log_addr(DTLS_OC_DBG_DEBUG, "dtls_new_peer",
+                       (const struct __session_t *)session);
   }
 
   return peer;

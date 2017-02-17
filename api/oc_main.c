@@ -72,7 +72,7 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_load_acl();
 #endif
 
-  PRINT("oc_main: stack initialized\n");
+  OC_DBG("oc_main: stack initialized\n");
 
 #ifdef OC_CLIENT
   app_callbacks->requests_entry();

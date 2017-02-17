@@ -207,8 +207,7 @@ typedef u_int64_t sha2_word64;	/* Exactly 8 bytes */
 #define MEMCPY_BCOPY(d,s,l)	bcopy((s), (d), (l))
 #endif
 
-
-/*** THE SIX LOGICAL FUNCTIONS ****************************************/
+/*** THE SIX OC_DBGICAL FUNCTIONS ****************************************/
 /*
  * Bit shifting and rotation (used by the six SHA-XYZ logical functions:
  *
