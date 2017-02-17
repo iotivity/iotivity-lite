@@ -75,7 +75,7 @@ oc_sec_encode_cred(void)
     oc_uuid_to_str(&creds->subjectuuid, uuid, 37);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
     oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, (const uint8_t *)creds->key);
+    oc_rep_set_byte_string(privatedata, data, (const uint8_t *)creds->key, 16);
     oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     oc_rep_close_object(creds, privatedata);
     oc_rep_object_array_end_item(creds);

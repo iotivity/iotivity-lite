@@ -58,6 +58,10 @@
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE_SET_MTU */
 
+#ifdef OC_COLLECTIONS
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS */
+
 #include "oc_coap.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
@@ -264,8 +268,14 @@ coap_notify_observers(oc_resource_t *resource,
     request.response = &response;
     request.request_payload = NULL;
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-    resource->get_handler.cb(&request, resource->default_interface,
-                             resource->get_handler.user_data);
+#ifdef OC_COLLECTIONS
+    if (oc_check_if_collection(resource))
+      oc_handle_collection_request(OC_GET, &request,
+                                   resource->default_interface);
+    else
+#endif /* OC_COLLECTIONS */
+      resource->get_handler.cb(&request, resource->default_interface,
+                               resource->get_handler.user_data);
     response_buf = &response_buffer;
     if (response_buf->code == OC_IGNORE) {
       LOG("coap_notify_observers: Resource ignored request\n");
