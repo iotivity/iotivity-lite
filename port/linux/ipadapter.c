@@ -515,6 +515,7 @@ oc_connectivity_shutdown(void)
 #endif /* OC_SECURITY */
 
   pthread_cancel(event_thread);
+  pthread_join(event_thread, NULL);
 
   LOG("oc_connectivity_shutdown\n");
 }
