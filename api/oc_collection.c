@@ -102,6 +102,18 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
 }
 
 bool
+oc_check_if_collection(oc_resource_t *resource)
+{
+  oc_collection_t *collection = oc_list_head(oc_collections);
+  while (collection != NULL) {
+    if ((oc_collection_t *)resource == collection)
+      return true;
+    collection = collection->next;
+  }
+  return false;
+}
+
+bool
 oc_collection_add(oc_collection_t *collection)
 {
   if (oc_list_length(collection->links) > 0) {
