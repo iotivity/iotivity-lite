@@ -3,9 +3,9 @@
 
 /* Time resolution */
 #include <stdint.h>
+#include <time.h>
 typedef uint64_t oc_clock_time_t;
-/* Sets one clock tick to 1 ms */
-#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
+#define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 
 /* Memory pool sizes */
 #define OC_BYTES_POOL_SIZE (1500)
