@@ -514,6 +514,15 @@ oc_connectivity_shutdown(void)
   close(secure_sock);
 #endif /* OC_SECURITY */
 
+#ifdef OC_IPV4
+  close(server4_sock);
+  close(mcast4_sock);
+
+#ifdef OC_SECURITY
+  close(secure4_sock);
+#endif /* OC_SECURITY */
+#endif
+
   pthread_cancel(event_thread);
   pthread_join(event_thread, NULL);
 
