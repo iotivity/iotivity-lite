@@ -135,9 +135,6 @@ oc_list_add(oc_list_t list, void *item)
 {
   struct list *l;
 
-  /* Make sure not to add the same element twice */
-  oc_list_remove(list, item);
-
   ((struct list *)item)->next = NULL;
 
   l = oc_list_tail(list);
