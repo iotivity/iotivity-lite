@@ -681,7 +681,7 @@ oc_connectivity_shutdown(void)
 #endif /* OC_SECURITY */
 #endif
 
-	_sleep(300);
+	Sleep(300);
 	TerminateThread(thread_handle,0);
 	WSACleanup();
 
