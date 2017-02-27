@@ -29,8 +29,16 @@
 #include "port/oc_connectivity.h"
 
 #define OCF_PORT_UNSECURED (5683)
-#define ALL_OCF_NODES "FF02::158"
-#define ALL_COAP_NODES_V4 "224.0.1.187"
+static const uint8_t ALL_OCF_NODES_LL[] = {
+	0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
+};
+static const uint8_t ALL_OCF_NODES_RL[] = {
+	0xff, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
+};
+static const uint8_t ALL_OCF_NODES_SL[] = {
+	0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
+};
+#define ALL_COAP_NODES_V4 0xe00001bb
 
 // the Windows critical section stuff is here,
 // because many definitions in <windows.h> collide with iotivity, e.g. INT, BOOL etc.
@@ -54,19 +62,18 @@ void event_has_arrived()
 
 static DWORD event_thread;
 static HANDLE mutex;
-static SOCKADDR_STORAGE mcast, server, client;
-
+static struct sockaddr_storage mcast, server, client;
 static int server_sock = -1, mcast_sock = -1, terminate;
 #ifdef OC_IPV4
-static SOCKADDR_STORAGE mcast4, server4;
+static struct sockaddr_storage mcast4, server4;
 static int server4_sock = -1, mcast4_sock = -1;
 #endif
 
 #ifdef OC_SECURITY
-static SOCKADDR_STORAGE secure;
+static struct sockaddr_storage secure;
 static int secure_sock = -1;
 #ifdef OC_IPV4
-static SOCKADDR_STORAGE secure4;
+static struct sockaddr_storage secure4;
 static int secure4_sock = -1;
 #endif
 static uint16_t dtls_port = 0;
@@ -233,8 +240,7 @@ network_event_thread(void *data)
 				memcpy(message->endpoint.addr.ipv4.address, &c4->sin_addr.s_addr,
 					sizeof(c4->sin_addr.s_addr));
 				message->endpoint.addr.ipv4.port = ntohs(c4->sin_port);
-			}
-			else if (message->endpoint.flags & IPV6) {
+			} else if (message->endpoint.flags & IPV6) {
 #else
 			if (message->endpoint.flags & IPV6) {
 #endif
@@ -268,43 +274,47 @@ oc_send_buffer(oc_message_t *message)
 #ifdef OC_IPV4
 	if (message->endpoint.flags & IPV4) {
 		struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
-    memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
-           sizeof(r->sin_addr.s_addr));
+		memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
+			sizeof(r->sin_addr.s_addr));
 		r->sin_family = AF_INET;
 		r->sin_port = htons(message->endpoint.addr.ipv4.port);
 	} else {
 #else
-	{
+		{
 #endif
-		struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
-    memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
-           sizeof(r->sin6_addr.s6_addr));
-		r->sin6_family = AF_INET6;
-		r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-		r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
+			struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
+			memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
+				sizeof(r->sin6_addr.s6_addr));
+			r->sin6_family = AF_INET6;
+			r->sin6_port = htons(message->endpoint.addr.ipv6.port);
+			r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
 	}
-	int send_sock = -1;
+		int send_sock = -1;
 
 #ifdef OC_SECURITY
-	if (message->endpoint.flags & SECURED)
+		if (message->endpoint.flags & SECURED) {
 #ifdef OC_IPV4
-		if (message->endpoint.flags & IPV4)
-			send_sock = secure4_sock;
-		else
-			send_sock = secure_sock;
+			if (message->endpoint.flags & IPV4) {
+				send_sock = secure4_sock;
+			} else {
+				send_sock = secure_sock;
+			}
 #else
-		send_sock = secure_sock;
+			send_sock = secure_sock;
 #endif
-	else
+		} else
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-		if (message->endpoint.flags & IPV4) 
-			send_sock = server4_sock;
-		else
-			send_sock = server_sock;
-#else
+			if (message->endpoint.flags & IPV4) {
+				send_sock = server4_sock;
+			} else {
+				send_sock = server_sock;
+			}
+#else  /* OC_IPV4 */
+	{
 		send_sock = server_sock;
-#endif
+	}
+#endif /* !OC_IPV4 */
 
 	fd_set wfds;
 	FD_ZERO(&wfds);
@@ -315,8 +325,13 @@ oc_send_buffer(oc_message_t *message)
 		int bytes_sent = 0, x;
 		while (bytes_sent < (int)message->length) {
 			x = sendto(send_sock, message->data + bytes_sent,
-                   message->length - bytes_sent, 0,
-                   (struct sockaddr *)&receiver, sizeof(receiver));
+                   message->length - bytes_sent, 0, (struct sockaddr *)&receiver, 
+				sizeof(receiver));
+			if (x < 0) {
+				PRINT("sendto() returned errno %d\n", errno);
+				return;
+			}
+
 			bytes_sent += x;
 		}
 		PRINT("Sent %d bytes\n", bytes_sent);
@@ -480,13 +495,10 @@ connectivity_ipv4_init(void)
 
   struct ip_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
-  if (inet_pton(AF_INET, ALL_COAP_NODES_V4, (void *)&mreq.imr_multiaddr) != 1) {
-    LOG("ERROR setting mcast IPv4 addr\n");
-    return -1;
-  }
+  mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   if (setsockopt(mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq,
                  sizeof(mreq)) == -1) {
-    LOG("ERROR setting mcast IPv4 join option %d\n", errno);
+	  LOG("ERROR joining IPv4 multicast group %d\n", errno);
     return -1;
   }
 
@@ -497,7 +509,7 @@ connectivity_ipv4_init(void)
     return -1;
   }
   if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1) {
-    LOG("ERROR binding mcast IPv4 socket %d\n", errno);
+	  LOG("ERROR binding IPv4 secure socket %d\n", errno);
     return -1;
   }
 
@@ -519,6 +531,20 @@ connectivity_ipv4_init(void)
   return 0;
 }
 #endif
+
+static int
+add_mcast_sock_to_ipv6_multicast_group(const uint8_t *addr)
+{
+	struct ipv6_mreq mreq;
+	memset(&mreq, 0, sizeof(mreq));
+	memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
+	if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+		sizeof(mreq)) == -1) {
+		LOG("ERROR joining IPv6 multicast group %d\n", errno);
+		return -1;
+	}
+	return 0;
+}
 
 int
 oc_connectivity_init(void)
@@ -568,18 +594,16 @@ oc_connectivity_init(void)
 		return -1;
 	}
 
-	struct ipv6_mreq mreq;
-	memset(&mreq, 0, sizeof(mreq));
-	if (inet_pton(AF_INET6, ALL_OCF_NODES, (void *)&mreq.ipv6mr_multiaddr) != 1) {
-		LOG("ERROR setting mcast addr\n");
+	if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_LL) < 0) {
 		return -1;
 	}
-	mreq.ipv6mr_interface = 0;
-	if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
-		sizeof(mreq)) == -1) {
-		LOG("ERROR setting mcast join option %d\n", errno);
+	if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_RL) < 0) {
 		return -1;
 	}
+	if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_SL) < 0) {
+		return -1;
+	}
+
 	int reuse = 1;
 	if (setsockopt(mcast_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(reuse)) ==
 		-1) {
@@ -598,7 +622,7 @@ oc_connectivity_init(void)
 		return -1;
 	}
 	if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1) {
-		LOG("ERROR binding smcast socket %d\n", errno);
+		LOG("ERROR binding IPv4 secure socket %d\n", errno);
 		return -1;
 	}
 
@@ -634,8 +658,16 @@ oc_connectivity_shutdown(void)
 	closesocket(server_sock);
 	closesocket(mcast_sock);
 
+#ifdef OC_IPV4
+	closesocket(server4_sock);
+	closesocket(mcast4_sock);
+#endif /* OC_IPV4 */
+
 #ifdef OC_SECURITY
 	closesocket(secure_sock);
+#ifdef OC_IPV4
+	closesocket(secure4_sock);
+#endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
 #ifdef OC_IPV4
@@ -647,9 +679,9 @@ oc_connectivity_shutdown(void)
 #endif /* OC_SECURITY */
 #endif
 
-	//TerminateThread(event_thread,0);
+	TerminateThread(event_thread,0);
 	WSACleanup();
+
 	LOG("oc_connectivity_shutdown\n");
 }
-
 
