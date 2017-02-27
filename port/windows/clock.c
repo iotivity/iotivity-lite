@@ -22,7 +22,7 @@ static LARGE_INTEGER frequency = { 0 };
 void
 oc_clock_init(void)
 {
-	QueryPerformanceFrequency(&frequency);
+  QueryPerformanceFrequency(&frequency);
 }
 
 oc_clock_time_t
@@ -30,8 +30,9 @@ oc_clock_time(void)
 {
   LARGE_INTEGER count = { 0 };
   if (frequency.QuadPart && QueryPerformanceCounter(&count)) {
-	  oc_clock_time_t t = 1000 * count.QuadPart / frequency.QuadPart; // milliseconds
-	  return t;
+    oc_clock_time_t t =
+      1000 * count.QuadPart / frequency.QuadPart; // milliseconds
+    return t;
   }
   // fall back if no QueryPerformanceCounter available
   return GetTickCount64();
@@ -40,12 +41,11 @@ oc_clock_time(void)
 unsigned long
 oc_clock_seconds(void)
 {
-  time_t t = time(0);
-  return (unsigned long)t;
+  return (unsigned long)time(0);
 }
 
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  Sleep((DWORD)(t*1000));
+  Sleep((DWORD)(t * 1000));
 }

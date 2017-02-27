@@ -20,13 +20,15 @@
 void
 oc_random_init(void)
 {
-	srand((unsigned)GetTickCount());
+  srand((unsigned)GetTickCount());
 }
 
 unsigned int
 oc_random_value(void)
 {
-	return (unsigned int)rand();
+  unsigned int val = 0;
+  rand_s(&val);
+  return val;
 }
 
 void
