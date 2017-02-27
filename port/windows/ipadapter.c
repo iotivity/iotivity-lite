@@ -60,6 +60,7 @@ void event_has_arrived()
 	WakeConditionVariable(&cv);
 }
 
+static HANDLE thread_handle;
 static DWORD event_thread;
 static HANDLE mutex;
 static struct sockaddr_storage mcast, server, client;
@@ -538,7 +539,7 @@ add_mcast_sock_to_ipv6_multicast_group(const uint8_t *addr)
 	struct ipv6_mreq mreq;
 	memset(&mreq, 0, sizeof(mreq));
 	memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
-	if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+	if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
 		sizeof(mreq)) == -1) {
 		LOG("ERROR joining IPv6 multicast group %d\n", errno);
 		return -1;
@@ -640,7 +641,8 @@ oc_connectivity_init(void)
 		PRINT("Could not initialize IPv4\n");
 #endif
 
-	if (CreateThread(0, 0, (LPTHREAD_START_ROUTINE)network_event_thread, NULL, 0, &event_thread) == NULL) {
+	thread_handle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)network_event_thread, NULL, 0, &event_thread);
+	if (thread_handle == NULL) {
 		LOG("ERROR creating network polling thread\n");
 		return -1;
 	}
@@ -679,7 +681,8 @@ oc_connectivity_shutdown(void)
 #endif /* OC_SECURITY */
 #endif
 
-	TerminateThread(event_thread,0);
+	_sleep(300);
+	TerminateThread(thread_handle,0);
 	WSACleanup();
 
 	LOG("oc_connectivity_shutdown\n");
