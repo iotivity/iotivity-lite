@@ -54,9 +54,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 #ifdef OC_COLLECTIONS
 #include "oc_collection.h"
@@ -97,15 +97,15 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
 }
 /*---------------------------------------------------------------------------*/
 static int
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 add_observer(oc_resource_t *resource, uint16_t block2_size,
              oc_endpoint_t *endpoint, const uint8_t *token, size_t token_len,
              const char *uri, int uri_len)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
              const uint8_t *token, size_t token_len, const char *uri,
              int uri_len)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 {
   /* Remove existing observe relationship, if any. */
   int dup = coap_remove_observer_handle_by_uri(endpoint, uri, uri_len);
@@ -125,9 +125,9 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     o->last_mid = 0;
     o->obs_counter = observe_counter;
     o->resource = resource;
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     o->block2_size = block2_size;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
     resource->num_observers++;
     OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]\n",
            oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS, o->url,
@@ -146,14 +146,14 @@ coap_remove_observer(coap_observer_t *o)
   OC_DBG("Removing observer for /%s [0x%02X%02X]\n", o->url, o->token[0],
          o->token[1]);
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
     &o->endpoint, OC_GET);
   if (response_state) {
     oc_blockwise_free_response_buffer(response_state);
   }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   oc_memb_free(&observers_memb, o);
   oc_list_remove(observers_list, o);
@@ -242,12 +242,12 @@ coap_notify_observers(oc_resource_t *resource,
     num_observers = resource->num_observers;
   }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
   oc_blockwise_state_t *response_state;
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   uint8_t buffer[OC_BLOCK_SIZE];
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   oc_request_t request = { 0 };
   oc_response_t response = { 0 };
@@ -257,11 +257,11 @@ coap_notify_observers(oc_resource_t *resource,
     OC_DBG("coap_notify_observers: Issue GET request to resource\n");
     response_buffer.buffer = buffer;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     response_buffer.buffer_size = OC_BLOCK_WISE_BUFFER_SIZE;
-#else /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
     response_buffer.buffer_size = OC_BLOCK_SIZE;
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 
     response.response_buffer = &response_buffer;
     request.resource = resource;
@@ -299,19 +299,19 @@ coap_notify_observers(oc_resource_t *resource,
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
       coap_set_header_uri_path(req, oc_string(resource->uri),
                                oc_string_len(resource->uri));
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
-      OC_DBG("Resource is SLOW; creating separate response\n");
-#ifdef OC_BLOCK_WISE_SET_MTU
+      LOG("Resource is SLOW; creating separate response\n");
+#ifdef OC_BLOCK_WISE
       if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
                                0, obs->block2_size) == 1)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
       if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
                                0) == 1)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
         response.separate_response->active = 1;
     } else {
       OC_DBG("coap_notify_observers: notifying observer\n");
@@ -320,7 +320,7 @@ coap_notify_observers(oc_resource_t *resource,
         coap_packet_t notification[1];
         coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         if (response_buf->response_length > obs->block2_size) {
           notification->type = COAP_TYPE_CON;
           response_state = oc_blockwise_find_response_buffer(
@@ -351,7 +351,7 @@ coap_notify_observers(oc_resource_t *resource,
                                  COAP_ETAG_LEN);
           }
         } else
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
         {
           if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
             OC_DBG("coap_observe_notify: forcing CON notification to check for "
@@ -388,15 +388,15 @@ coap_notify_observers(oc_resource_t *resource,
   return num_observers;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 int
 coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                      uint16_t block2_size, oc_endpoint_t *endpoint)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 int
 coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                      oc_endpoint_t *endpoint)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 {
   coap_packet_t *const coap_req = (coap_packet_t *)request;
   coap_packet_t *const coap_res = (coap_packet_t *)response;
@@ -405,14 +405,14 @@ coap_observe_handler(void *request, void *response, oc_resource_t *resource,
     if (IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
       if (coap_req->observe == 0) {
         dup =
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
           add_observer(resource, block2_size, endpoint, coap_req->token,
                        coap_req->token_len, coap_req->uri_path,
                        coap_req->uri_path_len);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
           add_observer(resource, endpoint, coap_req->token, coap_req->token_len,
                        coap_req->uri_path, coap_req->uri_path_len);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
       } else if (coap_req->observe == 1) {
         dup = coap_remove_observer_by_token(endpoint, coap_req->token,
                                             coap_req->token_len);

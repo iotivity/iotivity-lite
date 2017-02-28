@@ -20,9 +20,9 @@
 #include "messaging/coap/constants.h"
 #include "oc_ri.h"
 #include <stdbool.h>
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
@@ -73,14 +73,14 @@ typedef struct oc_client_cb_s
   oc_method_t method;
 } oc_client_cb_t;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 bool oc_ri_invoke_client_cb(void *response,
                             oc_blockwise_state_t *response_state,
                             oc_client_cb_t *cb, oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                             oc_endpoint_t *endpoint);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
                                       oc_server_handle_t *server,

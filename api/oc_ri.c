@@ -37,9 +37,9 @@
 #include "oc_ri.h"
 #include "oc_uuid.h"
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
@@ -512,17 +512,17 @@ does_interface_support_method(oc_interface_mask_t interface, oc_method_t method)
   return supported;
 }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                  oc_blockwise_state_t *request_state,
                                  oc_blockwise_state_t *response_state,
                                  uint16_t block2_size, oc_endpoint_t *endpoint)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                                  oc_endpoint_t *endpoint)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 {
   /* Flags that capture status along various stages of processing
    *  the request.
@@ -551,16 +551,16 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_response_buffer_t response_buffer;
   oc_response_t response_obj;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #ifndef OC_SERVER
   (void)block2_size;
 #endif /* !OC_SERVER */
   response_buffer.buffer = response_state->buffer;
   response_buffer.buffer_size = OC_BLOCK_WISE_BUFFER_SIZE;
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_BLOCK_SIZE;
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
 
@@ -585,7 +585,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   const char *uri_query = 0;
   int uri_query_len = 0;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (request_state) {
     oc_blockwise_request_state_t *bwt_request_state =
       (oc_blockwise_request_state_t *)request_state;
@@ -594,7 +594,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       uri_query = oc_string(bwt_request_state->uri_query);
     }
   } else
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
   {
     uri_query_len = coap_get_header_uri_query(request, &uri_query);
   }
@@ -614,14 +614,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Obtain handle to buffer containing the serialized payload */
   const uint8_t *payload;
   int payload_len = 0;
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (request_state) {
     payload = request_state->buffer;
     payload_len = request_state->payload_size;
   }
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(request, &payload);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 
   if (payload_len > 0) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
@@ -816,13 +816,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
        * requesting client as an observer.
        */
       if (observe == 0) {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
                                  endpoint) == 0) {
-#else     /* OC_BLOCK_WISE_SET_MTU */
+#else     /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint) ==
             0) {
-#endif    /* !OC_BLOCK_WISE_SET_MTU */
+#endif    /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
            * notifications being sent). If so, add the resource to a list of
@@ -849,13 +849,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
        * is periodic observable.
        */
       else if (observe == 1) {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
                                  endpoint) > 0) {
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint) >
             0) {
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
           }
@@ -880,13 +880,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  * out-of-band upon availability of the resource state knows it must
  * send out a response with it.
  */
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     if (coap_separate_accept(request, response_obj.separate_response, endpoint,
                              observe, block2_size) == 1)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
     if (coap_separate_accept(request, response_obj.separate_response, endpoint,
                              observe) == 1)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
       response_obj.separate_response->active = 1;
   } else
 #endif /* OC_SERVER */
@@ -908,12 +908,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                                            &oc_observe_notification_delayed, 0);
 #endif /* OC_SERVER */
     if (response_buffer.response_length) {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
       response_state->payload_size = response_buffer.response_length;
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
       coap_set_header_content_format(response, APPLICATION_CBOR);
     }
 
@@ -955,7 +955,7 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
 oc_event_callback_retval_t
 oc_ri_remove_client_cb(void *data)
 {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   oc_client_cb_t *client_cb = (oc_client_cb_t *)data;
   oc_blockwise_state_t *response_buffer = oc_blockwise_find_response_buffer(
     oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
@@ -967,7 +967,7 @@ oc_ri_remove_client_cb(void *data)
     oc_blockwise_free_request_buffer(request_buffer);
   if (response_buffer)
     oc_blockwise_free_response_buffer(response_buffer);
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   free_client_cb(data);
   return DONE;
@@ -1015,15 +1015,15 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
   return cb;
 }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t *response_state,
                        oc_client_cb_t *cb, oc_endpoint_t *endpoint)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 bool
 oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                        oc_endpoint_t *endpoint)
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 {
   uint8_t *payload;
   int payload_len = 0;
@@ -1066,29 +1066,29 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     }
   }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (response_state) {
     oc_blockwise_response_state_t *bwt_response_state =
       (oc_blockwise_response_state_t *)response_state;
     client_response.observe_option = bwt_response_state->observe_seq;
   }
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 
   bool separate = false;
 /*
   if payload exists, process payload and save in client response
   send client response to callback and return
 */
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (response_state) {
     payload = response_state->buffer;
     payload_len = response_state->payload_size;
   }
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
   if (payload_len) {
     if (cb->discovery) {
       if (oc_ri_process_discovery_payload(payload, payload_len,

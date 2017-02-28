@@ -66,12 +66,12 @@
 #ifndef COAP_MAX_HEADER_SIZE /*     Hdr                  CoF  If-Match         \
                                 Obs Blo strings   */
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #define COAP_MAX_HEADER_SIZE                                                   \
   (4 + COAP_TOKEN_LEN + 3 + COAP_ETAG_LEN + 4 + 4 + 30)
-#else /* OC_BLOCK_WISE_SET_MTU */
+#else /* OC_BLOCK_WISE */
 #define COAP_MAX_HEADER_SIZE (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + 30)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 #endif /* COAP_MAX_HEADER_SIZE */
 
 /* Number of observer slots (each takes abot xxx bytes) */

@@ -262,11 +262,11 @@ oc_indicate_separate_response(oc_request_t *request,
 void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   oc_rep_new(handle->buffer, OC_BLOCK_WISE_BUFFER_SIZE);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 }
 
 void
@@ -294,7 +294,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
           coap_set_header_observe(response, 1);
         }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         oc_blockwise_state_t *response_state = 0;
         if (response_buffer.response_length > cur->block2_size) {
           response_state = oc_blockwise_find_response_buffer(
@@ -326,7 +326,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
             coap_set_header_etag(response, bwt_res_state->etag, COAP_ETAG_LEN);
           }
         } else
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
           if (response_buffer.response_length > 0) {
           coap_set_payload(response, handle->buffer,
                            response_buffer.response_length);
@@ -335,9 +335,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
         t->message->length = coap_serialize_message(response, t->message->data);
         coap_send_transaction(t);
       }
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     clear_separate_store:
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
       coap_separate_clear(handle, cur);
     } else {
       if (coap_notify_observers(NULL, &response_buffer, &cur->endpoint) == 0) {

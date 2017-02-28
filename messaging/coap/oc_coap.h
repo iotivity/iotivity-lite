@@ -24,11 +24,11 @@ struct oc_separate_response_s
 {
   OC_LIST_STRUCT(requests);
   int active;
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
   uint8_t buffer[OC_BLOCK_SIZE];
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 };
 
 struct oc_response_buffer_s
