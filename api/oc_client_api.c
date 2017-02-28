@@ -26,9 +26,9 @@ coap_packet_t request[1];
 oc_client_cb_t *client_cb;
 oc_string_t uri_query;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 static oc_blockwise_state_t *request_buffer;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 static bool
 dispatch_coap_request(void)
@@ -38,7 +38,7 @@ dispatch_coap_request(void)
   if ((client_cb->method == OC_PUT || client_cb->method == OC_POST) &&
       payload_size > 0) {
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     request_buffer->payload_size = payload_size;
     uint16_t block_size;
     if (payload_size > OC_BLOCK_SIZE) {
@@ -55,10 +55,10 @@ dispatch_coap_request(void)
       coap_set_payload(request, request_buffer->buffer, payload_size);
       request_buffer->ref_count = 0;
     }
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
     coap_set_payload(request, transaction->message->data + COAP_MAX_HEADER_SIZE,
                      payload_size);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
   }
 
   coap_set_header_content_format(request, APPLICATION_CBOR);
@@ -73,9 +73,9 @@ dispatch_coap_request(void)
 
   extern oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   request_buffer = 0;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   if (client_cb->observe_seq == -1) {
     if (client_cb->qos == LOW_QOS)
@@ -107,9 +107,9 @@ prepare_coap_request(oc_client_cb_t *cb)
     return false;
   }
 
-#ifndef OC_BLOCK_WISE_SET_MTU
+#ifndef OC_BLOCK_WISE
   oc_rep_new(transaction->message->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
-#else  /* !OC_BLOCK_WISE_SET_MTU */
+#else  /* !OC_BLOCK_WISE */
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->server.endpoint,
@@ -122,7 +122,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 
     request_buffer->mid = cb->mid;
   }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   coap_init_message(request, type, cb->method, cb->mid);
 

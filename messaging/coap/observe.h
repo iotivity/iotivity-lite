@@ -67,9 +67,9 @@ typedef struct coap_observer
   uint8_t token[COAP_TOKEN_LEN];
   uint16_t last_mid;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   uint16_t block2_size;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   int32_t obs_counter;
 
@@ -88,11 +88,11 @@ int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           oc_endpoint_t *endpoint);
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          uint16_t block2_size, oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 #endif /* OBSERVE_H */
