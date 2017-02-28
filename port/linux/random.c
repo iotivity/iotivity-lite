@@ -36,7 +36,6 @@ oc_random_value(void)
   unsigned int rand = 0;
   int ret = read(urandom_fd, &rand, sizeof(rand));
   assert(ret != -1);
-  (void)ret;
   return rand;
 }
 
