@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Lynx Technology
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,20 +14,12 @@
 // limitations under the License.
 */
 
-#include <arpa/inet.h>
-#include <assert.h>
-#include <errno.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
+#define WIN32_LEAN_AND_MEAN
+#include <malloc.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+
+#undef NO_ERROR
 
 #include "oc_buffer.h"
 #include "port/oc_connectivity.h"
@@ -43,9 +35,35 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
-static pthread_t event_thread;
-static pthread_mutex_t mutex;
 
+// the Windows critical section stuff is here,
+// because many definitions in <windows.h> collide with iotivity, e.g. INT, BOOL
+// etc. There is no conflict when only including oc_buffer.h
+
+static CRITICAL_SECTION cs;
+static CONDITION_VARIABLE cv;
+
+void
+infinite_wait_for_event()
+{
+  SleepConditionVariableCS(&cv, &cs, INFINITE);
+}
+
+void
+ms_wait_for_event(int ms)
+{
+  SleepConditionVariableCS(&cv, &cs, ms);
+}
+
+void
+event_has_arrived()
+{
+  WakeConditionVariable(&cv);
+}
+
+static HANDLE thread_handle;
+static DWORD event_thread;
+static HANDLE mutex;
 static struct sockaddr_storage mcast, server, client;
 static int server_sock = -1, mcast_sock = -1, terminate;
 #ifdef OC_IPV4
@@ -72,22 +90,57 @@ oc_connectivity_get_dtls_port(void)
 void
 oc_network_event_handler_mutex_init(void)
 {
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
+  mutex = CreateMutex(NULL, FALSE, NULL);
+  if (mutex == NULL) {
     LOG("ERROR initializing network event handler mutex\n");
+    abort_impl();
   }
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
 }
 
 void
 oc_network_event_handler_mutex_lock(void)
 {
-  pthread_mutex_lock(&mutex);
+  WaitForSingleObject(mutex, 0);
 }
 
 void
 oc_network_event_handler_mutex_unlock(void)
 {
-  pthread_mutex_unlock(&mutex);
+  ReleaseMutex(mutex);
 }
+
+#ifdef OC_DEBUG
+static int32_t
+hexdump(const void *const buf, const size_t len)
+{
+  FILE *const fp = stderr;
+  const uint32_t indent = 5;
+  const unsigned char *p = (unsigned char *)buf;
+  size_t i, j;
+
+  if (NULL == buf || 0 == len || NULL == fp)
+    return -1;
+
+  for (j = 0; j < indent; ++j)
+    fputc(' ', fp);
+  for (i = 0; i < len; ++i) {
+    fprintf(fp, "%02X", p[i]);
+    if (0 == ((i + 1) & (0x0f)) && i + 1 < len) {
+      fputc('\n', fp);
+      for (j = 0; j < indent; ++j)
+        fputc(' ', fp);
+    } else
+      fputc(' ', fp);
+  }
+  fputc('\n', fp);
+
+  fflush(fp);
+
+  return 0;
+}
+#endif
 
 static void *
 network_event_thread(void *data)
@@ -132,16 +185,18 @@ network_event_thread(void *data)
       }
 
       if (FD_ISSET(server_sock, &setfds)) {
-        message->length = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV6;
         FD_CLR(server_sock, &setfds);
         goto common;
       }
 
       if (FD_ISSET(mcast_sock, &setfds)) {
-        message->length = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV6;
         FD_CLR(mcast_sock, &setfds);
         goto common;
@@ -149,16 +204,18 @@ network_event_thread(void *data)
 
 #ifdef OC_IPV4
       if (FD_ISSET(server4_sock, &setfds)) {
-        message->length = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV4;
         FD_CLR(server4_sock, &setfds);
         goto common;
       }
 
       if (FD_ISSET(mcast4_sock, &setfds)) {
-        message->length = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV4;
         FD_CLR(mcast4_sock, &setfds);
         goto common;
@@ -167,14 +224,16 @@ network_event_thread(void *data)
 
 #ifdef OC_SECURITY
       if (FD_ISSET(secure_sock, &setfds)) {
-        message->length = recvfrom(secure_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(secure_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV6 | SECURED;
       }
 #ifdef OC_IPV4
       if (FD_ISSET(secure4_sock, &setfds)) {
-        message->length = recvfrom(secure4_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(secure4_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        message->length = count < 0 ? 0 : count;
         message->endpoint.flags = IPV4 | SECURED;
       }
 #endif
@@ -199,12 +258,16 @@ network_event_thread(void *data)
       PRINT("Incoming message from ");
       PRINTipaddr(message->endpoint);
       PRINT("\n");
+#ifdef OC_DEBUG
+      hexdump(message->data, message->length);
+#endif
 
       oc_network_event(message);
     }
   }
 
-  pthread_exit(NULL);
+  CloseHandle(mutex);
+  return NULL;
 }
 
 void
@@ -275,32 +338,110 @@ oc_send_buffer(oc_message_t *message)
         PRINT("sendto() returned errno %d\n", errno);
         return;
       }
+
       bytes_sent += x;
     }
     PRINT("Sent %d bytes\n", bytes_sent);
   }
 }
 
-#ifdef OC_CLIENT
+static int
+get_network_interfaces(struct sockaddr ifa_addr[], int nic_size)
+{
+#ifdef DEBUG
+  char longname[50] = { 0 };
+  char dotname[INET6_ADDRSTRLEN] = { 0 };
+#endif
+  IP_ADAPTER_ADDRESSES *info = NULL;
+  ULONG info_size = 0;
 
+  int nCount = 0;
+
+  if (ifa_addr == NULL || nic_size == 0)
+    return 0;
+
+  memset(ifa_addr, 0, nic_size * sizeof(*ifa_addr));
+
+  // Gets the number of bytes needed to store all currently active adapter-info.
+  GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, NULL,
+                       &info_size);
+
+  if (info_size == 0 || (info = calloc(1, info_size)) == NULL)
+    goto cleanup;
+
+  if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, info,
+                           &info_size) != NO_ERROR)
+    goto cleanup;
+
+  IP_ADAPTER_ADDRESSES *adapter = NULL;
+  for (adapter = info; nCount < nic_size && adapter != NULL;
+       adapter = adapter->Next) {
+    IP_ADAPTER_UNICAST_ADDRESS *address = NULL;
+
+    if (IfOperStatusUp != adapter->OperStatus)
+      continue;
+
+    for (address = adapter->FirstUnicastAddress; nCount < nic_size && address;
+         address = address->Next) {
+      if (address->Address.lpSockaddr->sa_family == AF_INET) {
+        memcpy(&ifa_addr[nCount], address->Address.lpSockaddr,
+               sizeof(struct sockaddr_in));
+#ifdef DEBUG
+        getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in), dotname,
+                    sizeof(dotname), NULL, 0, NI_NUMERICHOST);
+        if (adapter->FriendlyName) {
+          WideCharToMultiByte(CP_UTF8, 0, adapter->FriendlyName,
+                              wcslen(adapter->FriendlyName), longname,
+                              sizeof(longname), NULL, NULL);
+          PRINT("%s %s\n", dotname, longname);
+        }
+#endif
+      } else if (address->Address.lpSockaddr->sa_family == AF_INET6) {
+        memcpy(&ifa_addr[nCount], address->Address.lpSockaddr,
+               sizeof(struct sockaddr_in6));
+#ifdef DEBUG
+        getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in6), dotname,
+                    sizeof(dotname), NULL, 0, NI_NUMERICHOST);
+        if (adapter->FriendlyName) {
+          WideCharToMultiByte(CP_UTF8, 0, adapter->FriendlyName,
+                              wcslen(adapter->FriendlyName), longname,
+                              sizeof(longname), NULL, NULL);
+          PRINT("%s %s\n", dotname, longname);
+        }
+#endif
+      } else {
+        continue; // only AF_INET and AF_INET6
+      }
+      nCount++;
+    }
+  }
+
+cleanup:
+  free(info);
+
+  return nCount;
+}
+
+#ifdef OC_CLIENT
 void
 oc_send_discovery_request(oc_message_t *message)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
+#define MAX_ADDRS 10
+  struct sockaddr ifa_addrs[MAX_ADDRS];
+  int i, count;
+
+  count = get_network_interfaces(ifa_addrs, MAX_ADDRS);
+  if (count <= 0) {
     LOG("error querying interfaces: %d\n", errno);
     goto done;
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
-      continue;
-    if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
-        interface->ifa_addr->sa_family == AF_INET6) {
-      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
+  for (i = 0; i < count; i++) {
+    if (message->endpoint.flags & IPV6 && ifa_addrs[i].sa_family == AF_INET6) {
+      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifa_addrs[i];
       if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
         int mif = addr->sin6_scope_id;
-        if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
-                       sizeof(mif)) == -1) {
+        if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                       (char *)&mif, sizeof(mif)) == -1) {
           LOG("ERROR setting socket option for default IPV6_MULTICAST_IF: %d\n",
               errno);
           goto done;
@@ -308,11 +449,11 @@ oc_send_discovery_request(oc_message_t *message)
         oc_send_buffer(message);
       }
 #ifdef OC_IPV4
-    } else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
-               interface->ifa_addr->sa_family == AF_INET) {
-      struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
-      if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
-                     sizeof(addr->sin_addr)) == -1) {
+    } else if (message->endpoint.flags & IPV4 &&
+               ifa_addrs[i].sa_family == AF_INET) {
+      struct sockaddr_in *addr = (struct sockaddr_in *)&ifa_addrs[i];
+      if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF,
+                     (char *)&addr->sin_addr, sizeof(addr->sin_addr)) == -1) {
         LOG("ERROR setting socket option for default IP_MULTICAST_IF: %d\n",
             errno);
         goto done;
@@ -323,8 +464,7 @@ oc_send_discovery_request(oc_message_t *message)
     }
 #endif
   }
-done:
-  freeifaddrs(ifs);
+done:;
 }
 #endif /* OC_CLIENT */
 
@@ -375,32 +515,32 @@ connectivity_ipv4_init(void)
   struct ip_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  if (setsockopt(mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
+  if (setsockopt(mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq,
                  sizeof(mreq)) == -1) {
     LOG("ERROR joining IPv4 multicast group %d\n", errno);
     return -1;
   }
 
   int reuse = 1;
-  if (setsockopt(mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ==
-      -1) {
+  if (setsockopt(mcast4_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
+                 sizeof(reuse)) == -1) {
     LOG("ERROR setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
   if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1) {
-    LOG("ERROR binding mcast IPv4 socket %d\n", errno);
+    LOG("ERROR binding IPv4 secure socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
-  if (setsockopt(secure4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
+  if (setsockopt(secure4_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
                  sizeof(reuse)) == -1) {
     LOG("ERROR setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
 
   if (bind(secure4_sock, (struct sockaddr *)&secure4, sizeof(secure4)) == -1) {
-    LOG("ERROR binding IPv4 secure socket %d\n", errno);
+    LOG("ERROR binding smcast IPv4 socket %d\n", errno);
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -417,7 +557,7 @@ add_mcast_sock_to_ipv6_multicast_group(const uint8_t *addr)
   struct ipv6_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
                  sizeof(mreq)) == -1) {
     LOG("ERROR joining IPv6 multicast group %d\n", errno);
     return -1;
@@ -428,6 +568,9 @@ add_mcast_sock_to_ipv6_multicast_group(const uint8_t *addr)
 int
 oc_connectivity_init(void)
 {
+  WSADATA wsadata;
+  WSAStartup(MAKEWORD(2, 2), &wsadata);
+
   memset(&mcast, 0, sizeof(struct sockaddr_storage));
   memset(&server, 0, sizeof(struct sockaddr_storage));
 
@@ -481,8 +624,8 @@ oc_connectivity_init(void)
   }
 
   int reuse = 1;
-  if (setsockopt(mcast_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ==
-      -1) {
+  if (setsockopt(mcast_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
+                 sizeof(reuse)) == -1) {
     LOG("ERROR setting reuseaddr option %d\n", errno);
     return -1;
   }
@@ -492,13 +635,13 @@ oc_connectivity_init(void)
   }
 
 #ifdef OC_SECURITY
-  if (setsockopt(secure_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
+  if (setsockopt(secure_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
                  sizeof(reuse)) == -1) {
     LOG("ERROR setting reuseaddr option %d\n", errno);
     return -1;
   }
   if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1) {
-    LOG("ERROR binding IPv6 secure socket %d\n", errno);
+    LOG("ERROR binding IPv4 secure socket %d\n", errno);
     return -1;
   }
 
@@ -516,7 +659,9 @@ oc_connectivity_init(void)
     PRINT("Could not initialize IPv4\n");
 #endif
 
-  if (pthread_create(&event_thread, NULL, &network_event_thread, NULL) != 0) {
+  thread_handle = CreateThread(
+    0, 0, (LPTHREAD_START_ROUTINE)network_event_thread, NULL, 0, &event_thread);
+  if (thread_handle == NULL) {
     LOG("ERROR creating network polling thread\n");
     return -1;
   }
@@ -531,23 +676,33 @@ oc_connectivity_shutdown(void)
 {
   terminate = 1;
 
-  close(server_sock);
-  close(mcast_sock);
+  closesocket(server_sock);
+  closesocket(mcast_sock);
 
 #ifdef OC_IPV4
-  close(server4_sock);
-  close(mcast4_sock);
+  closesocket(server4_sock);
+  closesocket(mcast4_sock);
 #endif /* OC_IPV4 */
 
 #ifdef OC_SECURITY
-  close(secure_sock);
+  closesocket(secure_sock);
 #ifdef OC_IPV4
-  close(secure4_sock);
+  closesocket(secure4_sock);
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
-  pthread_cancel(event_thread);
-  pthread_join(event_thread, NULL);
+#ifdef OC_IPV4
+  closesocket(server4_sock);
+  closesocket(mcast4_sock);
+
+#ifdef OC_SECURITY
+  closesocket(secure4_sock);
+#endif /* OC_SECURITY */
+#endif
+
+  WaitForSingleObject(thread_handle, INFINITE);
+  TerminateThread(thread_handle, 0);
+  WSACleanup();
 
   LOG("oc_connectivity_shutdown\n");
 }

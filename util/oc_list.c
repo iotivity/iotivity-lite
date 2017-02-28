@@ -135,9 +135,6 @@ oc_list_add(oc_list_t list, void *item)
 {
   struct list *l;
 
-  /* Make sure not to add the same element twice */
-  oc_list_remove(list, item);
-
   ((struct list *)item)->next = NULL;
 
   l = oc_list_tail(list);
@@ -229,26 +226,13 @@ oc_list_pop(oc_list_t list)
 void
 oc_list_remove(oc_list_t list, void *item)
 {
-  struct list *l, *r;
+  struct list **l;
 
-  if (*list == NULL) {
-    return;
-  }
-
-  r = NULL;
-  for (l = *list; l != NULL; l = l->next) {
-    if (l == item) {
-      if (r == NULL) {
-        /* First on list */
-        *list = l->next;
-      } else {
-        /* Not first on list */
-        r->next = l->next;
-      }
-      l->next = NULL;
+  for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
+    if (*l == item) {
+      *l = (*l)->next;
       return;
     }
-    r = l;
   }
 }
 /*---------------------------------------------------------------------------*/

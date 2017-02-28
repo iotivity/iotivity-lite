@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Lynx Technology
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,32 +15,23 @@
 */
 
 #include "port/oc_random.h"
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-static int urandom_fd;
+#include <windows.h>
 
 void
 oc_random_init(void)
 {
-  urandom_fd = open("/dev/urandom", O_RDONLY);
+  srand((unsigned)GetTickCount());
 }
 
 unsigned int
 oc_random_value(void)
 {
-  unsigned int rand = 0;
-  int ret = read(urandom_fd, &rand, sizeof(rand));
-  assert(ret != -1);
-  return rand;
+  unsigned int val = 0;
+  rand_s(&val);
+  return val;
 }
 
 void
 oc_random_destroy()
 {
-  close(urandom_fd);
 }
