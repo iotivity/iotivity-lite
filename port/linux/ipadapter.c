@@ -260,25 +260,18 @@ oc_send_buffer(oc_message_t *message)
   }
 #endif /* !OC_IPV4 */
 
-  fd_set wfds;
-  FD_ZERO(&wfds);
-  FD_SET(send_sock, &wfds);
-
-  int n = select(FD_SETSIZE, NULL, &wfds, NULL, NULL);
-  if (n > 0) {
-    int bytes_sent = 0, x;
-    while (bytes_sent < (int)message->length) {
-      x = sendto(send_sock, message->data + bytes_sent,
-                 message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
-                 sizeof(receiver));
-      if (x < 0) {
-        PRINT("sendto() returned errno %d\n", errno);
-        return;
-      }
-      bytes_sent += x;
+  int bytes_sent = 0, x;
+  while (bytes_sent < (int)message->length) {
+    x = sendto(send_sock, message->data + bytes_sent,
+        message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
+        sizeof(receiver));
+    if (x < 0) {
+      PRINT("sendto() returned errno %d\n", errno);
+      return;
     }
-    PRINT("Sent %d bytes\n", bytes_sent);
+    bytes_sent += x;
   }
+  PRINT("Sent %d bytes\n", bytes_sent);
 }
 
 #ifdef OC_CLIENT
