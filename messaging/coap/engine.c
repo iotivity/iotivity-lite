@@ -528,21 +528,23 @@ free_blockwise_buffers:
 send_message:
   if (coap_status_code == NO_ERROR) {
     if (transaction) {
-#ifdef OC_CLIENT
       if (response->type != COAP_TYPE_RST && message->token_len) {
-        int i = 0;
-        uint32_t r;
-        while (i < COAP_TOKEN_LEN) {
-          r = oc_random_value();
-          memcpy(response->token + i, &r, sizeof(r));
-          i += sizeof(r);
+        if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
+          coap_set_token(response, message->token, message->token_len);
         }
-        response->token_len = i;
+#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE_SET_MTU)
+        else {
+          int i = 0;
+          uint32_t r;
+          while (i < COAP_TOKEN_LEN) {
+            r = oc_random_value();
+            memcpy(response->token + i, &r, sizeof(r));
+            i += sizeof(r);
+          }
+          response->token_len = i;
+        }
+#endif /* OC_CLIENT && OC_BLOCK_WISE_SET_MTU */
       }
-#else  /* OC_CLIENT */
-      if (response->type != COAP_TYPE_RST && message->token_len)
-        coap_set_token(response, message->token, message->token_len);
-#endif /* !OC_CLIENT */
 
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
