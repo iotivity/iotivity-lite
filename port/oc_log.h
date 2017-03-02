@@ -48,10 +48,20 @@
   } while (0)
 
 #if OC_DEBUG
-#define LOG(...) PRINT(__VA_ARGS__)
+#define OC_LOG(level, ...)                                                     \
+  do {                                                                         \
+    PRINT("%s: %s <%s:%d>: ", level, __FILE__, __FUNCTION__, __LINE__);        \
+    PRINT(__VA_ARGS__);                                                        \
+  } while (0)
 #define LOGipaddr(endpoint) PRINTipaddr(endpoint)
+#define OC_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
+#define OC_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
+#define OC_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
 #else
-#define LOG(...)
+#define OC_LOG(...)
+#define OC_DBG(...)
+#define OC_WRN(...)
+#define OC_ERR(...)
 #define LOGipaddr(endpoint)
 #endif
 

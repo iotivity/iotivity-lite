@@ -107,7 +107,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   coap_status_code = CLEAR_TRANSACTION;
   /* send separate ACK for CON */
   if (coap_req->type == COAP_TYPE_CON) {
-    LOG("Sending ACK for separate response\n");
+    OC_DBG("Sending ACK for separate response\n");
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
