@@ -49,7 +49,7 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
   if (peer) {
-    LOG("\n\noc_sec_dtls: removed peer\n\n");
+    OC_DBG("\n\noc_sec_dtls: removed peer\n\n");
     oc_list_remove(dtls_peers, peer);
     oc_memb_free(&dtls_peers_s, peer);
   }
@@ -58,24 +58,24 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint)
 oc_event_callback_retval_t
 oc_sec_dtls_inactive(void *data)
 {
-  LOG("\n\noc_sec_dtls: DTLS inactivity callback\n\n");
+  OC_DBG("\n\noc_sec_dtls: DTLS inactivity callback\n\n");
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(data);
   if (peer) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
     if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
-      LOG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
+      OC_DBG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
     } else {
-      LOG("\n\noc_sec_dtls: Closing DTLS connection\n\n");
+      OC_DBG("\n\noc_sec_dtls: Closing DTLS connection\n\n");
       oc_sec_dtls_close_init(data);
       oc_sec_dtls_close_finish(data);
     }
   } else {
-    LOG("\n\noc_sec_dtls: Could not find peer\n\n");
-    LOG("oc_sec_dtls: Num active peers %d\n", oc_list_length(dtls_peers));
+    OC_DBG("\n\noc_sec_dtls: Could not find peer\n\n");
+    OC_DBG("oc_sec_dtls: Num active peers %d\n", oc_list_length(dtls_peers));
   }
-  LOG("\n\noc_sec_dtls: Terminating DTLS inactivity callback\n\n");
+  OC_DBG("\n\noc_sec_dtls: Terminating DTLS inactivity callback\n\n");
   return DONE;
 }
 
@@ -86,7 +86,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
   if (!peer) {
     peer = oc_memb_alloc(&dtls_peers_s);
     if (peer) {
-      LOG("\n\noc_sec_dtls: Allocating new DTLS peer\n\n");
+      OC_DBG("\n\noc_sec_dtls: Allocating new DTLS peer\n\n");
       memcpy(&peer->session.addr, endpoint, sizeof(oc_endpoint_t));
       peer->session.size = sizeof(oc_endpoint_t);
       OC_LIST_STRUCT_INIT(peer, send_queue);
@@ -145,7 +145,7 @@ oc_sec_dtls_init_connection(oc_message_t *message)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_add_peer(&message->endpoint);
   if (peer) {
-    LOG("\n\noc_dtls: Initializing DTLS connection\n\n");
+    OC_DBG("\n\noc_dtls: Initializing DTLS connection\n\n");
     dtls_connect(ocf_dtls_context, &peer->session);
     oc_list_add(peer->send_queue, message);
   } else
@@ -212,13 +212,13 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx, const session_t *session,
   switch (type) {
   case DTLS_PSK_IDENTITY:
   case DTLS_PSK_HINT: {
-    LOG("Identity\n");
+    OC_DBG("Identity\n");
     oc_uuid_t *uuid = oc_core_get_device_id(0);
     memcpy(result, uuid->id, 16);
     return 16;
   } break;
   case DTLS_PSK_KEY: {
-    LOG("key\n");
+    OC_DBG("key\n");
     oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t *)desc);
     oc_sec_dtls_peer_t *peer =
       oc_sec_dtls_get_peer((oc_endpoint_t *)&session->addr);
@@ -307,10 +307,10 @@ oc_sec_dtls_init_context(void)
   ocf_dtls_context = dtls_new_context(NULL);
 
   if (oc_sec_provisioned()) {
-    LOG("\n\noc_sec_dtls: Device in normal operation state\n\n");
+    OC_DBG("\n\noc_sec_dtls: Device in normal operation state\n\n");
     dtls_select_cipher(ocf_dtls_context, TLS_PSK_WITH_AES_128_CCM_8);
   } else {
-    LOG("\n\noc_sec_dtls: Device in ready for OTM state\n\n");
+    OC_DBG("\n\noc_sec_dtls: Device in ready for OTM state\n\n");
     dtls_enables_anon_ecdh(ocf_dtls_context, DTLS_CIPHER_ENABLE);
   }
   dtls_set_handler(ocf_dtls_context, &dtls_cb);
@@ -326,7 +326,7 @@ oc_sec_dtls_close_init(oc_endpoint_t *endpoint)
       dtls_close(ocf_dtls_context, &p->session);
       oc_message_t *m = oc_list_pop(p->send_queue);
       while (m != NULL) {
-        LOG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
+        OC_DBG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
         oc_message_unref(m);
         m = oc_list_pop(p->send_queue);
       }
@@ -347,7 +347,7 @@ oc_sec_dtls_close_finish(oc_endpoint_t *endpoint)
     }
     oc_message_t *m = oc_list_pop(p->send_queue);
     while (m != NULL) {
-      LOG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
+      OC_DBG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
       oc_message_unref(m);
       m = oc_list_pop(p->send_queue);
     }
