@@ -28,7 +28,7 @@ void abort_impl(void);
 
 #define oc_abort(msg)                                                          \
   do {                                                                         \
-    LOG("\n%s:%d:%s: error: %s\nAbort.\n", __FILE__, __LINE__, __func__, msg); \
+    OC_ERR("\n%s\nAbort.\n", msg);                                             \
     abort_impl();                                                              \
   } while (0)
 

@@ -82,7 +82,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
   if (t) {
     oc_message_t *message = oc_allocate_message();
     if (message) {
-      LOG("Created new transaction %d %d\n", mid, message->length);
+      OC_DBG("Created new transaction %d %d\n", mid, message->length);
       t->mid = mid;
       t->retrans_counter = 0;
 
@@ -107,7 +107,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  LOG("Sending transaction %u\n", t->mid);
+  OC_DBG("Sending transaction %u\n", t->mid);
   bool confirmable = false;
 
   confirmable =
@@ -119,17 +119,17 @@ coap_send_transaction(coap_transaction_t *t)
   if (confirmable) {
     if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
-      LOG("Keeping transaction %u\n", t->mid);
+      OC_DBG("Keeping transaction %u\n", t->mid);
 
       if (t->retrans_counter == 0) {
         t->retrans_timer.timer.interval =
           COAP_RESPONSE_TIMEOUT_TICKS +
           (oc_random_value() %
            (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        LOG("Initial interval %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Initial interval %d\n", t->retrans_timer.timer.interval);
       } else {
         t->retrans_timer.timer.interval <<= 1; /* double */
-        LOG("Doubled %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Doubled %d\n", t->retrans_timer.timer.interval);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
@@ -143,10 +143,10 @@ coap_send_transaction(coap_transaction_t *t)
       t = NULL;
     } else {
       /* timed out */
-      LOG("Timeout\n");
+      OC_DBG("Timeout\n");
 
 #ifdef OC_SERVER
-      LOG("timeout.. so removing observers\n");
+      OC_DBG("timeout.. so removing observers\n");
       /* handle observers */
       coap_remove_observer_by_client(&t->message->endpoint);
 #endif /* OC_SERVER */
@@ -175,7 +175,7 @@ void
 coap_clear_transaction(coap_transaction_t *t)
 {
   if (t) {
-    LOG("Freeing transaction %u: %p\n", t->mid, t);
+    OC_DBG("Freeing transaction %u: %p\n", t->mid, t);
 
     oc_etimer_stop(&t->retrans_timer);
     oc_message_unref(t->message);
@@ -191,7 +191,7 @@ coap_get_transaction_by_mid(uint16_t mid)
   for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
        t = t->next) {
     if (t->mid == mid) {
-      LOG("Found transaction for MID %u: %p\n", t->mid, t);
+      OC_DBG("Found transaction for MID %u: %p\n", t->mid, t);
       return t;
     }
   }
@@ -208,7 +208,7 @@ coap_check_transactions(void)
        t = t->next) {
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
-      LOG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
+      OC_DBG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
       coap_send_transaction(t);
     }
   }
