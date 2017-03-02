@@ -51,7 +51,7 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     return;
   }
 
-  LOG("ipadapter: No free RX/TX buffers to handle incoming message\n");
+  OC_WRN("ipadapter: No free RX/TX buffers to handle incoming message\n");
 }
 
 static void
@@ -59,7 +59,8 @@ receive(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
         uint16_t sender_port, const uip_ipaddr_t *receiver_addr,
         uint16_t receiver_port, const uint8_t *data, uint16_t datalen)
 {
-  LOG("ipadapter: Incoming message from network...dispatch for processing\n");
+  OC_DBG(
+    "ipadapter: Incoming message from network...dispatch for processing\n");
   handle_incoming_message((uint8_t *)data, datalen, (uint8_t *)sender_addr,
                           sender_port);
 }
@@ -79,9 +80,9 @@ set_global_address(void)
   uip_ip6addr(&mcast, 0xff02, 0, 0, 0, 0, 0, 0, 0x0158);
   uip_ds6_maddr_t *rv = uip_ds6_maddr_add(&mcast);
   if (rv)
-    LOG("Joined OCF multicast group\n");
+    OC_DBG("Joined OCF multicast group\n");
   else
-    LOG("Failed to join OCF multicast group\n");
+    OC_WRN("Failed to join OCF multicast group\n");
 
   return &ipaddr;
 }
@@ -98,9 +99,9 @@ create_rpl_dag(uip_ipaddr_t *ipaddr)
     dag = rpl_get_any_dag();
     uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
     rpl_set_prefix(dag, &prefix, 64);
-    LOG("Created new RPL DAG\n");
+    OC_DBG("Created new RPL DAG\n");
   } else {
-    LOG("Failed to create new RPL DAG\n");
+    OC_WRN("Failed to create new RPL DAG\n");
   }
 }
 
@@ -118,7 +119,7 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
 
   simple_udp_register(&server, OCF_SERVER_PORT_UNSECURED, NULL, 0, receive);
 
-  LOG("ipadapter: Initialized ip_adapter_process\n");
+  OC_DBG("ipadapter: Initialized ip_adapter_process\n");
   while (ev != PROCESS_EVENT_EXIT) {
     PROCESS_WAIT_EVENT();
   }
