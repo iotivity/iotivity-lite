@@ -155,7 +155,7 @@ static void
 call_process(struct oc_process *p, oc_process_event_t ev,
              oc_process_data_t data)
 {
-  int ret;
+  int ret = 0;
 
   if ((p->state & OC_PROCESS_STATE_RUNNING) && p->thread != NULL) {
     oc_process_current = p;

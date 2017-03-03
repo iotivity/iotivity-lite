@@ -66,8 +66,8 @@ oc_memb_alloc(struct oc_memb *m)
 char
 oc_memb_free(struct oc_memb *m, void *ptr)
 {
-  int i;
-  char *ptr2;
+  int i = 0;
+  char *ptr2 = NULL;
 
   /* Walk through the list of blocks and try to find the block to
      which the pointer "ptr" points to. */
