@@ -72,7 +72,8 @@ oc_connectivity_get_dtls_port(void)
 void
 oc_network_event_handler_mutex_init(void)
 {
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
+  if (pthread_mutex_init(&mutex, NULL) != 0)
+  {
     OC_ERR("initializing network event handler mutex\n");
   }
 }
@@ -118,20 +119,24 @@ network_event_thread(void *data)
 #endif
 #endif
 
-  int i, n;
+  int i = 0, n = 0;
 
-  while (!terminate) {
+  while (!terminate)
+  {
     setfds = rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
       oc_message_t *message = oc_allocate_message();
 
-      if (!message) {
+      if (!message)
+      {
         break;
       }
 
-      if (FD_ISSET(server_sock, &setfds)) {
+      if (FD_ISSET(server_sock, &setfds))
+      {
         message->length = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV6;
@@ -139,7 +144,8 @@ network_event_thread(void *data)
         goto common;
       }
 
-      if (FD_ISSET(mcast_sock, &setfds)) {
+      if (FD_ISSET(mcast_sock, &setfds))
+      {
         message->length = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV6;
@@ -148,7 +154,8 @@ network_event_thread(void *data)
       }
 
 #ifdef OC_IPV4
-      if (FD_ISSET(server4_sock, &setfds)) {
+      if (FD_ISSET(server4_sock, &setfds))
+      {
         message->length = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV4;
@@ -156,7 +163,8 @@ network_event_thread(void *data)
         goto common;
       }
 
-      if (FD_ISSET(mcast4_sock, &setfds)) {
+      if (FD_ISSET(mcast4_sock, &setfds))
+      {
         message->length = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV4;
@@ -166,13 +174,15 @@ network_event_thread(void *data)
 #endif
 
 #ifdef OC_SECURITY
-      if (FD_ISSET(secure_sock, &setfds)) {
+      if (FD_ISSET(secure_sock, &setfds))
+      {
         message->length = recvfrom(secure_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV6 | SECURED;
       }
 #ifdef OC_IPV4
-      if (FD_ISSET(secure4_sock, &setfds)) {
+      if (FD_ISSET(secure4_sock, &setfds))
+      {
         message->length = recvfrom(secure4_sock, message->data, OC_PDU_SIZE, 0,
                                    (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV4 | SECURED;
@@ -182,13 +192,15 @@ network_event_thread(void *data)
 
     common:
 #ifdef OC_IPV4
-      if (message->endpoint.flags & IPV4) {
+      if (message->endpoint.flags & IPV4)
+      {
         memcpy(message->endpoint.addr.ipv4.address, &c4->sin_addr.s_addr,
                sizeof(c4->sin_addr.s_addr));
         message->endpoint.addr.ipv4.port = ntohs(c4->sin_port);
       } else if (message->endpoint.flags & IPV6) {
 #else
-      if (message->endpoint.flags & IPV6) {
+      if (message->endpoint.flags & IPV6)
+      {
 #endif
         memcpy(message->endpoint.addr.ipv6.address, c->sin6_addr.s6_addr,
                sizeof(c->sin6_addr.s6_addr));
@@ -216,16 +228,17 @@ oc_send_buffer(oc_message_t *message)
 
   struct sockaddr_storage receiver;
 #ifdef OC_IPV4
-  if (message->endpoint.flags & IPV4) {
+  if (message->endpoint.flags & IPV4)
+  {
     struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
     memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
            sizeof(r->sin_addr.s_addr));
     r->sin_family = AF_INET;
     r->sin_port = htons(message->endpoint.addr.ipv4.port);
-  } else {
-#else
-  {
+  }
+  else
 #endif
+  {
     struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
     memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
            sizeof(r->sin6_addr.s6_addr));
@@ -236,22 +249,30 @@ oc_send_buffer(oc_message_t *message)
   int send_sock = -1;
 
 #ifdef OC_SECURITY
-  if (message->endpoint.flags & SECURED) {
+  if (message->endpoint.flags & SECURED)
+  {
 #ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4) {
+    if (message->endpoint.flags & IPV4)
+    {
       send_sock = secure4_sock;
-    } else {
+    }
+    else
+    {
       send_sock = secure_sock;
     }
 #else
     send_sock = secure_sock;
 #endif
-  } else
+  }
+  else
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4) {
+  if (message->endpoint.flags & IPV4)
+  {
     send_sock = server4_sock;
-  } else {
+  }
+  else
+  {
     send_sock = server_sock;
   }
 #else  /* OC_IPV4 */
@@ -260,12 +281,14 @@ oc_send_buffer(oc_message_t *message)
   }
 #endif /* !OC_IPV4 */
 
-  int bytes_sent = 0, x;
-  while (bytes_sent < (int)message->length) {
+  int bytes_sent = 0, x = 0;
+  while (bytes_sent < (int)message->length)
+  {
     x = sendto(send_sock, message->data + bytes_sent,
         message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
         sizeof(receiver));
-    if (x < 0) {
+    if (x < 0)
+    {
       PRINT("sendto() returned errno %d\n", errno);
       return;
     }
@@ -280,20 +303,27 @@ void
 oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
+  if (getifaddrs(&ifs) < 0)
+  {
     OC_ERR("querying interfaces: %d\n", errno);
     goto done;
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next)
+  {
     if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+    {
       continue;
+    }
     if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
-        interface->ifa_addr->sa_family == AF_INET6) {
+        interface->ifa_addr->sa_family == AF_INET6)
+    {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
-      if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
+      if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr))
+      {
         int mif = addr->sin6_scope_id;
         if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
-                       sizeof(mif)) == -1) {
+                       sizeof(mif)) == -1)
+        {
           OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
                  errno);
           goto done;
@@ -301,11 +331,14 @@ oc_send_discovery_request(oc_message_t *message)
         oc_send_buffer(message);
       }
 #ifdef OC_IPV4
-    } else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
-               interface->ifa_addr->sa_family == AF_INET) {
+    }
+    else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
+               interface->ifa_addr->sa_family == AF_INET)
+    {
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
       if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
-                     sizeof(addr->sin_addr)) == -1) {
+                     sizeof(addr->sin_addr)) == -1)
+      {
         OC_ERR("setting socket option for default IP_MULTICAST_IF: %d\n",
                errno);
         goto done;
@@ -346,7 +379,8 @@ connectivity_ipv4_init(void)
   sm->sin_addr.s_addr = INADDR_ANY;
 
   secure4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (secure4_sock < 0) {
+  if (secure4_sock < 0)
+  {
     OC_ERR("creating secure IPv4 socket\n");
     return -1;
   }
@@ -355,12 +389,14 @@ connectivity_ipv4_init(void)
   server4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (server4_sock < 0 || mcast4_sock < 0) {
+  if (server4_sock < 0 || mcast4_sock < 0)
+  {
     OC_ERR("creating IPv4 server sockets\n");
     return -1;
   }
 
-  if (bind(server4_sock, (struct sockaddr *)&server4, sizeof(server4)) == -1) {
+  if (bind(server4_sock, (struct sockaddr *)&server4, sizeof(server4)) == -1)
+  {
     OC_ERR("binding server4 socket %d\n", errno);
     return -1;
   }
@@ -369,30 +405,35 @@ connectivity_ipv4_init(void)
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   if (setsockopt(mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
+                 sizeof(mreq)) == -1)
+  {
     OC_ERR("joining IPv4 multicast group %d\n", errno);
     return -1;
   }
 
   int reuse = 1;
   if (setsockopt(mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == -1)
+  {
     OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
-  if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1) {
+  if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1)
+  {
     OC_ERR("binding mcast IPv4 socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(secure4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == -1)
+  {
     OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
 
-  if (bind(secure4_sock, (struct sockaddr *)&secure4, sizeof(secure4)) == -1) {
+  if (bind(secure4_sock, (struct sockaddr *)&secure4, sizeof(secure4)) == -1)
+  {
     OC_ERR("binding IPv4 secure socket %d\n", errno);
     return -1;
   }
@@ -411,7 +452,8 @@ add_mcast_sock_to_ipv6_multicast_group(const uint8_t *addr)
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
   if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
+                 sizeof(mreq)) == -1)
+  {
     OC_ERR("joining IPv6 multicast group %d\n", errno);
     return -1;
   }
@@ -445,58 +487,69 @@ oc_connectivity_init(void)
   server_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (server_sock < 0 || mcast_sock < 0) {
+  if (server_sock < 0 || mcast_sock < 0)
+  {
     OC_ERR("creating server sockets\n");
     return -1;
   }
 
 #ifdef OC_SECURITY
   secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (secure_sock < 0) {
+  if (secure_sock < 0)
+  {
     OC_ERR("creating secure socket\n");
     return -1;
   }
 #endif /* OC_SECURITY */
 
-  if (bind(server_sock, (struct sockaddr *)&server, sizeof(server)) == -1) {
+  if (bind(server_sock, (struct sockaddr *)&server, sizeof(server)) == -1)
+  {
     OC_ERR("binding server socket %d\n", errno);
     return -1;
   }
 
-  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_LL) < 0) {
+  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_LL) < 0)
+  {
     return -1;
   }
-  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_RL) < 0) {
+  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_RL) < 0)
+  {
     return -1;
   }
-  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_SL) < 0) {
+  if (add_mcast_sock_to_ipv6_multicast_group(ALL_OCF_NODES_SL) < 0)
+  {
     return -1;
   }
 
   int reuse = 1;
   if (setsockopt(mcast_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ==
-      -1) {
+      -1)
+  {
     OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
-  if (bind(mcast_sock, (struct sockaddr *)&mcast, sizeof(mcast)) == -1) {
+  if (bind(mcast_sock, (struct sockaddr *)&mcast, sizeof(mcast)) == -1)
+  {
     OC_ERR("binding mcast socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(secure_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == -1)
+  {
     OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
-  if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1) {
+  if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1)
+  {
     OC_ERR("binding IPv6 secure socket %d\n", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(secure);
-  if (getsockname(secure_sock, (struct sockaddr *)&secure, &socklen) == -1) {
+  if (getsockname(secure_sock, (struct sockaddr *)&secure, &socklen) == -1)
+  {
     OC_ERR("obtaining secure socket information %d\n", errno);
     return -1;
   }
@@ -506,10 +559,13 @@ oc_connectivity_init(void)
 
 #ifdef OC_IPV4
   if (connectivity_ipv4_init() != 0)
+  {
     PRINT("Could not initialize IPv4\n");
+  }
 #endif
 
-  if (pthread_create(&event_thread, NULL, &network_event_thread, NULL) != 0) {
+  if (pthread_create(&event_thread, NULL, &network_event_thread, NULL) != 0)
+  {
     OC_ERR("creating network polling thread\n");
     return -1;
   }
