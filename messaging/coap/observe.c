@@ -163,7 +163,7 @@ int
 coap_remove_observer_by_client(oc_endpoint_t *endpoint)
 {
   int removed = 0;
-  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next = NULL;
 
   OC_DBG("Unregistering observers for client at: ");
   LOGipaddr(*endpoint);
@@ -244,7 +244,7 @@ coap_notify_observers(oc_resource_t *resource,
 
 #ifdef OC_BLOCK_WISE_SET_MTU
   uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
-  oc_blockwise_state_t *response_state;
+  oc_blockwise_state_t *response_state = NULL;
 #else  /* OC_BLOCK_WISE_SET_MTU */
   uint8_t buffer[OC_BLOCK_SIZE];
 #endif /* OC_BLOCK_WISE_SET_MTU */
