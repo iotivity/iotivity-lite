@@ -45,9 +45,9 @@ OC_PROCESS(oc_etimer_process, "Event timer");
 static void
 update_time(void)
 {
-  oc_clock_time_t tdist;
-  oc_clock_time_t now;
-  struct oc_etimer *t;
+  oc_clock_time_t tdist = 0;
+  oc_clock_time_t now = 0;
+  struct oc_etimer *t = NULL;
 
   if (timerlist == NULL) {
     next_expiration = 0;
@@ -232,7 +232,7 @@ oc_etimer_next_expiration_time(void)
 void
 oc_etimer_stop(struct oc_etimer *et)
 {
-  struct oc_etimer *t;
+  struct oc_etimer *t = NULL;
 
   /* First check if et is the first event timer on the list. */
   if (et == timerlist) {
