@@ -38,7 +38,7 @@ static const oc_handler_t *app_callbacks;
 int
 oc_main_init(const oc_handler_t *handler)
 {
-  int ret;
+  int ret = 0;
 
   if (initialized == true)
     return 0;
