@@ -196,9 +196,9 @@ network_event_thread(void *data)
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
       }
 
-      PRINT("Incoming message from ");
-      PRINTipaddr(message->endpoint);
-      PRINT("\n");
+      OC_DBG("Incoming message from ");
+      OC_LOGipaddr(message->endpoint);
+      OC_DBG("\n");
 
       oc_network_event(message);
     }
@@ -210,9 +210,9 @@ network_event_thread(void *data)
 void
 oc_send_buffer(oc_message_t *message)
 {
-  PRINT("Outgoing message to ");
-  PRINTipaddr(message->endpoint);
-  PRINT("\n");
+  OC_DBG("Outgoing message to ");
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n");
 
   struct sockaddr_storage receiver;
 #ifdef OC_IPV4
@@ -266,12 +266,12 @@ oc_send_buffer(oc_message_t *message)
         message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
         sizeof(receiver));
     if (x < 0) {
-      PRINT("sendto() returned errno %d\n", errno);
+      OC_WRN("sendto() returned errno %d\n", errno);
       return;
     }
     bytes_sent += x;
   }
-  PRINT("Sent %d bytes\n", bytes_sent);
+  OC_DBG("Sent %d bytes\n", bytes_sent);
 }
 
 #ifdef OC_CLIENT
