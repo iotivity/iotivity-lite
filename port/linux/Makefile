@@ -37,7 +37,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 LIBS?= -lm -pthread -lrt
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g
+	CFLAGS += -DOC_DEBUG -g -O0
 else
 	CFLAGS += -Wl,--gc-sections
 endif
