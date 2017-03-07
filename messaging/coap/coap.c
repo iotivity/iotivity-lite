@@ -311,7 +311,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   coap_pkt->buffer = buffer;
   coap_pkt->version = 1;
 
-  OC_DBG("-Serializing MID %u to %p, ", coap_pkt->mid, coap_pkt->buffer);
+  OC_DBG("-Serializing MID %u to %p\n", coap_pkt->mid, coap_pkt->buffer);
 
   /* set header fields */
   coap_pkt->buffer[0] = 0x00;
@@ -328,7 +328,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 
   /* empty packet, dont need to do more stuff */
   if (!coap_pkt->code) {
-    OC_DBG("-Done serializing empty message at %p-\n", coap_pkt->buffer);
+    OC_DBG("Done serializing empty message at %p-\n", coap_pkt->buffer);
     return 4;
   }
 
@@ -337,16 +337,18 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   option = coap_pkt->buffer + COAP_HEADER_LEN;
   for (current_number = 0; current_number < coap_pkt->token_len;
        ++current_number) {
-    OC_DBG(" %02X", coap_pkt->token[current_number]);
+#ifdef OC_DEBUG
+    PRINT(" %02X", coap_pkt->token[current_number]);
+#endif
     *option = coap_pkt->token[current_number];
     ++option;
   }
-  OC_DBG("-\n");
+  OC_DBG("\n");
 
   /* Serialize options */
   current_number = 0;
 
-  OC_DBG("-Serializing options at %p-\n", option);
+  OC_DBG("Serializing options at %p\n", option);
 #if 0
   /* The options must be serialized in the order of their number */
   COAP_SERIALIZE_BYTE_OPTION(COAP_OPTION_IF_MATCH, if_match, "If-Match");

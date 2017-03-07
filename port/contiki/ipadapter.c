@@ -43,9 +43,9 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     memcpy(message->endpoint.addr.ipv6.address, addr, 16);
     message->endpoint.addr.ipv6.port = port;
 
-    PRINT("Incoming message from ");
-    PRINTipaddr(message->endpoint);
-    PRINT("\n");
+    OC_DBG("Incoming message from ");
+    OC_LOGipaddr(message->endpoint);
+    OC_DBG("\n");
 
     oc_network_event(message);
     return;
@@ -129,9 +129,9 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
 void
 oc_send_buffer(oc_message_t *message)
 {
-  PRINT("Outgoing message to ");
-  PRINTipaddr(message->endpoint);
-  PRINT("\n");
+  OC_DBG("Outgoing message to ");
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n");
 
   simple_udp_sendto_port(
     &server, message->data, message->length,
