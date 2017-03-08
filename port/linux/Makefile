@@ -32,11 +32,12 @@ CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestand
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
+OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 LIBS?= -lm -pthread -lrt
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g
+	CFLAGS += -DOC_DEBUG -g -O0
 else
 	CFLAGS += -Wl,--gc-sections
 endif
@@ -55,8 +56,10 @@ endif
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
-		   libiotivity-constrained-server.so libiotivity-constrained-client.so
-PC = iotivity-constrained-client.pc iotivity-constrained-server.pc
+		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
+		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
+     iotivity-constrained-client-server.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
@@ -74,6 +77,10 @@ obj/client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
+obj/client_server/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
@@ -85,6 +92,12 @@ libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 
 libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
+
+libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+
+libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
 server: libiotivity-constrained-server.a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
@@ -121,6 +134,13 @@ iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 		-e 's,@includedir@,$(includedir),'
 
 iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
+	$(SED) > $@ < $< \
+		-e 's,@prefix@,$(prefix),' \
+		-e 's,@exec_prefix@,$(exec_prefix),' \
+		-e 's,@libdir@,$(libdir),' \
+		-e 's,@includedir@,$(includedir),'
+
+iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
