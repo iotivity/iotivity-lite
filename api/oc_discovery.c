@@ -169,7 +169,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_LL: {
     oc_rep_start_links_array();
     for (device = 0; device < oc_core_get_num_devices(); device++) {
-      matches =
+      matches +=
         process_device_object(oc_rep_array(links), rt, rt_len, device, false);
     }
     oc_rep_end_links_array();
@@ -177,7 +177,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE: {
     oc_rep_start_links_array();
     for (device = 0; device < oc_core_get_num_devices(); device++) {
-      matches =
+      matches +=
         process_device_object(oc_rep_array(links), rt, rt_len, device, true);
     }
     oc_rep_end_links_array();

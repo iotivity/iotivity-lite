@@ -166,7 +166,7 @@ coap_remove_observer_by_client(oc_endpoint_t *endpoint)
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
 
   OC_DBG("Unregistering observers for client at: ");
-  LOGipaddr(*endpoint);
+  OC_LOGipaddr(*endpoint);
 
   while (obs) {
     next = obs->next;
