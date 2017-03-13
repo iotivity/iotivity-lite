@@ -129,9 +129,15 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     o->block2_size = block2_size;
 #endif /* OC_BLOCK_WISE */
     resource->num_observers++;
+#ifdef OC_DYNAMIC_ALLOCATION
+    OC_DBG("Adding observer (%u) for /%s [0x%02X%02X]\n",
+           oc_list_length(observers_list) + 1, o->url, o->token[0],
+           o->token[1]);
+#else  /* OC_DYNAMIC_ALLOCATION */
     OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]\n",
            oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS, o->url,
            o->token[0], o->token[1]);
+#endif /* !OC_DYNAMIC_ALLOCATION */
     oc_list_add(observers_list, o);
     return dup;
   }
@@ -151,12 +157,12 @@ coap_remove_observer(coap_observer_t *o)
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
     &o->endpoint, OC_GET);
   if (response_state) {
-    oc_blockwise_free_response_buffer(response_state);
+    response_state->ref_count = 0;
   }
 #endif /* OC_BLOCK_WISE */
 
-  oc_memb_free(&observers_memb, o);
   oc_list_remove(observers_list, o);
+  oc_memb_free(&observers_memb, o);
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -243,7 +249,7 @@ coap_notify_observers(oc_resource_t *resource,
   }
 
 #ifdef OC_BLOCK_WISE
-  uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
   oc_blockwise_state_t *response_state;
 #else  /* OC_BLOCK_WISE */
   uint8_t buffer[OC_BLOCK_SIZE];
@@ -258,7 +264,7 @@ coap_notify_observers(oc_resource_t *resource,
     response_buffer.buffer = buffer;
 
 #ifdef OC_BLOCK_WISE
-    response_buffer.buffer_size = OC_BLOCK_WISE_BUFFER_SIZE;
+    response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
 #else  /* OC_BLOCK_WISE */
     response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
@@ -304,7 +310,7 @@ coap_notify_observers(oc_resource_t *resource,
                                oc_string_len(resource->uri));
 #endif /* OC_BLOCK_WISE */
 
-      LOG("Resource is SLOW; creating separate response\n");
+      OC_DBG("Resource is SLOW; creating separate response\n");
 #ifdef OC_BLOCK_WISE
       if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
                                0, obs->block2_size) == 1)
@@ -376,7 +382,6 @@ coap_notify_observers(oc_resource_t *resource,
         if (transaction) {
           obs->last_mid = transaction->mid;
           notification->mid = transaction->mid;
-
           transaction->message->length =
             coap_serialize_message(notification, transaction->message->data);
 

@@ -22,6 +22,8 @@
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
+void oc_core_init(void);
+
 oc_string_t *oc_core_init_platform(const char *mfg_name,
                                    oc_core_init_platform_cb_t init_cb,
                                    void *data);

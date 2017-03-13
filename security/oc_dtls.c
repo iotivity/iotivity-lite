@@ -66,15 +66,14 @@ oc_sec_dtls_inactive(void *data)
     if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       OC_DBG("\n\noc_sec_dtls: Resetting DTLS inactivity callback\n\n");
       return CONTINUE;
-    } else {
+    } else if (peer->connected) {
       OC_DBG("\n\noc_sec_dtls: Closing DTLS connection\n\n");
+      peer->connected = false;
       oc_sec_dtls_close_init(data);
-      oc_sec_dtls_close_finish(data);
+      return CONTINUE;
     }
-  } else {
-    OC_DBG("\n\noc_sec_dtls: Could not find peer\n\n");
-    OC_DBG("oc_sec_dtls: Num active peers %d\n", oc_list_length(dtls_peers));
   }
+  oc_sec_dtls_close_finish(data);
   OC_DBG("\n\noc_sec_dtls: Terminating DTLS inactivity callback\n\n");
   return DONE;
 }
@@ -148,8 +147,9 @@ oc_sec_dtls_init_connection(oc_message_t *message)
     OC_DBG("\n\noc_dtls: Initializing DTLS connection\n\n");
     dtls_connect(ocf_dtls_context, &peer->session);
     oc_list_add(peer->send_queue, message);
-  } else
+  } else {
     oc_message_unref(message);
+  }
 }
 
 /*
@@ -188,10 +188,18 @@ oc_sec_dtls_send_encrypted_message(struct dtls_context_t *ctx,
 {
   (void)ctx;
   oc_message_t message;
+#ifdef OC_DYNAMIC_ALLOCATION
+  message.data = malloc(OC_PDU_SIZE);
+  if (!message.data)
+    return -1;
+#endif /* OC_DYNAMIC_ALLOCATION */
   memcpy(&message.endpoint, &session->addr, sizeof(oc_endpoint_t));
   memcpy(message.data, buf, len);
   message.length = len;
   oc_send_buffer(&message);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(message.data);
+#endif /* OC_DYNAMIC_ALLOCATION */
   return len;
 }
 
@@ -288,7 +296,6 @@ oc_sec_dtls_recv_message(oc_message_t *message)
                                   message->data, message->length);
     if (ret != 0) {
       oc_sec_dtls_close_finish(&message->endpoint);
-      oc_sec_dtls_remove_peer(&message->endpoint);
     } else {
       peer->timestamp = oc_clock_time();
     }
@@ -339,7 +346,6 @@ oc_sec_dtls_close_finish(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *p = oc_sec_dtls_get_peer(endpoint);
   if (p) {
-    oc_ri_remove_timed_event_callback(&p->session.addr, oc_sec_dtls_inactive);
     dtls_peer_t *peer = dtls_get_peer(ocf_dtls_context, &p->session);
     if (peer) {
       oc_list_remove(ocf_dtls_context->peers, peer);

@@ -24,13 +24,14 @@
 #include "util/oc_process.h"
 #include <stdint.h>
 
-#ifndef OC_MAX_PDU_BUFFER_SIZE
-#error "Set OC_MAX_PDU_BUFFER_SIZE in config.h"
-#else /* !OC_MAX_PDU_BUFFER_SIZE */
-#if OC_MAX_PDU_BUFFER_SIZE < (COAP_MAX_HEADER_SIZE + 16)
-#error "OC_MAX_PDU_BUFFER_SIZE must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
-#endif /* OC_MAX_PDU_BUFFER_SIZE is too small */
-#endif /* OC_MAX_PDU_BUFFER_SIZE */
+#ifndef OC_DYNAMIC_ALLOCATION
+#ifndef OC_MAX_APP_DATA_SIZE
+#error "Set OC_MAX_APP_DATA_SIZE in config.h"
+#else /* !OC_MAX_APP_DATA_SIZE */
+#if OC_MAX_APP_DATA_SIZE < (COAP_MAX_HEADER_SIZE + 16)
+#error "OC_MAX_APP_DATA_SIZE must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
+#endif /* OC_MAX_APP_DATA_SIZE is too small */
+#endif /* OC_MAX_APP_DATA_SIZE */
 
 #ifdef OC_BLOCK_WISE_SET_MTU
 #define OC_BLOCK_WISE
@@ -52,11 +53,10 @@
                          : (OC_MAX_BLOCK_SIZE < 1024                           \
                               ? 512                                            \
                               : (OC_MAX_BLOCK_SIZE < 2048 ? 1024 : 2048)))))))
-#define OC_BLOCK_WISE_BUFFER_SIZE                                              \
-  (OC_MAX_PDU_BUFFER_SIZE - COAP_MAX_HEADER_SIZE)
 #else /* OC_BLOCK_WISE_SET_MTU */
-#define OC_BLOCK_SIZE (OC_MAX_PDU_BUFFER_SIZE - COAP_MAX_HEADER_SIZE)
+#define OC_BLOCK_SIZE (OC_MAX_APP_DATA_SIZE)
 #endif /* !OC_BLOCK_WISE_SET_MTU */
+
 enum
 {
 #ifdef OC_SECURITY
@@ -65,6 +65,12 @@ enum
   OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 #endif /* !OC_SECURITY */
 };
+#else /* !OC_DYNAMIC_ALLOCATION */
+#include "oc_buffer_settings.h"
+#define OC_PDU_SIZE (oc_get_mtu_size())
+#define OC_BLOCK_SIZE (oc_get_block_size())
+#define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 typedef struct
 {
@@ -119,7 +125,11 @@ struct oc_message_s
   oc_endpoint_t endpoint;
   size_t length;
   uint8_t ref_count;
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *data;
+#else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t data[OC_PDU_SIZE];
+#endif /* OC_DYNAMIC_ALLOCATION */
 };
 
 void oc_send_buffer(oc_message_t *message);

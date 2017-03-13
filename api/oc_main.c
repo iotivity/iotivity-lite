@@ -35,6 +35,51 @@
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "oc_buffer_settings.h"
+static long _OC_BLOCK_SIZE = 1024;
+static long _OC_MTU_SIZE = 1024 + COAP_MAX_HEADER_SIZE;
+static long _OC_MAX_APP_DATA_SIZE = 2048;
+
+int
+oc_set_mtu_size(long mtu_size)
+{
+  if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
+    return -1;
+  _OC_MTU_SIZE = mtu_size;
+  mtu_size -= COAP_MAX_HEADER_SIZE;
+  int i;
+  for (i = 10; i >= 4 && (mtu_size >> i) == 0; i--)
+    ;
+  _OC_BLOCK_SIZE = 1 << i;
+  return 0;
+}
+
+long
+oc_get_mtu_size(void)
+{
+  return _OC_MTU_SIZE;
+}
+
+void
+oc_set_max_app_data_size(long size)
+{
+  _OC_MAX_APP_DATA_SIZE = size;
+}
+
+long
+oc_get_max_app_data_size(void)
+{
+  return _OC_MAX_APP_DATA_SIZE;
+}
+
+long
+oc_get_block_size(void)
+{
+  return _OC_BLOCK_SIZE;
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 int
 oc_main_init(const oc_handler_t *handler)
 {
@@ -48,10 +93,6 @@ oc_main_init(const oc_handler_t *handler)
   oc_ri_init();
 
 #ifdef OC_SECURITY
-  oc_sec_load_pstat();
-  oc_sec_load_doxm();
-  oc_sec_load_cred();
-  oc_sec_dtls_init_context();
   oc_sec_create_svr();
 #endif
 
@@ -70,6 +111,10 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
+  oc_sec_load_pstat();
+  oc_sec_load_doxm();
+  oc_sec_load_cred();
+  oc_sec_dtls_init_context();
   oc_sec_load_acl();
 #endif
 

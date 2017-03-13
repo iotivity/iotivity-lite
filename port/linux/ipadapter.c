@@ -214,7 +214,7 @@ oc_send_buffer(oc_message_t *message)
   OC_LOGipaddr(message->endpoint);
   OC_DBG("\n");
 
-  struct sockaddr_storage receiver;
+  static struct sockaddr_storage receiver;
 #ifdef OC_IPV4
   if (message->endpoint.flags & IPV4) {
     struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
