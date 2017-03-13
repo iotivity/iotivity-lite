@@ -237,9 +237,10 @@ void
 oc_sec_acl_default(void)
 {
   bool success = true;
-  int i;
   oc_resource_t *resource;
-  for (i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
+  int i,
+    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+  for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
       success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,

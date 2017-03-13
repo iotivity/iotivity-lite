@@ -247,6 +247,7 @@ oc_send_buffer(oc_message_t *message)
   OC_DBG("\n");
 
   struct sockaddr_storage receiver;
+  memset(&receiver, 0, sizeof(struct sockaddr_storage));
 #ifdef OC_IPV4
   if (message->endpoint.flags & IPV4) {
     struct sockaddr_in *r = (struct sockaddr_in *)&receiver;

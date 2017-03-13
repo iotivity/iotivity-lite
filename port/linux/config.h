@@ -7,8 +7,21 @@
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 
+/* Security Layer */
+/* Max inactivity timeout before tearing down DTLS connection */
+#define OC_DTLS_INACTIVITY_TIMEOUT (60)
+
+/* If we selected support for dynamic memory allocation */
+#ifdef OC_DYNAMIC_ALLOCATION
+#define OC_COLLECTIONS
+#define OC_BLOCK_WISE
+
+#else /* OC_DYNAMIC_ALLOCATION */
+/* List of constraints below for a build that does not employ dynamic
+   memory allocation
+*/
 /* Memory pool sizes */
-#define OC_BYTES_POOL_SIZE (1500)
+#define OC_BYTES_POOL_SIZE (1800)
 #define OC_INTS_POOL_SIZE (100)
 #define OC_DOUBLES_POOL_SIZE (4)
 
@@ -19,11 +32,11 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_COLLECTIONS (1)
 
 /* Common paramters */
-/* Limit MTU size to lower layers, enable block-wise transfers */
+/* Prescriptive lower layers MTU size, enable block-wise transfers */
 #define OC_BLOCK_WISE_SET_MTU (400)
 
-/* Maximum size of request/response PDUs */
-#define OC_MAX_PDU_BUFFER_SIZE (1024)
+/* Maximum size of request/response payloads */
+#define OC_MAX_APP_DATA_SIZE (1024)
 
 /* Maximum number of concurrent requests */
 #define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
@@ -34,12 +47,6 @@ typedef uint64_t oc_clock_time_t;
 /* Number of devices on the OCF platform */
 #define OC_MAX_NUM_DEVICES (1)
 
-/* Platform payload size */
-#define OC_MAX_PLATFORM_PAYLOAD_SIZE (256)
-
-/* Device payload size */
-#define OC_MAX_DEVICE_PAYLOAD_SIZE (256)
-
 /* Security layer */
 /* Maximum number of authorized clients */
 #define OC_MAX_NUM_SUBJECTS (2)
@@ -47,7 +54,6 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of concurrent DTLS sessions */
 #define OC_MAX_DTLS_PEERS (1)
 
-/* Max inactivity timeout before tearing down DTLS connection */
-#define OC_DTLS_INACTIVITY_TIMEOUT (60)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #endif /* CONFIG_H */

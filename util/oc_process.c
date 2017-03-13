@@ -296,7 +296,6 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
   static oc_process_num_events_t snum;
 
   if (nevents == OC_PROCESS_CONF_NUMEVENTS) {
-    oc_message_unref(data);
     return OC_PROCESS_ERR_FULL;
   }
 

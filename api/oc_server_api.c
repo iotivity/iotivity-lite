@@ -23,6 +23,10 @@
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 #include "oc_core_res.h"
 
 int
@@ -263,7 +267,7 @@ void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
 #ifdef OC_BLOCK_WISE
-  oc_rep_new(handle->buffer, OC_BLOCK_WISE_BUFFER_SIZE);
+  oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
   oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
 #endif /* !OC_BLOCK_WISE */
@@ -348,6 +352,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
   }
   if (oc_list_length(handle->requests) == 0) {
     handle->active = 0;
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(handle->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
 

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,14 @@
 // limitations under the License.
 */
 
-#ifndef OC_COAP_H
-#define OC_COAP_H
+#ifndef OC_BUFFER_SETTINGS_H
+#define OC_BUFFER_SETTINGS_H
 
-#include "separate.h"
-#include "util/oc_list.h"
-
-struct oc_separate_response_s
-{
-  OC_LIST_STRUCT(requests);
-  int active;
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buffer;
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-};
-
-struct oc_response_buffer_s
-{
-  uint8_t *buffer;
-  uint16_t buffer_size;
-  uint16_t response_length;
-  int code;
-};
-
-#endif /* OC_COAP_H */
+int oc_set_mtu_size(long mtu_size);
+long oc_get_mtu_size(void);
+void oc_set_max_app_data_size(long size);
+long oc_get_max_app_data_size(void);
+long oc_get_block_size(void);
+#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_BUFFER_SETTINGS_H */
