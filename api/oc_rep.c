@@ -123,69 +123,86 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   oc_rep_t *cur = *rep, **prev = 0;
   cur->next = 0;
   cur->value.object_array = 0;
+
+#define OC_PARSE_REP_CHECK(_err, ...) \
+  do { \
+    if (_err != CborNoError) { \
+      OC_WRN(__VA_ARGS__); \
+      return; \
+    } \
+  } while (0)
+
   /* key */
-  *err |= cbor_value_calculate_string_length(value, &len);
+  *err = cbor_value_calculate_string_length(value, &len);
+  OC_PARSE_REP_CHECK(*err, "Could not calculate string length for %p\n", value);
+
   len++;
   oc_alloc_string(&cur->name, len);
-  *err |= cbor_value_copy_text_string(value, (char *)oc_string(cur->name), &len,
+  *err = cbor_value_copy_text_string(value, (char *)oc_string(cur->name), &len,
                                       NULL);
-  if (*err != CborNoError)
-    return;
-  *err |= cbor_value_advance(value);
+  OC_PARSE_REP_CHECK(*err, "Could not copy string %p\n", value);
+
+  *err = cbor_value_advance(value);
+  OC_PARSE_REP_CHECK(*err, "Could not advance %p\n", value);
   /* value */
   switch (value->type) {
   case CborIntegerType:
-    *err |= cbor_value_get_int(value, &cur->value.integer);
+    *err = cbor_value_get_int(value, &cur->value.integer);
     cur->type = INT;
     break;
   case CborBooleanType:
-    *err |= cbor_value_get_boolean(value, &cur->value.boolean);
+    *err = cbor_value_get_boolean(value, &cur->value.boolean);
     cur->type = BOOL;
     break;
   case CborDoubleType:
-    *err |= cbor_value_get_double(value, &cur->value.double_p);
+    *err = cbor_value_get_double(value, &cur->value.double_p);
     cur->type = DOUBLE;
     break;
   case CborByteStringType:
-    *err |= cbor_value_calculate_string_length(value, &len);
+    *err = cbor_value_calculate_string_length(value, &len);
+    OC_PARSE_REP_CHECK(*err, "Could not calculate byte string length %p\n", value);
     len++;
     oc_alloc_string(&cur->value.string, len);
-    *err |= cbor_value_copy_byte_string(
+    *err = cbor_value_copy_byte_string(
       value, oc_cast(cur->value.string, uint8_t), &len, NULL);
     cur->type = BYTE_STRING;
     break;
   case CborTextStringType:
-    *err |= cbor_value_calculate_string_length(value, &len);
+    *err = cbor_value_calculate_string_length(value, &len);
+    OC_PARSE_REP_CHECK(*err, "Could not calculate text string length %p\n", value);
     len++;
     oc_alloc_string(&cur->value.string, len);
-    *err |= cbor_value_copy_text_string(value, oc_string(cur->value.string),
+    *err = cbor_value_copy_text_string(value, oc_string(cur->value.string),
                                         &len, NULL);
     cur->type = STRING;
     break;
   case CborMapType: {
     oc_rep_t **obj = &cur->value.object;
-    *err |= cbor_value_enter_container(value, &map);
+    *err = cbor_value_enter_container(value, &map);
+    OC_PARSE_REP_CHECK(*err, "Could not enter into map container %p\n", value);
     while (!cbor_value_at_end(&map)) {
       oc_parse_rep_value(&map, obj, err);
       (*obj)->next = 0;
       obj = &(*obj)->next;
       if (*err != CborNoError)
         return;
-      *err |= cbor_value_advance(&map);
+      *err = cbor_value_advance(&map);
+      OC_PARSE_REP_CHECK(*err, "Could not advance in map container %p\n", &map);
     }
     cur->type = OBJECT;
   } break;
   case CborArrayType:
-    *err |= cbor_value_enter_container(value, &array);
+    *err = cbor_value_enter_container(value, &array);
+    OC_PARSE_REP_CHECK(*err, "Could not enter into array container %p\n", value);
     len = 0;
-    cbor_value_get_array_length(value, &len);
+    *err = cbor_value_get_array_length(value, &len);
+    OC_PARSE_REP_CHECK(*err, "Could not get array length %p\n", value);
     if (len == 0) {
       CborValue t = array;
       while (!cbor_value_at_end(&t)) {
         len++;
-        if (*err != CborNoError)
-          return;
-        cbor_value_advance(&t);
+        *err = cbor_value_advance(&t);
+        OC_PARSE_REP_CHECK(*err, "Could not advance in array %p\n", &t);
       }
     }
     k = 0;
@@ -196,14 +213,14 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           oc_new_int_array(&cur->value.array, len);
           cur->type = INT | ARRAY;
         }
-        *err |= cbor_value_get_int(&array, oc_int_array(cur->value.array) + k);
+        *err = cbor_value_get_int(&array, oc_int_array(cur->value.array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
           oc_new_double_array(&cur->value.array, len);
           cur->type = DOUBLE | ARRAY;
         }
-        *err |=
+        *err =
           cbor_value_get_double(&array, oc_double_array(cur->value.array) + k);
         break;
       case CborBooleanType:
@@ -211,7 +228,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           oc_new_bool_array(&cur->value.array, len);
           cur->type = BOOL | ARRAY;
         }
-        *err |=
+        *err =
           cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
         break;
       case CborByteStringType:
@@ -219,9 +236,10 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           oc_new_string_array(&cur->value.array, len);
           cur->type = BYTE_STRING | ARRAY;
         }
-        *err |= cbor_value_calculate_string_length(&array, &len);
+        *err = cbor_value_calculate_string_length(&array, &len);
+        OC_PARSE_REP_CHECK(*err, "Could not calculate string length %p\n", &array);
         len++;
-        *err |= cbor_value_copy_byte_string(
+        *err = cbor_value_copy_byte_string(
           &array, (uint8_t *)oc_string_array_get_item(cur->value.array, k),
           &len, NULL);
         break;
@@ -230,9 +248,10 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           oc_new_string_array(&cur->value.array, len);
           cur->type = STRING | ARRAY;
         }
-        *err |= cbor_value_calculate_string_length(&array, &len);
+        *err = cbor_value_calculate_string_length(&array, &len);
+        OC_PARSE_REP_CHECK(*err, "Could not calculate string length %p\n", &array);
         len++;
-        *err |= cbor_value_copy_text_string(
+        *err = cbor_value_copy_text_string(
           &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
           NULL);
         break;
@@ -249,27 +268,31 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         (*prev)->next = 0;
         oc_rep_t **obj = &(*prev)->value.object;
         /* Process a series of properties that make up an object of the array */
-        *err |= cbor_value_enter_container(&array, &map);
+        *err = cbor_value_enter_container(&array, &map);
+        OC_PARSE_REP_CHECK(*err, "Could not enter into container %p\n", &array);
         while (!cbor_value_at_end(&map)) {
           oc_parse_rep_value(&map, obj, err);
+          OC_PARSE_REP_CHECK(*err, "Could parse map %p\n", &map);
           obj = &(*obj)->next;
-          if (*err != CborNoError)
-            return;
-          *err |= cbor_value_advance(&map);
+          *err = cbor_value_advance(&map);
+          OC_PARSE_REP_CHECK(*err, "Could not advance into map %p\n", &map);
         }
         break;
       default:
         break;
       }
-      k++;
       if (*err != CborNoError)
         return;
-      *err |= cbor_value_advance(&array);
+      k++;
+      *err = cbor_value_advance(&array);
+      OC_PARSE_REP_CHECK(*err, "Could not advance into array %p\n", &array);
     }
     break;
   default:
     break;
   }
+
+#undef OC_PARSE_REP_CHECK
 }
 
 uint16_t
@@ -279,32 +302,47 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
   CborParser parser;
   CborValue root_value, cur_value, map;
   CborError err = CborNoError;
-  err |= cbor_parser_init(in_payload, payload_size, 0, &parser, &root_value);
+
+#define OC_PARSE_REP_CHECK(_err, ...) \
+  do { \
+    if (_err != CborNoError) { \
+      OC_WRN(__VA_ARGS__); \
+      return (uint16_t)_err; \
+    } \
+  } while (0)
+
+  err = cbor_parser_init(in_payload, payload_size, 0, &parser, &root_value);
+  OC_PARSE_REP_CHECK(err, "Could not parser the payload %p\n", in_payload);
   if (cbor_value_is_map(&root_value)) {
-    err |= cbor_value_enter_container(&root_value, &cur_value);
+    err = cbor_value_enter_container(&root_value, &cur_value);
+    OC_PARSE_REP_CHECK(err, "Could not into %p\n", &cur_value);
     *out_rep = 0;
     oc_rep_t **cur = out_rep;
     while (cbor_value_is_valid(&cur_value)) {
       oc_parse_rep_value(&cur_value, cur, &err);
       if (err != CborNoError)
         return err;
-      err |= cbor_value_advance(&cur_value);
+      err = cbor_value_advance(&cur_value);
+      OC_PARSE_REP_CHECK(err, "Could not advance into %p\n", &cur_value);
       cur = &(*cur)->next;
     }
   } else if (cbor_value_is_array(&root_value)) {
     *out_rep = 0;
     oc_rep_t **cur = out_rep, **kv;
-    err |= cbor_value_enter_container(&root_value, &map);
+    err = cbor_value_enter_container(&root_value, &map);
+    OC_PARSE_REP_CHECK(err, "Could enter into container %p\n", &root_value);
     while (cbor_value_is_valid(&map)) {
       *cur = _alloc_rep();
       (*cur)->type = OBJECT;
       kv = &(*cur)->value.object;
-      err |= cbor_value_enter_container(&map, &cur_value);
+      err = cbor_value_enter_container(&map, &cur_value);
+      OC_PARSE_REP_CHECK(err, "Could enter into container %p\n", &map);
       while (cbor_value_is_valid(&cur_value)) {
         oc_parse_rep_value(&cur_value, kv, &err);
         if (err != CborNoError)
           return err;
         err |= cbor_value_advance(&cur_value);
+        OC_PARSE_REP_CHECK(err, "Could not advance into %p\n", &cur_value);
         (*kv)->next = 0;
         kv = &(*kv)->next;
       }
@@ -312,8 +350,10 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
       cur = &(*cur)->next;
       if (err != CborNoError)
         return err;
-      err |= cbor_value_advance(&map);
+      err = cbor_value_advance(&map);
+      OC_PARSE_REP_CHECK(err, "Could not advance into %p\n", &map);
     }
   }
+#undef OC_PARSE_REP_CHECK
   return (uint16_t)err;
 }
