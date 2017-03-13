@@ -1192,7 +1192,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->payload = (uint8_t *)payload;
-  coap_pkt->payload_len = MIN(OC_BLOCK_SIZE, length);
+  coap_pkt->payload_len = MIN((unsigned)OC_BLOCK_SIZE, length);
 
   return coap_pkt->payload_len;
 }

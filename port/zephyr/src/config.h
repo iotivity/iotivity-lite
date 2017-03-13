@@ -35,7 +35,7 @@ typedef uint64_t oc_clock_time_t;
 //#define OC_BLOCK_WISE_SET_MTU (80)
 
 /* Maximum size of request/response PDUs */
-#define OC_MAX_PDU_BUFFER_SIZE (512)
+#define OC_MAX_APP_DATA_SIZE (512)
 
 /* Maximum number of concurrent requests */
 #define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
@@ -45,12 +45,6 @@ typedef uint64_t oc_clock_time_t;
 
 /* Number of devices on the OCF platform */
 #define OC_MAX_NUM_DEVICES (1)
-
-/* Platform payload size */
-#define OC_MAX_PLATFORM_PAYLOAD_SIZE (256)
-
-/* Device payload size */
-#define OC_MAX_DEVICE_PAYLOAD_SIZE (256)
 
 /* Security layer */
 /* Maximum number of authorized clients */

@@ -102,7 +102,4 @@ oc_discovery_flags_t oc_ri_process_discovery_payload(
   uint8_t *payload, int len, oc_discovery_handler_t handler,
   oc_endpoint_t *endpoint, void *user_data);
 
-bool oc_ri_send_rst(oc_endpoint_t *endpoint, uint8_t *token, uint8_t token_len,
-                    uint16_t mid);
-
 #endif /* OC_CLIENT_STATE_H */

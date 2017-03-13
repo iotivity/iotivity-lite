@@ -111,7 +111,7 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
     matches++;
 
   if (filter_resource(
-        oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 - device_num),
+        oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 + device_num),
         rt, rt_len, oc_rep_array(links)))
     matches++;
 

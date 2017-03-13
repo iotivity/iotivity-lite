@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef OC_DYNAMIC_ALLOCATION
 #if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
   !defined(OC_DOUBLES_POOL_SIZE)
 #error "Please define byte, int, double pool sizes in config.h"
@@ -52,13 +53,19 @@ static unsigned int avail_bytes, avail_ints, avail_doubles;
 OC_LIST(bytes_list);
 OC_LIST(ints_list);
 OC_LIST(doubles_list);
-
+#else /* !OC_DYNAMIC_ALLOCATION */
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
 int
 oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
 {
   switch (pool_type) {
   case BYTE_POOL:
+#ifdef OC_DYNAMIC_ALLOCATION
+    m->ptr = malloc(size);
+    m->size = size;
+#else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_bytes < size) {
       return 0;
     }
@@ -66,8 +73,13 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &bytes[OC_BYTES_POOL_SIZE - avail_bytes];
     m->size = size;
     avail_bytes -= size;
+#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
+#ifdef OC_DYNAMIC_ALLOCATION
+    m->ptr = malloc(size * sizeof(int));
+    m->size = size;
+#else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_ints < size) {
       return 0;
     }
@@ -75,8 +87,13 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &ints[OC_INTS_POOL_SIZE - avail_ints];
     m->size = size;
     avail_ints -= size;
+#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case DOUBLE_POOL:
+#ifdef OC_DYNAMIC_ALLOCATION
+    m->ptr = malloc(size * sizeof(double));
+    m->size = size;
+#else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_doubles < size) {
       return 0;
     }
@@ -84,6 +101,7 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles];
     m->size = size;
     avail_doubles -= size;
+#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   default:
     break;
@@ -94,6 +112,7 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
 void
 oc_mmem_free(struct oc_mmem *m, pool pool_type)
 {
+#ifndef OC_DYNAMIC_ALLOCATION
   struct oc_mmem *n;
 
   if (m->next != NULL) {
@@ -101,6 +120,7 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
     case BYTE_POOL:
       memmove(m->ptr, m->next->ptr, &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
                                       (unsigned char *)m->next->ptr);
+
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
@@ -134,11 +154,17 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
     oc_list_remove(doubles_list, m);
     break;
   }
+#else /* !OC_DYNAMIC_ALLOCATION */
+  (void)pool_type;
+  free(m->ptr);
+  m->size = 0;
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
 oc_mmem_init(void)
 {
+#ifndef OC_DYNAMIC_ALLOCATION
   static int inited = 0;
   if (inited) {
     return;
@@ -150,5 +176,6 @@ oc_mmem_init(void)
   avail_ints = OC_INTS_POOL_SIZE;
   avail_doubles = OC_DOUBLES_POOL_SIZE;
   inited = 1;
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 /*---------------------------------------------------------------------------*/

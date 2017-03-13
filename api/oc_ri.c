@@ -267,7 +267,13 @@ oc_ri_init(void)
 #endif
 
   oc_list_init(timed_callbacks);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_core_init();
+#endif /* OC_DYNAMIC_ALLOCATION */
+
   start_processes();
+
   oc_create_discovery_resource();
 }
 
@@ -385,6 +391,7 @@ check_event_callbacks(void)
 static oc_event_callback_retval_t
 oc_observe_notification_delayed(void *data)
 {
+  (void)data;
   coap_notify_observers((oc_resource_t *)data, NULL, NULL);
   return DONE;
 }
@@ -556,7 +563,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   (void)block2_size;
 #endif /* !OC_SERVER */
   response_buffer.buffer = response_state->buffer;
-  response_buffer.buffer_size = OC_BLOCK_WISE_BUFFER_SIZE;
+  response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
 #else  /* OC_BLOCK_WISE */
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_BLOCK_SIZE;
@@ -649,8 +656,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared core resources.
    */
   if (!bad_request) {
-    int i;
-    for (i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
+    int i, num_core_resources =
+             NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    for (i = 0; i < num_core_resources; i++) {
       resource = oc_core_get_resource_by_index(i);
       if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
@@ -708,7 +716,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     /* Process a request against a valid resource, request payload, and
      * interface.
      */
-
     /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
      * points to memory allocated in the messaging layer for the "CoAP
      * Transaction" to service this request.
@@ -902,10 +909,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * altered the resource state, so attempt to notify all observers
      * of that resource with the change.
      */
-    if ((method == OC_PUT || method == OC_POST) &&
+    if (cur_resource && (method == OC_PUT || method == OC_POST) &&
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
       oc_ri_add_timed_event_callback_ticks(cur_resource,
                                            &oc_observe_notification_delayed, 0);
+
 #endif /* OC_SERVER */
     if (response_buffer.response_length) {
 #ifdef OC_BLOCK_WISE
@@ -934,8 +942,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 static void
 free_client_cb(oc_client_cb_t *cb)
 {
-  oc_free_string(&cb->uri);
   oc_list_remove(client_cbs, cb);
+  oc_free_string(&cb->uri);
   oc_memb_free(&client_cbs_s, cb);
 }
 
@@ -971,24 +979,6 @@ oc_ri_remove_client_cb(void *data)
 
   free_client_cb(data);
   return DONE;
-}
-
-bool
-oc_ri_send_rst(oc_endpoint_t *endpoint, uint8_t *token, uint8_t token_len,
-               uint16_t mid)
-{
-  coap_packet_t rst[1];
-  coap_init_message(rst, COAP_TYPE_RST, 0, mid);
-  coap_set_header_observe(rst, 1);
-  coap_set_token(rst, token, token_len);
-  oc_message_t *message = oc_allocate_message();
-  if (message) {
-    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
-    message->length = coap_serialize_message(rst, message->data);
-    coap_send_message(message);
-    return true;
-  }
-  return false;
 }
 
 oc_client_cb_t *
@@ -1056,6 +1046,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
      if no observe option, set to -1, else store observe seq
   */
   oc_client_response_t client_response;
+  memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.observe_option = -1;
   client_response.payload = 0;
   client_response.user_data = cb->user_data;
@@ -1096,6 +1087,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
         free_client_cb(cb);
+        return true;
       }
     } else {
       uint16_t err =
@@ -1126,8 +1118,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
     oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
-  } else
+  } else {
     cb->observe_seq = client_response.observe_option;
+  }
 
   return true;
 }
