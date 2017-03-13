@@ -38,6 +38,13 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
 
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_memb_alloc(pool);
   if (buffer) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    buffer->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
+    if (!buffer->buffer) {
+      oc_memb_free(pool, buffer);
+      return NULL;
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
     buffer->next_block_offset = 0;
     buffer->payload_size = 0;
     buffer->ref_count = 1;
@@ -100,6 +107,9 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool, void *data)
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)data;
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buffer->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
   oc_memb_free(pool, buffer);
 }
 
@@ -122,6 +132,28 @@ oc_blockwise_free_response_buffer(void *data)
   oc_blockwise_free_buffer(oc_blockwise_responses,
                            &oc_blockwise_response_states_s, data);
   return DONE;
+}
+
+void
+oc_blockwise_scrub_buffers()
+{
+  oc_blockwise_state_t *buffer = oc_list_head(oc_blockwise_requests), *next;
+  while (buffer != NULL) {
+    next = buffer->next;
+    if (buffer->ref_count == 0) {
+      oc_blockwise_free_request_buffer(buffer);
+    }
+    buffer = next;
+  }
+
+  buffer = oc_list_head(oc_blockwise_responses);
+  while (buffer != NULL) {
+    next = buffer->next;
+    if (buffer->ref_count == 0) {
+      oc_blockwise_free_response_buffer(buffer);
+    }
+    buffer = next;
+  }
 }
 
 #ifdef OC_CLIENT
@@ -205,9 +237,8 @@ oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                           const uint8_t *incoming_block,
                           uint16_t incoming_block_size)
 {
-  if (incoming_block_offset >= OC_BLOCK_WISE_BUFFER_SIZE ||
-      incoming_block_size >
-        (OC_BLOCK_WISE_BUFFER_SIZE - incoming_block_offset) ||
+  if (incoming_block_offset >= (unsigned)OC_MAX_APP_DATA_SIZE ||
+      incoming_block_size > (OC_MAX_APP_DATA_SIZE - incoming_block_offset) ||
       incoming_block_offset > buffer->next_block_offset)
     return false;
 

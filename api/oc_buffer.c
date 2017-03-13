@@ -19,10 +19,13 @@
 #include "util/oc_memb.h"
 #include <stdint.h>
 #include <stdio.h>
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
 #include "security/oc_dtls.h"
-#endif
+#endif /* OC_SECURITY */
 
 #include "config.h"
 #include "oc_buffer.h"
@@ -36,14 +39,26 @@ oc_allocate_message(void)
 {
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(&oc_buffers_s);
   if (message) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    message->data = malloc(OC_PDU_SIZE);
+    if (!message->data) {
+      oc_memb_free(&oc_buffers_s, message);
+      return NULL;
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
     message->length = 0;
     message->next = 0;
     message->ref_count = 1;
+#ifndef OC_DYNAMIC_ALLOCATION
     OC_DBG("buffer: Allocated TX/RX buffer; num free: %d\n",
            oc_memb_numfree(&oc_buffers_s));
-  } else {
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  }
+#ifndef OC_DYNAMIC_ALLOCATION
+  else {
     OC_WRN("buffer: No free TX/RX buffers!\n");
   }
+#endif /* !OC_DYNAMIC_ALLOCATION */
   return message;
 }
 
@@ -59,10 +74,15 @@ oc_message_unref(oc_message_t *message)
 {
   if (message) {
     message->ref_count--;
-    if (message->ref_count == 0) {
+    if (message->ref_count <= 0) {
+#ifdef OC_DYNAMIC_ALLOCATION
+      free(message->data);
+#endif /* OC_DYNAMIC_ALLOCATION */
       oc_memb_free(&oc_buffers_s, message);
+#ifndef OC_DYNAMIC_ALLOCATION
       OC_DBG("buffer: freed TX/RX buffer; num free: %d\n",
              oc_memb_numfree(&oc_buffers_s));
+#endif /* !OC_DYNAMIC_ALLOCATION */
     }
   }
 }
@@ -70,15 +90,18 @@ oc_message_unref(oc_message_t *message)
 void
 oc_recv_message(oc_message_t *message)
 {
-  oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
-                  message);
+  if (oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
+                      message) == OC_PROCESS_ERR_FULL)
+    oc_message_unref(message);
 }
 
 void
 oc_send_message(oc_message_t *message)
 {
-  oc_process_post(&message_buffer_handler, oc_events[OUTBOUND_NETWORK_EVENT],
-                  message);
+  if (oc_process_post(&message_buffer_handler,
+                      oc_events[OUTBOUND_NETWORK_EVENT],
+                      message) == OC_PROCESS_ERR_FULL)
+    message->ref_count--;
 
   _oc_signal_event_loop();
 }

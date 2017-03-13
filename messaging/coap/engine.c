@@ -85,6 +85,8 @@ coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
     ack_message->length = coap_serialize_message(ack, ack_message->data);
     coap_send_message(ack_message);
+    if (ack_message->ref_count == 0)
+      oc_message_unref(ack_message);
   }
 }
 
@@ -366,8 +368,9 @@ coap_receive(oc_message_t *msg)
             response_buffer->ref_count = 0;
         }
 #endif /* OC_BLOCK_WISE */
-        if (response->code != 0)
+        if (response->code != 0) {
           goto send_message;
+        }
       }
     } else {
 #ifdef OC_CLIENT
@@ -415,9 +418,9 @@ coap_receive(oc_message_t *msg)
         } else {
           uint32_t peer_mtu = 0;
           if (coap_get_header_size1(message, (uint32_t *)&peer_mtu) == 1) {
-            block1_size = MIN(peer_mtu, OC_BLOCK_SIZE);
+            block1_size = MIN(peer_mtu, (unsigned)OC_BLOCK_SIZE);
           } else {
-            block1_size = OC_BLOCK_SIZE;
+            block1_size = (unsigned)OC_BLOCK_SIZE;
           }
           payload = oc_blockwise_dispatch_block(request_buffer, 0, block1_size,
                                                 &payload_size);
@@ -545,7 +548,6 @@ send_message:
         }
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
-
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
       if (transaction->message->length) {
@@ -559,12 +561,7 @@ send_message:
   }
 
 #ifdef OC_BLOCK_WISE
-  if (request_buffer && request_buffer->ref_count == 0) {
-    oc_blockwise_free_request_buffer(request_buffer);
-  }
-  if (response_buffer && response_buffer->ref_count == 0) {
-    oc_blockwise_free_response_buffer(response_buffer);
-  }
+  oc_blockwise_scrub_buffers();
 #endif /* OC_BLOCK_WISE */
 
   return coap_status_code;

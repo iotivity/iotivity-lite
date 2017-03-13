@@ -32,7 +32,11 @@ typedef struct oc_blockwise_state_s
   uint32_t payload_size;
   uint32_t next_block_offset;
   uint8_t ref_count;
-  uint8_t buffer[OC_BLOCK_WISE_BUFFER_SIZE];
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_CLIENT
   uint16_t mid;
@@ -91,5 +95,7 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                                uint32_t incoming_block_offset,
                                const uint8_t *incoming_block,
                                uint16_t incoming_block_size);
+
+void oc_blockwise_scrub_buffers();
 
 #endif /* OC_BLOCKWISE_H */

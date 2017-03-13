@@ -86,10 +86,14 @@ typedef enum {
   OCF_SEC_ACL,
   OCF_SEC_CRED,
 #endif
-  __NUM_OC_CORE_RESOURCES__
+  OCF_D
 } oc_core_resource_t;
 
-#define NUM_OC_CORE_RESOURCES (__NUM_OC_CORE_RESOURCES__ + OC_MAX_NUM_DEVICES)
+#ifndef OC_DYNAMIC_ALLOCATION
+#define NUM_OC_CORE_RESOURCES (OCF_D + OC_MAX_NUM_DEVICES)
+#else /* !OC_DYNAMIC_ALLOCATION */
+#define NUM_OC_CORE_RESOURCES (OCF_D + 1)
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 typedef struct oc_resource_s oc_resource_t;
 

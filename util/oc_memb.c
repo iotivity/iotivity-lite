@@ -39,13 +39,20 @@
 void
 oc_memb_init(struct oc_memb *m)
 {
+#ifndef OC_DYNAMIC_ALLOCATION
   memset(m->count, 0, m->num);
   memset(m->mem, 0, (unsigned)m->size * (unsigned)m->num);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  (void)m;
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 /*---------------------------------------------------------------------------*/
 void *
 oc_memb_alloc(struct oc_memb *m)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  return calloc(1, m->size);
+#else  /* OC_DYNAMIC_ALLOCATION */
   int i;
 
   for (i = 0; i < m->num; ++i) {
@@ -61,11 +68,17 @@ oc_memb_alloc(struct oc_memb *m)
   /* No free block was found, so we return NULL to indicate failure to
      allocate block. */
   return NULL;
+#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 /*---------------------------------------------------------------------------*/
 char
 oc_memb_free(struct oc_memb *m, void *ptr)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  (void)m;
+  free(ptr);
+  return 0;
+#else  /* OC_DYNAMIC_ALLOCATION */
   int i;
   char *ptr2;
 
@@ -86,8 +99,10 @@ oc_memb_free(struct oc_memb *m, void *ptr)
     ptr2 += m->size;
   }
   return -1;
+#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 /*---------------------------------------------------------------------------*/
+#ifndef OC_DYNAMIC_ALLOCATION
 int
 oc_memb_inmemb(struct oc_memb *m, void *ptr)
 {
@@ -109,3 +124,4 @@ oc_memb_numfree(struct oc_memb *m)
 
   return num_free;
 }
+#endif /* !OC_DYNAMIC_ALLOCATION */

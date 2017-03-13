@@ -47,6 +47,8 @@
 #ifndef OC_MEMB_H
 #define OC_MEMB_H
 
+#include "config.h"
+
 #define CC_CONCAT2(s1, s2) s1##s2
 /**
  * A C preprocessing macro for concatenating two preprocessor tokens.
@@ -77,12 +79,18 @@
  * \param num The total number of memory chunks in the block.
  *
  */
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#define OC_MEMB(name, structure, num)                                          \
+  static struct oc_memb name = { sizeof(structure), 0, 0, 0 }
+#else /* OC_DYNAMIC_ALLOCATION */
 #define OC_MEMB(name, structure, num)                                          \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
   static struct oc_memb name = { sizeof(structure), num,                       \
                                  CC_CONCAT(name, _memb_count),                 \
                                  (void *)CC_CONCAT(name, _memb_mem) }
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 struct oc_memb
 {

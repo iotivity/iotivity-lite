@@ -25,14 +25,33 @@
 
 #include <stdarg.h>
 
-static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
+#define OC_MAX_DEV_PLATFORM_PAYLOAD (256)
 struct oc_device_info_t
 {
   oc_uuid_t uuid;
   oc_string_t payload;
-} oc_device_info[OC_MAX_NUM_DEVICES];
+};
+
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+static oc_resource_t *core_resources;
+static struct oc_device_info_t *oc_device_info;
+#else  /* OC_DYNAMIC_ALLOCATION */
+static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
+static struct oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
 static int device_count;
 static oc_string_t oc_platform_payload;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+void
+oc_core_init(void)
+{
+  core_resources =
+    (oc_resource_t *)calloc(NUM_OC_CORE_RESOURCES, sizeof(oc_resource_t));
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
@@ -109,7 +128,6 @@ finalize_payload(oc_string_t *temp_buffer, oc_string_t *payload)
     oc_free_string(temp_buffer);
     return 1;
   }
-
   oc_free_string(temp_buffer);
   return -1;
 }
@@ -119,8 +137,19 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
+#ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES)
     return NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  core_resources = (oc_resource_t *)realloc(
+    core_resources,
+    (NUM_OC_CORE_RESOURCES + device_count) * sizeof(oc_resource_t));
+
+  oc_device_info = (struct oc_device_info_t *)realloc(
+    oc_device_info, (device_count + 1) * sizeof(struct oc_device_info_t));
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  int ocf_d = NUM_OC_CORE_RESOURCES - 1 + device_count;
 
   oc_string_t temp_buffer;
 /* Once provisioned, UUID is retrieved from the credential store.
@@ -136,8 +165,6 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_gen_uuid(&oc_device_info[device_count].uuid);
 #endif
 
-  int ocf_d = NUM_OC_CORE_RESOURCES - 1 - device_count;
-
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(
@@ -150,8 +177,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   /* Encoding device resource payload */
-  oc_alloc_string(&temp_buffer, OC_MAX_DEVICE_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEVICE_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_DEV_PLATFORM_PAYLOAD);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEV_PLATFORM_PAYLOAD);
 
   oc_rep_start_root_object();
 
@@ -216,8 +243,8 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
   /* Encoding platform resource payload */
-  oc_alloc_string(&temp_buffer, OC_MAX_PLATFORM_PAYLOAD_SIZE);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_PLATFORM_PAYLOAD_SIZE);
+  oc_alloc_string(&temp_buffer, OC_MAX_DEV_PLATFORM_PAYLOAD);
+  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEV_PLATFORM_PAYLOAD);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
 
@@ -299,8 +326,8 @@ oc_core_get_resource_by_index(int type)
 oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri)
 {
-  int i;
-  for (i = 0; i < NUM_OC_CORE_RESOURCES; i++) {
+  int i, num_core_resources = NUM_OC_CORE_RESOURCES - 1 + device_count;
+  for (i = 0; i < num_core_resources; i++) {
     if (oc_string_len(core_resources[i].uri) == strlen(uri) &&
         strncmp(uri, oc_string(core_resources[i].uri), strlen(uri)) == 0)
       return &core_resources[i];
