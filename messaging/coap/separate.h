@@ -67,22 +67,22 @@ typedef struct coap_separate
 
   oc_endpoint_t endpoint;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   oc_method_t method;
   oc_string_t uri;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 } coap_separate_t;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 int coap_separate_accept(void *request,
                          oc_separate_response_t *separate_response,
                          oc_endpoint_t *endpoint, int observe,
                          uint16_t block2_size);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 int coap_separate_accept(void *request,
                          oc_separate_response_t *separate_response,
                          oc_endpoint_t *endpoint, int observe);
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 void coap_separate_resume(void *response, coap_separate_t *separate_store,
                           uint8_t code, uint16_t mid);

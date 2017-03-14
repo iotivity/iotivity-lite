@@ -33,6 +33,7 @@
 #endif /* OC_MAX_PDU_BUFFER_SIZE */
 
 #ifdef OC_BLOCK_WISE_SET_MTU
+#define OC_BLOCK_WISE
 #if OC_BLOCK_WISE_SET_MTU < (COAP_MAX_HEADER_SIZE + 16)
 #error "OC_BLOCK_WISE_SET_MTU must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
 #endif /* OC_BLOCK_WISE_SET_MTU is too small */
