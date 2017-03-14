@@ -14,8 +14,9 @@
 // limitations under the License.
 */
 
+#include "port/oc_connectivity.h"
 #include "config.h"
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
@@ -219,4 +220,4 @@ oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 
   return true;
 }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
