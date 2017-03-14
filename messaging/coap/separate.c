@@ -73,15 +73,15 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
  * this function will respond with 5.03 Service Unavailable. The client can
  * then retry later.
  */
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 int
 coap_separate_accept(void *request, oc_separate_response_t *separate_response,
                      oc_endpoint_t *endpoint, int observe, uint16_t block2_size)
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 int
 coap_separate_accept(void *request, oc_separate_response_t *separate_response,
                      oc_endpoint_t *endpoint, int observe)
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 {
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
@@ -133,14 +133,14 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   memcpy(separate_store->token, coap_req->token, coap_req->token_len);
   separate_store->token_len = coap_req->token_len;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (coap_req->uri_path_len > 0)
     oc_new_string(&separate_store->uri, coap_req->uri_path,
                   coap_req->uri_path_len);
 
   separate_store->method = coap_req->code;
   separate_store->block2_size = block2_size;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   separate_store->observe = observe;
   return 1;
