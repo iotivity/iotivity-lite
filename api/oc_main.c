@@ -65,7 +65,8 @@ oc_main_init(const oc_handler_t *handler)
     goto err;
 
 #ifdef OC_SERVER
-  app_callbacks->register_resources();
+  if (app_callbacks->register_resources)
+    app_callbacks->register_resources();
 #endif
 
 #ifdef OC_SECURITY
@@ -75,7 +76,8 @@ oc_main_init(const oc_handler_t *handler)
   OC_DBG("oc_main: stack initialized\n");
 
 #ifdef OC_CLIENT
-  app_callbacks->requests_entry();
+  if (app_callbacks->requests_entry)
+    app_callbacks->requests_entry();
 #endif
 
   initialized = true;

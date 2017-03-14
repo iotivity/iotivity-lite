@@ -54,9 +54,9 @@
 #include "oc_buffer.h"
 #include "oc_ri.h"
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
@@ -64,16 +64,16 @@
 
 OC_PROCESS(coap_engine, "CoAP Engine");
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 extern bool oc_ri_invoke_coap_entity_handler(
   void *request, void *response, oc_blockwise_state_t *request_state,
   oc_blockwise_state_t *response_state, uint16_t block2_size,
   oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
 extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              uint8_t *buffer,
                                              oc_endpoint_t *endpoint);
-#endif /* !OC_BLOCK_WISE_SET_MTU */
+#endif /* !OC_BLOCK_WISE */
 
 void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
@@ -110,9 +110,9 @@ coap_receive(oc_message_t *msg)
   uint8_t block1_more = 0, block2_more = 0;
   bool block1 = false, block2 = false;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *request_buffer = 0, *response_buffer = 0;
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   coap_status_code = coap_parse_message(message, msg->data, msg->length);
 
@@ -150,10 +150,10 @@ coap_receive(oc_message_t *msg)
                                &block2_offset))
       block2 = true;
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
     block1_size = MIN(block1_size, OC_BLOCK_SIZE);
     block2_size = MIN(block2_size, OC_BLOCK_SIZE);
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
     transaction = coap_get_transaction_by_mid(message->mid);
     if (transaction)
@@ -194,7 +194,7 @@ coap_receive(oc_message_t *msg)
                             coap_get_mid());
         }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         const char *href;
         int href_len = coap_get_header_uri_path(message, &href);
         const uint8_t *incoming_block;
@@ -321,23 +321,23 @@ coap_receive(oc_message_t *msg)
           }
           goto init_reset_message;
         }
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
         if (block1 || block2) {
           goto init_reset_message;
         }
-#endif /* !OC_BLOCK_WISE_SET_MTU */
-#ifdef OC_BLOCK_WISE_SET_MTU
+#endif /* !OC_BLOCK_WISE */
+#ifdef OC_BLOCK_WISE
       request_handler:
         if (oc_ri_invoke_coap_entity_handler(message, response, request_buffer,
                                              response_buffer, block2_size,
                                              &msg->endpoint)) {
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
         if (oc_ri_invoke_coap_entity_handler(message, response,
                                              transaction->message->data +
                                                COAP_MAX_HEADER_SIZE,
                                              &msg->endpoint)) {
-#endif /* !OC_BLOCK_WISE_SET_MTU */
-#ifdef OC_BLOCK_WISE_SET_MTU
+#endif /* !OC_BLOCK_WISE */
+#ifdef OC_BLOCK_WISE
           uint16_t payload_size = 0;
           const void *payload = oc_blockwise_dispatch_block(
             response_buffer, 0, block2_size, &payload_size);
@@ -356,24 +356,24 @@ coap_receive(oc_message_t *msg)
           } else {
             response_buffer->ref_count = 0;
           }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
         }
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         else {
           if (request_buffer)
             request_buffer->ref_count = 0;
           if (response_buffer)
             response_buffer->ref_count = 0;
         }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
         if (response->code != 0)
           goto send_message;
       }
     } else {
 #ifdef OC_CLIENT
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
       uint16_t response_mid = coap_get_mid();
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
       oc_client_cb_t *client_cb = 0;
       if (message->type != COAP_TYPE_RST) {
         client_cb =
@@ -392,7 +392,7 @@ coap_receive(oc_message_t *msg)
       }
 
 #ifdef OC_CLIENT
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
       if (client_cb) {
         request_buffer = oc_blockwise_find_request_buffer(
           oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
@@ -496,16 +496,16 @@ coap_receive(oc_message_t *msg)
         oc_blockwise_free_request_buffer(request_buffer);
         request_buffer = 0;
       }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
       if (client_cb) {
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
         oc_ri_invoke_client_cb(message, response_buffer, client_cb,
                                &msg->endpoint);
         goto free_blockwise_buffers;
-#else  /* OC_BLOCK_WISE_SET_MTU */
+#else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
       }
 #endif /* OC_CLIENT */
     }
@@ -513,7 +513,7 @@ coap_receive(oc_message_t *msg)
 
 init_reset_message:
   coap_init_message(response, COAP_TYPE_RST, 0, message->mid);
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
 #ifdef OC_CLIENT
 free_blockwise_buffers:
 #endif /* OC_CLIENT */
@@ -523,7 +523,7 @@ free_blockwise_buffers:
   if (response_buffer) {
     response_buffer->ref_count = 0;
   }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
 send_message:
   if (coap_status_code == NO_ERROR) {
@@ -532,7 +532,7 @@ send_message:
         if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
           coap_set_token(response, message->token, message->token_len);
         }
-#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE_SET_MTU)
+#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
         else {
           int i = 0;
           uint32_t r;
@@ -543,7 +543,7 @@ send_message:
           }
           response->token_len = i;
         }
-#endif /* OC_CLIENT && OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
 
       transaction->message->length =
@@ -558,14 +558,14 @@ send_message:
     coap_clear_transaction(transaction);
   }
 
-#ifdef OC_BLOCK_WISE_SET_MTU
+#ifdef OC_BLOCK_WISE
   if (request_buffer && request_buffer->ref_count == 0) {
     oc_blockwise_free_request_buffer(request_buffer);
   }
   if (response_buffer && response_buffer->ref_count == 0) {
     oc_blockwise_free_response_buffer(response_buffer);
   }
-#endif /* OC_BLOCK_WISE_SET_MTU */
+#endif /* OC_BLOCK_WISE */
 
   return coap_status_code;
 }
