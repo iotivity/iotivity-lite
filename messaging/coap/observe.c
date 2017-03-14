@@ -304,7 +304,7 @@ coap_notify_observers(oc_resource_t *resource,
                                oc_string_len(resource->uri));
 #endif /* OC_BLOCK_WISE */
 
-      LOG("Resource is SLOW; creating separate response\n");
+      OC_DBG("Resource is SLOW; creating separate response\n");
 #ifdef OC_BLOCK_WISE
       if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
                                0, obs->block2_size) == 1)
