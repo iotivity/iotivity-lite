@@ -121,6 +121,7 @@ network_event_thread(void *data)
   int i, n;
 
   while (!terminate) {
+    len = sizeof(client);
     setfds = rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
@@ -132,16 +133,25 @@ network_event_thread(void *data)
       }
 
       if (FD_ISSET(server_sock, &setfds)) {
-        message->length = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV6;
         FD_CLR(server_sock, &setfds);
         goto common;
       }
 
       if (FD_ISSET(mcast_sock, &setfds)) {
-        message->length = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
         message->endpoint.flags = IPV6;
         FD_CLR(mcast_sock, &setfds);
         goto common;
@@ -149,16 +159,20 @@ network_event_thread(void *data)
 
 #ifdef OC_IPV4
       if (FD_ISSET(server4_sock, &setfds)) {
-        message->length = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
         message->endpoint.flags = IPV4;
         FD_CLR(server4_sock, &setfds);
         goto common;
       }
 
       if (FD_ISSET(mcast4_sock, &setfds)) {
-        message->length = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
-                                   (struct sockaddr *)&client, &len);
+        int count = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
+                             (struct sockaddr *)&client, &len);
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
         message->endpoint.flags = IPV4;
         FD_CLR(mcast4_sock, &setfds);
         goto common;
