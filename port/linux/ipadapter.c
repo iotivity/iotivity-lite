@@ -126,6 +126,7 @@ network_event_thread(void *data)
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
     for (i = 0; i < n; i++) {
+      len = sizeof(client);
       oc_message_t *message = oc_allocate_message();
 
       if (!message) {
