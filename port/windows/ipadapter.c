@@ -174,6 +174,7 @@ network_event_thread(void *data)
   int i, n;
 
   while (!terminate) {
+    len = sizeof(client);
     setfds = rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
@@ -187,7 +188,11 @@ network_event_thread(void *data)
       if (FD_ISSET(server_sock, &setfds)) {
         int count = recvfrom(server_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV6;
         FD_CLR(server_sock, &setfds);
         goto common;
@@ -196,7 +201,11 @@ network_event_thread(void *data)
       if (FD_ISSET(mcast_sock, &setfds)) {
         int count = recvfrom(mcast_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV6;
         FD_CLR(mcast_sock, &setfds);
         goto common;
@@ -206,7 +215,11 @@ network_event_thread(void *data)
       if (FD_ISSET(server4_sock, &setfds)) {
         int count = recvfrom(server4_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV4;
         FD_CLR(server4_sock, &setfds);
         goto common;
@@ -215,7 +228,11 @@ network_event_thread(void *data)
       if (FD_ISSET(mcast4_sock, &setfds)) {
         int count = recvfrom(mcast4_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV4;
         FD_CLR(mcast4_sock, &setfds);
         goto common;
@@ -226,14 +243,22 @@ network_event_thread(void *data)
       if (FD_ISSET(secure_sock, &setfds)) {
         int count = recvfrom(secure_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV6 | SECURED;
       }
 #ifdef OC_IPV4
       if (FD_ISSET(secure4_sock, &setfds)) {
         int count = recvfrom(secure4_sock, message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
-        message->length = count < 0 ? 0 : count;
+        if (count < 0) {
+            oc_message_unref(message);
+            continue;
+        }
+        message->length = count;
         message->endpoint.flags = IPV4 | SECURED;
       }
 #endif
@@ -255,12 +280,9 @@ network_event_thread(void *data)
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
       }
 
-      PRINT("Incoming message from ");
-      PRINTipaddr(message->endpoint);
-      PRINT("\n");
-#ifdef OC_DEBUG
-      hexdump(message->data, message->length);
-#endif
+      OC_DBG("Incoming message from ");
+      OC_LOGipaddr(message->endpoint);
+      OC_DBG("\n");
 
       oc_network_event(message);
     }
@@ -273,9 +295,9 @@ network_event_thread(void *data)
 void
 oc_send_buffer(oc_message_t *message)
 {
-  PRINT("Outgoing message to ");
-  PRINTipaddr(message->endpoint);
-  PRINT("\n");
+  OC_DBG("Outgoing message to ");
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n");
 
   struct sockaddr_storage receiver;
 #ifdef OC_IPV4
@@ -326,15 +348,15 @@ oc_send_buffer(oc_message_t *message)
   int bytes_sent = 0, x;
   while (bytes_sent < (int)message->length) {
     x = sendto(send_sock, message->data + bytes_sent,
-               message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
-               sizeof(receiver));
+        message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
+        sizeof(receiver));
     if (x < 0) {
-      PRINT("sendto() returned errno %d\n", errno);
+      OC_WRN("sendto() returned errno %d\n", errno);
       return;
     }
     bytes_sent += x;
   }
-  PRINT("Sent %d bytes\n", bytes_sent);
+  OC_DBG("Sent %d bytes\n", bytes_sent);
 }
 
 static int
@@ -520,7 +542,7 @@ connectivity_ipv4_init(void)
     return -1;
   }
   if (bind(mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) == -1) {
-    OC_ERR("binding IPv4 secure socket %d\n", errno);
+    OC_ERR("binding mcast IPv4 socket %d\n", errno);
     return -1;
   }
 
@@ -532,7 +554,7 @@ connectivity_ipv4_init(void)
   }
 
   if (bind(secure4_sock, (struct sockaddr *)&secure4, sizeof(secure4)) == -1) {
-    OC_ERR("binding smcast IPv4 socket %d\n", errno);
+    OC_ERR("binding IPv4 secure socket %d\n", errno);
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -633,7 +655,7 @@ oc_connectivity_init(void)
     return -1;
   }
   if (bind(secure_sock, (struct sockaddr *)&secure, sizeof(secure)) == -1) {
-    OC_ERR("binding IPv4 secure socket %d\n", errno);
+    OC_ERR("binding IPv6 secure socket %d\n", errno);
     return -1;
   }
 
