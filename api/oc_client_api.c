@@ -290,8 +290,7 @@ oc_stop_observe(const char *uri, oc_server_handle_t *server)
 
 #ifdef OC_IPV4
 static bool
-oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
-                     oc_discovery_handler_t handler, void *user_data)
+oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, oc_discovery_handler_t handler, void *user_data)
 {
   bool status = false;
   oc_server_handle_t handle;
@@ -310,12 +309,6 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
 
   cb->mid = ipv6_cb->mid;
   memcpy(cb->token, ipv6_cb->token, cb->token_len);
-
-  if (rt && strlen(rt) > 0) {
-    oc_concat_strings(&uri_query, "if=oic.if.ll&rt=", rt);
-  } else {
-    oc_new_string(&uri_query, "if=oic.if.ll", 12);
-  }
 
   cb->discovery = true;
   status = prepare_coap_request(cb);
@@ -364,7 +357,7 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 
 #ifdef OC_IPV4
   if (status)
-    status = oc_do_ipv4_discovery(cb, rt, handler, user_data);
+    status = oc_do_ipv4_discovery(cb, handler, user_data);
 #endif
 
   return status;
