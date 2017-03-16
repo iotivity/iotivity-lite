@@ -121,6 +121,7 @@ network_event_thread(void *data)
   int i, n;
 
   while (!terminate) {
+    len = sizeof(client);
     setfds = rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
