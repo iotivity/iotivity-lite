@@ -1,8 +1,12 @@
-CC = gcc
-SED = sed
-INSTALL = install
+CC ?= gcc
+AR ?= ar
+SED ?= sed
+RM ?= rm
+MKDIR ?= mkdir
+INSTALL ?= install
 
 DESTDIR ?= /usr/local
+OBJDIR ?= ./obj
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
 exec_prefix = $(prefix)
@@ -29,10 +33,10 @@ HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall #-Wextra -Werror -pedantic #-Wl,-Map,client.map
-OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
-OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
-OBJ_SERVER=$(addprefix obj/server/,$(notdir $(SRC:.c=.o)))
-OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
+OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
+OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
+OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(notdir $(SRC:.c=.o)))
+OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
 LIBS?= -lm -pthread -lrt
 
@@ -62,22 +66,23 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+default: all
 
 .PHONY: clean
 
-obj/%.o: %.c
+${OBJDIR}/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS}
 
-obj/server/%.o: %.c
+${OBJDIR}/server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_SERVER
 
-obj/client/%.o: %.c
+${OBJDIR}/client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
-obj/client_server/%.o: %.c
+${OBJDIR}/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
@@ -148,10 +153,10 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@includedir@,$(includedir),'
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
+	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES)
+	$(RM) -rf ${all} $(SAMPLES)
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
@@ -171,6 +176,6 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-constrained/deps/tinycbor/src
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
-# Installing the samples
+	# Installing the samples
 	$(INSTALL) -d ${install_bin_dir}
 	$(INSTALL) $(SAMPLES) ${install_bin_dir}
