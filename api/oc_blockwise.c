@@ -15,7 +15,7 @@
 */
 
 #include "port/oc_connectivity.h"
-#include "config.h"
+#include <config.h>
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #include "port/oc_log.h"
