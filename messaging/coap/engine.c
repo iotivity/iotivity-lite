@@ -98,7 +98,7 @@ coap_receive(oc_message_t *msg)
 {
   coap_status_code = NO_ERROR;
 
-  OC_DBG("\n\nCoAP Engine: received datalen=%u \n", msg->length);
+  OC_DBG("\n\nCoAP Engine: received datalen=%u \n", (unsigned int)msg->length);
 
   /* static declaration reduces stack peaks and program code size */
   static coap_packet_t
@@ -180,8 +180,8 @@ coap_receive(oc_message_t *msg)
         OC_DBG("  method: DELETE\n");
         break;
       }
-      OC_DBG("  URL: %.*s\n", message->uri_path_len, message->uri_path);
-      OC_DBG("  Payload: %.*s\n", message->payload_len, message->payload);
+      OC_DBG("  URL: %.*s\n", (int)message->uri_path_len, message->uri_path);
+      OC_DBG("  Payload: %.*s\n", (int)message->payload_len, message->payload);
 #endif
 
       /* create transaction for response */
