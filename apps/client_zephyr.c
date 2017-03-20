@@ -25,6 +25,7 @@ static char light_1[MAX_URI_LENGTH];
 static oc_server_handle_t light_server;
 static bool light_state = false;
 static struct k_sem block;
+static bool got_discovery_response = false;
 
 static void
 set_device_custom_property(void *data)
@@ -114,16 +115,29 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       oc_do_observe(light_1, &light_server, NULL, &observe_light, LOW_QOS,
                     NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
+
+      got_discovery_response = true;
       return OC_STOP_DISCOVERY;
     }
   }
   return OC_CONTINUE_DISCOVERY;
 }
 
+static oc_event_callback_retval_t
+do_discovery(void *data)
+{
+  (void)data;
+  if (got_discovery_response) {
+    return DONE;
+  }
+  oc_do_ip_discovery("oic.r.light", &discovery, NULL);
+  return CONTINUE;
+}
+
 static void
 issue_requests(void)
 {
-  oc_do_ip_discovery("oic.r.light", &discovery, NULL);
+  oc_set_delayed_callback(NULL, &do_discovery, 10);
 }
 
 static void
