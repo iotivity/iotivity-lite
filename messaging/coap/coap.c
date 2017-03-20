@@ -177,7 +177,7 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
          array);
 
   if (split_char != '\0') {
-    size_t j;
+    int j;
     uint8_t *part_start = array;
     uint8_t *part_end = NULL;
     size_t temp_length;
@@ -423,7 +423,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 void
 coap_send_message(oc_message_t *message)
 {
-  OC_DBG("-sending OCF message (%u)-\n", message->length);
+  OC_DBG("-sending OCF message (%u)-\n", (unsigned int)message->length);
 
   oc_send_message(message);
 }

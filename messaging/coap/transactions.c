@@ -86,7 +86,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
   if (t) {
     t->message = oc_allocate_message();
     if (t->message) {
-      OC_DBG("Created new transaction %d %d\n", mid, t->message->length);
+      OC_DBG("Created new transaction %d %d\n", mid, (int)t->message->length);
       t->mid = mid;
       t->retrans_counter = 0;
 
@@ -128,10 +128,10 @@ coap_send_transaction(coap_transaction_t *t)
           COAP_RESPONSE_TIMEOUT_TICKS +
           (oc_random_value() %
            (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        OC_DBG("Initial interval %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Initial interval %d\n", (int)t->retrans_timer.timer.interval);
       } else {
         t->retrans_timer.timer.interval <<= 1; /* double */
-        OC_DBG("Doubled %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Doubled %d\n", (int)t->retrans_timer.timer.interval);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
