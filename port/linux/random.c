@@ -40,7 +40,7 @@ oc_random_value(void)
 }
 
 void
-oc_random_destroy()
+oc_random_destroy(void)
 {
   close(urandom_fd);
 }
