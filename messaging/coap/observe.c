@@ -259,6 +259,8 @@ coap_notify_observers(oc_resource_t *resource,
   if (!buffer)
     goto leave_notify_observers;
 #endif /* OC_DYNAMIC_ALLOCATION */
+  if (!resources && !endpoint)
+    goto leave_notify_observers;
 
   oc_request_t request = { 0 };
   oc_response_t response = { 0 };
@@ -289,14 +291,18 @@ coap_notify_observers(oc_resource_t *resource,
     }
   }
 
+  num_observers = 0;
+
   coap_observer_t *obs = NULL;
   /* iterate over observers */
-  for (obs = (coap_observer_t *)oc_list_head(observers_list);
-       obs && ((resource && obs->resource == resource) ||
-               (endpoint &&
-                memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0));
+  for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    num_observers = obs->resource->num_observers;
+    if ((resource && obs->resource != resource) ||
+        (endpoint &&
+         memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) != 0)) {
+      continue;
+    }
+    num_observers++;
 
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
