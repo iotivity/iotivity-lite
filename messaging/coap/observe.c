@@ -239,6 +239,11 @@ coap_notify_observers(oc_resource_t *resource,
                       oc_response_buffer_t *response_buf,
                       oc_endpoint_t *endpoint)
 {
+  if (!resource && !endpoint) {
+    OC_DBG("coap_notify_observers: no resource or endpoint passed; returning\n");
+    return 0;
+  }
+
   int num_observers = 0;
   if (resource) {
     if (!resource->num_observers) {
@@ -289,14 +294,18 @@ coap_notify_observers(oc_resource_t *resource,
     }
   }
 
+  num_observers = 0;
+
   coap_observer_t *obs = NULL;
   /* iterate over observers */
-  for (obs = (coap_observer_t *)oc_list_head(observers_list);
-       obs && ((resource && obs->resource == resource) ||
-               (endpoint &&
-                memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0));
+  for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    num_observers = obs->resource->num_observers;
+    if ((resource && obs->resource != resource) ||
+        (endpoint &&
+         memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) != 0)) {
+      continue;
+    }
+    num_observers++;
 
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
