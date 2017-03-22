@@ -119,7 +119,6 @@ oc_blockwise_free_request_buffer(void *data)
   oc_blockwise_request_state_t *buffer = (oc_blockwise_request_state_t *)data;
   if (oc_string_len(buffer->uri_query))
     oc_free_string(&buffer->uri_query);
-  oc_ri_remove_timed_event_callback(data, oc_blockwise_free_request_buffer);
   oc_blockwise_free_buffer(oc_blockwise_requests,
                            &oc_blockwise_request_states_s, data);
   return DONE;
@@ -128,7 +127,6 @@ oc_blockwise_free_request_buffer(void *data)
 oc_event_callback_retval_t
 oc_blockwise_free_response_buffer(void *data)
 {
-  oc_ri_remove_timed_event_callback(data, oc_blockwise_free_response_buffer);
   oc_blockwise_free_buffer(oc_blockwise_responses,
                            &oc_blockwise_response_states_s, data);
   return DONE;
