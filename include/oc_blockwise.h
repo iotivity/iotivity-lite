@@ -82,9 +82,9 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(const char *href,
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method);
 
-oc_event_callback_retval_t oc_blockwise_free_request_buffer(void *buffer);
+void oc_blockwise_free_request_buffer(oc_blockwise_state_t *buffer);
 
-oc_event_callback_retval_t oc_blockwise_free_response_buffer(void *buffer);
+void oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer);
 
 const void *oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer,
                                         uint32_t block_offset,
