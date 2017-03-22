@@ -93,7 +93,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
   for (coap_separate_t *item = oc_list_head(separate_response->requests);
-       item != NULL; item = oc_list_item_next(separate_response->requests)) {
+       item != NULL; item = item->next) {
     if (item->token_len == coap_req->token_len &&
         memcmp(item->token, coap_req->token, item->token_len) == 0) {
       return 0;
@@ -138,12 +138,12 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   memcpy(separate_store->token, coap_req->token, coap_req->token_len);
   separate_store->token_len = coap_req->token_len;
 
-#ifdef OC_BLOCK_WISE
-  if (coap_req->uri_path_len > 0)
-    oc_new_string(&separate_store->uri, coap_req->uri_path,
-                  coap_req->uri_path_len);
+  oc_new_string(&separate_store->uri, coap_req->uri_path,
+                coap_req->uri_path_len);
 
   separate_store->method = coap_req->code;
+
+#ifdef OC_BLOCK_WISE
   separate_store->block2_size = block2_size;
 #endif /* OC_BLOCK_WISE */
 

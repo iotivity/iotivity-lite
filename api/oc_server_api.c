@@ -344,7 +344,11 @@ oc_send_separate_response(oc_separate_response_t *handle,
 #endif /* OC_BLOCK_WISE */
       coap_separate_clear(handle, cur);
     } else {
-      if (coap_notify_observers(NULL, &response_buffer, &cur->endpoint) == 0) {
+      oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
+        oc_string(cur->uri), oc_string_len(cur->uri));
+      if (resource &&
+          coap_notify_observers(resource, &response_buffer, &cur->endpoint) ==
+            0) {
         coap_separate_clear(handle, cur);
       }
     }

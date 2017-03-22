@@ -239,19 +239,17 @@ coap_notify_observers(oc_resource_t *resource,
                       oc_response_buffer_t *response_buf,
                       oc_endpoint_t *endpoint)
 {
-  if (!resource && !endpoint) {
-    OC_DBG("coap_notify_observers: no resource or endpoint passed; returning\n");
+  if (!resource) {
+    OC_DBG("coap_notify_observers: no resource passed; returning\n");
     return 0;
   }
 
   int num_observers = 0;
-  if (resource) {
-    if (!resource->num_observers) {
-      OC_DBG("coap_notify_observers: no observers; returning\n");
-      return 0;
-    }
-    num_observers = resource->num_observers;
+  if (!resource->num_observers) {
+    OC_DBG("coap_notify_observers: no observers; returning\n");
+    return 0;
   }
+  num_observers = resource->num_observers;
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *response_state;
@@ -294,18 +292,15 @@ coap_notify_observers(oc_resource_t *resource,
     }
   }
 
-  num_observers = 0;
-
   coap_observer_t *obs = NULL;
   /* iterate over observers */
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    if ((resource && obs->resource != resource) ||
+    if ((obs->resource != resource) ||
         (endpoint &&
          memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) != 0)) {
       continue;
     }
-    num_observers++;
 
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
@@ -314,10 +309,8 @@ coap_notify_observers(oc_resource_t *resource,
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
 
-#ifdef OC_BLOCK_WISE
       coap_set_header_uri_path(req, oc_string(resource->uri),
                                oc_string_len(resource->uri));
-#endif /* OC_BLOCK_WISE */
 
       OC_DBG("Resource is SLOW; creating separate response\n");
 #ifdef OC_BLOCK_WISE
