@@ -57,20 +57,13 @@ typedef struct coap_separate
 {
   struct coap_separate *next;
   coap_message_type_t type;
-
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
-
   uint16_t block2_size;
-
   int32_t observe;
-
   oc_endpoint_t endpoint;
-
-#ifdef OC_BLOCK_WISE
   oc_method_t method;
   oc_string_t uri;
-#endif /* OC_BLOCK_WISE */
 } coap_separate_t;
 
 #ifdef OC_BLOCK_WISE

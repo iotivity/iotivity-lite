@@ -233,10 +233,13 @@ stop_processes(void)
 oc_resource_t *
 oc_ri_get_app_resource_by_uri(const char *uri, int uri_len)
 {
+  int skip = 0;
+  if (uri[0] != '/')
+    skip = 1;
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if ((int)oc_string_len(res->uri) == uri_len &&
-        strncmp(uri, oc_string(res->uri), uri_len) == 0)
+    if ((int)oc_string_len(res->uri) == (uri_len + skip) &&
+        strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0)
       return res;
     res = res->next;
   }
