@@ -218,6 +218,7 @@ start_processes(void)
 static void
 stop_processes(void)
 {
+  oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&timed_callback_events);
   oc_process_exit(&coap_engine);
