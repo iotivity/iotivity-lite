@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,33 +14,14 @@
 // limitations under the License.
 */
 
-#include "port/oc_random.h"
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef OC_BUFFER_SETTINGS_H
+#define OC_BUFFER_SETTINGS_H
 
-static int urandom_fd;
-
-void
-oc_random_init(void)
-{
-  urandom_fd = open("/dev/urandom", O_RDONLY);
-}
-
-unsigned int
-oc_random_value(void)
-{
-  unsigned int rand = 0;
-  int ret = read(urandom_fd, &rand, sizeof(rand));
-  assert(ret != -1);
-  return rand;
-}
-
-void
-oc_random_destroy(void)
-{
-  close(urandom_fd);
-}
+#ifdef OC_DYNAMIC_ALLOCATION
+int oc_set_mtu_size(long mtu_size);
+long oc_get_mtu_size(void);
+void oc_set_max_app_data_size(long size);
+long oc_get_max_app_data_size(void);
+long oc_get_block_size(void);
+#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_BUFFER_SETTINGS_H */

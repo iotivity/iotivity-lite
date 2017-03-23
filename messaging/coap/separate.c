@@ -85,12 +85,15 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
 {
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
+#ifdef OC_DYNAMIC_ALLOCATION
+    separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
+#endif /* OC_DYNAMIC_ALLOCATION */
   }
 
   coap_packet_t *const coap_req = (coap_packet_t *)request;
 
   for (coap_separate_t *item = oc_list_head(separate_response->requests);
-       item != NULL; item = oc_list_item_next(separate_response->requests)) {
+       item != NULL; item = item->next) {
     if (item->token_len == coap_req->token_len &&
         memcmp(item->token, coap_req->token, item->token_len) == 0) {
       return 0;
@@ -120,6 +123,8 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
       message->length = coap_serialize_message(ack, message->data);
       coap_send_message(message);
+      if (message->ref_count == 0)
+        oc_message_unref(message);
     } else {
       coap_separate_clear(separate_response, separate_store);
       return 0;
@@ -133,12 +138,12 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   memcpy(separate_store->token, coap_req->token, coap_req->token_len);
   separate_store->token_len = coap_req->token_len;
 
-#ifdef OC_BLOCK_WISE
-  if (coap_req->uri_path_len > 0)
-    oc_new_string(&separate_store->uri, coap_req->uri_path,
-                  coap_req->uri_path_len);
+  oc_new_string(&separate_store->uri, coap_req->uri_path,
+                coap_req->uri_path_len);
 
   separate_store->method = coap_req->code;
+
+#ifdef OC_BLOCK_WISE
   separate_store->block2_size = block2_size;
 #endif /* OC_BLOCK_WISE */
 
@@ -160,6 +165,10 @@ void
 coap_separate_clear(oc_separate_response_t *separate_response,
                     coap_separate_t *separate_store)
 {
+#ifdef OC_BLOCK_WISE
+  if (oc_string_len(separate_store->uri) > 0)
+    oc_free_string(&separate_store->uri);
+#endif /* OC_BLOCK_WISE */
   oc_list_remove(separate_response->requests, separate_store);
   oc_memb_free(&separate_requests, separate_store);
 }

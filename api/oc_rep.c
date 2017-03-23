@@ -51,6 +51,7 @@ static oc_rep_t *
 _alloc_rep(void)
 {
   oc_rep_t *rep = oc_memb_alloc(&rep_objects);
+  rep->name.size = 0;
 #ifdef OC_DEBUG
   oc_assert(rep != NULL);
 #endif
@@ -96,7 +97,8 @@ oc_free_rep(oc_rep_t *rep)
   default:
     break;
   }
-  oc_free_string(&rep->name);
+  if (rep->name.size > 0)
+    oc_free_string(&rep->name);
   _free_rep(rep);
 }
 

@@ -45,7 +45,7 @@ oc_new_string(oc_string_t *ocstring, const char *str, int str_len)
 {
   oc_malloc(ocstring, str_len + 1, BYTE_POOL);
   memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
-  memcpy(oc_string(*ocstring) + strlen(str), (const uint8_t *)"", 1);
+  memcpy(oc_string(*ocstring) + str_len, (const uint8_t *)"", 1);
 }
 
 void

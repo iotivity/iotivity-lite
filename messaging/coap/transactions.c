@@ -52,6 +52,10 @@
 #include "util/oc_memb.h"
 #include <string.h>
 
+#ifdef OC_BLOCK_WISE
+#include "oc_blockwise.h"
+#endif /* OC_BLOCK_WISE */
+
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
@@ -80,13 +84,11 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
-    oc_message_t *message = oc_allocate_message();
-    if (message) {
-      OC_DBG("Created new transaction %d %d\n", mid, message->length);
+    t->message = oc_allocate_message();
+    if (t->message) {
+      OC_DBG("Created new transaction %d %d\n", mid, (int)t->message->length);
       t->mid = mid;
       t->retrans_counter = 0;
-
-      t->message = message;
 
       /* save client address */
       memcpy(&t->message->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -126,10 +128,10 @@ coap_send_transaction(coap_transaction_t *t)
           COAP_RESPONSE_TIMEOUT_TICKS +
           (oc_random_value() %
            (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        OC_DBG("Initial interval %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Initial interval %d\n", (int)t->retrans_timer.timer.interval);
       } else {
         t->retrans_timer.timer.interval <<= 1; /* double */
-        OC_DBG("Doubled %d\n", t->retrans_timer.timer.interval);
+        OC_DBG("Doubled %d\n", (int)t->retrans_timer.timer.interval);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
@@ -160,6 +162,10 @@ coap_send_transaction(coap_transaction_t *t)
 #ifdef OC_CLIENT
       oc_ri_remove_client_cb_by_mid(t->mid);
 #endif /* OC_CLIENT */
+
+#ifdef OC_BLOCK_WISE
+      oc_blockwise_scrub_buffers();
+#endif /* OC_BLOCK_WISE */
 
       coap_clear_transaction(t);
     }
@@ -202,15 +208,16 @@ coap_get_transaction_by_mid(uint16_t mid)
 void
 coap_check_transactions(void)
 {
-  coap_transaction_t *t = NULL;
-
-  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
-       t = t->next) {
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
+                     *next;
+  while (t != NULL) {
+    next = t->next;
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
       OC_DBG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
       coap_send_transaction(t);
     }
+    t = next;
   }
 }
 /*---------------------------------------------------------------------------*/

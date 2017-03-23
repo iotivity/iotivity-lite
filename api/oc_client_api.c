@@ -118,7 +118,7 @@ prepare_coap_request(oc_client_cb_t *cb)
       return false;
     }
 
-    oc_rep_new(request_buffer->buffer, OC_BLOCK_WISE_BUFFER_SIZE);
+    oc_rep_new(request_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 
     request_buffer->mid = cb->mid;
   }

@@ -86,9 +86,18 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
+    uint16_t pos;
     size_t bytes_read = net_nbuf_appdatalen(buf);
+    size_t offset_from_start = net_buf_frags_len(buf) - bytes_read;
     bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
-    memcpy(message->data, net_nbuf_appdata(buf), bytes_read);
+    struct net_buf *frag = net_nbuf_read(buf->frags, offset_from_start, &pos,
+                                         bytes_read, message->data);
+    if (!frag && pos == 0xffff) {
+      net_nbuf_unref(buf);
+      oc_message_unref(message);
+      return;
+    }
+
     message->length = bytes_read;
     if (user_data != NULL)
       message->endpoint.flags = IPV6 | SECURED;
@@ -98,7 +107,7 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
     message->endpoint.addr.ipv6.scope = 0;
     message->endpoint.addr.ipv6.port = ntohs(NET_UDP_BUF(buf)->src_port);
 
-    PRINT("oc_network_receive: received %d bytes\n", message->length);
+    PRINT("oc_network_receive: received %d bytes\n", (int)message->length);
     PRINT("oc_network_receive: incoming message: ");
     PRINTipaddr(message->endpoint);
     PRINT("\n");
@@ -134,7 +143,14 @@ oc_send_buffer(oc_message_t *message)
 
   /* Network buffer to hold data to be sent */
   struct net_buf *send_buf;
-  send_buf = net_nbuf_get_tx(udp_recv6, K_NO_WAIT);
+#ifdef OC_SECURITY
+  if (message->endpoint.flags & SECURED) {
+    send_buf = net_nbuf_get_tx(dtls_recv6, K_NO_WAIT);
+  } else
+#endif /* OC_SECURITY */
+  {
+    send_buf = net_nbuf_get_tx(udp_recv6, K_NO_WAIT);
+  }
   if (!send_buf) {
     OC_WRN("oc_send_buffer: cannot acquire send_buf\n");
     return;

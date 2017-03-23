@@ -46,6 +46,10 @@ else
 	CFLAGS += -Wl,--gc-sections
 endif
 
+ifeq ($(DYNAMIC),1)
+	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
+
 ifeq ($(SECURE),1)
 	SRC += $(wildcard ../../security/*.c)
 	SRC_COMMON += ${DTLS}
