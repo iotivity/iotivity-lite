@@ -187,7 +187,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         len++;
         if (*err != CborNoError)
           return;
-        cbor_value_advance(&t);
+        *err = cbor_value_advance(&t);
       }
     }
     k = 0;
