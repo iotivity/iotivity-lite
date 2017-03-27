@@ -1,0 +1,9 @@
+Code-Review+1: Andreas Zisowsky <zisowsky@lynxtechnology.com>
+Code-Review+1: Christian Gran <gran@lynxtechnology.com>
+Code-Review+2: Kishen Maloor <kishen.maloor@intel.com>
+Verified+1: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-by: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-at: Mon, 27 Mar 2017 18:10:25 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/17961
+Project: iotivity-constrained
+Branch: refs/heads/master
