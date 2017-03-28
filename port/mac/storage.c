@@ -22,10 +22,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define STORE_PATH_SIZE 64
+#include <sys/syslimits.h>
+
+#define STORE_PATH_SIZE PATH_MAX
 
 static char store_path[STORE_PATH_SIZE];
-static int store_path_len;
+static size_t store_path_len;
 static bool path_set = false;
 
 int

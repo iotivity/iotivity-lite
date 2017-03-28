@@ -294,7 +294,7 @@ oc_send_buffer(oc_message_t *message)
   } else
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4) {
+  if (message->endpoint.flags & IPV4) {
     send_sock = server4_sock;
   } else {
     send_sock = server_sock;
@@ -350,7 +350,7 @@ oc_send_discovery_request(oc_message_t *message)
     } else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
                interface->ifa_addr->sa_family == AF_INET) {
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
-      if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
+      if (setsockopt(server4_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                      sizeof(addr->sin_addr)) == -1) {
         OC_ERR("setting socket option for default IP_MULTICAST_IF: %d\n",
                errno);
