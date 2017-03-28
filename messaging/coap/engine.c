@@ -75,6 +75,22 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
 
+#define OC_REQUEST_HISTORY_SIZE (250)
+static uint16_t history[OC_REQUEST_HISTORY_SIZE];
+static uint8_t idx;
+
+static bool
+check_if_duplicate(uint16_t mid)
+{
+  size_t i;
+  for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
+    if (history[i] == mid) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
@@ -119,8 +135,6 @@ coap_receive(oc_message_t *msg)
   coap_status_code = coap_parse_message(message, msg->data, msg->length);
 
   if (coap_status_code == NO_ERROR) {
-
-/*TODO duplicates suppression, if required by application */
 
 #if OC_DEBUG
     OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u\n",
@@ -184,18 +198,21 @@ coap_receive(oc_message_t *msg)
       OC_DBG("  Payload: %.*s\n", (int)message->payload_len, message->payload);
 #endif
 
+      if (message->type == COAP_TYPE_CON) {
+        coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
+      } else {
+        if (check_if_duplicate(message->mid))
+          return 0;
+        history[idx] = message->mid;
+        idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
+        coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
+                          coap_get_mid());
+      }
+
       /* create transaction for response */
       transaction = coap_new_transaction(message->mid, &msg->endpoint);
 
       if (transaction) {
-        if (message->type == COAP_TYPE_CON) {
-          coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
-                            message->mid);
-        } else {
-          coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
-                            coap_get_mid());
-        }
-
 #ifdef OC_BLOCK_WISE
         const char *href;
         int href_len = coap_get_header_uri_path(message, &href);
