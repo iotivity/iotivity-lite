@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 typedef uint64_t oc_clock_time_t;
-#define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
+#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000000)
 
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
@@ -27,9 +27,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Server-side parameters */
 /* Maximum number of server resources */
-#define OC_MAX_APP_RESOURCES (2)
+#define OC_MAX_APP_RESOURCES (32)
 
-#define OC_MAX_NUM_COLLECTIONS (1)
+#define OC_MAX_NUM_COLLECTIONS (16)
 
 /* Common paramters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
@@ -39,7 +39,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_APP_DATA_SIZE (1024)
 
 /* Maximum number of concurrent requests */
-#define OC_MAX_NUM_CONCURRENT_REQUESTS (2)
+#define OC_MAX_NUM_CONCURRENT_REQUESTS (16)
 
 /* Maximum number of nodes in a payload tree structure */
 #define OC_MAX_NUM_REP_OBJECTS (100)
@@ -49,7 +49,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Security layer */
 /* Maximum number of authorized clients */
-#define OC_MAX_NUM_SUBJECTS (2)
+#define OC_MAX_NUM_SUBJECTS (8)
 
 /* Maximum number of concurrent DTLS sessions */
 #define OC_MAX_DTLS_PEERS (1)
