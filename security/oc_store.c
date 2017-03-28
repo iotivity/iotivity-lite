@@ -22,7 +22,7 @@
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "port/oc_storage.h"
-#include <config.h>
+#include "config.h"
 
 void
 oc_sec_load_doxm(void)
