@@ -285,6 +285,8 @@ int
 main(void)
 {
   int init;
+  pthread_cond_init(&cv, NULL);
+  pthread_mutex_init(&mutex, NULL);
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -319,6 +321,8 @@ main(void)
   }
 
   oc_main_shutdown();
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
   return 0;
 }
 #elif defined(WIN32) /* windows */

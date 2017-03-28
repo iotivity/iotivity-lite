@@ -19,7 +19,7 @@
 
 #include "deps/tinycbor/src/cbor.h"
 #include "oc_helpers.h"
-#include <config.h>
+#include "config.h"
 #include <stdbool.h>
 #include <stdint.h>
 
