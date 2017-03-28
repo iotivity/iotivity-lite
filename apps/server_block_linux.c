@@ -146,10 +146,8 @@ main(void)
   oc_storage_config("./creds");
 #endif /* OC_SECURITY */
 
-#ifdef OC_DYNAMIC_ALLOCATION
   oc_set_mtu_size(100);
   oc_set_max_app_data_size(2048);
-#endif /* OC_DYNAMIC_ALLOCATION */
 
   init = oc_main_init(&handler);
   if (init < 0)
