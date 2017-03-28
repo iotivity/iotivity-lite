@@ -276,6 +276,7 @@ oc_stop_observe(const char *uri, oc_server_handle_t *server)
   if (!cb)
     return false;
 
+  cb->mid = coap_get_mid();
   cb->observe_seq = 1;
 
   bool status = false;
