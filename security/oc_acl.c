@@ -288,14 +288,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     if (!res) {
       res = oc_sec_acl_get_ace(identity, resource, true, false);
     }
+
+    if (!res) {
+      if (memcmp(identity->id, ac_list.rowneruuid.id, 16) == 0 &&
+          memcmp(oc_string(resource->uri), "/oic/sec/acl", 12) == 0) {
+        return true;
+      }
+    }
   }
 
   if (!res) { // Try Anonymous
     res = oc_sec_acl_get_ace(&WILDCARD_SUB, resource, false, false);
   }
 
-  if (!res)
-    return granted;
+  if (!res) {
+    return false;
+  }
 
   OC_DBG("Got permissions mask %d\n", res->permissions);
 
