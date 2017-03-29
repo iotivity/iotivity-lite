@@ -27,6 +27,11 @@
 
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#else /* OC_DYNAMIC_ALLOCATION */
+#define MAX_NUM_PERM_GROUPS (OC_MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 1) * (OC_MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES))
 OC_MEMB(ace_l, oc_sec_ace_t, OC_MAX_NUM_SUBJECTS + 1);
@@ -61,10 +66,10 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
   *n = j + 1;
 }
 
-void
+bool
 oc_sec_encode_acl(void)
 {
-  int i, n;
+  int i, n = 0;
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_ACL));
@@ -80,7 +85,14 @@ oc_sec_encode_acl(void)
     }
     OC_DBG("oc_sec_acl_encode: subject %s\n", uuid);
     n = oc_list_length(sub->resources);
-    uint16_t groups[n];
+#ifdef OC_DYNAMIC_ALLOCATION
+    uint16_t *groups = malloc(n * sizeof(uint16_t));
+    if (!groups) {
+      return false;
+    }
+#else  /* OC_DYNAMIC_ALLOCATION */
+    uint16_t groups[MAX_NUM_PERM_GROUPS];
+#endif /* !OC_DYNAMIC_ALLOCATION */
     get_sub_perm_groups(sub, groups, &n);
     for (i = 0; i < n; i++) {
       oc_rep_object_array_start_item(aces);
@@ -116,6 +128,9 @@ oc_sec_encode_acl(void)
       oc_rep_close_array(aces, resources);
       oc_rep_object_array_end_item(aces);
     }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(groups);
+#endif /* OC_DYNAMIC_ALLOCATION */
     sub = sub->next;
   }
   oc_rep_close_array(aclist, aces);
@@ -123,6 +138,8 @@ oc_sec_encode_acl(void)
   oc_uuid_to_str(&ac_list.rowneruuid, uuid, 37);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
+
+  return true;
 }
 
 static oc_sec_acl_res_t *
@@ -552,8 +569,11 @@ get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  oc_sec_encode_acl();
-  oc_send_response(request, OC_STATUS_OK);
+  if (oc_sec_encode_acl()) {
+    oc_send_response(request, OC_STATUS_OK);
+  } else {
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  }
 }
 
 #endif /* OC_SECURITY */
