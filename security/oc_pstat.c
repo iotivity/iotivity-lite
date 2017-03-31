@@ -20,6 +20,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
+#include "oc_store.h"
 
 static oc_sec_pstat_t pstat;
 
@@ -120,6 +121,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   oc_sec_decode_pstat(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);
+  oc_sec_dump_pstat();
 }
 
 #endif /* OC_SECURITY */
