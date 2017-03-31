@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_dtls.h"
 #include "oc_rep.h"
+#include "oc_store.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -84,8 +85,8 @@ oc_sec_encode_acl(void)
       oc_uuid_to_str(&sub->subjectuuid, uuid, 37);
     }
     OC_DBG("oc_sec_acl_encode: subject %s\n", uuid);
-#ifdef OC_DYNAMIC_ALLOCATION
     n = oc_list_length(sub->resources);
+#ifdef OC_DYNAMIC_ALLOCATION
     uint16_t *groups = malloc(n * sizeof(uint16_t));
     if (!groups) {
       return false;
@@ -552,10 +553,12 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_acl(request->request_payload))
+  if (oc_sec_decode_acl(request->request_payload)) {
     oc_send_response(request, OC_STATUS_CHANGED);
-  else
+    oc_sec_dump_acl();
+  } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  }
 }
 
 void
@@ -567,6 +570,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
   int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
   if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
     oc_send_response(request, OC_STATUS_DELETED);
+    oc_sec_dump_acl();
     return;
   }
   oc_send_response(request, OC_STATUS_NOT_FOUND);

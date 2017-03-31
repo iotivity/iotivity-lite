@@ -187,10 +187,6 @@ oc_main_shutdown(void)
   oc_connectivity_shutdown();
   oc_ri_shutdown();
 
-#ifdef OC_SECURITY /* fix ensure this gets executed on constraied platforms */
-  oc_sec_dump_state();
-#endif
-
   app_callbacks = NULL;
   initialized = false;
 }
