@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_doxm.h"
 #include "oc_dtls.h"
+#include "oc_store.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -218,6 +219,7 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {
     oc_send_response(request, OC_STATUS_CHANGED);
+    oc_sec_dump_cred();
   }
 }
 
