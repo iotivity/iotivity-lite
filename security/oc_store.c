@@ -24,20 +24,35 @@
 #include "port/oc_storage.h"
 #include <config.h>
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 void
 oc_sec_load_doxm(void)
 {
   long ret = 0;
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    if (!buf) {
+      oc_sec_doxm_default();
+      return;
+    }
+#else  /* OC_DYNAMIC_ALLOCATION */
+    uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
     ret = oc_storage_read("/doxm", buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
       oc_parse_rep(buf, ret, &rep);
       oc_sec_decode_doxm(rep);
       oc_free_rep(rep);
     }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
   }
 
   if (ret <= 0) {
@@ -53,8 +68,17 @@ void
 oc_sec_load_pstat(void)
 {
   long ret = 0;
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
   oc_rep_t *rep;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buf) {
+    oc_sec_pstat_default();
+    return;
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
   ret = oc_storage_read("/pstat", buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
@@ -62,6 +86,10 @@ oc_sec_load_pstat(void)
     oc_sec_decode_pstat(rep);
     oc_free_rep(rep);
   }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
 
   if (ret <= 0) {
     oc_sec_pstat_default();
@@ -72,10 +100,16 @@ void
 oc_sec_load_cred(void)
 {
   long ret = 0;
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
   oc_rep_t *rep;
 
   if (oc_sec_provisioned()) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    if (!buf)
+      return;
+#else  /* OC_DYNAMIC_ALLOCATION */
+    uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
     ret = oc_storage_read("/cred", buf, OC_MAX_APP_DATA_SIZE);
 
     if (ret <= 0)
@@ -84,6 +118,9 @@ oc_sec_load_cred(void)
     oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_cred(rep, NULL);
     oc_free_rep(rep);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
 
@@ -91,18 +128,29 @@ void
 oc_sec_load_acl(void)
 {
   long ret = 0;
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
   oc_rep_t *rep;
 
   oc_sec_acl_init();
 
   if (oc_sec_provisioned()) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    if (!buf) {
+      oc_sec_acl_default();
+      return;
+    }
+#else  /* OC_DYNAMIC_ALLOCATION */
+    uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
     ret = oc_storage_read("/acl", buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
       oc_parse_rep(buf, ret, &rep);
       oc_sec_decode_acl(rep);
       oc_free_rep(rep);
     }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
   }
 
   if (ret <= 0) {
@@ -111,11 +159,16 @@ oc_sec_load_acl(void)
 }
 
 void
-oc_sec_dump_state(void)
+oc_sec_dump_pstat(void)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buf)
+    return;
+#else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
-  /* pstat */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_pstat();
   int size = oc_rep_finalize();
@@ -124,32 +177,81 @@ oc_sec_dump_state(void)
     oc_storage_write("/pstat", buf, size);
   }
 
-  /* cred */
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_dump_cred(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buf)
+    return;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_cred();
-  size = oc_rep_finalize();
+  int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d\n", size);
     oc_storage_write("/cred", buf, size);
   }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_dump_doxm(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buf)
+    return;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
   /* doxm */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_doxm();
-  size = oc_rep_finalize();
+  int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d\n", size);
     oc_storage_write("/doxm", buf, size);
   }
 
-  /* acl */
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_dump_acl(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buf)
+    return;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_acl();
-  size = oc_rep_finalize();
+  int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d\n", size);
     oc_storage_write("/acl", buf, size);
   }
-}
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
 #endif /* OC_SECURITY */
