@@ -21,6 +21,9 @@ void oc_sec_load_pstat(void);
 void oc_sec_load_doxm(void);
 void oc_sec_load_cred(void);
 void oc_sec_load_acl(void);
-void oc_sec_dump_state(void);
+void oc_sec_dump_pstat(void);
+void oc_sec_dump_cred(void);
+void oc_sec_dump_doxm(void);
+void oc_sec_dump_acl(void);
 
 #endif /* OC_STORE_H_ */

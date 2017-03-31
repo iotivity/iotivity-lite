@@ -19,6 +19,7 @@
 #include "oc_doxm.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_store.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -128,6 +129,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   oc_sec_decode_doxm(request->request_payload);
   oc_send_response(request, OC_STATUS_CHANGED);
+  oc_sec_dump_doxm();
 }
 
 #endif /* OC_SECURITY */
