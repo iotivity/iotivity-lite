@@ -52,7 +52,7 @@ void _oc_free_array(oc_array_t *ocarray, pool type);
 #define oc_bool_array(ocboolarray) (oc_cast(ocboolarray, bool))
 #define oc_double_array(ocdoublearray) (oc_cast(ocdoublearray, double))
 
-#define STRING_ARRAY_ITEM_MAX_LEN 24
+#define STRING_ARRAY_ITEM_MAX_LEN 128
 void _oc_alloc_string_array(oc_string_array_t *ocstringarray, uint8_t size);
 bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
                                      const char str[], uint8_t index);
