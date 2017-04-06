@@ -37,13 +37,14 @@ static const oc_handler_t *app_callbacks;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
-static long _OC_BLOCK_SIZE = 1024;
 static long _OC_MTU_SIZE = 1024 + COAP_MAX_HEADER_SIZE;
-static long _OC_MAX_APP_DATA_SIZE = 2048;
+static long _OC_MAX_APP_DATA_SIZE = 1024;
+static long _OC_BLOCK_SIZE = 1024;
 
 int
 oc_set_mtu_size(long mtu_size)
 {
+#ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
     return -1;
   _OC_MTU_SIZE = mtu_size;
@@ -52,6 +53,7 @@ oc_set_mtu_size(long mtu_size)
   for (i = 10; i >= 4 && (mtu_size >> i) == 0; i--)
     ;
   _OC_BLOCK_SIZE = 1 << i;
+#endif /* OC_BLOCK_WISE */
   return 0;
 }
 
@@ -65,6 +67,10 @@ void
 oc_set_max_app_data_size(long size)
 {
   _OC_MAX_APP_DATA_SIZE = size;
+#ifndef OC_BLOCK_WISE
+  _OC_BLOCK_SIZE = size;
+  _OC_MTU_SIZE = size + COAP_MAX_HEADER_SIZE;
+#endif /* !OC_BLOCK_WISE */
 }
 
 long
