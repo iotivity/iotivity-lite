@@ -39,7 +39,7 @@ oc_rep_finalize(void)
   int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
 #ifdef OC_DEBUG
   if (size < 0 && g_err == CborErrorOutOfMemory)
-    oc_abort("Insufficient memory: Increase OC_MAX_PDU_BUFFER_SIZE to "
+    oc_abort("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
              "accomodate a larger payload\n");
 #endif /* OC_DEBUG */
   if (g_err != CborNoError)
