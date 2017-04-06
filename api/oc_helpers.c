@@ -112,7 +112,7 @@ _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
   if (strlen(str) >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }
-  uint8_t pos = index * STRING_ARRAY_ITEM_MAX_LEN;
+  int pos = index * STRING_ARRAY_ITEM_MAX_LEN;
   memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, strlen(str));
   memcpy(oc_string(*ocstringarray) + pos + strlen(str), (const uint8_t *)"", 1);
   return true;
