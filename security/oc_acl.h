@@ -55,7 +55,7 @@ typedef struct oc_sec_ace_s
 } oc_sec_ace_t;
 
 void oc_sec_acl_default(void);
-void oc_sec_encode_acl(void);
+bool oc_sec_encode_acl(void);
 bool oc_sec_decode_acl(oc_rep_t *rep);
 void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);

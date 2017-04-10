@@ -158,17 +158,27 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
                           void *data)
 {
   (void)data;
-  char *rt = NULL;
-  int rt_len = 0, matches = 0, device;
+  char *rt = NULL, *di = NULL;
+  oc_uuid_t dev_id;
+  int rt_len = 0, matches = 0, di_len = 0, device;
   if (request->query_len) {
     rt_len =
       oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
+    di_len =
+      oc_ri_get_query_value(request->query, request->query_len, "di", &di);
+    if (di_len == 36) {
+      oc_str_to_uuid(di, &dev_id);
+    }
   }
 
   switch (interface) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
     for (device = 0; device < oc_core_get_num_devices(); device++) {
+      if (di_len > 0 &&
+          memcmp(oc_core_get_device_id(device), &dev_id, sizeof(oc_uuid_t)) !=
+            0)
+        continue;
       matches +=
         process_device_object(oc_rep_array(links), rt, rt_len, device, false);
     }
@@ -177,6 +187,10 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE: {
     oc_rep_start_links_array();
     for (device = 0; device < oc_core_get_num_devices(); device++) {
+      if (di_len > 0 &&
+          memcmp(oc_core_get_device_id(device), &dev_id, sizeof(oc_uuid_t)) !=
+            0)
+        continue;
       matches +=
         process_device_object(oc_rep_array(links), rt, rt_len, device, true);
     }

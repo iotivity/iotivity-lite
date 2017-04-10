@@ -19,7 +19,6 @@
 #include "oc_api.h"
 
 #ifdef OC_CLIENT
-#define OC_CLIENT_CB_TIMEOUT_SECS COAP_RESPONSE_TIMEOUT
 
 static coap_transaction_t *transaction;
 coap_packet_t request[1];
@@ -80,7 +79,7 @@ dispatch_coap_request(void)
   if (client_cb->observe_seq == -1) {
     if (client_cb->qos == LOW_QOS)
       oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
-                              OC_CLIENT_CB_TIMEOUT_SECS);
+                              OC_NON_LIFETIME);
     else
       oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
                               OC_EXCHANGE_LIFETIME);
@@ -276,6 +275,7 @@ oc_stop_observe(const char *uri, oc_server_handle_t *server)
   if (!cb)
     return false;
 
+  cb->mid = coap_get_mid();
   cb->observe_seq = 1;
 
   bool status = false;
