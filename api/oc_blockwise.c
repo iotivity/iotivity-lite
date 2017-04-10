@@ -60,6 +60,37 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
   return buffer;
 }
 
+static void
+oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
+                         oc_blockwise_state_t *buffer)
+{
+  oc_free_string(&buffer->href);
+  oc_list_remove(list, buffer);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buffer->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_memb_free(pool, buffer);
+}
+
+static oc_event_callback_retval_t
+oc_blockwise_request_timeout(void *data)
+{
+  oc_blockwise_request_state_t *buffer = (oc_blockwise_request_state_t *)data;
+  if (oc_string_len(buffer->uri_query))
+    oc_free_string(&buffer->uri_query);
+  oc_blockwise_free_buffer(oc_blockwise_requests,
+                           &oc_blockwise_request_states_s, data);
+  return DONE;
+}
+
+static oc_event_callback_retval_t
+oc_blockwise_response_timeout(void *data)
+{
+  oc_blockwise_free_buffer(oc_blockwise_responses,
+                           &oc_blockwise_response_states_s, data);
+  return DONE;
+}
+
 oc_blockwise_state_t *
 oc_blockwise_alloc_request_buffer(const char *href, int href_len,
                                   oc_endpoint_t *endpoint, oc_method_t method)
@@ -69,8 +100,8 @@ oc_blockwise_alloc_request_buffer(const char *href, int href_len,
       &oc_blockwise_request_states_s, href, href_len, endpoint, method);
   if (buffer) {
     memset(&buffer->uri_query, 0, sizeof(oc_string_t));
-    oc_ri_add_timed_event_callback_seconds(
-      buffer, oc_blockwise_free_request_buffer, OC_EXCHANGE_LIFETIME);
+    oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_request_timeout,
+                                           OC_EXCHANGE_LIFETIME);
     oc_list_add(oc_blockwise_requests, buffer);
   }
   return (oc_blockwise_state_t *)buffer;
@@ -95,43 +126,24 @@ oc_blockwise_alloc_response_buffer(const char *href, int href_len,
     buffer->observe_seq = -1;
 #endif /* OC_CLIENT */
     oc_ri_add_timed_event_callback_seconds(
-      buffer, oc_blockwise_free_response_buffer, OC_EXCHANGE_LIFETIME);
+      buffer, oc_blockwise_response_timeout, OC_EXCHANGE_LIFETIME);
     oc_list_add(oc_blockwise_responses, buffer);
   }
   return (oc_blockwise_state_t *)buffer;
 }
 
-static void
-oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool, void *data)
+void
+oc_blockwise_free_request_buffer(oc_blockwise_state_t *buffer)
 {
-  oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)data;
-  oc_free_string(&buffer->href);
-  oc_list_remove(list, buffer);
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(buffer->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  oc_memb_free(pool, buffer);
+  oc_ri_remove_timed_event_callback(buffer, oc_blockwise_request_timeout);
+  oc_blockwise_request_timeout(buffer);
 }
 
-oc_event_callback_retval_t
-oc_blockwise_free_request_buffer(void *data)
+void
+oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer)
 {
-  oc_blockwise_request_state_t *buffer = (oc_blockwise_request_state_t *)data;
-  if (oc_string_len(buffer->uri_query))
-    oc_free_string(&buffer->uri_query);
-  oc_ri_remove_timed_event_callback(data, oc_blockwise_free_request_buffer);
-  oc_blockwise_free_buffer(oc_blockwise_requests,
-                           &oc_blockwise_request_states_s, data);
-  return DONE;
-}
-
-oc_event_callback_retval_t
-oc_blockwise_free_response_buffer(void *data)
-{
-  oc_ri_remove_timed_event_callback(data, oc_blockwise_free_response_buffer);
-  oc_blockwise_free_buffer(oc_blockwise_responses,
-                           &oc_blockwise_response_states_s, data);
-  return DONE;
+  oc_ri_remove_timed_event_callback(buffer, oc_blockwise_response_timeout);
+  oc_blockwise_response_timeout(buffer);
 }
 
 void

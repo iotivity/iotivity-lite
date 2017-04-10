@@ -174,11 +174,12 @@ int
 oc_ri_get_query_value(const char *query, int query_len, const char *key,
                       char **value)
 {
-  int next_pos = 0, found = -1, kl, vl;
+  int next_pos = 0, found = -1, kl, vl, pos = 0;
   char *k;
-  while (next_pos < query_len) {
-    next_pos = oc_ri_get_query_nth_key_value(
-      query + next_pos, query_len - next_pos, &k, &kl, value, &vl, 1);
+
+  while (pos < query_len) {
+    next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
+                                             &kl, value, &vl, 1);
     if (next_pos == -1)
       return -1;
 
@@ -186,6 +187,8 @@ oc_ri_get_query_value(const char *query, int query_len, const char *key,
       found = vl;
       break;
     }
+
+    pos += next_pos;
   }
   return found;
 }
@@ -218,6 +221,7 @@ start_processes(void)
 static void
 stop_processes(void)
 {
+  oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&timed_callback_events);
   oc_process_exit(&coap_engine);
