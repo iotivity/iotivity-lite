@@ -61,7 +61,6 @@
 static uint16_t current_mid = 0;
 
 coap_status_t coap_status_code = NO_ERROR;
-char *coap_error_message = "";
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -405,7 +404,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   } else {
     /* an error occurred: caller must check for !=0 */
     coap_pkt->buffer = NULL;
-    coap_error_message = "Serialized header exceeds COAP_MAX_HEADER_SIZE";
+    OC_DBG("Serialized header exceeds COAP_MAX_HEADER_SIZE\n");
     return 0;
   }
 
@@ -447,12 +446,12 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
   coap_pkt->mid = coap_pkt->buffer[2] << 8 | coap_pkt->buffer[3];
 
   if (coap_pkt->version != 1) {
-    coap_error_message = "CoAP version must be 1";
+    OC_DBG("CoAP version must be 1\n");
     return BAD_REQUEST_4_00;
   }
 
   if (coap_pkt->token_len > COAP_TOKEN_LEN) {
-    coap_error_message = "Token Length must not be more than 8";
+    OC_DBG("Token Length must not be more than 8\n");
     return BAD_REQUEST_4_00;
   }
 
@@ -573,8 +572,6 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 #endif
       OC_DBG("Proxy-Uri NOT IMPLEMENTED [%.*s]\n", (int)coap_pkt->proxy_uri_len,
 	  coap_pkt->proxy_uri);
-      coap_error_message =
-	"This is a constrained server (Contiki)";
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
     case COAP_OPTION_PROXY_SCHEME:
@@ -584,8 +581,6 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 #endif
       OC_DBG("Proxy-Scheme NOT IMPLEMENTED [%.*s]\n",
 	  (int)coap_pkt->proxy_scheme_len, coap_pkt->proxy_scheme);
-      coap_error_message =
-	"This is a constrained server (Contiki)";
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
 
@@ -678,7 +673,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       OC_DBG("unknown (%u)\n", option_number);
       /* check if critical (odd) */
       if (option_number & 1) {
-        coap_error_message = "Unsupported critical option";
+        OC_DBG("Unsupported critical option\n");
         return BAD_OPTION_4_02;
       }
     }
