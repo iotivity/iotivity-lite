@@ -223,6 +223,9 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         }
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
+        if (len > STRING_ARRAY_ITEM_MAX_LEN) {
+          len = STRING_ARRAY_ITEM_MAX_LEN;
+        }
         *err |= cbor_value_copy_byte_string(
           &array, (uint8_t *)oc_string_array_get_item(cur->value.array, k),
           &len, NULL);
@@ -234,10 +237,13 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         }
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
+        if (len > STRING_ARRAY_ITEM_MAX_LEN) {
+          len = STRING_ARRAY_ITEM_MAX_LEN;
+        }
         *err |= cbor_value_copy_text_string(
-          &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
-          NULL);
-        break;
+           &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
+           NULL);
+      break;
       case CborMapType:
         if (k == 0) {
           cur->type = OBJECT | ARRAY;
