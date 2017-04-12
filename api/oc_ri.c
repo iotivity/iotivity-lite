@@ -279,6 +279,7 @@ oc_ri_init(void)
   oc_core_init();
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+  oc_process_init();
   start_processes();
 
   oc_create_discovery_resource();

@@ -76,10 +76,6 @@ typedef unsigned char oc_process_num_events_t;
 
 #define OC_PROCESS_NONE NULL
 
-#ifndef OC_PROCESS_CONF_NUMEVENTS
-#define OC_PROCESS_CONF_NUMEVENTS 10
-#endif /* OC_PROCESS_CONF_NUMEVENTS */
-
 #define OC_PROCESS_EVENT_NONE 0x80
 #define OC_PROCESS_EVENT_INIT 0x81
 #define OC_PROCESS_EVENT_POLL 0x82
