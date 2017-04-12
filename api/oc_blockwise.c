@@ -51,7 +51,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
     buffer->method = method;
     memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
     oc_new_string(&buffer->href, href, href_len);
-
+    buffer->next = 0;
 #ifdef OC_CLIENT
     buffer->mid = 0;
     buffer->client_cb = 0;
@@ -201,7 +201,7 @@ oc_blockwise_find_buffer(oc_list_t list, const char *href, int href_len,
   oc_blockwise_state_t *buffer = oc_list_head(list);
   while (buffer) {
     if (strncmp(href, oc_string(buffer->href), href_len) == 0 &&
-        memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t)) &&
+        memcmp(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0 &&
         buffer->method == method)
       break;
     buffer = buffer->next;
