@@ -35,6 +35,11 @@
 #include "oc_process.h"
 #include "oc_buffer.h"
 #include <stdio.h>
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "port/oc_assert.h"
+#include <stdlib.h>
+#include <string.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 /*
  * Pointer to the currently running process structure.
@@ -54,8 +59,18 @@ struct event_data
   struct oc_process *p;
 };
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static long OC_PROCESS_NUMEVENTS = 10;
+#else /* OC_DYNAMIC_ALLOCATION */
+#define OC_PROCESS_NUMEVENTS 10
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
 static oc_process_num_events_t nevents, fevent;
-static struct event_data events[OC_PROCESS_CONF_NUMEVENTS];
+#ifdef OC_DYNAMIC_ALLOCATION
+static struct event_data *events;
+#else  /* OC_DYNAMIC_ALLOCATION */
+static struct event_data events[OC_PROCESS_NUMEVENTS];
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #if OC_PROCESS_CONF_STATS
 oc_process_num_events_t process_maxevents;
@@ -178,6 +193,14 @@ oc_process_exit(struct oc_process *p)
 void
 oc_process_init(void)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  events = (struct event_data *)calloc(OC_PROCESS_NUMEVENTS,
+                                       sizeof(struct event_data));
+  if (!events) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
   lastevent = OC_PROCESS_EVENT_MAX;
 
   nevents = fevent = 0;
@@ -239,7 +262,7 @@ do_event(void)
 
     /* Since we have seen the new event, we move pointer upwards
        and decrease the number of events. */
-    fevent = (fevent + 1) % OC_PROCESS_CONF_NUMEVENTS;
+    fevent = (fevent + 1) % OC_PROCESS_NUMEVENTS;
     --nevents;
 
     /* If this is a broadcast event, we deliver it to all events, in
@@ -295,12 +318,23 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
 {
   static oc_process_num_events_t snum;
 
-  if (nevents == OC_PROCESS_CONF_NUMEVENTS) {
+  if (nevents == OC_PROCESS_NUMEVENTS) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    OC_PROCESS_NUMEVENTS <<= 1;
+    events = (struct event_data *)realloc(events, (OC_PROCESS_NUMEVENTS) *
+                                                    sizeof(struct event_data));
+    if (!events) {
+      oc_abort("Insufficient memory");
+    }
+    int i;
+    for (i = nevents; i < OC_PROCESS_NUMEVENTS; i++)
+      memset(&events[i], 0, sizeof(struct event_data));
+#else  /* OC_DYNAMIC_ALLOCATION */
     return OC_PROCESS_ERR_FULL;
+#endif /* !OC_DYNAMIC_ALLOCATION */
   }
 
-  snum =
-    (oc_process_num_events_t)(fevent + nevents) % OC_PROCESS_CONF_NUMEVENTS;
+  snum = (oc_process_num_events_t)(fevent + nevents) % OC_PROCESS_NUMEVENTS;
   events[snum].ev = ev;
   events[snum].data = data;
   events[snum].p = p;
