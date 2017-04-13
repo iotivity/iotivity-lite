@@ -128,8 +128,14 @@ finalize_payload(uint8_t *buffer, oc_string_t *payload)
   if (size != -1) {
     oc_alloc_string(payload, size);
     memcpy(oc_cast(*payload, uint8_t), buffer, size);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
     return 1;
   }
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
   return -1;
 }
 
@@ -182,8 +188,15 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
-  /* Encoding device resource payload */
+/* Encoding device resource payload */
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    oc_abort("Insufficient memory");
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
 
   oc_rep_start_root_object();
@@ -247,8 +260,15 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                             OC_IF_BASELINE, OC_DISCOVERABLE,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
-  /* Encoding platform resource payload */
+/* Encoding platform resource payload */
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    oc_abort("Insufficient memory");
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
