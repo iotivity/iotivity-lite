@@ -25,7 +25,6 @@
 
 #include <stdarg.h>
 
-#define OC_MAX_DEV_PLATFORM_PAYLOAD (256)
 struct oc_device_info_t
 {
   oc_uuid_t uuid;
@@ -122,17 +121,21 @@ oc_core_get_num_devices(void)
 }
 
 static int
-finalize_payload(oc_string_t *temp_buffer, oc_string_t *payload)
+finalize_payload(uint8_t *buffer, oc_string_t *payload)
 {
   oc_rep_end_root_object();
   int size = oc_rep_finalize();
   if (size != -1) {
     oc_alloc_string(payload, size);
-    memcpy(oc_cast(*payload, uint8_t), oc_cast(*temp_buffer, uint8_t), size);
-    oc_free_string(temp_buffer);
+    memcpy(oc_cast(*payload, uint8_t), buffer, size);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
     return 1;
   }
-  oc_free_string(temp_buffer);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
   return -1;
 }
 
@@ -161,7 +164,6 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   int ocf_d = NUM_OC_CORE_RESOURCES - 1 + device_count;
 
-  oc_string_t temp_buffer;
 /* Once provisioned, UUID is retrieved from the credential store.
    If not yet provisioned, a default is generated in the security
    layer.
@@ -186,9 +188,16 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
-  /* Encoding device resource payload */
-  oc_alloc_string(&temp_buffer, OC_MAX_DEV_PLATFORM_PAYLOAD);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEV_PLATFORM_PAYLOAD);
+/* Encoding device resource payload */
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    oc_abort("Insufficient memory");
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
 
   oc_rep_start_root_object();
 
@@ -205,7 +214,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   if (add_device_cb)
     add_device_cb(data);
-  if (!finalize_payload(&temp_buffer, &oc_device_info[device_count].payload))
+  if (!finalize_payload(buffer, &oc_device_info[device_count].payload))
     return NULL;
 
   return &oc_device_info[device_count++].payload;
@@ -246,15 +255,21 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
   if (oc_platform_payload.size > 0)
     return NULL;
 
-  oc_string_t temp_buffer;
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
                             OC_IF_BASELINE, OC_DISCOVERABLE,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
-  /* Encoding platform resource payload */
-  oc_alloc_string(&temp_buffer, OC_MAX_DEV_PLATFORM_PAYLOAD);
-  oc_rep_new(oc_cast(temp_buffer, uint8_t), OC_MAX_DEV_PLATFORM_PAYLOAD);
+/* Encoding platform resource payload */
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    oc_abort("Insufficient memory");
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
 
@@ -272,7 +287,7 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
   if (init_cb)
     init_cb(data);
 
-  if (!finalize_payload(&temp_buffer, &oc_platform_payload))
+  if (!finalize_payload(buffer, &oc_platform_payload))
     return NULL;
 
   return &oc_platform_payload;
