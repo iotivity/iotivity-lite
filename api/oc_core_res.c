@@ -42,6 +42,7 @@ static struct oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 static int device_count;
+static oc_uuid_t *next_di;
 static oc_string_t oc_platform_payload;
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -139,6 +140,12 @@ finalize_payload(uint8_t *buffer, oc_string_t *payload)
   return -1;
 }
 
+void
+oc_core_set_device_id(oc_uuid_t *uuid)
+{
+  next_di = uuid;
+}
+
 oc_string_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
@@ -172,10 +179,17 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                       or it will generate non-standard uuid */
   /* where are secondary device ids persisted? */
   if (!oc_sec_provisioned() && device_count > 0)
-    oc_gen_uuid(&oc_device_info[device_count].uuid);
+    if (next_di == NULL)
+      oc_gen_uuid(&oc_device_info[device_count].uuid);
+    else
+      oc_device_info[device_count].uuid = *next_di;
 #else
-  oc_gen_uuid(&oc_device_info[device_count].uuid);
+  if (next_di == NULL)
+    oc_gen_uuid(&oc_device_info[device_count].uuid);
+  else
+    oc_device_info[device_count].uuid = *next_di;
 #endif
+next_di = NULL;
 
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {

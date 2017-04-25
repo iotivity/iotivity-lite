@@ -29,6 +29,12 @@
 
 #include "oc_core_res.h"
 
+void
+oc_set_device_id(oc_uuid_t *uuid)
+{
+  oc_core_set_device_id(uuid);
+}
+
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
               const char *spec_version, const char *data_model_version,
