@@ -44,6 +44,7 @@ int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
 
+void oc_set_device_id(oc_uuid_t *uuid);
 int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);

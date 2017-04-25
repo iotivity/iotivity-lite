@@ -36,6 +36,8 @@ oc_string_t *oc_core_add_new_device(const char *uri, const char *rt,
 
 int oc_core_get_num_devices(void);
 
+void oc_core_set_device_id(oc_uuid_t *uuid);
+
 oc_uuid_t *oc_core_get_device_id(int device);
 
 void oc_core_encode_interfaces_mask(CborEncoder *parent,
