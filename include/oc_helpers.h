@@ -35,7 +35,7 @@ void oc_free_string(oc_string_t *ocstring);
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #define oc_string_len(ocstring) ((ocstring).size ? (ocstring).size - 1 : 0)
 
-void _oc_new_array(oc_array_t *ocarray, uint8_t size, pool type);
+void _oc_new_array(oc_array_t *ocarray, int size, pool type);
 void _oc_free_array(oc_array_t *ocarray, pool type);
 #define oc_new_int_array(ocarray, size) (_oc_new_array(ocarray, size, INT_POOL))
 #define oc_new_bool_array(ocarray, size)                                       \
@@ -57,9 +57,9 @@ void _oc_free_array(oc_array_t *ocarray, pool type);
 #else /* OC_DYNAMIC_ALLOCATION */
 #define STRING_ARRAY_ITEM_MAX_LEN 32
 #endif /* !OC_DYNAMIC_ALLOCATION */
-void _oc_alloc_string_array(oc_string_array_t *ocstringarray, uint8_t size);
+void _oc_alloc_string_array(oc_string_array_t *ocstringarray, int size);
 bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                     const char str[], uint8_t index);
+                                     const char str[], int index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[]);
 void oc_join_string_array(oc_string_array_t *ocstringarray,
