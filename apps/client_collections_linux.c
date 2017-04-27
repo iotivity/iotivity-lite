@@ -26,19 +26,12 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static void
-set_device_custom_property(void *data)
-{
-  (void)data;
-  oc_set_custom_device_property(purpose, "operate lamp");
-}
-
 static int
 app_init(void)
 {
   int ret = oc_init_platform("Apple", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
-                       set_device_custom_property, NULL);
+                       NULL, NULL);
   return ret;
 }
 
@@ -74,10 +67,10 @@ post_lights_oic_if_b(oc_client_response_t *data)
         while (rep != NULL) {
           switch (rep->type) {
           case BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case INT:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           default:
             break;
@@ -121,10 +114,10 @@ get_lights_oic_if_b(oc_client_response_t *data)
         while (rep != NULL) {
           switch (rep->type) {
           case BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case INT:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
+            PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           default:
             break;
@@ -144,15 +137,27 @@ get_lights_oic_if_b(oc_client_response_t *data)
   if (!do_once)
     return;
 
-  PRINT("\nSending POST %s?if=oic.if.b { state : true, counter : 200 }\n",
+  PRINT("\nSending POST %s?if=oic.if.b [{href: /light/1, rep: "
+        "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
         lights);
 
   if (oc_init_post(lights, &lights_server, "if=oic.if.b", &post_lights_oic_if_b,
                    LOW_QOS, NULL)) {
-    oc_rep_start_root_object();
-    oc_rep_set_boolean(root, state, true);
-    oc_rep_set_int(root, count, 200);
-    oc_rep_end_root_object();
+    oc_rep_start_links_array();
+    oc_rep_object_array_start_item(links);
+    oc_rep_set_text_string(links, href, "/light/1");
+    oc_rep_set_object(links, rep);
+    oc_rep_set_boolean(rep, state, true);
+    oc_rep_close_object(links, rep);
+    oc_rep_object_array_end_item(links);
+    oc_rep_object_array_start_item(links);
+    oc_rep_set_text_string(links, href, "/count/1");
+    oc_rep_set_object(links, rep);
+    oc_rep_set_int(rep, count, 100);
+    oc_rep_close_object(links, rep);
+    oc_rep_object_array_end_item(links);
+    oc_rep_end_links_array();
+
     if (oc_do_post())
       PRINT("Sent POST request\n\n");
     else
@@ -194,6 +199,12 @@ get_lights_oic_if_ll(oc_client_response_t *data)
         while (rep != NULL) {
           PRINT(" %s : ", oc_string(rep->name));
           switch (rep->type) {
+          case BOOL:
+            PRINT("%d ", rep->value.boolean);
+            break;
+          case INT:
+            PRINT("%d ", rep->value.integer);
+            break;
           case STRING:
             PRINT("%s ", oc_string(rep->value.string));
             break;
