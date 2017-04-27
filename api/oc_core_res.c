@@ -16,8 +16,8 @@
 
 #include "oc_core_res.h"
 #include "messaging/coap/oc_coap.h"
+#include "oc_api.h"
 #include "oc_rep.h"
-#include "oc_ri.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
@@ -25,20 +25,14 @@
 
 #include <stdarg.h>
 
-struct oc_device_info_t
-{
-  oc_uuid_t uuid;
-  oc_string_t payload;
-};
-
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_resource_t *core_resources;
-static struct oc_device_info_t *oc_device_info;
+static oc_device_info_t *oc_device_info;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
-static struct oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
+static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 static int device_count;
@@ -89,29 +83,29 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
                        void *data)
 {
   (void)data;
-  uint8_t *buffer = request->response->response_buffer->buffer;
-  uint16_t buffer_size = request->response->response_buffer->buffer_size;
-  int payload_size = oc_device_info[request->resource->device].payload.size;
+  int device = request->resource->device;
+  oc_rep_start_root_object();
 
-  if (buffer_size < payload_size) {
-    request->response->response_buffer->response_length = 0;
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
-    return;
-  }
+  char uuid[37];
+  oc_uuid_to_str(&oc_device_info[device].uuid, uuid, 37);
 
   switch (interface) {
-  case OC_IF_R:
   case OC_IF_BASELINE:
-    memcpy(buffer,
-           oc_cast(oc_device_info[request->resource->device].payload, uint8_t),
-           payload_size);
-    request->response->response_buffer->response_length = payload_size;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-    break;
+    oc_process_baseline_interface(request->resource);
+  case OC_IF_R: {
+    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+    oc_rep_set_text_string(root, icv, oc_string(oc_device_info[device].icv));
+    oc_rep_set_text_string(root, dmv, oc_string(oc_device_info[device].dmv));
+    if (oc_device_info[device].add_device_cb)
+      oc_device_info[device].add_device_cb(NULL);
+  } break;
   default:
     break;
   }
+
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 int
@@ -139,7 +133,7 @@ finalize_payload(uint8_t *buffer, oc_string_t *payload)
   return -1;
 }
 
-oc_string_t *
+oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
@@ -155,8 +149,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     oc_abort("Insufficient memory");
   }
 
-  oc_device_info = (struct oc_device_info_t *)realloc(
-    oc_device_info, (device_count + 1) * sizeof(struct oc_device_info_t));
+  oc_device_info = (oc_device_info_t *)realloc(
+    oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
   if (!oc_device_info) {
     oc_abort("Insufficient memory");
   }
@@ -180,44 +174,22 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(
-      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_BASELINE,
+      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
   } else {
     oc_core_populate_resource(
-      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_BASELINE,
+      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
-/* Encoding device resource payload */
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
-  if (!buffer) {
-    oc_abort("Insufficient memory");
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
+  oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
+  oc_new_string(&oc_device_info[device_count].icv, spec_version,
+                strlen(spec_version));
+  oc_new_string(&oc_device_info[device_count].dmv, data_model_version,
+                strlen(data_model_version));
+  oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  oc_rep_start_root_object();
-
-  oc_rep_set_string_array(root, rt, core_resources[ocf_d].types);
-  oc_core_encode_interfaces_mask(oc_rep_object(root),
-                                 core_resources[ocf_d].interfaces);
-
-  char uuid[37];
-  oc_uuid_to_str(&oc_device_info[device_count].uuid, uuid, 37);
-  oc_rep_set_text_string(root, di, uuid);
-  oc_rep_set_text_string(root, n, name);
-  oc_rep_set_text_string(root, icv, spec_version);
-  oc_rep_set_text_string(root, dmv, data_model_version);
-
-  if (add_device_cb)
-    add_device_cb(data);
-  if (!finalize_payload(buffer, &oc_device_info[device_count].payload))
-    return NULL;
-
-  return &oc_device_info[device_count++].payload;
+  return &oc_device_info[device_count++];
 }
 
 void
