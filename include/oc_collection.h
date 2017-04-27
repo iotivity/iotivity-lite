@@ -24,10 +24,7 @@ struct oc_link_s
 {
   struct oc_link_s *next;
   oc_resource_t *resource;
-  oc_string_t href;
-  oc_string_array_t types;
-  oc_interface_mask_t interfaces;
-  oc_string_t bp;
+  oc_string_t ins;
   oc_string_array_t rel;
 };
 
@@ -40,6 +37,10 @@ struct oc_collection_s
   oc_interface_mask_t interfaces;
   oc_interface_mask_t default_interface;
   oc_resource_properties_t properties;
+  oc_request_handler_t get_handler;
+  oc_request_handler_t put_handler;
+  oc_request_handler_t post_handler;
+  oc_request_handler_t delete_handler;
   OC_LIST_STRUCT(links);
 };
 
