@@ -86,8 +86,8 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
     if (((memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0)) &&
         (obs->url == uri || memcmp(obs->url, uri, uri_len) == 0)) {
       obs->resource->num_observers--;
-      oc_memb_free(&observers_memb, obs);
       oc_list_remove(observers_list, obs);
+      oc_memb_free(&observers_memb, obs);
       removed++;
       break;
     }
