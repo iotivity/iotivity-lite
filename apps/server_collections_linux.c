@@ -28,19 +28,12 @@ static int quit = 0;
 static bool light_state = false;
 static int counter;
 
-static void
-set_device_custom_property(void *data)
-{
-  (void)data;
-  oc_set_custom_device_property(purpose, "desk lamp");
-}
-
 static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
-                       set_device_custom_property, NULL);
+                       NULL, NULL);
   return ret;
 }
 
@@ -64,6 +57,34 @@ get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
+post_count(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
+  (void)interface;
+  (void)user_data;
+  PRINT("POST_count:\n");
+  oc_rep_t *rep = request->request_payload;
+  while (rep != NULL) {
+    PRINT("key: %s ", oc_string(rep->name));
+    switch (rep->type) {
+    case INT:
+      counter = rep->value.integer;
+      PRINT("value: %d\n", counter);
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, count, counter);
+  oc_rep_end_root_object();
+
+  oc_send_response(request, OC_STATUS_CHANGED);
+}
+
+static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
@@ -80,7 +101,6 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  PRINT("Light state %d\n", light_state);
 }
 
 static void
@@ -140,6 +160,7 @@ register_resources(void)
   oc_resource_set_discoverable(res2, true);
   oc_resource_set_periodic_observable(res2, 1);
   oc_resource_set_request_handler(res2, OC_GET, get_count, NULL);
+  oc_resource_set_request_handler(res2, OC_POST, post_count, NULL);
   oc_add_resource(res2);
 
 #if defined(OC_COLLECTIONS)
@@ -147,15 +168,10 @@ register_resources(void)
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
-  oc_link_t *l1 = oc_new_link("/light/1", 1, 0);
-  oc_link_set_if(l1, OC_IF_BASELINE | OC_IF_RW);
-  oc_link_add_rt(l1, "oic.r.light");
-  oc_link_set_bp(l1, "if=oic.if.baseline");
+  oc_link_t *l1 = oc_new_link(res1);
   oc_collection_add_link(col, l1);
 
-  oc_link_t *l2 = oc_new_link("/count/1", 1, 0);
-  oc_link_set_if(l2, OC_IF_BASELINE | OC_IF_R);
-  oc_link_add_rt(l2, "oic.r.counter");
+  oc_link_t *l2 = oc_new_link(res2);
   oc_collection_add_link(col, l2);
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
