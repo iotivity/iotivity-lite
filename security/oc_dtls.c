@@ -37,11 +37,12 @@ oc_sec_dtls_get_peer(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *peer = oc_list_head(dtls_peers);
   while (peer != NULL) {
-    if (memcmp(&peer->session.addr, endpoint, sizeof(oc_endpoint_t)) == 0)
-      break;
-    peer = oc_list_item_next(peer);
+    if (memcmp(&peer->session.addr, endpoint, sizeof(oc_endpoint_t)) == 0) {
+      return peer;
+    }
+    peer = peer->next;
   }
-  return peer;
+  return NULL;
 }
 
 void
@@ -49,7 +50,7 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
   if (peer) {
-    OC_DBG("\n\noc_sec_dtls: removed peer\n\n");
+    OC_DBG("\n\noc_sec_dtls: removing peer\n\n");
     oc_list_remove(dtls_peers, peer);
     oc_memb_free(&dtls_peers_s, peer);
   }
@@ -90,6 +91,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
       peer->session.size = sizeof(oc_endpoint_t);
       OC_LIST_STRUCT_INIT(peer, send_queue);
       peer->connected = false;
+      peer->next = 0;
       oc_list_add(dtls_peers, peer);
 
       oc_ri_add_timed_event_callback_seconds(
@@ -346,11 +348,6 @@ oc_sec_dtls_close_finish(oc_endpoint_t *endpoint)
 {
   oc_sec_dtls_peer_t *p = oc_sec_dtls_get_peer(endpoint);
   if (p) {
-    dtls_peer_t *peer = dtls_get_peer(ocf_dtls_context, &p->session);
-    if (peer) {
-      oc_list_remove(ocf_dtls_context->peers, peer);
-      dtls_free_peer(peer);
-    }
     oc_message_t *m = oc_list_pop(p->send_queue);
     while (m != NULL) {
       OC_DBG("\n\noc_sec_dtls: Freeing DTLS Peer send queue\n\n");
