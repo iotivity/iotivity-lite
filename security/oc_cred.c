@@ -58,7 +58,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
 }
 
 void
-oc_sec_encode_cred(void)
+oc_sec_encode_cred(bool persist)
 {
   oc_sec_cred_t *creds = oc_list_head(creds_l);
   char uuid[37];
@@ -76,7 +76,11 @@ oc_sec_encode_cred(void)
     oc_uuid_to_str(&creds->subjectuuid, uuid, 37);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
     oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, (const uint8_t *)creds->key, 16);
+    if (persist) {
+      oc_rep_set_byte_string(privatedata, data, creds->key, 16);
+    } else {
+      oc_rep_set_byte_string(privatedata, data, creds->key, 0);
+    }
     oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     oc_rep_close_object(creds, privatedata);
     oc_rep_object_array_end_item(creds);
@@ -94,7 +98,6 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
   char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
   oc_sec_cred_t *credobj;
-  bool got_key = false, base64_key = false;
   int len = 0;
   uint8_t key[24];
   while (rep != NULL) {
@@ -110,6 +113,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
       while (creds_array != NULL) {
         oc_rep_t *cred = creds_array->value.object;
         bool valid_cred = false;
+        bool got_key = false, base64_key = false;
         while (cred != NULL) {
           len = oc_string_len(cred->name);
           valid_cred = true;
@@ -146,8 +150,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
-                  if (size != 24)
+                  if (size != 24) {
                     return false;
+                  }
                   got_key = true;
                   memcpy(key, p, size);
                 }
@@ -157,8 +162,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
                 int size = oc_string_len(data->value.string);
                 if (size == 0)
                   goto next_item;
-                if (size != 16)
+                if (size != 16) {
                   return false;
+                }
                 got_key = true;
                 memcpy(key, p, 16);
               } break;
@@ -199,6 +205,15 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
     rep = rep->next;
   }
   return true;
+}
+
+void
+get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
+{
+  (void)interface;
+  (void)data;
+  oc_sec_encode_cred(false);
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 void
