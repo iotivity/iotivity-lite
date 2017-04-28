@@ -43,7 +43,7 @@ oc_sec_pstat_default(void)
   pstat.cm = 2;
   pstat.tm = 0;
   pstat.om = 3;
-  pstat.sm = 3;
+  pstat.sm = 4;
 }
 
 void
