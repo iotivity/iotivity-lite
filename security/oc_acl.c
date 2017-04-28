@@ -113,6 +113,7 @@ oc_sec_encode_acl(void)
                                    oc_string(res->resource->uri));
             oc_core_encode_interfaces_mask(oc_rep_object(resources),
                                            res->interfaces);
+            oc_rep_set_string_array(resources, rt, res->types);
             oc_rep_object_array_end_item(resources);
           } else {
             OC_DBG("oc_sec_acl_encode: adding resource *\n");
@@ -121,6 +122,9 @@ oc_sec_encode_acl(void)
             oc_rep_set_array(resources, if);
             oc_rep_add_text_string(if, "*");
             oc_rep_close_array(resources, if);
+            oc_rep_set_array(resources, rt);
+            oc_rep_add_text_string(rt, "*");
+            oc_rep_close_array(resources, rt);
             oc_rep_object_array_end_item(resources);
           }
         }
@@ -207,6 +211,7 @@ new_res:
   if (res) {
     res->resource = resource;
     res->wildcard = wildcard;
+    memset(&res->types, 0, sizeof(oc_string_array_t));
 #ifdef OC_DEBUG
     if (wildcard)
       OC_DBG("Adding new resource * to ACE\n");
@@ -222,8 +227,8 @@ done:
 
 static oc_sec_acl_res_t *
 oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
-                  bool wildcard, oc_interface_mask_t interfaces,
-                  uint16_t permissions)
+                  bool wildcard, oc_string_array_t *rt,
+                  oc_interface_mask_t interfaces, uint16_t permissions)
 {
   oc_sec_acl_res_t *res =
     oc_sec_acl_get_ace(subjectuuid, resource, wildcard, true);
@@ -231,6 +236,13 @@ oc_sec_update_acl(oc_uuid_t *subjectuuid, oc_resource_t *resource,
   if (!res)
     return false;
 
+  if (oc_string_array_get_allocated_size(res->types) > 0)
+    oc_free_string_array(&res->types);
+  oc_new_string_array(&res->types, oc_string_array_get_allocated_size(*rt));
+  int i;
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(*rt); i++) {
+    oc_string_array_add_item(res->types, oc_string_array_get_item(*rt, i));
+  }
   res->interfaces = interfaces;
   res->permissions = permissions;
 
@@ -261,14 +273,17 @@ oc_sec_acl_default(void)
   for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
-      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
-                                    OC_IF_BASELINE, 2) != NULL);
+      success &=
+        (oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
+                           OC_IF_BASELINE, 2) != NULL);
     else if (i == OCF_SEC_ACL)
-      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
-                                    OC_IF_BASELINE, 14) != NULL);
+      success &=
+        (oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
+                           OC_IF_BASELINE, 14) != NULL);
     else
-      success &= (oc_sec_update_acl(&WILDCARD_SUB, resource, false,
-                                    OC_IF_BASELINE, 6) != NULL);
+      success &=
+        (oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
+                           OC_IF_BASELINE, 6) != NULL);
   }
   OC_DBG("ACL for core resources initialized %d\n", success);
   oc_uuid_t *device = oc_core_get_device_id(0);
@@ -429,6 +444,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
               oc_sec_acl_res_t *ace_res = NULL;
               oc_resource_t *res = NULL;
               oc_interface_mask_t interfaces = 0;
+              oc_string_array_t *rt = 0;
               int i;
 
               while (resource != NULL) {
@@ -459,26 +475,30 @@ oc_sec_decode_acl(oc_rep_t *rep)
                     }
                   }
                   break;
-                case STRING_ARRAY:
-                  if (oc_string_len(resource->name) == 2 &&
-                      strncasecmp(oc_string(resource->name), "if", 2) == 0) {
-                    for (i = 0; i < (int)oc_string_array_get_allocated_size(
-                                      resource->value.array);
-                         i++) {
-                      if (wildcard ||
-                          memcmp(
-                            oc_string_array_get_item(resource->value.array, i),
-                            "*", 1) == 0) {
-                        wildcard = true;
-                        break;
+                case STRING_ARRAY: {
+                  if (oc_string_len(resource->name) == 2) {
+                    if (strncasecmp(oc_string(resource->name), "if", 2) == 0) {
+                      for (i = 0; i < (int)oc_string_array_get_allocated_size(
+                                        resource->value.array);
+                           i++) {
+                        if (wildcard ||
+                            memcmp(oc_string_array_get_item(
+                                     resource->value.array, i),
+                                   "*", 1) == 0) {
+                          wildcard = true;
+                          break;
+                        }
+                        interfaces |= oc_ri_get_interface_mask(
+                          oc_string_array_get_item(resource->value.array, i),
+                          oc_string_array_get_item_size(resource->value.array,
+                                                        i));
                       }
-                      interfaces |= oc_ri_get_interface_mask(
-                        oc_string_array_get_item(resource->value.array, i),
-                        oc_string_array_get_item_size(resource->value.array,
-                                                      i));
+                    } else if (strncasecmp(oc_string(resource->name), "rt",
+                                           2) == 0) {
+                      rt = &resource->value.array;
                     }
                   }
-                  break;
+                } break;
                 default:
                   break;
                 }
@@ -494,7 +514,7 @@ oc_sec_decode_acl(oc_rep_t *rep)
                        oc_string(res->uri));
 #endif /* OC_DBG */
 
-              ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard,
+              ace_res = oc_sec_update_acl(&subjectuuid, res, wildcard, rt,
                                           interfaces, permissions);
               if (ace_res == NULL) {
 #ifdef OC_DEBUG
