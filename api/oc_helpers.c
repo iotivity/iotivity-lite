@@ -22,7 +22,7 @@
 static bool mmem_initialized = false;
 
 static void
-oc_malloc(oc_handle_t *block, uint16_t num_items, pool pool_type)
+oc_malloc(oc_handle_t *block, int num_items, pool pool_type)
 {
   if (!mmem_initialized) {
     oc_mmem_init();
@@ -71,7 +71,7 @@ oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 }
 
 void
-_oc_new_array(oc_array_t *ocarray, uint8_t size, pool type)
+_oc_new_array(oc_array_t *ocarray, int size, pool type)
 {
   switch (type) {
   case INT_POOL:
@@ -95,7 +95,7 @@ _oc_free_array(oc_array_t *ocarray, pool type)
 }
 
 void
-_oc_alloc_string_array(oc_string_array_t *ocstringarray, uint8_t size)
+_oc_alloc_string_array(oc_string_array_t *ocstringarray, int size)
 {
   oc_alloc_string(ocstringarray, size * STRING_ARRAY_ITEM_MAX_LEN);
   int i, pos;
@@ -107,14 +107,15 @@ _oc_alloc_string_array(oc_string_array_t *ocstringarray, uint8_t size)
 
 bool
 _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                const char str[], uint8_t index)
+                                const char str[], int index)
 {
   if (strlen(str) >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }
   int pos = index * STRING_ARRAY_ITEM_MAX_LEN;
-  memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, strlen(str));
-  memcpy(oc_string(*ocstringarray) + pos + strlen(str), (const uint8_t *)"", 1);
+  size_t len = strlen(str);
+  memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, len);
+  memcpy(oc_string(*ocstringarray) + pos + len, (const uint8_t *)"", 1);
   return true;
 }
 
@@ -125,8 +126,7 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
   int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(*ocstringarray);
        i++) {
-    if (strlen((const char *)oc_string_array_get_item(*ocstringarray, i)) ==
-        0) {
+    if (oc_string_array_get_item_size(*ocstringarray, i) == 0) {
       success = oc_string_array_set_item(*ocstringarray, str, i);
       break;
     }
@@ -138,7 +138,7 @@ void
 oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
 {
   size_t len = 0;
-  uint8_t i;
+  int i;
   for (i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
     const char *item =
       (const char *)oc_string_array_get_item(*ocstringarray, i);
@@ -157,7 +157,7 @@ oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
         oc_string(*ocstring)[len] = ' ';
         len++;
       }
-      strncpy((char *)oc_string(*ocstring) + len, item, strlen(item));
+      memcpy((char *)oc_string(*ocstring) + len, item, strlen(item));
       len += strlen(item);
     }
   }

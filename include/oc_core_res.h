@@ -22,17 +22,27 @@
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
+typedef struct oc_device_info_s
+{
+  oc_uuid_t uuid;
+  oc_string_t name;
+  oc_string_t icv;
+  oc_string_t dmv;
+  oc_core_add_device_cb_t add_device_cb;
+} oc_device_info_t;
+
 void oc_core_init(void);
 
 oc_string_t *oc_core_init_platform(const char *mfg_name,
                                    oc_core_init_platform_cb_t init_cb,
                                    void *data);
 
-oc_string_t *oc_core_add_new_device(const char *uri, const char *rt,
-                                    const char *name, const char *spec_version,
-                                    const char *data_model_version,
-                                    oc_core_add_device_cb_t add_device_cb,
-                                    void *data);
+oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
+                                         const char *name,
+                                         const char *spec_version,
+                                         const char *data_model_version,
+                                         oc_core_add_device_cb_t add_device_cb,
+                                         void *data);
 
 int oc_core_get_num_devices(void);
 

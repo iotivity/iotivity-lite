@@ -145,6 +145,9 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM), rt, rt_len,
                       oc_rep_array(links)))
     matches++;
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_PSTAT), rt, rt_len,
+                      oc_rep_array(links)))
+    matches++;
 #endif
 
   oc_rep_close_array(links, links);
@@ -207,6 +210,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     /* There were rt/if selections and there were no matches, so ignore */
+
     request->response->response_buffer->code = OC_IGNORE;
   }
 }

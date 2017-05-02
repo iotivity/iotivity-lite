@@ -181,14 +181,15 @@ int oc_rep_finalize(void);
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     CborEncoder key##_value_array;                                             \
-    g_err |=                                                                   \
-      cbor_encoder_create_array(&object##_map, &key##_value_array,             \
-                                oc_string_array_get_allocated_size(values));   \
+    g_err |= cbor_encoder_create_array(&object##_map, &key##_value_array,      \
+                                       CborIndefiniteLength);                  \
     int i;                                                                     \
     for (i = 0; i < (int)oc_string_array_get_allocated_size(values); i++) {    \
-      g_err |= cbor_encode_text_string(                                        \
-        &key##_value_array, oc_string_array_get_item(values, i),               \
-        oc_string_array_get_item_size(values, i));                             \
+      if (oc_string_array_get_item_size(values, i) > 0) {                      \
+        g_err |= cbor_encode_text_string(                                      \
+          &key##_value_array, oc_string_array_get_item(values, i),             \
+          oc_string_array_get_item_size(values, i));                           \
+      }                                                                        \
     }                                                                          \
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)

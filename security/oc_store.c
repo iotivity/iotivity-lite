@@ -194,7 +194,7 @@ oc_sec_dump_cred(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_cred();
+  oc_sec_encode_cred(true);
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d\n", size);
