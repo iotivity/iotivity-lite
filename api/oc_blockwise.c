@@ -31,7 +31,8 @@ OC_LIST(oc_blockwise_responses);
 
 static oc_blockwise_state_t *
 oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
-                         oc_endpoint_t *endpoint, oc_method_t method)
+                         oc_endpoint_t *endpoint, oc_method_t method,
+                         oc_blockwise_role_t role)
 {
   if (href_len == 0)
     return NULL;
@@ -49,6 +50,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
     buffer->payload_size = 0;
     buffer->ref_count = 1;
     buffer->method = method;
+    buffer->role = role;
     memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
     oc_new_string(&buffer->href, href, href_len);
     buffer->next = 0;
@@ -93,11 +95,12 @@ oc_blockwise_response_timeout(void *data)
 
 oc_blockwise_state_t *
 oc_blockwise_alloc_request_buffer(const char *href, int href_len,
-                                  oc_endpoint_t *endpoint, oc_method_t method)
+                                  oc_endpoint_t *endpoint, oc_method_t method,
+                                  oc_blockwise_role_t role)
 {
   oc_blockwise_request_state_t *buffer =
     (oc_blockwise_request_state_t *)oc_blockwise_init_buffer(
-      &oc_blockwise_request_states_s, href, href_len, endpoint, method);
+      &oc_blockwise_request_states_s, href, href_len, endpoint, method, role);
   if (buffer) {
     memset(&buffer->uri_query, 0, sizeof(oc_string_t));
     oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_request_timeout,
@@ -109,11 +112,12 @@ oc_blockwise_alloc_request_buffer(const char *href, int href_len,
 
 oc_blockwise_state_t *
 oc_blockwise_alloc_response_buffer(const char *href, int href_len,
-                                   oc_endpoint_t *endpoint, oc_method_t method)
+                                   oc_endpoint_t *endpoint, oc_method_t method,
+                                   oc_blockwise_role_t role)
 {
   oc_blockwise_response_state_t *buffer =
     (oc_blockwise_response_state_t *)oc_blockwise_init_buffer(
-      &oc_blockwise_response_states_s, href, href_len, endpoint, method);
+      &oc_blockwise_response_states_s, href, href_len, endpoint, method, role);
   if (buffer) {
     int i = COAP_ETAG_LEN;
     uint32_t r = oc_random_value();
@@ -170,11 +174,12 @@ oc_blockwise_scrub_buffers()
 
 #ifdef OC_CLIENT
 static oc_blockwise_state_t *
-oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid)
+oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid,
+                                oc_blockwise_role_t role)
 {
   oc_blockwise_state_t *buffer = oc_list_head(list);
   while (buffer) {
-    if (buffer->mid == mid)
+    if (buffer->mid == mid && buffer->role == role)
       break;
     buffer = buffer->next;
   }
@@ -182,27 +187,28 @@ oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid)
 }
 
 oc_blockwise_state_t *
-oc_blockwise_find_request_buffer_by_mid(uint16_t mid)
+oc_blockwise_find_request_buffer_by_mid(uint16_t mid, oc_blockwise_role_t role)
 {
-  return oc_blockwise_find_buffer_by_mid(oc_blockwise_requests, mid);
+  return oc_blockwise_find_buffer_by_mid(oc_blockwise_requests, mid, role);
 }
 
 oc_blockwise_state_t *
-oc_blockwise_find_response_buffer_by_mid(uint16_t mid)
+oc_blockwise_find_response_buffer_by_mid(uint16_t mid, oc_blockwise_role_t role)
 {
-  return oc_blockwise_find_buffer_by_mid(oc_blockwise_responses, mid);
+  return oc_blockwise_find_buffer_by_mid(oc_blockwise_responses, mid, role);
 }
 #endif /* OC_CLIENT */
 
 static oc_blockwise_state_t *
 oc_blockwise_find_buffer(oc_list_t list, const char *href, int href_len,
-                         oc_endpoint_t *endpoint, oc_method_t method)
+                         oc_endpoint_t *endpoint, oc_method_t method,
+                         oc_blockwise_role_t role)
 {
   oc_blockwise_state_t *buffer = oc_list_head(list);
   while (buffer) {
     if (strncmp(href, oc_string(buffer->href), href_len) == 0 &&
         memcmp(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0 &&
-        buffer->method == method)
+        buffer->method == method && buffer->role == role)
       break;
     buffer = buffer->next;
   }
@@ -211,18 +217,20 @@ oc_blockwise_find_buffer(oc_list_t list, const char *href, int href_len,
 
 oc_blockwise_state_t *
 oc_blockwise_find_request_buffer(const char *href, int href_len,
-                                 oc_endpoint_t *endpoint, oc_method_t method)
+                                 oc_endpoint_t *endpoint, oc_method_t method,
+                                 oc_blockwise_role_t role)
 {
   return oc_blockwise_find_buffer(oc_blockwise_requests, href, href_len,
-                                  endpoint, method);
+                                  endpoint, method, role);
 }
 
 oc_blockwise_state_t *
 oc_blockwise_find_response_buffer(const char *href, int href_len,
-                                  oc_endpoint_t *endpoint, oc_method_t method)
+                                  oc_endpoint_t *endpoint, oc_method_t method,
+                                  oc_blockwise_role_t role)
 {
   return oc_blockwise_find_buffer(oc_blockwise_responses, href, href_len,
-                                  endpoint, method);
+                                  endpoint, method, role);
 }
 
 const void *

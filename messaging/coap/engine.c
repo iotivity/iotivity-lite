@@ -220,11 +220,12 @@ coap_receive(oc_message_t *msg)
         int incoming_block_len = coap_get_payload(message, &incoming_block);
         if (block1) {
           request_buffer = oc_blockwise_find_request_buffer(
-            href, href_len, &msg->endpoint, message->code);
+            href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
 
           if (!request_buffer && block1_num == 0) {
             request_buffer = oc_blockwise_alloc_request_buffer(
-              href, href_len, &msg->endpoint, message->code);
+              href, href_len, &msg->endpoint, message->code,
+              OC_BLOCKWISE_SERVER);
 
             if (request_buffer) {
               if (message->uri_query_len > 0) {
@@ -254,10 +255,12 @@ coap_receive(oc_message_t *msg)
                 request_buffer->ref_count = 0;
 
                 response_buffer = oc_blockwise_find_response_buffer(
-                  href, href_len, &msg->endpoint, message->code);
+                  href, href_len, &msg->endpoint, message->code,
+                  OC_BLOCKWISE_SERVER);
                 if (!response_buffer) {
                   response_buffer = oc_blockwise_alloc_response_buffer(
-                    href, href_len, &msg->endpoint, message->code);
+                    href, href_len, &msg->endpoint, message->code,
+                    OC_BLOCKWISE_SERVER);
                   if (response_buffer)
                     goto request_handler;
                 } else {
@@ -270,7 +273,7 @@ coap_receive(oc_message_t *msg)
         } else if (block2) {
           coap_set_header_content_format(response, APPLICATION_CBOR);
           response_buffer = oc_blockwise_find_response_buffer(
-            href, href_len, &msg->endpoint, message->code);
+            href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
           if (response_buffer) {
             uint16_t payload_size = 0;
             const void *payload = oc_blockwise_dispatch_block(
@@ -292,14 +295,17 @@ coap_receive(oc_message_t *msg)
           } else {
             if (block2_num == 0) {
               response_buffer = oc_blockwise_alloc_response_buffer(
-                href, href_len, &msg->endpoint, message->code);
+                href, href_len, &msg->endpoint, message->code,
+                OC_BLOCKWISE_SERVER);
               if (response_buffer) {
                 if (incoming_block_len > 0) {
                   request_buffer = oc_blockwise_find_request_buffer(
-                    href, href_len, &msg->endpoint, message->code);
+                    href, href_len, &msg->endpoint, message->code,
+                    OC_BLOCKWISE_SERVER);
                   if (!request_buffer) {
                     request_buffer = oc_blockwise_alloc_request_buffer(
-                      href, href_len, &msg->endpoint, message->code);
+                      href, href_len, &msg->endpoint, message->code,
+                      OC_BLOCKWISE_SERVER);
                     if (!(request_buffer && oc_blockwise_handle_block(
                                               request_buffer, 0, incoming_block,
                                               incoming_block_len))) {
@@ -316,11 +322,13 @@ coap_receive(oc_message_t *msg)
         } else {
           if (incoming_block_len <= block1_size) {
             response_buffer = oc_blockwise_alloc_response_buffer(
-              href, href_len, &msg->endpoint, message->code);
+              href, href_len, &msg->endpoint, message->code,
+              OC_BLOCKWISE_SERVER);
             if (response_buffer) {
               if (incoming_block_len > 0) {
                 request_buffer = oc_blockwise_alloc_request_buffer(
-                  href, href_len, &msg->endpoint, message->code);
+                  href, href_len, &msg->endpoint, message->code,
+                  OC_BLOCKWISE_SERVER);
                 if (!(request_buffer && oc_blockwise_handle_block(
                                           request_buffer, 0, incoming_block,
                                           incoming_block_len))) {
@@ -416,11 +424,12 @@ coap_receive(oc_message_t *msg)
       if (client_cb) {
         request_buffer = oc_blockwise_find_request_buffer(
           oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-          &msg->endpoint, client_cb->method);
+          &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
         if (request_buffer)
           request_buffer->client_cb = client_cb;
       } else {
-        request_buffer = oc_blockwise_find_request_buffer_by_mid(message->mid);
+        request_buffer = oc_blockwise_find_request_buffer_by_mid(
+          message->mid, OC_BLOCKWISE_CLIENT);
       }
       if (request_buffer &&
           (block1 || message->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
@@ -471,18 +480,18 @@ coap_receive(oc_message_t *msg)
       if (client_cb) {
         response_buffer = oc_blockwise_find_response_buffer(
           oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-          &msg->endpoint, client_cb->method);
+          &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
         if (!response_buffer) {
           response_buffer = oc_blockwise_alloc_response_buffer(
             oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-            &msg->endpoint, client_cb->method);
+            &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
         }
         if (response_buffer) {
           response_buffer->client_cb = client_cb;
         }
       } else {
-        response_buffer =
-          oc_blockwise_find_response_buffer_by_mid(message->mid);
+        response_buffer = oc_blockwise_find_response_buffer_by_mid(
+          message->mid, OC_BLOCKWISE_CLIENT);
       }
       if (response_buffer) {
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;

@@ -975,10 +975,10 @@ oc_ri_remove_client_cb(void *data)
   oc_client_cb_t *client_cb = (oc_client_cb_t *)data;
   oc_blockwise_state_t *response_buffer = oc_blockwise_find_response_buffer(
     oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    &client_cb->server.endpoint, client_cb->method);
+    &client_cb->server.endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
   oc_blockwise_state_t *request_buffer = oc_blockwise_find_request_buffer(
     oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    &client_cb->server.endpoint, client_cb->method);
+    &client_cb->server.endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
   if (request_buffer)
     oc_blockwise_free_request_buffer(request_buffer);
   if (response_buffer)
