@@ -112,7 +112,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->server.endpoint,
-      cb->method);
+      cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
       return false;
     }
