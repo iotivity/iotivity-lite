@@ -35,7 +35,6 @@ oc_sec_doxm_default(void)
   doxm.oxmsel = 0;
   doxm.sct = 1;
   doxm.owned = false;
-  doxm.dpc = false;
   oc_uuid_t *deviceuuid = oc_core_get_device_id(0);
   oc_gen_uuid(deviceuuid);
   memcpy(&doxm.deviceuuid, deviceuuid, sizeof(oc_uuid_t));
@@ -90,36 +89,55 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
   }
 }
 
-void
+bool
 oc_sec_decode_doxm(oc_rep_t *rep)
 {
+  doxm.sct = 1;
   while (rep != NULL) {
     switch (rep->type) {
     case BOOL:
-      if (memcmp(oc_string(rep->name), "owned", 5) == 0)
+      if (oc_string_len(rep->name) == 5 &&
+          memcmp(oc_string(rep->name), "owned", 5) == 0) {
         doxm.owned = rep->value.boolean;
-      else if (memcmp(oc_string(rep->name), "dpc", 3) == 0)
-        doxm.dpc = rep->value.boolean;
+      } else {
+        return false;
+      }
       break;
     case INT:
-      if (memcmp(oc_string(rep->name), "oxmsel", 6) == 0)
+      if (oc_string_len(rep->name) == 6 &&
+          memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
         doxm.oxmsel = rep->value.integer;
-      else if (memcmp(oc_string(rep->name), "sct", 3) == 0)
-        doxm.sct = rep->value.integer;
+      } else {
+        return false;
+      }
       break;
     case STRING:
-      if (memcmp(oc_string(rep->name), "deviceuuid", 10) == 0)
+      if (oc_string_len(rep->name) == 10 &&
+          memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm.deviceuuid);
-      else if (memcmp(oc_string(rep->name), "devowneruuid", 12) == 0)
+      } else if (oc_string_len(rep->name) == 12 &&
+                 memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm.devowneruuid);
-      else if (memcmp(oc_string(rep->name), "rowneruuid", 10) == 0)
+      } else if (oc_string_len(rep->name) == 10 &&
+                 memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm.rowneruuid);
+      } else {
+        return false;
+      }
       break;
-    default:
-      break;
+    default: {
+      if (!((oc_string_len(rep->name) == 4 &&
+             memcmp(oc_string(rep->name), "oxms", 4) == 0) ||
+            (oc_string_len(rep->name) == 2 &&
+             (memcmp(oc_string(rep->name), "rt", 2) == 0 ||
+              memcmp(oc_string(rep->name), "if", 2) == 0)))) {
+        return false;
+      }
+    } break;
     }
     rep = rep->next;
   }
+  return true;
 }
 
 void
@@ -127,9 +145,12 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  oc_sec_decode_doxm(request->request_payload);
-  oc_send_response(request, OC_STATUS_CHANGED);
-  oc_sec_dump_doxm();
+  if (oc_sec_decode_doxm(request->request_payload)) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_sec_dump_doxm();
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
 }
 
 #endif /* OC_SECURITY */
