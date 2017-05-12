@@ -44,7 +44,7 @@ oc_sec_create_svr(void)
                             delete_acl, 1, "oic.r.acl");
   oc_core_populate_resource(OCF_SEC_CRED, 0, "/oic/sec/cred", OC_IF_BASELINE,
                             OC_IF_BASELINE, OC_SECURE, get_cred, 0, post_cred,
-                            0, 1, "oic.r.cred");
+                            delete_cred, 1, "oic.r.cred");
 }
 
 #endif /* OC_SECURITY */

@@ -38,4 +38,6 @@ void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
 void get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
+void delete_cred(oc_request_t *request, oc_interface_mask_t interface,
+                 void *data);
 #endif /* OC_CRED_H_ */
