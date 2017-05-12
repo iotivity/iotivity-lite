@@ -80,6 +80,8 @@ oc_sec_load_pstat(void)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+  oc_sec_acl_init();
+
   ret = oc_storage_read("/pstat", buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
     oc_parse_rep(buf, ret, &rep);
@@ -129,8 +131,6 @@ oc_sec_load_acl(void)
 {
   long ret = 0;
   oc_rep_t *rep;
-
-  oc_sec_acl_init();
 
   if (oc_sec_provisioned()) {
 #ifdef OC_DYNAMIC_ALLOCATION
