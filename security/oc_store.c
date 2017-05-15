@@ -47,7 +47,7 @@ oc_sec_load_doxm(void)
     ret = oc_storage_read("/doxm", buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
       oc_parse_rep(buf, ret, &rep);
-      oc_sec_decode_doxm(rep);
+      oc_sec_decode_doxm(rep, true);
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -85,7 +85,7 @@ oc_sec_load_pstat(void)
   ret = oc_storage_read("/pstat", buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
     oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_pstat(rep);
+    oc_sec_decode_pstat(rep, true);
     oc_free_rep(rep);
   }
 
