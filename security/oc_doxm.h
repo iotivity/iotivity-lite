@@ -35,7 +35,7 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
-bool oc_sec_decode_doxm(oc_rep_t *rep);
+bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage);
 void oc_sec_encode_doxm(void);
 oc_sec_doxm_t *oc_sec_get_doxm(void);
 void oc_sec_doxm_default(void);

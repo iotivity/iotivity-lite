@@ -90,7 +90,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 bool
-oc_sec_decode_doxm(oc_rep_t *rep)
+oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage)
 {
   doxm.sct = 1;
   while (rep != NULL) {
@@ -107,6 +107,8 @@ oc_sec_decode_doxm(oc_rep_t *rep)
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
         doxm.oxmsel = rep->value.integer;
+      } else if (from_storage && memcmp(oc_string(rep->name), "sct", 3) == 0) {
+        doxm.sct = rep->value.integer;
       } else {
         return false;
       }
@@ -145,7 +147,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_doxm(request->request_payload)) {
+  if (oc_sec_decode_doxm(request->request_payload, false)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_doxm();
   } else {
