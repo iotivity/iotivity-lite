@@ -67,9 +67,8 @@ oc_sec_encode_pstat(void)
 }
 
 bool
-oc_sec_decode_pstat(oc_rep_t *rep)
+oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage)
 {
-  pstat.sm = 4;
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   while (rep != NULL) {
     switch (rep->type) {
@@ -91,6 +90,8 @@ oc_sec_decode_pstat(oc_rep_t *rep)
         pstat.tm = rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "om", 2) == 0) {
         pstat.om = rep->value.integer;
+      } else if (from_storage && memcmp(oc_string(rep->name), "sm", 2) == 0) {
+        pstat.sm = rep->value.integer;
       } else {
         return false;
       }
@@ -136,7 +137,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_pstat(request->request_payload)) {
+  if (oc_sec_decode_pstat(request->request_payload, false)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_pstat();
   } else {
