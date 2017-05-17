@@ -19,6 +19,7 @@
 
 #include "deps/tinycbor/src/cbor.h"
 #include "oc_helpers.h"
+#include "util/oc_memb.h"
 #include <config.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -227,6 +228,8 @@ typedef struct oc_rep_s
     struct oc_rep_s *object_array;
   } value;
 } oc_rep_t;
+
+void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 
 uint16_t oc_parse_rep(const uint8_t *payload, uint16_t payload_size,
                       oc_rep_t **value_list);
