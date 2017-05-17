@@ -80,8 +80,7 @@ oc_sec_encode_acl(void)
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
   while (sub != NULL) {
     if (memcmp(sub->subjectuuid.id, WILDCARD_SUB.id, 16) == 0) {
-      uuid[0] = '*';
-      uuid[1] = '\0';
+      goto next_sub;
     } else {
       oc_uuid_to_str(&sub->subjectuuid, uuid, 37);
     }
@@ -137,6 +136,7 @@ oc_sec_encode_acl(void)
 #ifdef OC_DYNAMIC_ALLOCATION
     free(groups);
 #endif /* OC_DYNAMIC_ALLOCATION */
+  next_sub:
     sub = sub->next;
   }
   oc_rep_close_array(aclist, aces);
@@ -308,7 +308,6 @@ oc_sec_set_post_otm_acl(void)
                         OC_IF_BASELINE, 2);
     }
   }
-  oc_sec_dump_acl();
 }
 
 void
