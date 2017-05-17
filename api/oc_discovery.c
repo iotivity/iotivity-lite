@@ -242,6 +242,19 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   memcpy(&handle.endpoint, endpoint, sizeof(oc_endpoint_t));
 
   oc_rep_t *array = 0, *rep;
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                 rep_objects_alloc, (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_set_pool(&rep_objects);
+
   int s = oc_parse_rep(payload, len, &rep);
   if (s == 0)
     array = rep;

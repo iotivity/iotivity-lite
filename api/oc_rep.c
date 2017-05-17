@@ -20,10 +20,16 @@
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
 
-OC_MEMB(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+static struct oc_memb *rep_objects;
 static uint8_t *g_buf;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
+
+void
+oc_rep_set_pool(struct oc_memb *rep_objects_pool)
+{
+  rep_objects = rep_objects_pool;
+}
 
 void
 oc_rep_new(uint8_t *out_payload, int size)
@@ -50,8 +56,10 @@ oc_rep_finalize(void)
 static oc_rep_t *
 _alloc_rep(void)
 {
-  oc_rep_t *rep = oc_memb_alloc(&rep_objects);
-  rep->name.size = 0;
+  oc_rep_t *rep = oc_memb_alloc(rep_objects);
+  if (rep != NULL) {
+    rep->name.size = 0;
+  }
 #ifdef OC_DEBUG
   oc_assert(rep != NULL);
 #endif
@@ -61,7 +69,7 @@ _alloc_rep(void)
 static void
 _free_rep(oc_rep_t *rep_value)
 {
-  oc_memb_free(&rep_objects, rep_value);
+  oc_memb_free(rep_objects, rep_value);
 }
 
 void
