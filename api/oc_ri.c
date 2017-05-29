@@ -638,6 +638,18 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   payload_len = coap_get_payload(request, &payload);
 #endif /* !OC_BLOCK_WISE */
 
+#ifndef OC_DYNAMIC_ALLOCATION
+  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                 rep_objects_alloc, (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_set_pool(&rep_objects);
+
   if (payload_len > 0) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
      * functions. The result of this parse is a tree of oc_rep_t structures
@@ -1088,6 +1100,19 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                 rep_objects_alloc, (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_set_pool(&rep_objects);
+
   if (payload_len) {
     if (cb->discovery) {
       if (oc_ri_process_discovery_payload(payload, payload_len,

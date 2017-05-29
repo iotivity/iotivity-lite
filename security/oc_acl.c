@@ -20,6 +20,7 @@
 #include "config.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_doxm.h"
 #include "oc_dtls.h"
 #include "oc_rep.h"
 #include "oc_store.h"
@@ -79,8 +80,7 @@ oc_sec_encode_acl(void)
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
   while (sub != NULL) {
     if (memcmp(sub->subjectuuid.id, WILDCARD_SUB.id, 16) == 0) {
-      uuid[0] = '*';
-      uuid[1] = '\0';
+      goto next_sub;
     } else {
       oc_uuid_to_str(&sub->subjectuuid, uuid, 37);
     }
@@ -136,6 +136,7 @@ oc_sec_encode_acl(void)
 #ifdef OC_DYNAMIC_ALLOCATION
     free(groups);
 #endif /* OC_DYNAMIC_ALLOCATION */
+  next_sub:
     sub = sub->next;
   }
   oc_rep_close_array(aclist, aces);
@@ -263,6 +264,52 @@ oc_sec_acl_init(void)
   OC_LIST_STRUCT_INIT(&ac_list, subjects);
 }
 
+static bool
+oc_sec_remove_subject(const char *subject)
+{
+  bool removed = false;
+  oc_uuid_t subjectuuid;
+  oc_str_to_uuid(subject, &subjectuuid);
+
+  oc_sec_ace_t *sub = oc_list_head(ac_list.subjects), *next_sub = 0;
+  while (sub != NULL) {
+    next_sub = sub->next;
+    if (memcmp(subjectuuid.id, sub->subjectuuid.id, 16) == 0) {
+      oc_sec_acl_res_t *res = oc_list_head(sub->resources), *next_res = 0;
+      while (res != NULL) {
+        next_res = res->next;
+        oc_list_remove(sub->resources, res);
+        oc_memb_free(&res_l, res);
+        res = next_res;
+      }
+      oc_list_remove(ac_list.subjects, sub);
+      oc_memb_free(&ace_l, sub);
+      removed = true;
+      break;
+    }
+    sub = next_sub;
+  }
+
+  return removed;
+}
+
+void
+oc_sec_set_post_otm_acl(void)
+{
+  const char wildcard_sub[36] = "00000000-0000-0000-0000-000000000000";
+  oc_sec_remove_subject(wildcard_sub);
+  oc_resource_t *resource;
+  int i,
+    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+  for (i = 0; i < num_core_resources; i++) {
+    resource = oc_core_get_resource_by_index(i);
+    if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED || i == OCF_SEC_DOXM) {
+      oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
+                        OC_IF_BASELINE, 2);
+    }
+  }
+}
+
 void
 oc_sec_acl_default(void)
 {
@@ -299,6 +346,11 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   oc_uuid_t *identity = (oc_uuid_t *)oc_sec_dtls_get_peer_uuid(endpoint);
 
   if (identity) {
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+    if (memcmp(identity->id, doxm->devowneruuid.id, 16) == 0) {
+      return true;
+    }
+
     res = oc_sec_acl_get_ace(identity, resource, false, false);
 
     if (!res) {
@@ -307,7 +359,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
     if (!res) {
       if (memcmp(identity->id, ac_list.rowneruuid.id, 16) == 0 &&
-          memcmp(oc_string(resource->uri), "/oic/sec/acl", 12) == 0) {
+          (memcmp(oc_string(resource->uri), "/oic/sec/acl", 12) == 0 ||
+           memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0 ||
+           memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0)) {
         return true;
       }
     }
@@ -356,35 +410,6 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
 
   return granted;
-}
-
-static bool
-oc_sec_remove_subject(const char *subject)
-{
-  bool removed = false;
-  oc_uuid_t subjectuuid;
-  oc_str_to_uuid(subject, &subjectuuid);
-
-  oc_sec_ace_t *sub = oc_list_head(ac_list.subjects), *next_sub = 0;
-  while (sub != NULL) {
-    next_sub = sub->next;
-    if (memcmp(subjectuuid.id, sub->subjectuuid.id, 16) == 0) {
-      oc_sec_acl_res_t *res = oc_list_head(sub->resources), *next_res = 0;
-      while (res != NULL) {
-        next_res = res->next;
-        oc_memb_free(&res_l, res);
-        oc_list_remove(sub->resources, res);
-        res = next_res;
-      }
-      oc_memb_free(&ace_l, sub);
-      oc_list_remove(ac_list.subjects, sub);
-      removed = true;
-      break;
-    }
-    sub = next_sub;
-  }
-
-  return removed;
 }
 
 bool
