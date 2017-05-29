@@ -46,8 +46,20 @@ oc_sec_load_doxm(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
     ret = oc_storage_read("/doxm", buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
+#ifndef OC_DYNAMIC_ALLOCATION
+      char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+      oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+      memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+      memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+      struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                     rep_objects_alloc,
+                                     (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+      struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+      oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, ret, &rep);
-      oc_sec_decode_doxm(rep);
+      oc_sec_decode_doxm(rep, true);
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -80,10 +92,24 @@ oc_sec_load_pstat(void)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+  oc_sec_acl_init();
+
   ret = oc_storage_read("/pstat", buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
+#ifndef OC_DYNAMIC_ALLOCATION
+    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                   rep_objects_alloc,
+                                   (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+    oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_pstat(rep);
+    oc_sec_decode_pstat(rep, true);
     oc_free_rep(rep);
   }
 
@@ -115,6 +141,18 @@ oc_sec_load_cred(void)
     if (ret <= 0)
       return;
 
+#ifndef OC_DYNAMIC_ALLOCATION
+    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                   rep_objects_alloc,
+                                   (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+    oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, ret, &rep);
     oc_sec_decode_cred(rep, NULL);
     oc_free_rep(rep);
@@ -130,8 +168,6 @@ oc_sec_load_acl(void)
   long ret = 0;
   oc_rep_t *rep;
 
-  oc_sec_acl_init();
-
   if (oc_sec_provisioned()) {
 #ifdef OC_DYNAMIC_ALLOCATION
     uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -144,6 +180,18 @@ oc_sec_load_acl(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
     ret = oc_storage_read("/acl", buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
+#ifndef OC_DYNAMIC_ALLOCATION
+      char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
+      oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
+      memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+      memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+      struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                     rep_objects_alloc,
+                                     (void *)rep_objects_pool };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+      struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+      oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, ret, &rep);
       oc_sec_decode_acl(rep);
       oc_free_rep(rep);
