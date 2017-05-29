@@ -51,8 +51,10 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
   oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid);
   if (cred == NULL) {
     cred = oc_memb_alloc(&creds);
-    memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
-    oc_list_add(creds_l, cred);
+    if (cred != NULL) {
+      memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
+      oc_list_add(creds_l, cred);
+    }
   }
   return cred;
 }
@@ -214,6 +216,39 @@ get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   oc_sec_encode_cred(false);
   oc_send_response(request, OC_STATUS_OK);
+}
+
+static bool
+oc_sec_remove_subject(const char *subjectuuid)
+{
+  oc_uuid_t _subjectuuid;
+  oc_str_to_uuid(subjectuuid, &_subjectuuid);
+  oc_sec_cred_t *cred = oc_list_head(creds_l), *next = 0;
+  while (cred != NULL) {
+    next = cred->next;
+    if (memcmp(cred->subjectuuid.id, _subjectuuid.id, 16) == 0) {
+      oc_list_remove(creds_l, cred);
+      oc_memb_free(&creds, cred);
+      return true;
+    }
+    cred = next;
+  }
+  return false;
+}
+
+void
+delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
+{
+  (void)interface;
+  (void)data;
+  char *subjectuuid = 0;
+  int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
+  if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
+    oc_send_response(request, OC_STATUS_DELETED);
+    oc_sec_dump_cred();
+    return;
+  }
+  oc_send_response(request, OC_STATUS_NOT_FOUND);
 }
 
 void

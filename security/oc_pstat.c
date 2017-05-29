@@ -17,6 +17,7 @@
 #ifdef OC_SECURITY
 
 #include "oc_pstat.h"
+#include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
@@ -65,8 +66,8 @@ oc_sec_encode_pstat(void)
   oc_rep_end_root_object();
 }
 
-void
-oc_sec_decode_pstat(oc_rep_t *rep)
+bool
+oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm();
   while (rep != NULL) {
@@ -75,29 +76,46 @@ oc_sec_decode_pstat(oc_rep_t *rep)
       if (oc_string_len(rep->name) == 4 &&
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         pstat.isop = rep->value.boolean;
+        if (pstat.isop) {
+          oc_sec_set_post_otm_acl();
+        }
+      } else {
+        return false;
       }
       break;
     case INT:
-      if (memcmp(oc_string(rep->name), "cm", 2) == 0)
+      if (memcmp(oc_string(rep->name), "cm", 2) == 0) {
         pstat.cm = rep->value.integer;
-      else if (memcmp(oc_string(rep->name), "tm", 2) == 0)
+      } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
         pstat.tm = rep->value.integer;
-      else if (memcmp(oc_string(rep->name), "om", 2) == 0)
+      } else if (memcmp(oc_string(rep->name), "om", 2) == 0) {
         pstat.om = rep->value.integer;
-      else if (memcmp(oc_string(rep->name), "sm", 2) == 0)
+      } else if (from_storage && memcmp(oc_string(rep->name), "sm", 2) == 0) {
         pstat.sm = rep->value.integer;
+      } else {
+        return false;
+      }
       break;
     case STRING:
-      if (memcmp(oc_string(rep->name), "deviceuuid", 10) == 0)
+      if (memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm->deviceuuid);
-      else if (memcmp(oc_string(rep->name), "rowneruuid", 10) == 0)
+      } else if (memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm->rowneruuid);
+      } else {
+        return false;
+      }
       break;
     default:
+      if (!(oc_string_len(rep->name) == 2 &&
+            (memcmp(oc_string(rep->name), "rt", 2) == 0 ||
+             memcmp(oc_string(rep->name), "if", 2) == 0))) {
+        return false;
+      }
       break;
     }
     rep = rep->next;
   }
+  return true;
 }
 
 void
@@ -119,9 +137,12 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  oc_sec_decode_pstat(request->request_payload);
-  oc_send_response(request, OC_STATUS_CHANGED);
-  oc_sec_dump_pstat();
+  if (oc_sec_decode_pstat(request->request_payload, false)) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_sec_dump_pstat();
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
 }
 
 #endif /* OC_SECURITY */
