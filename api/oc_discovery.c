@@ -258,6 +258,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   int s = oc_parse_rep(payload, len, &rep);
   if (s == 0)
     array = rep;
+  else if (s == CborErrorOutOfMemory) {
+      OC_ERR("rep objects exhausted\n");
+  }
   while (array != NULL) {
     oc_rep_t *device_map = array->value.object;
     while (device_map != NULL) {

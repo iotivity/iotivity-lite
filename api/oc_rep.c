@@ -43,11 +43,14 @@ int
 oc_rep_finalize(void)
 {
   int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
+  if (size < 0 && g_err == CborErrorOutOfMemory) {
 #ifdef OC_DEBUG
-  if (size < 0 && g_err == CborErrorOutOfMemory)
     oc_abort("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
              "accomodate a larger payload\n");
+#else
+    OC_ERR("app data exhausted");
 #endif /* OC_DEBUG */
+  }
   if (g_err != CborNoError)
     return -1;
   return size;

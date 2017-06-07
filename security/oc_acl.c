@@ -198,8 +198,10 @@ got_ace:
 new_ace:
   ace = oc_memb_alloc(&ace_l);
 
-  if (!ace)
+  if (!ace) {
+    OC_ERR("ACE exhausted\n");
     goto done;
+  }
 
   OC_DBG("Created new ACE for subject %s\n", uuid);
 
