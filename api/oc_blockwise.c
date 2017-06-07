@@ -58,8 +58,10 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
     buffer->mid = 0;
     buffer->client_cb = 0;
 #endif /* OC_CLIENT */
+    return buffer;
   }
-  return buffer;
+  OC_ERR("block buffers exhausted\n");
+  return NULL;
 }
 
 static void
