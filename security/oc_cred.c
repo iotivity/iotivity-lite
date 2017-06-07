@@ -55,6 +55,9 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
       memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
       oc_list_add(creds_l, cred);
     }
+    else {
+      OC_ERR("cred exhausted\n");
+    }
   }
   return cred;
 }

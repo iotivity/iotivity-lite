@@ -146,8 +146,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
 #ifndef OC_DYNAMIC_ALLOCATION
-  if (device_count == OC_MAX_NUM_DEVICES)
+  if (device_count == OC_MAX_NUM_DEVICES) {
+    OC_ERR("device limit reached\n");
     return NULL;
+  }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   core_resources = (oc_resource_t *)realloc(
     core_resources,

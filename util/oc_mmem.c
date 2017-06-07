@@ -67,6 +67,7 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_bytes < size) {
+      OC_ERR("byte pool exhausted\n");
       return 0;
     }
     oc_list_add(bytes_list, m);
@@ -81,6 +82,7 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_ints < size) {
+      OC_ERR("int pool exhausted\n");
       return 0;
     }
     oc_list_add(ints_list, m);
@@ -95,6 +97,7 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_doubles < size) {
+      OC_ERR("double pool exhausted\n");
       return 0;
     }
     oc_list_add(doubles_list, m);
