@@ -1,6 +1,7 @@
 CC = gcc
 SED = sed
 INSTALL = install
+CHECK_SCRIPT = ../../tools/check.py
 
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
@@ -158,7 +159,7 @@ clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES)
+	rm -rf ${all} $(SAMPLES) $(TESTS)
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
@@ -181,3 +182,16 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 # Installing the samples
 	$(INSTALL) -d ${install_bin_dir}
 	$(INSTALL) $(SAMPLES) ${install_bin_dir}
+
+############# TESTS ##########################
+TESTS = \
+	tests/client_get_linux_test
+
+tests/client_get_linux_test: libiotivity-constrained-client-server.a
+	@mkdir -p $(@D)
+	$(CC) -o $@ ../../tests/client_get_linux.c \
+		libiotivity-constrained-client-server.a -DOC_SERVER \
+		-DOC_CLIENT $(CFLAGS) $(LIBS)
+
+check: $(TESTS)
+	$(Q)$(PYTHON) $(CHECK_SCRIPT) --tests="$(TESTS)"
