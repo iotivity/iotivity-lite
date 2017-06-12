@@ -185,7 +185,14 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 
 ############# TESTS ##########################
 TESTS = \
+	tests/client_init_linux_test \
 	tests/client_get_linux_test
+
+tests/client_init_linux_test: libiotivity-constrained-client.a
+	@mkdir -p $(@D)
+	$(CC) -o $@ ../../tests/client_init_linux.c \
+		libiotivity-constrained-client.a \
+		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
 tests/client_get_linux_test: libiotivity-constrained-client-server.a
 	@mkdir -p $(@D)
