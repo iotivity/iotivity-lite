@@ -101,6 +101,9 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
       t = NULL;
     }
   }
+  else {
+    OC_ERR("transactions exhausted\n");
+  }
 
   return t;
 }
