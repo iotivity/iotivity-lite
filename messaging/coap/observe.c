@@ -141,6 +141,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     oc_list_add(observers_list, o);
     return dup;
   }
+  OC_ERR("observers exhausted\n");
   return -1;
 }
 /*---------------------------------------------------------------------------*/
