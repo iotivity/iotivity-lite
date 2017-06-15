@@ -326,7 +326,7 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
     if (!events) {
       oc_abort("Insufficient memory");
     }
-    oc_process_num_events_t i = fevent, n = nevents - fevent, j = 0;
+    long i = fevent, n = nevents - fevent, j = 0;
     while (i < (OC_PROCESS_NUMEVENTS - n)) {
       if (i < nevents) {
         memcpy(&events[OC_PROCESS_NUMEVENTS - n + j], &events[i],
