@@ -50,7 +50,11 @@
 
 typedef unsigned char oc_process_event_t;
 typedef void *oc_process_data_t;
+#ifdef OC_DYNAMIC_ALLOCATION
+typedef unsigned long oc_process_num_events_t;
+#else
 typedef unsigned char oc_process_num_events_t;
+#endif
 
 /**
  * \name Return values
