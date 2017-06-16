@@ -231,6 +231,15 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
   handler->user_data = user_data;
 }
 
+void
+oc_set_con_app_cb(oc_con_app_read_cb_t read_callback,
+                  oc_con_app_write_cb_t write_callback)
+{
+  oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON);
+  res->get_handler.user_data = (void*)read_callback;
+  res->post_handler.user_data = (void*)write_callback;
+}
+
 bool
 oc_add_resource(oc_resource_t *resource)
 {
