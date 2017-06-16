@@ -89,10 +89,12 @@ typedef enum {
   OCF_D
 } oc_core_resource_t;
 
+#define OC_CORE_LAST_RESOURCE OCF_D
+
 #ifndef OC_DYNAMIC_ALLOCATION
-#define NUM_OC_CORE_RESOURCES (OCF_D + OC_MAX_NUM_DEVICES)
+#define NUM_OC_CORE_RESOURCES (OC_CORE_LAST_RESOURCE + (OC_MAX_NUM_DEVICES * 2))
 #else /* !OC_DYNAMIC_ALLOCATION */
-#define NUM_OC_CORE_RESOURCES (OCF_D + 1)
+#define NUM_OC_CORE_RESOURCES (OC_CORE_LAST_RESOURCE + 2)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 typedef struct oc_resource_s oc_resource_t;

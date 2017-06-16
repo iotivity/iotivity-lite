@@ -110,9 +110,16 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
                       oc_rep_array(links)))
     matches++;
 
+  /* oic.wk.d */
   if (filter_resource(
-        oc_core_get_resource_by_index(NUM_OC_CORE_RESOURCES - 1 + device_num),
+        oc_core_get_resource_by_index(OC_CORE_LAST_RESOURCE - 1 + (2 * device_num)),
         rt, rt_len, oc_rep_array(links)))
+    matches++;
+
+  /* oic.wk.con */
+  if (filter_resource(
+      oc_core_get_resource_by_index(OC_CORE_LAST_RESOURCE + (2 * device_num)),
+      rt, rt_len, oc_rep_array(links)))
     matches++;
 
 #ifdef OC_SERVER
