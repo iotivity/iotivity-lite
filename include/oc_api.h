@@ -14,11 +14,18 @@
 // limitations under the License.
 */
 
+/**
+  @brief Main API of IoTivity-constrained for client and server.
+  @file
+*/
+
+
 #ifndef OC_API_H
 #define OC_API_H
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
+#include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
@@ -88,6 +95,44 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
+
+/**
+  @brief Callback for change notifications from the oic.wk.con resource.
+
+  This callback is invoked to notify a change of one or more properties
+  on the oic.wk.con resource. The \c rep parameter contains all properties,
+  the function is not invoked for each property.
+
+  When the function is invoked, all properties handled by the stack are
+  already updated. The callee can use the invocation to optionally store
+  the new values persistently.
+
+  Once the callback returns, the response will be sent to the client
+  and observers will be notified.
+
+  @note As of now only the attribute "n" is supported.
+  @note The callee shall not block for too long as the stack is blocked
+   during the invocation.
+
+  @param device_index index of the device to which the change was
+   applied, 0 is the first device
+  @parem rep list of properties and their new values
+*/
+typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
+
+/**
+  @brief Sets the callback to receive change notifications for
+   the oic.wk.con resource.
+
+  The function can be used to set or unset the callback. Whenever
+  an attribute of the oic.wk.con resource is changed, the callback
+  will be invoked.
+
+  @param callback The callback to register or NULL to unset it.
+   If the function is invoked a second time, then the previously
+   set callback is simply replaced.
+*/
+void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
 void oc_init_query_iterator(void);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,
