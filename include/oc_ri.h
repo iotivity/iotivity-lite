@@ -80,6 +80,7 @@ typedef enum {
 typedef enum {
   OCF_RES = 0,
   OCF_P,
+  OCF_CON,
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,

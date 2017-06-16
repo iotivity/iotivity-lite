@@ -115,6 +115,11 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
         rt, rt_len, oc_rep_array(links)))
     matches++;
 
+  /* oic.wk.con */
+  if (filter_resource(oc_core_get_resource_by_index(OCF_CON),
+                      rt, rt_len, oc_rep_array(links)))
+    matches++;
+
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
