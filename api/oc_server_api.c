@@ -243,6 +243,17 @@ oc_delete_resource(oc_resource_t *resource)
   oc_ri_delete_resource(resource);
 }
 
+void 
+oc_resource_set_con_request_handler(oc_method_t method,
+                                    oc_request_callback_t callback,
+                                    void *user_data)
+{
+  oc_resource_set_request_handler(oc_core_get_con_app_resource(),
+                                  method,
+                                  callback,
+                                  user_data);
+}
+
 void
 oc_init_query_iterator(void)
 {

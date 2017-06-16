@@ -90,6 +90,10 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
 
+void oc_resource_set_con_request_handler(oc_method_t method,
+                                         oc_request_callback_t callback,
+                                         void *user_data);
+
 void oc_init_query_iterator(void);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,
                       char **value, int *value_len);

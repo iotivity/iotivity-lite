@@ -38,6 +38,7 @@ static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 static int device_count;
 static oc_uuid_t *next_di;
 static oc_string_t oc_platform_payload;
+static oc_resource_t con_app_resource;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 void
@@ -109,10 +110,101 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_OK);
 }
 
+static void
+oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
+                        void *data)
+{
+  (void)data;
+  (void)interface;
+
+  int device = request->resource->device;
+  oc_rep_start_root_object();
+
+  oc_process_baseline_interface(request->resource);
+  /* oic.wk.d attribute n shall always be the same value as
+     oic.wk.con attribute n. */
+  oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+
+  if (con_app_resource.get_handler.cb) {
+    con_app_resource.get_handler.cb(request,
+                                    interface,
+                                    con_app_resource.get_handler.user_data);
+  }
+
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+static void
+oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
+                         void *data)
+{
+
+  if (interface != OC_IF_RW) {
+    oc_send_response(request, OC_STATUS_FORBIDDEN);
+    return;
+  }
+
+  bool handled = false;
+  oc_rep_t *rep = request->request_payload;
+
+  oc_rep_start_root_object();
+
+  while (rep != NULL) {
+    if (strcmp(oc_string(rep->name), "n") == 0) {
+      if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        return;
+      }
+
+      int device = request->resource->device;
+      oc_free_string(&oc_device_info[device].name);
+      oc_new_string(&oc_device_info[device].name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
+      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+      handled = true;
+      break;
+    }
+    rep = rep->next;
+  }
+
+  if (con_app_resource.post_handler.cb) {
+    /* cannot know what the handler does, so assume it knows
+       how to treat the request*/
+    handled = true;
+    con_app_resource.post_handler.cb(request,
+                                     interface,
+                                     con_app_resource.post_handler.user_data);
+  }
+
+  oc_rep_end_root_object();
+
+  if (handled) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+    /* notify_observers is automatically triggered in
+       oc_ri_invoke_coap_entity_handler() */
+    return;
+  }
+
+  oc_send_response(request, OC_STATUS_BAD_REQUEST);
+}
+
 int
 oc_core_get_num_devices(void)
 {
   return device_count;
+}
+
+int
+oc_core_get_num_resources(void)
+{
+    return NUM_OC_CORE_RESOURCES - 1 + device_count;
+}
+
+oc_resource_t *
+oc_core_get_con_app_resource(void)
+{
+  return &con_app_resource;
 }
 
 static int
@@ -165,7 +257,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  int ocf_d = NUM_OC_CORE_RESOURCES - 1 + device_count;
+  int ocf_d = oc_core_get_num_resources();
 
 /* Once provisioned, UUID is retrieved from the credential store.
    If not yet provisioned, a default is generated in the security
@@ -204,6 +296,13 @@ next_di = NULL;
   oc_new_string(&oc_device_info[device_count].dmv, data_model_version,
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
+
+  /* Construct oic.wk.con resource for this device */
+  oc_core_populate_resource(
+    OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OC_DISCOVERABLE | OC_OBSERVABLE, 
+    oc_core_con_handler_get, oc_core_con_handler_post, oc_core_con_handler_post,
+    0, 1, "oic.wk.con");
 
   return &oc_device_info[device_count++];
 }
@@ -339,7 +438,7 @@ oc_core_get_resource_by_index(int type)
 oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri)
 {
-  int i, num_core_resources = NUM_OC_CORE_RESOURCES - 1 + device_count;
+  int i, num_core_resources = oc_core_get_num_resources();
   for (i = 0; i < num_core_resources; i++) {
     if (oc_string_len(core_resources[i].uri) == strlen(uri) &&
         strncmp(uri, oc_string(core_resources[i].uri), strlen(uri)) == 0)
