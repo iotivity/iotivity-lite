@@ -681,8 +681,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared core resources.
    */
   if (!bad_request) {
-    int i, num_core_resources =
-             NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    int i, num_core_resources = oc_core_get_num_resources();
     for (i = 0; i < num_core_resources; i++) {
       resource = oc_core_get_resource_by_index(i);
       if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
