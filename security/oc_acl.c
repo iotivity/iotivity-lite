@@ -305,7 +305,7 @@ oc_sec_set_post_otm_acl(void)
   oc_sec_remove_subject(wildcard_sub);
   oc_resource_t *resource;
   int i,
-    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    num_core_resources = oc_core_get_num_resources();
   for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED || i == OCF_SEC_DOXM) {
@@ -321,7 +321,7 @@ oc_sec_acl_default(void)
   bool success = true;
   oc_resource_t *resource;
   int i,
-    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    num_core_resources = oc_core_get_num_resources();
   for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
