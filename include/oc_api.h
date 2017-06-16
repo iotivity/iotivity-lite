@@ -19,6 +19,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
+#include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
@@ -89,6 +90,9 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
 void oc_delete_resource(oc_resource_t *resource);
+
+typedef void(*oc_con_app_cb_t)(int device_index, const char *name);
+void oc_set_con_app_cb(oc_con_app_cb_t callback);
 
 void oc_init_query_iterator(void);
 int oc_interate_query(oc_request_t *request, char **key, int *key_len,
