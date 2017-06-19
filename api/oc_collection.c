@@ -33,6 +33,7 @@ oc_collection_alloc(void)
     OC_LIST_STRUCT_INIT(collection, links);
     return collection;
   }
+  OC_WRN("insufficient memory to create new collection\n");
   return NULL;
 }
 
@@ -46,8 +47,10 @@ oc_new_link(oc_resource_t *resource)
     link->resource = resource;
     link->next = 0;
     memset(&link->ins, 0, sizeof(oc_string_t));
+    return link;
   }
-  return link;
+  OC_WRN("insufficient memory to create new link\n");
+  return NULL;
 }
 
 void

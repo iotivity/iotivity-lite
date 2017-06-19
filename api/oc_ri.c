@@ -360,6 +360,9 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
     OC_PROCESS_CONTEXT_END(&timed_callback_events);
     oc_list_add(timed_callbacks, event_cb);
   }
+  else {
+    OC_WRN("insufficient memory to add timed event callback\n");
+  }
 }
 
 static void
@@ -459,8 +462,10 @@ add_periodic_observe_callback(oc_resource_t *resource)
   if (!event_cb) {
     event_cb = (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
 
-    if (!event_cb)
+    if (!event_cb) {
+      OC_WRN("insufficient memory to add periodic observe callback\n");
       return false;
+    }
 
     event_cb->data = resource;
     event_cb->callback = periodic_observe_handler;
@@ -1183,9 +1188,12 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
                       oc_method_t method, oc_client_handler_t handler,
                       oc_qos_t qos, void *user_data)
 {
+    static unsigned int call = 0;
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
-  if (!cb)
+  if (!cb) {
+    OC_WRN("insufficient memory to add client callback\n");
     return cb;
+  }
 
   cb->mid = coap_get_mid();
   oc_new_string(&cb->uri, uri, strlen(uri));
