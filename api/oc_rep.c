@@ -43,11 +43,10 @@ int
 oc_rep_finalize(void)
 {
   int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
-#ifdef OC_DEBUG
-  if (size < 0 && g_err == CborErrorOutOfMemory)
-    oc_abort("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
-             "accomodate a larger payload\n");
-#endif /* OC_DEBUG */
+  if (size < 0 && g_err == CborErrorOutOfMemory) {
+    OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
+           "accomodate a larger payload\n");
+  }
   if (g_err != CborNoError)
     return -1;
   return size;
@@ -130,6 +129,10 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   size_t k, len;
   CborValue map, array;
   *rep = _alloc_rep();
+  if (*rep == NULL) {
+    *err = CborErrorOutOfMemory;
+    return;
+  }
   oc_rep_t *cur = *rep, **prev = 0;
   cur->next = 0;
   cur->value.object_array = 0;
@@ -256,9 +259,17 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           cur->type = OBJECT | ARRAY;
           cur->value.object_array = _alloc_rep();
+          if (cur->value.object_array == NULL) {
+            *err = CborErrorOutOfMemory;
+            return;
+          }
           prev = &cur->value.object_array;
         } else {
           (*prev)->next = _alloc_rep();
+          if ((*prev)->next == NULL) {
+            *err = CborErrorOutOfMemory;
+            return;
+          }
           prev = &(*prev)->next;
         }
         (*prev)->type = OBJECT;
@@ -313,6 +324,8 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
     err |= cbor_value_enter_container(&root_value, &map);
     while (cbor_value_is_valid(&map)) {
       *cur = _alloc_rep();
+      if (*cur == NULL)
+        return (uint16_t)CborErrorOutOfMemory;
       (*cur)->type = OBJECT;
       kv = &(*cur)->value.object;
       err |= cbor_value_enter_container(&map, &cur_value);

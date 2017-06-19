@@ -88,27 +88,27 @@ oc_get_block_size(void)
 int
 oc_set_mtu_size(long mtu_size)
 {
-  OC_WRN("Dynamic memory not available");
+  OC_WRN("Dynamic memory not available\n");
   return -1;
 }
 
 long
 oc_get_mtu_size(void)
 {
-  OC_WRN("Dynamic memory not available");
+  OC_WRN("Dynamic memory not available\n");
   return -1;
 }
 
 void
 oc_set_max_app_data_size(long size)
 {
-  OC_WRN("Dynamic memory not available");
+  OC_WRN("Dynamic memory not available\n");
 }
 
 long
 oc_get_max_app_data_size(void)
 {
-  OC_WRN("Dynamic memory not available");
+  OC_WRN("Dynamic memory not available\n");
   return -1;
 }
 
