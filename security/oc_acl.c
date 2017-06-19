@@ -198,8 +198,10 @@ got_ace:
 new_ace:
   ace = oc_memb_alloc(&ace_l);
 
-  if (!ace)
+  if (!ace) {
+    OC_WRN("insufficient memory to add new ACE\n");
     goto done;
+  }
 
   OC_DBG("Created new ACE for subject %s\n", uuid);
 
@@ -220,6 +222,9 @@ new_res:
       OC_DBG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
 #endif /* OC_DBG */
     oc_list_add(ace->resources, res);
+  }
+  else {
+    OC_WRN("insufficient memory to add new resource to ACE\n");
   }
 
 done:
