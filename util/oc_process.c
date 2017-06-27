@@ -60,7 +60,7 @@ struct event_data
 };
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static long OC_PROCESS_NUMEVENTS = 10;
+static unsigned long OC_PROCESS_NUMEVENTS = 10;
 #else /* OC_DYNAMIC_ALLOCATION */
 #define OC_PROCESS_NUMEVENTS 10
 #endif /* !OC_DYNAMIC_ALLOCATION */

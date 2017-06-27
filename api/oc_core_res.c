@@ -112,6 +112,7 @@ static void
 oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
                         void *data)
 {
+  (void)data;
   int device = request->resource->device;
   oc_rep_start_root_object();
 
@@ -136,6 +137,7 @@ static void
 oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
                          void *data)
 {
+  (void)interface;
   oc_rep_t *rep = request->request_payload;
   bool changed = false;
   int device = request->resource->device;
@@ -164,7 +166,8 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
   }
 
   if (data) {
-      ((oc_con_write_cb_t)data)(device, request->request_payload);
+    oc_con_write_cb_t cb = *(oc_con_write_cb_t *)(&data);
+    cb(device, request->request_payload);
   }
 
   if (changed) {
@@ -211,6 +214,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
+  (void)data;
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
     OC_ERR("device limit reached\n");
