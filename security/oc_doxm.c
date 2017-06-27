@@ -127,9 +127,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage)
       }
       break;
     default: {
-      if (!((oc_string_len(rep->name) == 4 &&
-             memcmp(oc_string(rep->name), "oxms", 4) == 0) ||
-            (oc_string_len(rep->name) == 2 &&
+      if (!((oc_string_len(rep->name) == 2 &&
              (memcmp(oc_string(rep->name), "rt", 2) == 0 ||
               memcmp(oc_string(rep->name), "if", 2) == 0)))) {
         return false;
