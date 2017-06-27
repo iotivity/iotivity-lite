@@ -184,7 +184,7 @@ void
 coap_clear_transaction(coap_transaction_t *t)
 {
   if (t) {
-    OC_DBG("Freeing transaction %u: %p\n", t->mid, t);
+    OC_DBG("Freeing transaction %u: %p\n", t->mid, (void *)t);
 
     oc_etimer_stop(&t->retrans_timer);
     oc_message_unref(t->message);
@@ -200,7 +200,7 @@ coap_get_transaction_by_mid(uint16_t mid)
   for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
        t = t->next) {
     if (t->mid == mid) {
-      OC_DBG("Found transaction for MID %u: %p\n", t->mid, t);
+      OC_DBG("Found transaction for MID %u: %p\n", t->mid, (void *)t);
       return t;
     }
   }

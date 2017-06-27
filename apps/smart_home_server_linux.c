@@ -44,6 +44,7 @@ app_init(void)
 static void
 get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
   PRINT("GET_temp:\n");
   bool invalid_query = false;
   double temp = temp_C;
@@ -115,6 +116,8 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_temp:\n");
   bool out_of_range = false;
   double temp = -1;
@@ -156,6 +159,7 @@ static void
 get_pswitch(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
+  (void)user_data;
   PRINT("GET_pswitch:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -177,6 +181,8 @@ static void
 post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_pswitch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
@@ -211,6 +217,7 @@ static void
 get_switch(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
+  (void)user_data;
   PRINT("GET_switch:\n");
   oc_rep_start_root_object();
   switch (interface) {
@@ -232,6 +239,8 @@ static void
 post_switch(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
+  (void)interface;
+  (void)user_data;
   PRINT("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
@@ -321,6 +330,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

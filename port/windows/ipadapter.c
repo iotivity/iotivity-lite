@@ -22,8 +22,8 @@
 #undef NO_ERROR
 
 #include "oc_buffer.h"
+#include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
-
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
   0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
@@ -50,9 +50,9 @@ infinite_wait_for_event()
 }
 
 void
-ms_wait_for_event(int ms)
+ms_wait_for_event(oc_clock_time_t ms)
 {
-  SleepConditionVariableCS(&cv, &cs, ms);
+  SleepConditionVariableCS(&cv, &cs, (DWORD)ms);
 }
 
 void
@@ -276,7 +276,7 @@ network_event_thread(void *data)
 #endif
         memcpy(message->endpoint.addr.ipv6.address, c->sin6_addr.s6_addr,
                sizeof(c->sin6_addr.s6_addr));
-        message->endpoint.addr.ipv6.scope = c->sin6_scope_id;
+        message->endpoint.addr.ipv6.scope = (uint8_t)c->sin6_scope_id;
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
       }
 
