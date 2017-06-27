@@ -124,7 +124,8 @@ coap_receive(oc_message_t *msg)
 
   /* block options */
   uint32_t block1_num = 0, block1_offset = 0, block2_num = 0, block2_offset = 0;
-  uint16_t block1_size = OC_BLOCK_SIZE, block2_size = OC_BLOCK_SIZE;
+  uint16_t block1_size = (uint16_t)OC_BLOCK_SIZE,
+           block2_size = (uint16_t)OC_BLOCK_SIZE;
   uint8_t block1_more = 0, block2_more = 0;
   bool block1 = false, block2 = false;
 
@@ -132,7 +133,8 @@ coap_receive(oc_message_t *msg)
   oc_blockwise_state_t *request_buffer = 0, *response_buffer = 0;
 #endif /* OC_BLOCK_WISE */
 
-  coap_status_code = coap_parse_message(message, msg->data, msg->length);
+  coap_status_code =
+    coap_parse_message(message, msg->data, (uint16_t)msg->length);
 
   if (coap_status_code == NO_ERROR) {
 
@@ -167,8 +169,8 @@ coap_receive(oc_message_t *msg)
       block2 = true;
 
 #ifdef OC_BLOCK_WISE
-    block1_size = MIN(block1_size, OC_BLOCK_SIZE);
-    block2_size = MIN(block2_size, OC_BLOCK_SIZE);
+    block1_size = MIN(block1_size, (uint16_t)OC_BLOCK_SIZE);
+    block2_size = MIN(block2_size, (uint16_t)OC_BLOCK_SIZE);
 #endif /* OC_BLOCK_WISE */
 
     transaction = coap_get_transaction_by_mid(message->mid);

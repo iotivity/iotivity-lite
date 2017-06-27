@@ -328,6 +328,10 @@ main(void)
 
 int quit = 0;
 
+void event_has_arrived();
+void infinite_wait_for_event();
+void ms_wait_for_event(oc_clock_time_t ms);
+
 static void
 signal_event_loop(void)
 {

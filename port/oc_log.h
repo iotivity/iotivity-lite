@@ -50,7 +50,7 @@
 #if OC_DEBUG
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \
-    PRINT("%s: %s <%s:%d>: ", level, __FILE__, __FUNCTION__, __LINE__);        \
+    PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
     PRINT(__VA_ARGS__);                                                        \
   } while (0)
 #define OC_LOGipaddr(endpoint) PRINTipaddr(endpoint)
