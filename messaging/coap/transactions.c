@@ -102,7 +102,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
     }
   }
   else {
-    OC_ERR("transactions exhausted\n");
+    OC_WRN("insufficient memory to create transaction\n");
   }
 
   return t;

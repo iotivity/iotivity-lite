@@ -199,7 +199,7 @@ new_ace:
   ace = oc_memb_alloc(&ace_l);
 
   if (!ace) {
-    OC_ERR("ACE exhausted\n");
+    OC_WRN("insufficient memory to add new ACE\n");
     goto done;
   }
 
@@ -222,6 +222,9 @@ new_res:
       OC_DBG("Adding new resource %s to ACE\n", oc_string(res->resource->uri));
 #endif /* OC_DBG */
     oc_list_add(ace->resources, res);
+  }
+  else {
+    OC_WRN("insufficient memory to add new resource to ACE\n");
   }
 
 done:
@@ -302,7 +305,7 @@ oc_sec_set_post_otm_acl(void)
   oc_sec_remove_subject(wildcard_sub);
   oc_resource_t *resource;
   int i,
-    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    num_core_resources = oc_core_get_num_resources();
   for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED || i == OCF_SEC_DOXM) {
@@ -318,7 +321,7 @@ oc_sec_acl_default(void)
   bool success = true;
   oc_resource_t *resource;
   int i,
-    num_core_resources = NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    num_core_resources = oc_core_get_num_resources();
   for (i = 0; i < num_core_resources; i++) {
     resource = oc_core_get_resource_by_index(i);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)

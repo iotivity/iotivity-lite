@@ -98,7 +98,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint)
         &peer->session.addr, oc_sec_dtls_inactive, OC_DTLS_INACTIVITY_TIMEOUT);
     }
     else {
-      OC_ERR("DTLS peers exhausted\n");
+      OC_WRN("DTLS peers exhausted\n");
     }
   }
   return peer;

@@ -56,7 +56,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
       oc_list_add(creds_l, cred);
     }
     else {
-      OC_ERR("cred exhausted\n");
+      OC_WRN("insufficient memory to add new credential\n");
     }
   }
   return cred;

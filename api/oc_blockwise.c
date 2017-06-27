@@ -60,7 +60,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
 #endif /* OC_CLIENT */
     return buffer;
   }
-  OC_ERR("block buffers exhausted\n");
+  OC_WRN("block-wise buffers exhausted\n");
   return NULL;
 }
 

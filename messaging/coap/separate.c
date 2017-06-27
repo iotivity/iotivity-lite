@@ -103,7 +103,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   coap_separate_t *separate_store = oc_memb_alloc(&separate_requests);
 
   if (!separate_store) {
-    OC_ERR("cannot separate request\n");
+    OC_WRN("insufficient memory to store new request for separate response\n");
     return 0;
   }
 

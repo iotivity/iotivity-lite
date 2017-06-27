@@ -361,7 +361,7 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
     oc_list_add(timed_callbacks, event_cb);
   }
   else {
-    OC_ERR("timed events exhausted\n");
+    OC_WRN("insufficient memory to add timed event callback\n");
   }
 }
 
@@ -463,7 +463,7 @@ add_periodic_observe_callback(oc_resource_t *resource)
     event_cb = (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
 
     if (!event_cb) {
-      OC_ERR("periodic callbacks exhausted\n");
+      OC_WRN("insufficient memory to add periodic observe callback\n");
       return false;
     }
 
@@ -681,8 +681,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared core resources.
    */
   if (!bad_request) {
-    int i, num_core_resources =
-             NUM_OC_CORE_RESOURCES - 1 + oc_core_get_num_devices();
+    int i, num_core_resources = oc_core_get_num_resources();
     for (i = 0; i < num_core_resources; i++) {
       resource = oc_core_get_resource_by_index(i);
       if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
@@ -1188,10 +1187,9 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
                       oc_method_t method, oc_client_handler_t handler,
                       oc_qos_t qos, void *user_data)
 {
-    static unsigned int call = 0;
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
   if (!cb) {
-    OC_ERR("client callbacks exhausted\n");
+    OC_WRN("insufficient memory to add client callback\n");
     return cb;
   }
 

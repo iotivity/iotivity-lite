@@ -22,10 +22,10 @@
 #include <stdio.h>
 #include <zephyr.h>
 
-#include <net/nbuf.h>
 #include <net/net_context.h>
 #include <net/net_core.h>
 #include <net/net_if.h>
+#include <net/net_pkt.h>
 
 #if defined(CONFIG_NET_L2_BLUETOOTH)
 #include <bluetooth/bluetooth.h>
@@ -80,20 +80,20 @@ oc_network_event_handler_mutex_unlock(void)
 }
 
 static void
-oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
+oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
                    void *user_data)
 {
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
     uint16_t pos;
-    size_t bytes_read = net_nbuf_appdatalen(buf);
-    size_t offset_from_start = net_buf_frags_len(buf) - bytes_read;
+    size_t bytes_read = net_pkt_appdatalen(pkt);
+    size_t offset_from_start = net_pkt_get_len(pkt) - bytes_read;
     bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
-    struct net_buf *frag = net_nbuf_read(buf->frags, offset_from_start, &pos,
+    struct net_buf *frag = net_frag_read(pkt->frags, offset_from_start, &pos,
                                          bytes_read, message->data);
     if (!frag && pos == 0xffff) {
-      net_nbuf_unref(buf);
+      net_pkt_unref(pkt);
       oc_message_unref(message);
       return;
     }
@@ -103,9 +103,9 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
       message->endpoint.flags = IPV6 | SECURED;
     else
       message->endpoint.flags = IPV6;
-    memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_BUF(buf)->src, 16);
+    memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_HDR(pkt)->src, 16);
     message->endpoint.addr.ipv6.scope = 0;
-    message->endpoint.addr.ipv6.port = ntohs(NET_UDP_BUF(buf)->src_port);
+    message->endpoint.addr.ipv6.port = ntohs(NET_UDP_HDR(pkt)->src_port);
 
     PRINT("oc_network_receive: received %d bytes\n", (int)message->length);
     PRINT("oc_network_receive: incoming message: ");
@@ -115,7 +115,7 @@ oc_network_receive(struct net_context *context, struct net_buf *buf, int status,
     oc_network_event(message);
   }
 
-  net_nbuf_unref(buf);
+  net_pkt_unref(pkt);
 }
 
 static inline void
@@ -142,32 +142,32 @@ oc_send_buffer(oc_message_t *message)
   peer_addr.sin6_port = htons(message->endpoint.addr.ipv6.port);
 
   /* Network buffer to hold data to be sent */
-  struct net_buf *send_buf;
+  struct net_pkt *send_pkt;
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
-    send_buf = net_nbuf_get_tx(dtls_recv6, K_NO_WAIT);
+    send_pkt = net_pkt_get_tx(dtls_recv6, K_NO_WAIT);
   } else
 #endif /* OC_SECURITY */
   {
-    send_buf = net_nbuf_get_tx(udp_recv6, K_NO_WAIT);
+    send_pkt = net_pkt_get_tx(udp_recv6, K_NO_WAIT);
   }
-  if (!send_buf) {
-    OC_WRN("oc_send_buffer: cannot acquire send_buf\n");
+  if (!send_pkt) {
+    OC_WRN("oc_send_buffer: cannot acquire send_pkt\n");
     return;
   }
 
-  bool status = net_nbuf_append(send_buf, message->length, message->data, K_NO_WAIT);
+  bool status = net_pkt_append_all(send_pkt, message->length, message->data, K_NO_WAIT);
   if (!status) {
-    OC_WRN("oc_send_buffer: cannot populate send_buf\n");
+    OC_WRN("oc_send_buffer: cannot populate send_pkt\n");
     return;
   }
 
   int ret = net_context_sendto(
-    send_buf, (struct sockaddr *)&peer_addr, sizeof(struct sockaddr_in6),
-    udp_sent, 0, UINT_TO_POINTER(net_buf_frags_len(send_buf)), NULL);
+    send_pkt, (struct sockaddr *)&peer_addr, sizeof(struct sockaddr_in6),
+    udp_sent, 0, UINT_TO_POINTER(net_pkt_get_len(send_pkt)), NULL);
   if (ret < 0) {
     OC_WRN("oc_send_buffer: cannot send data to peer (%d)\n", ret);
-    net_nbuf_unref(send_buf);
+    net_pkt_unref(send_pkt);
   }
 }
 
