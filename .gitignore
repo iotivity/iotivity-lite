@@ -7,6 +7,7 @@ port/linux/server_collections_linux
 port/linux/client_collections_linux
 port/linux/client_block_linux
 port/linux/server_block_linux
+port/linux/smart_home_server_linux
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*
 port/linux/libiotivity-constrained-client-server.*
