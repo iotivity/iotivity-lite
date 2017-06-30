@@ -114,22 +114,27 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
                         void *data)
 {
   int device = request->resource->device;
-  oc_rep_start_root_object();
 
-  switch (interface) {
-    case OC_IF_BASELINE:
-      oc_process_baseline_interface(request->resource);
-      /* intentionally no break here */
-    case OC_IF_RW: {
-      /* oic.wk.d attribute n shall always be the same value as
-      oic.wk.con attribute n. */
-      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
-    } break;
-    default:
-      break;
+  if (device == 0)
+  {
+    oc_rep_start_root_object();
+
+    switch (interface) {
+      case OC_IF_BASELINE:
+        oc_process_baseline_interface(request->resource);
+        /* intentionally no break here */
+      case OC_IF_RW: {
+        /* oic.wk.d attribute n shall always be the same value as
+        oic.wk.con attribute n. */
+        oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+      } break;
+      default:
+        break;
+    }
+
+    oc_rep_end_root_object();
   }
-
-  oc_rep_end_root_object();
+  
   oc_send_response(request, OC_STATUS_OK);
 }
 
@@ -141,27 +146,29 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
   bool changed = false;
   int device = request->resource->device;
 
-  while (rep != NULL) {
-    if (strcmp(oc_string(rep->name), "n") == 0) {
-      if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
-        oc_send_response(request, OC_STATUS_BAD_REQUEST);
-        return;
-      }
+  if (device == 0) {
+    while (rep != NULL) {
+      if (strcmp(oc_string(rep->name), "n") == 0) {
+        if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
+          oc_send_response(request, OC_STATUS_BAD_REQUEST);
+          return;
+        }
 
-      oc_free_string(&oc_device_info[device].name);
-      oc_new_string(&oc_device_info[device].name, oc_string(rep->value.string),
-                    oc_string_len(rep->value.string));
-      oc_rep_start_root_object();
-      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
-      oc_rep_end_root_object();
-      /* notify_observers is automatically triggered in
-         oc_ri_invoke_coap_entity_handler() for oic.wk.con,
-         we cannot notify name change of oic.wk.d, as this
-         is not observable */
-      changed = true;
-      break;
+        oc_free_string(&oc_device_info[device].name);
+        oc_new_string(&oc_device_info[device].name, oc_string(rep->value.string),
+                      oc_string_len(rep->value.string));
+        oc_rep_start_root_object();
+        oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+        oc_rep_end_root_object();
+        /* notify_observers is automatically triggered in
+           oc_ri_invoke_coap_entity_handler() for oic.wk.con,
+           we cannot notify name change of oic.wk.d, as this
+           is not observable */
+        changed = true;
+        break;
+      }
+      rep = rep->next;
     }
-    rep = rep->next;
   }
 
   if (data) {
@@ -278,13 +285,15 @@ next_di = NULL;
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  /* Construct oic.wk.con resource for this device. */
-  oc_core_populate_resource(
-    OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-    OC_DISCOVERABLE | OC_OBSERVABLE,
-    oc_core_con_handler_get, oc_core_con_handler_post, oc_core_con_handler_post,
-    0, 1, "oic.wk.con");
-
+  /* Construct oic.wk.con resource for this device.
+     As of now we only support one device. */
+  if (device_count == 0) {
+    oc_core_populate_resource(
+      OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_OBSERVABLE,
+      oc_core_con_handler_get, oc_core_con_handler_post, oc_core_con_handler_post,
+      0, 1, "oic.wk.con");
+  }
   return &oc_device_info[device_count++];
 }
 
