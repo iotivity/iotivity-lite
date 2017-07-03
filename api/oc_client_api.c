@@ -42,7 +42,7 @@ dispatch_coap_request(void)
     uint16_t block_size;
     if (payload_size > OC_BLOCK_SIZE) {
       const void *payload = oc_blockwise_dispatch_block(
-        request_buffer, 0, OC_BLOCK_SIZE, &block_size);
+        request_buffer, 0, (uint16_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
         coap_set_payload(request, payload, block_size);
         coap_set_header_block1(request, 0, 1, block_size);

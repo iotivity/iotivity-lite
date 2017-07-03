@@ -120,7 +120,7 @@ coap_set_option_header(unsigned int delta, size_t length, uint8_t *buffer)
     buffer[++written] = ((length - 269) >> 8) & 0xff;
     buffer[++written] = (length - 269) & 0xff;
   } else if (length > 12) {
-    buffer[++written] = (length - 13);
+    buffer[++written] = (uint8_t)(length - 13);
   }
 
   OC_DBG("WRITTEN %zu B opt header\n", 1 + written);
@@ -176,13 +176,13 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
          array);
 
   if (split_char != '\0') {
-    int j;
+    size_t j;
     uint8_t *part_start = array;
     uint8_t *part_end = NULL;
     size_t temp_length;
 
     for (j = 0; j <= length + 1; ++j) {
-      OC_DBG("STEP %u/%zu (%c)\n", j, length, array[j]);
+      OC_DBG("STEP %zu/%zu (%c)\n", j, length, array[j]);
       if (array[j] == split_char || j == length) {
         part_end = array + j;
         temp_length = part_end - part_start;
@@ -479,8 +479,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->payload = ++current_option;
       coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
 
-      if (coap_pkt->payload_len > OC_BLOCK_SIZE) {
-        coap_pkt->payload_len = OC_BLOCK_SIZE;
+      if (coap_pkt->payload_len > (uint16_t)OC_BLOCK_SIZE) {
+        coap_pkt->payload_len = (uint16_t)OC_BLOCK_SIZE;
         /* null-terminate payload */
       }
       coap_pkt->payload[coap_pkt->payload_len] = '\0';
@@ -533,7 +533,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       OC_DBG("Max-Age [%lu]\n", (unsigned long)coap_pkt->max_age);
       break;
     case COAP_OPTION_ETAG:
-      coap_pkt->etag_len = MIN(COAP_ETAG_LEN, option_length);
+      coap_pkt->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, option_length);
       memcpy(coap_pkt->etag, current_option, coap_pkt->etag_len);
       OC_DBG("ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
              coap_pkt->etag_len, coap_pkt->etag[0], coap_pkt->etag[1],
@@ -724,7 +724,7 @@ coap_set_token(void *packet, const uint8_t *token, size_t token_len)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->token_len = MIN(COAP_TOKEN_LEN, token_len);
+  coap_pkt->token_len = (uint8_t)MIN(COAP_TOKEN_LEN, token_len);
   memcpy(coap_pkt->token, token, coap_pkt->token_len);
 
   return coap_pkt->token_len;
@@ -814,7 +814,7 @@ int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len)
 {
   coap_packet_t * const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->etag_len = MIN(COAP_ETAG_LEN, etag_len);
+  coap_pkt->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, etag_len);
   memcpy(coap_pkt->etag, etag, coap_pkt->etag_len);
 
   SET_OPTION(coap_pkt, COAP_OPTION_ETAG);
@@ -1187,7 +1187,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->payload = (uint8_t *)payload;
-  coap_pkt->payload_len = MIN((unsigned)OC_BLOCK_SIZE, length);
+  coap_pkt->payload_len = (uint16_t)MIN((unsigned)OC_BLOCK_SIZE, length);
 
   return coap_pkt->payload_len;
 }

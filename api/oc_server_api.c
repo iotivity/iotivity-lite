@@ -235,7 +235,7 @@ void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
   oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON);
-  res->post_handler.user_data = (void*)callback;
+  res->post_handler.user_data = *(void **)(&callback);
 }
 
 bool
