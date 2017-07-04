@@ -234,6 +234,8 @@ void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 uint16_t oc_parse_rep(const uint8_t *payload, uint16_t payload_size,
                       oc_rep_t **value_list);
 
+oc_rep_t *oc_alloc_rep(void);
+
 void oc_free_rep(oc_rep_t *rep);
 
 #endif /* OC_REP_H */
