@@ -1,0 +1,9 @@
+Code-Review+1: Andreas Zisowsky <zisowsky@lynxtechnology.com>
+Code-Review+1: Reinhard Baier <baier@lynxtechnology.com>
+Code-Review+2: Kishen Maloor <kishen.maloor@intel.com>
+Verified+1: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-by: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-at: Wed, 05 Jul 2017 16:45:18 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/21211
+Project: iotivity-constrained
+Branch: refs/heads/lynx
