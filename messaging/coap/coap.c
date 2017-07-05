@@ -391,6 +391,17 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 #endif
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_SIZE1, size1, "Size1");
 
+  if (IS_OPTION(coap_pkt, COAP_OPTION_ACCEPT)) {
+    option += coap_serialize_int_option(OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER,
+                                        current_number, option, OCF_VER_1_0_0);
+    current_number = OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER;
+  }
+  if (IS_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT)) {
+    option += coap_serialize_int_option(OCF_OPTION_CONTENT_FORMAT_VER,
+                                        current_number, option, OCF_VER_1_0_0);
+    current_number = OCF_OPTION_CONTENT_FORMAT_VER;
+  }
+
   OC_DBG("-Done serializing at %p----\n", option);
 
   /* Pack payload */
@@ -527,6 +538,9 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->content_format =
         coap_parse_int_option(current_option, option_length);
       OC_DBG("Content-Format [%u]\n", coap_pkt->content_format);
+      if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR &&
+          coap_pkt->content_format != APPLICATION_CBOR)
+        return UNSUPPORTED_MEDIA_TYPE_4_15;
       break;
     case COAP_OPTION_MAX_AGE:
       coap_pkt->max_age = coap_parse_int_option(current_option, option_length);
@@ -544,6 +558,9 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
     case COAP_OPTION_ACCEPT:
       coap_pkt->accept = coap_parse_int_option(current_option, option_length);
       OC_DBG("Accept [%u]\n", coap_pkt->accept);
+      if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR &&
+          coap_pkt->accept != APPLICATION_CBOR)
+        return UNSUPPORTED_MEDIA_TYPE_4_15;
       break;
 #if 0
     case COAP_OPTION_IF_MATCH:
@@ -669,6 +686,14 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->size1 = coap_parse_int_option(current_option, option_length);
       OC_DBG("Size1 [%lu]\n", (unsigned long)coap_pkt->size1);
       break;
+    case OCF_OPTION_CONTENT_FORMAT_VER:
+    case OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER: {
+      uint16_t version = coap_parse_int_option(current_option, option_length);
+      OC_DBG("Content-format/accept-Version: [%u]\n", version);
+      if (version != OCF_VER_1_0_0) {
+        return UNSUPPORTED_MEDIA_TYPE_4_15;
+      }
+    } break;
     default:
       OC_DBG("unknown (%u)\n", option_number);
       /* check if critical (odd) */
