@@ -300,7 +300,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
       if (t) {
         coap_separate_resume(response, cur, oc_status_code(response_code),
                              t->mid);
-        coap_set_header_content_format(response, APPLICATION_CBOR);
+        coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
         if (cur->observe == 1) {
           coap_set_header_observe(response, 1);
         }

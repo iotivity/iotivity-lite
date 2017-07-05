@@ -946,7 +946,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      coap_set_header_content_format(response, APPLICATION_CBOR);
+      coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
     }
 
     if (response_buffer.code ==
@@ -1052,18 +1052,6 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     -handled by separate flag
     if ack is for block then store data and pass to client
   */
-
-  unsigned int content_format = APPLICATION_CBOR;
-  coap_get_header_content_format(pkt, &content_format);
-
-  /* If content format is not CBOR, then reject response
-     and clear callback
-     If incoming response type is RST, then clear callback
-  */
-  if (content_format != APPLICATION_CBOR || pkt->type == COAP_TYPE_RST) {
-    free_client_cb(cb);
-    return false;
-  }
 
   /* Check code, translate to oc_status_code, store
      Check observe option:
