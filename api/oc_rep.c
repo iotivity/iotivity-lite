@@ -71,9 +71,10 @@ _free_rep(oc_rep_t *rep_value)
   oc_memb_free(rep_objects, rep_value);
 }
 
-oc_rep_t *oc_alloc_rep(void)
+oc_rep_t *
+oc_alloc_rep(void)
 {
-	return _alloc_rep();
+  return _alloc_rep();
 }
 
 void
