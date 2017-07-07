@@ -632,7 +632,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 
   /* Obtain handle to buffer containing the serialized payload */
-  const uint8_t *payload;
+  const uint8_t *payload = NULL;
   int payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (request_state) {
@@ -1039,7 +1039,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                        oc_endpoint_t *endpoint)
 #endif /* OC_BLOCK_WISE */
 {
-  uint8_t *payload;
+  uint8_t *payload = NULL;
   int payload_len = 0;
   coap_packet_t *const pkt = (coap_packet_t *)response;
   int i;
