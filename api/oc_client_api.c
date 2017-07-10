@@ -60,7 +60,9 @@ dispatch_coap_request(void)
 #endif /* !OC_BLOCK_WISE */
   }
 
-  coap_set_header_content_format(request, APPLICATION_CBOR);
+  if (payload_size > 0) {
+    coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+  }
 
   transaction->message->length =
     coap_serialize_message(request, transaction->message->data);
@@ -125,7 +127,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 
   coap_init_message(request, type, cb->method, cb->mid);
 
-  coap_set_header_accept(request, APPLICATION_CBOR);
+  coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
 
   coap_set_token(request, cb->token, cb->token_len);
 

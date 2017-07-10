@@ -381,7 +381,7 @@ coap_notify_observers(oc_resource_t *resource,
         } else {
           coap_set_header_observe(notification, 1);
         }
-        coap_set_header_content_format(notification, APPLICATION_CBOR);
+        coap_set_header_content_format(notification, APPLICATION_VND_OCF_CBOR);
         coap_set_token(notification, obs->token, obs->token_len);
         transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
         if (transaction) {
