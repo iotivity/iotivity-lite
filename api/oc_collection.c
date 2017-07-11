@@ -16,7 +16,7 @@
 
 #include "oc_collection.h"
 
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#if (defined(OC_COLLECTIONS) || defined(OC_SCENES)) && defined(OC_SERVER)
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "util/oc_memb.h"
@@ -37,6 +37,25 @@ oc_collection_alloc(void)
   return NULL;
 }
 
+void
+oc_collection_free(oc_collection_t *collection)
+{
+  if (collection != NULL) {
+    oc_list_remove(oc_collections, collection);
+    oc_collection_remove_all_links((oc_resource_t *)collection);
+    if (oc_string_len(collection->title) > 0) {
+      oc_free_string(&(collection->title));
+    }
+    if (oc_string_len(collection->uri) > 0) {
+      oc_free_string(&(collection->uri));
+    }
+    if (oc_string_array_get_allocated_size(collection->types) > 0) {
+      oc_free_string_array(&(collection->types));
+    }
+    oc_memb_free(&oc_collections_s, collection);
+  }
+}
+
 oc_link_t *
 oc_new_link(oc_resource_t *resource)
 {
@@ -54,6 +73,18 @@ oc_new_link(oc_resource_t *resource)
 }
 
 void
+oc_delete_link(oc_link_t *link)
+{
+  if (link) {
+    if (oc_string_len(link->ins) > 0) {
+      oc_free_string(&(link->ins));
+    }
+    oc_free_string_array(&(link->rel));
+    oc_memb_free(&oc_links_s, link);
+  }
+}
+
+void
 oc_link_set_ins(oc_link_t *link, const char *ins)
 {
   oc_new_string(&link->ins, ins, strlen(ins));
@@ -66,6 +97,35 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   oc_list_add(c->links, link);
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
+  }
+}
+
+void
+oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
+{
+    oc_collection_t *c = (oc_collection_t *)collection;
+    oc_list_remove(c->links, link);
+}
+
+void
+oc_collection_remove_all_links(oc_resource_t *collection)
+{
+  if (collection != NULL) {
+    oc_collection_t *c = (oc_collection_t *)collection;
+    oc_link_t *link;
+    while ((link = (oc_link_t*)oc_list_pop(c->links)) != NULL) {
+      if (link->resource != NULL) {
+        if (link->resource->delete_handler.cb != NULL) {
+          link->resource->delete_handler.cb(NULL,
+                                            link->resource->default_interface,
+                                            link->resource->delete_handler.user_data);
+        }
+        else {
+          oc_ri_delete_resource(link->resource);
+        }
+      }
+      oc_delete_link(link);
+    }
   }
 }
 
@@ -107,7 +167,7 @@ oc_check_if_collection(oc_resource_t *resource)
 bool
 oc_collection_add(oc_collection_t *collection)
 {
-  if (oc_list_length(collection->links) > 0) {
+  if (collection != NULL) {
     oc_list_add(oc_collections, collection);
     return true;
   }
@@ -177,6 +237,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       link = link->next;
     }
     oc_rep_close_array(root, links);
+    if (oc_string_len(collection->title) > 0) {
+      oc_rep_set_text_string(root, title, oc_string(collection->title));
+    }
     oc_rep_end_root_object();
   } break;
   case OC_IF_LL: {
@@ -291,7 +354,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->put_handler.cb)
                   link->resource->put_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->put_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -299,7 +362,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->post_handler.cb)
                   link->resource->post_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->post_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -307,7 +370,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->delete_handler.cb)
                   link->resource->delete_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->delete_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -371,4 +434,12 @@ oc_collection_get_all(void)
   return (oc_collection_t *)oc_list_head(oc_collections);
 }
 
+void
+oc_collection_remove_all(void)
+{
+  oc_collection_t *collection;
+  while ((collection = (oc_collection_t*)oc_list_head(oc_collections)) != NULL) {
+    oc_collection_free(collection);
+  }
+}
 #endif /* OC_COLLECTIONS && OC_SERVER */

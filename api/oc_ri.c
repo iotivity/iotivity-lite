@@ -302,6 +302,13 @@ oc_ri_alloc_resource(void)
 void
 oc_ri_delete_resource(oc_resource_t *resource)
 {
+  oc_list_remove(app_resources, resource);
+  if (oc_string_len(resource->uri) > 0) {
+    oc_free_string(&(resource->uri));
+  }
+  if (oc_string_array_get_allocated_size(resource->types) > 0) {
+    oc_free_string_array(&(resource->types));
+  }
   oc_memb_free(&app_resources_s, resource);
 }
 

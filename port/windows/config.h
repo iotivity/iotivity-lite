@@ -16,6 +16,7 @@ typedef uint64_t oc_clock_time_t;
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
+#define OC_SCENES
 #define OC_BLOCK_WISE
 
 #else /* OC_DYNAMIC_ALLOCATION */
@@ -32,6 +33,7 @@ memory allocation
 #define OC_MAX_APP_RESOURCES (2)
 
 #define OC_MAX_NUM_COLLECTIONS (1)
+#define OC_MAX_NUM_SCENES (1)
 
 /* Common paramters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
