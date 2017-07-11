@@ -299,9 +299,26 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
+void oc_ri_free_resource_properties(oc_resource_t *resource)
+{
+  if (resource) {
+    if (oc_string_len(resource->name) > 0) {
+      oc_free_string(&(resource->name));
+    }
+    if (oc_string_len(resource->uri) > 0) {
+      oc_free_string(&(resource->uri));
+    }
+    if (oc_string_array_get_allocated_size(resource->types) > 0) {
+      oc_free_string_array(&(resource->types));
+    }
+  }
+}
+
 void
 oc_ri_delete_resource(oc_resource_t *resource)
 {
+  oc_list_remove(app_resources, resource);
+  oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
 }
 

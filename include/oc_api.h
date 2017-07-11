@@ -19,6 +19,12 @@
   @file
 */
 
+/**
+  \mainpage IoTivity-constrained API
+
+  The file \link oc_api.h\endlink is the main entry for all
+  server and client related OCF functions.
+*/
 
 #ifndef OC_API_H
 #define OC_API_H
@@ -75,13 +81,143 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 void oc_process_baseline_interface(oc_resource_t *resource);
 
+/**
+  @defgroup oc_collections Collection Support
+  Optional group of functions to support OCF compliant collections.
+  @{
+*/
+
+/**
+  @brief Creates a new empty collection.
+
+  The collection is created with interfaces \c OC_IF_BASELINE,
+  \c OC_IF_LL (also default) and \c OC_IF_B. Initially it is neither
+  discoverable nor observable.
+
+  The function only allocates the collection. Use
+  \c oc_add_collection() after the setup of the collection
+  is complete.
+  @param name name of the collection
+  @param uri Unique URI of this collection. Must not be NULL.
+  @param num_resource_types Number of resources the caller will
+   bind with this resource (e.g. by invoking
+   \c oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)). Must
+   be 1 or higher.
+  @param device The internal device that should carry this collection.
+   This is typically 0.
+  @return A pointer to the new collection (actually oc_collection_t*)
+   or NULL if out of memory.
+  @see oc_add_collection
+  @see oc_collection_add_link
+*/
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
                                  uint8_t num_resource_types, int device);
+
+/**
+  @brief Deletes the specified collection.
+
+  The function removes the collection from the internal list of collections
+  and releases all direct resources and links associated with this collection.
+
+  @note The function does not delete the resources set in the links.
+   The caller needs to do this on her/his own in case these are
+   no longer required.
+
+  @param collection The pointer to the collection to delete.
+   If this is NULL, the function does nothing.
+  @see oc_collection_get_links
+  @see oc_delete_link
+*/
+void oc_delete_collection(oc_resource_t *collection);
+
+/**
+  @brief Creates a new link for collections with the specified resource.
+  @param resource Resource to set in the link. The resource is not copied.
+   May be NULL.
+  @return The created link or NULL if out of memory.
+  @see oc_delete_link
+  @see oc_collection_add_link
+  @see oc_new_resource
+*/
 oc_link_t *oc_new_link(oc_resource_t *resource);
+
+/**
+  @brief Deletes the link.
+  @note The function neither removes the resource set on this link
+   nor does it remove it from any collection.
+  @param link The link to delete. The function does nothing, if
+   the parameter is NULL.
+*/
+void oc_delete_link(oc_link_t *link);
+
+/**
+  @brief Adds a relation to the link.
+  @param link Link to add the relation to. Must not be NULL.
+  @param rel Relation to add. Must not be NULL.
+*/
 void oc_link_add_rel(oc_link_t *link, const char *rel);
+
+/**
+  @brief Sets the unique link instance on the link.
+  @param link The link to set the instance on. Must not be NULL.
+  @param ins The link instance to set. Must not be NULL.
+*/
 void oc_link_set_ins(oc_link_t *link, const char *ins);
+
+/**
+  @brief Adds the link to the collection.
+  @param collection Collection to add the link to. Must not be NULL.
+  @param link Link to add to the collection. The link is not copied.
+   Must not be NULL. Must not be added again to this or a different
+   collection or a list corruption will occur. To re-add it, remove
+   the link first.
+  @see oc_new_link
+  @see oc_collection_remove_link
+*/
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
-bool oc_add_collection(oc_resource_t *collection);
+
+/**
+  @brief Removes a link from the collection.
+  @param collection Collection to remove the link from. Does nothing
+   if this is NULL.
+  @param link The link to remove. Does nothing if this is NULL or not
+   part of the collection. The link and its resource are not freed.
+*/
+void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
+
+/**
+  @brief Returns the list of links belonging to this collection.
+  @param collection Collection to get the links from.
+  @return All links of this collection. The links are not copied. Returns
+   NULL if the collection is NULL or contains no links.
+  @see oc_collection_add_link
+*/
+oc_link_t * oc_collection_get_links(oc_resource_t* collection);
+
+/**
+  @brief Adds a collection to the list of collections.
+
+  If the caller makes the collection discoverable, then it will
+  be included in the collection discovery once it has been added
+  with this function.
+  @param collection Collection to add to the list of collections.
+   Must not be NULL. Must not be added twice or a list corruption
+   will occur. The collection is not copied.
+  @see oc_set_discoverable
+  @see oc_new_collection
+*/
+void oc_add_collection(oc_resource_t *collection);
+
+/**
+  @brief Gets all known collections.
+  @return All collections that have been added via
+   \c oc_add_collection(). The collections are not copied.
+   Returns NULL if there are no collections. Collections created
+   only via \c oc_new_collection() but not added will not be
+   returned by this function.
+*/
+oc_resource_t *oc_collection_get_collections(void);
+/** @} */ // end of oc_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
 
@@ -116,7 +252,7 @@ void oc_delete_resource(oc_resource_t *resource);
 
   @param device_index index of the device to which the change was
    applied, 0 is the first device
-  @parem rep list of properties and their new values
+  @param rep list of properties and their new values
 */
 typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
 
