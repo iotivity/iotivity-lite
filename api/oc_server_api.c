@@ -145,11 +145,23 @@ oc_new_collection(const char *uri, uint8_t num_resource_types, int device)
   return (oc_resource_t *)collection;
 }
 
-bool
+void
+oc_delete_collection(oc_resource_t *collection)
+{
+  oc_collection_free((oc_collection_t*)collection);
+}
+
+void
 oc_add_collection(oc_resource_t *collection)
 {
   oc_resource_set_observable(collection, false);
-  return oc_collection_add((oc_collection_t *)collection);
+  oc_collection_add((oc_collection_t *)collection);
+}
+
+oc_resource_t *
+oc_collection_get_collections(void)
+{
+  return (oc_resource_t*)oc_collection_get_all();
 }
 #endif /* OC_COLLECTIONS */
 

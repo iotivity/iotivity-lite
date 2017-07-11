@@ -42,15 +42,20 @@ struct oc_collection_s
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
   OC_LIST_STRUCT(links);
+  oc_string_t name;
 };
 
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t interface);
 oc_collection_t *oc_collection_alloc(void);
+void oc_collection_free(oc_collection_t *collection);
+
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
                                           int uri_path_len);
 oc_collection_t *oc_collection_get_all(void);
+oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len);
+
 bool oc_check_if_collection(oc_resource_t *resource);
-bool oc_collection_add(oc_collection_t *collection);
+void oc_collection_add(oc_collection_t *collection);
 
 #endif /* OC_COLLECTION_H */
