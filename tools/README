@@ -12,4 +12,5 @@ The pre-commit tool is a git hook that fix the code style of the commmit
 automatically.  To use this tool one have to copy this file to
 <project-root-dir>/.git/hooks/
 
-
+Invoke doxygen doygen.ini to create the Doxygen API documentation.
+Afterwards you find the start page by loading html/index.html.
