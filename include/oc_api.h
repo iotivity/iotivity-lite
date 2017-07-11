@@ -78,10 +78,14 @@ void oc_process_baseline_interface(oc_resource_t *resource);
 
 oc_resource_t *oc_new_collection(const char *uri, uint8_t num_resource_types,
                                  int device);
+void oc_delete_collection(oc_resource_t *collection);
 oc_link_t *oc_new_link(oc_resource_t *resource);
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 void oc_link_set_ins(oc_link_t *link, const char *ins);
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
+void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
+void oc_collection_delete_link(oc_resource_t *collection, oc_link_t *link);
+void oc_collection_delete_all_links(oc_resource_t *collection);
 bool oc_add_collection(oc_resource_t *collection);
 
 void oc_resource_make_public(oc_resource_t *resource);

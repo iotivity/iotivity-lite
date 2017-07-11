@@ -145,6 +145,12 @@ oc_new_collection(const char *uri, uint8_t num_resource_types, int device)
   return (oc_resource_t *)collection;
 }
 
+void
+oc_delete_collection(oc_resource_t *collection)
+{
+  oc_collection_free((oc_collection_t*)collection);
+}
+
 bool
 oc_add_collection(oc_resource_t *collection)
 {

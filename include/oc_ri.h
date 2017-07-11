@@ -181,6 +181,10 @@ void oc_ri_delete_resource(oc_resource_t *resource);
 #ifdef OC_MAX_NUM_COLLECTIONS
 #define OC_COLLECTIONS
 #endif /* OC_MAX_NUM_COLLECTIONS */
+
+#ifdef OC_MAX_NUM_SCENES
+#define OC_SCENES
+#endif /* OC_MAX_NUM_SCENES */
 #endif /* OC_SERVER */
 
 int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
