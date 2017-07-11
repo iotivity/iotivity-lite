@@ -37,6 +37,16 @@ oc_collection_alloc(void)
   return NULL;
 }
 
+void
+oc_collection_free(oc_collection_t *collection)
+{
+  if (collection != NULL) {
+    oc_list_remove(oc_collections, collection);
+    oc_ri_free_resource_properties((oc_resource_t*)collection);
+    oc_memb_free(&oc_collections_s, collection);
+  }
+}
+
 oc_link_t *
 oc_new_link(oc_resource_t *resource)
 {
@@ -54,6 +64,18 @@ oc_new_link(oc_resource_t *resource)
 }
 
 void
+oc_delete_link(oc_link_t *link)
+{
+  if (link) {
+    if (oc_string_len(link->ins) > 0) {
+      oc_free_string(&(link->ins));
+    }
+    oc_free_string_array(&(link->rel));
+    oc_memb_free(&oc_links_s, link);
+  }
+}
+
+void
 oc_link_set_ins(oc_link_t *link, const char *ins)
 {
   oc_new_string(&link->ins, ins, strlen(ins));
@@ -67,6 +89,23 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
+}
+
+void
+oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
+{
+  if (collection && link) {
+    oc_collection_t *c = (oc_collection_t *)collection;
+    oc_list_remove(c->links, link);
+  }
+}
+
+oc_link_t *
+oc_collection_get_links(oc_resource_t* collection)
+{
+    if (collection)
+      return (oc_link_t*)oc_list_head(((oc_collection_t*)collection)->links);
+    return NULL;
 }
 
 void
@@ -92,6 +131,31 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
   return collection;
 }
 
+oc_link_t *
+oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len)
+{
+  oc_link_t *link = NULL;
+
+  if (collection && uri_path && uri_path_len > 0) {
+    while (uri_path[0] == '/') {
+      uri_path++;
+      uri_path_len--;
+    }
+
+    link = oc_list_head(collection->links);
+    while (link != NULL) {
+      if (link->resource &&
+          (int)oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
+          strncmp(oc_string(link->resource->uri) + 1, uri_path, uri_path_len) == 0) {
+        break;
+      }
+      link = link->next;
+    }
+  }
+
+  return link;
+}
+
 bool
 oc_check_if_collection(oc_resource_t *resource)
 {
@@ -104,14 +168,10 @@ oc_check_if_collection(oc_resource_t *resource)
   return false;
 }
 
-bool
+void
 oc_collection_add(oc_collection_t *collection)
 {
-  if (oc_list_length(collection->links) > 0) {
-    oc_list_add(oc_collections, collection);
-    return true;
-  }
-  return false;
+  oc_list_add(oc_collections, collection);
 }
 
 static bool
@@ -291,7 +351,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->put_handler.cb)
                   link->resource->put_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->put_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -299,7 +359,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->post_handler.cb)
                   link->resource->post_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->post_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -307,7 +367,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->delete_handler.cb)
                   link->resource->delete_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->delete_handler.user_data);
                 else
                   method_not_found = true;
                 break;
