@@ -113,7 +113,6 @@ register_resources(void)
 
 #if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
 
-#include <sections.h>
 #include <string.h>
 #include <zephyr.h>
 

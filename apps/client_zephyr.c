@@ -16,7 +16,6 @@
 
 #include "oc_api.h"
 
-#include <sections.h>
 #include <string.h>
 #include <zephyr.h>
 

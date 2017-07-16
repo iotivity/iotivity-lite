@@ -63,7 +63,6 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-#include <sections.h>
 #include <string.h>
 #include <zephyr.h>
 
