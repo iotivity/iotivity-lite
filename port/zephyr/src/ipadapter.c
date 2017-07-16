@@ -18,7 +18,6 @@
 #include "port/oc_connectivity.h"
 
 #include <errno.h>
-#include <sections.h>
 #include <stdio.h>
 #include <zephyr.h>
 
