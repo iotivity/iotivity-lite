@@ -86,6 +86,9 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
 
   if (message) {
     uint16_t pos;
+    struct net_udp_hdr *udp =
+      (struct net_udp_hdr *)((u8_t *)(NET_IPV6_HDR(pkt)) +
+                             sizeof(struct net_ipv6_hdr));
     size_t bytes_read = net_pkt_appdatalen(pkt);
     size_t offset_from_start = net_pkt_get_len(pkt) - bytes_read;
     bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
@@ -104,7 +107,7 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
       message->endpoint.flags = IPV6;
     memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_HDR(pkt)->src, 16);
     message->endpoint.addr.ipv6.scope = 0;
-    message->endpoint.addr.ipv6.port = ntohs(NET_UDP_HDR(pkt)->src_port);
+    message->endpoint.addr.ipv6.port = ntohs(udp->src_port);
 
     PRINT("oc_network_receive: received %d bytes\n", (int)message->length);
     PRINT("oc_network_receive: incoming message: ");
