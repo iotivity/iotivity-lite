@@ -14,6 +14,9 @@
 // limitations under the License.
 */
 
+#ifdef __ANDROID__
+#include <android/api-level.h>
+#endif
 #include "oc_api.h"
 #include "port/oc_clock.h"
 
@@ -130,13 +133,18 @@ handle_signal(int signal)
 int
 main(void)
 {
-  int init;
+#if defined(__ANDROID__) && __ANDROID_API__ < 21
+  signal(SIGINT, handle_signal);
+  signal(SIGABRT, handle_signal);
+  signal(SIGTERM, handle_signal);
+#else
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
-
+#endif
+  
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources = register_resources };
@@ -147,7 +155,7 @@ main(void)
   oc_storage_config("./creds");
 #endif /* OC_SECURITY */
 
-  init = oc_main_init(&handler);
+  int init = oc_main_init(&handler);
   if (init < 0)
     return init;
 
