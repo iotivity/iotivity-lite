@@ -394,6 +394,7 @@ oc_send_discovery_request_ipv6(oc_message_t *message)
     int prefix_len = 0;
     int scope = 0;
     char if_name[IFNAMSIZ] = { 0 };
+    int matches;
 
     /*
       Reference: Linux IPv6 HOWTO
@@ -407,30 +408,34 @@ oc_send_discovery_request_ipv6(oc_message_t *message)
       3. Prefix length in hexadecimal
       4. Scope value (global, link local, etc)
       5. Interface flags (no idea, has nothing to do with IFF_UP etc. apparently)
-      6. Device name
-
-      1     2  3  4  5   6 */
+      6. Device name */
 #if __ANDROID_API__ >= 24
-    if (fscanf(fid, "%32*s %x %x %x %*x %s",
-               &if_index,
-               &prefix_len,
-               &scope,
-               (char*)if_name) == 4)
+    const int matches_required = 4;
+    matches = fscanf(fid, "%32*s %x %x %x %*x %s",
+                     &if_index,
+                     &prefix_len,
+                     &scope,
+                     (char*)if_name);
 #else
     /* Older Android versions do not support the suppression flag. */
     char strdummy[34];
     int dummy;
-      
-    if (fscanf(fid, "%32s %x %x %x %x %s",
-               (char*)&strdummy,
-               &if_index,
-               &prefix_len,
-               &scope,
-               &dummy,
-               (char*)if_name) == 6)
+    const int matches_required = 6;
+    matches = fscanf(fid, "%32s %x %x %x %x %s",
+                     (char*)&strdummy,
+                     &if_index,
+                     &prefix_len,
+                     &scope,
+                     &dummy,
+                     (char*)if_name);
 #endif
-    {
 
+    OC_DBG("fscanf matches: %d, index: %d, prefix: %d, scope: %d, name: %s\n",
+           matches, if_index, prefix_len, scope, if_name);
+    if (matches < 0) {
+      break; /* EOF */
+    }
+    if (matches == matches_required) {
       /* scope == 0 means global, prefix_len should never be 0 */
       if (scope != 0 || prefix_len == 0)
         continue;
@@ -473,7 +478,7 @@ oc_send_discovery_request_ipv6(oc_message_t *message)
       oc_send_buffer(message);
     }
     else {
-      OC_WRN("failed parsing if_inet6\n");
+      OC_WRN("failed parsing if_inet6 (read %d, expected %d)\n", matches, matches_required);
     }
   }
 
