@@ -13,8 +13,12 @@ ANDROID_API := 19
 ANDROID_HOST := arm-linux-androideabi-
 
 BIN_BASE := ${ANDROID_BASE}/bin/${ANDROID_HOST}
+ifeq ($(origin CC),default)
 CC := ${BIN_BASE}gcc
+endif
+ifeq ($(origin AR),default)
 AR := ${BIN_BASE}ar
+endif
 SED ?= sed
 RM ?= rm
 MKDIR ?= mkdir
