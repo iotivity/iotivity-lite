@@ -538,8 +538,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->content_format =
         coap_parse_int_option(current_option, option_length);
       OC_DBG("Content-Format [%u]\n", coap_pkt->content_format);
-      if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR &&
-          coap_pkt->content_format != APPLICATION_CBOR)
+      if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR)
         return UNSUPPORTED_MEDIA_TYPE_4_15;
       break;
     case COAP_OPTION_MAX_AGE:
@@ -558,9 +557,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
     case COAP_OPTION_ACCEPT:
       coap_pkt->accept = coap_parse_int_option(current_option, option_length);
       OC_DBG("Accept [%u]\n", coap_pkt->accept);
-      if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR &&
-          coap_pkt->accept != APPLICATION_CBOR)
-        return UNSUPPORTED_MEDIA_TYPE_4_15;
+      if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR)
+        return NOT_ACCEPTABLE_4_06;
       break;
 #if 0
     case COAP_OPTION_IF_MATCH:

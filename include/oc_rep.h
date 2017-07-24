@@ -195,6 +195,8 @@ int oc_rep_finalize(void);
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)
 
+CborError oc_rep_get_cbor_errno(void);
+
 typedef enum {
   NIL = 0,
   INT = 0x01,

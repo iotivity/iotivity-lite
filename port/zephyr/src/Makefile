@@ -52,6 +52,7 @@ obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          ../../../api/oc_ri.o \
          ../../../api/oc_rep.o \
          ../../../api/oc_uuid.o \
+         ../../../api/oc_endpoint.o \
          ../../../api/oc_core_res.o \
          ../../../api/oc_network_events.o \
          ../../../api/oc_blockwise.o \

@@ -42,7 +42,7 @@ app_init(void)
 
 #define MAX_URI_LENGTH (30)
 static char light_1[MAX_URI_LENGTH];
-static oc_server_handle_t light_server;
+static oc_endpoint_t *light_server;
 static bool light_state = false;
 
 static oc_event_callback_retval_t
@@ -50,7 +50,7 @@ stop_observe(void *data)
 {
   (void)data;
   PRINT("Stopping OBSERVE\n");
-  oc_stop_observe(light_1, &light_server);
+  oc_stop_observe(light_1, light_server);
   return DONE;
 }
 
@@ -82,7 +82,7 @@ observe_light(oc_client_response_t *data)
     rep = rep->next;
   }
 
-  if (oc_init_post(light_1, &light_server, NULL, &post_light, LOW_QOS, NULL)) {
+  if (oc_init_post(light_1, light_server, NULL, &post_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, !light_state);
     oc_rep_end_root_object();
@@ -95,11 +95,11 @@ observe_light(oc_client_response_t *data)
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)interfaces;
   (void)user_data;
   int i;
@@ -109,13 +109,12 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 11 && strncmp(t, "oic.r.light", 11) == 0) {
-      memcpy(&light_server, server, sizeof(oc_server_handle_t));
+      light_server = endpoint;
 
       strncpy(light_1, uri, uri_len);
       light_1[uri_len] = '\0';
 
-      oc_do_observe(light_1, &light_server, NULL, &observe_light, LOW_QOS,
-                    NULL);
+      oc_do_observe(light_1, light_server, NULL, &observe_light, LOW_QOS, NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
 
       got_discovery_response = true;

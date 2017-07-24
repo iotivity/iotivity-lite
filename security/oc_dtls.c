@@ -226,13 +226,13 @@ oc_sec_dtls_get_owner_psk(struct dtls_context_t *ctx, const session_t *session,
   case DTLS_PSK_IDENTITY:
   case DTLS_PSK_HINT: {
     OC_DBG("Identity\n");
-    oc_uuid_t *uuid = oc_core_get_device_id(0);
+    oc_uuid_t *uuid = oc_core_get_device_id(0); // FIX
     memcpy(result, uuid->id, 16);
     return 16;
   } break;
   case DTLS_PSK_KEY: {
     OC_DBG("key\n");
-    oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t *)desc);
+    oc_sec_cred_t *cred = oc_sec_find_cred((oc_uuid_t *)desc, 0); // FIX
     oc_sec_dtls_peer_t *peer =
       oc_sec_dtls_get_peer((oc_endpoint_t *)&session->addr);
     if (cred != NULL && peer != NULL) {
@@ -318,7 +318,7 @@ oc_sec_dtls_init_context(void)
   dtls_init();
   ocf_dtls_context = dtls_new_context(NULL);
 
-  if (oc_sec_provisioned()) {
+  if (oc_sec_provisioned(0)) {
     OC_DBG("\n\noc_sec_dtls: Device in normal operation state\n\n");
     dtls_select_cipher(ocf_dtls_context, TLS_PSK_WITH_AES_128_CCM_8);
   } else {

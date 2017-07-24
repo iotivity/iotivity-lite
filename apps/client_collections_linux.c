@@ -37,7 +37,7 @@ app_init(void)
 
 #define MAX_URI_LENGTH (30)
 static char lights[MAX_URI_LENGTH];
-static oc_server_handle_t lights_server;
+static oc_endpoint_t *lights_server;
 static bool do_once = true;
 static void get_lights_oic_if_b(oc_client_response_t *data);
 
@@ -89,8 +89,8 @@ post_lights_oic_if_b(oc_client_response_t *data)
 
   PRINT("\nSending GET %s?if=oic.if.b\n\n", lights);
 
-  oc_do_get(lights, &lights_server, "if=oic.if.b", &get_lights_oic_if_b,
-            LOW_QOS, NULL);
+  oc_do_get(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b, LOW_QOS,
+            NULL);
 }
 
 static void
@@ -141,7 +141,7 @@ get_lights_oic_if_b(oc_client_response_t *data)
         "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
         lights);
 
-  if (oc_init_post(lights, &lights_server, "if=oic.if.b", &post_lights_oic_if_b,
+  if (oc_init_post(lights, lights_server, "if=oic.if.b", &post_lights_oic_if_b,
                    LOW_QOS, NULL)) {
     oc_rep_start_links_array();
     oc_rep_object_array_start_item(links);
@@ -225,16 +225,16 @@ get_lights_oic_if_ll(oc_client_response_t *data)
 
   PRINT("\nSending GET %s?if=oic.if.b\n\n", lights);
 
-  oc_do_get(lights, &lights_server, "if=oic.if.b", &get_lights_oic_if_b,
-            LOW_QOS, NULL);
+  oc_do_get(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b, LOW_QOS,
+            NULL);
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)interfaces;
   (void)user_data;
   int i;
@@ -244,19 +244,28 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "oic.wk.col", 10) == 0) {
-      memcpy(&lights_server, server, sizeof(oc_server_handle_t));
+      lights_server = endpoint;
 
       strncpy(lights, uri, uri_len);
       lights[uri_len] = '\0';
 
+      PRINT("Resource %s hosted at endpoints:\n", lights);
+      oc_endpoint_t *ep = endpoint;
+      while (ep != NULL) {
+        PRINTipaddr(*ep);
+        PRINT("\n");
+        ep = ep->next;
+      }
+
       PRINT("\nSending GET %s?if=oic.if.ll\n\n", lights);
 
-      oc_do_get(lights, &lights_server, "if=oic.if.ll", &get_lights_oic_if_ll,
+      oc_do_get(lights, lights_server, "if=oic.if.ll", &get_lights_oic_if_ll,
                 LOW_QOS, NULL);
 
       return OC_STOP_DISCOVERY;
     }
   }
+  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 

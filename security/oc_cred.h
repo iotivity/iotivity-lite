@@ -30,10 +30,10 @@ typedef struct oc_sec_cred_s
   uint8_t key[16]; // Supports only 128-bit keys
 } oc_sec_cred_t;
 
-void oc_sec_encode_cred(bool persist);
-bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner);
-oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid);
-oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid);
+void oc_sec_encode_cred(bool persist, int device);
+bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device);
+oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, int device);
+oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, int device);
 void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
                void *data);

@@ -15,8 +15,8 @@
 */
 
 #include "oc_buffer.h"
+#include "oc_endpoint.h"
 #include "port/oc_connectivity.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <zephyr.h>
@@ -47,10 +47,13 @@ static struct in6_addr in6addr_mcast = OCF_MCAST_IP6ADDR;
 #define OCF_MCAST_PORT (5683)
 /* Multicast receive socket */
 static struct net_context *mcast_recv6;
+static struct sockaddr_in6 mcast_addr6;
+static struct sockaddr_in6 my_addr6;
 
 #ifdef OC_SECURITY
 /* DTLS receive socket */
 static struct net_context *dtls_recv6;
+static struct sockaddr_in6 dtls_addr6;
 #define MY_DTLS_PORT (56789)
 #endif /* OC_SECURITY */
 
@@ -108,6 +111,7 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
     memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_HDR(pkt)->src, 16);
     message->endpoint.addr.ipv6.scope = 0;
     message->endpoint.addr.ipv6.port = ntohs(udp->src_port);
+    message->endpoint.device = 0;
 
     PRINT("oc_network_receive: received %d bytes\n", (int)message->length);
     PRINT("oc_network_receive: incoming message: ");
@@ -173,15 +177,36 @@ oc_send_buffer(oc_message_t *message)
   }
 }
 
-int
-oc_connectivity_init(void)
+oc_endpoint_t *
+oc_connectivity_get_endpoints(int device)
 {
-  int ret;
-  static struct sockaddr_in6 mcast_addr6 = { 0 };
-  static struct sockaddr_in6 my_addr6 = { 0 };
+  (void)device;
+  oc_init_endpoint_list();
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+  ep.flags = IPV6;
+  net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR, ep.addr.ipv6.address);
+  ep.addr.ipv6.port = ntohs(my_addr6.sin6_port);
+  ep.device = 0;
+  oc_add_endpoint_to_list(&ep);
 #ifdef OC_SECURITY
-  static struct sockaddr_in6 dtls_addr6 = { 0 };
+  oc_endpoint_t ep_sec;
+  memset(&ep_sec, 0, sizeof(oc_endpoint_t));
+  ep_sec.flags = IPV6 | SECURED;
+  net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR,
+                ep_sec.addr.ipv6.address);
+  ep_sec.addr.ipv6_port = ntohs(dtls_addr6.sin6_port);
+  ep_sec.device = 0;
+  oc_add_endpoint_to_list(&ep_sec);
 #endif /* OC_SECURITY */
+  return oc_get_endpoint_list();
+}
+
+int
+oc_connectivity_init(int device)
+{
+  (void)device;
+  int ret;
 
 #if defined(CONFIG_NET_L2_BLUETOOTH)
   if (bt_enable(NULL)) {
@@ -296,8 +321,9 @@ error:
 }
 
 void
-oc_connectivity_shutdown(void)
+oc_connectivity_shutdown(int device)
 {
+  (void)device;
 #ifdef OC_SECURITY
   net_context_put(dtls_recv6);
 #endif /* OC_SECURITY */
@@ -312,11 +338,3 @@ oc_send_discovery_request(oc_message_t *message)
   oc_send_buffer(message);
 }
 #endif /* OC_CLIENT */
-
-#ifdef OC_SECURITY
-uint16_t
-oc_connectivity_get_dtls_port(void)
-{
-  return MY_DTLS_PORT;
-}
-#endif /* OC_SECURITY */

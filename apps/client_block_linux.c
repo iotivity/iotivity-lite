@@ -37,7 +37,7 @@ app_init(void)
 
 #define MAX_URI_LENGTH (30)
 static char array_1[MAX_URI_LENGTH];
-static oc_server_handle_t array_server;
+static oc_endpoint_t *array_server;
 static int large_array[100];
 
 static void
@@ -55,10 +55,10 @@ stop_observe(void *data)
 {
   (void)data;
   PRINT("Stopping OBSERVE\n");
-  oc_stop_observe(array_1, &array_server);
+  oc_stop_observe(array_1, array_server);
 
   int i;
-  if (oc_init_post(array_1, &array_server, NULL, &post_array, LOW_QOS, NULL)) {
+  if (oc_init_post(array_1, array_server, NULL, &post_array, LOW_QOS, NULL)) {
     for (i = 0; i < 100; i++) {
       large_array[i] = oc_random_value();
       PRINT("(%d %d) ", i, large_array[i]);
@@ -101,11 +101,11 @@ get_array(oc_client_response_t *data)
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)interfaces;
   (void)user_data;
   int i;
@@ -115,16 +115,25 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 11 && strncmp(t, "oic.r.array", 11) == 0) {
-      memcpy(&array_server, server, sizeof(oc_server_handle_t));
+      array_server = endpoint;
 
       strncpy(array_1, uri, uri_len);
       array_1[uri_len] = '\0';
 
-      oc_do_observe(array_1, &array_server, NULL, &get_array, HIGH_QOS, NULL);
+      PRINT("Resource %s hosted at endpoints:\n", array_1);
+      oc_endpoint_t *ep = endpoint;
+      while (ep != NULL) {
+        PRINTipaddr(*ep);
+        PRINT("\n");
+        ep = ep->next;
+      }
+
+      oc_do_observe(array_1, array_server, NULL, &get_array, HIGH_QOS, NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 25);
       return OC_STOP_DISCOVERY;
     }
   }
+  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 

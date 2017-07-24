@@ -59,7 +59,7 @@ ifeq ($(IPV4),1)
 endif
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
 		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
@@ -133,6 +133,12 @@ server_block_linux: libiotivity-constrained-server.a
 
 smart_home_server_linux: libiotivity-constrained-server.a
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+multi_device_server: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+multi_device_client: libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
