@@ -48,7 +48,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t interface);
 oc_collection_t *oc_collection_alloc(void);
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
-                                          int uri_path_len);
+                                          int uri_path_len, int device);
 oc_collection_t *oc_collection_get_all(void);
 bool oc_check_if_collection(oc_resource_t *resource);
 bool oc_collection_add(oc_collection_t *collection);

@@ -76,7 +76,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
+oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -85,7 +85,8 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
     if ((int)oc_string_len(collection->uri) == (uri_path_len + 1) &&
-        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0)
+        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0 &&
+        collection->device == device)
       break;
     collection = collection->next;
   }
@@ -165,13 +166,25 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-        if (link->resource->properties & OC_SECURE) {
-          oc_rep_set_boolean(p, sec, true);
-          oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
-        }
-#endif /* OC_SECURITY */
         oc_rep_close_object(links, p);
+
+        // eps
+        oc_rep_set_array(links, eps);
+        oc_endpoint_t *eps =
+          oc_connectivity_get_endpoints(link->resource->device);
+        while (eps != NULL) {
+          oc_rep_object_array_start_item(eps);
+          oc_string_t ep;
+          if (oc_endpoint_to_string(eps, &ep) == 0) {
+            oc_rep_set_text_string(eps, ep, oc_string(ep));
+            oc_free_string(&ep);
+          }
+          oc_rep_object_array_end_item(eps);
+          eps = eps->next;
+        }
+        oc_free_endpoint_list();
+        oc_rep_close_array(links, eps);
+
         oc_rep_object_array_end_item(links);
       }
       link = link->next;
@@ -195,13 +208,25 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-        if (link->resource->properties & OC_SECURE) {
-          oc_rep_set_boolean(p, sec, true);
-          oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
-        }
-#endif /* OC_SECURITY */
         oc_rep_close_object(links, p);
+
+        // eps
+        oc_rep_set_array(links, eps);
+        oc_endpoint_t *eps =
+          oc_connectivity_get_endpoints(link->resource->device);
+        while (eps != NULL) {
+          oc_rep_object_array_start_item(eps);
+          oc_string_t ep;
+          if (oc_endpoint_to_string(eps, &ep) == 0) {
+            oc_rep_set_text_string(eps, ep, oc_string(ep));
+            oc_free_string(&ep);
+          }
+          oc_rep_object_array_end_item(eps);
+          eps = eps->next;
+        }
+        oc_free_endpoint_list();
+        oc_rep_close_array(links, eps);
+
         oc_rep_object_array_end_item(links);
       }
       link = link->next;
@@ -291,7 +316,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->put_handler.cb)
                   link->resource->put_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->put_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -299,7 +324,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->post_handler.cb)
                   link->resource->post_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->post_handler.user_data);
                 else
                   method_not_found = true;
                 break;
@@ -307,7 +332,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (link->resource->delete_handler.cb)
                   link->resource->delete_handler.cb(
                     &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
+                    link->resource->delete_handler.user_data);
                 else
                   method_not_found = true;
                 break;

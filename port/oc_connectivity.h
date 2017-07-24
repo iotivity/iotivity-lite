@@ -87,8 +87,10 @@ typedef struct
   uint8_t address[6];
 } oc_le_addr_t;
 
-typedef struct
+typedef struct oc_endpoint_t
 {
+  struct oc_endpoint_t *next;
+  int device;
   enum transport_flags
   {
     DISCOVERY = 1 << 0,
@@ -104,6 +106,7 @@ typedef struct
     oc_ipv4_addr_t ipv4;
     oc_le_addr_t bt;
   } addr;
+  uint8_t priority;
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
@@ -130,14 +133,12 @@ struct oc_message_s
 
 void oc_send_buffer(oc_message_t *message);
 
-#ifdef OC_SECURITY
-uint16_t oc_connectivity_get_dtls_port(void);
-#endif /* OC_SECURITY */
+int oc_connectivity_init(int device);
 
-int oc_connectivity_init(void);
-
-void oc_connectivity_shutdown(void);
+void oc_connectivity_shutdown(int device);
 
 void oc_send_discovery_request(oc_message_t *message);
+
+oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
 #endif /* OC_CONNECTIVITY_H */

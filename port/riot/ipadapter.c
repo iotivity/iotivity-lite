@@ -22,6 +22,7 @@
 #include "net/gnrc/rpl.h"
 #include "net/gnrc/udp.h"
 #include "oc_buffer.h"
+#include "oc_endpoint.h"
 #include "port/oc_connectivity.h"
 #include "thread.h"
 
@@ -178,9 +179,29 @@ multicast_receive_thread(void *arg)
   return NULL;
 }
 
-int
-oc_connectivity_init(void)
+oc_endpoint_t *
+oc_connectivity_get_endpoints(int device)
 {
+  (void)device;
+  oc_init_endpoint_list();
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+  ep.flags = IPV6;
+
+  gnrc_ipv6_netif_t *iface = gnrc_ipv6_netif_get(interface_pid);
+  gnrc_ipv6_netif_addr_t *addr = &iface->addrs[1];
+  memcpy(ep.addr.ipv6.address, addr->addr.u8, 16);
+
+  ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+  ep.device = 0;
+  oc_add_endpoint_to_list(&ep);
+  return oc_get_endpoint_list();
+}
+
+int
+oc_connectivity_init(int device)
+{
+  (void)device;
   kernel_pid_t interfaces[GNRC_NETIF_NUMOF];
   size_t if_num = gnrc_netif_get(interfaces);
 
@@ -190,6 +211,8 @@ oc_connectivity_init(void)
   }
 
   interface_pid = interfaces[0];
+
+  gnrc_ipv6_netif_init_by_dev();
 
   recv_thread =
     thread_create(_recv_stack, sizeof(_recv_stack), 1, 0, server_receive_thread,
@@ -203,8 +226,9 @@ oc_connectivity_init(void)
 }
 
 void
-oc_connectivity_shutdown(void)
+oc_connectivity_shutdown(int device)
 {
+  (void)device;
   terminate = true;
 }
 
@@ -215,12 +239,3 @@ oc_send_discovery_request(oc_message_t *message)
   oc_send_buffer(message);
 }
 #endif /* OC_CLIENT */
-
-// TODO:
-#ifdef OC_SECURITY
-uint16_t
-oc_connectivity_get_dtls_port(void)
-{
-  return 0;
-}
-#endif /* OC_SECURITY */

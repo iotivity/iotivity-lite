@@ -63,6 +63,7 @@
 #endif /* OC_COLLECTIONS */
 
 #include "oc_coap.h"
+#include "oc_endpoint.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 /*-------------------*/
@@ -83,7 +84,7 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
 
   while (obs) {
     next = obs->next;
-    if (((memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0)) &&
+    if (((oc_endpoint_compare(&obs->endpoint, endpoint) == 0)) &&
         (obs->url == uri || memcmp(obs->url, uri, uri_len) == 0)) {
       obs->resource->num_observers--;
       oc_list_remove(observers_list, obs);
@@ -177,7 +178,7 @@ coap_remove_observer_by_client(oc_endpoint_t *endpoint)
 
   while (obs) {
     next = obs->next;
-    if (memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0) {
+    if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
@@ -197,7 +198,7 @@ coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
   OC_DBG("Unregistering observers for request token 0x%02X%02X\n", token[0],
          token[1]);
   while (obs) {
-    if (memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0 &&
+    if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0 &&
         obs->token_len == token_len &&
         memcmp(obs->token, token, token_len) == 0) {
       obs->resource->num_observers--;
@@ -220,7 +221,7 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
 
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
        obs = obs->next) {
-    if (memcmp(&obs->endpoint, endpoint, sizeof(*endpoint)) == 0 &&
+    if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0 &&
         obs->last_mid == mid) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
@@ -298,8 +299,7 @@ coap_notify_observers(oc_resource_t *resource,
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
     if ((obs->resource != resource) ||
-        (endpoint &&
-         memcmp(&obs->endpoint, endpoint, sizeof(oc_endpoint_t)) != 0)) {
+        (endpoint && oc_endpoint_compare(&obs->endpoint, endpoint) != 0)) {
       continue;
     }
 

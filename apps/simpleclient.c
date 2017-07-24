@@ -27,7 +27,7 @@ app_init(void)
 
 #define MAX_URI_LENGTH (30)
 static char a_light[MAX_URI_LENGTH];
-static oc_server_handle_t light_server;
+static oc_endpoint_t *light_server;
 
 static bool state;
 static int power;
@@ -38,7 +38,7 @@ stop_observe(void *data)
 {
   (void)data;
   PRINT("Stopping OBSERVE\n");
-  oc_stop_observe(a_light, &light_server);
+  oc_stop_observe(a_light, light_server);
   return DONE;
 }
 
@@ -83,7 +83,7 @@ post2_light(oc_client_response_t *data)
   else
     PRINT("POST response code %d\n", data->code);
 
-  oc_do_observe(a_light, &light_server, NULL, &observe_light, LOW_QOS, NULL);
+  oc_do_observe(a_light, light_server, NULL, &observe_light, LOW_QOS, NULL);
   oc_set_delayed_callback(NULL, &stop_observe, 30);
   PRINT("Sent OBSERVE request\n");
 }
@@ -99,7 +99,7 @@ post_light(oc_client_response_t *data)
   else
     PRINT("POST response code %d\n", data->code);
 
-  if (oc_init_post(a_light, &light_server, NULL, &post2_light, LOW_QOS, NULL)) {
+  if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, true);
     oc_rep_set_int(root, power, 55);
@@ -122,7 +122,7 @@ put_light(oc_client_response_t *data)
   else
     PRINT("PUT response code %d\n", data->code);
 
-  if (oc_init_post(a_light, &light_server, NULL, &post_light, LOW_QOS, NULL)) {
+  if (oc_init_post(a_light, light_server, NULL, &post_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, false);
     oc_rep_set_int(root, power, 105);
@@ -164,7 +164,7 @@ get_light(oc_client_response_t *data)
     rep = rep->next;
   }
 
-  if (oc_init_put(a_light, &light_server, NULL, &put_light, LOW_QOS, NULL)) {
+  if (oc_init_put(a_light, light_server, NULL, &put_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, true);
     oc_rep_set_int(root, power, 15);
@@ -179,11 +179,11 @@ get_light(oc_client_response_t *data)
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)user_data;
   (void)interfaces;
   int i;
@@ -193,17 +193,24 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
-      memcpy(&light_server, server, sizeof(oc_server_handle_t));
-
+      light_server = endpoint;
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
-      oc_do_get(a_light, &light_server, NULL, &get_light, LOW_QOS, NULL);
-      PRINT("Sent GET request\n");
+      PRINT("Resource %s hosted at endpoints:\n", a_light);
+      oc_endpoint_t *ep = endpoint;
+      while (ep != NULL) {
+        PRINTipaddr(*ep);
+        PRINT("\n");
+        ep = ep->next;
+      }
+
+      oc_do_get(a_light, light_server, NULL, &get_light, LOW_QOS, NULL);
 
       return OC_STOP_DISCOVERY;
     }
   }
+  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 

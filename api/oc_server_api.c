@@ -228,8 +228,11 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
-  oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON);
-  res->post_handler.user_data = *(void **)(&callback);
+  int i;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
+    res->post_handler.user_data = *(void **)(&callback);
+  }
 }
 
 bool
@@ -352,7 +355,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
       coap_separate_clear(handle, cur);
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
-        oc_string(cur->uri), oc_string_len(cur->uri));
+        oc_string(cur->uri), oc_string_len(cur->uri), cur->endpoint.device);
       if (resource &&
           coap_notify_observers(resource, &response_buffer, &cur->endpoint) ==
             0) {

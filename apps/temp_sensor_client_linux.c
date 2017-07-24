@@ -27,7 +27,7 @@ app_init(void)
 
 #define MAX_URI_LENGTH (30)
 static char temp_1[MAX_URI_LENGTH];
-static oc_server_handle_t temp_sensor;
+static oc_endpoint_t *temp_sensor;
 static int temperature;
 
 static oc_event_callback_retval_t
@@ -35,7 +35,7 @@ stop_observe(void *data)
 {
   (void)data;
   PRINT("Stopping OBSERVE\n");
-  oc_stop_observe(temp_1, &temp_sensor);
+  oc_stop_observe(temp_1, temp_sensor);
   return DONE;
 }
 
@@ -58,11 +58,11 @@ get_temp(oc_client_response_t *data)
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)interfaces;
   (void)user_data;
   int i;
@@ -72,17 +72,25 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 16 && strncmp(t, "oic.r.tempsensor", 16) == 0) {
-      memcpy(&temp_sensor, server, sizeof(oc_server_handle_t));
-
+      temp_sensor = endpoint;
       strncpy(temp_1, uri, uri_len);
       temp_1[uri_len] = '\0';
 
-      oc_do_observe(temp_1, &temp_sensor, NULL, &get_temp, HIGH_QOS, NULL);
+      PRINT("Resource %s hosted at endpoints:\n", temp_1);
+      oc_endpoint_t *ep = endpoint;
+      while (ep != NULL) {
+        PRINTipaddr(*ep);
+        PRINT("\n");
+        ep = ep->next;
+      }
+
+      oc_do_observe(temp_1, temp_sensor, NULL, &get_temp, HIGH_QOS, NULL);
       oc_set_delayed_callback(NULL, &stop_observe, 30);
 
       return OC_STOP_DISCOVERY;
     }
   }
+  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
