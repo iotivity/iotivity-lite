@@ -29,16 +29,16 @@
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 void
-oc_sec_load_doxm(void)
+oc_sec_load_doxm(int device)
 {
   long ret = 0;
   oc_rep_t *rep;
 
-  if (oc_sec_provisioned()) {
+  if (oc_sec_provisioned(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
     uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf) {
-      oc_sec_doxm_default();
+      oc_sec_doxm_default(device);
       return;
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -59,7 +59,7 @@ oc_sec_load_doxm(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, ret, &rep);
-      oc_sec_decode_doxm(rep, true);
+      oc_sec_decode_doxm(rep, true, device);
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -68,16 +68,16 @@ oc_sec_load_doxm(void)
   }
 
   if (ret <= 0) {
-    oc_sec_doxm_default();
+    oc_sec_doxm_default(device);
   }
 
-  oc_uuid_t *deviceuuid = oc_core_get_device_id(0);
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+  oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   memcpy(deviceuuid, &doxm->deviceuuid, sizeof(oc_uuid_t));
 }
 
 void
-oc_sec_load_pstat(void)
+oc_sec_load_pstat(int device)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -85,7 +85,7 @@ oc_sec_load_pstat(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
-    oc_sec_pstat_default();
+    oc_sec_pstat_default(device);
     return;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -109,7 +109,7 @@ oc_sec_load_pstat(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_pstat(rep, true);
+    oc_sec_decode_pstat(rep, true, device);
     oc_free_rep(rep);
   }
 
@@ -118,17 +118,17 @@ oc_sec_load_pstat(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   if (ret <= 0) {
-    oc_sec_pstat_default();
+    oc_sec_pstat_default(device);
   }
 }
 
 void
-oc_sec_load_cred(void)
+oc_sec_load_cred(int device)
 {
   long ret = 0;
   oc_rep_t *rep;
 
-  if (oc_sec_provisioned()) {
+  if (oc_sec_provisioned(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
     uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf)
@@ -154,7 +154,7 @@ oc_sec_load_cred(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_cred(rep, NULL);
+    oc_sec_decode_cred(rep, NULL, device);
     oc_free_rep(rep);
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
@@ -163,16 +163,16 @@ oc_sec_load_cred(void)
 }
 
 void
-oc_sec_load_acl(void)
+oc_sec_load_acl(int device)
 {
   long ret = 0;
   oc_rep_t *rep;
 
-  if (oc_sec_provisioned()) {
+  if (oc_sec_provisioned(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
     uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf) {
-      oc_sec_acl_default();
+      oc_sec_acl_default(device);
       return;
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -193,7 +193,7 @@ oc_sec_load_acl(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, ret, &rep);
-      oc_sec_decode_acl(rep);
+      oc_sec_decode_acl(rep, device);
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -202,12 +202,12 @@ oc_sec_load_acl(void)
   }
 
   if (ret <= 0) {
-    oc_sec_acl_default();
+    oc_sec_acl_default(device);
   }
 }
 
 void
-oc_sec_dump_pstat(void)
+oc_sec_dump_pstat(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -218,7 +218,7 @@ oc_sec_dump_pstat(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_pstat();
+  oc_sec_encode_pstat(device);
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded pstat size %d\n", size);
@@ -231,7 +231,7 @@ oc_sec_dump_pstat(void)
 }
 
 void
-oc_sec_dump_cred(void)
+oc_sec_dump_cred(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -242,7 +242,7 @@ oc_sec_dump_cred(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_cred(true);
+  oc_sec_encode_cred(true, device);
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d\n", size);
@@ -255,7 +255,7 @@ oc_sec_dump_cred(void)
 }
 
 void
-oc_sec_dump_doxm(void)
+oc_sec_dump_doxm(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -267,7 +267,7 @@ oc_sec_dump_doxm(void)
 
   /* doxm */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_doxm();
+  oc_sec_encode_doxm(device);
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d\n", size);
@@ -280,7 +280,7 @@ oc_sec_dump_doxm(void)
 }
 
 void
-oc_sec_dump_acl(void)
+oc_sec_dump_acl(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -291,7 +291,7 @@ oc_sec_dump_acl(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_acl();
+  oc_sec_encode_acl(device);
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d\n", size);

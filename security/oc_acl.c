@@ -32,10 +32,11 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #else /* OC_DYNAMIC_ALLOCATION */
-#define MAX_NUM_PERM_GROUPS (OC_MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES)
+#define MAX_NUM_PERM_GROUPS (OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
-  ((OC_MAX_NUM_SUBJECTS + 1) * (OC_MAX_APP_RESOURCES + NUM_OC_CORE_RESOURCES))
+  ((OC_MAX_NUM_SUBJECTS + 1) *                                                 \
+   (OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES))
 OC_MEMB(ace_l, oc_sec_ace_t, OC_MAX_NUM_SUBJECTS + 1);
 OC_MEMB(res_l, oc_sec_acl_res_t, MAX_NUM_RES_PERM_PAIRS);
 static oc_uuid_t WILDCARD_SUB = {.id = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -69,12 +70,13 @@ get_sub_perm_groups(oc_sec_ace_t *ace, uint16_t *groups, int *n)
 }
 
 bool
-oc_sec_encode_acl(void)
+oc_sec_encode_acl(int device)
 {
   int i, n = 0;
   char uuid[37];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_ACL));
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_ACL, device));
   oc_rep_set_object(root, aclist);
   oc_rep_set_array(aclist, aces);
   oc_sec_ace_t *sub = oc_list_head(ac_list.subjects);
@@ -299,15 +301,14 @@ oc_sec_remove_subject(const char *subject)
 }
 
 void
-oc_sec_set_post_otm_acl(void)
+oc_sec_set_post_otm_acl(int device)
 {
   const char wildcard_sub[36] = "00000000-0000-0000-0000-000000000000";
   oc_sec_remove_subject(wildcard_sub);
   oc_resource_t *resource;
-  int i,
-    num_core_resources = oc_core_get_num_resources();
-  for (i = 0; i < num_core_resources; i++) {
-    resource = oc_core_get_resource_by_index(i);
+  int i;
+  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
+    resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED || i == OCF_SEC_DOXM) {
       oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
                         OC_IF_BASELINE, 2);
@@ -316,14 +317,13 @@ oc_sec_set_post_otm_acl(void)
 }
 
 void
-oc_sec_acl_default(void)
+oc_sec_acl_default(int device)
 {
   bool success = true;
   oc_resource_t *resource;
-  int i,
-    num_core_resources = oc_core_get_num_resources();
-  for (i = 0; i < num_core_resources; i++) {
-    resource = oc_core_get_resource_by_index(i);
+  int i;
+  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
+    resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED)
       success &=
         (oc_sec_update_acl(&WILDCARD_SUB, resource, false, &resource->types,
@@ -338,8 +338,8 @@ oc_sec_acl_default(void)
                            OC_IF_BASELINE, 6) != NULL);
   }
   OC_DBG("ACL for core resources initialized %d\n", success);
-  oc_uuid_t *device = oc_core_get_device_id(0);
-  memcpy(&ac_list.rowneruuid, device, sizeof(oc_uuid_t));
+  oc_uuid_t *dev = oc_core_get_device_id(device);
+  memcpy(&ac_list.rowneruuid, dev, sizeof(oc_uuid_t));
 }
 
 bool
@@ -351,7 +351,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   oc_uuid_t *identity = (oc_uuid_t *)oc_sec_dtls_get_peer_uuid(endpoint);
 
   if (identity) {
-    oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     if (memcmp(identity->id, doxm->devowneruuid.id, 16) == 0) {
       return true;
     }
@@ -418,7 +418,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 }
 
 bool
-oc_sec_decode_acl(oc_rep_t *rep)
+oc_sec_decode_acl(oc_rep_t *rep, int device)
 {
   uint16_t permissions = 0;
   oc_uuid_t subjectuuid;
@@ -483,13 +483,13 @@ oc_sec_decode_acl(oc_rep_t *rep)
                   if (oc_string_len(resource->name) == 4 &&
                       strncasecmp(oc_string(resource->name), "href", 4) == 0) {
                     res = oc_core_get_resource_by_uri(
-                      oc_string(resource->value.string));
+                      oc_string(resource->value.string), device);
 
 #ifdef OC_SERVER
                     if (!res)
                       res = oc_ri_get_app_resource_by_uri(
                         oc_string(resource->value.string),
-                        oc_string_len(resource->value.string));
+                        oc_string_len(resource->value.string), device);
 #endif /* OC_SERVER */
 
                     if (!res) {
@@ -603,9 +603,9 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_acl(request->request_payload)) {
+  if (oc_sec_decode_acl(request->request_payload, request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_acl();
+    oc_sec_dump_acl(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   }
@@ -620,7 +620,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
   int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
   if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
     oc_send_response(request, OC_STATUS_DELETED);
-    oc_sec_dump_acl();
+    oc_sec_dump_acl(request->resource->device);
     return;
   }
   oc_send_response(request, OC_STATUS_NOT_FOUND);
@@ -631,7 +631,7 @@ get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_encode_acl()) {
+  if (oc_sec_encode_acl(request->resource->device)) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);

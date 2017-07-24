@@ -28,11 +28,11 @@ typedef struct
   int sm;
 } oc_sec_pstat_t;
 
-bool oc_sec_provisioned(void);
-bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage);
-void oc_sec_encode_pstat(void);
-oc_sec_pstat_t *oc_sec_get_pstat(void);
-void oc_sec_pstat_default(void);
+bool oc_sec_provisioned(int device);
+bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device);
+void oc_sec_encode_pstat(int device);
+oc_sec_pstat_t *oc_sec_get_pstat(int device);
+void oc_sec_pstat_default(int device);
 void get_pstat(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t interface,

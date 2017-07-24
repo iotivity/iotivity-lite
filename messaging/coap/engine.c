@@ -77,14 +77,15 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 
 #define OC_REQUEST_HISTORY_SIZE (250)
 static uint16_t history[OC_REQUEST_HISTORY_SIZE];
+static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t idx;
 
 static bool
-check_if_duplicate(uint16_t mid)
+check_if_duplicate(uint16_t mid, uint8_t device)
 {
   size_t i;
   for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
-    if (history[i] == mid) {
+    if (history[i] == mid && history_dev[i] == device) {
       return true;
     }
   }
@@ -203,9 +204,11 @@ coap_receive(oc_message_t *msg)
       if (message->type == COAP_TYPE_CON) {
         coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
       } else {
-        if (check_if_duplicate(message->mid))
+        if (check_if_duplicate(message->mid, msg->endpoint.device)) {
           return 0;
+        }
         history[idx] = message->mid;
+        history_dev[idx] = msg->endpoint.device;
         idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
         coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
                           coap_get_mid());
@@ -273,7 +276,7 @@ coap_receive(oc_message_t *msg)
           }
           goto init_reset_message;
         } else if (block2) {
-          coap_set_header_content_format(response, APPLICATION_CBOR);
+          coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
           response_buffer = oc_blockwise_find_response_buffer(
             href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
           if (response_buffer) {
@@ -427,8 +430,9 @@ coap_receive(oc_message_t *msg)
         request_buffer = oc_blockwise_find_request_buffer(
           oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
           &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
-        if (request_buffer)
+        if (request_buffer) {
           request_buffer->client_cb = client_cb;
+        }
       } else {
         request_buffer = oc_blockwise_find_request_buffer_by_mid(
           message->mid, OC_BLOCKWISE_CLIENT);
