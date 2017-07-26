@@ -90,6 +90,9 @@ oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
 void
 oc_process_baseline_interface(oc_resource_t *resource)
 {
+  if (oc_string_len(resource->name) > 0) {
+    oc_rep_set_text_string(root, n, oc_string(resource->name));
+  }
   oc_rep_set_string_array(root, rt, resource->types);
   oc_core_encode_interfaces_mask(oc_rep_object(root), resource->interfaces);
 }
@@ -98,9 +101,15 @@ oc_process_baseline_interface(oc_resource_t *resource)
 static int query_iterator;
 
 static void
-oc_populate_resource_object(oc_resource_t *resource, const char *uri,
-                            uint8_t num_resource_types, int device)
+oc_populate_resource_object(oc_resource_t *resource, const char *name,
+                            const char *uri, uint8_t num_resource_types,
+                            int device)
 {
+  if (name) {
+    oc_new_string(&resource->name, name, strlen(name));
+  } else {
+    memset(&resource->name, 0, sizeof(oc_string_t));
+  }
   oc_store_uri(uri, &resource->uri);
   oc_new_string_array(&resource->types, num_resource_types);
   resource->properties = 0;
@@ -112,7 +121,8 @@ oc_populate_resource_object(oc_resource_t *resource, const char *uri,
 }
 
 oc_resource_t *
-oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
+oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
+                int device)
 {
   oc_resource_t *resource = oc_ri_alloc_resource();
   if (resource) {
@@ -120,20 +130,22 @@ oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
     resource->default_interface = OC_IF_BASELINE;
     resource->observe_period_seconds = 0;
     resource->num_observers = 0;
-    oc_populate_resource_object(resource, uri, num_resource_types, device);
+    oc_populate_resource_object(resource, name, uri, num_resource_types,
+                                device);
   }
   return resource;
 }
 
 #if defined(OC_COLLECTIONS)
 oc_resource_t *
-oc_new_collection(const char *uri, uint8_t num_resource_types, int device)
+oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
+                  int device)
 {
   oc_collection_t *collection = oc_collection_alloc();
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
     collection->default_interface = OC_IF_LL;
-    oc_populate_resource_object((oc_resource_t *)collection, uri,
+    oc_populate_resource_object((oc_resource_t *)collection, name, uri,
                                 num_resource_types, device);
   }
   return (oc_resource_t *)collection;
