@@ -99,7 +99,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface,
 static void
 register_resources(void)
 {
-  oc_resource_t *res = oc_new_resource("/light/1", 1, 0);
+  oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);

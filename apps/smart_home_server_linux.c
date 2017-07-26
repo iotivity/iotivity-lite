@@ -274,7 +274,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t interface,
 static void
 register_resources(void)
 {
-  oc_resource_t *temp = oc_new_resource("/temp", 1, 0);
+  oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
   oc_resource_bind_resource_type(temp, "oic.r.temperature");
   oc_resource_bind_resource_interface(temp, OC_IF_A);
   oc_resource_bind_resource_interface(temp, OC_IF_S);
@@ -285,7 +285,7 @@ register_resources(void)
   oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
   oc_add_resource(temp);
 
-  oc_resource_t *bswitch = oc_new_resource("/switch", 1, 0);
+  oc_resource_t *bswitch = oc_new_resource("smartbutton", "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
   oc_resource_set_default_interface(bswitch, OC_IF_A);
@@ -294,7 +294,8 @@ register_resources(void)
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
   oc_add_resource(bswitch);
 
-  oc_resource_t *pbswitch = oc_new_resource("/purifier_switch", 1, 0);
+  oc_resource_t *pbswitch =
+    oc_new_resource("purifierswitch", "/purifier_switch", 1, 0);
   oc_resource_bind_resource_type(pbswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(pbswitch, OC_IF_A);
   oc_resource_set_default_interface(pbswitch, OC_IF_A);
@@ -304,7 +305,7 @@ register_resources(void)
   oc_add_resource(pbswitch);
 
 #ifdef OC_COLLECTIONS
-  oc_resource_t *col = oc_new_collection("/platform", 1, 0);
+  oc_resource_t *col = oc_new_collection("dashboard", "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_link_t *l1 = oc_new_link(temp);

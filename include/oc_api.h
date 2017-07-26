@@ -65,8 +65,8 @@ int oc_init_platform(const char *mfg_name,
   oc_rep_set_text_string(root, prop, value)
 
 /** Server side */
-oc_resource_t *oc_new_resource(const char *uri, uint8_t num_resource_types,
-                               int device);
+oc_resource_t *oc_new_resource(const char *name, const char *uri,
+                               uint8_t num_resource_types, int device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
                                          uint8_t interface);
 void oc_resource_set_default_interface(oc_resource_t *resource,
@@ -75,8 +75,8 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 void oc_process_baseline_interface(oc_resource_t *resource);
 
-oc_resource_t *oc_new_collection(const char *uri, uint8_t num_resource_types,
-                                 int device);
+oc_resource_t *oc_new_collection(const char *name, const char *uri,
+                                 uint8_t num_resource_types, int device);
 oc_link_t *oc_new_link(oc_resource_t *resource);
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 void oc_link_set_ins(oc_link_t *link, const char *ins);

@@ -32,6 +32,7 @@ struct oc_collection_s
 {
   struct oc_collection_s *next;
   int device;
+  oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
   oc_interface_mask_t interfaces;

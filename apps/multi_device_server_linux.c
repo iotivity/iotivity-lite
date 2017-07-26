@@ -172,7 +172,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 register_resources(void)
 {
-  oc_resource_t *res = oc_new_resource("/fridge/1", 1, 0);
+  oc_resource_t *res = oc_new_resource("myfridge", "/fridge/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.refrigeration");
   oc_resource_bind_resource_interface(res, OC_IF_A);
   oc_resource_set_default_interface(res, OC_IF_A);
@@ -182,7 +182,7 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_fridge, NULL);
   oc_add_resource(res);
 
-  oc_resource_t *res1 = oc_new_resource("/temp/1", 1, 1);
+  oc_resource_t *res1 = oc_new_resource("tempsetter", "/temp/1", 1, 1);
   oc_resource_bind_resource_type(res1, "oic.r.temperature");
   oc_resource_bind_resource_interface(res1, OC_IF_A | OC_IF_S);
   oc_resource_set_default_interface(res1, OC_IF_A);
