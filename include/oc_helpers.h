@@ -14,6 +14,11 @@
 // limitations under the License.
 */
 
+/**
+  @brief General API to handle constrained strings and arrays.
+  @file
+*/
+
 #ifndef OC_HELPERS_H
 #define OC_HELPERS_H
 

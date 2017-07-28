@@ -23,6 +23,10 @@
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
+#if defined(OC_SCENES) && defined(OC_SERVER)
+#include "oc_scene.h"
+#endif /* OC_SCENES && OC_SERVER */
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -131,7 +135,7 @@ oc_new_resource(const char *uri, uint8_t num_resource_types, int device)
   return resource;
 }
 
-#if defined(OC_COLLECTIONS)
+#if defined(OC_COLLECTIONS) || defined(OC_SCENES)
 oc_resource_t *
 oc_new_collection(const char *uri, uint8_t num_resource_types, int device)
 {
@@ -163,7 +167,107 @@ oc_collection_get_collections(void)
 {
   return (oc_resource_t*)oc_collection_get_all();
 }
-#endif /* OC_COLLECTIONS */
+
+#ifdef OC_SCENES
+oc_resource_t *
+oc_new_scene_collection(const char *uri, int device)
+{
+  oc_resource_t *scene_collection = (oc_resource_t*)oc_collection_alloc();
+  if (scene_collection) {
+    scene_collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_A;
+    scene_collection->default_interface = OC_IF_A;
+    oc_populate_resource_object(scene_collection, uri, 1, device);
+    if (strcmp(uri, OC_SCENELIST_URI) == 0) {
+      oc_resource_bind_resource_type(scene_collection, "oic.wk.scenelist");
+      ((oc_collection_t*)scene_collection)->collection_type = OC_CT_SCENE_LIST;
+    }
+    else {
+      oc_resource_bind_resource_type(scene_collection, "oic.wk.scenecollection");
+      ((oc_collection_t*)scene_collection)->collection_type = OC_CT_SCENE_COLLECTION;
+#ifdef OC_DYNAMIC_ALLOCATION
+      oc_new_string_array(&((oc_collection_t*)scene_collection)->scene_values, 1);
+#else
+      oc_new_string_array(&((oc_collection_t*)scene_collection)->scene_values, OC_MAX_NUM_SCENES);
+#endif
+    }
+  }
+  return scene_collection;
+}
+
+void
+oc_delete_scene_collection(oc_resource_t *scene_collection)
+{
+  oc_collection_free((oc_collection_t*)scene_collection);
+}
+
+static bool
+oc_create_and_add_link(oc_resource_t *collection, oc_resource_t *resource)
+{
+  if (collection && resource) {
+    oc_link_t *link = oc_new_link(resource);
+    if (link) {
+      oc_collection_add_link(collection, link);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+oc_add_scene_collection(oc_resource_t *scene_collection)
+{
+  return oc_create_and_add_link((oc_resource_t *)oc_scene_get_scenelist(), 
+                                scene_collection);
+}
+
+oc_resource_t *
+oc_new_scene_member(const char *uri, oc_resource_t *resource)
+{
+  oc_resource_t *scene_member = (oc_resource_t*)oc_scene_member_alloc();
+  if (scene_member) {
+    scene_member->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_A;
+    scene_member->default_interface = OC_IF_A;
+    /* device is set in oc_add_scene_member() */
+    oc_populate_resource_object(scene_member, uri, 1, 0);
+    oc_resource_bind_resource_type(scene_member, "oic.wk.scenemember");
+    ((oc_scene_member_t*)scene_member)->resource = resource;
+  }
+  return scene_member;
+}
+
+void oc_delete_scene_member(oc_resource_t *scene_member)
+{
+  oc_scene_member_free((oc_scene_member_t*)scene_member);
+}
+
+bool
+oc_add_scene_member(oc_resource_t *scene_collection, oc_resource_t *scene_member)
+{
+  if (oc_create_and_add_link(scene_collection, scene_member))
+  {
+    oc_scene_member_t* member = (oc_scene_member_t*)scene_member;
+    oc_collection_t* parent = (oc_collection_t*)scene_collection;
+    member->parent = parent;
+    scene_member->device = scene_collection->device;
+    /* If caller already added mappings before adding the member to the parent
+       scene collection, then register now all scenes. */
+    oc_scene_mapping_t *mapping = (oc_scene_mapping_t*)oc_list_head(member->scene_mapping);
+    while (mapping != NULL) {
+      oc_scene_collection_add_scene(parent, oc_string(mapping->scene));
+      mapping = mapping->next;
+    }
+    return true;
+  }
+  return false;
+}
+
+void
+oc_remove_scene_member(oc_resource_t *scene_collection, oc_resource_t *scene_member)
+{
+  oc_collection_remove_resource((oc_collection_t*)scene_collection, scene_member);
+}
+#endif /* OC_SCENES */
+#endif /* OC_COLLECTIONS || OC_SCENES */
 
 void
 oc_resource_bind_resource_interface(oc_resource_t *resource, uint8_t interface)

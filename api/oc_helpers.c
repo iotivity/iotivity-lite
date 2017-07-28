@@ -18,7 +18,9 @@
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include <stdbool.h>
-
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif
 static bool mmem_initialized = false;
 
 static void
@@ -130,6 +132,22 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
       break;
     }
   }
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (!success) {
+    unsigned int old_size = ocstringarray->size;
+    unsigned int new_size = old_size + (5 * STRING_ARRAY_ITEM_MAX_LEN);
+    void *tmp = realloc(ocstringarray->ptr, new_size);
+    if (tmp) {
+      memset((char*)tmp + old_size, 0, (new_size - old_size));
+      ocstringarray->ptr = tmp;
+      ocstringarray->size = new_size;
+      success = oc_string_array_set_item(*ocstringarray, str, i);
+    }
+    else {
+      OC_WRN("insufficient memory to add increase string array size\n");
+    }
+  }
+#endif
   return success;
 }
 

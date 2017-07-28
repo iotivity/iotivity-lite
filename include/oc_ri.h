@@ -14,6 +14,11 @@
 // limitations under the License.
 */
 
+/**
+  @brief Internal API to handle resources.
+  @file
+*/
+
 #ifndef OC_RI_H
 #define OC_RI_H
 
@@ -25,6 +30,9 @@
 
 typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE } oc_method_t;
 
+/**
+  @brief Supported resource properties.
+*/
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
@@ -32,6 +40,9 @@ typedef enum {
   OC_PERIODIC = (1 << 6),
 } oc_resource_properties_t;
 
+/**
+  @brief Result codes.
+*/
 typedef enum {
   OC_STATUS_OK = 0,
   OC_STATUS_CREATED,
@@ -117,6 +128,9 @@ typedef struct oc_request_handler_s
   void *user_data;
 } oc_request_handler_t;
 
+/**
+  @brief Basic resource.
+*/
 struct oc_resource_s
 {
   struct oc_resource_s *next;
@@ -136,6 +150,8 @@ struct oc_resource_s
 
 typedef struct oc_link_s oc_link_t;
 typedef struct oc_collection_s oc_collection_t;
+typedef struct oc_scene_member_s oc_scene_member_t;
+typedef struct oc_scene_mapping_s oc_scene_mapping_t;
 
 typedef enum { DONE = 0, CONTINUE } oc_event_callback_retval_t;
 
@@ -172,6 +188,9 @@ int oc_status_code(oc_status_t key);
 oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len);
 
 oc_resource_t *oc_ri_get_app_resources(void);
+
+bool oc_ri_filter_rt(oc_resource_t *resource,
+                     const char *rt, int rt_len);
 
 #ifdef OC_SERVER
 oc_resource_t *oc_ri_alloc_resource(void);
