@@ -106,6 +106,7 @@
     <ClInclude Include="..\..\include\oc_network_events.h" />
     <ClInclude Include="..\..\include\oc_rep.h" />
     <ClInclude Include="..\..\include\oc_ri.h" />
+    <ClInclude Include="..\..\include\oc_scene.h" />
     <ClInclude Include="..\..\include\oc_signal_event_loop.h" />
     <ClInclude Include="..\..\include\oc_uuid.h" />
     <ClInclude Include="..\..\messaging\coap\coap.h" />
@@ -156,6 +157,7 @@
     <ClCompile Include="..\..\api\oc_network_events.c" />
     <ClCompile Include="..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\api\oc_ri.c" />
+    <ClCompile Include="..\..\api\oc_scene.c" />
     <ClCompile Include="..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\api\oc_uuid.c" />
     <ClCompile Include="..\..\apps\simpleclient.c">

@@ -23,6 +23,9 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
+#if defined(OC_SCENES)
+#include "oc_scene.h"
+#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #include "oc_core_res.h"
@@ -31,23 +34,8 @@ static bool
 filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
                 CborEncoder *links)
 {
-  int i;
-  bool match = true;
-  if (rt_len > 0) {
-    match = false;
-    for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-         i++) {
-      int size = oc_string_array_get_item_size(resource->types, i);
-      const char *t =
-        (const char *)oc_string_array_get_item(resource->types, i);
-      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
-        match = true;
-        break;
-      }
-    }
-  }
 
-  if (!match) {
+  if (!oc_ri_filter_rt(resource, rt, rt_len)) {
     return false;
   }
 
@@ -58,6 +46,7 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
 
   // rt
   oc_rep_set_array(res, rt);
+  int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
        i++) {
     int size = oc_string_array_get_item_size(resource->types, i);
@@ -144,6 +133,33 @@ process_device_object(CborEncoder *device, const char *rt, int rt_len,
                         oc_rep_array(links)))
       matches++;
   }
+
+#if defined(OC_SCENES)
+  collection = oc_scene_get_scenelist();
+  if (collection) {
+    oc_link_t *link = oc_list_head(collection->links);
+    for (; link; link = link->next) {
+      oc_collection_t *scene_collection = (oc_collection_t*)link->resource;
+      if (scene_collection != NULL &&
+          scene_collection->device == device_num) {
+        if (collection->properties & OC_DISCOVERABLE &&
+            filter_resource((oc_resource_t *)scene_collection, rt, rt_len,
+                            oc_rep_array(links))) {
+          matches++;
+        }
+        oc_link_t *member = oc_list_head(scene_collection->links);
+        for (; member; member = member->next) {
+          oc_resource_t *scene_member = member->resource;
+          if (scene_member != NULL &&
+              scene_member->properties & OC_DISCOVERABLE &&
+              filter_resource(scene_member, rt, rt_len, oc_rep_array(links))) {
+            matches++;
+          }
+        }
+      }
+    }
+  }
+#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
 

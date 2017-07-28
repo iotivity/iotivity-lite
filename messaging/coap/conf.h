@@ -68,9 +68,9 @@
 
 #ifdef OC_BLOCK_WISE
 #define COAP_MAX_HEADER_SIZE                                                   \
-  (4 + COAP_TOKEN_LEN + 3 + COAP_ETAG_LEN + 4 + 4 + 50)
+  (4 + COAP_TOKEN_LEN + 3 + COAP_ETAG_LEN + 4 + 4 + 52)
 #else /* OC_BLOCK_WISE */
-#define COAP_MAX_HEADER_SIZE (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + 50)
+#define COAP_MAX_HEADER_SIZE (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + 52)
 #endif /* !OC_BLOCK_WISE */
 #endif /* COAP_MAX_HEADER_SIZE */
 

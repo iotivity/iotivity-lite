@@ -144,6 +144,9 @@
     <ClCompile Include="..\..\util\oc_timer.c">
       <Filter>util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\api\oc_scene.c">
+      <Filter>api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
@@ -299,6 +302,9 @@
     </ClInclude>
     <ClInclude Include="..\oc_storage.h">
       <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_scene.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
