@@ -424,34 +424,33 @@ oc_core_get_resource_by_uri(const char *uri, int device)
     skip = 1;
   if ((strlen(uri) - skip) == 5 && memcmp(uri + skip, "oic/p", 5) == 0) {
     return &core_resources[0];
-  } else {
-    int type = 0;
-    if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oic/res", 7) == 0) {
-      type = OCF_RES;
-    } else if ((strlen(uri) - skip) == 7 &&
-               memcmp(uri + skip, "oic/con", 7) == 0) {
-      type = OCF_CON;
-    } else if ((strlen(uri) - skip) == 5 &&
-               memcmp(uri + skip, "oic/d", 5) == 0) {
-      type = OCF_D;
-    }
-#ifdef OC_SECURITY
-    else if ((strlen(uri) - skip) == 11 &&
-             memcmp(uri + skip, "oic/sec/doxm", 11) == 0) {
-      type = OCF_SEC_DOXM;
-    } else if ((strlen(uri) - skip) == 12 &&
-               memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
-      type = OCF_SEC_PSTAT;
-    } else if ((strlen(uri) - skip) == 11 &&
-               memcmp(uri + skip, "oic/sec/acl", 11) == 0) {
-      type = OCF_SEC_ACL;
-    } else if ((strlen(uri) - skip) == 11 &&
-               strncmp(uri + skip, "oic/sec/cred", 11) == 0) {
-      type = OCF_SEC_CRED;
-    }
-#endif /* OC_SECURITY */
-    int res = OCF_D * device + type;
-    return &core_resources[res];
   }
-  return NULL;
+
+  int type = 0;
+  if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oic/res", 7) == 0) {
+    type = OCF_RES;
+  } else if ((strlen(uri) - skip) == 7 &&
+             memcmp(uri + skip, "oic/con", 7) == 0) {
+    type = OCF_CON;
+  } else if ((strlen(uri) - skip) == 5 &&
+             memcmp(uri + skip, "oic/d", 5) == 0) {
+    type = OCF_D;
+  }
+#ifdef OC_SECURITY
+  else if ((strlen(uri) - skip) == 11 &&
+           memcmp(uri + skip, "oic/sec/doxm", 11) == 0) {
+    type = OCF_SEC_DOXM;
+  } else if ((strlen(uri) - skip) == 12 &&
+             memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
+    type = OCF_SEC_PSTAT;
+  } else if ((strlen(uri) - skip) == 11 &&
+             memcmp(uri + skip, "oic/sec/acl", 11) == 0) {
+    type = OCF_SEC_ACL;
+  } else if ((strlen(uri) - skip) == 11 &&
+             strncmp(uri + skip, "oic/sec/cred", 11) == 0) {
+    type = OCF_SEC_CRED;
+  }
+#endif /* OC_SECURITY */
+  int res = OCF_D * device + type;
+  return &core_resources[res];
 }

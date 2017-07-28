@@ -305,7 +305,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   }
 }
 
-uint16_t
+int
 oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
              oc_rep_t **out_rep)
 {
@@ -331,7 +331,7 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
     while (cbor_value_is_valid(&map)) {
       *cur = _alloc_rep();
       if (*cur == NULL)
-        return (uint16_t)CborErrorOutOfMemory;
+        return CborErrorOutOfMemory;
       (*cur)->type = OBJECT;
       kv = &(*cur)->value.object;
       err |= cbor_value_enter_container(&map, &cur_value);
@@ -350,5 +350,5 @@ oc_parse_rep(const uint8_t *in_payload, uint16_t payload_size,
       err |= cbor_value_advance(&map);
     }
   }
-  return (uint16_t)err;
+  return err;
 }

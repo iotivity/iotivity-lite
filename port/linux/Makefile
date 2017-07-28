@@ -58,8 +58,17 @@ ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
 endif
 
+ifneq ($(findstring cygwin,$(shell $(CC) -dumpmachine)),)
+	# gcc on Cygwin defines WIN32 environment but we need
+	# to compile as Linux. -fPIC results in a warning
+	# as everything is relocatable in Cygwin.
+	CFLAGS := $(filter-out -fPIC,$(CFLAGS)) -D__linux__
+endif
+
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
+	  client_scenes_linux server_scenes_linux
+
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
 		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
@@ -139,6 +148,12 @@ multi_device_server: libiotivity-constrained-server.a
 
 multi_device_client: libiotivity-constrained-client.a
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+server_scenes_linux: ../../apps/server_scenes_linux.c libiotivity-constrained-server.a
+	${CC} -o $@ $< libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_scenes_linux: ../../apps/client_scenes_linux.c libiotivity-constrained-client.a
+	${CC} -o $@ $< libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \

@@ -41,9 +41,14 @@
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
 
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#ifdef OC_SERVER
+#ifdef OC_COLLECTIONS
 #include "oc_collection.h"
-#endif /* OC_COLLECTIONS && OC_SERVER */
+#ifdef OC_SCENES
+#include "oc_scene.h"
+#endif /* OC_SCENES */
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
 
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
@@ -92,7 +97,7 @@ set_mpro_status_codes(void)
   oc_coap_status_codes[OC_STATUS_BAD_REQUEST] = BAD_REQUEST_4_00;
   /* UNAUTHORIZED_401 */
   oc_coap_status_codes[OC_STATUS_UNAUTHORIZED] = UNAUTHORIZED_4_01;
-  /* BAD_REQUEST_400 */
+  /* BAD_OPTION_402 */
   oc_coap_status_codes[OC_STATUS_BAD_OPTION] = BAD_OPTION_4_02;
   /* FORBIDDEN_403 */
   oc_coap_status_codes[OC_STATUS_FORBIDDEN] = FORBIDDEN_4_03;
@@ -253,6 +258,11 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
   if (!res) {
     res = (oc_resource_t *)oc_get_collection_by_uri(uri, uri_len, device);
   }
+#ifdef OC_SCENES
+  if (!res && device == 0) {
+    res = oc_get_scene_member_by_uri(uri, uri_len);
+  }
+#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS */
 
   return res;
@@ -342,6 +352,32 @@ oc_ri_add_resource(oc_resource_t *resource)
   return valid;
 }
 #endif /* OC_SERVER */
+
+bool
+oc_ri_filter_rt(oc_resource_t *resource, const char *rt, int rt_len)
+{
+  if (resource == NULL) {
+    return false;
+  }
+
+  bool match = true;
+  if (rt_len > 0 && rt && *rt) {
+    match = false;
+    int i;
+    for (i = 0;
+         i < (int)oc_string_array_get_allocated_size(resource->types);
+         i++) {
+      int size = oc_string_array_get_item_size(resource->types, i);
+      const char *t =
+        (const char *)oc_string_array_get_item(resource->types, i);
+      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        match = true;
+        break;
+      }
+    }
+  }
+  return match;
+}
 
 void
 oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
@@ -577,6 +613,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
+#ifdef OC_SCENES
+  bool resource_is_scene_member = false;
+#endif /* OC_SCENES*/
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
@@ -687,7 +726,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * Any failures while parsing the payload is viewed as an erroneous
      * request and results in a 4.00 response being sent.
      */
-    uint16_t parse_error =
+    int parse_error =
       oc_parse_rep(payload, payload_len, &request_obj.request_payload);
     if (parse_error != 0) {
       OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d\n",
@@ -726,8 +765,15 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
 
 #if defined(OC_COLLECTIONS)
-    if (cur_resource && oc_check_if_collection(cur_resource)) {
-      resource_is_collection = true;
+    if (cur_resource) {
+      if (oc_check_if_collection(cur_resource)) {
+        resource_is_collection = true;
+      }
+#ifdef OC_SCENES
+      else if (oc_check_if_scene_member(cur_resource)) {
+        resource_is_scene_member = true;
+      }
+#endif /* OC_SCENES */
     }
 #endif /* OC_COLLECTIONS */
   }
@@ -780,6 +826,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (resource_is_collection) {
         oc_handle_collection_request(method, &request_obj, interface);
       } else
+#ifdef OC_SCENES
+      if (resource_is_scene_member) {
+        oc_handle_scene_member_request(method, &request_obj, interface);
+      } else
+#endif /* OC_SCENES */
 #endif  /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
          * its handler for the requested method. If it has not
@@ -1135,7 +1186,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         return true;
       }
     } else {
-      uint16_t err =
+      int err =
         oc_parse_rep(payload, payload_len, &client_response.payload);
       if (err == 0) {
         oc_response_handler_t handler =

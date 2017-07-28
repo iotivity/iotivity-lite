@@ -60,6 +60,9 @@
 
 #ifdef OC_COLLECTIONS
 #include "oc_collection.h"
+#ifdef OC_SCENES
+#include "oc_scene.h"
+#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS */
 
 #include "oc_coap.h"
@@ -284,6 +287,12 @@ coap_notify_observers(oc_resource_t *resource,
       oc_handle_collection_request(OC_GET, &request,
                                    resource->default_interface);
     else
+#ifdef OC_SCENES
+    if (oc_check_if_scene_member(resource))
+      oc_handle_scene_member_request(OC_GET, &request,
+                                     resource->default_interface);
+    else
+#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS */
       resource->get_handler.cb(&request, resource->default_interface,
                                resource->get_handler.user_data);
