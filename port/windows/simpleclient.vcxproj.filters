@@ -144,6 +144,9 @@
     <ClCompile Include="..\..\util\oc_timer.c">
       <Filter>util</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\api\oc_endpoint.c">
+      <Filter>api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
