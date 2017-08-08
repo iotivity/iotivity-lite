@@ -304,7 +304,6 @@ static int
 get_network_interfaces(struct sockaddr ifa_addr[], int nic_size)
 {
 #ifdef DEBUG
-    char longname[50] = { 0 };
     char dotname[INET6_ADDRSTRLEN] = { 0 };
 #endif
     IP_ADAPTER_ADDRESSES *info = NULL;
@@ -333,41 +332,40 @@ get_network_interfaces(struct sockaddr ifa_addr[], int nic_size)
         adapter = adapter->Next) {
         IP_ADAPTER_UNICAST_ADDRESS *address = NULL;
 
-        if (IfOperStatusUp != adapter->OperStatus)
+        if (IfOperStatusUp != adapter->OperStatus || adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
             continue;
+        }
 
+#ifdef DEBUG
+        if (adapter->FriendlyName) {
+            PRINT("%ws / %ws:\n", adapter->FriendlyName, adapter->Description);
+        }
+#endif
         for (address = adapter->FirstUnicastAddress; nCount < nic_size && address;
             address = address->Next) {
             if (address->Address.lpSockaddr->sa_family == AF_INET) {
-                memcpy(&ifa_addr[nCount], address->Address.lpSockaddr,
-                    sizeof(struct sockaddr_in));
+                struct sockaddr_in *addr = (struct sockaddr_in *)address->Address.lpSockaddr;
+                memcpy(&ifa_addr[nCount], addr, sizeof(struct sockaddr_in));
 #ifdef DEBUG
                 getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in), dotname,
                     sizeof(dotname), NULL, 0, NI_NUMERICHOST);
-                if (adapter->FriendlyName) {
-                    WideCharToMultiByte(CP_UTF8, 0, adapter->FriendlyName,
-                        wcslen(adapter->FriendlyName), longname,
-                        sizeof(longname), NULL, NULL);
-                    PRINT("%s %s\n", dotname, longname);
-                }
+                PRINT("\t%s\n", dotname);
 #endif
             }
             else if (address->Address.lpSockaddr->sa_family == AF_INET6) {
-                memcpy(&ifa_addr[nCount], address->Address.lpSockaddr,
-                    sizeof(struct sockaddr_in6));
+                struct sockaddr_in6 *addr = (struct sockaddr_in6 *)address->Address.lpSockaddr;
+                if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
+                    continue;
+                }
+                memcpy(&ifa_addr[nCount], addr, sizeof(struct sockaddr_in6));
 #ifdef DEBUG
                 getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in6), dotname,
                     sizeof(dotname), NULL, 0, NI_NUMERICHOST);
-                if (adapter->FriendlyName) {
-                    WideCharToMultiByte(CP_UTF8, 0, adapter->FriendlyName,
-                        wcslen(adapter->FriendlyName), longname,
-                        sizeof(longname), NULL, NULL);
-                    PRINT("%s %s\n", dotname, longname);
-                }
+                PRINT("\t%s\n", dotname);
 #endif
             }
             else {
-                continue; // only AF_INET and AF_INET6
+                continue;
             }
             nCount++;
         }
@@ -529,16 +527,14 @@ oc_send_discovery_request(oc_message_t *message)
   for (i = 0; i < count; i++) {
     if (message->endpoint.flags & IPV6 && ifa_addrs[i].sa_family == AF_INET6) {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifa_addrs[i];
-      if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
-        int mif = addr->sin6_scope_id;
-        if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
-                       (char *)&mif, sizeof(mif)) == -1) {
-          OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
-              errno);
-          goto done;
-        }
-        oc_send_buffer(message);
+      int mif = addr->sin6_scope_id;
+      if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                     (char *)&mif, sizeof(mif)) == -1) {
+        OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
+            errno);
+        goto done;
       }
+      oc_send_buffer(message);
 #ifdef OC_IPV4
     } else if (message->endpoint.flags & IPV4 &&
                ifa_addrs[i].sa_family == AF_INET) {
