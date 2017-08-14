@@ -225,4 +225,75 @@ main(void)
   pthread_mutex_destroy(&mutex);
   return 0;
 }
-#endif /* __linux__ */
+#elif defined(WIN32) /* windows */
+
+#include "port/oc_clock.h"
+#include <signal.h>
+
+int quit = 0;
+
+void event_has_arrived();
+void infinite_wait_for_event();
+void ms_wait_for_event(oc_clock_time_t ms);
+
+static void
+signal_event_loop(void)
+{
+    event_has_arrived();
+}
+
+void
+handle_signal(int signal)
+{
+    (void)signal;
+    signal_event_loop();
+    quit = 1;
+}
+
+int
+main(void)
+{
+    int init;
+
+    signal(SIGINT, handle_signal);
+
+    static const oc_handler_t handler = { .init = app_init,
+        .signal_event_loop = signal_event_loop,
+        .register_resources =
+        register_resources };
+
+    oc_clock_time_t next_event;
+
+#ifdef OC_SECURITY
+    oc_storage_config("./creds");
+#endif /* OC_SECURITY */
+
+    init = oc_main_init(&handler);
+    if (init < 0)
+        return init;
+
+    while (quit != 1) {
+        next_event = oc_main_poll();
+
+        if (next_event == 0)
+
+
+
+            infinite_wait_for_event();
+        else
+            ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND));
+
+
+
+    }
+    oc_main_shutdown();
+    return 0;
+}
+
+void
+abort_impl(void)
+{
+    abort();
+}
+#endif /* __windows__ */
+
