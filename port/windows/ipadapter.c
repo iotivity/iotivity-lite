@@ -71,27 +71,27 @@ typedef struct ip_context_t
   struct ip_context_t *next;
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;
-  int mcast_sock;
-  int server_sock;
+  SOCKET mcast_sock;
+  SOCKET server_sock;
   uint16_t port;
 #ifdef OC_SECURITY
   struct sockaddr_storage secure;
-  int secure_sock;
+  SOCKET secure_sock;
   uint16_t dtls_port;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
   struct sockaddr_storage mcast4;
   struct sockaddr_storage server4;
-  int mcast4_sock;
-  int server4_sock;
+  SOCKET mcast4_sock;
+  SOCKET server4_sock;
   uint16_t port4;
 #ifdef OC_SECURITY
   struct sockaddr_storage secure4;
-  int secure4_sock;
+  SOCKET secure4_sock;
   uint16_t dtls4_port;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-  int terminate;
+  BOOL terminate;
   int device;
 } ip_context_t;
 
@@ -146,7 +146,7 @@ static void *
 network_event_thread(void *data)
 {
   struct sockaddr_storage client;
-  memset(&client, 0, sizeof(struct sockaddr_storage));
+  memset(&client, 0, sizeof(client));
   struct sockaddr_in6 *c = (struct sockaddr_in6 *)&client;
   socklen_t len = sizeof(client);
 
@@ -174,7 +174,7 @@ network_event_thread(void *data)
 
   int i, n;
 
-  while (dev->terminate != 1) {
+  while (!dev->terminate) {
     setfds = rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
@@ -300,35 +300,47 @@ network_event_thread(void *data)
   return NULL;
 }
 
-static int
-get_network_interfaces(struct sockaddr ifa_addr[], int nic_size)
+typedef struct ifaddr_t {
+  struct ifaddr_t *next;
+  struct sockaddr_storage addr;
+} ifaddr_t;
+
+static ifaddr_t*
+get_network_addresses()
 {
-#ifdef DEBUG
-  char dotname[INET6_ADDRSTRLEN] = { 0 };
-#endif
-  IP_ADAPTER_ADDRESSES *info = NULL;
-  ULONG info_size = 0;
-
-  int nCount = 0;
-
-  if (ifa_addr == NULL || nic_size == 0)
-    return 0;
-
-  memset(ifa_addr, 0, nic_size * sizeof(*ifa_addr));
-
-  // Gets the number of bytes needed to store all currently active adapter-info.
-  GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, NULL,
-                       &info_size);
-
-  if (info_size == 0 || (info = calloc(1, info_size)) == NULL)
-    goto cleanup;
-
-  if (GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, info,
-                           &info_size) != NO_ERROR)
-    goto cleanup;
-
+  ifaddr_t *ifaddr_list = NULL;
+  ULONG family = AF_INET6;
+  int i;
+  IP_ADAPTER_ADDRESSES *adapter_list = NULL;
   IP_ADAPTER_ADDRESSES *adapter = NULL;
-  for (adapter = info; nCount < nic_size && adapter != NULL;
+  ULONG adapter_list_size = 8000; // start with small buffer
+
+#ifdef OC_IPV4
+  family = AF_UNSPEC;
+#endif
+
+  for (i = 0; i < 5; i++) {
+    DWORD dwRetVal = 0;
+    adapter_list = calloc(1, adapter_list_size);
+    if (adapter_list == NULL) {
+      OC_ERR("no memory for GetAdaptersAddresses\n");
+      return NULL;
+    }
+    dwRetVal = GetAdaptersAddresses(family, GAA_FLAG_INCLUDE_PREFIX, NULL, adapter_list, &adapter_list_size);
+    if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
+      OC_ERR("try GetAdaptersAddresses with adapter_list_size=%d\n", adapter_list_size);
+      free(adapter_list);
+      adapter_list = NULL;
+      continue;
+    }
+    break;
+  }
+  if (adapter_list == NULL) {
+    OC_ERR("GetAdaptersAddresses failed\n");
+    return NULL;
+  }
+
+  for (adapter = adapter_list; adapter != NULL;
        adapter = adapter->Next) {
     IP_ADAPTER_UNICAST_ADDRESS *address = NULL;
 
@@ -339,84 +351,105 @@ get_network_interfaces(struct sockaddr ifa_addr[], int nic_size)
 
 #ifdef DEBUG
     if (adapter->FriendlyName) {
-      PRINT("%ws / %ws:\n", adapter->FriendlyName, adapter->Description);
+      PRINT("%ws:\n", adapter->FriendlyName);
     }
 #endif
-    for (address = adapter->FirstUnicastAddress; nCount < nic_size && address;
-         address = address->Next) {
+    for (address = adapter->FirstUnicastAddress; address; address = address->Next) {
+      ifaddr_t *ifaddr = NULL;
+#ifdef OC_IPV4
       if (address->Address.lpSockaddr->sa_family == AF_INET) {
         struct sockaddr_in *addr =
           (struct sockaddr_in *)address->Address.lpSockaddr;
-        memcpy(&ifa_addr[nCount], addr, sizeof(struct sockaddr_in));
-#ifdef DEBUG
-        getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in), dotname,
-                    sizeof(dotname), NULL, 0, NI_NUMERICHOST);
-        PRINT("\t%s\n", dotname);
+        ifaddr = calloc(1, sizeof(ifaddr_t));
+        if (ifaddr == NULL) {
+          OC_ERR("no memory for ifaddr\n");
+          goto cleanup;
+        }
+        memcpy(&ifaddr->addr, addr, sizeof(struct sockaddr_in));
+      }
 #endif
-      } else if (address->Address.lpSockaddr->sa_family == AF_INET6) {
+      if (address->Address.lpSockaddr->sa_family == AF_INET6) {
         struct sockaddr_in6 *addr =
           (struct sockaddr_in6 *)address->Address.lpSockaddr;
-        if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
+        if (! IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) && !(address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
+#ifdef DEBUG
+          char dotname[NI_MAXHOST] = { 0 };
+          getnameinfo((const SOCKADDR*)addr, sizeof(struct sockaddr_in6), dotname,
+                      sizeof(dotname), NULL, 0, NI_NUMERICHOST);
+          PRINT("%s is not IN6_IS_ADDR_LINKLOCAL and not IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.\n", dotname);
+#endif
           continue;
         }
-        memcpy(&ifa_addr[nCount], addr, sizeof(struct sockaddr_in6));
-#ifdef DEBUG
-        getnameinfo(&ifa_addr[nCount], sizeof(struct sockaddr_in6), dotname,
-                    sizeof(dotname), NULL, 0, NI_NUMERICHOST);
-        PRINT("\t%s\n", dotname);
-#endif
-      } else {
-        continue;
+        ifaddr = calloc(1, sizeof(ifaddr_t));
+        if (ifaddr == NULL) {
+            OC_ERR("no memory for ifaddr\n");
+            goto cleanup;
+        }
+        memcpy(&ifaddr->addr, addr, sizeof(struct sockaddr_in6));
       }
-      nCount++;
+      if (ifaddr) {
+          ifaddr->next = ifaddr_list;
+          ifaddr_list = ifaddr;
+      }
     }
   }
 
 cleanup:
-  free(info);
+  free(adapter_list);
 
-  return nCount;
+  return ifaddr_list;
+}
+
+static void
+free_network_addresses(ifaddr_t *ifaddr)
+{
+  while (ifaddr) {
+    ifaddr_t *tmp = ifaddr;
+    ifaddr = ifaddr->next;
+    free(tmp);
+  }
 }
 
 static void
 get_interface_addresses(unsigned char family, uint16_t port, bool secure)
 {
-#define MAX_ADDRS 10
-  struct sockaddr ifa_addrs[MAX_ADDRS];
-  int i, count;
-
-  count = get_network_interfaces(ifa_addrs, MAX_ADDRS);
-  if (count <= 0) {
-    OC_ERR("querying interfaces: %d\n", errno);
-    return;
-  }
+  ifaddr_t *ifaddr_list = get_network_addresses();
+  ifaddr_t *ifaddr;
 
   oc_endpoint_t ep = { 0 };
 
   if (secure) {
     ep.flags |= SECURED;
   }
-  for (i = 0; i < count; i++) {
-    if (family == AF_INET6 && ifa_addrs[i].sa_family == AF_INET6) {
-      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifa_addrs[i];
+  
+  for (ifaddr = ifaddr_list; ifaddr != NULL; ifaddr = ifaddr->next) {
+    if (family == AF_INET6 && ifaddr->addr.ss_family == AF_INET6) {
+      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifaddr->addr;
       memcpy(ep.addr.ipv6.address, &addr->sin6_addr, sizeof(addr->sin6_addr));
       ep.flags = IPV6;
       ep.addr.ipv6.port = port;
       ep.addr.ipv6.scope = (uint8_t)addr->sin6_scope_id;
+      if (oc_add_endpoint_to_list(&ep) == -1) {
+        OC_ERR("oc_add_endpoint_to_list failed.\n");
+        break;
+      }
+      continue;
+    }
 #ifdef OC_IPV4
-    } else if (family == AF_INET && ifa_addrs[i].sa_family == AF_INET) {
-      struct sockaddr_in *addr = (struct sockaddr_in *)&ifa_addrs[i];
+    if (family == AF_INET && ifaddr->addr.ss_family == AF_INET) {
+      struct sockaddr_in *addr = (struct sockaddr_in *)&ifaddr->addr;
       memcpy(ep.addr.ipv4.address, &addr->sin_addr, sizeof(addr->sin_addr));
       ep.flags = IPV4;
       ep.addr.ipv4.port = port;
-#endif
-    } else {
+      if (oc_add_endpoint_to_list(&ep) == -1) {
+        OC_ERR("oc_add_endpoint_to_list failed.\n");
+        break;
+      }
       continue;
     }
-    if (oc_add_endpoint_to_list(&ep) == -1) {
-      return;
-    }
+#endif
   }
+  free_network_addresses(ifaddr_list);
 }
 
 oc_endpoint_t *
@@ -445,7 +478,7 @@ oc_send_buffer(oc_message_t *message)
   OC_DBG("\n");
 
   struct sockaddr_storage receiver;
-  memset(&receiver, 0, sizeof(struct sockaddr_storage));
+  memset(&receiver, 0, sizeof(receiver));
 #ifdef OC_IPV4
   if (message->endpoint.flags & IPV4) {
     struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
@@ -464,7 +497,7 @@ oc_send_buffer(oc_message_t *message)
     r->sin6_port = htons(message->endpoint.addr.ipv6.port);
     r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
   }
-  int send_sock = -1;
+  SOCKET send_sock = INVALID_SOCKET;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
@@ -498,7 +531,7 @@ oc_send_buffer(oc_message_t *message)
     x = sendto(send_sock, message->data + bytes_sent,
                message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
                sizeof(receiver));
-    if (x < 0) {
+    if (x == SOCKET_ERROR) {
       OC_WRN("sendto() returned errno %d\n", errno);
       return;
     }
@@ -511,35 +544,27 @@ oc_send_buffer(oc_message_t *message)
 void
 oc_send_discovery_request(oc_message_t *message)
 {
-#define MAX_ADDRS 10
-  struct sockaddr ifa_addrs[MAX_ADDRS];
-  int i, count;
-
-  count = get_network_interfaces(ifa_addrs, MAX_ADDRS);
-  if (count <= 0) {
-    OC_ERR("querying interfaces: %d\n", errno);
-    goto done;
-  }
+  ifaddr_t *ifaddr_list = get_network_addresses();
+  ifaddr_t *ifaddr;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
-  for (i = 0; i < count; i++) {
-    if (message->endpoint.flags & IPV6 && ifa_addrs[i].sa_family == AF_INET6) {
-      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifa_addrs[i];
+  for (ifaddr = ifaddr_list; ifaddr != NULL; ifaddr = ifaddr->next) {
+    if (message->endpoint.flags & IPV6 && ifaddr->addr.ss_family== AF_INET6) {
+      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifaddr->addr;
       int mif = addr->sin6_scope_id;
       if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
-                     (char *)&mif, sizeof(mif)) == -1) {
+                     (char *)&mif, sizeof(mif)) == SOCKET_ERROR) {
         OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
                errno);
         goto done;
       }
       oc_send_buffer(message);
 #ifdef OC_IPV4
-    } else if (message->endpoint.flags & IPV4 &&
-               ifa_addrs[i].sa_family == AF_INET) {
-      struct sockaddr_in *addr = (struct sockaddr_in *)&ifa_addrs[i];
+    } else if (message->endpoint.flags & IPV4 && ifaddr->addr.ss_family == AF_INET) {
+      struct sockaddr_in *addr = (struct sockaddr_in *)&ifaddr->addr;
       if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF,
-                     (char *)&addr->sin_addr, sizeof(addr->sin_addr)) == -1) {
+                     (char *)&addr->sin_addr, sizeof(addr->sin_addr)) == SOCKET_ERROR) {
         OC_ERR("setting socket option for default IP_MULTICAST_IF: %d\n",
                errno);
         goto done;
@@ -550,7 +575,8 @@ oc_send_discovery_request(oc_message_t *message)
     }
 #endif /* ! OC_IPV4 */
   }
-done:;
+done:
+  free_network_addresses(ifaddr_list);
 }
 #endif /* OC_CLIENT */
 
@@ -559,8 +585,8 @@ static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
   OC_DBG("Initializing IPv4 connectivity for device %d\n", dev->device);
-  memset(&dev->mcast4, 0, sizeof(struct sockaddr_storage));
-  memset(&dev->server4, 0, sizeof(struct sockaddr_storage));
+  memset(&dev->mcast4, 0, sizeof(dev->mcast4));
+  memset(&dev->server4, 0, sizeof(dev->server4));
 
   struct sockaddr_in *m = (struct sockaddr_in *)&dev->mcast4;
   m->sin_family = AF_INET;
@@ -573,14 +599,14 @@ connectivity_ipv4_init(ip_context_t *dev)
   l->sin_port = 0;
 
 #ifdef OC_SECURITY
-  memset(&dev->secure4, 0, sizeof(struct sockaddr_storage));
+  memset(&dev->secure4, 0, sizeof(dev->secure4));
   struct sockaddr_in *sm = (struct sockaddr_in *)&dev->secure4;
   sm->sin_family = AF_INET;
   sm->sin_port = 0;
   sm->sin_addr.s_addr = INADDR_ANY;
 
   dev->secure4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->secure4_sock < 0) {
+  if (dev->secure4_sock == SOCKET_ERROR) {
     OC_ERR("creating secure IPv4 socket\n");
     return -1;
   }
@@ -589,20 +615,20 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->server4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   dev->mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (dev->server4_sock < 0 || dev->mcast4_sock < 0) {
+  if (dev->server4_sock == SOCKET_ERROR || dev->mcast4_sock == SOCKET_ERROR) {
     OC_ERR("creating IPv4 server sockets\n");
     return -1;
   }
 
   if (bind(dev->server4_sock, (struct sockaddr *)&dev->server4,
-           sizeof(dev->server4)) == -1) {
+           sizeof(dev->server4)) == SOCKET_ERROR) {
     OC_ERR("binding server4 socket %d\n", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(dev->server4);
   if (getsockname(dev->server4_sock, (struct sockaddr *)&dev->server4,
-                  &socklen) == -1) {
+                  &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining server4 socket information %d\n", errno);
     return -1;
   }
@@ -613,39 +639,39 @@ connectivity_ipv4_init(ip_context_t *dev)
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   if (setsockopt(dev->mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq,
-                 sizeof(mreq)) == -1) {
+                 sizeof(mreq)) == SOCKET_ERROR) {
     OC_ERR("joining IPv4 multicast group %d\n", errno);
     return -1;
   }
 
   int reuse = 1;
   if (setsockopt(dev->mcast4_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
   if (bind(dev->mcast4_sock, (struct sockaddr *)&dev->mcast4,
-           sizeof(dev->mcast4)) == -1) {
+           sizeof(dev->mcast4)) == SOCKET_ERROR) {
     OC_ERR("binding mcast IPv4 socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
     return -1;
   }
 
   if (bind(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
-           sizeof(dev->secure4)) == -1) {
+           sizeof(dev->secure4)) == SOCKET_ERROR) {
     OC_ERR("binding IPv4 secure socket %d\n", errno);
     return -1;
   }
 
   socklen = sizeof(dev->secure4);
   if (getsockname(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
-                  &socklen) == -1) {
+                  &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining DTLS4 socket information %d\n", errno);
     return -1;
   }
@@ -667,7 +693,7 @@ add_mcast_sock_to_ipv6_multicast_group(int sock, const uint8_t *addr)
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
-                 sizeof(mreq)) == -1) {
+                 sizeof(mreq)) == SOCKET_ERROR) {
     OC_ERR("joining IPv6 multicast group %d\n", errno);
     return -1;
   }
@@ -692,8 +718,8 @@ oc_connectivity_init(int device)
 #endif /* !OC_DYNAMIC_ALLOCATION */
   dev->device = device;
 
-  memset(&dev->mcast, 0, sizeof(struct sockaddr_storage));
-  memset(&dev->server, 0, sizeof(struct sockaddr_storage));
+  memset(&dev->mcast, 0, sizeof(dev->mcast));
+  memset(&dev->server, 0, sizeof(dev->server));
 
   struct sockaddr_in6 *m = (struct sockaddr_in6 *)&dev->mcast;
   m->sin6_family = AF_INET6;
@@ -706,7 +732,7 @@ oc_connectivity_init(int device)
   l->sin6_port = 0;
 
 #ifdef OC_SECURITY
-  memset(&dev->secure, 0, sizeof(struct sockaddr_storage));
+  memset(&dev->secure, 0, sizeof(dev->secure));
   struct sockaddr_in6 *sm = (struct sockaddr_in6 *)&dev->secure;
   sm->sin6_family = AF_INET6;
   sm->sin6_port = 0;
@@ -716,14 +742,14 @@ oc_connectivity_init(int device)
   dev->server_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   dev->mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (dev->server_sock < 0 || dev->mcast_sock < 0) {
+  if (dev->server_sock == SOCKET_ERROR || dev->mcast_sock == SOCKET_ERROR) {
     OC_ERR("creating server sockets\n");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->secure_sock < 0) {
+  if (dev->secure_sock == SOCKET_ERROR) {
     OC_ERR("creating secure socket\n");
     return -1;
   }
@@ -731,20 +757,20 @@ oc_connectivity_init(int device)
 
   int opt = 1;
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&opt,
-                 sizeof(opt)) == -1) {
+                 sizeof(opt)) == SOCKET_ERROR) {
     OC_ERR("setting sock option %d\n", errno);
     return -1;
   }
 
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
-           sizeof(dev->server)) == -1) {
+           sizeof(dev->server)) == SOCKET_ERROR) {
     OC_ERR("binding server socket %d\n", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(dev->server);
   if (getsockname(dev->server_sock, (struct sockaddr *)&dev->server,
-                  &socklen) == -1) {
+                  &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining server socket information %d\n", errno);
     return -1;
   }
@@ -766,31 +792,31 @@ oc_connectivity_init(int device)
 
   int reuse = 1;
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
-           sizeof(dev->mcast)) == -1) {
+           sizeof(dev->mcast)) == SOCKET_ERROR) {
     OC_ERR("binding mcast socket %d\n", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse,
-                 sizeof(reuse)) == -1) {
+                 sizeof(reuse)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr option %d\n", errno);
     return -1;
   }
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
-           sizeof(dev->secure)) == -1) {
+           sizeof(dev->secure)) == SOCKET_ERROR) {
     OC_ERR("binding IPv6 secure socket %d\n", errno);
     return -1;
   }
 
   socklen = sizeof(dev->secure);
   if (getsockname(dev->secure_sock, (struct sockaddr *)&dev->secure,
-                  &socklen) == -1) {
+                  &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining secure socket information %d\n", errno);
     return -1;
   }
@@ -820,7 +846,7 @@ void
 oc_connectivity_shutdown(int device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
-  dev->terminate = 1;
+  dev->terminate = TRUE;
 
   closesocket(dev->server_sock);
   closesocket(dev->mcast_sock);
