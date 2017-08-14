@@ -49,6 +49,9 @@ memory allocation
 /* Number of devices on the OCF platform */
 #define OC_MAX_NUM_DEVICES (1)
 
+/* Maximum number of endpoints */
+#define OC_MAX_NUM_ENDPOINTS (10)
+
 /* Security layer */
 /* Maximum number of authorized clients */
 #define OC_MAX_NUM_SUBJECTS (2)
