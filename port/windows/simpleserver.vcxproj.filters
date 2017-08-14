@@ -1,0 +1,339 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\apps\simpleserver.c" />
+    <ClCompile Include="clock.c" />
+    <ClCompile Include="ipadapter.c" />
+    <ClCompile Include="random.c" />
+    <ClCompile Include="storage.c" />
+    <ClCompile Include="..\..\api\oc_base64.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_blockwise.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_buffer.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_client_api.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_collection.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_core_res.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborencoder.c">
+      <Filter>deps\tinycbor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborencoder_close_container_checked.c">
+      <Filter>deps\tinycbor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborparser.c">
+      <Filter>deps\tinycbor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\ccm.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\crypto.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\dtls.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\dtls_time.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\ecc\ecc.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\hmac.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\netq.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_etimer.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_list.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_memb.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_mmem.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_acl.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_cred.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_doxm.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_dtls.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_pstat.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_store.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_svr.c">
+      <Filter>security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\coap.c">
+      <Filter>messaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\engine.c">
+      <Filter>messaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\observe.c">
+      <Filter>messaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\separate.c">
+      <Filter>messaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\transactions.c">
+      <Filter>messaging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_discovery.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_helpers.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_network_events.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_rep.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_ri.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_server_api.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_uuid.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_main.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_process.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_timer.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\peer.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\aes\rijndael.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\session.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinydtls\sha2\sha2.c">
+      <Filter>deps\tinydtls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_scene.c">
+      <Filter>api</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="..\..\deps\tinycbor\src\cbor.h">
+      <Filter>deps\tinycbor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\deps\tinycbor\src\cborjson.h">
+      <Filter>deps\tinycbor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\deps\tinydtls\ccm.h">
+      <Filter>deps\tinydtls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc-addrlabels.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc-switch.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_etimer.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_list.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_memb.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_mmem.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_acl.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_cred.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_doxm.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_dtls.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_pstat.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_store.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_svr.h">
+      <Filter>security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\coap.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\conf.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\constants.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\engine.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\observe.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\oc_coap.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\separate.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\transactions.h">
+      <Filter>messaging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_assert.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_clock.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_connectivity.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_log.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_network_events_mutex.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_process.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_api.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_base64.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_blockwise.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_buffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_client_state.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_collection.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_core_res.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_discovery.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\api\oc_events.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_helpers.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_network_events.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_rep.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_ri.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_scene.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_signal_event_loop.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_uuid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_timer.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_random.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_storage.h">
+      <Filter>port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\pt.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\pt-sem.h">
+      <Filter>util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{3fb6af1b-7b34-42ba-8bdb-1a7a1a0a6256}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deps">
+      <UniqueIdentifier>{300b5a51-acd3-434a-8b79-29db9e48589c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deps\tinydtls">
+      <UniqueIdentifier>{6076adf4-156a-4de3-874f-25e2e6d81f41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deps\tinycbor">
+      <UniqueIdentifier>{cd3da498-b69e-4603-8618-08a2dc99c20a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="security">
+      <UniqueIdentifier>{7d439c2d-24cb-490e-a22d-a4c112a02759}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="messaging">
+      <UniqueIdentifier>{dd347922-0c44-4631-bb47-1767c5b2612c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{c3d5651f-9b41-47eb-95c8-ef753c96fdfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="port">
+      <UniqueIdentifier>{44cb2cd3-77ca-4ecc-bc78-fb803dee4765}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{13387a5a-800d-4bb1-ac68-a69a8b48f987}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
