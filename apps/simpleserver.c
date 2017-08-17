@@ -183,8 +183,6 @@ int
 main(void)
 {
   int init;
-  pthread_cond_init(&cv, NULL);
-  pthread_mutex_init(&mutex, NULL);
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -220,8 +218,6 @@ main(void)
   }
 
   oc_main_shutdown();
-  pthread_cond_destroy(&cv);
-  pthread_mutex_destroy(&mutex);
   return 0;
 }
 #elif defined(WIN32) /* windows */
@@ -238,61 +234,54 @@ void ms_wait_for_event(oc_clock_time_t ms);
 static void
 signal_event_loop(void)
 {
-    event_has_arrived();
+  event_has_arrived();
 }
 
 void
 handle_signal(int signal)
 {
-    (void)signal;
-    signal_event_loop();
-    quit = 1;
+  (void)signal;
+  signal_event_loop();
+  quit = 1;
 }
 
 int
 main(void)
 {
-    int init;
+  int init;
 
-    signal(SIGINT, handle_signal);
+  signal(SIGINT, handle_signal);
 
-    static const oc_handler_t handler = { .init = app_init,
-        .signal_event_loop = signal_event_loop,
-        .register_resources =
-        register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
-    oc_clock_time_t next_event;
+  oc_clock_time_t next_event;
 
 #ifdef OC_SECURITY
-    oc_storage_config("./creds");
+  oc_storage_config("./creds");
 #endif /* OC_SECURITY */
 
-    init = oc_main_init(&handler);
-    if (init < 0)
-        return init;
+  init = oc_main_init(&handler);
+  if (init < 0)
+    return init;
 
-    while (quit != 1) {
-        next_event = oc_main_poll();
+  while (quit != 1) {
+    next_event = oc_main_poll();
+    if (next_event == 0)
+      infinite_wait_for_event();
+    else
+      ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND)); // number of ms to wait
+  }
 
-        if (next_event == 0)
-
-
-
-            infinite_wait_for_event();
-        else
-            ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND));
-
-
-
-    }
-    oc_main_shutdown();
-    return 0;
+  oc_main_shutdown();
+  return 0;
 }
 
 void
 abort_impl(void)
 {
-    abort();
+  abort();
 }
 #endif /* __windows__ */
-

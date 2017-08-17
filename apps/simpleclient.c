@@ -351,6 +351,7 @@ signal_event_loop(void)
 void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }
@@ -381,7 +382,7 @@ main(void)
     if (next_event == 0)
       infinite_wait_for_event();
     else
-      ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND));
+      ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND)); // number of ms to wait
   }
 
   oc_main_shutdown();
