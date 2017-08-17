@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -58,7 +58,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -151,6 +151,7 @@
     <ClCompile Include="..\..\api\oc_collection.c" />
     <ClCompile Include="..\..\api\oc_core_res.c" />
     <ClCompile Include="..\..\api\oc_discovery.c" />
+    <ClCompile Include="..\..\api\oc_endpoint.c" />
     <ClCompile Include="..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\api\oc_main.c" />
     <ClCompile Include="..\..\api\oc_network_events.c" />
