@@ -1,5 +1,6 @@
 /*
 // Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Lynx Technology
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +16,10 @@
 */
 
 #define __USE_GNU
+#include <android/api-level.h>
+#if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
+#error __ANDROID_API__ not defined
+#endif
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
@@ -23,7 +28,9 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#if __ANDROID_API__ >= 24
 #include <ifaddrs.h>
+#endif /* __ANDROID_API__ >= 24 */
 #include <linux/ipv6.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -50,6 +57,8 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
 static pthread_mutex_t mutex;
+
+#define OCF_IF_FLAGS (IFF_UP | IFF_RUNNING | IFF_BROADCAST | IFF_MULTICAST)
 
 typedef struct ip_context_t
 {
@@ -312,83 +321,94 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
     return;
   }
 
-  int guess = 512, response_len;
-  do {
-    guess <<= 1;
-    uint8_t dummy[guess];
-    response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
+  bool done = false;
+  while (!done) {
+    int guess = 512, response_len;
+    do {
+      guess <<= 1;
+      uint8_t dummy[guess];
+      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
+      if (response_len < 0) {
+        close(nl_sock);
+        return;
+      }
+    } while (response_len == guess);
+
+    uint8_t buffer[response_len];
+    response_len = recv(nl_sock, buffer, response_len, 0);
     if (response_len < 0) {
       close(nl_sock);
       return;
     }
-  } while (response_len == guess);
 
-  uint8_t buffer[response_len];
-  response_len = recv(nl_sock, buffer, response_len, 0);
-  if (response_len < 0) {
-    close(nl_sock);
-    return;
-  }
-
-  response = (struct nlmsghdr *)buffer;
-  oc_endpoint_t ep;
-
-  while
-    NLMSG_OK(response, response_len)
-    {
-      memset(&ep, 0, sizeof(oc_endpoint_t));
-      bool include = false;
-      struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
-        include = true;
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
-        int att_len = IFA_PAYLOAD(response);
-        while
-          RTA_OK(attr, att_len)
-          {
-            if (attr->rta_type == IFA_ADDRESS) {
-#ifdef OC_IPV4
-              if (family == AF_INET) {
-                memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
-                ep.flags = IPV4;
-              } else
-#endif /* OC_IPV4 */
-                if (family == AF_INET6) {
-                memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-                ep.flags = IPV6;
-              }
-            } else if (attr->rta_type == IFA_FLAGS) {
-              if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
-                include = false;
-              }
-            }
-            attr = RTA_NEXT(attr, att_len);
-          }
-      }
-      if (include) {
-        if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
-          ep.addr.ipv6.scope = addrmsg->ifa_index;
-        }
-        if (secure) {
-          ep.flags |= SECURED;
-        }
-#ifdef OC_IPV4
-        if (family == AF_INET) {
-          ep.addr.ipv4.port = port;
-        } else
-#endif /* OC_IPV4 */
-          if (family == AF_INET6) {
-          ep.addr.ipv6.port = port;
-        }
-        if (oc_add_endpoint_to_list(&ep) == -1) {
-          close(nl_sock);
-          return;
-        }
-      }
-
-      response = NLMSG_NEXT(response, response_len);
+    response = (struct nlmsghdr *)buffer;
+    if (response->nlmsg_type == NLMSG_ERROR) {
+      close(nl_sock);
+      return;
     }
 
+    oc_endpoint_t ep;
+
+    while
+      NLMSG_OK(response, response_len)
+        {
+          if (response->nlmsg_type == NLMSG_DONE) {
+            done = true;
+            break;
+          }
+          memset(&ep, 0, sizeof(oc_endpoint_t));
+          bool include = false;
+          struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
+          if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
+            include = true;
+            struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
+            int att_len = IFA_PAYLOAD(response);
+            while
+              RTA_OK(attr, att_len)
+                    {
+                      if (attr->rta_type == IFA_ADDRESS) {
+#ifdef OC_IPV4
+                        if (family == AF_INET) {
+                          memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
+                          ep.flags = IPV4;
+                        } else
+#endif /* OC_IPV4 */
+                          if (family == AF_INET6) {
+                            memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
+                            ep.flags = IPV6;
+                          }
+                      } else if (attr->rta_type == IFA_FLAGS) {
+                        if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+                          include = false;
+                        }
+                      }
+                      attr = RTA_NEXT(attr, att_len);
+                    }
+          }
+          if (include) {
+            if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
+              ep.addr.ipv6.scope = addrmsg->ifa_index;
+            }
+            if (secure) {
+              ep.flags |= SECURED;
+            }
+#ifdef OC_IPV4
+            if (family == AF_INET) {
+              ep.addr.ipv4.port = port;
+            } else
+#endif /* OC_IPV4 */
+              if (family == AF_INET6) {
+                ep.addr.ipv6.port = port;
+              }
+            if (oc_add_endpoint_to_list(&ep) == -1) {
+              close(nl_sock);
+              return;
+            }
+          }
+
+          response = NLMSG_NEXT(response, response_len);
+     }
+  }
   close(nl_sock);
 }
 
@@ -481,6 +501,7 @@ oc_send_buffer(oc_message_t *message)
 }
 
 #ifdef OC_CLIENT
+#if __ANDROID_API__ >= 24
 void
 oc_send_discovery_request(oc_message_t *message)
 {
@@ -493,8 +514,13 @@ oc_send_discovery_request(oc_message_t *message)
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+    /* Only broadcast on LAN/WLAN. 3G/4G/5G should not have the broadcast
+       and multicast flags set. */
+    if ((interface->ifa_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
+        OCF_IF_FLAGS) {
+      OC_DBG("skipping %s\n", (interface->ifa_name ? interface->ifa_name : "<none>"));
       continue;
+    }
     if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
         interface->ifa_addr->sa_family == AF_INET6) {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
@@ -527,6 +553,200 @@ oc_send_discovery_request(oc_message_t *message)
 done:
   freeifaddrs(ifs);
 }
+
+#else /* __ANDROID_API__ < 24 */
+
+static void
+oc_send_discovery_request_ipv6(oc_message_t *message)
+{
+  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
+  int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+
+  struct sockaddr_nl nl;
+  memset(&nl, 0, sizeof(nl));
+  nl.nl_family = AF_NETLINK;
+  if (bind(nl_sock, (struct sockaddr*)&nl, sizeof(nl)) < 0)
+  {
+    close(nl_sock);
+    OC_ERR("Cannot bind netlink socket: %d\n", errno);
+    return;
+  }
+
+  struct
+  {
+    struct nlmsghdr nlhdr;
+    struct ifinfomsg infomsg;
+  } request;
+
+  memset(&request, 0, sizeof(request));
+  request.nlhdr.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
+  request.nlhdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_ROOT;
+  request.nlhdr.nlmsg_type = RTM_GETLINK;
+  request.infomsg.ifi_family = AF_INET6;
+
+  if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
+    close(nl_sock);
+    OC_ERR("cannot send getlink query: %d\n", errno);
+    return;
+  }
+
+  fd_set rfds;
+  FD_ZERO(&rfds);
+  FD_SET(nl_sock, &rfds);
+
+  if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
+    close(nl_sock);
+    return;
+  }
+
+  /* On Android there can be quite a number of interfaces (over 10).
+     In this case the kernel returns the response in chunks.
+     So we need to continue receiving the response until we
+     receive the DONE message. */
+  bool done = false;
+  while (!done) {
+    int guess = 512, response_len;
+    do {
+      guess <<= 1;
+      uint8_t dummy[guess];
+      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
+      if (response_len <= 0) {
+        close(nl_sock);
+        OC_ERR("cannot peek getlink response: %d\n", errno);
+        return;
+      }
+    } while (response_len == guess);
+
+    uint8_t buffer[response_len];
+    response_len = recv(nl_sock, buffer, response_len, 0);
+    if (response_len <= 0) {
+      close(nl_sock);
+        OC_ERR("cannot get getlink response: %d\n", errno);
+      return;
+    }
+
+    struct nlmsghdr *response = (struct nlmsghdr *)buffer;
+    if (response->nlmsg_type == NLMSG_ERROR) {
+      close(nl_sock);
+      OC_ERR("getlink signalled error\n");
+      return;
+    }
+
+    while
+      NLMSG_OK(response, response_len)
+        {
+          if (response->nlmsg_type == NLMSG_DONE) {
+            /* Set by the kernel when all interfaces were sent. */
+            done = true;
+            break;
+          }
+          struct ifinfomsg *infomsg = (struct ifinfomsg *)NLMSG_DATA(response);
+          if ((infomsg->ifi_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) ==
+              OCF_IF_FLAGS) {
+            int mif = infomsg->ifi_index;
+            if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
+                           sizeof(mif)) == -1) {
+              OC_ERR("setting socket option for IPV6_MULTICAST_IF on if %d: %d\n",
+                     mif, errno);
+            }
+            else {
+              OC_DBG("IPv6 discovery on if %d\n", infomsg->ifi_index);
+              oc_send_buffer(message);
+            }
+          }
+          else {
+            OC_DBG("skipping IPv6 discovery on if %d\n", infomsg->ifi_index);
+          }
+
+          response = NLMSG_NEXT(response, response_len);
+        }
+  }
+
+  close(nl_sock);
+}
+
+#ifdef OC_IPV4
+static void
+oc_send_discovery_request_ipv4(oc_message_t *message)
+{
+  int cnf_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+  if (cnf_socket < 0) {
+    OC_ERR("opening configuration socket failed: %d\n", errno);
+    return;
+  }
+
+  struct ifconf	if_conf = { 0 };
+  struct ifreq  if_req[OC_MAX_NUM_INTERFACES];
+  memset(if_req, 0, sizeof(if_req));
+  if_conf.ifc_len = sizeof(if_req);
+  if_conf.ifc_req = if_req;
+
+  /* Note: This delivers only IPv4 interfaces */
+  if (ioctl(cnf_socket, SIOCGIFCONF, &if_conf) < 0) {
+    OC_ERR("acquiring network interfaces failed: %d\n", errno);
+    goto done;
+  }
+
+  int num_interfaces = if_conf.ifc_len / sizeof(struct ifreq);
+  if (num_interfaces <= 0) {
+    close(cnf_socket);
+    OC_ERR("no interfaces detected\n");
+    goto done;
+  }
+
+  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
+  int loop;
+  for (loop = 0; loop < num_interfaces; ++loop) {
+    struct ifreq flags_req;
+    struct ifreq addrs_req;
+    memset(&flags_req, 0, sizeof(flags_req));
+    memset(&addrs_req, 0, sizeof(addrs_req));
+    memcpy(flags_req.ifr_name, if_req[loop].ifr_name, strlen(if_req[loop].ifr_name)+1);
+    memcpy(addrs_req.ifr_name, if_req[loop].ifr_name, strlen(if_req[loop].ifr_name)+1);
+
+    /* Only broadcast on LAN/WLAN. 3G/4G/5G should not have the broadcast
+       and multicast flags set. */
+    if (ioctl(cnf_socket, SIOCGIFFLAGS, &flags_req) < 0 ||
+        (flags_req.ifr_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
+        OCF_IF_FLAGS ||
+        ioctl(cnf_socket, SIOCGIFADDR, &addrs_req) < 0 ||
+        addrs_req.ifr_addr.sa_family != AF_INET) {
+      OC_DBG("skipping IPv4 %s\n", flags_req.ifr_name);
+      continue;
+    }
+
+    struct sockaddr_in *addr = (struct sockaddr_in *)&addrs_req.ifr_addr;
+    if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
+                   sizeof(addr->sin_addr)) == -1) {
+      OC_ERR("setting socket option for default IP_MULTICAST_IF of %s: %d\n",
+             flags_req.ifr_name, errno);
+      continue;
+    }
+
+    OC_DBG("IPv4 discovery on %s\n", flags_req.ifr_name);
+    oc_send_buffer(message);
+  }
+
+done:
+  close(cnf_socket);
+}
+#endif
+
+void
+oc_send_discovery_request(oc_message_t *message)
+{
+  if (message) {
+    if (message->endpoint.flags & IPV6)
+      oc_send_discovery_request_ipv6(message);
+#ifdef OC_IPV4
+    if (message->endpoint.flags & IPV4)
+      oc_send_discovery_request_ipv4(message);
+#endif
+  }
+}
+#endif /* __ANDROID_API__ < 24 */
 #endif /* OC_CLIENT */
 
 #ifdef OC_IPV4
@@ -808,7 +1028,6 @@ oc_connectivity_shutdown(int device)
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
-  pthread_cancel(dev->event_thread);
   pthread_join(dev->event_thread, NULL);
 
 #ifdef OC_DYNAMIC_ALLOCATION
