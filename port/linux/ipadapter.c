@@ -398,6 +398,8 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
 
       response = NLMSG_NEXT(response, response_len);
     }
+
+  close(nl_sock);
 }
 
 oc_endpoint_t *
