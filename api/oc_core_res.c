@@ -17,6 +17,7 @@
 #include "oc_core_res.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_discovery.h"
 #include "oc_rep.h"
 
 #ifdef OC_SECURITY
@@ -26,25 +27,25 @@
 #include <stdarg.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
+#include "oc_endpoint.h"
 #include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_resource_t *core_resources;
 static oc_device_info_t *oc_device_info;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_resource_t core_resources[NUM_OC_CORE_RESOURCES];
+static oc_resource_t core_resources[1 + OCF_D * OC_MAX_NUM_DEVICES];
 static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 static int device_count;
-static oc_uuid_t *next_di;
 static oc_string_t oc_platform_payload;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 void
 oc_core_init(void)
 {
-  core_resources =
-    (oc_resource_t *)calloc(NUM_OC_CORE_RESOURCES, sizeof(oc_resource_t));
+  core_resources = (oc_resource_t *)calloc(OC_NUM_CORE_RESOURCES_PER_DEVICE,
+                                           sizeof(oc_resource_t));
   if (!core_resources) {
     oc_abort("Insufficient memory");
   }
@@ -87,14 +88,16 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
   int device = request->resource->device;
   oc_rep_start_root_object();
 
-  char uuid[37];
-  oc_uuid_to_str(&oc_device_info[device].uuid, uuid, 37);
+  char di[37], pid[37];
+  oc_uuid_to_str(&oc_device_info[device].di, di, 37);
+  oc_uuid_to_str(&oc_device_info[device].pid, pid, 37);
 
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   case OC_IF_R: {
-    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, di, di);
+    oc_rep_set_text_string(root, pid, pid);
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
     oc_rep_set_text_string(root, icv, oc_string(oc_device_info[device].icv));
     oc_rep_set_text_string(root, dmv, oc_string(oc_device_info[device].dmv));
@@ -115,27 +118,22 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)data;
   int device = request->resource->device;
+  oc_rep_start_root_object();
 
-  if (device == 0)
-  {
-    oc_rep_start_root_object();
-
-    switch (interface) {
-      case OC_IF_BASELINE:
-        oc_process_baseline_interface(request->resource);
-        /* intentionally no break here */
-      case OC_IF_RW: {
-        /* oic.wk.d attribute n shall always be the same value as
-        oic.wk.con attribute n. */
-        oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
-      } break;
-      default:
-        break;
-    }
-
-    oc_rep_end_root_object();
+  switch (interface) {
+    case OC_IF_BASELINE:
+      oc_process_baseline_interface(request->resource);
+      /* intentionally no break here */
+    case OC_IF_RW: {
+      /* oic.wk.d attribute n shall always be the same value as
+      oic.wk.con attribute n. */
+      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+    } break;
+    default:
+      break;
   }
-  
+
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
@@ -148,29 +146,27 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
   bool changed = false;
   int device = request->resource->device;
 
-  if (device == 0) {
-    while (rep != NULL) {
-      if (strcmp(oc_string(rep->name), "n") == 0) {
-        if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
-          oc_send_response(request, OC_STATUS_BAD_REQUEST);
-          return;
-        }
-
-        oc_free_string(&oc_device_info[device].name);
-        oc_new_string(&oc_device_info[device].name, oc_string(rep->value.string),
-                      oc_string_len(rep->value.string));
-        oc_rep_start_root_object();
-        oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
-        oc_rep_end_root_object();
-        /* notify_observers is automatically triggered in
-           oc_ri_invoke_coap_entity_handler() for oic.wk.con,
-           we cannot notify name change of oic.wk.d, as this
-           is not observable */
-        changed = true;
-        break;
+  while (rep != NULL) {
+    if (strcmp(oc_string(rep->name), "n") == 0) {
+      if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        return;
       }
-      rep = rep->next;
+
+      oc_free_string(&oc_device_info[device].name);
+      oc_new_string(&oc_device_info[device].name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
+      oc_rep_start_root_object();
+      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+      oc_rep_end_root_object();
+      /* notify_observers is automatically triggered in
+         oc_ri_invoke_coap_entity_handler() for oic.wk.con,
+         we cannot notify name change of oic.wk.d, as this
+         is not observable */
+      changed = true;
+      break;
     }
+    rep = rep->next;
   }
 
   if (data) {
@@ -192,12 +188,6 @@ oc_core_get_num_devices(void)
   return device_count;
 }
 
-int
-oc_core_get_num_resources(void)
-{
-    return NUM_OC_CORE_RESOURCES - 1 + device_count;
-}
-
 static int
 finalize_payload(uint8_t *buffer, oc_string_t *payload)
 {
@@ -217,12 +207,6 @@ finalize_payload(uint8_t *buffer, oc_string_t *payload)
   return -1;
 }
 
-void
-oc_core_set_device_id(oc_uuid_t *uuid)
-{
-  next_di = uuid;
-}
-
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
@@ -236,8 +220,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   core_resources = (oc_resource_t *)realloc(
-    core_resources,
-    (NUM_OC_CORE_RESOURCES + device_count) * sizeof(oc_resource_t));
+    core_resources, (1 + OCF_D * (device_count + 1)) * sizeof(oc_resource_t));
   if (!core_resources) {
     oc_abort("Insufficient memory");
   }
@@ -249,7 +232,9 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  int ocf_d = oc_core_get_num_resources();
+  int ocf_d = OCF_D * device_count + OCF_D;
+  int ocf_con = OCF_D * device_count + OCF_CON;
+  int ocf_res = OCF_D * device_count + OCF_RES;
 
 /* Once provisioned, UUID is retrieved from the credential store.
    If not yet provisioned, a default is generated in the security
@@ -258,18 +243,11 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #ifdef OC_SECURITY /*fix if add new devices after provisioning, need to reset  \
                       or it will generate non-standard uuid */
   /* where are secondary device ids persisted? */
-  if (!oc_sec_provisioned() && device_count > 0)
-    if (next_di == NULL)
-      oc_gen_uuid(&oc_device_info[device_count].uuid);
-    else
-      oc_device_info[device_count].uuid = *next_di;
+  if (!oc_sec_provisioned(0) && device_count > 0)
+    oc_gen_uuid(&oc_device_info[device_count].di);
 #else
-  if (next_di == NULL)
-    oc_gen_uuid(&oc_device_info[device_count].uuid);
-  else
-    oc_device_info[device_count].uuid = *next_di;
+  oc_gen_uuid(&oc_device_info[device_count].di);
 #endif
-next_di = NULL;
 
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
@@ -282,6 +260,7 @@ next_di = NULL;
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
+  oc_gen_uuid(&oc_device_info[device_count].pid);
   oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
   oc_new_string(&oc_device_info[device_count].icv, spec_version,
                 strlen(spec_version));
@@ -289,16 +268,18 @@ next_di = NULL;
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  /* Construct oic.wk.con resource for this device.
-     As of now we only support one device. */
-  if (device_count == 0) {
-    oc_core_populate_resource(
-      OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_OBSERVABLE,
-      oc_core_con_handler_get, oc_core_con_handler_post, oc_core_con_handler_post,
-      0, 1, "oic.wk.con");
-  }
-  return &oc_device_info[device_count++];
+  /* Construct oic.wk.con resource for this device. */
+  oc_core_populate_resource(
+    ocf_con, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
+    oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+
+  oc_create_discovery_resource(ocf_res, device_count);
+
+  device_count++;
+  oc_connectivity_init(device_count - 1);
+
+  return &oc_device_info[device_count];
 }
 
 void
@@ -352,15 +333,11 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 #endif /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
-  oc_rep_set_string_array(root, rt, core_resources[OCF_P].types);
-
-  oc_core_encode_interfaces_mask(oc_rep_object(root),
-                                 core_resources[OCF_P].interfaces);
+  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_P, 0));
 
   oc_uuid_t uuid;
-  oc_gen_uuid(&uuid);
   char uuid_str[37];
-
+  oc_gen_uuid(&uuid);
   oc_uuid_to_str(&uuid, uuid_str, 37);
   oc_rep_set_text_string(root, pi, uuid_str);
   oc_rep_set_text_string(root, mnmn, mfg_name);
@@ -420,23 +397,54 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
 oc_uuid_t *
 oc_core_get_device_id(int device)
 {
-  return &oc_device_info[device].uuid;
+  return &oc_device_info[device].di;
 }
 
 oc_resource_t *
-oc_core_get_resource_by_index(int type)
+oc_core_get_resource_by_index(int type, int device)
 {
-  return &core_resources[type];
+  if (type == OCF_P) {
+    return &core_resources[0];
+  }
+  return &core_resources[OCF_D * device + type];
 }
 
 oc_resource_t *
-oc_core_get_resource_by_uri(const char *uri)
+oc_core_get_resource_by_uri(const char *uri, int device)
 {
-  int i, num_core_resources = oc_core_get_num_resources();
-  for (i = 0; i < num_core_resources; i++) {
-    if (oc_string_len(core_resources[i].uri) == strlen(uri) &&
-        strncmp(uri, oc_string(core_resources[i].uri), strlen(uri)) == 0)
-      return &core_resources[i];
+  int skip = 0;
+  if (uri[0] != '/')
+    skip = 1;
+  if ((strlen(uri) - skip) == 5 && memcmp(uri + skip, "oic/p", 5) == 0) {
+    return &core_resources[0];
+  } else {
+    int type = 0;
+    if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oic/res", 7) == 0) {
+      type = OCF_RES;
+    } else if ((strlen(uri) - skip) == 7 &&
+               memcmp(uri + skip, "oic/con", 7) == 0) {
+      type = OCF_CON;
+    } else if ((strlen(uri) - skip) == 5 &&
+               memcmp(uri + skip, "oic/d", 5) == 0) {
+      type = OCF_D;
+    }
+#ifdef OC_SECURITY
+    else if ((strlen(uri) - skip) == 11 &&
+             memcmp(uri + skip, "oic/sec/doxm", 11) == 0) {
+      type = OCF_SEC_DOXM;
+    } else if ((strlen(uri) - skip) == 12 &&
+               memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
+      type = OCF_SEC_PSTAT;
+    } else if ((strlen(uri) - skip) == 11 &&
+               memcmp(uri + skip, "oic/sec/acl", 11) == 0) {
+      type = OCF_SEC_ACL;
+    } else if ((strlen(uri) - skip) == 11 &&
+               strncmp(uri + skip, "oic/sec/cred", 11) == 0) {
+      type = OCF_SEC_CRED;
+    }
+#endif /* OC_SECURITY */
+    int res = OCF_D * device + type;
+    return &core_resources[res];
   }
   return NULL;
 }

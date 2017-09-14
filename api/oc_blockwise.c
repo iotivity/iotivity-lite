@@ -18,6 +18,7 @@
 #include "config.h"
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
+#include "oc_endpoint.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -209,7 +210,7 @@ oc_blockwise_find_buffer(oc_list_t list, const char *href, int href_len,
   oc_blockwise_state_t *buffer = oc_list_head(list);
   while (buffer) {
     if (strncmp(href, oc_string(buffer->href), href_len) == 0 &&
-        memcmp(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t)) == 0 &&
+        oc_endpoint_compare(&buffer->endpoint, endpoint) == 0 &&
         buffer->method == method && buffer->role == role)
       break;
     buffer = buffer->next;

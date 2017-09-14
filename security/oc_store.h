@@ -17,13 +17,13 @@
 #ifndef OC_STORE_H_
 #define OC_STORE_H_
 
-void oc_sec_load_pstat(void);
-void oc_sec_load_doxm(void);
-void oc_sec_load_cred(void);
-void oc_sec_load_acl(void);
-void oc_sec_dump_pstat(void);
-void oc_sec_dump_cred(void);
-void oc_sec_dump_doxm(void);
-void oc_sec_dump_acl(void);
+void oc_sec_load_pstat(int device);
+void oc_sec_load_doxm(int device);
+void oc_sec_load_cred(int device);
+void oc_sec_load_acl(int device);
+void oc_sec_dump_pstat(int device);
+void oc_sec_dump_cred(int device);
+void oc_sec_dump_doxm(int device);
+void oc_sec_dump_acl(int device);
 
 #endif /* OC_STORE_H_ */

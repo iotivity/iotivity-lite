@@ -142,7 +142,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static void
 register_resources(void)
 {
-  oc_resource_t *res1 = oc_new_resource("/light/1", 1, 0);
+  oc_resource_t *res1 = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, "oic.r.light");
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
   oc_resource_set_default_interface(res1, OC_IF_RW);
@@ -153,7 +153,7 @@ register_resources(void)
   oc_resource_set_request_handler(res1, OC_PUT, put_light, NULL);
   oc_add_resource(res1);
 
-  oc_resource_t *res2 = oc_new_resource("/count/1", 1, 0);
+  oc_resource_t *res2 = oc_new_resource("counter", "/count/1", 1, 0);
   oc_resource_bind_resource_type(res2, "oic.r.counter");
   oc_resource_bind_resource_interface(res2, OC_IF_R);
   oc_resource_set_default_interface(res2, OC_IF_R);
@@ -164,7 +164,7 @@ register_resources(void)
   oc_add_resource(res2);
 
 #if defined(OC_COLLECTIONS)
-  oc_resource_t *col = oc_new_collection("/lights", 1, 0);
+  oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 

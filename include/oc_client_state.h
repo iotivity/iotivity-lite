@@ -18,6 +18,7 @@
 #define OC_CLIENT_STATE_H
 
 #include "messaging/coap/constants.h"
+#include "oc_endpoint.h"
 #include "oc_ri.h"
 #include <stdbool.h>
 #ifdef OC_BLOCK_WISE
@@ -34,19 +35,16 @@ typedef struct
   void *user_data;
 } oc_client_response_t;
 
-typedef struct
-{
-  oc_endpoint_t endpoint;
-} oc_server_handle_t;
-
 typedef enum {
   OC_STOP_DISCOVERY = 0,
   OC_CONTINUE_DISCOVERY
 } oc_discovery_flags_t;
 
-typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
-  const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-  oc_server_handle_t *, void *);
+typedef oc_discovery_flags_t (*oc_discovery_handler_t)(const char *,
+                                                       const char *,
+                                                       oc_string_array_t,
+                                                       oc_interface_mask_t,
+                                                       oc_endpoint_t *, void *);
 
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
 
@@ -63,7 +61,7 @@ typedef struct oc_client_cb_s
   uint8_t token[COAP_TOKEN_LEN];
   uint8_t token_len;
   uint16_t mid;
-  oc_server_handle_t server;
+  oc_endpoint_t *endpoint;
   oc_client_handler_t handler;
   void *user_data;
   bool discovery;
@@ -82,13 +80,12 @@ bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                             oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
 
-oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
-                                      oc_server_handle_t *server,
+oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
                                       oc_method_t method,
                                       oc_client_handler_t handler, oc_qos_t qos,
                                       void *user_data);
 
-oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
+oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                                     oc_method_t method);
 
 oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,

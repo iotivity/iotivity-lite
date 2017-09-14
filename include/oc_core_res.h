@@ -24,7 +24,8 @@ typedef void (*oc_core_add_device_cb_t)(void *data);
 
 typedef struct oc_device_info_s
 {
-  oc_uuid_t uuid;
+  oc_uuid_t di;
+  oc_uuid_t pid;
   oc_string_t name;
   oc_string_t icv;
   oc_string_t dmv;
@@ -46,18 +47,14 @@ oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
 
 int oc_core_get_num_devices(void);
 
-int oc_core_get_num_resources(void);
-
-void oc_core_set_device_id(oc_uuid_t *uuid);
-
 oc_uuid_t *oc_core_get_device_id(int device);
 
 void oc_core_encode_interfaces_mask(CborEncoder *parent,
                                     oc_interface_mask_t interface);
 
-oc_resource_t *oc_core_get_resource_by_index(int type);
+oc_resource_t *oc_core_get_resource_by_index(int type, int device);
 
-oc_resource_t *oc_core_get_resource_by_uri(const char *uri);
+oc_resource_t *oc_core_get_resource_by_uri(const char *uri, int device);
 
 void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
 

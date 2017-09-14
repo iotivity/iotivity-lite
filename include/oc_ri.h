@@ -89,8 +89,8 @@ typedef enum {
 } oc_interface_mask_t;
 
 typedef enum {
-  OCF_RES = 0,
-  OCF_P,
+  OCF_P = 0,
+  OCF_RES,
   OCF_CON,
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
@@ -101,11 +101,7 @@ typedef enum {
   OCF_D
 } oc_core_resource_t;
 
-#ifndef OC_DYNAMIC_ALLOCATION
-#define NUM_OC_CORE_RESOURCES (OCF_D + OC_MAX_NUM_DEVICES)
-#else /* !OC_DYNAMIC_ALLOCATION */
-#define NUM_OC_CORE_RESOURCES (OCF_D + 1)
-#endif /* OC_DYNAMIC_ALLOCATION */
+#define OC_NUM_CORE_RESOURCES_PER_DEVICE (1 + OCF_D)
 
 typedef struct oc_resource_s oc_resource_t;
 
@@ -135,6 +131,7 @@ struct oc_resource_s
 {
   struct oc_resource_s *next;
   int device;
+  oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
   oc_interface_mask_t interfaces;
@@ -185,7 +182,8 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
 
 int oc_status_code(oc_status_t key);
 
-oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len);
+oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len,
+                                             int device);
 
 oc_resource_t *oc_ri_get_app_resources(void);
 
