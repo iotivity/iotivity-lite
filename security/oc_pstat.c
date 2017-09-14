@@ -26,19 +26,19 @@
 static oc_sec_pstat_t pstat;
 
 oc_sec_pstat_t *
-oc_sec_get_pstat(void)
+oc_sec_get_pstat(int device)
 {
   return &pstat;
 }
 
 bool
-oc_sec_provisioned(void)
+oc_sec_provisioned(int device)
 {
   return pstat.isop;
 }
 
 void
-oc_sec_pstat_default(void)
+oc_sec_pstat_default(int device)
 {
   pstat.isop = false;
   pstat.cm = 2;
@@ -48,12 +48,13 @@ oc_sec_pstat_default(void)
 }
 
 void
-oc_sec_encode_pstat(void)
+oc_sec_encode_pstat(int device)
 {
   char uuid[37];
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   oc_rep_start_root_object();
-  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_PSTAT));
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
   oc_rep_set_uint(root, cm, pstat.cm);
   oc_rep_set_uint(root, tm, pstat.tm);
   oc_rep_set_int(root, om, pstat.om);
@@ -67,9 +68,9 @@ oc_sec_encode_pstat(void)
 }
 
 bool
-oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage)
+oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   while (rep != NULL) {
     switch (rep->type) {
     case BOOL:
@@ -77,7 +78,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage)
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         pstat.isop = rep->value.boolean;
         if (pstat.isop) {
-          oc_sec_set_post_otm_acl();
+          oc_sec_set_post_otm_acl(device);
         }
       } else {
         return false;
@@ -124,7 +125,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   switch (interface) {
   case OC_IF_BASELINE: {
-    oc_sec_encode_pstat();
+    oc_sec_encode_pstat(request->resource->device);
     oc_send_response(request, OC_STATUS_OK);
   } break;
   default:
@@ -137,9 +138,10 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_pstat(request->request_payload, false)) {
+  if (oc_sec_decode_pstat(request->request_payload, false,
+                          request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_pstat();
+    oc_sec_dump_pstat(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }

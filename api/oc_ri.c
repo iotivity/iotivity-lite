@@ -41,14 +41,9 @@
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
 
-#ifdef OC_SERVER
-#ifdef OC_COLLECTIONS
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
-#ifdef OC_SCENES
-#include "oc_scene.h"
-#endif /* OC_SCENES */
-#endif /* OC_COLLECTIONS */
-#endif /* OC_SERVER */
+#endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
@@ -69,7 +64,7 @@ OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
 OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
-        NUM_OC_CORE_RESOURCES + OC_MAX_APP_RESOURCES +
+        1 + OCF_D * OC_MAX_NUM_DEVICES + OC_MAX_APP_RESOURCES +
           OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
@@ -97,7 +92,7 @@ set_mpro_status_codes(void)
   oc_coap_status_codes[OC_STATUS_BAD_REQUEST] = BAD_REQUEST_4_00;
   /* UNAUTHORIZED_401 */
   oc_coap_status_codes[OC_STATUS_UNAUTHORIZED] = UNAUTHORIZED_4_01;
-  /* BAD_OPTION_402 */
+  /* BAD_REQUEST_400 */
   oc_coap_status_codes[OC_STATUS_BAD_OPTION] = BAD_OPTION_4_02;
   /* FORBIDDEN_403 */
   oc_coap_status_codes[OC_STATUS_FORBIDDEN] = FORBIDDEN_4_03;
@@ -240,7 +235,7 @@ stop_processes(void)
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resource_by_uri(const char *uri, int uri_len)
+oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
 {
   int skip = 0;
   if (uri[0] != '/')
@@ -248,18 +243,16 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len)
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
     if ((int)oc_string_len(res->uri) == (uri_len + skip) &&
-        strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0)
+        strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0 &&
+        res->device == device)
       return res;
     res = res->next;
   }
 
 #ifdef OC_COLLECTIONS
-  if (!res)
-    res = (oc_resource_t *)oc_get_collection_by_uri(uri, uri_len);
-#ifdef OC_SCENES
-  if (!res)
-    res = oc_get_scene_member_by_uri(uri, uri_len);
-#endif /* OC_SCENES */
+  if (!res) {
+    res = (oc_resource_t *)oc_get_collection_by_uri(uri, uri_len, device);
+  }
 #endif /* OC_COLLECTIONS */
 
   return res;
@@ -290,8 +283,6 @@ oc_ri_init(void)
 
   oc_process_init();
   start_processes();
-
-  oc_create_discovery_resource();
 }
 
 void
@@ -311,6 +302,9 @@ oc_ri_alloc_resource(void)
 void oc_ri_free_resource_properties(oc_resource_t *resource)
 {
   if (resource) {
+    if (oc_string_len(resource->name) > 0) {
+      oc_free_string(&(resource->name));
+    }
     if (oc_string_len(resource->uri) > 0) {
       oc_free_string(&(resource->uri));
     }
@@ -348,32 +342,6 @@ oc_ri_add_resource(oc_resource_t *resource)
   return valid;
 }
 #endif /* OC_SERVER */
-
-bool
-oc_ri_filter_rt(oc_resource_t *resource, const char *rt, int rt_len)
-{
-  if (resource == NULL) {
-    return false;
-  }
-
-  bool match = true;
-  if (rt_len > 0 && rt && *rt) {
-    match = false;
-    int i;
-    for (i = 0;
-         i < (int)oc_string_array_get_allocated_size(resource->types);
-         i++) {
-      int size = oc_string_array_get_item_size(resource->types, i);
-      const char *t =
-        (const char *)oc_string_array_get_item(resource->types, i);
-      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
-        match = true;
-        break;
-      }
-    }
-  }
-  return match;
-}
 
 void
 oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
@@ -601,9 +569,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
-#ifdef OC_SCENES
-  bool resource_is_scene_member = false;
-#endif /* OC_SCENES*/
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
@@ -733,9 +698,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared core resources.
    */
   if (!bad_request) {
-    int i, num_core_resources = oc_core_get_num_resources();
-    for (i = 0; i < num_core_resources; i++) {
-      resource = oc_core_get_resource_by_index(i);
+    int i;
+    for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
+      resource = oc_core_get_resource_by_index(i, endpoint->device);
       if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
@@ -749,30 +714,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared application resources.
    */
   if (!cur_resource && !bad_request) {
-    for (resource = oc_ri_get_app_resources(); resource;
-         resource = resource->next) {
-      if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
-          strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
-                  uri_path_len) == 0) {
-        request_obj.resource = cur_resource = resource;
-        break;
-      }
-    }
+    request_obj.resource = cur_resource =
+      oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
+
 #if defined(OC_COLLECTIONS)
-    if (!cur_resource) {
-      request_obj.resource = cur_resource =
-        (oc_resource_t *)oc_get_collection_by_uri(uri_path, uri_path_len);
-      if (cur_resource)
-        resource_is_collection = true;
+    if (cur_resource && oc_check_if_collection(cur_resource)) {
+      resource_is_collection = true;
     }
-#ifdef OC_SCENES
-    if (!cur_resource) {
-      request_obj.resource = cur_resource =
-        oc_get_scene_member_by_uri(uri_path, uri_path_len);
-      if (cur_resource)
-        resource_is_scene_member = true;
-    }
-#endif /* OC_SCENES */
 #endif /* OC_COLLECTIONS */
   }
 #endif /* OC_SERVER */
@@ -824,11 +772,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (resource_is_collection) {
         oc_handle_collection_request(method, &request_obj, interface);
       } else
-#ifdef OC_SCENES
-      if (resource_is_scene_member) {
-        oc_handle_scene_member_request(method, &request_obj, interface);
-      } else
-#endif /* OC_SCENES */
 #endif  /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
          * its handler for the requested method. If it has not
@@ -1056,10 +999,10 @@ oc_ri_remove_client_cb(void *data)
   oc_client_cb_t *client_cb = (oc_client_cb_t *)data;
   oc_blockwise_state_t *response_buffer = oc_blockwise_find_response_buffer(
     oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    &client_cb->server.endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
+    client_cb->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
   oc_blockwise_state_t *request_buffer = oc_blockwise_find_request_buffer(
     oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    &client_cb->server.endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
+    client_cb->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
   if (request_buffer)
     oc_blockwise_free_request_buffer(request_buffer);
   if (response_buffer)
@@ -1216,7 +1159,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 }
 
 oc_client_cb_t *
-oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
+oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                     oc_method_t method)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs);
@@ -1224,9 +1167,7 @@ oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
   while (cb != NULL) {
     if (oc_string_len(cb->uri) == strlen(uri) &&
         strncmp(oc_string(cb->uri), uri, strlen(uri)) == 0 &&
-        memcmp(&cb->server.endpoint, &server->endpoint,
-               sizeof(oc_endpoint_t)) == 0 &&
-        cb->method == method)
+        cb->endpoint == endpoint && cb->method == method)
       return cb;
 
     cb = cb->next;
@@ -1236,7 +1177,7 @@ oc_ri_get_client_cb(const char *uri, oc_server_handle_t *server,
 }
 
 oc_client_cb_t *
-oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
+oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
                       oc_method_t method, oc_client_handler_t handler,
                       oc_qos_t qos, void *user_data)
 {
@@ -1263,7 +1204,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_server_handle_t *server,
   cb->discovery = false;
   cb->timestamp = oc_clock_time();
   cb->observe_seq = -1;
-  memcpy(&cb->server, server, sizeof(oc_server_handle_t));
+  cb->endpoint = endpoint;
 
   oc_list_add(client_cbs, cb);
   return cb;

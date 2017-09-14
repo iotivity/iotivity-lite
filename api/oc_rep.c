@@ -39,6 +39,12 @@ oc_rep_new(uint8_t *out_payload, int size)
   cbor_encoder_init(&g_encoder, out_payload, size, 0);
 }
 
+CborError
+oc_rep_get_cbor_errno(void)
+{
+  return g_err;
+}
+
 int
 oc_rep_finalize(void)
 {

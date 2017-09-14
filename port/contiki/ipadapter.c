@@ -14,13 +14,13 @@
  // limitations under the License.
  */
 
-#include "oc_buffer.h"
-#include "port/oc_connectivity.h"
-
 #include "contiki.h"
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/rpl/rpl.h"
+#include "oc_buffer.h"
+#include "oc_endpoint.h"
+#include "port/oc_connectivity.h"
 #include "simple-udp.h"
 
 #define OCF_MCAST_PORT_UNSECURED (5683)
@@ -28,6 +28,7 @@
 
 static struct simple_udp_connection server, mcast;
 PROCESS(ip_adapter_process, "IP Adapter");
+static uip_ipaddr_t ipaddr, mcastaddr;
 
 void
 handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
@@ -65,11 +66,24 @@ receive(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
                           sender_port);
 }
 
+oc_endpoint_t *
+oc_connectivity_get_endpoints(int device)
+{
+  (void)device;
+  oc_init_endpoint_list();
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+  ep.flags = IPV6;
+  memcpy(ep.addr.ipv6.address, ipaddr.u8, 16);
+  ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+  ep.device = 0;
+  oc_add_endpoint_to_list(&ep);
+  return oc_get_endpoint_list();
+}
+
 static uip_ipaddr_t *
 set_global_address(void)
 {
-  static uip_ipaddr_t ipaddr, mcast;
-
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
@@ -77,8 +91,8 @@ set_global_address(void)
   /*
    * Joining the OCF multicast group at ff0x::158
    */
-  uip_ip6addr(&mcast, 0xff02, 0, 0, 0, 0, 0, 0, 0x0158);
-  uip_ds6_maddr_t *rv = uip_ds6_maddr_add(&mcast);
+  uip_ip6addr(&mcastaddr, 0xff02, 0, 0, 0, 0, 0, 0, 0x0158);
+  uip_ds6_maddr_t *rv = uip_ds6_maddr_add(&mcastaddr);
   if (rv)
     OC_DBG("Joined OCF multicast group\n");
   else
@@ -140,15 +154,17 @@ oc_send_buffer(oc_message_t *message)
 }
 
 int
-oc_connectivity_init(void)
+oc_connectivity_init(int device)
 {
+  (void)device;
   process_start(&ip_adapter_process, NULL);
   return 0;
 }
 
 void
-oc_connectivity_shutdown(void)
+oc_connectivity_shutdown(int device)
 {
+  (void)device;
   process_exit(&ip_adapter_process);
 }
 
@@ -159,11 +175,6 @@ oc_send_discovery_request(oc_message_t *message)
   oc_send_buffer(message);
 }
 #endif /* OC_CLIENT */
-
-// TODO:
-#ifdef OC_SECURITY
-uint16_t oc_connectivity_get_dtls_port(void);
-#endif /* OC_SECURITY */
 
 /*
  * oc_network_event_handler_mutex_* are defined only to comply with the

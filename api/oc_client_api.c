@@ -102,7 +102,7 @@ prepare_coap_request(oc_client_cb_t *cb)
     type = COAP_TYPE_CON;
   }
 
-  transaction = coap_new_transaction(cb->mid, &cb->server.endpoint);
+  transaction = coap_new_transaction(cb->mid, cb->endpoint);
 
   if (!transaction) {
     return false;
@@ -113,7 +113,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 #else  /* !OC_BLOCK_WISE */
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
-      oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->server.endpoint,
+      oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
       return false;
@@ -145,14 +145,25 @@ prepare_coap_request(oc_client_cb_t *cb)
   return true;
 }
 
+void
+oc_free_server_endpoints(oc_endpoint_t *endpoint)
+{
+  oc_endpoint_t *next;
+  while (endpoint != NULL) {
+    next = endpoint->next;
+    oc_free_endpoint(endpoint);
+    endpoint = next;
+  }
+}
+
 bool
-oc_do_delete(const char *uri, oc_server_handle_t *server,
+oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, server, OC_DELETE,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE,
                                              client_handler, qos, user_data);
 
   if (!cb)
@@ -169,14 +180,14 @@ oc_do_delete(const char *uri, oc_server_handle_t *server,
 }
 
 bool
-oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
+oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_GET, client_handler, qos, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET,
+                                             client_handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -194,14 +205,14 @@ oc_do_get(const char *uri, oc_server_handle_t *server, const char *query,
 }
 
 bool
-oc_init_put(const char *uri, oc_server_handle_t *server, const char *query,
+oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_PUT, client_handler, qos, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_PUT,
+                                             client_handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -212,14 +223,14 @@ oc_init_put(const char *uri, oc_server_handle_t *server, const char *query,
 }
 
 bool
-oc_init_post(const char *uri, oc_server_handle_t *server, const char *query,
+oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_POST, client_handler, qos, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_POST,
+                                             client_handler, qos, user_data);
   if (!cb) {
     return false;
   }
@@ -243,14 +254,14 @@ oc_do_post(void)
 }
 
 bool
-oc_do_observe(const char *uri, oc_server_handle_t *server, const char *query,
+oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
               oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb =
-    oc_ri_alloc_client_cb(uri, server, OC_GET, client_handler, qos, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET,
+                                             client_handler, qos, user_data);
   if (!cb)
     return false;
 
@@ -270,9 +281,9 @@ oc_do_observe(const char *uri, oc_server_handle_t *server, const char *query,
 }
 
 bool
-oc_stop_observe(const char *uri, oc_server_handle_t *server)
+oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
 {
-  oc_client_cb_t *cb = oc_ri_get_client_cb(uri, server, OC_GET);
+  oc_client_cb_t *cb = oc_ri_get_client_cb(uri, endpoint, OC_GET);
 
   if (!cb)
     return false;
@@ -296,16 +307,14 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
                      oc_discovery_handler_t handler, void *user_data)
 {
   bool status = false;
-  oc_server_handle_t handle;
   oc_client_handler_t client_handler = {
     .discovery = handler,
   };
 
   oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
-  memcpy(&handle.endpoint, &mcast4, sizeof(oc_endpoint_t));
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", &handle, OC_GET, client_handler, LOW_QOS, user_data);
+    "/oic/res", &mcast4, OC_GET, client_handler, LOW_QOS, user_data);
 
   if (!cb)
     return false;
@@ -337,14 +346,11 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                       0, 0, 0, 0, 0, 0, 0, 0x01, 0x58);
   mcast.addr.ipv6.scope = 0;
 
-  oc_server_handle_t handle;
-  memcpy(&handle.endpoint, &mcast, sizeof(oc_endpoint_t));
-
   oc_client_handler_t client_handler;
   client_handler.discovery = handler;
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", &handle, OC_GET, client_handler, LOW_QOS, user_data);
+    "/oic/res", &mcast, OC_GET, client_handler, LOW_QOS, user_data);
 
   if (!cb)
     return false;

@@ -33,7 +33,7 @@ OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 
 oc_sec_cred_t *
-oc_sec_find_cred(oc_uuid_t *subjectuuid)
+oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 {
   oc_sec_cred_t *cred = oc_list_head(creds_l);
   while (cred != NULL) {
@@ -46,9 +46,9 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid)
 }
 
 oc_sec_cred_t *
-oc_sec_get_cred(oc_uuid_t *subjectuuid)
+oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 {
-  oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid);
+  oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid, device);
   if (cred == NULL) {
     cred = oc_memb_alloc(&creds);
     if (cred != NULL) {
@@ -63,12 +63,13 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid)
 }
 
 void
-oc_sec_encode_cred(bool persist)
+oc_sec_encode_cred(bool persist, int device)
 {
   oc_sec_cred_t *creds = oc_list_head(creds_l);
   char uuid[37];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_CRED));
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_CRED, device));
   oc_rep_set_array(root, creds);
   if (creds == NULL) {
     oc_rep_object_array_start_item(creds);
@@ -96,9 +97,9 @@ oc_sec_encode_cred(bool persist)
 }
 
 bool
-oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
+oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   int credid = 0, credtype = 0;
   char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
@@ -190,7 +191,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner)
         }
         if (valid_cred) {
           oc_str_to_uuid(subjectuuid, &subject);
-          credobj = oc_sec_get_cred(&subject);
+          credobj = oc_sec_get_cred(&subject, device);
           credobj->credid = credid;
           credobj->credtype = credtype;
 
@@ -217,7 +218,7 @@ get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  oc_sec_encode_cred(false);
+  oc_sec_encode_cred(false, request->resource->device);
   oc_send_response(request, OC_STATUS_OK);
 }
 
@@ -248,7 +249,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
   if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
     oc_send_response(request, OC_STATUS_DELETED);
-    oc_sec_dump_cred();
+    oc_sec_dump_cred(request->resource->device);
     return;
   }
   oc_send_response(request, OC_STATUS_NOT_FOUND);
@@ -259,9 +260,10 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm();
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(request->resource->device);
   oc_sec_cred_t *owner = NULL;
-  bool success = oc_sec_decode_cred(request->request_payload, &owner);
+  bool success = oc_sec_decode_cred(request->request_payload, &owner,
+                                    request->resource->device);
   if (owner && memcmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) {
     oc_uuid_t *dev = oc_core_get_device_id(0);
     oc_sec_derive_owner_psk(request->origin, (const uint8_t *)OXM_JUST_WORKS,
@@ -272,7 +274,7 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {
     oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_cred();
+    oc_sec_dump_cred(request->resource->device);
   }
 }
 
