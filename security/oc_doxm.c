@@ -30,7 +30,7 @@ static oc_sec_doxm_t doxm;
 // Fix.. multiple devices.. how many doxms, when we retrieve
 // credentials, how do we correlate between creds and devices?
 void
-oc_sec_doxm_default(void)
+oc_sec_doxm_default(int device)
 {
   doxm.oxmsel = 0;
   doxm.sct = 1;
@@ -43,12 +43,13 @@ oc_sec_doxm_default(void)
 }
 
 void
-oc_sec_encode_doxm(void)
+oc_sec_encode_doxm(int device)
 {
   int oxms[1] = { 0 };
   char uuid[37];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_SEC_DOXM));
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
   oc_rep_set_int_array(root, oxms, oxms, 1);
   oc_rep_set_int(root, oxmsel, doxm.oxmsel);
   oc_rep_set_int(root, sct, doxm.sct);
@@ -63,7 +64,7 @@ oc_sec_encode_doxm(void)
 }
 
 oc_sec_doxm_t *
-oc_sec_get_doxm(void)
+oc_sec_get_doxm(int device)
 {
   return &doxm;
 }
@@ -80,7 +81,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
                    (doxm.owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       oc_ignore_request(request);
     } else {
-      oc_sec_encode_doxm();
+      oc_sec_encode_doxm(request->resource->device);
       oc_send_response(request, OC_STATUS_OK);
     }
   } break;
@@ -90,7 +91,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 bool
-oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage)
+oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
 {
   while (rep != NULL) {
     switch (rep->type) {
@@ -144,9 +145,10 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_doxm(request->request_payload, false)) {
+  if (oc_sec_decode_doxm(request->request_payload, false,
+                         request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_doxm();
+    oc_sec_dump_doxm(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }

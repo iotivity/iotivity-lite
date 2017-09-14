@@ -20,18 +20,8 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "util/oc_memb.h"
-#ifdef OC_SCENES
-#include "oc_scene.h"
-#endif /* OC_SCENES */
 
-#ifndef OC_MAX_NUM_COLLECTIONS
-#define OC_MAX_NUM_COLLECTIONS 0
-#endif
-#ifndef OC_MAX_NUM_SCENES
-#define OC_MAX_NUM_SCENES 0
-#endif
-
-OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS + OC_MAX_NUM_SCENES);
+OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);
 OC_LIST(oc_collections);
 OC_MEMB(oc_links_s, oc_link_t, OC_MAX_APP_RESOURCES);
 
@@ -51,26 +41,7 @@ void
 oc_collection_free(oc_collection_t *collection)
 {
   if (collection != NULL) {
-#ifdef OC_SCENES
-    if (collection->collection_type == OC_CT_SCENE_COLLECTION) {
-      /* scene collections are in the scene list */
-      oc_collection_remove_resource(oc_scene_get_scenelist(), (oc_resource_t*)collection);
-    }
-    else {
-      /* regular collections and scene list are in oc_collections */
-      oc_list_remove(oc_collections, collection);
-    }
-#else
     oc_list_remove(oc_collections, collection);
-#endif
-    if (oc_string_len(collection->name) > 0) {
-      oc_free_string(&(collection->name));
-    }
-#ifdef OC_SCENES
-    if (oc_string_len(collection->last_scene) > 0) {
-      oc_free_string(&(collection->last_scene));
-    }
-#endif
     oc_ri_free_resource_properties((oc_resource_t*)collection);
 
     oc_link_t *link;
@@ -85,16 +56,18 @@ oc_collection_free(oc_collection_t *collection)
 oc_link_t *
 oc_new_link(oc_resource_t *resource)
 {
-  oc_link_t *link = oc_memb_alloc(&oc_links_s);
-  if (link) {
-    oc_new_string_array(&link->rel, 3);
-    oc_string_array_add_item(link->rel, "hosts");
-    link->resource = resource;
-    link->next = 0;
-    memset(&link->ins, 0, sizeof(oc_string_t));
-    return link;
+  if (resource) {
+    oc_link_t *link = oc_memb_alloc(&oc_links_s);
+    if (link) {
+      oc_new_string_array(&link->rel, 3);
+      oc_string_array_add_item(link->rel, "hosts");
+      link->resource = resource;
+      link->next = 0;
+      memset(&link->ins, 0, sizeof(oc_string_t));
+      return link;
+    }
+    OC_WRN("insufficient memory to create new link\n");
   }
-  OC_WRN("insufficient memory to create new link\n");
   return NULL;
 }
 
@@ -144,23 +117,13 @@ oc_collection_get_links(oc_resource_t* collection)
 }
 
 void
-oc_collection_remove_resource(oc_collection_t *collection, oc_resource_t *resource)
-{
-  oc_link_t *link = oc_get_link_by_resource(collection, resource);
-  if (link) {
-    oc_collection_remove_link((oc_resource_t*)collection, link);
-    oc_delete_link(link);
-  }
-}
-
-void
 oc_link_add_rel(oc_link_t *link, const char *rel)
 {
   oc_string_array_add_item(link->rel, rel);
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
+oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -169,17 +132,11 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len)
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
     if ((int)oc_string_len(collection->uri) == (uri_path_len + 1) &&
-        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0)
+        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0 &&
+        collection->device == device)
       break;
     collection = collection->next;
   }
-#ifdef OC_SCENES
-  if (collection == NULL) {
-    /* Lookup scene collections. The scene list is already part of the
-       regular collections and hence already addressed above. */
-    collection = oc_get_scene_collection_by_uri(uri_path, uri_path_len);
-  }
-#endif
   return collection;
 }
 
@@ -208,21 +165,6 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_pa
   return link;
 }
 
-oc_link_t *
-oc_get_link_by_resource(oc_collection_t *collection, oc_resource_t *resource)
-{
-  if (collection && resource) {
-    oc_link_t *link = oc_list_head(collection->links);
-    while (link != NULL) {
-      if (link->resource == resource) {
-        return link;
-      }
-      link = link->next;
-    }
-  }
-  return NULL;
-}
-
 bool
 oc_check_if_collection(oc_resource_t *resource)
 {
@@ -232,11 +174,7 @@ oc_check_if_collection(oc_resource_t *resource)
       return true;
     collection = collection->next;
   }
-#ifdef OC_SCENES
-  return oc_check_if_scene_collection(resource);
-#else
   return false;
-#endif
 }
 
 void
@@ -245,43 +183,45 @@ oc_collection_add(oc_collection_t *collection)
   oc_list_add(oc_collections, collection);
 }
 
+static bool
+oc_link_filter_rt(oc_link_t *link, const char *rt, int rt_len)
+{
+  bool match = true;
+  if (rt_len > 0) {
+    match = false;
+    int i;
+    for (i = 0;
+         i < (int)oc_string_array_get_allocated_size(link->resource->types);
+         i++) {
+      int size = oc_string_array_get_item_size(link->resource->types, i);
+      const char *t =
+        (const char *)oc_string_array_get_item(link->resource->types, i);
+      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        match = true;
+        break;
+      }
+    }
+  }
+  return match;
+}
+
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t interface)
 {
-  int code = 69; /* status ok */
+  int code = 69;
   char *rt;
   int rt_len =
     oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   oc_link_t *link = oc_list_head(collection->links);
-
   switch (interface) {
   case OC_IF_BASELINE: {
     oc_rep_start_root_object();
     oc_process_baseline_interface(request->resource);
-#ifdef OC_SCENES
-    if (collection->collection_type != OC_CT_COLLECTION) {
-      const char *wk;
-      if (collection->collection_type == OC_CT_SCENE_COLLECTION) {
-        const char *last_scene = (oc_string_len(collection->last_scene) > 0 ?
-                                  oc_string(collection->last_scene) : "");
-        oc_rep_set_text_string(root, lastScene, last_scene);
-        oc_rep_set_string_array(root, sceneValues, collection->scene_values);
-        wk = "oic.wk.scenemember";
-      }
-      else {
-        wk = "oic.wk.scenecollection";
-      }
-      /* Add mandatory rts array. */
-      oc_rep_set_array(root, rts);
-      oc_rep_add_text_string(rts, wk);
-      oc_rep_close_array(root, rts);
-    }
-#endif
     oc_rep_set_array(root, links);
     while (link != NULL) {
-      if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+      if (oc_link_filter_rt(link, rt, rt_len)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -294,13 +234,25 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-        if (link->resource->properties & OC_SECURE) {
-          oc_rep_set_boolean(p, sec, true);
-          oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
-        }
-#endif /* OC_SECURITY */
         oc_rep_close_object(links, p);
+
+        // eps
+        oc_rep_set_array(links, eps);
+        oc_endpoint_t *eps =
+          oc_connectivity_get_endpoints(link->resource->device);
+        while (eps != NULL) {
+          oc_rep_object_array_start_item(eps);
+          oc_string_t ep;
+          if (oc_endpoint_to_string(eps, &ep) == 0) {
+            oc_rep_set_text_string(eps, ep, oc_string(ep));
+            oc_free_string(&ep);
+          }
+          oc_rep_object_array_end_item(eps);
+          eps = eps->next;
+        }
+        oc_free_endpoint_list();
+        oc_rep_close_array(links, eps);
+
         oc_rep_object_array_end_item(links);
       }
       link = link->next;
@@ -311,7 +263,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   case OC_IF_LL: {
     oc_rep_start_links_array();
     while (link != NULL) {
-      if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+      if (oc_link_filter_rt(link, rt, rt_len)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -324,13 +276,25 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-        if (link->resource->properties & OC_SECURE) {
-          oc_rep_set_boolean(p, sec, true);
-          oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
-        }
-#endif /* OC_SECURITY */
         oc_rep_close_object(links, p);
+
+        // eps
+        oc_rep_set_array(links, eps);
+        oc_endpoint_t *eps =
+          oc_connectivity_get_endpoints(link->resource->device);
+        while (eps != NULL) {
+          oc_rep_object_array_start_item(eps);
+          oc_string_t ep;
+          if (oc_endpoint_to_string(eps, &ep) == 0) {
+            oc_rep_set_text_string(eps, ep, oc_string(ep));
+            oc_free_string(&ep);
+          }
+          oc_rep_object_array_end_item(eps);
+          eps = eps->next;
+        }
+        oc_free_endpoint_list();
+        oc_rep_close_array(links, eps);
+
         oc_rep_object_array_end_item(links);
       }
       link = link->next;
@@ -338,12 +302,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     oc_rep_end_links_array();
   } break;
   case OC_IF_B: {
-#ifdef OC_SCENES
-    /* OCF lists for scene collection and scene list "oic.if.a" instead
-       of "oic.if.b" although they are also specified as collections. */
-    if (collection->collection_type != OC_CT_COLLECTION)
-      break;
-#endif
     CborEncoder encoder, prev_link;
     oc_request_t rest_request = { 0 };
     oc_response_t response = { 0 };
@@ -389,7 +347,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         link = oc_list_head(collection->links);
         while (link != NULL) {
           if (link->resource) {
-            if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+            if (oc_link_filter_rt(link, rt, rt_len)) {
               if (!get_delete && oc_string_len(href) > 0 &&
                   memcmp(oc_string(href), oc_string(link->resource->uri),
                          oc_string_len(href)) != 0) {
@@ -487,68 +445,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
     oc_rep_end_links_array();
   } break;
-#ifdef OC_SCENES
-  case OC_IF_A: {
-    /* OCF lists for scene collection and scene list "oic.if.a" instead
-       of "oic.if.b" although they are also specified as collections.
-       But for the scene list the actuator interface makes no sense
-       as available behavior is only READ. */
-    if (collection->collection_type == OC_CT_SCENE_COLLECTION) {
-      switch (method) {
-        case OC_GET:
-          if (oc_string_len(collection->last_scene) > 0) {
-            oc_rep_start_root_object();
-            oc_rep_set_text_string(root, lastScene, oc_string(collection->last_scene));
-            oc_rep_end_root_object();
-          }
-          break;
-        case OC_POST:
-        case OC_PUT: {
-          oc_rep_t *pay = request->request_payload;
-          while (pay != NULL) {
-            if (oc_string_len(pay->name) > 0 &&
-                strcmp(oc_string(pay->name), "lastScene") == 0) {
-              if (pay->type == STRING &&
-                  oc_string_len(pay->value.string) > 0 &&
-                  oc_scene_collection_has_scene(collection,
-                                                oc_string(pay->value.string))) {
-                if (oc_string_len(collection->last_scene) > 0) {
-                  oc_free_string(&(collection->last_scene));
-                }
-                oc_new_string(&(collection->last_scene),
-                              oc_string(pay->value.string),
-                              oc_string_len(pay->value.string));
-                oc_rep_start_root_object();
-                oc_rep_set_text_string(root, lastScene,
-                                       oc_string(collection->last_scene));
-                oc_rep_end_root_object();
-
-                /*
-                  Note:
-                  This is a current work-around to let the app handle the device
-                  updates when the scene is triggered. A later version will apply
-                  the value updates itself.
-                */
-                if (collection->post_handler.cb) {
-                  collection->post_handler.cb(request, OC_IF_A,
-                                              collection->post_handler.user_data);
-                }
-                code = oc_status_code(OC_STATUS_CHANGED);
-              }
-              else {
-                code = oc_status_code(OC_STATUS_BAD_REQUEST);
-              }
-              break;
-            }
-            pay = pay->next;
-          }
-        } break;
-        default:
-          break;
-      }
-    }
-  } break;
-#endif
   default:
     break;
   }

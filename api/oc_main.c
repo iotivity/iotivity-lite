@@ -25,6 +25,7 @@
 #include "util/oc_process.h"
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_dtls.h"
@@ -38,7 +39,7 @@ static const oc_handler_t *app_callbacks;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
 static long _OC_MTU_SIZE = 1024 + COAP_MAX_HEADER_SIZE;
-static long _OC_MAX_APP_DATA_SIZE = 1024;
+static long _OC_MAX_APP_DATA_SIZE = 8192;
 static long _OC_BLOCK_SIZE = 1024;
 
 int
@@ -138,12 +139,9 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_create_svr();
 #endif
 
-  ret = app_callbacks->init();
-  if (ret < 0)
-    goto err;
-
   oc_network_event_handler_mutex_init();
-  ret = oc_connectivity_init();
+
+  ret = app_callbacks->init();
   if (ret < 0)
     goto err;
 
@@ -153,11 +151,11 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
-  oc_sec_load_pstat();
-  oc_sec_load_doxm();
-  oc_sec_load_cred();
+  oc_sec_load_pstat(0);
+  oc_sec_load_doxm(0);
+  oc_sec_load_cred(0);
   oc_sec_dtls_init_context();
-  oc_sec_load_acl();
+  oc_sec_load_acl(0);
 #endif
 
   OC_DBG("oc_main: stack initialized\n");
@@ -192,7 +190,10 @@ oc_main_shutdown(void)
     return;
   }
 
-  oc_connectivity_shutdown();
+  int device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_connectivity_shutdown(device);
+  }
   oc_ri_shutdown();
 
   app_callbacks = NULL;
