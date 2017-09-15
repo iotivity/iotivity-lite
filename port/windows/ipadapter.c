@@ -187,7 +187,7 @@ network_event_thread(void *data)
       }
 
       if (FD_ISSET(dev->server_sock, &setfds)) {
-        int count = recvfrom(dev->server_sock, message->data, OC_PDU_SIZE, 0,
+        int count = recvfrom(dev->server_sock, (char*)message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
         if (count < 0) {
           oc_message_unref(message);
@@ -201,7 +201,7 @@ network_event_thread(void *data)
       }
 
       if (FD_ISSET(dev->mcast_sock, &setfds)) {
-        int count = recvfrom(dev->mcast_sock, message->data, OC_PDU_SIZE, 0,
+        int count = recvfrom(dev->mcast_sock, (char*)message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
         if (count < 0) {
           oc_message_unref(message);
@@ -216,7 +216,7 @@ network_event_thread(void *data)
 
 #ifdef OC_IPV4
       if (FD_ISSET(dev->server4_sock, &setfds)) {
-        int count = recvfrom(dev->server4_sock, message->data, OC_PDU_SIZE, 0,
+        int count = recvfrom(dev->server4_sock, (char*)message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
         if (count < 0) {
           oc_message_unref(message);
@@ -230,7 +230,7 @@ network_event_thread(void *data)
       }
 
       if (FD_ISSET(dev->mcast4_sock, &setfds)) {
-        int count = recvfrom(dev->mcast4_sock, message->data, OC_PDU_SIZE, 0,
+        int count = recvfrom(dev->mcast4_sock, (char*)message->data, OC_PDU_SIZE, 0,
                              (struct sockaddr *)&client, &len);
         if (count < 0) {
           oc_message_unref(message);
@@ -528,7 +528,7 @@ oc_send_buffer(oc_message_t *message)
 
   int bytes_sent = 0, x;
   while (bytes_sent < (int)message->length) {
-    x = sendto(send_sock, message->data + bytes_sent,
+    x = sendto(send_sock, (const char*)(message->data + bytes_sent),
                message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
                sizeof(receiver));
     if (x == SOCKET_ERROR) {

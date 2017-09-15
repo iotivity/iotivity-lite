@@ -22,8 +22,23 @@
 /**
   \mainpage IoTivity-constrained API
 
-  The file \link oc_api.h\endlink is the main entry for all
+  The file <strong>\link oc_api.h\endlink</strong> is the main entry for all
   server and client related OCF functions.
+
+  @warning Avoid using internal functions. The main API often does additional
+   setups and checks before using internal API.
+
+  \page apps Example Apps
+  \section scene_apps Scene Apps
+  \subsection server_scene_app Scene Server Linux App
+  \include server_scenes_linux.c
+  \subsection client_scene_app Scene Client Linux App
+  \include client_scenes_linux.c
+  \section collection_apps Collection Apps
+  \subsection server_collections_app Collection Server Linux App
+  \include server_collections_linux.c
+  \subsection client_collections_app Collection Client Linux App
+  \include client_collections_linux.c
 */
 
 #ifndef OC_API_H
@@ -57,6 +72,7 @@ int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
 
+void oc_set_device_id(oc_uuid_t *uuid);
 int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
@@ -84,6 +100,8 @@ void oc_process_baseline_interface(oc_resource_t *resource);
 /**
   @defgroup oc_collections Collection Support
   Optional group of functions to support OCF compliant collections.
+
+  Examples: See \ref collection_apps
   @{
 */
 
@@ -97,6 +115,8 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   The function only allocates the collection. Use
   \c oc_add_collection() after the setup of the collection
   is complete.
+
+  @note Making collections observable is not supported.
   @param name name of the collection
   @param uri Unique URI of this collection. Must not be NULL.
   @param num_resource_types Number of resources the caller will
@@ -105,10 +125,13 @@ void oc_process_baseline_interface(oc_resource_t *resource);
    be 1 or higher.
   @param device The internal device that should carry this collection.
    This is typically 0.
-  @return A pointer to the new collection (actually oc_collection_t*)
+  @return A pointer to the new collection (actually \c oc_collection_t*)
    or NULL if out of memory.
   @see oc_add_collection
   @see oc_collection_add_link
+  @see oc_delete_collection
+  @see oc_resource_set_discoverable
+  @see oc_new_scene_collection
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
                                  uint8_t num_resource_types, int device);
@@ -124,8 +147,10 @@ oc_resource_t *oc_new_collection(const char *name, const char *uri,
    no longer required.
 
   @param collection The pointer to the collection to delete.
+   The pointer needs to be actually of type \c oc_collection_t.
    If this is NULL, the function does nothing.
   @see oc_collection_get_links
+  @see oc_delete_scene_collection
   @see oc_delete_link
 */
 void oc_delete_collection(oc_resource_t *collection);
@@ -167,6 +192,7 @@ void oc_link_set_ins(oc_link_t *link, const char *ins);
 /**
   @brief Adds the link to the collection.
   @param collection Collection to add the link to. Must not be NULL.
+   The pointer needs to be actually of type \c oc_collection_t.
   @param link Link to add to the collection. The link is not copied.
    Must not be NULL. Must not be added again to this or a different
    collection or a list corruption will occur. To re-add it, remove
@@ -180,6 +206,7 @@ void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
   @brief Removes a link from the collection.
   @param collection Collection to remove the link from. Does nothing
    if this is NULL.
+   The pointer needs to be actually of type \c oc_collection_t.
   @param link The link to remove. Does nothing if this is NULL or not
    part of the collection. The link and its resource are not freed.
 */
@@ -188,36 +215,289 @@ void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
 /**
   @brief Returns the list of links belonging to this collection.
   @param collection Collection to get the links from.
+   The pointer needs to be actually of type \c oc_collection_t.
   @return All links of this collection. The links are not copied. Returns
    NULL if the collection is NULL or contains no links.
   @see oc_collection_add_link
 */
-oc_link_t * oc_collection_get_links(oc_resource_t* collection);
+oc_link_t *oc_collection_get_links(oc_resource_t* collection);
 
 /**
-  @brief Adds a collection to the list of collections.
+  @brief Adds the collection to the list of collections.
 
   If the caller makes the collection discoverable, then it will
   be included in the collection discovery once it has been added
   with this function.
+
   @param collection Collection to add to the list of collections.
+   The pointer needs to be actually of type \c oc_collection_t.
    Must not be NULL. Must not be added twice or a list corruption
    will occur. The collection is not copied.
   @see oc_set_discoverable
   @see oc_new_collection
+  @see oc_add_scene_collection
 */
 void oc_add_collection(oc_resource_t *collection);
 
 /**
   @brief Gets all known collections.
+  @note If scene support is enabled, then the list also includes
+   the scene list. The scene collections are not directly part
+   of the list, but are referenced by the scene list.
   @return All collections that have been added via
    \c oc_add_collection(). The collections are not copied.
    Returns NULL if there are no collections. Collections created
    only via \c oc_new_collection() but not added will not be
-   returned by this function.
+   returned by this function. The returned pointer is actually of type
+   \c oc_collection_t.
 */
 oc_resource_t *oc_collection_get_collections(void);
 /** @} */ // end of oc_collections
+
+/**
+  @defgroup oc_scenes Scene Support
+  Optional group of functions to support OCF compliant scenes.
+
+  The layout of scenes is this:
+  - Scene List:
+    - structure: oc_collection_t (is an \c oc_resource_t)
+    - rt: oic.wk.scenelist
+    - URI: /OCSceneListURI (see \c OC_SCENELIST_URI)
+    - not discoverable by default
+    - is simply in the list of collections in \c oc_collection.h
+  - Scene Collection:
+    - structure: oc_collection_t (is an \c oc_resource_t)
+    - rt: oic.wk.scenecollection
+    - URI: (specified by app)
+    - not discoverable by default
+    - is linked as resource in oc_link_t in the scene list
+  - Scene Member
+    - structure: oc_scene_member_t (is an \c oc_resource_t)
+    - rt: oic.wk.scenemember
+    - URI: (specified by app)
+    - not discoverable by default
+    - is linked as resource in oc_link_t in a scene collection
+  - Scene Mapping
+    - structure: oc_scene_mapping_t (is NOT an \c oc_resource_t)
+    - rt: (none)
+    - URI (none)
+    - discoverability is based on the setting of the parent scene member
+    - is simply in the list of mappings in a scene member
+
+  @warning Use the according scene functions where available instead
+   of the corresponding collection functions. Otherwise the internal
+   lists may become corrupted.
+
+  Comparison to OCF 1.0 and IoTivity:
+  - Scene list, collection and member have interfaces oic.if.a, oic.if.ll
+    and oic.if.baseline as specified in OCF 1.0. IoTivitiy uses oic.if.b
+    instead of oic.if.a.
+  - Property sceneValues is a string array instead of a string just like
+    in IoTivity. OCF 1.0 specifies here a string, but there is already a
+    change request to change this to a string array.
+  - There is currently no support to setup scene collections, members and
+    mappings remotely. Only the local app can create and modify these.
+    Only the property lastScene can also be set remotely.
+
+  @note In case of multiple devices: As of now there is at most one
+   scene list and this is assigned to device 0.
+  @note When a new scene is triggered, then the stack does not update the
+  resource properties by itself yet. This needs to be done by the app.
+
+  To have the app receive the notifications when the value of lastScene
+  changes, register a post handler with each scene collection:
+  \code oc_resource_set_request_handler(
+  <scene collection>, OC_POST, <post callback>, NULL);\endcode
+  The post callback will be called after the lastScene value has been updated.
+  The handler shall NOT send any response. The according scene collection is
+  set as request resource.
+
+  Examples: See \ref scene_apps
+  @{
+*/
+
+/**
+  @brief Creates a new empty scene collection.
+
+  The collection is created with interfaces \c OC_IF_BASELINE,
+  \c OC_IF_A (also default) and \c OC_IF_LL. The resource type
+  "oic.wk.scenecollection" is added.
+  Initially it is neither discoverable nor observable.
+
+  @note Making scene collections observable is not supported.
+
+  @param uri Unique URI of this scene collection. Must not be NULL.
+  @param device The internal device that should carry this scene collection.
+   This is typically 0 (also currently used for the scene list).
+  @return A pointer to the new collection (actually \c oc_collection_t*)
+   or NULL if out of memory.
+  @see oc_add_scene_collection
+  @see oc_delete_scene_collection
+  @see oc_resource_set_discoverable
+  @see oc_new_collection
+*/
+oc_resource_t *oc_new_scene_collection(const char *uri,
+                                       int device);
+
+/**
+  @brief Deletes the specified scene collection.
+
+  The function removes the scene collection from the scene list
+  and releases all direct resources and links associated with this
+  collection including the link holding this collection.
+
+  @note The function does not delete the scene members set in the links.
+   The caller needs to do this on her/his own in case these are
+   no longer required.
+
+  @param scene_collection The pointer to the collection to delete.
+   If this is NULL, the function does nothing.
+   The pointer needs to be actually of type \c oc_collection_t.
+  @see oc_collection_get_links
+  @see oc_delete_collection
+*/
+void oc_delete_scene_collection(oc_resource_t *scene_collection);
+
+/**
+  @brief Adds the scene collection to the scene list.
+
+  If the caller makes the scene collection discoverable, then it will
+  be included in the discovery once it has been added
+  with this function.
+
+  @param scene_collection Scene ollection to add to the scene list.
+   Must not be added twice or a list corruption will occur.
+   The pointer needs to be actually of type \c oc_collection_t.
+   The scene collection is not copied.
+  @return true if the scene collection was added, false if out of
+   memory or if the parameter is NULL.
+  @see oc_set_discoverable
+  @see oc_new_scene_collection
+  @see oc_add_scene_member
+  @see oc_add_collection
+*/
+bool oc_add_scene_collection(oc_resource_t *scene_collection);
+
+/**
+  @brief Creates a new empty scene member.
+
+  The collection is created with interfaces \c OC_IF_BASELINE,
+  \c OC_IF_A (also default) and \c OC_IF_LL. The resource type
+  "oic.wk.scenemember" is added.
+  Initially it is neither discoverable nor observable.
+
+  @note Making scene members observable is not supported.
+
+  @param uri Unique URI of this scene member. Must not be NULL.
+  @param resource The resource to assign to the member. All scene
+   mappings will operate on this resource.
+  @return A pointer to the new member (actually \c oc_scene_member_t*)
+   or NULL if out of memory.
+  @see oc_add_scene_member
+  @see oc_delete_scene_member
+  @see oc_resource_set_discoverable
+  @see oc_add_scene_mapping
+*/
+oc_resource_t *oc_new_scene_member(const char *uri,
+                                   oc_resource_t *resource);
+
+/**
+  @brief Deletes the scene member.
+
+  The function deletes the scene member and scene mappings.
+  The resource hold by the member is not released.
+
+  @note If the scene member is part of a scene collection, then
+   it must be removed from it before deleting it.
+  @param scene_member Scene member to delete. The function does
+   nothing if this is NULL.
+   The pointer needs to be actually of type \c oc_scene_member_t.
+  @see oc_remove_scene_member
+*/
+void oc_delete_scene_member(oc_resource_t *scene_member);
+
+/**
+  @brief Adds the scene member to the scene collection.
+
+  If the caller makes the scene member discoverable, then it will
+  be included in the discovery once it has been added
+  with this function.
+
+  @param scene_collection Scene collection to add the member to.
+   The pointer needs to be actually of type \c oc_collection_t.
+   If this is NULL, then the function does nothing.
+  @param scene_member Scene member to add to the scene collection.
+   Must not be added twice or a list corruption will occur.
+   The pointer needs to be actually of type \c oc_scene_member_t.
+   The scene member is not copied.
+   If this is NULL, then the function does nothing.
+  @return true if the scene member was added, false if out of
+   memory or if any parameter is NULL.
+  @see oc_set_discoverable
+  @see oc_new_scene_member
+  @see oc_remove_scene_member
+  @see oc_add_scene_mapping
+*/
+bool oc_add_scene_member(oc_resource_t *scene_collection,
+                         oc_resource_t *scene_member);
+
+/**
+  @brief Removes the scene member from the scene collection.
+
+  The function removes the scene member from the collection and
+  deletes the holding link. The member and the mappings are not
+  deleted.
+  @param scene_collection Scene collection to remove the member
+   from. If this is NULL, then the function does nothing.
+   The pointer needs to be actually of type \c oc_collection_t.
+  @param scene_member Scene member to remove.
+  The pointer needs to be actually of type \c oc_scene_member_t.
+  If this is NULL, then the function does nothing.
+  @see oc_delete_scene_member
+*/
+void oc_remove_scene_member(oc_resource_t *scene_collection,
+                            oc_resource_t *scene_member);
+
+/**
+  @brief Adds the scene mapping to the scene member.
+
+  Adds the mapping to the scene member. If the specified scene
+  is triggered, then the property is set to the value on
+  the resource of the scene member.
+
+  The function can be called on a member before and after
+  it has been added to a scene collection. If a new scene
+  is specified, then it will be listed in the sceneValues
+  of the parent scene collection as soon as the member
+  is added to the collection.
+
+  @note The function does not check, if the according
+   scene and property combination already exists. The
+   mapping is simply added to the list.
+
+  @note The function does neither verify that the property
+   is available on the resource not that the value
+   makes sense for the property. This is the responsibility
+   of the caller.
+
+  @param scene_member Scene member to add the mapping to.
+   The pointer needs to be actually of type \c oc_scene_member_t.
+   The function does nothing if this is NULL.
+  @param scene Name of the scene.
+   The function does nothing if this is NULL or empty.
+  @param property Name of the property to modify on the resource
+   if the scene is triggered.
+   The function does nothing if this is NULL or empty.
+  @param value Value to change the property to.
+   The function does nothing if this is NULL or empty.
+  @return true if the mapping was added, false if out
+   of memory or if the parameters are invalid
+*/
+bool oc_add_scene_mapping(oc_resource_t *scene_member,
+                          const char *scene,
+                          const char *property,
+                          const char *value);
+/** @} */ // end of oc_scenes
 
 void oc_resource_make_public(oc_resource_t *resource);
 
