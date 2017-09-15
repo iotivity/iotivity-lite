@@ -24,7 +24,11 @@
 #include <assert.h>
 #include <errno.h>
 #include <ifaddrs.h>
+/*
+  This include creates issues with some toolchains and seems not
+  necessary for compilation.
 #include <linux/ipv6.h>
+*/
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
@@ -37,6 +41,12 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+/* Some outdated toolchains do not define IFA_FLAGS.
+   Note: Requires Linux kernel 3.14 or later. */
+#ifndef IFA_FLAGS
+#define IFA_FLAGS (IFA_MULTICAST+1)
+#endif
 
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
