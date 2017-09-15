@@ -35,7 +35,7 @@ static int quit = 0;
 
 #define MAX_URI_LENGTH (30)
 static char scene_uri[MAX_URI_LENGTH];
-static oc_server_handle_t scene_server;
+static oc_endpoint_t *scene_server;
 static int current_scene = -1;
 static oc_string_array_t scenes;
 
@@ -115,7 +115,7 @@ trigger_scene(void *data)
   {
     const char *scene = oc_string_array_get_item(scenes, current_scene);
     PRINT("--> Triggering scene %s\n", scene);
-    if (oc_init_post(scene_uri, &scene_server, "if=oic.if.a", &post_scene_response,
+    if (oc_init_post(scene_uri, scene_server, "if=oic.if.a", &post_scene_response,
                      LOW_QOS, NULL)) {
       oc_rep_start_root_object();
       oc_rep_set_text_string(root, lastScene, scene);
@@ -146,11 +146,11 @@ get_scene_collection_oic_if_baseline(oc_client_response_t *data)
 }
 
 static oc_discovery_flags_t
-discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_server_handle_t *server,
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
           void *user_data)
 {
-  (void)di;
+  (void)anchor;
   (void)interfaces;
   (void)user_data;
   int i;
@@ -161,14 +161,14 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
     char *t = oc_string_array_get_item(types, i);
     PRINT("\ntype: %s\n", t);
     if (strlen(t) == 22 && strncmp(t, "oic.wk.scenecollection", 22) == 0) {
-      memcpy(&scene_server, server, sizeof(oc_server_handle_t));
+      scene_server = endpoint;
 
       strncpy(scene_uri, uri, uri_len);
       scene_uri[uri_len] = '\0';
 
       PRINT("\nSending GET %s?if=oic.if.baseline\n\n", scene_uri);
 
-      oc_do_get(scene_uri, &scene_server, "if=oic.if.baseline", &get_scene_collection_oic_if_baseline,
+      oc_do_get(scene_uri, scene_server, "if=oic.if.baseline", &get_scene_collection_oic_if_baseline,
                 LOW_QOS, NULL);
 
       return OC_STOP_DISCOVERY;
@@ -202,7 +202,10 @@ handle_signal(int signal)
 static int
 app_init(void)
 {
-  return 0;
+  int ret = oc_init_platform("Linux", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.client", "Scene Client", "1.0", "1.0",
+                       NULL, NULL);
+  return ret;
 }
 
 int
