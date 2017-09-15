@@ -36,7 +36,7 @@ oc_scene_get_scenelist(void)
 {
   oc_resource_t *scene_list = 
     (oc_resource_t*)oc_get_collection_by_uri(OC_SCENELIST_URI,
-                                             OC_SCENELIST_URI_LEN);
+                                             OC_SCENELIST_URI_LEN, 0);
   if (scene_list == NULL) {
     /* TBD: does it make sense to allow multiple scene lists /
        one per device? Default now to zero. */

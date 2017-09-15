@@ -147,6 +147,9 @@
     <ClCompile Include="..\..\api\oc_scene.c">
       <Filter>api</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\api\oc_endpoint.c">
+      <Filter>api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />

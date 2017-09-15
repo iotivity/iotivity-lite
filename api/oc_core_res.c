@@ -209,9 +209,9 @@ finalize_payload(uint8_t *buffer, oc_string_t *payload)
 }
 
 void
-oc_set_device_id(oc_uuid_t *uuid)
+oc_core_set_device_id(oc_uuid_t *uuid)
 {
-    next_di = uuid;
+  next_di = uuid;
 }
 
 oc_device_info_t *
@@ -459,5 +459,4 @@ oc_core_get_resource_by_uri(const char *uri, int device)
     int res = OCF_D * device + type;
     return &core_resources[res];
   }
-  return NULL;
 }
