@@ -9,7 +9,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
-#define OC_DTLS_INACTIVITY_TIMEOUT (60)
+#define OC_DTLS_INACTIVITY_TIMEOUT (300)
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -35,19 +35,22 @@ typedef uint64_t oc_clock_time_t;
 
 /* Common paramters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
-#define OC_BLOCK_WISE_SET_MTU (400)
+#define OC_BLOCK_WISE_SET_MTU (700)
 
 /* Maximum size of request/response payloads */
-#define OC_MAX_APP_DATA_SIZE (1024)
+#define OC_MAX_APP_DATA_SIZE (1500)
 
 /* Maximum number of concurrent requests */
 #define OC_MAX_NUM_CONCURRENT_REQUESTS (16)
 
 /* Maximum number of nodes in a payload tree structure */
-#define OC_MAX_NUM_REP_OBJECTS (100)
+#define OC_MAX_NUM_REP_OBJECTS (150)
 
 /* Number of devices on the OCF platform */
-#define OC_MAX_NUM_DEVICES (1)
+#define OC_MAX_NUM_DEVICES (2)
+
+/* Maximum number of endpoints */
+#define OC_MAX_NUM_ENDPOINTS (20)
 
 /* Security layer */
 /* Maximum number of authorized clients */
