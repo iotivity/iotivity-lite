@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		504366351F72AA5900839F98 /* oc_scene.c in Sources */ = {isa = PBXBuildFile; fileRef = 504366321F72AA5800839F98 /* oc_scene.c */; };
+		504366361F72AA5900839F98 /* oc_base64.c in Sources */ = {isa = PBXBuildFile; fileRef = 504366331F72AA5800839F98 /* oc_base64.c */; };
+		504366371F72AA5900839F98 /* oc_endpoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 504366341F72AA5900839F98 /* oc_endpoint.c */; };
+		504366381F72B0FD00839F98 /* oc_endpoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 504366341F72AA5900839F98 /* oc_endpoint.c */; };
 		50ADDEB81E8BF5AA0063CDDD /* simpleserver.c in Sources */ = {isa = PBXBuildFile; fileRef = FA7B88241E36447E00AEA72E /* simpleserver.c */; };
 		50ADDEBC1E8C0BB40063CDDD /* coap.c in Sources */ = {isa = PBXBuildFile; fileRef = FA7B88431E36449E00AEA72E /* coap.c */; };
 		50ADDEBD1E8C0BB40063CDDD /* engine.c in Sources */ = {isa = PBXBuildFile; fileRef = FA7B88471E36449E00AEA72E /* engine.c */; };
@@ -143,6 +147,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		504366321F72AA5800839F98 /* oc_scene.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oc_scene.c; path = ../../../api/oc_scene.c; sourceTree = "<group>"; };
+		504366331F72AA5800839F98 /* oc_base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oc_base64.c; path = ../../../api/oc_base64.c; sourceTree = "<group>"; };
+		504366341F72AA5900839F98 /* oc_endpoint.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oc_endpoint.c; path = ../../../api/oc_endpoint.c; sourceTree = "<group>"; };
 		50ADDEF81E8C0BB40063CDDD /* simpleclient */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = simpleclient; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA7B87341E36424B00AEA72E /* assert_p.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = assert_p.h; path = ../../../deps/tinycbor/src/assert_p.h; sourceTree = "<group>"; };
 		FA7B87351E36424B00AEA72E /* cbor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cbor.h; path = ../../../deps/tinycbor/src/cbor.h; sourceTree = "<group>"; };
@@ -455,6 +462,9 @@
 		FA7B87F41E36435400AEA72E /* api */ = {
 			isa = PBXGroup;
 			children = (
+				504366331F72AA5800839F98 /* oc_base64.c */,
+				504366341F72AA5900839F98 /* oc_endpoint.c */,
+				504366321F72AA5800839F98 /* oc_scene.c */,
 				FA7B87F51E36437200AEA72E /* oc_blockwise.c */,
 				FA7B87F61E36437200AEA72E /* oc_buffer.c */,
 				FA7B87F71E36437200AEA72E /* oc_client_api.c */,
@@ -686,6 +696,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				504366381F72B0FD00839F98 /* oc_endpoint.c in Sources */,
 				50ADDEFA1E8C0E810063CDDD /* oc_server_api.c in Sources */,
 				50ADDEF91E8C0DCD0063CDDD /* simpleclient.c in Sources */,
 				50ADDEBC1E8C0BB40063CDDD /* coap.c in Sources */,
@@ -765,10 +776,12 @@
 				FA7B89B61E37876100AEA72E /* oc_dtls.c in Sources */,
 				FA7B89B71E37876100AEA72E /* oc_pstat.c in Sources */,
 				FA7B89B81E37876100AEA72E /* oc_store.c in Sources */,
+				504366361F72AA5900839F98 /* oc_base64.c in Sources */,
 				FA7B89B91E37876100AEA72E /* oc_svr.c in Sources */,
 				FA7B89BA1E37876100AEA72E /* cborencoder_close_container_checked.c in Sources */,
 				FA7B89BB1E37876100AEA72E /* cborencoder.c in Sources */,
 				FA7B89BC1E37876100AEA72E /* cborerrorstrings.c in Sources */,
+				504366371F72AA5900839F98 /* oc_endpoint.c in Sources */,
 				FA7B89BD1E37876100AEA72E /* cborparser_dup_string.c in Sources */,
 				FA7B89BE1E37876100AEA72E /* cborparser.c in Sources */,
 				FA7B89BF1E37876100AEA72E /* cborpretty.c in Sources */,
@@ -800,6 +813,7 @@
 				FA7B89A11E37873E00AEA72E /* oc_discovery.c in Sources */,
 				FA7B89A31E37873E00AEA72E /* oc_helpers.c in Sources */,
 				FA7B89A41E37873E00AEA72E /* oc_main.c in Sources */,
+				504366351F72AA5900839F98 /* oc_scene.c in Sources */,
 				FA7B89A51E37873E00AEA72E /* oc_network_events.c in Sources */,
 				FA7B89A61E37873E00AEA72E /* oc_rep.c in Sources */,
 				FA7B89A71E37873E00AEA72E /* oc_ri.c in Sources */,
