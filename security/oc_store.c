@@ -22,7 +22,7 @@
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "port/oc_storage.h"
-#include <config.h>
+#include "config.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>

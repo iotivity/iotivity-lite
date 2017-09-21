@@ -62,7 +62,7 @@ enum
 #endif /* !OC_SECURITY */
 };
 #else /* !OC_DYNAMIC_ALLOCATION */
-#include "oc_buffer_settings.h"
+#include "../include/oc_buffer_settings.h"
 #define OC_PDU_SIZE (oc_get_mtu_size())
 #define OC_BLOCK_SIZE (oc_get_block_size())
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
