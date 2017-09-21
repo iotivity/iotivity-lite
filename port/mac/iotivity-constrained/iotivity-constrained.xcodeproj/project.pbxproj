@@ -976,7 +976,6 @@
 					WITH_SHA384,
 					WITH_SHA512,
 					OC_SERVER,
-					OC_DEBUG,
 					OC_DYNAMIC_ALLOCATION,
 					OC_IPV4,
 				);
