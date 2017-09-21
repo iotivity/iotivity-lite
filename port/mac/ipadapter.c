@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -298,12 +299,15 @@ get_interface_addresses(uint16_t port
                         )
   {
     struct ifaddrs *ifs = NULL, *interface = NULL;
+    int io_socket6 = -1;
     if (getifaddrs(&ifs) < 0) {
       OC_ERR("querying interfaces: %d\n", errno);
       goto done;
     }
-
-    oc_endpoint_t ep;
+    if ((io_socket6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
+      OC_ERR("cannot open AF_INET6 socket: %d\n", errno);
+      goto done;
+    }
 
     for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
       if (interface->ifa_addr == NULL ||
@@ -313,11 +317,19 @@ get_interface_addresses(uint16_t port
         continue;
       }
 
-      memset(&ep, 0, sizeof(oc_endpoint_t));
+      oc_endpoint_t ep = { 0 };
 
       if (interface->ifa_addr->sa_family == AF_INET6) {
         struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
-        if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
+        struct in6_ifreq ifreq6 = { 0 };
+        strncpy(ifreq6.ifr_name, interface->ifa_name, sizeof(ifreq6.ifr_name));
+        ifreq6.ifr_addr = *addr;
+        if (ioctl(io_socket6, SIOCGIFAFLAG_IN6, &ifreq6) < 0) {
+          OC_ERR("cannot get flags for %s\n", interface->ifa_name);
+          continue;
+        }
+ 
+        if ((ifreq6.ifr_ifru.ifru_flags6 & IN6_IFF_TEMPORARY) == 0) {
           ep.addr.ipv6.scope = addr->sin6_scope_id;
           memcpy(ep.addr.ipv6.address, &addr->sin6_addr, 16);
           ep.addr.ipv6.port = port;
@@ -356,6 +368,9 @@ get_interface_addresses(uint16_t port
 
   done:
     freeifaddrs(ifs);
+    if (io_socket6 >=0) {
+      close(io_socket6);
+    }
 }
 
 oc_endpoint_t *
@@ -511,7 +526,6 @@ static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
   OC_DBG("Initializing IPv4 connectivity for device %d\n", dev->device);
-  printf("size: %d\n", (int)sizeof(dev->mcast4));
   memset(&dev->mcast4, 0, sizeof(dev->mcast4));
   memset(&dev->server4, 0, sizeof(dev->server4));
 
