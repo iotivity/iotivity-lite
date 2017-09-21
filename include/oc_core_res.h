@@ -25,7 +25,7 @@ typedef void (*oc_core_add_device_cb_t)(void *data);
 typedef struct oc_device_info_s
 {
   oc_uuid_t di;
-  oc_uuid_t pid;
+  oc_uuid_t piid;
   oc_string_t name;
   oc_string_t icv;
   oc_string_t dmv;
