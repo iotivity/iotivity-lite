@@ -88,16 +88,16 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
   int device = request->resource->device;
   oc_rep_start_root_object();
 
-  char di[37], pid[37];
+  char di[37], piid[37];
   oc_uuid_to_str(&oc_device_info[device].di, di, 37);
-  oc_uuid_to_str(&oc_device_info[device].pid, pid, 37);
+  oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
 
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   case OC_IF_R: {
     oc_rep_set_text_string(root, di, di);
-    oc_rep_set_text_string(root, pid, pid);
+    oc_rep_set_text_string(root, piid, piid);
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
     oc_rep_set_text_string(root, icv, oc_string(oc_device_info[device].icv));
     oc_rep_set_text_string(root, dmv, oc_string(oc_device_info[device].dmv));
@@ -219,10 +219,16 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     return NULL;
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  core_resources = (oc_resource_t *)realloc(
-    core_resources, (1 + OCF_D * (device_count + 1)) * sizeof(oc_resource_t));
-  if (!core_resources) {
-    oc_abort("Insufficient memory");
+  int new_num = 1 + OCF_D * (device_count + 1);
+  /* Initially we have already OC_NUM_CORE_RESOURCES_PER_DEVICE
+     allocated. See oc_core_init(). */
+  if (new_num > OC_NUM_CORE_RESOURCES_PER_DEVICE) {
+    core_resources = (oc_resource_t *)realloc(
+      core_resources, new_num * sizeof(oc_resource_t));
+    if (!core_resources) {
+      oc_abort("Insufficient memory");
+    }
+    memset(&core_resources[new_num - OCF_D], 0, OCF_D * sizeof(oc_resource_t));
   }
 
   oc_device_info = (oc_device_info_t *)realloc(
@@ -230,6 +236,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   if (!oc_device_info) {
     oc_abort("Insufficient memory");
   }
+  memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   int ocf_d = OCF_D * device_count + OCF_D;
@@ -260,7 +267,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
-  oc_gen_uuid(&oc_device_info[device_count].pid);
+  oc_gen_uuid(&oc_device_info[device_count].piid);
   oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
   oc_new_string(&oc_device_info[device_count].icv, spec_version,
                 strlen(spec_version));
