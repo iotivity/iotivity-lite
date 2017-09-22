@@ -387,7 +387,8 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   (void)data;
 
   if (request->origin->version == OIC_VER_1_1_0) {
-    return oc_core_1_1_discovery_handler(request, interface, data);
+    oc_core_1_1_discovery_handler(request, interface, data);
+    return;
   }
 
   char *rt = NULL;
