@@ -169,11 +169,227 @@ process_device_resources(CborEncoder *links, const char *rt, int rt_len,
   return matches;
 }
 
+static bool
+filter_oic_1_1_resource(oc_resource_t *resource, const char *rt, int rt_len,
+                        CborEncoder *links)
+{
+  int i;
+  bool match = true;
+  if (rt_len > 0) {
+    match = false;
+    for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+         i++) {
+      int size = oc_string_array_get_item_size(resource->types, i);
+      const char *t =
+        (const char *)oc_string_array_get_item(resource->types, i);
+      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        match = true;
+        break;
+      }
+    }
+  }
+
+  if (!match) {
+    return false;
+  }
+
+  oc_rep_start_object(*links, res);
+
+  // uri
+  oc_rep_set_text_string(res, href, oc_string(resource->uri));
+
+  // rt
+  oc_rep_set_array(res, rt);
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+       i++) {
+    int size = oc_string_array_get_item_size(resource->types, i);
+    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
+    if (size > 0)
+      oc_rep_add_text_string(rt, t);
+  }
+  oc_rep_close_array(res, rt);
+
+  // if
+  oc_core_encode_interfaces_mask(oc_rep_object(res), resource->interfaces);
+
+  // p
+  oc_rep_set_object(res, p);
+  oc_rep_set_uint(p, bm,
+                  (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
+#ifdef OC_SECURITY
+  if (resource->properties & OC_SECURE) {
+    oc_rep_set_boolean(p, sec, true);
+
+    oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
+    while (eps != NULL) {
+      if (eps->flags & SECURED) {
+        break;
+      }
+      eps = eps->next;
+    }
+    if (eps) {
+      if (eps->flags & IPV6) {
+        oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+      }
+#ifdef OC_IPV4
+      else {
+        oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+      }
+#endif /* OC_IPV4 */
+    }
+    oc_free_endpoint_list();
+  }
+#endif /* OC_SECURITY */
+
+  oc_rep_close_object(res, p);
+
+  oc_rep_end_object(*links, res);
+  return true;
+}
+
+static int
+process_oic_1_1_device_object(CborEncoder *device, const char *rt, int rt_len,
+                              int device_num, bool baseline)
+{
+  int matches = 0;
+  char uuid[37];
+  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, 37);
+
+  oc_rep_start_object(*device, links);
+  oc_rep_set_text_string(links, di, uuid);
+
+  if (baseline) {
+    oc_resource_t *ocf_res = oc_core_get_resource_by_index(OCF_RES, device_num);
+    oc_rep_set_string_array(links, rt, ocf_res->types);
+    oc_core_encode_interfaces_mask(oc_rep_object(links), ocf_res->interfaces);
+  }
+
+  oc_rep_set_array(links, links);
+
+  if (filter_oic_1_1_resource(oc_core_get_resource_by_index(OCF_P, device_num),
+                              rt, rt_len, oc_rep_array(links)))
+    matches++;
+
+  if (filter_oic_1_1_resource(oc_core_get_resource_by_index(OCF_D, device_num),
+                              rt, rt_len, oc_rep_array(links)))
+    matches++;
+
+  /* oic.wk.con */
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_CON, device_num), rt, rt_len,
+        oc_rep_array(links)))
+    matches++;
+
+#ifdef OC_SERVER
+  oc_resource_t *resource = oc_ri_get_app_resources();
+  for (; resource; resource = resource->next) {
+
+    if (resource->device != device_num ||
+        !(resource->properties & OC_DISCOVERABLE))
+      continue;
+
+    if (filter_oic_1_1_resource(resource, rt, rt_len, oc_rep_array(links)))
+      matches++;
+  }
+
+#if defined(OC_COLLECTIONS)
+  oc_collection_t *collection = oc_collection_get_all();
+  for (; collection; collection = collection->next) {
+    if (collection->device != device_num ||
+        !(collection->properties & OC_DISCOVERABLE))
+      continue;
+
+    if (filter_oic_1_1_resource((oc_resource_t *)collection, rt, rt_len,
+                                oc_rep_array(links)))
+      matches++;
+  }
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+
+#ifdef OC_SECURITY
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_DOXM, device_num), rt, rt_len,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_num), rt, rt_len,
+        oc_rep_array(links)))
+    matches++;
+#endif
+
+  oc_rep_close_array(links, links);
+  oc_rep_end_object(*device, links);
+
+  return matches;
+}
+
+static void
+oc_core_1_1_discovery_handler(oc_request_t *request,
+                              oc_interface_mask_t interface, void *data)
+{
+  (void)data;
+  char *rt = NULL, *di = NULL;
+  oc_uuid_t dev_id;
+  int rt_len = 0, matches = 0, di_len = 0, device;
+  if (request->query_len) {
+    rt_len =
+      oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
+    di_len =
+      oc_ri_get_query_value(request->query, request->query_len, "di", &di);
+    if (di_len == 36) {
+      oc_str_to_uuid(di, &dev_id);
+    }
+  }
+
+  switch (interface) {
+  case OC_IF_LL: {
+    oc_rep_start_links_array();
+    for (device = 0; device < oc_core_get_num_devices(); device++) {
+      if (di_len > 0 &&
+          memcmp(oc_core_get_device_id(device), &dev_id, sizeof(oc_uuid_t)) !=
+            0)
+        continue;
+      matches += process_oic_1_1_device_object(oc_rep_array(links), rt, rt_len,
+                                               device, false);
+    }
+    oc_rep_end_links_array();
+  } break;
+  case OC_IF_BASELINE: {
+    oc_rep_start_links_array();
+    for (device = 0; device < oc_core_get_num_devices(); device++) {
+      if (di_len > 0 &&
+          memcmp(oc_core_get_device_id(device), &dev_id, sizeof(oc_uuid_t)) !=
+            0)
+        continue;
+      matches += process_oic_1_1_device_object(oc_rep_array(links), rt, rt_len,
+                                               device, true);
+    }
+    oc_rep_end_links_array();
+  } break;
+  default:
+    break;
+  }
+
+  int response_length = oc_rep_finalize();
+
+  if (matches && response_length) {
+    request->response->response_buffer->response_length = response_length;
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+  } else {
+    request->response->response_buffer->code = OC_IGNORE;
+  }
+}
+
 static void
 oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
                           void *data)
 {
   (void)data;
+
+  if (request->origin->version == OIC_VER_1_1_0) {
+    return oc_core_1_1_discovery_handler(request, interface, data);
+  }
+
   char *rt = NULL;
   int rt_len = 0, matches = 0, device = request->origin->device;
   if (request->query_len) {

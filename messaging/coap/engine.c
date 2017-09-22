@@ -276,7 +276,12 @@ coap_receive(oc_message_t *msg)
           }
           goto init_reset_message;
         } else if (block2) {
-          coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
+          unsigned int accept = 0;
+          if (coap_get_header_accept(message, &accept) == 1) {
+            coap_set_header_content_format(response, accept);
+          } else {
+            coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
+          }
           response_buffer = oc_blockwise_find_response_buffer(
             href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
           if (response_buffer) {

@@ -9,7 +9,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
-#define OC_DTLS_INACTIVITY_TIMEOUT (300)
+#define OC_DTLS_INACTIVITY_TIMEOUT (600)
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
