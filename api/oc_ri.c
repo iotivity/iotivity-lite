@@ -567,6 +567,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   bool method_impl = true, bad_request = false, success = false,
        forbidden = false, entity_too_large = false;
 
+  endpoint->version = OCF_VER_1_0_0;
+  unsigned int accept = 0;
+  if (coap_get_header_accept(request, &accept) == 1) {
+    if (accept == APPLICATION_CBOR) {
+      endpoint->version = OIC_VER_1_1_0;
+    }
+  }
+
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
 #endif /* OC_COLLECTIONS && OC_SERVER */
@@ -947,14 +955,18 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                                            &oc_observe_notification_delayed, 0);
 
 #endif /* OC_SERVER */
-    if (response_buffer.response_length) {
+    if (response_buffer.response_length > 0) {
 #ifdef OC_BLOCK_WISE
       response_state->payload_size = response_buffer.response_length;
 #else  /* OC_BLOCK_WISE */
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
+      if (endpoint->version == OIC_VER_1_1_0) {
+        coap_set_header_content_format(response, APPLICATION_CBOR);
+      } else {
+        coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
+      }
     }
 
     if (response_buffer.code ==
