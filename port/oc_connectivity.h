@@ -107,6 +107,7 @@ typedef struct oc_endpoint_t
     oc_le_addr_t bt;
   } addr;
   uint8_t priority;
+  ocf_version_t version;
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
