@@ -322,83 +322,94 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
     return;
   }
 
-  int guess = 512, response_len;
-  do {
-    guess <<= 1;
-    uint8_t dummy[guess];
-    response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
+  bool done = false;
+  while (!done) {
+    int guess = 512, response_len;
+    do {
+      guess <<= 1;
+      uint8_t dummy[guess];
+      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
+      if (response_len < 0) {
+        close(nl_sock);
+        return;
+      }
+    } while (response_len == guess);
+
+    uint8_t buffer[response_len];
+    response_len = recv(nl_sock, buffer, response_len, 0);
     if (response_len < 0) {
       close(nl_sock);
       return;
     }
-  } while (response_len == guess);
 
-  uint8_t buffer[response_len];
-  response_len = recv(nl_sock, buffer, response_len, 0);
-  if (response_len < 0) {
-    close(nl_sock);
-    return;
-  }
-
-  response = (struct nlmsghdr *)buffer;
-  oc_endpoint_t ep;
-
-  while
-    NLMSG_OK(response, response_len)
-    {
-      memset(&ep, 0, sizeof(oc_endpoint_t));
-      bool include = false;
-      struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
-        include = true;
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
-        int att_len = IFA_PAYLOAD(response);
-        while
-          RTA_OK(attr, att_len)
-          {
-            if (attr->rta_type == IFA_ADDRESS) {
-#ifdef OC_IPV4
-              if (family == AF_INET) {
-                memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
-                ep.flags = IPV4;
-              } else
-#endif /* OC_IPV4 */
-                if (family == AF_INET6) {
-                memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-                ep.flags = IPV6;
-              }
-            } else if (attr->rta_type == IFA_FLAGS) {
-              if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
-                include = false;
-              }
-            }
-            attr = RTA_NEXT(attr, att_len);
-          }
-      }
-      if (include) {
-        if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
-          ep.addr.ipv6.scope = addrmsg->ifa_index;
-        }
-        if (secure) {
-          ep.flags |= SECURED;
-        }
-#ifdef OC_IPV4
-        if (family == AF_INET) {
-          ep.addr.ipv4.port = port;
-        } else
-#endif /* OC_IPV4 */
-          if (family == AF_INET6) {
-          ep.addr.ipv6.port = port;
-        }
-        if (oc_add_endpoint_to_list(&ep) == -1) {
-          close(nl_sock);
-          return;
-        }
-      }
-
-      response = NLMSG_NEXT(response, response_len);
+    response = (struct nlmsghdr *)buffer;
+    if (response->nlmsg_type == NLMSG_ERROR) {
+      close(nl_sock);
+      return;
     }
 
+    oc_endpoint_t ep;
+
+    while
+      NLMSG_OK(response, response_len)
+      {
+        if (response->nlmsg_type == NLMSG_DONE) {
+          done = true;
+          break;
+        }
+        memset(&ep, 0, sizeof(oc_endpoint_t));
+        bool include = false;
+        struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
+        if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
+          include = true;
+          struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
+          int att_len = IFA_PAYLOAD(response);
+          while
+            RTA_OK(attr, att_len)
+            {
+              if (attr->rta_type == IFA_ADDRESS) {
+#ifdef OC_IPV4
+                if (family == AF_INET) {
+                  memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
+                  ep.flags = IPV4;
+                } else
+#endif /* OC_IPV4 */
+                  if (family == AF_INET6) {
+                    memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
+                    ep.flags = IPV6;
+                  }
+              } else if (attr->rta_type == IFA_FLAGS) {
+                if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+                  include = false;
+                }
+              }
+              attr = RTA_NEXT(attr, att_len);
+            }
+        }
+        if (include) {
+          if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
+            ep.addr.ipv6.scope = addrmsg->ifa_index;
+          }
+          if (secure) {
+            ep.flags |= SECURED;
+          }
+#ifdef OC_IPV4
+          if (family == AF_INET) {
+            ep.addr.ipv4.port = port;
+          } else
+#endif /* OC_IPV4 */
+            if (family == AF_INET6) {
+              ep.addr.ipv6.port = port;
+            }
+          if (oc_add_endpoint_to_list(&ep) == -1) {
+            close(nl_sock);
+            return;
+          }
+        }
+
+        response = NLMSG_NEXT(response, response_len);
+      }
+  }
   close(nl_sock);
 }
 
