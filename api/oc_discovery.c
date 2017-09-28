@@ -391,6 +391,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   if (matches && response_length) {
     request->response->response_buffer->response_length = response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+  } else if ((request->origin->flags & MULTICAST) == 0) {
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
