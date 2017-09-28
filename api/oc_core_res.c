@@ -90,14 +90,18 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
 
   char di[37], piid[37];
   oc_uuid_to_str(&oc_device_info[device].di, di, 37);
-  oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
+  if (request->origin->version != OIC_VER_1_1_0) {
+    oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
+  }
 
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   case OC_IF_R: {
     oc_rep_set_text_string(root, di, di);
-    oc_rep_set_text_string(root, piid, piid);
+    if (request->origin->version != OIC_VER_1_1_0) {
+      oc_rep_set_text_string(root, piid, piid);
+    }
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
     oc_rep_set_text_string(root, icv, oc_string(oc_device_info[device].icv));
     oc_rep_set_text_string(root, dmv, oc_string(oc_device_info[device].dmv));

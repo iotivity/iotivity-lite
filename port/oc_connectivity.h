@@ -97,7 +97,8 @@ typedef struct oc_endpoint_t
     SECURED = 1 << 1,
     IPV4 = 1 << 2,
     IPV6 = 1 << 3,
-    GATT = 1 << 4
+    GATT = 1 << 4,
+    MULTICAST = 1 << 5
   } flags;
 
   union dev_addr
