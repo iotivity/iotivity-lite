@@ -200,7 +200,7 @@ network_event_thread(void *data)
           continue;
         }
         message->length = count;
-        message->endpoint.flags = IPV6;
+        message->endpoint.flags = IPV6 | MULTICAST;
         message->endpoint.device = dev->device;
         FD_CLR(dev->mcast_sock, &setfds);
         goto common;
@@ -229,7 +229,7 @@ network_event_thread(void *data)
           continue;
         }
         message->length = count;
-        message->endpoint.flags = IPV4;
+        message->endpoint.flags = IPV4 | MULTICAST;
         message->endpoint.device = dev->device;
         FD_CLR(dev->mcast4_sock, &setfds);
         goto common;
