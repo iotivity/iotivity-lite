@@ -61,7 +61,9 @@ oc_memb_alloc(struct oc_memb *m)
    indicate that it now is used and return a pointer to the
    memory block. */
       ++(m->count[i]);
-      return (void *)((char *)m->mem + (i * m->size));
+      void *mem = (void *)((char *)m->mem + (i * m->size));
+      memset(mem, 0, m->size);
+      return mem;
     }
   }
 
