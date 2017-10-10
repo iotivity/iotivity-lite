@@ -20,8 +20,8 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("GE", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub", "1.0",
-                       "1.0", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub",
+                       "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
@@ -140,6 +140,10 @@ main(void)
                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
+
+#ifdef OC_SECURITY
+  oc_storage_config("./temp_sensor_creds");
+#endif /* OC_SECURITY */
 
   int init = oc_main_init(&handler);
 
