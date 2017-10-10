@@ -394,7 +394,8 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 int
 oc_endpoint_compare(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 {
-  if (ep1->flags == ep2->flags && ep1->device == ep2->device &&
+  if ((ep1->flags & ~MULTICAST) == (ep2->flags & ~MULTICAST) &&
+      ep1->device == ep2->device &&
       memcmp(&ep1->addr, &ep2->addr, sizeof(union dev_addr)) == 0)
     return 0;
   return 1;
