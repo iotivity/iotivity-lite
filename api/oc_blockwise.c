@@ -153,6 +153,30 @@ oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer)
   oc_blockwise_response_timeout(buffer);
 }
 
+#ifdef OC_CLIENT
+void
+oc_blockwise_scrub_buffers_for_client_cb(void *cb)
+{
+  oc_blockwise_state_t *buffer = oc_list_head(oc_blockwise_requests), *next;
+  while (buffer != NULL) {
+    next = buffer->next;
+    if (buffer->client_cb == cb) {
+      oc_blockwise_free_request_buffer(buffer);
+    }
+    buffer = next;
+  }
+
+  buffer = oc_list_head(oc_blockwise_responses);
+  while (buffer != NULL) {
+    next = buffer->next;
+    if (buffer->client_cb == cb) {
+      oc_blockwise_free_response_buffer(buffer);
+    }
+    buffer = next;
+  }
+}
+#endif /* OC_CLIENT */
+
 void
 oc_blockwise_scrub_buffers()
 {

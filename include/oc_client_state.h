@@ -73,7 +73,7 @@ typedef struct oc_client_cb_s
 
 #ifdef OC_BLOCK_WISE
 bool oc_ri_invoke_client_cb(void *response,
-                            oc_blockwise_state_t *response_state,
+                            oc_blockwise_state_t **response_state,
                             oc_client_cb_t *cb, oc_endpoint_t *endpoint);
 #else  /* OC_BLOCK_WISE */
 bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
