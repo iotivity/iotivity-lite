@@ -36,10 +36,10 @@ static oc_device_info_t *oc_device_info;
 static oc_resource_t core_resources[1 + OCF_D * OC_MAX_NUM_DEVICES];
 static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+static oc_platform_info_t oc_platform_info;
 
 static int device_count;
 static oc_uuid_t *next_di;
-static oc_string_t oc_platform_payload;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 void
@@ -48,6 +48,11 @@ oc_core_init(void)
   core_resources = (oc_resource_t *)calloc(OC_NUM_CORE_RESOURCES_PER_DEVICE,
                                            sizeof(oc_resource_t));
   if (!core_resources) {
+    oc_abort("Insufficient memory");
+  }
+  oc_device_info = (oc_device_info_t *)calloc(OC_NUM_CORE_RESOURCES_PER_DEVICE,
+                                              sizeof(oc_device_info_t));
+  if (!oc_device_info) {
     oc_abort("Insufficient memory");
   }
 }
@@ -106,8 +111,9 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
     oc_rep_set_text_string(root, icv, oc_string(oc_device_info[device].icv));
     oc_rep_set_text_string(root, dmv, oc_string(oc_device_info[device].dmv));
-    if (oc_device_info[device].add_device_cb)
-      oc_device_info[device].add_device_cb(NULL);
+    if (oc_device_info[device].add_device_cb) {
+      oc_device_info[device].add_device_cb(oc_device_info[device].data);
+    }
   } break;
   default:
     break;
@@ -193,25 +199,6 @@ oc_core_get_num_devices(void)
   return device_count;
 }
 
-static int
-finalize_payload(uint8_t *buffer, oc_string_t *payload)
-{
-  oc_rep_end_root_object();
-  int size = oc_rep_finalize();
-  if (size != -1) {
-    oc_alloc_string(payload, size);
-    memcpy(oc_cast(*payload, uint8_t), buffer, size);
-#ifdef OC_DYNAMIC_ALLOCATION
-    free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-    return 1;
-  }
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return -1;
-}
-
 void
 oc_core_set_device_id(oc_uuid_t *uuid)
 {
@@ -231,56 +218,36 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   int new_num = 1 + OCF_D * (device_count + 1);
-  /* Initially we have already OC_NUM_CORE_RESOURCES_PER_DEVICE
-     allocated. See oc_core_init(). */
   if (new_num > OC_NUM_CORE_RESOURCES_PER_DEVICE) {
-    core_resources = (oc_resource_t *)realloc(
-      core_resources, new_num * sizeof(oc_resource_t));
+    core_resources =
+      (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
     if (!core_resources) {
       oc_abort("Insufficient memory");
     }
     memset(&core_resources[new_num - OCF_D], 0, OCF_D * sizeof(oc_resource_t));
-  }
 
-  oc_device_info = (oc_device_info_t *)realloc(
-    oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
-  if (!oc_device_info) {
-    oc_abort("Insufficient memory");
+    oc_device_info = (oc_device_info_t *)realloc(
+      oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
+    if (!oc_device_info) {
+      oc_abort("Insufficient memory");
+    }
+    memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
   }
-  memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  int ocf_d = OCF_D * device_count + OCF_D;
-  int ocf_con = OCF_D * device_count + OCF_CON;
-  int ocf_res = OCF_D * device_count + OCF_RES;
-
-/* Once provisioned, UUID is retrieved from the credential store.
-   If not yet provisioned, a default is generated in the security
-   layer.
-*/
-#ifdef OC_SECURITY /*fix if add new devices after provisioning, need to reset  \
-                      or it will generate non-standard uuid */
-  /* where are secondary device ids persisted? */
-  if (!oc_sec_provisioned(0) && device_count > 0)
-    if (next_di == NULL)
-      oc_gen_uuid(&oc_device_info[device_count].di);
-    else
-      oc_device_info[device_count].di = *next_di;
-#else
   if (next_di == NULL)
     oc_gen_uuid(&oc_device_info[device_count].di);
   else
     oc_device_info[device_count].di = *next_di;
-#endif
 
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(
-      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
+      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
   } else {
     oc_core_populate_resource(
-      ocf_d, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
+      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
@@ -294,14 +261,17 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   /* Construct oic.wk.con resource for this device. */
   oc_core_populate_resource(
-    ocf_con, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
     OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
     oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
 
-  oc_create_discovery_resource(ocf_res, device_count);
+  oc_create_discovery_resource(OCF_RES, device_count);
+
+  oc_device_info[device_count].data = data;
+
+  oc_connectivity_init(device_count);
 
   device_count++;
-  oc_connectivity_init(device_count - 1);
 
   return &oc_device_info[device_count];
 }
@@ -311,68 +281,48 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
                          void *data)
 {
   (void)data;
-  uint8_t *buffer = request->response->response_buffer->buffer;
-  uint16_t buffer_size = request->response->response_buffer->buffer_size;
-  int payload_size = oc_platform_payload.size;
+  oc_rep_start_root_object();
 
-  if (buffer_size < payload_size) {
-    request->response->response_buffer->response_length = 0;
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
-    return;
-  }
+  char pi[37];
+  oc_uuid_to_str(&oc_platform_info.pi, pi, 37);
 
   switch (interface) {
-  case OC_IF_R:
   case OC_IF_BASELINE:
-    memcpy(buffer, oc_cast(oc_platform_payload, uint8_t), payload_size);
-    request->response->response_buffer->response_length = payload_size;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-    break;
+    oc_process_baseline_interface(request->resource);
+  case OC_IF_R: {
+    oc_rep_set_text_string(root, pi, pi);
+    oc_rep_set_text_string(root, mnmn, oc_string(oc_platform_info.mfg_name));
+    if (oc_platform_info.init_platform_cb) {
+      oc_platform_info.init_platform_cb(oc_platform_info.data);
+    }
+  } break;
   default:
     break;
   }
+
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_string_t *
+oc_platform_info_t *
 oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                       void *data)
 {
-  if (oc_platform_payload.size > 0)
-    return NULL;
+  if (oc_platform_info.mfg_name.size > 0) {
+    return &oc_platform_info;
+  }
 
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
                             OC_IF_BASELINE, OC_DISCOVERABLE,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
-/* Encoding platform resource payload */
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
-  if (!buffer) {
-    oc_abort("Insufficient memory");
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(buffer, OC_MAX_APP_DATA_SIZE);
-  oc_rep_start_root_object();
-  oc_process_baseline_interface(oc_core_get_resource_by_index(OCF_P, 0));
+  oc_gen_uuid(&oc_platform_info.pi);
+  oc_new_string(&oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
+  oc_platform_info.init_platform_cb = init_cb;
+  oc_platform_info.data = data;
 
-  oc_uuid_t uuid;
-  char uuid_str[37];
-  oc_gen_uuid(&uuid);
-  oc_uuid_to_str(&uuid, uuid_str, 37);
-  oc_rep_set_text_string(root, pi, uuid_str);
-  oc_rep_set_text_string(root, mnmn, mfg_name);
-
-  if (init_cb)
-    init_cb(data);
-
-  if (!finalize_payload(buffer, &oc_platform_payload))
-    return NULL;
-
-  return &oc_platform_payload;
+  return &oc_platform_info;
 }
 
 void
@@ -384,8 +334,9 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
     memcpy((char *)oc_string(*d_uri) + 1, s_uri, s_len);
     ((char *)oc_string(*d_uri))[0] = '/';
     ((char *)oc_string(*d_uri))[s_len + 1] = '\0';
-  } else
+  } else {
     oc_new_string(d_uri, s_uri, strlen(s_uri));
+  }
 }
 
 void
@@ -398,7 +349,7 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           oc_request_callback_t delete, int num_resource_types,
                           ...)
 {
-  oc_resource_t *r = &core_resources[core_resource];
+  oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
   r->device = device_index;
   oc_store_uri(uri, &r->uri);
   r->properties = properties;
@@ -422,6 +373,18 @@ oc_uuid_t *
 oc_core_get_device_id(int device)
 {
   return &oc_device_info[device].di;
+}
+
+oc_device_info_t *
+oc_core_get_device_info(int device)
+{
+  return &oc_device_info[device];
+}
+
+oc_platform_info_t *
+oc_core_get_platform_info(void)
+{
+  return &oc_platform_info;
 }
 
 oc_resource_t *
