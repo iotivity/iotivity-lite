@@ -10,6 +10,7 @@ port/linux/server_block_linux
 port/linux/smart_home_server_linux
 port/linux/multi_device_client
 port/linux/multi_device_server
+port/linux/onboarding_tool
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*
 port/linux/libiotivity-constrained-client-server.*
