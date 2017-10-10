@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_STORE_H_
-#define OC_STORE_H_
+#ifndef OC_STORE_H
+#define OC_STORE_H
 
 void oc_sec_load_pstat(int device);
 void oc_sec_load_doxm(int device);
@@ -25,5 +25,7 @@ void oc_sec_dump_pstat(int device);
 void oc_sec_dump_cred(int device);
 void oc_sec_dump_doxm(int device);
 void oc_sec_dump_acl(int device);
+void oc_sec_dump_unique_ids(int device);
+void oc_sec_load_unique_ids(int device);
 
-#endif /* OC_STORE_H_ */
+#endif /* OC_STORE_H */
