@@ -22,7 +22,15 @@
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
-typedef struct oc_device_info_s
+typedef struct
+{
+  oc_uuid_t pi;
+  oc_string_t mfg_name;
+  oc_core_init_platform_cb_t init_platform_cb;
+  void *data;
+} oc_platform_info_t;
+
+typedef struct
 {
   oc_uuid_t di;
   oc_uuid_t piid;
@@ -30,13 +38,14 @@ typedef struct oc_device_info_s
   oc_string_t icv;
   oc_string_t dmv;
   oc_core_add_device_cb_t add_device_cb;
+  void *data;
 } oc_device_info_t;
 
 void oc_core_init(void);
 
-oc_string_t *oc_core_init_platform(const char *mfg_name,
-                                   oc_core_init_platform_cb_t init_cb,
-                                   void *data);
+oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
+                                          oc_core_init_platform_cb_t init_cb,
+                                          void *data);
 
 oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
                                          const char *name,
@@ -50,6 +59,10 @@ int oc_core_get_num_devices(void);
 void oc_core_set_device_id(oc_uuid_t *uuid);
 
 oc_uuid_t *oc_core_get_device_id(int device);
+
+oc_device_info_t *oc_core_get_device_info(int device);
+
+oc_platform_info_t *oc_core_get_platform_info(void);
 
 void oc_core_encode_interfaces_mask(CborEncoder *parent,
                                     oc_interface_mask_t interface);
