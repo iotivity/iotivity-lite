@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_ACL_H_
-#define OC_ACL_H_
+#ifndef OC_ACL_H
+#define OC_ACL_H
 
 #include "oc_ri.h"
 #include "oc_uuid.h"
@@ -25,12 +25,57 @@
 #include <stdbool.h>
 
 typedef enum {
+  OC_PERM_NONE = 0,
   OC_PERM_CREATE = (1 << 0),
   OC_PERM_RETRIEVE = (1 << 1),
   OC_PERM_UPDATE = (1 << 2),
   OC_PERM_DELETE = (1 << 3),
   OC_PERM_NOTIFY = (1 << 4)
-} oc_sec_acl_permissions_mask_t;
+} oc_ace_permissions_t;
+
+typedef enum {
+  OC_ACE_WC_ALL = 1,
+  OC_ACE_WC_ALL_DISCOVERABLE = (1 << 1),
+  OC_ACE_WC_ALL_NON_DISCOVERABLE = (1 << 2),
+} oc_ace_wildcard_t;
+
+typedef enum {
+  OC_SUBJECT_UUID = 0,
+  OC_SUBJECT_ROLE,
+  OC_SUBJECT_CONN
+} oc_ace_subject_type_t;
+
+typedef enum {
+  OC_CONN_AUTH_CRYPT = 0,
+  OC_CONN_ANON_CLEAR
+} oc_ace_connection_type_t;
+
+typedef struct oc_ace_res_s
+{
+  struct oc_ace_res_s *next;
+  oc_string_t href;
+  oc_interface_mask_t interfaces;
+  oc_string_array_t types;
+  oc_ace_wildcard_t wildcard;
+} oc_ace_res_t;
+
+typedef union
+{
+  oc_uuid_t uuid;
+  oc_string_t role;
+  oc_ace_connection_type_t conn;
+} oc_ace_subject_t;
+
+typedef struct oc_sec_ace_s
+{
+  struct oc_sec_ace_s *next;
+  OC_LIST_STRUCT(resources);
+  oc_ace_subject_type_t subject_type;
+  oc_ace_subject_t subject;
+  int aceid;
+  oc_ace_permissions_t permission;
+  // TODO: Add "validity" for ACE. It is currently not a mandatory property
+} oc_sec_ace_t;
 
 typedef struct
 {
@@ -38,23 +83,8 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_acl_t;
 
-typedef struct oc_sec_acl_res_s
-{
-  struct oc_sec_acl_res_s *next;
-  oc_resource_t *resource;
-  oc_interface_mask_t interfaces;
-  oc_string_array_t types;
-  bool wildcard;
-  uint16_t permissions;
-} oc_sec_acl_res_t;
-
-typedef struct oc_sec_ace_s
-{
-  struct oc_sec_ace_s *next;
-  OC_LIST_STRUCT(resources);
-  oc_uuid_t subjectuuid;
-} oc_sec_ace_t;
-
+void oc_sec_acl_init(void);
+oc_sec_acl_t *oc_sec_get_acl(int device);
 void oc_sec_acl_default(int device);
 bool oc_sec_encode_acl(int device);
 bool oc_sec_decode_acl(oc_rep_t *rep, int device);
@@ -66,4 +96,5 @@ void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                       oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(int device);
-#endif /* OC_ACL_H_ */
+
+#endif /* OC_ACL_H */

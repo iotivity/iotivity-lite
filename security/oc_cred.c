@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,14 +28,91 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 
-OC_LIST(creds_l);
-OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_SUBJECTS + 1);
+OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
+
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "port/oc_assert.h"
+#include <stdlib.h>
+static oc_sec_creds_t *devices;
+#else /* OC_DYNAMIC_ALLOCATION */
+static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
+void
+oc_sec_cred_default(int device)
+{
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
+  while (cred != NULL) {
+    oc_memb_free(&creds, cred);
+    cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
+  }
+  memset(devices[device].rowneruuid.id, 0, 16);
+}
+
+oc_sec_creds_t *
+oc_sec_get_creds(int device)
+{
+  return &devices[device];
+}
+
+void
+oc_sec_cred_init(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  devices =
+    (oc_sec_creds_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_creds_t));
+  if (!devices) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  int i;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    OC_LIST_STRUCT_INIT(&devices[i], creds);
+  }
+}
+
+static bool
+unique_credid(int credid, int device)
+{
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  while (cred != NULL) {
+    if (cred->credid == credid)
+      return false;
+    cred = cred->next;
+  }
+  return true;
+}
+
+static int
+get_new_credid(int device)
+{
+  int credid;
+  do {
+    credid = oc_random_value() >> 1;
+  } while (!unique_credid(credid, device));
+  return credid;
+}
+
+static bool
+oc_sec_remove_cred(int credid, int device)
+{
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  while (cred != NULL) {
+    if (cred->credid == credid) {
+      oc_list_remove(devices[device].creds, cred);
+      oc_memb_free(&creds, cred);
+      return true;
+    }
+    cred = cred->next;
+  }
+  return false;
+}
 
 oc_sec_cred_t *
 oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 {
-  oc_sec_cred_t *cred = oc_list_head(creds_l);
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
     if (memcmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {
       return cred;
@@ -53,9 +130,8 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
     cred = oc_memb_alloc(&creds);
     if (cred != NULL) {
       memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
-      oc_list_add(creds_l, cred);
-    }
-    else {
+      oc_list_add(devices[device].creds, cred);
+    } else {
       OC_WRN("insufficient memory to add new credential\n");
     }
   }
@@ -65,42 +141,43 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 void
 oc_sec_encode_cred(bool persist, int device)
 {
-  oc_sec_cred_t *creds = oc_list_head(creds_l);
+  oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_CRED, device));
   oc_rep_set_array(root, creds);
-  if (creds == NULL) {
+  if (cr == NULL) {
     oc_rep_object_array_start_item(creds);
     oc_rep_object_array_end_item(creds);
   }
-  while (creds != NULL) {
+  while (cr != NULL) {
     oc_rep_object_array_start_item(creds);
-    oc_rep_set_int(creds, credid, creds->credid);
-    oc_rep_set_int(creds, credtype, creds->credtype);
-    oc_uuid_to_str(&creds->subjectuuid, uuid, 37);
+    oc_rep_set_int(creds, credid, cr->credid);
+    oc_rep_set_int(creds, credtype, cr->credtype);
+    oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
     oc_rep_set_object(creds, privatedata);
     if (persist) {
-      oc_rep_set_byte_string(privatedata, data, creds->key, 16);
+      oc_rep_set_byte_string(privatedata, data, cr->key, 16);
     } else {
-      oc_rep_set_byte_string(privatedata, data, creds->key, 0);
+      oc_rep_set_byte_string(privatedata, data, cr->key, 0);
     }
     oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     oc_rep_close_object(creds, privatedata);
     oc_rep_object_array_end_item(creds);
-    creds = creds->next;
+    cr = cr->next;
   }
   oc_rep_close_array(root, creds);
+  oc_uuid_to_str(&devices[device].rowneruuid, uuid, 37);
+  oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 }
 
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  int credid = 0, credtype = 0;
+  int credid = -1, credtype = 0;
   char subjectuuid[37] = { 0 };
   oc_uuid_t subject;
   oc_sec_cred_t *credobj;
@@ -111,7 +188,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
     switch (rep->type) {
     case STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string), &doxm->rowneruuid);
+        oc_str_to_uuid(oc_string(rep->value.string),
+                       &devices[device].rowneruuid);
       }
       break;
     case OBJECT_ARRAY: {
@@ -191,6 +269,13 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
         }
         if (valid_cred) {
           oc_str_to_uuid(subjectuuid, &subject);
+          if (!unique_credid(credid, device)) {
+            oc_sec_remove_cred(credid, device);
+            credid = -1;
+          }
+          if (credid == -1) {
+            credid = get_new_credid(device);
+          }
           credobj = oc_sec_get_cred(&subject, device);
           credobj->credid = credid;
           credobj->credtype = credtype;
@@ -198,8 +283,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
           if (got_key) {
             memcpy(credobj->key, key, 16);
           } else {
-            if (owner)
+            if (owner) {
               *owner = credobj;
+            }
           }
         }
         creds_array = creds_array->next;
@@ -222,16 +308,16 @@ get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static bool
-oc_sec_remove_subject(const char *subjectuuid)
+bool
+oc_cred_remove_subject(const char *subjectuuid, int device)
 {
   oc_uuid_t _subjectuuid;
   oc_str_to_uuid(subjectuuid, &_subjectuuid);
-  oc_sec_cred_t *cred = oc_list_head(creds_l), *next = 0;
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next = 0;
   while (cred != NULL) {
     next = cred->next;
     if (memcmp(cred->subjectuuid.id, _subjectuuid.id, 16) == 0) {
-      oc_list_remove(creds_l, cred);
+      oc_list_remove(devices[device].creds, cred);
       oc_memb_free(&creds, cred);
       return true;
     }
@@ -247,7 +333,8 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   char *subjectuuid = 0;
   int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
-  if (ret != -1 && oc_sec_remove_subject(subjectuuid)) {
+  if (ret != -1 &&
+      oc_cred_remove_subject(subjectuuid, request->resource->device)) {
     oc_send_response(request, OC_STATUS_DELETED);
     oc_sec_dump_cred(request->resource->device);
     return;
@@ -264,11 +351,12 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   oc_sec_cred_t *owner = NULL;
   bool success = oc_sec_decode_cred(request->request_payload, &owner,
                                     request->resource->device);
-  if (owner && memcmp(owner->subjectuuid.id, doxm->rowneruuid.id, 16) == 0) {
-    oc_uuid_t *dev = oc_core_get_device_id(0);
-    oc_sec_derive_owner_psk(request->origin, (const uint8_t *)OXM_JUST_WORKS,
-                            strlen(OXM_JUST_WORKS), owner->subjectuuid.id, 16,
-                            dev->id, 16, owner->key, 16);
+  if (success && owner &&
+      memcmp(owner->subjectuuid.id,
+             devices[request->resource->device].rowneruuid.id, 16) == 0) {
+    success = oc_sec_derive_owner_psk(
+      request->origin, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
+      doxm->deviceuuid.id, 16, owner->subjectuuid.id, 16, owner->key, 16);
   }
   if (!success) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);

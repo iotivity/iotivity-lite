@@ -19,18 +19,15 @@
 
 #include "port/oc_log.h"
 
-#ifdef __linux__
-#include <stdlib.h>
-#define abort_impl() abort()
-#else
 void abort_impl(void);
-#endif
+void exit_impl(int status);
 
-#define oc_abort(msg)                                                          \
-  do {                                                                         \
-    OC_ERR("\n%s\nAbort.\n", msg);                                             \
-    abort_impl();                                                              \
-  } while (0)
+static inline void
+oc_abort(const char *msg)
+{
+  PRINT("\n%s\nAbort.\n", msg);
+  abort_impl();
+}
 
 #define oc_assert(cond)                                                        \
   do {                                                                         \
@@ -38,5 +35,11 @@ void abort_impl(void);
       oc_abort("Assertion (" #cond ") failed.");                               \
     }                                                                          \
   } while (0)
+
+static inline void
+oc_exit(int status)
+{
+  exit_impl(status);
+}
 
 #endif /* OC_ASSERT_H */

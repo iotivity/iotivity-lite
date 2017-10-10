@@ -135,15 +135,15 @@ oc_main_init(const oc_handler_t *handler)
 
   oc_ri_init();
 
-#ifdef OC_SECURITY
-  oc_sec_create_svr();
-#endif
-
   oc_network_event_handler_mutex_init();
 
   ret = app_callbacks->init();
   if (ret < 0)
     goto err;
+
+#ifdef OC_SECURITY
+  oc_sec_create_svr();
+#endif
 
 #ifdef OC_SERVER
   if (app_callbacks->register_resources)
@@ -151,11 +151,15 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
-  oc_sec_load_pstat(0);
-  oc_sec_load_doxm(0);
-  oc_sec_load_cred(0);
   oc_sec_dtls_init_context();
-  oc_sec_load_acl(0);
+  int device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_sec_load_pstat(device);
+    oc_sec_load_doxm(device);
+    oc_sec_load_cred(device);
+    oc_sec_load_acl(device);
+    oc_sec_load_unique_ids(device);
+  }
 #endif
 
   OC_DBG("oc_main: stack initialized\n");

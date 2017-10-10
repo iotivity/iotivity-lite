@@ -158,7 +158,7 @@ coap_send_transaction(coap_transaction_t *t)
 
 #ifdef OC_SECURITY
       if (t->message->endpoint.flags & SECURED) {
-        oc_sec_dtls_close_init(&t->message->endpoint);
+        oc_sec_dtls_close_connection(&t->message->endpoint);
       }
 #endif /* OC_SECURITY */
 
