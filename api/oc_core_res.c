@@ -218,6 +218,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   int new_num = 1 + OCF_D * (device_count + 1);
+  /* Initially we have already OC_NUM_CORE_RESOURCES_PER_DEVICE
+     allocated. See oc_core_init(). */
   if (new_num > OC_NUM_CORE_RESOURCES_PER_DEVICE) {
     core_resources =
       (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
