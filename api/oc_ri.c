@@ -986,6 +986,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 static void
 free_client_cb(oc_client_cb_t *cb)
 {
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_scrub_buffers_for_client_cb(cb);
+#endif /* OC_BLOCK_WISE */
   oc_list_remove(client_cbs, cb);
   oc_free_string(&cb->uri);
   oc_memb_free(&client_cbs_s, cb);
@@ -1007,20 +1010,6 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
 oc_event_callback_retval_t
 oc_ri_remove_client_cb(void *data)
 {
-#ifdef OC_BLOCK_WISE
-  oc_client_cb_t *client_cb = (oc_client_cb_t *)data;
-  oc_blockwise_state_t *response_buffer = oc_blockwise_find_response_buffer(
-    oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    client_cb->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
-  oc_blockwise_state_t *request_buffer = oc_blockwise_find_request_buffer(
-    oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-    client_cb->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
-  if (request_buffer)
-    oc_blockwise_free_request_buffer(request_buffer);
-  if (response_buffer)
-    oc_blockwise_free_response_buffer(response_buffer);
-#endif /* OC_BLOCK_WISE */
-
   free_client_cb(data);
   return DONE;
 }
@@ -1051,7 +1040,7 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
 
 #ifdef OC_BLOCK_WISE
 bool
-oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t *response_state,
+oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t **response_state,
                        oc_client_cb_t *cb, oc_endpoint_t *endpoint)
 #else  /* OC_BLOCK_WISE */
 bool
@@ -1092,7 +1081,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #ifdef OC_BLOCK_WISE
   if (response_state) {
     oc_blockwise_response_state_t *bwt_response_state =
-      (oc_blockwise_response_state_t *)response_state;
+      (oc_blockwise_response_state_t *)*response_state;
     client_response.observe_option = bwt_response_state->observe_seq;
   }
 #else  /* OC_BLOCK_WISE */
@@ -1106,10 +1095,10 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 */
 #ifdef OC_BLOCK_WISE
   if (response_state) {
-    payload = response_state->buffer;
-    payload_len = response_state->payload_size;
+    payload = (*response_state)->buffer;
+    payload_len = (*response_state)->payload_size;
   }
-#else  /* OC_BLOCK_WISE */
+#else /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
 
@@ -1132,6 +1121,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
         free_client_cb(cb);
+        response_state = NULL;
         return true;
       }
     } else {
@@ -1163,6 +1153,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
     oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
+    response_state = NULL;
   } else {
     cb->observe_seq = client_response.observe_option;
   }
