@@ -84,6 +84,9 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
   oc_rep_set_array(link, eps);
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
   while (eps != NULL) {
+    if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+      goto next_eps;
+    }
     oc_rep_object_array_start_item(eps);
     oc_string_t ep;
     if (oc_endpoint_to_string(eps, &ep) == 0) {
@@ -91,6 +94,7 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
       oc_free_string(&ep);
     }
     oc_rep_object_array_end_item(eps);
+  next_eps:
     eps = eps->next;
   }
   oc_free_endpoint_list();
@@ -428,7 +432,6 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   } else if ((request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
-    /* There were rt/if selections and there were no matches, so ignore */
     request->response->response_buffer->code = OC_IGNORE;
   }
 }
@@ -448,11 +451,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                                 oc_endpoint_t *endpoint, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
-  oc_string_t uri;
-  uri.ptr = 0;
-  oc_string_t anchor;
-  anchor.ptr = 0;
-  oc_string_array_t types = { 0 };
+  oc_string_t *uri = NULL;
+  oc_string_t *anchor = NULL;
+  oc_string_array_t *types = NULL;
   oc_interface_mask_t interfaces = 0;
   oc_endpoint_t *eps_list = NULL;
 
@@ -495,17 +496,17 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       case STRING: {
         if (oc_string_len(link->name) == 6 &&
             memcmp(oc_string(link->name), "anchor", 6) == 0) {
-          anchor = link->value.string;
+          anchor = &link->value.string;
         } else if (oc_string_len(link->name) == 4 &&
                    memcmp(oc_string(link->name), "href", 4) == 0) {
-          uri = link->value.string;
+          uri = &link->value.string;
         }
       } break;
       case STRING_ARRAY: {
         int i;
         if (oc_string_len(link->name) == 2 &&
             strncmp(oc_string(link->name), "rt", 2) == 0) {
-          types = link->value.array;
+          types = &link->value.array;
         } else {
           interfaces = 0;
           for (i = 0;
@@ -561,8 +562,8 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
     if (eps_list &&
-        handler(oc_string(anchor), oc_string(uri), types, interfaces, eps_list,
-                user_data) == OC_STOP_DISCOVERY) {
+        handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
+                eps_list, user_data) == OC_STOP_DISCOVERY) {
       ret = OC_STOP_DISCOVERY;
       goto done;
     }
