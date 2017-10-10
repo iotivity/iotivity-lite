@@ -36,8 +36,8 @@ app_init(void)
 {
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "core.1.1.0",
-                       "res.1.1.0", NULL, NULL);
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
   return err;
 }
 
@@ -357,7 +357,7 @@ main(void)
   oc_set_max_app_data_size(8192);
 
 #ifdef OC_SECURITY
-  oc_storage_config("./creds");
+  oc_storage_config("./smart_home_server_linux_creds");
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
