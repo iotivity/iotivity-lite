@@ -123,10 +123,10 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         OC_DBG("Inbound network event: decrypted request\n");
         oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
       }
-#else
+#else  /* OC_SECURITY */
       OC_DBG("Inbound network event: decrypted request\n");
       oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
-#endif
+#endif /* !OC_SECURITY */
     } else if (ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
       oc_message_t *message = (oc_message_t *)data;
 
@@ -136,21 +136,24 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         oc_send_discovery_request(message);
         oc_message_unref(message);
       } else
-#endif
+#endif /* OC_CLIENT */
 #ifdef OC_SECURITY
         if (message->endpoint.flags & SECURED) {
         OC_DBG("Outbound network event: forwarding to DTLS\n");
 
+#ifdef OC_CLIENT
         if (!oc_sec_dtls_connected(&message->endpoint)) {
           OC_DBG("Posting INIT_DTLS_CONN_EVENT\n");
           oc_process_post(&oc_dtls_handler, oc_events[INIT_DTLS_CONN_EVENT],
                           data);
-        } else {
+        } else
+#endif /* OC_CLIENT */
+        {
           OC_DBG("Posting RI_TO_DTLS_EVENT\n");
           oc_process_post(&oc_dtls_handler, oc_events[RI_TO_DTLS_EVENT], data);
         }
       } else
-#endif
+#endif /* OC_SECURITY */
       {
         OC_DBG("Outbound network event: unicast message\n");
         oc_send_buffer(message);

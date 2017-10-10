@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_DOXM_H_
-#define OC_DOXM_H_
+#ifndef OC_DOXM_H
+#define OC_DOXM_H
 
 #include "oc_uuid.h"
 #include "port/oc_log.h"
@@ -35,6 +35,7 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
+void oc_sec_doxm_init(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device);
 void oc_sec_encode_doxm(int device);
 oc_sec_doxm_t *oc_sec_get_doxm(int device);
@@ -42,4 +43,5 @@ void oc_sec_doxm_default(int device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
-#endif /* OC_DOXM_H_ */
+
+#endif /* OC_DOXM_H */

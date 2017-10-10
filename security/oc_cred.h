@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_CRED_H_
-#define OC_CRED_H_
+#ifndef OC_CRED_H
+#define OC_CRED_H
 
 #include "oc_ri.h"
 #include "oc_uuid.h"
@@ -30,9 +30,19 @@ typedef struct oc_sec_cred_s
   uint8_t key[16]; // Supports only 128-bit keys
 } oc_sec_cred_t;
 
+typedef struct
+{
+  OC_LIST_STRUCT(creds);
+  oc_uuid_t rowneruuid;
+} oc_sec_creds_t;
+
+void oc_sec_cred_default(int device);
+void oc_sec_cred_init(void);
 void oc_sec_encode_cred(bool persist, int device);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device);
+bool oc_cred_remove_subject(const char *subjectuuid, int device);
 oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, int device);
+oc_sec_creds_t *oc_sec_get_creds(int device);
 oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, int device);
 void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
@@ -40,4 +50,5 @@ void post_cred(oc_request_t *request, oc_interface_mask_t interface,
 void get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void delete_cred(oc_request_t *request, oc_interface_mask_t interface,
                  void *data);
-#endif /* OC_CRED_H_ */
+
+#endif /* OC_CRED_H */
