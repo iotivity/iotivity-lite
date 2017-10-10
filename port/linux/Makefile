@@ -51,6 +51,8 @@ LIBS?= -lm -pthread -lrt
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client
 
+OBT = onboarding_tool
+
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
 else
@@ -65,6 +67,8 @@ ifeq ($(SECURE),1)
 	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
 ifeq ($(DYNAMIC),1)
 	SRC_COMMON += ${DTLS}
+	SRC += oc_obt.c
+	SAMPLES += ${OBT}
 else
 	SRC_COMMON += ${DTLS} memory_buffer_alloc.c
 endif
@@ -76,7 +80,7 @@ ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
 endif
 
-SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES})
+SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
@@ -168,6 +172,10 @@ multi_device_client: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+${OBT}: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
@@ -193,7 +201,7 @@ clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${SAMPLES_CREDS}
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS}
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
