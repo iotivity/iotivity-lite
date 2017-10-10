@@ -31,8 +31,8 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.array", "Large array generator", "1.0",
-                       "1.0", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.array", "Large array generator",
+                       "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
@@ -143,7 +143,7 @@ main(void)
   oc_clock_time_t next_event;
 
 #ifdef OC_SECURITY
-  oc_storage_config("./creds");
+  oc_storage_config("./server_block_linux_creds");
 #endif /* OC_SECURITY */
 
   oc_set_mtu_size(100);
