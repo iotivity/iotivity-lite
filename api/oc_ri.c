@@ -395,6 +395,8 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
       if (event_cb->callback(event_cb->data) == DONE) {
         oc_list_remove(list, event_cb);
         oc_memb_free(cb_pool, event_cb);
+        event_cb = oc_list_head(list);
+        continue;
       } else {
         OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
         oc_etimer_restart(&event_cb->timer);
