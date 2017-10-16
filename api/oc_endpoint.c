@@ -327,6 +327,7 @@ static int
 oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                          oc_string_t *uri)
 {
+  endpoint->flags = 0;
   if (memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
              strlen(OC_SCHEME_COAPS)) == 0) {
     endpoint->flags = SECURED;
@@ -350,13 +351,13 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     address += 2;
     int address_len = (p - address - 1);
     if (address[0] == '[' && address[address_len - 1] == ']') {
-      endpoint->flags = IPV6;
+      endpoint->flags |= IPV6;
       endpoint->addr.ipv6.port = port;
       oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
     }
 #ifdef OC_IPV4
     else {
-      endpoint->flags = IPV4;
+      endpoint->flags |= IPV4;
       endpoint->addr.ipv4.port = port;
       oc_parse_ipv4_address(address, address_len, endpoint);
     }
@@ -393,7 +394,8 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 int
 oc_endpoint_compare(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 {
-  if (ep1->flags == ep2->flags && ep1->device == ep2->device &&
+  if ((ep1->flags & ~MULTICAST) == (ep2->flags & ~MULTICAST) &&
+      ep1->device == ep2->device &&
       memcmp(&ep1->addr, &ep2->addr, sizeof(union dev_addr)) == 0)
     return 0;
   return 1;
