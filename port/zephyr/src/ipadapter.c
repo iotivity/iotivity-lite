@@ -195,7 +195,7 @@ oc_connectivity_get_endpoints(int device)
   ep_sec.flags = IPV6 | SECURED;
   net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR,
                 ep_sec.addr.ipv6.address);
-  ep_sec.addr.ipv6_port = ntohs(dtls_addr6.sin6_port);
+  ep_sec.addr.ipv6.port = ntohs(dtls_addr6.sin6_port);
   ep_sec.device = 0;
   oc_add_endpoint_to_list(&ep_sec);
 #endif /* OC_SECURITY */
