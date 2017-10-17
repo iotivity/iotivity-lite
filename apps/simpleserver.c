@@ -24,8 +24,8 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |=
-    oc_add_device("/oic/d", "oic.d.light", "Lamp", "1.0", "1.0", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);
   return ret;
 }
@@ -197,7 +197,7 @@ main(void)
   oc_clock_time_t next_event;
 
 #ifdef OC_SECURITY
-  oc_storage_config("./creds");
+  oc_storage_config("./simpleserver_creds");
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
