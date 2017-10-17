@@ -104,4 +104,6 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 
 void oc_blockwise_scrub_buffers();
 
+void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
+
 #endif /* OC_BLOCKWISE_H */
