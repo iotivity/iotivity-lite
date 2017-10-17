@@ -50,6 +50,8 @@ static struct net_context *mcast_recv6;
 static struct sockaddr_in6 mcast_addr6;
 static struct sockaddr_in6 my_addr6;
 
+static struct in6_addr in6addr_my;
+
 #ifdef OC_SECURITY
 /* DTLS receive socket */
 static struct net_context *dtls_recv6;
@@ -226,6 +228,18 @@ oc_connectivity_init(int device)
 
   /* Wildcard address set for server with randomly chosen port */
   my_addr6.sin6_family = AF_INET6;
+
+  /* Add unicast IPV6 address to interface so that node can communicate */
+  /* Would be good to have the address auto-configured in case some router is
+   * distributing pre-fixes*/
+  if (net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR, &in6addr_my) < 0) {
+    NET_ERR("Invalid IPv6 address %s", CONFIG_NET_APP_MY_IPV6_ADDR);
+  }
+
+  struct net_if_addr *ifaddr =
+    net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL, 0);
+
+  OC_DBG("=====>>>Interface unicast address added @ %u\n", ifaddr);
 
 #ifdef OC_SECURITY
   dtls_addr6.sin6_port = htons(MY_DTLS_PORT);
