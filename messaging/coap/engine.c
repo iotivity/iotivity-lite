@@ -540,7 +540,7 @@ coap_receive(oc_message_t *msg)
 
       if (client_cb) {
 #ifdef OC_BLOCK_WISE
-        oc_ri_invoke_client_cb(message, response_buffer, client_cb,
+        oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
                                &msg->endpoint);
         goto free_blockwise_buffers;
 #else  /* OC_BLOCK_WISE */
@@ -574,14 +574,20 @@ send_message:
         }
 #if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
         else {
-          int i = 0;
-          uint32_t r;
-          while (i < COAP_TOKEN_LEN) {
-            r = oc_random_value();
-            memcpy(response->token + i, &r, sizeof(r));
-            i += sizeof(r);
+          oc_blockwise_response_state_t *b =
+            (oc_blockwise_response_state_t *)response_buffer;
+          if (b && b->observe_seq != -1) {
+            int i = 0;
+            uint32_t r;
+            while (i < COAP_TOKEN_LEN) {
+              r = oc_random_value();
+              memcpy(response->token + i, &r, sizeof(r));
+              i += sizeof(r);
+            }
+            response->token_len = i;
+          } else {
+            coap_set_token(response, message->token, message->token_len);
           }
-          response->token_len = i;
         }
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
