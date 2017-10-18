@@ -14,9 +14,17 @@
 // limitations under the License.
 */
 
-#ifndef OC_SVR_H
-#define OC_SVR_H
+#include "port/oc_assert.h"
+#include <stdlib.h>
 
-void oc_sec_create_svr(void);
+void
+abort_impl(void)
+{
+  abort();
+}
 
-#endif /* OC_SVR_H */
+void
+exit_impl(int status)
+{
+  exit(status);
+}
