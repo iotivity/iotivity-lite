@@ -15,10 +15,21 @@ libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 
-DTLS=../../deps/tinydtls/ccm.c ../../deps/tinydtls/hmac.c ../../deps/tinydtls/netq.c ../../deps/tinydtls/peer.c ../../deps/tinydtls/dtls_time.c ../../deps/tinydtls/session.c ../../deps/tinydtls/sha2/sha2.c ../../deps/tinydtls/ecc/ecc.c ../../deps/tinydtls/aes/rijndael.c ../../deps/tinydtls/crypto.c ../../deps/tinydtls/dtls.c
-DTLSFLAGS=-DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
+DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
+	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
+	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
+	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
+	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
+	md5.c		md_wrap.c	oid.c		padlock.c	\
+	pem.c		pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	\
+	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
+	sha512.c	threading.c	timing.c	version.c	version_features.c		\
+	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c
+DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
-CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c #../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
+CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
@@ -32,13 +43,19 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
-CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall #-Wextra -Werror -pedantic #-Wl,-Map,client.map
+CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -Wextra #-Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(notdir $(SRC:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
+
+SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
+	  client_scenes_linux server_scenes_linux
+
+OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -51,10 +68,16 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC += $(wildcard ../../security/*.c)
+	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+ifeq ($(DYNAMIC),1)
 	SRC_COMMON += ${DTLS}
+	SRC += oc_obt.c
+	SAMPLES += ${OBT}
+else
+	SRC_COMMON += ${DTLS} memory_buffer_alloc.c
+endif
 	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
-	VPATH += ../../security/:../../deps/tinydtls/:../../deps/tinydtls/aes/:../../deps/tinydtls/sha2/:../../deps/tinydtls/ecc/:
+	VPATH += ../../security/:../../deps/mbedtls/library:
 endif
 
 ifeq ($(IPV4),1)
@@ -68,9 +91,8 @@ ifneq ($(findstring cygwin,$(shell $(CC) -dumpmachine)),)
 	CFLAGS := $(filter-out -fPIC,$(CFLAGS)) -D__linux__
 endif
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client\
-	  client_scenes_linux server_scenes_linux
+SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
+
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
 		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
@@ -117,24 +139,31 @@ libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
 server: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 temp_sensor: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 simpleserver: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 simpleclient: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 server_collections_linux: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client_block_linux: libiotivity-constrained-client.a
@@ -144,6 +173,7 @@ server_block_linux: libiotivity-constrained-server.a
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 smart_home_server_linux: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 server_scenes_linux: ../../apps/server_scenes_linux.c libiotivity-constrained-server.a
@@ -153,11 +183,16 @@ client_scenes_linux: ../../apps/client_scenes_linux.c libiotivity-constrained-cl
 	${CC} -o $@ $< libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 multi_device_server: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 multi_device_client: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+${OBT}: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
@@ -184,7 +219,7 @@ clean:
 	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	$(RM) -rf ${all} $(SAMPLES) $(TESTS)
+	$(RM) -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS}
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)

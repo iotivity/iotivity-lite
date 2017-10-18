@@ -1,3 +1,6 @@
 [submodule "deps/tinycbor"]
 	path = deps/tinycbor
 	url = https://github.com/01org/tinycbor.git
+[submodule "deps/mbedtls"]
+	path = deps/mbedtls
+	url = https://github.com/ARMmbed/mbedtls.git

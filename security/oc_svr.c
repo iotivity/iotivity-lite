@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,25 +26,30 @@
 #include "oc_ri.h"
 #include "port/oc_log.h"
 
-// Multiple devices?
-// What methods do sec resources support
-
-/* check resource properties */
 void
 oc_sec_create_svr(void)
 {
-  oc_core_populate_resource(OCF_SEC_DOXM, 0, "/oic/sec/doxm", OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_SECURE | OC_DISCOVERABLE,
-                            get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
-  oc_core_populate_resource(OCF_SEC_PSTAT, 0, "/oic/sec/pstat", OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_SECURE | OC_DISCOVERABLE, get_pstat, 0, post_pstat,
-                            0, 1, "oic.r.pstat");
-  oc_core_populate_resource(OCF_SEC_ACL, 0, "/oic/sec/acl", OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_SECURE, get_acl, 0, post_acl,
-                            delete_acl, 1, "oic.r.acl");
-  oc_core_populate_resource(OCF_SEC_CRED, 0, "/oic/sec/cred", OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_SECURE, get_cred, 0, post_cred,
-                            delete_cred, 1, "oic.r.cred");
+  oc_sec_doxm_init();
+  oc_sec_pstat_init();
+  oc_sec_cred_init();
+  oc_sec_acl_init();
+
+  int i;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    oc_core_populate_resource(OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE, get_doxm, 0,
+                              post_doxm, 0, 1, "oic.r.doxm");
+    oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
+                              OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_SECURE | OC_DISCOVERABLE, get_pstat, 0,
+                              post_pstat, 0, 1, "oic.r.pstat");
+    oc_core_populate_resource(OCF_SEC_ACL, i, "/oic/sec/acl2", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_SECURE, get_acl, 0, post_acl,
+                              delete_acl, 1, "oic.r.acl2");
+    oc_core_populate_resource(OCF_SEC_CRED, i, "/oic/sec/cred", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_SECURE, get_cred, 0, post_cred,
+                              delete_cred, 1, "oic.r.cred");
+  }
 }
 
 #endif /* OC_SECURITY */
