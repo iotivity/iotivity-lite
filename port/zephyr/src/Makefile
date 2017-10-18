@@ -2,7 +2,7 @@ ccflags-y += -I${ZEPHYR_BASE}/net/ip
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os/lib
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os
-ccflags-y +=-I. -I../../include -I../../ -DDTLSV12 -DWITH_SHA256 -DDTLS_CHECK_CONTENTTYPE -DWITH_OCF -I../../deps/tinydtls -DNDEBUG
+ccflags-y +=-I. -I../../include -I../../ -D__OC_RANDOM -I../../deps/mbedtls/include
 
 ifeq ($(SECURE),1)
 ccflags-y += -DOC_SECURITY
@@ -63,17 +63,70 @@ obj-y += ../../../deps/tinycbor/src/cborencoder_close_container_checked.o \
          abort.o
 
 ifeq ($(SECURE),1)
-obj-y += ../../../deps/tinydtls/ccm.o \
-         ../../../deps/tinydtls/hmac.o \
-         ../../../deps/tinydtls/netq.o \
-         ../../../deps/tinydtls/peer.o \
-         ../../../deps/tinydtls/dtls_time.o \
-         ../../../deps/tinydtls/session.o \
-         ../../../deps/tinydtls/sha2/sha2.o \
-         ../../../deps/tinydtls/ecc/ecc.o \
-         ../../../deps/tinydtls/aes/rijndael.o \
-         ../../../deps/tinydtls/crypto.o \
-         ../../../deps/tinydtls/dtls.o \
+obj-y += ../../../deps/mbedtls/library/aes.o \
+         ../../../deps/mbedtls/library/aesni.o \
+         ../../../deps/mbedtls/library/arc4.o \
+         ../../../deps/mbedtls/library/asn1parse.o \
+         ../../../deps/mbedtls/library/asn1write.o \
+         ../../../deps/mbedtls/library/base64.o \
+         ../../../deps/mbedtls/library/bignum.o \
+         ../../../deps/mbedtls/library/blowfish.o \
+         ../../../deps/mbedtls/library/camellia.o \
+         ../../../deps/mbedtls/library/ccm.o \
+         ../../../deps/mbedtls/library/cipher.o \
+         ../../../deps/mbedtls/library/cipher_wrap.o \
+         ../../../deps/mbedtls/library/cmac.o \
+         ../../../deps/mbedtls/library/ctr_drbg.o \
+         ../../../deps/mbedtls/library/des.o \
+         ../../../deps/mbedtls/library/dhm.o \
+         ../../../deps/mbedtls/library/ecdh.o \
+         ../../../deps/mbedtls/library/ecdsa.o \
+         ../../../deps/mbedtls/library/ecjpake.o \
+         ../../../deps/mbedtls/library/ecp.o \
+         ../../../deps/mbedtls/library/ecp_curves.o \
+         ../../../deps/mbedtls/library/entropy.o \
+         ../../../deps/mbedtls/library/entropy_poll.o \
+         ../../../deps/mbedtls/library/error.o \
+         ../../../deps/mbedtls/library/gcm.o \
+         ../../../deps/mbedtls/library/havege.o \
+         ../../../deps/mbedtls/library/hmac_drbg.o \
+         ../../../deps/mbedtls/library/md.o \
+         ../../../deps/mbedtls/library/md2.o \
+         ../../../deps/mbedtls/library/md4.o \
+         ../../../deps/mbedtls/library/md5.o \
+         ../../../deps/mbedtls/library/md_wrap.o \
+         ../../../deps/mbedtls/library/oid.o \
+         ../../../deps/mbedtls/library/padlock.o \
+         ../../../deps/mbedtls/library/pem.o \
+         ../../../deps/mbedtls/library/pk.o \
+         ../../../deps/mbedtls/library/pk_wrap.o \
+         ../../../deps/mbedtls/library/pkcs12.o \
+         ../../../deps/mbedtls/library/pkcs5.o \
+         ../../../deps/mbedtls/library/pkparse.o \
+         ../../../deps/mbedtls/library/pkwrite.o \
+         ../../../deps/mbedtls/library/platform.o \
+         ../../../deps/mbedtls/library/ripemd160.o \
+         ../../../deps/mbedtls/library/rsa.o \
+         ../../../deps/mbedtls/library/sha1.o \
+         ../../../deps/mbedtls/library/sha256.o \
+         ../../../deps/mbedtls/library/sha512.o \
+         ../../../deps/mbedtls/library/threading.o \
+         ../../../deps/mbedtls/library/timing.o \
+         ../../../deps/mbedtls/library/version.o \
+         ../../../deps/mbedtls/library/version_features.o \
+         ../../../deps/mbedtls/library/xtea.o \
+         ../../../deps/mbedtls/library/pkcs11.o \
+         ../../../deps/mbedtls/library/x509.o \
+         ../../../deps/mbedtls/library/x509_crt.o \
+         ../../../deps/mbedtls/library/net_sockets.o \
+         ../../../deps/mbedtls/library/ssl_cache.o \
+         ../../../deps/mbedtls/library/ssl_ciphersuites.o \
+         ../../../deps/mbedtls/library/ssl_cli.o \
+         ../../../deps/mbedtls/library/ssl_cookie.o \
+         ../../../deps/mbedtls/library/ssl_srv.o \
+         ../../../deps/mbedtls/library/ssl_ticket.o \
+         ../../../deps/mbedtls/library/ssl_tls.o \
+         ../../../deps/mbedtls/library/memory_buffer_alloc.o \
          ../../../security/oc_acl.o \
          ../../../security/oc_cred.o \
          ../../../security/oc_doxm.o \
