@@ -108,9 +108,6 @@ oc_scene_member_free(oc_scene_member_t *member)
       oc_memb_free(&oc_scenemappings_s, mapping);
     }
 
-    if (oc_string_len(member->name) > 0) {
-      oc_free_string(&(member->name));
-    }
     oc_ri_free_resource_properties((oc_resource_t*)member);
     oc_memb_free(&oc_scenemembers_s, member);
   }
@@ -235,13 +232,25 @@ reprocess:
       oc_rep_set_object(link, p);
       oc_rep_set_uint(p, bm, (uint8_t)(member->resource->properties &
                                        ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-      if (member->resource->properties & OC_SECURE) {
-        oc_rep_set_boolean(p, sec, true);
-        oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
-      }
-#endif /* OC_SECURITY */
       oc_rep_close_object(link, p);
+
+      // eps
+      oc_rep_set_array(link, eps);
+      oc_endpoint_t *eps =
+        oc_connectivity_get_endpoints(member->resource->device);
+      while (eps != NULL) {
+        oc_rep_object_array_start_item(eps);
+        oc_string_t ep;
+        if (oc_endpoint_to_string(eps, &ep) == 0) {
+          oc_rep_set_text_string(eps, ep, oc_string(ep));
+          oc_free_string(&ep);
+        }
+        oc_rep_object_array_end_item(eps);
+        eps = eps->next;
+      }
+      oc_free_endpoint_list();
+      oc_rep_close_array(link, eps);
+      
       oc_rep_close_object(root, link);
       oc_rep_set_array(root, sceneMappings);
       oc_scene_mapping_t *mapping = (oc_scene_mapping_t*)oc_list_head(member->scene_mapping);
@@ -262,22 +271,34 @@ reprocess:
         oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
       oc_rep_set_array(root, links);
       if (oc_ri_filter_rt(member->resource, rt, rt_len)) {
-          oc_rep_object_array_start_item(links);
-          oc_rep_set_text_string(links, href, oc_string(member->resource->uri));
-          oc_rep_set_string_array(links, rt, member->resource->types);
-          oc_core_encode_interfaces_mask(oc_rep_object(links),
-                                         member->resource->interfaces);
-          oc_rep_set_object(links, p);
-          oc_rep_set_uint(p, bm, (uint8_t)(member->resource->properties &
-                                           ~(OC_PERIODIC | OC_SECURE)));
-#ifdef OC_SECURITY
-          if (member->resource->properties & OC_SECURE) {
-            oc_rep_set_boolean(p, sec, true);
-            oc_rep_set_uint(p, port, oc_connectivity_get_dtls_port());
+        oc_rep_object_array_start_item(links);
+        oc_rep_set_text_string(links, href, oc_string(member->resource->uri));
+        oc_rep_set_string_array(links, rt, member->resource->types);
+        oc_core_encode_interfaces_mask(oc_rep_object(links),
+                                       member->resource->interfaces);
+        oc_rep_set_object(links, p);
+        oc_rep_set_uint(p, bm, (uint8_t)(member->resource->properties &
+                                         ~(OC_PERIODIC | OC_SECURE)));
+        oc_rep_close_object(links, p);
+
+        // eps
+        oc_rep_set_array(links, eps);
+        oc_endpoint_t *eps =
+          oc_connectivity_get_endpoints(member->resource->device);
+        while (eps != NULL) {
+          oc_rep_object_array_start_item(eps);
+          oc_string_t ep;
+          if (oc_endpoint_to_string(eps, &ep) == 0) {
+            oc_rep_set_text_string(eps, ep, oc_string(ep));
+            oc_free_string(&ep);
           }
-#endif /* OC_SECURITY */
-          oc_rep_close_object(links, p);
-          oc_rep_object_array_end_item(links);
+          oc_rep_object_array_end_item(eps);
+          eps = eps->next;
+        }
+        oc_free_endpoint_list();
+        oc_rep_close_array(links, eps);
+
+        oc_rep_object_array_end_item(links);
       }
       oc_rep_close_array(root, links);
       oc_rep_end_root_object();
