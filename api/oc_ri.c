@@ -1123,7 +1123,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
         free_client_cb(cb);
+#ifdef OC_BLOCK_WISE
         response_state = NULL;
+#endif /* OC_BLOCK_WISE */
         return true;
       }
     } else {
@@ -1155,7 +1157,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
     oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
+#ifdef OC_BLOCK_WISE
     response_state = NULL;
+#endif /* OC_BLOCK_WISE */
   } else {
     cb->observe_seq = client_response.observe_option;
   }
