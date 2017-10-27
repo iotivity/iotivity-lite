@@ -26,11 +26,6 @@
 #include <net/net_if.h>
 #include <net/net_pkt.h>
 
-#if defined(CONFIG_NET_L2_BLUETOOTH)
-#include <bluetooth/bluetooth.h>
-#include <gatt/ipss.h>
-#endif
-
 /* Server's receive socket */
 static struct net_context *udp_recv6;
 
@@ -95,6 +90,11 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
       (struct net_udp_hdr *)((u8_t *)(NET_IPV6_HDR(pkt)) +
                              sizeof(struct net_ipv6_hdr));
     size_t bytes_read = net_pkt_appdatalen(pkt);
+    if (bytes_read < 0) {
+      oc_message_unref(message);
+      return;
+    }
+
     size_t offset_from_start = net_pkt_get_len(pkt) - bytes_read;
     bytes_read = (bytes_read < OC_PDU_SIZE) ? bytes_read : OC_PDU_SIZE;
     struct net_buf *frag = net_frag_read(pkt->frags, offset_from_start, &pos,
@@ -115,10 +115,12 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
     message->endpoint.addr.ipv6.port = ntohs(udp->src_port);
     message->endpoint.device = 0;
 
-    PRINT("oc_network_receive: received %d bytes\n", (int)message->length);
-    PRINT("oc_network_receive: incoming message: ");
+    OC_DBG("oc_network_receive: received %d bytes\n", (int)message->length);
+#ifdef OC_DEBUG
+    OC_DBG("oc_network_receive: incoming message: ");
     PRINTipaddr(message->endpoint);
-    PRINT("\n");
+    OC_DBG("\n");
+#endif
 
     oc_network_event(message);
   }
@@ -129,18 +131,19 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
 static inline void
 udp_sent(struct net_context *context, int status, void *token, void *user_data)
 {
-  if (!status)
-    PRINT("oc_send_buffer: sent %d bytes\n", POINTER_TO_UINT(token));
-  else
-    PRINT("oc_send_buffer: failed: (%d)\n", status);
+  if (!status) {
+    OC_DBG("oc_send_buffer: sent %d bytes\n", POINTER_TO_UINT(token));
+  }
 }
 
 void
 oc_send_buffer(oc_message_t *message)
 {
-  PRINT("oc_send_buffer: outgoing message: ");
+#ifdef OC_DEBUG
+  OC_DBG("oc_send_buffer: outgoing message: ");
   PRINTipaddr(message->endpoint);
-  PRINT("\n");
+  OC_DBG("\n");
+#endif
 
   /* Populate destination address structure */
   struct sockaddr_in6 peer_addr;
@@ -210,15 +213,6 @@ oc_connectivity_init(int device)
   (void)device;
   int ret;
 
-#if defined(CONFIG_NET_L2_BLUETOOTH)
-  if (bt_enable(NULL)) {
-    OC_WRN("oc_connectivity_init: bluetooth initialization failed\n");
-    return -1;
-  }
-  ipss_init();
-  ipss_advertise();
-#endif
-
   /* Record OCF's multicast address with network interface */
   net_if_ipv6_maddr_add(net_if_get_default(), &in6addr_mcast);
 
@@ -236,10 +230,13 @@ oc_connectivity_init(int device)
     NET_ERR("Invalid IPv6 address %s", CONFIG_NET_APP_MY_IPV6_ADDR);
   }
 
+#ifdef OC_DEBUG
   struct net_if_addr *ifaddr =
+#endif
     net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL, 0);
-
-  OC_DBG("=====>>>Interface unicast address added @ %u\n", ifaddr);
+#ifdef OC_DEBUG
+  OC_DBG("=====>>>Interface unicast address added @ %p\n", ifaddr);
+#endif
 
 #ifdef OC_SECURITY
   dtls_addr6.sin6_port = htons(MY_DTLS_PORT);
