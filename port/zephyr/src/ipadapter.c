@@ -26,11 +26,6 @@
 #include <net/net_if.h>
 #include <net/net_pkt.h>
 
-#if defined(CONFIG_NET_L2_BLUETOOTH)
-#include <bluetooth/bluetooth.h>
-#include <gatt/ipss.h>
-#endif
-
 /* Server's receive socket */
 static struct net_context *udp_recv6;
 
@@ -129,10 +124,9 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
 static inline void
 udp_sent(struct net_context *context, int status, void *token, void *user_data)
 {
-  if (!status)
+  if (!status) {
     PRINT("oc_send_buffer: sent %d bytes\n", POINTER_TO_UINT(token));
-  else
-    PRINT("oc_send_buffer: failed: (%d)\n", status);
+  }
 }
 
 void
@@ -210,15 +204,6 @@ oc_connectivity_init(int device)
   (void)device;
   int ret;
 
-#if defined(CONFIG_NET_L2_BLUETOOTH)
-  if (bt_enable(NULL)) {
-    OC_WRN("oc_connectivity_init: bluetooth initialization failed\n");
-    return -1;
-  }
-  ipss_init();
-  ipss_advertise();
-#endif
-
   /* Record OCF's multicast address with network interface */
   net_if_ipv6_maddr_add(net_if_get_default(), &in6addr_mcast);
 
@@ -236,10 +221,12 @@ oc_connectivity_init(int device)
     NET_ERR("Invalid IPv6 address %s", CONFIG_NET_APP_MY_IPV6_ADDR);
   }
 
+#ifdef OC_DEBUG
   struct net_if_addr *ifaddr =
     net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL, 0);
 
   OC_DBG("=====>>>Interface unicast address added @ %u\n", ifaddr);
+#endif
 
 #ifdef OC_SECURITY
   dtls_addr6.sin6_port = htons(MY_DTLS_PORT);
