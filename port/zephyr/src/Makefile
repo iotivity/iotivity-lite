@@ -21,7 +21,7 @@ obj-y += ../../../apps/server_zephyr.o
 #obj-y += ../../../apps/sensor_interrupt_server_zephyr.o
 endif
 
-ifeq ($(CONFIG_NET_L2_BLUETOOTH),y)
+ifeq ($(CONFIG_NET_L2_BT),y)
 # TODO: Instead of using ipss sample module, implement Bluetooth init functionality.
 ccflags-y +=-I${ZEPHYR_BASE}/samples/bluetooth
 obj-y += ipss.o
