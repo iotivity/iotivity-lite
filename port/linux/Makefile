@@ -1,3 +1,9 @@
+# Note: This makefile is modified to expect quite a number of options
+# to be provided by the caller.
+
+# Additional option:
+# IOT_NAME_SUFFIX: Suffix for libraries and binaries
+
 CC ?= gcc
 AR ?= ar
 SED ?= sed
@@ -6,7 +12,7 @@ MKDIR ?= mkdir
 INSTALL ?= install
 
 DESTDIR ?= /usr/local
-OBJDIR ?= ./obj
+OBJDIR ?= ./obj$(IOT_NAME_SUFFIX)
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
 exec_prefix = $(prefix)
@@ -51,9 +57,13 @@ OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
 	  client_scenes_linux server_scenes_linux
+
+ifneq ($(IOT_NAME_SUFFIX),)
+SAMPLES := $(addsuffix $(IOT_NAME_SUFFIX),$(SAMPLES))
+endif
 
 OBT = onboarding_tool
 
@@ -93,10 +103,11 @@ endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
-CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
-		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
-PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
+CONSTRAINED_LIBS := libiotivity-constrained-server$(IOT_NAME_SUFFIX).a libiotivity-constrained-client$(IOT_NAME_SUFFIX).a \
+		   libiotivity-constrained-server$(IOT_NAME_SUFFIX).so libiotivity-constrained-client$(IOT_NAME_SUFFIX).so \
+		   libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).so libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a
+
+PC := iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
@@ -120,79 +131,79 @@ ${OBJDIR}/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
-libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-constrained-server$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
-libiotivity-constrained-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-constrained-server$(IOT_NAME_SUFFIX).so: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
 
-libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-constrained-client$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-constrained-client$(IOT_NAME_SUFFIX).so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
-libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
-server: libiotivity-constrained-server.a
+server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client: libiotivity-constrained-client.a
+client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-temp_sensor: libiotivity-constrained-client.a
+temp_sensor$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-simpleserver: libiotivity-constrained-server.a
+simpleserver$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleclient: libiotivity-constrained-client.a
+simpleclient$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-client_collections_linux: libiotivity-constrained-client.a
+client_collections_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_collections_linux: libiotivity-constrained-server.a
+server_collections_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_block_linux: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client_block_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_block_linux: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_block_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-constrained-server.a
+smart_home_server_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-server_scenes_linux: ../../apps/server_scenes_linux.c libiotivity-constrained-server.a
-	${CC} -o $@ $< libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/server_scenes_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ $< libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_scenes_linux: ../../apps/client_scenes_linux.c libiotivity-constrained-client.a
-	${CC} -o $@ $< libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+client_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/client_scenes_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ $< libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-multi_device_server: libiotivity-constrained-server.a
+multi_device_server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_client: libiotivity-constrained-client.a
+multi_device_client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-${OBT}: libiotivity-constrained-client.a
+${OBT}: libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
@@ -245,26 +256,26 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 
 ############# TESTS ##########################
 TESTS = \
-	tests/client_init_linux_test \
-	tests/server_init_linux_test \
-	tests/client_get_linux_test
+	tests/client_init_linux_test$(IOT_NAME_SUFFIX) \
+	tests/server_init_linux_test$(IOT_NAME_SUFFIX) \
+	tests/client_get_linux_test$(IOT_NAME_SUFFIX)
 
-tests/client_init_linux_test: libiotivity-constrained-client.a
+tests/client_init_linux_test$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/client_init_linux.c \
-		libiotivity-constrained-client.a \
+		libiotivity-constrained-client$(IOT_NAME_SUFFIX).a \
 		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
-tests/server_init_linux_test: libiotivity-constrained-server.a
+tests/server_init_linux_test$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/server_init_linux.c \
-		libiotivity-constrained-server.a \
+		libiotivity-constrained-server$(IOT_NAME_SUFFIX).a \
 		-DOC_SERVER $(CFLAGS) $(LIBS)
 
-tests/client_get_linux_test: libiotivity-constrained-client-server.a
+tests/client_get_linux_test$(IOT_NAME_SUFFIX): libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/client_get_linux.c \
-		libiotivity-constrained-client-server.a -DOC_SERVER \
+		libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a -DOC_SERVER \
 		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
 check: $(TESTS)
