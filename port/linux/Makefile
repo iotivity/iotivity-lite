@@ -188,9 +188,11 @@ smart_home_server_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_N
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 server_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/server_scenes_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
+	@mkdir -p $@_creds
 	${CC} -o $@ $< libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/client_scenes_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	@mkdir -p $@_creds
 	${CC} -o $@ $< libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 multi_device_server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
