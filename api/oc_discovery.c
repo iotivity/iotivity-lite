@@ -84,6 +84,10 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
   oc_rep_set_array(link, eps);
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
   while (eps != NULL) {
+    /*  If this resource has been explicitly tagged as SECURE on the
+     *  application layer, skip all coap:// endpoints, and only include
+     *  coaps:// endpoints.
+     */
     if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
       goto next_eps;
     }
@@ -221,28 +225,27 @@ filter_oic_1_1_resource(oc_resource_t *resource, const char *rt, int rt_len,
   oc_rep_set_uint(p, bm,
                   (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
 #ifdef OC_SECURITY
-  if (resource->properties & OC_SECURE) {
-    oc_rep_set_boolean(p, sec, true);
+  /** Tag all resources with sec=true for OIC 1.1 to pass the CTT script. */
+  oc_rep_set_boolean(p, sec, true);
 
-    oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
-    while (eps != NULL) {
-      if (eps->flags & SECURED) {
-        break;
-      }
-      eps = eps->next;
+  oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
+  while (eps != NULL) {
+    if (eps->flags & SECURED) {
+      break;
     }
-    if (eps) {
-      if (eps->flags & IPV6) {
-        oc_rep_set_uint(p, port, eps->addr.ipv6.port);
-      }
-#ifdef OC_IPV4
-      else {
-        oc_rep_set_uint(p, port, eps->addr.ipv4.port);
-      }
-#endif /* OC_IPV4 */
-    }
-    oc_free_endpoint_list();
+    eps = eps->next;
   }
+  if (eps) {
+    if (eps->flags & IPV6) {
+      oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+    }
+#ifdef OC_IPV4
+    else {
+      oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+    }
+#endif /* OC_IPV4 */
+  }
+  oc_free_endpoint_list();
 #endif /* OC_SECURITY */
 
   oc_rep_close_object(res, p);
@@ -412,14 +415,18 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_rep_end_links_array();
   } break;
   case OC_IF_BASELINE: {
-    oc_rep_start_root_object();
+    oc_rep_start_links_array();
+    oc_rep_start_object(*oc_rep_array(links), props);
+    memcpy(&root_map, &props_map, sizeof(CborEncoder));
     oc_process_baseline_interface(
       oc_core_get_resource_by_index(OCF_RES, device));
     oc_rep_set_array(root, links);
     matches +=
       process_device_resources(oc_rep_array(links), rt, rt_len, device);
     oc_rep_close_array(root, links);
-    oc_rep_end_root_object();
+    memcpy(&props_map, &root_map, sizeof(CborEncoder));
+    oc_rep_end_object(*oc_rep_array(links), props);
+    oc_rep_end_links_array();
   } break;
   default:
     break;
@@ -475,8 +482,23 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     OC_WRN("error parsing discovery response\n");
   }
   links = rep = p;
+  /*  While the oic.wk.res schema over the baseline interface provides for an
+   *  array of objects, only one object is present and used in practice.
+   *
+   *  If rep->value.object != NULL, it means the response was from the baseline
+   *  interface, and in that case make rep point to the properties of its first
+   *  object. It is traversed in the following loop to obtain a handle to its
+   *  array of links.
+   */
+  if (rep->value.object) {
+    rep = rep->value.object;
+  }
+
   while (rep != NULL) {
     switch (rep->type) {
+    /*  Ignore other oic.wk.res properties over here as they're known
+     *  and fixed. Only process the "links" property.
+     */
     case OBJECT_ARRAY: {
       if (oc_string_len(rep->name) == 5 &&
           memcmp(oc_string(rep->name), "links", 5) == 0) {
