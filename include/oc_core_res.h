@@ -78,4 +78,6 @@ void oc_core_populate_resource(
   oc_request_callback_t put, oc_request_callback_t post,
   oc_request_callback_t delete, int num_resource_types, ...);
 
+void oc_core_regen_unique_ids(int device);
+
 #endif /* OC_CORE_RES_H */
