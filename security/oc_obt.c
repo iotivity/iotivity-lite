@@ -294,6 +294,9 @@ obt_jw_13(oc_client_response_t *data)
     free_otm_status(o, -1);
     return;
   }
+
+  /**  13) <close DTLS>
+   */
   oc_dostype_t s = parse_dos(data->payload);
   if (s == OC_DOS_RFNOP) {
     free_otm_status(o, 0);
@@ -310,8 +313,16 @@ obt_jw_12(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  12) <close DTLS> ; <tls psk> ; get pstat s=rfnop?
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+
+  oc_sec_dtls_close_connection(ep);
+
+  oc_sec_dtls_demote_anon_ciphersuite();
+
   oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, LOW_QOS, o);
 }
 
@@ -323,12 +334,13 @@ obt_jw_11(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
-  oc_dostype_t s = parse_dos(data->payload);
 
+  oc_dostype_t s = parse_dos(data->payload);
   if (s == OC_DOS_RFPRO) {
+    /**  11) post pstat s=rfnop, isop=true
+     */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-
     if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, LOW_QOS, o)) {
       oc_rep_start_root_object();
       oc_rep_set_object(root, dos);
@@ -349,6 +361,9 @@ obt_jw_10(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  10) get pstat s=rfpro?
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_11, LOW_QOS, o);
@@ -362,12 +377,11 @@ obt_jw_9(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  9) post pstat s=rfpro
+    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-
-  oc_sec_dtls_close_connection(ep);
-  oc_sec_dtls_demote_anon_ciphersuite();
-
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_10, LOW_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -386,16 +400,14 @@ obt_jw_8(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  8) post doxm owned = true
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_9, LOW_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-    char uuid[37];
-    oc_uuid_to_str(my_uuid, uuid, 37);
-
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, owned, true);
-    oc_rep_set_text_string(root, devowneruuid, uuid);
     oc_rep_end_root_object();
     oc_do_post();
   }
@@ -409,12 +421,16 @@ obt_jw_7(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  7) post pstat rowneruuid
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_8, LOW_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[37];
     oc_uuid_to_str(my_uuid, uuid, 37);
+
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, rowneruuid, uuid);
     oc_rep_end_root_object();
@@ -430,11 +446,13 @@ obt_jw_6(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
   oc_device_t *device = o->device;
   oc_sec_cred_t *c = oc_sec_get_cred(&device->uuid, 0);
   if (!c) {
     return;
   }
+
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   char uuid[37];
@@ -453,6 +471,8 @@ obt_jw_6(oc_client_response_t *data)
 
   int credid = oc_obt_get_next_id();
 
+  /**  6) post cred rowneruuid, cred
+   */
   if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_7, LOW_QOS, o)) {
     c->credid = credid;
     c->credtype = 1;
@@ -488,28 +508,7 @@ obt_jw_5(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
 
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, LOW_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-    char uuid[37];
-    oc_uuid_to_str(my_uuid, uuid, 37);
-    oc_rep_start_root_object();
-    oc_rep_set_text_string(root, rowneruuid, uuid);
-    oc_rep_end_root_object();
-    oc_do_post();
-  }
-}
-
-static void
-obt_jw_4(oc_client_response_t *data)
-{
-  OC_DBG("In obt_jw_4\n");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    return;
-  }
   oc_uuid_t peer;
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -525,23 +524,42 @@ obt_jw_4(oc_client_response_t *data)
     }
     rep = rep->next;
   }
+
+  /**  5) <store peer uuid> ; post acl rowneruuid
+   */
   oc_device_t *device = o->device;
-  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  /* Store peer device's fixed uuid in local device object */
+
+  /* Store peer device's now fixed uuid in local device object */
   memcpy(device->uuid.id, peer.id, 16);
 
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  char uuid[37];
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_5, LOW_QOS, o)) {
+  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, LOW_QOS, o)) {
+    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    char uuid[37];
     oc_uuid_to_str(my_uuid, uuid, 37);
 
     oc_rep_start_root_object();
-    oc_rep_set_int(root, oxmsel, 0);
-    /* Set OBT's rowneruuid */
     oc_rep_set_text_string(root, rowneruuid, uuid);
     oc_rep_end_root_object();
     oc_do_post();
   }
+}
+
+static void
+obt_jw_4(oc_client_response_t *data)
+{
+  OC_DBG("In obt_jw_4\n");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return;
+  }
+
+  /**  4) get doxm
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+  oc_do_get("/oic/sec/doxm", ep, NULL, &obt_jw_5, LOW_QOS, o);
 }
 
 static void
@@ -552,11 +570,27 @@ obt_jw_3(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
   oc_dostype_t s = parse_dos(data->payload);
   if (s == OC_DOS_RFOTM) {
+    /**  3) post doxm oxmsel=0, rowneruuid, devowneruuid
+     */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-    oc_do_get("/oic/sec/doxm", ep, NULL, &obt_jw_4, LOW_QOS, o);
+    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_4, LOW_QOS, o)) {
+      oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+      char uuid[37];
+      oc_uuid_to_str(my_uuid, uuid, 37);
+
+      oc_rep_start_root_object();
+      oc_rep_set_int(root, oxmsel, 0);
+      /* Set OBT's uuid as rowneruuid */
+      oc_rep_set_text_string(root, rowneruuid, uuid);
+      /* Set OBT's uuid as devowneruuid */
+      oc_rep_set_text_string(root, devowneruuid, uuid);
+      oc_rep_end_root_object();
+      oc_do_post();
+    }
   }
 }
 
@@ -568,77 +602,68 @@ obt_jw_2(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
+
+  /**  2) get pstat s=rfotm?
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_3, LOW_QOS, o);
 }
 
-static void
-obt_jw_1(oc_client_response_t *data)
-{
-  OC_DBG("In obt_jw_1\n");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    return;
-  }
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-
-  oc_sec_dtls_elevate_anon_ciphersuite();
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, LOW_QOS, o)) {
-    oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, OC_DOS_RESET);
-    oc_rep_close_object(root, dos);
-    oc_rep_end_root_object();
-    oc_do_post();
-  }
-}
-
 /*
   OTM sequence:
-  0) perform_just_works_otm ; post doxm : oxmsel=0
   1) <anon ecdh>+post pstat s=reset
   2) get pstat s=rfotm?
-  3) get doxm
-  4) <store uuid> ; post doxm oxmsel=0, rowneruuid
-  5) post acl rowneruuid
+  3) post doxm oxmsel=0, rowneruuid, devowneruuid
+  4) get doxm
+  5) <store peer uuid> ; post acl rowneruuid
   6) post cred rowneruuid, cred
   7) post pstat rowneruuid
-  8) post doxm owned = true, devowneruuid
-  9) <close DTLS> ; <tls psk> ; post pstat s=rfpro
+  8) post doxm owned = true
+  9) post pstat s=rfpro
   10) get pstat s=rfpro?
   11) post pstat s=rfnop, isop=true
-  12) get pstat s=rfnop?
+  12) <close DTLS> ; <tls psk> ; get pstat s=rfnop?
   13) <close DTLS>
 */
 int
 oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
                               void *data)
 {
-  OC_DBG("In obt_jw_0\n");
+  OC_DBG("In oc_obt_perform_just_works_otm\n");
+
   /* Remove device from temporary cache */
   if (owned_device(&device->uuid)) {
     free_device(device);
     return -1;
   }
+
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)oc_memb_alloc(&oc_otm_ctx_s);
   if (!o) {
     return -1;
   }
+
   o->cb.cb = cb;
   o->cb.data = data;
   o->device = device;
-  oc_endpoint_t *ep = get_unsecure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_1, LOW_QOS, o)) {
+
+  /**  1) <anon ecdh>+post pstat s=reset
+   */
+  oc_sec_dtls_elevate_anon_ciphersuite();
+
+  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, LOW_QOS, o)) {
     oc_rep_start_root_object();
-    oc_rep_set_int(root, oxmsel, 0);
+    oc_rep_set_object(root, dos);
+    oc_rep_set_int(dos, s, OC_DOS_RESET);
+    oc_rep_close_object(root, dos);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       oc_set_delayed_callback(o, otm_request_timeout_cb, OBT_CB_TIMEOUT);
       return 0;
     }
   }
+
   free_device(o->device);
   oc_memb_free(&oc_otm_ctx_s, o);
   return -1;
@@ -1204,6 +1229,12 @@ free_ace(oc_sec_ace_t *ace)
   }
 }
 
+void
+oc_obt_free_ace(oc_sec_ace_t *ace)
+{
+  free_ace(ace);
+}
+
 static void
 free_acl2prov_request(oc_acl2prov_ctx_t *request, int status)
 {
@@ -1259,12 +1290,12 @@ provision_ace(int status, void *data)
       oc_rep_set_array(root, aclist2);
       oc_rep_object_array_start_item(aclist2);
 
+      oc_rep_set_object(aclist2, subject);
       if (ace->subject_type == OC_SUBJECT_UUID) {
         char c[37];
         oc_uuid_to_str(&ace->subject.uuid, c, 37);
-        oc_rep_set_text_string(aclist2, subject, c);
+        oc_rep_set_text_string(subject, uuid, c);
       } else {
-        oc_rep_set_object(aclist2, subject);
         switch (ace->subject.conn) {
         case OC_CONN_AUTH_CRYPT:
           oc_rep_set_text_string(subject, conntype, "auth-crypt");
@@ -1273,8 +1304,8 @@ provision_ace(int status, void *data)
           oc_rep_set_text_string(subject, conntype, "anon-clear");
           break;
         }
-        oc_rep_close_object(aclist2, subject);
       }
+      oc_rep_close_object(aclist2, subject);
 
       oc_rep_set_array(aclist2, resources);
       oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(ace->resources);
@@ -1293,6 +1324,8 @@ provision_ace(int status, void *data)
             break;
           case OC_ACE_WC_ALL_NON_DISCOVERABLE:
             oc_rep_set_text_string(resources, wc, "-");
+            break;
+          default:
             break;
           }
         }
