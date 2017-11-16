@@ -27,6 +27,9 @@
 #include "mbedtls/ssl_cookie.h"
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
+#ifdef OC_DEBUG
+#include "mbedtls/error.h"
+#endif /* OC_DEBUG */
 
 #include "api/oc_events.h"
 #include "config.h"
@@ -201,6 +204,11 @@ check_retr_timers()
         if (ret != 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
             ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
             ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+#ifdef OC_DEBUG
+          char buf[256];
+          mbedtls_strerror(ret, buf, 256);
+          OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+#endif /* OC_DEBUG */
           oc_sec_dtls_remove_peer(&peer->endpoint, false);
         }
       }
@@ -229,6 +237,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 {
   (void)data;
   (void)identity_len;
+  OC_DBG("oc_dtls: In PSK callback\n");
   oc_sec_dtls_peer_t *peer = oc_list_head(dtls_peers);
   while (peer != NULL) {
     if (&peer->ssl_ctx == ssl) {
@@ -237,13 +246,16 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     peer = peer->next;
   }
   if (peer) {
+    OC_DBG("oc_dtls: Found peer object\n");
     oc_sec_cred_t *cred =
       oc_sec_find_cred((oc_uuid_t *)identity, peer->endpoint.device);
     if (cred) {
+      OC_DBG("oc_dtls: Found peer credential\n");
       memcpy(peer->uuid.id, identity, 16);
       if (mbedtls_ssl_set_hs_psk(ssl, cred->key, 16) != 0) {
         return -1;
       }
+      OC_DBG("oc_dtls: Set peer credential to SSL handle\n");
       return 0;
     }
   }
@@ -274,7 +286,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint, int role)
   if (!peer) {
     peer = oc_memb_alloc(&dtls_peers_s);
     if (peer) {
-      OC_DBG("\n\noc_sec_dtls: Allocating new DTLS peer\n\n");
+      OC_DBG("oc_dtls: Allocating new DTLS peer\n");
       memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
       OC_LIST_STRUCT_INIT(peer, recv_q);
       OC_LIST_STRUCT_INIT(peer, send_q);
@@ -530,6 +542,11 @@ oc_sec_dtls_send_message(oc_message_t *message)
                                 message->length);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+#ifdef OC_DEBUG
+      char buf[256];
+      mbedtls_strerror(ret, buf, 256);
+      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+#endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
     } else {
       length = message->length;
@@ -553,6 +570,11 @@ write_application_data(void *ctx)
                                 message->length);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+#ifdef OC_DEBUG
+      char buf[256];
+      mbedtls_strerror(ret, buf, 256);
+      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+#endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
       break;
     }
@@ -583,6 +605,11 @@ oc_sec_dtls_init_connection(oc_message_t *message)
     int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+#ifdef OC_DEBUG
+      char buf[256];
+      mbedtls_strerror(ret, buf, 256);
+      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+#endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
       goto init_conn_err;
     }
@@ -653,6 +680,11 @@ read_application_data(void *ctx)
     } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
                ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
                ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+#ifdef OC_DEBUG
+      char buf[256];
+      mbedtls_strerror(ret, buf, 256);
+      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+#endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
     }
 #ifdef OC_CLIENT
@@ -688,6 +720,12 @@ oc_sec_dtls_recv_message(oc_message_t *message)
     oc_sec_dtls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER);
 
   if (peer) {
+#ifdef OC_DEBUG
+    char u[37];
+    oc_uuid_to_str(&peer->uuid, u, 37);
+    OC_DBG("oc_dtls: Received message from device %s\n", u);
+#endif /* OC_DEBUG */
+
     oc_list_add(peer->recv_q, message);
     oc_set_delayed_callback(peer, &read_application_data, 0);
     peer->timestamp = oc_clock_time();
