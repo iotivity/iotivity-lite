@@ -676,15 +676,15 @@ oc_sec_acl_default(int device)
     resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
       success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2,
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
                               oc_string(resource->uri), -1, 0, 0, device);
     }
     if (i >= OCF_SEC_DOXM && i <= OCF_SEC_CRED) {
       success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 6,
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 6,
                               oc_string(resource->uri), -1, 0, 0, device);
       success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, -1, 6,
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, 2, 6,
                               oc_string(resource->uri), -1, 0, 0, device);
     }
   }
@@ -751,7 +751,7 @@ oc_sec_set_post_otm_acl(int device)
   oc_string_array_t rt;
   oc_new_string_array(&rt, 1);
   oc_string_array_add_item(rt, "oic.r.doxm");
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/sec/doxm",
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2, "/oic/sec/doxm",
                         -1, &rt, 0, device);
   oc_free_string_array(&rt);
 
@@ -759,7 +759,7 @@ oc_sec_set_post_otm_acl(int device)
   for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
     oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
-      oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2,
+      oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
                             oc_string(resource->uri), -1, 0, 0, device);
     }
   }
