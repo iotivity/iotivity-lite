@@ -21,6 +21,8 @@
 #include "oc_rep.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_doxm.h"
+#include "security/oc_dtls.h"
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
@@ -85,6 +87,21 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   oc_rep_add_text_string(if, "oic.if.baseline");
   oc_rep_end_array((*parent), if);
 }
+
+#ifdef OC_SECURITY
+void
+oc_core_regen_unique_ids(int device)
+{
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  oc_device_info_t *d = &oc_device_info[device];
+  oc_gen_uuid(&doxm->deviceuuid);
+  memcpy(d->di.id, doxm->deviceuuid.id, 16);
+  oc_gen_uuid(&d->piid);
+  oc_gen_uuid(&oc_platform_info.pi);
+
+  oc_sec_dtls_update_psk_identity(device);
+}
+#endif /* OC_SECURITY */
 
 static void
 oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
@@ -237,10 +254,12 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#ifndef OC_SECURITY
   if (next_di == NULL)
     oc_gen_uuid(&oc_device_info[device_count].di);
   else
     oc_device_info[device_count].di = *next_di;
+#endif /* !OC_SECURITY */
 
   /* Construct device resource */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
@@ -253,7 +272,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
+#ifndef OC_SECURITY
   oc_gen_uuid(&oc_device_info[device_count].piid);
+#endif /* !OC_SECURITY */
+
   oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
   oc_new_string(&oc_device_info[device_count].icv, spec_version,
                 strlen(spec_version));
@@ -319,7 +341,10 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
                             OC_IF_BASELINE, OC_DISCOVERABLE,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
+#ifndef OC_SECURITY
   oc_gen_uuid(&oc_platform_info.pi);
+#endif /* !OC_SECURITY */
+
   oc_new_string(&oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
   oc_platform_info.init_platform_cb = init_cb;
   oc_platform_info.data = data;

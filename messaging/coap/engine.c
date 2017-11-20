@@ -485,6 +485,8 @@ coap_receive(oc_message_t *msg)
             request_buffer->mid = response_mid;
             goto send_message;
           }
+        } else {
+          request_buffer->ref_count = 0;
         }
       }
 
