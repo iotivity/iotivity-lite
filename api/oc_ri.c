@@ -813,8 +813,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * the requestor (the subject) is authorized to issue this request to
      * the resource.
      */
-    if ((cur_resource->properties & OC_SECURE) &&
-        !oc_sec_check_acl(method, cur_resource, endpoint)) {
+    if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
     } else
 #endif /* OC_SECURITY */
@@ -1045,6 +1044,13 @@ free_client_cb(oc_client_cb_t *cb)
   oc_memb_free(&client_cbs_s, cb);
 }
 
+oc_event_callback_retval_t
+oc_ri_remove_client_cb(void *data)
+{
+  free_client_cb(data);
+  return DONE;
+}
+
 void
 oc_ri_remove_client_cb_by_mid(uint16_t mid)
 {
@@ -1054,15 +1060,10 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
       break;
     cb = cb->next;
   }
-  if (cb)
+  if (cb) {
+    oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
-}
-
-oc_event_callback_retval_t
-oc_ri_remove_client_cb(void *data)
-{
-  free_client_cb(data);
-  return DONE;
+  }
 }
 
 oc_client_cb_t *
@@ -1173,7 +1174,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
         free_client_cb(cb);
 #ifdef OC_BLOCK_WISE
-        response_state = NULL;
+        *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
         return true;
       }
@@ -1207,7 +1208,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
 #ifdef OC_BLOCK_WISE
-    response_state = NULL;
+    *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
   } else {
     cb->observe_seq = client_response.observe_option;

@@ -361,6 +361,7 @@ provision_ace2(void)
 
   if (i == 0) {
     PRINT("\nNo devices to provision.. Please Re-Discover owned devices.\n");
+    my_devices = NULL;
     return;
   }
 
@@ -368,6 +369,7 @@ provision_ace2(void)
   SCANF("%d", &dev);
   if (dev >= i) {
     PRINT("ERROR: Invalid selection\n");
+    my_devices = NULL;
     return;
   }
 
@@ -388,6 +390,7 @@ provision_ace2(void)
 
   if (sub >= (i + 2)) {
     PRINT("ERROR: Invalid selection\n");
+    my_devices = NULL;
     return;
   }
 
@@ -404,11 +407,18 @@ provision_ace2(void)
 
   if (!ace) {
     PRINT("\nERROR: Could not create ACE\n");
+    my_devices = NULL;
     return;
   }
 
-  PRINT("\nEnter number of resources: ");
-  SCANF("%d", &num_resources);
+  while (num_resources <= 0) {
+    PRINT("\nEnter number of resources in this ACE: ");
+    SCANF("%d", &num_resources);
+
+    if (num_resources <= 0) {
+      PRINT("\n\nERROR: Enter valid number\n\n");
+    }
+  }
 
   int c;
   PRINT("\nResource properties\n");
@@ -418,6 +428,8 @@ provision_ace2(void)
 
     if (!res) {
       PRINT("\nERROR: Could not allocate new resource for ACE\n");
+      oc_obt_free_ace(ace);
+      my_devices = NULL;
       return;
     }
 
@@ -447,7 +459,7 @@ provision_ace2(void)
     }
     PRINT("Enter number of interfaces [0-None]");
     SCANF("%d", &c);
-    if (c > 0) {
+    if (c > 0 && c <= 7) {
       int j = 0;
       while (j < c) {
         int k;
@@ -482,6 +494,9 @@ provision_ace2(void)
         }
         j++;
       }
+    } else if (c < 0 || c > 7) {
+      PRINT("\nWARNING: Invalid number of interfaces.. skipping interface "
+            "selection\n");
     }
     PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
     SCANF("%d", &c);

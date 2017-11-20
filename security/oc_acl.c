@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_doxm.h"
 #include "oc_dtls.h"
+#include "oc_pstat.h"
 #include "oc_rep.h"
 #include "oc_store.h"
 #include <stddef.h>
@@ -188,12 +189,20 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
         }
         break;
       case OC_SUBJECT_ROLE:
-        if (oc_string_len(subject->role) == oc_string_len(ace->subject.role) &&
-            memcmp(oc_string(subject->role), oc_string(ace->subject.role),
-                   oc_string_len(subject->role)) == 0) {
-          // TODO: check if role corresponds to credential used to secure
-          //       this connection.
-          return ace;
+        if ((oc_string_len(subject->role.role) ==
+               oc_string_len(ace->subject.role.role) &&
+             memcmp(oc_string(subject->role.role),
+                    oc_string(ace->subject.role.role),
+                    oc_string_len(subject->role.role)) == 0)) {
+          if (oc_string_len(ace->subject.role.authority) ==
+                oc_string_len(subject->role.authority) &&
+              memcmp(oc_string(subject->role.authority),
+                     oc_string(ace->subject.role.authority),
+                     oc_string_len(subject->role.authority)) == 0) {
+            // TODO: check if role corresponds to credential used to secure
+            //       this connection.
+            return ace;
+          }
         }
         break;
       case OC_SUBJECT_CONN:
@@ -244,10 +253,70 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
   return permission;
 }
 
+#ifdef OC_DEBUG
+static void
+dump_acl(int device)
+{
+  oc_sec_acl_t *a = &aclist[device];
+  oc_sec_ace_t *ace = oc_list_head(a->subjects);
+  PRINT("\nAccess Control List\n---------\n");
+  while (ace != NULL) {
+    PRINT("\n---------\nAce: %d\n---------\n", ace->aceid);
+    switch (ace->subject_type) {
+    case OC_SUBJECT_UUID: {
+      char u[37];
+      oc_uuid_to_str(&ace->subject.uuid, u, 37);
+      PRINT("UUID: %s\n", u);
+    } break;
+    case OC_SUBJECT_CONN: {
+      switch (ace->subject.conn) {
+      case OC_CONN_AUTH_CRYPT:
+        PRINT("CONN: auth-crypt\n");
+        break;
+      case OC_CONN_ANON_CLEAR:
+        PRINT("CONN: anon-clear\n");
+        break;
+      }
+    } break;
+    case OC_SUBJECT_ROLE:
+      break;
+    }
+
+    oc_ace_res_t *r = oc_list_head(ace->resources);
+    PRINT("\nResources:\n");
+    while (r != NULL) {
+      if (oc_string_len(r->href) > 0) {
+        PRINT("href: %s\n", oc_string(r->href));
+      }
+      switch (r->wildcard) {
+      case OC_ACE_NO_WC:
+        PRINT("No wildcard\n");
+        break;
+      case OC_ACE_WC_ALL:
+        PRINT("Wildcard: *\n");
+        break;
+      case OC_ACE_WC_ALL_DISCOVERABLE:
+        PRINT("Wildcard: +\n");
+        break;
+      case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+        PRINT("Wildcard: -\n");
+        break;
+      }
+      PRINT("Permission: %d\n", ace->permission);
+      r = r->next;
+    }
+    ace = ace->next;
+  }
+}
+#endif /* OC_DEBUG */
+
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                  oc_endpoint_t *endpoint)
 {
+#ifdef OC_DEBUG
+  dump_acl(endpoint->device);
+#endif /* OC_DEBUG */
   oc_uuid_t *uuid = oc_sec_dtls_get_peer_uuid(endpoint);
 
   if (uuid &&
@@ -339,18 +408,20 @@ oc_sec_encode_acl(int device)
 
   while (sub != NULL) {
     oc_rep_object_array_start_item(aclist2);
+    oc_rep_set_object(aclist2, subject);
     switch (sub->subject_type) {
     case OC_SUBJECT_UUID:
       oc_uuid_to_str(&sub->subject.uuid, uuid, 37);
-      oc_rep_set_text_string(aclist2, subject, uuid);
+      oc_rep_set_text_string(subject, uuid, uuid);
       break;
     case OC_SUBJECT_ROLE:
-      oc_rep_set_object(aclist2, subject);
-      oc_rep_set_text_string(subject, role, oc_string(sub->subject.role));
-      oc_rep_close_object(aclist2, subject);
+      oc_rep_set_text_string(subject, role, oc_string(sub->subject.role.role));
+      if (oc_string_len(sub->subject.role.authority) > 0) {
+        oc_rep_set_text_string(subject, authority,
+                               oc_string(sub->subject.role.authority));
+      }
       break;
     case OC_SUBJECT_CONN: {
-      oc_rep_set_object(aclist2, subject);
       switch (sub->subject.conn) {
       case OC_CONN_AUTH_CRYPT:
         oc_rep_set_text_string(subject, conntype, auth_crypt);
@@ -359,16 +430,16 @@ oc_sec_encode_acl(int device)
         oc_rep_set_text_string(subject, conntype, anon_clear);
         break;
       }
-      oc_rep_close_object(aclist2, subject);
     } break;
     }
+    oc_rep_close_object(aclist2, subject);
 
     oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(sub->resources);
     oc_rep_set_array(aclist2, resources);
 
     while (res != NULL) {
       oc_rep_object_array_start_item(resources);
-      if (res->wildcard == 0) {
+      if (res->wildcard == -1) {
         oc_rep_set_text_string(resources, href, oc_string(res->href));
       } else {
         switch (res->wildcard) {
@@ -380,6 +451,8 @@ oc_sec_encode_acl(int device)
           break;
         case OC_ACE_WC_ALL:
           oc_rep_set_text_string(resources, wc, wc_all);
+          break;
+        default:
           break;
         }
       }
@@ -438,19 +511,29 @@ new_ace:
   }
 
   OC_LIST_STRUCT_INIT(ace, resources);
+
   if (type == OC_SUBJECT_ROLE) {
-    oc_new_string(&ace->subject.role, oc_string(subject->role),
-                  oc_string_len(subject->role));
+    oc_new_string(&ace->subject.role.role, oc_string(subject->role.role),
+                  oc_string_len(subject->role.role));
+    if (oc_string_len(subject->role.authority) > 0) {
+      oc_new_string(&ace->subject.role.authority,
+                    oc_string(subject->role.authority),
+                    oc_string_len(subject->role.authority));
+    }
   } else {
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
   }
+
   ace->subject_type = type;
+
   if (aceid == -1) {
     ace->aceid = get_new_aceid(device);
   } else {
     ace->aceid = aceid;
   }
+
   ace->permission = permission;
+
   oc_list_add(aclist[device].subjects, ace);
 
 new_res:
@@ -458,10 +541,27 @@ new_res:
 
   if (res) {
     res->wildcard = wildcard;
+#ifdef OC_DEBUG
+    switch (res->wildcard) {
+    case OC_ACE_WC_ALL_DISCOVERABLE:
+      OC_DBG("Adding ACE for + with permission\n\n", permission);
+      break;
+    case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+      OC_DBG("Adding ACE for - with permission\n\n", permission);
+      break;
+    case OC_ACE_WC_ALL:
+      OC_DBG("Adding ACE for * with permission\n\n", permission);
+      break;
+    default:
+      break;
+    }
+#endif /* OC_DEBUG */
+
     if (href) {
       oc_new_string(&res->href, href, strlen(href));
       OC_DBG("Adding ACE for %s with permission %d\n\n", href, permission);
     }
+
     if (rt) {
       oc_new_string_array(&res->types, oc_string_array_get_allocated_size(*rt));
       int i;
@@ -469,6 +569,7 @@ new_res:
         oc_string_array_add_item(res->types, oc_string_array_get_item(*rt, i));
       }
     }
+
     res->interfaces = interfaces;
 
     oc_list_add(ace->resources, res);
@@ -540,35 +641,6 @@ oc_acl_remove_ace(int aceid, int device)
   return removed;
 }
 
-static bool
-oc_acl_remove_subject(const char *subject, int device)
-{
-  bool removed = false;
-  /* At the moment, I'm not sure if we are to handle DELETE requests of
-     ACEs for non-UUID subjects */
-  if (strlen(subject) != 36) {
-    return false;
-  }
-  oc_uuid_t subjectuuid;
-  oc_str_to_uuid(subject, &subjectuuid);
-
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects), *next = 0;
-  while (ace != NULL) {
-    next = ace->next;
-    if (ace->subject_type == OC_SUBJECT_UUID &&
-        memcmp(subjectuuid.id, ace->subject.uuid.id, 16) == 0) {
-      oc_ace_free_resources(device, &ace, NULL);
-      oc_list_remove(aclist[device].subjects, ace);
-      oc_memb_free(&ace_l, ace);
-      removed = true;
-      break;
-    }
-    ace = next;
-  }
-
-  return removed;
-}
-
 static void
 oc_sec_clear_acl(int device)
 {
@@ -577,7 +649,10 @@ oc_sec_clear_acl(int device)
   while (ace != NULL) {
     oc_ace_free_resources(device, &ace, NULL);
     if (ace->subject_type == OC_SUBJECT_ROLE) {
-      oc_free_string(&ace->subject.role);
+      oc_free_string(&ace->subject.role.role);
+      if (oc_string_len(ace->subject.role.authority) > 0) {
+        oc_free_string(&ace->subject.role.authority);
+      }
     }
     oc_memb_free(&ace_l, ace);
     ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
@@ -601,19 +676,16 @@ oc_sec_acl_default(int device)
     resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
       success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2,
-                              oc_string(resource->uri), 0, 0, 0, device);
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
+                              oc_string(resource->uri), -1, 0, 0, device);
     }
-    if (i == OCF_SEC_DOXM) {
-      success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 6,
-                              oc_string(resource->uri), 0, 0, 0, device);
-    }
-
     if (i >= OCF_SEC_DOXM && i <= OCF_SEC_CRED) {
       success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, -1, 6,
-                              oc_string(resource->uri), 0, 0, 0, device);
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 6,
+                              oc_string(resource->uri), -1, 0, 0, device);
+      success &=
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, 2, 6,
+                              oc_string(resource->uri), -1, 0, 0, device);
     }
   }
   OC_DBG("ACL for core resources initialized %d\n", success);
@@ -631,7 +703,7 @@ oc_sec_set_post_otm_acl(int device)
 
   // pre otm:
   // anon-clear R: res, p, d
-  // anon-clear RW: doxm
+  // anon-clear RW: doxm, pstat, acl, cred
   // auth-crypt RW: doxm, pstat, acl, cred
   // post otm:
   // anon-clear R: res, p, d
@@ -664,17 +736,65 @@ oc_sec_set_post_otm_acl(int device)
     if (anon_clear) {
       oc_ace_free_resources(device, &anon_clear, "/oic/sec/doxm");
     }
+    if (anon_clear) {
+      oc_ace_free_resources(device, &anon_clear, "/oic/sec/pstat");
+    }
+    if (anon_clear) {
+      oc_ace_free_resources(device, &anon_clear, "/oic/sec/acl2");
+    }
+    if (anon_clear) {
+      oc_ace_free_resources(device, &anon_clear, "/oic/sec/cred");
+    }
   } while (anon_clear);
 
   /* Add anon-clear R access to doxm */
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/sec/doxm",
-                        0, 0, 0, device);
+  oc_string_array_t rt;
+  oc_new_string_array(&rt, 1);
+  oc_string_array_add_item(rt, "oic.r.doxm");
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2, "/oic/sec/doxm",
+                        -1, &rt, 0, device);
+  oc_free_string_array(&rt);
+
+  int i;
+  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
+    oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
+    if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
+      oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
+                            oc_string(resource->uri), -1, 0, 0, device);
+    }
+  }
 }
 
 bool
-oc_sec_decode_acl(oc_rep_t *rep, int device)
+oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
 {
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  oc_rep_t *t = rep;
   int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case STRING:
+      if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
+        if (!from_storage && (ps->s == OC_DOS_RFNOP || ps->s == OC_DOS_RFPRO)) {
+          OC_ERR("oc_acl: Cannot set rowneruuid in RFNOP/RFPRO\n");
+          return false;
+        }
+      }
+      break;
+    case OBJECT_ARRAY: {
+      if (!from_storage && ps->s == OC_DOS_RFNOP) {
+        OC_ERR("oc_acl: Cannot provision ACE in RFNOP\n");
+        return false;
+      }
+    } break;
+    default:
+      break;
+    }
+    t = t->next;
+  }
+
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
@@ -697,12 +817,6 @@ oc_sec_decode_acl(oc_rep_t *rep, int device)
         while (ace != NULL) {
           len = oc_string_len(ace->name);
           switch (ace->type) {
-          case STRING:
-            if (len == 7 && memcmp(oc_string(ace->name), "subject", 7) == 0) {
-              oc_str_to_uuid(oc_string(ace->value.string), &subject.uuid);
-              subject_type = OC_SUBJECT_UUID;
-            }
-            break;
           case INT:
             if (len == 10 &&
                 memcmp(oc_string(ace->name), "permission", 10) == 0) {
@@ -720,8 +834,18 @@ oc_sec_decode_acl(oc_rep_t *rep, int device)
             oc_rep_t *sub = ace->value.object;
             while (sub != NULL) {
               len = oc_string_len(sub->name);
-              if (len == 4 && memcmp(oc_string(sub->name), "role", 4) == 0) {
-                oc_new_string(&subject.role, oc_string(sub->value.string),
+              if (len == 4 && memcmp(oc_string(sub->name), "uuid", 4) == 0) {
+                oc_str_to_uuid(oc_string(sub->value.string), &subject.uuid);
+                subject_type = OC_SUBJECT_UUID;
+              } else if (len == 4 &&
+                         memcmp(oc_string(sub->name), "role", 4) == 0) {
+                oc_new_string(&subject.role.role, oc_string(sub->value.string),
+                              oc_string_len(sub->value.string));
+                subject_type = OC_SUBJECT_ROLE;
+              } else if (len == 9 &&
+                         memcmp(oc_string(sub->name), "authority", 9) == 0) {
+                oc_new_string(&subject.role.authority,
+                              oc_string(sub->value.string),
                               oc_string_len(sub->value.string));
                 subject_type = OC_SUBJECT_ROLE;
               } else if (len == 8 &&
@@ -747,8 +871,12 @@ oc_sec_decode_acl(oc_rep_t *rep, int device)
           ace = ace->next;
         }
 
+        if (aceid != -1 && !unique_aceid(aceid, device)) {
+          oc_acl_remove_ace(aceid, device);
+        }
+
         while (resources != NULL) {
-          oc_ace_wildcard_t wc = 0;
+          oc_ace_wildcard_t wc = OC_ACE_NO_WC;
           oc_rep_t *resource = resources->value.object;
           const char *href = 0;
 #ifdef OC_SERVER
@@ -814,14 +942,6 @@ oc_sec_decode_acl(oc_rep_t *rep, int device)
             resource = resource->next;
           }
 
-          if (!unique_aceid(aceid, device)) {
-            oc_acl_remove_ace(aceid, device);
-            aceid = -1;
-          }
-          if (aceid == -1) {
-            aceid = get_new_aceid(device);
-          }
-
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
                                 wc, rt, interfaces, device);
 
@@ -849,7 +969,10 @@ oc_sec_decode_acl(oc_rep_t *rep, int device)
         }
 
         if (subject_type == OC_SUBJECT_ROLE) {
-          oc_free_string(&subject.role);
+          oc_free_string(&subject.role.role);
+          if (oc_string_len(subject.role.authority) > 0) {
+            oc_free_string(&subject.role.authority);
+          }
         }
 
         aclist2 = aclist2->next;
@@ -868,11 +991,12 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  if (oc_sec_decode_acl(request->request_payload, request->resource->device)) {
+  if (oc_sec_decode_acl(request->request_payload, false,
+                        request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_acl(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
 
@@ -881,15 +1005,29 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  char *subjectuuid = 0;
-  int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
-  if (ret != -1 &&
-      oc_acl_remove_subject(subjectuuid, request->origin->device)) {
+  bool success = false;
+  char *query_param = 0;
+  int ret = oc_get_query_value(request, "aceid", &query_param);
+  int aceid = 0;
+  if (ret != -1) {
+    aceid = (int)strtoul(query_param, NULL, 10);
+    if (aceid != 0) {
+      if (oc_acl_remove_ace(aceid, request->origin->device)) {
+        success = true;
+      }
+    }
+  } else if (ret == -1) {
+    oc_sec_clear_acl(request->origin->device);
+    oc_sec_set_post_otm_acl(request->origin->device); //
+    success = true;
+  }
+
+  if (success) {
     oc_send_response(request, OC_STATUS_DELETED);
     oc_sec_dump_acl(request->resource->device);
-    return;
+  } else {
+    oc_send_response(request, OC_STATUS_NOT_FOUND);
   }
-  oc_send_response(request, OC_STATUS_NOT_FOUND);
 }
 
 void

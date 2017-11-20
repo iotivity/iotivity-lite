@@ -34,6 +34,7 @@ typedef enum {
 } oc_ace_permissions_t;
 
 typedef enum {
+  OC_ACE_NO_WC = -1,
   OC_ACE_WC_ALL = 0,
   OC_ACE_WC_ALL_DISCOVERABLE,
   OC_ACE_WC_ALL_NON_DISCOVERABLE,
@@ -62,7 +63,11 @@ typedef struct oc_ace_res_s
 typedef union
 {
   oc_uuid_t uuid;
-  oc_string_t role;
+  struct
+  {
+    oc_string_t role;
+    oc_string_t authority;
+  } role;
   oc_ace_connection_type_t conn;
 } oc_ace_subject_t;
 
@@ -87,7 +92,7 @@ void oc_sec_acl_init(void);
 oc_sec_acl_t *oc_sec_get_acl(int device);
 void oc_sec_acl_default(int device);
 bool oc_sec_encode_acl(int device);
-bool oc_sec_decode_acl(oc_rep_t *rep, int device);
+bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device);
 void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);

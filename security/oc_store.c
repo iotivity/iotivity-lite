@@ -77,10 +77,6 @@ oc_sec_load_doxm(int device)
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
-  if (ret <= 0) {
-    oc_sec_doxm_default(device);
-  }
-
   oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   memcpy(deviceuuid, &doxm->deviceuuid, sizeof(oc_uuid_t));
@@ -165,7 +161,7 @@ oc_sec_load_cred(int device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, ret, &rep);
-    oc_sec_decode_cred(rep, NULL, device);
+    oc_sec_decode_cred(rep, NULL, true, device);
     oc_free_rep(rep);
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
@@ -205,16 +201,12 @@ oc_sec_load_acl(int device)
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, ret, &rep);
-      oc_sec_decode_acl(rep, device);
+      oc_sec_decode_acl(rep, true, device);
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  }
-
-  if (ret <= 0) {
-    oc_sec_acl_default(device);
   }
 }
 

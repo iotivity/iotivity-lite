@@ -19,6 +19,12 @@
 #include <string.h>
 #include <zephyr.h>
 
+#ifdef CONFIG_NET_L2_BT
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/conn.h>
+#include <gatt/ipss.h>
+#endif
+
 static struct k_sem block;
 static bool light_state = false;
 
@@ -114,6 +120,18 @@ signal_event_loop(void)
   k_sem_give(&block);
 }
 
+#ifdef CONFIG_NET_L2_BT
+static void connected(struct bt_conn *conn, u8_t err)
+{
+  PRINT("client connected\n");
+}
+
+static void disconnected(struct bt_conn *conn, u8_t reason)
+{
+  PRINT("client disconnected\n");
+}
+#endif
+
 void
 main(void)
 {
@@ -122,6 +140,26 @@ main(void)
                                        .register_resources = register_resources };
 
   k_sem_init(&block, 0, 1);
+
+#ifdef CONFIG_NET_L2_BT
+  static struct bt_conn_cb conn_callbacks = {
+    .connected = connected,
+    .disconnected = disconnected,
+  };
+
+#ifndef CONFIG_NET_APP_AUTO_INIT
+  int err;
+  err = bt_enable(NULL);
+  if (err) {
+    OC_WRN("oc_connectivity_init: bluetooth initialization failed (%d)\n", err);
+    return;
+  }
+#endif
+
+  bt_conn_cb_register(&conn_callbacks);
+  ipss_init();
+  ipss_advertise();
+#endif
 
   if (oc_main_init(&handler) < 0)
     return;

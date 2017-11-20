@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_doxm.h"
 #include "oc_dtls.h"
+#include "oc_pstat.h"
 #include "oc_store.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
@@ -94,14 +95,26 @@ get_new_credid(int device)
   return credid;
 }
 
+static void
+oc_sec_remove_cred(oc_sec_cred_t *cred, int device)
+{
+  oc_list_remove(devices[device].creds, cred);
+  if (oc_string_len(cred->role.role) > 0) {
+    oc_free_string(&cred->role.role);
+    if (oc_string_len(cred->role.authority) > 0) {
+      oc_free_string(&cred->role.authority);
+    }
+  }
+  oc_memb_free(&creds, cred);
+}
+
 static bool
-oc_sec_remove_cred(int credid, int device)
+oc_sec_remove_cred_by_credid(int credid, int device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
     if (cred->credid == credid) {
-      oc_list_remove(devices[device].creds, cred);
-      oc_memb_free(&creds, cred);
+      oc_sec_remove_cred(cred, device);
       return true;
     }
     cred = cred->next;
@@ -157,6 +170,15 @@ oc_sec_encode_cred(bool persist, int device)
     oc_rep_set_int(creds, credtype, cr->credtype);
     oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
+    if (oc_string_len(cr->role.role) > 0) {
+      oc_rep_set_object(creds, roleid);
+      oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
+      if (oc_string_len(cr->role.authority) > 0) {
+        oc_rep_set_text_string(roleid, authority,
+                               oc_string(cr->role.authority));
+      }
+      oc_rep_close_object(creds, roleid);
+    }
     oc_rep_set_object(creds, privatedata);
     if (persist) {
       oc_rep_set_byte_string(privatedata, data, cr->key, 16);
@@ -175,14 +197,37 @@ oc_sec_encode_cred(bool persist, int device)
 }
 
 bool
-oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
+oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
+                   int device)
 {
-  int credid = -1, credtype = 0;
-  char subjectuuid[37] = { 0 };
-  oc_uuid_t subject;
-  oc_sec_cred_t *credobj;
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  oc_rep_t *t = rep;
   int len = 0;
-  uint8_t key[24];
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case STRING:
+      if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
+        if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
+          OC_ERR("oc_cred: Can set rowneruuid only in RFOTM/SRESET\n");
+          return false;
+        }
+      }
+      break;
+    case OBJECT_ARRAY: {
+      if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET &&
+          ps->s != OC_DOS_RFPRO) {
+        OC_ERR("oc_cred: Can set cred only in RFOTM/SRESET/RFPRO\n");
+        return false;
+      }
+    } break;
+    default:
+      break;
+    }
+    t = t->next;
+  }
+
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
@@ -196,11 +241,14 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
       oc_rep_t *creds_array = rep->value.object_array;
       while (creds_array != NULL) {
         oc_rep_t *cred = creds_array->value.object;
-        bool valid_cred = false;
+        int credid = -1, credtype = 0;
+        oc_string_t *role = 0, *authority = 0, *subjectuuid = 0;
+        uint8_t key[24];
+        bool non_empty = false;
         bool got_key = false, base64_key = false;
         while (cred != NULL) {
           len = oc_string_len(cred->name);
-          valid_cred = true;
+          non_empty = true;
           switch (cred->type) {
           case INT:
             if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0)
@@ -212,54 +260,70 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
           case STRING:
             if (len == 11 &&
                 memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
-              memcpy(subjectuuid, oc_string(cred->value.string),
-                     oc_string_len(cred->value.string) + 1);
+              subjectuuid = &cred->value.string;
             }
             break;
           case OBJECT: {
             oc_rep_t *data = cred->value.object;
-            while (data != NULL) {
-              switch (data->type) {
-              case STRING: {
-                if (oc_string_len(data->name) == 8 &&
-                    memcmp("encoding", oc_string(data->name), 8) == 0) {
-                  if (oc_string_len(data->value.string) == 23 &&
-                      memcmp("oic.sec.encoding.base64",
-                             oc_string(data->value.string), 23) == 0) {
-                    base64_key = true;
+            if (len == 11 &&
+                memcmp(oc_string(cred->name), "privatedata", 11) == 0) {
+              while (data != NULL) {
+                switch (data->type) {
+                case STRING: {
+                  if (oc_string_len(data->name) == 8 &&
+                      memcmp("encoding", oc_string(data->name), 8) == 0) {
+                    if (oc_string_len(data->value.string) == 23 &&
+                        memcmp("oic.sec.encoding.base64",
+                               oc_string(data->value.string), 23) == 0) {
+                      base64_key = true;
+                    }
+                  } else if (oc_string_len(data->name) == 4 &&
+                             memcmp(oc_string(data->name), "data", 4) == 0) {
+                    uint8_t *p = oc_cast(data->value.string, uint8_t);
+                    int size = oc_string_len(data->value.string);
+                    if (size == 0)
+                      goto next_item;
+                    if (size != 24) {
+                      OC_ERR("oc_cred: Invalid key\n");
+                      return false;
+                    }
+                    got_key = true;
+                    memcpy(key, p, size);
                   }
-                } else if (oc_string_len(data->name) == 4 &&
-                           memcmp(oc_string(data->name), "data", 4) == 0) {
+                } break;
+                case BYTE_STRING: {
                   uint8_t *p = oc_cast(data->value.string, uint8_t);
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
-                  if (size != 24) {
+                  if (size != 16) {
+                    OC_ERR("oc_cred: Invalid key\n");
                     return false;
                   }
                   got_key = true;
-                  memcpy(key, p, size);
+                  memcpy(key, p, 16);
+                } break;
+                default:
+                  break;
                 }
-              } break;
-              case BYTE_STRING: {
-                uint8_t *p = oc_cast(data->value.string, uint8_t);
-                int size = oc_string_len(data->value.string);
-                if (size == 0)
-                  goto next_item;
-                if (size != 16) {
-                  return false;
-                }
-                got_key = true;
-                memcpy(key, p, 16);
-              } break;
-              default:
-                break;
+              next_item:
+                data = data->next;
               }
-            next_item:
-              data = data->next;
-            }
-            if (got_key && base64_key) {
-              oc_base64_decode(key, 24);
+              if (got_key && base64_key) {
+                oc_base64_decode(key, 24);
+              }
+            } else if (len == 6 &&
+                       memcmp(oc_string(cred->name), "roleid", 6) == 0) {
+              while (data != NULL) {
+                len = oc_string_len(data->name);
+                if (len == 4 && memcmp(oc_string(data->name), "role", 4) == 0) {
+                  role = &data->value.string;
+                } else if (len == 9 &&
+                           memcmp(oc_string(data->name), "authority", 9) == 0) {
+                  authority = &data->value.string;
+                }
+                data = data->next;
+              }
             }
           } break;
           default:
@@ -267,19 +331,27 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, int device)
           }
           cred = cred->next;
         }
-        if (valid_cred) {
-          oc_str_to_uuid(subjectuuid, &subject);
+        if (non_empty) {
+          oc_uuid_t subject;
+          oc_str_to_uuid(oc_string(*subjectuuid), &subject);
           if (!unique_credid(credid, device)) {
-            oc_sec_remove_cred(credid, device);
+            oc_sec_remove_cred_by_credid(credid, device);
             credid = -1;
           }
           if (credid == -1) {
             credid = get_new_credid(device);
           }
-          credobj = oc_sec_get_cred(&subject, device);
+          oc_sec_cred_t *credobj = oc_sec_get_cred(&subject, device);
           credobj->credid = credid;
           credobj->credtype = credtype;
-
+          if (role) {
+            oc_new_string(&credobj->role.role, oc_string(*role),
+                          oc_string_len(*role));
+            if (authority) {
+              oc_new_string(&credobj->role.authority, oc_string(*authority),
+                            oc_string_len(*authority));
+            }
+          }
           if (got_key) {
             memcpy(credobj->key, key, 16);
           } else {
@@ -317,8 +389,7 @@ oc_cred_remove_subject(const char *subjectuuid, int device)
   while (cred != NULL) {
     next = cred->next;
     if (memcmp(cred->subjectuuid.id, _subjectuuid.id, 16) == 0) {
-      oc_list_remove(devices[device].creds, cred);
-      oc_memb_free(&creds, cred);
+      oc_sec_remove_cred(cred, device);
       return true;
     }
     cred = next;
@@ -349,7 +420,7 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)data;
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(request->resource->device);
   oc_sec_cred_t *owner = NULL;
-  bool success = oc_sec_decode_cred(request->request_payload, &owner,
+  bool success = oc_sec_decode_cred(request->request_payload, &owner, false,
                                     request->resource->device);
   if (success && owner &&
       memcmp(owner->subjectuuid.id,
