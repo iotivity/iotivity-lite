@@ -144,6 +144,14 @@ process_device_resources(CborEncoder *links, const char *rt, int rt_len,
         oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_index), rt, rt_len,
         oc_string(anchor), links))
     matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_ACL, device_index),
+                      rt, rt_len, oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
+                      rt, rt_len, oc_string(anchor), links))
+    matches++;
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -320,6 +328,14 @@ process_oic_1_1_device_object(CborEncoder *device, const char *rt, int rt_len,
     matches++;
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_num), rt, rt_len,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_CRED, device_num), rt, rt_len,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), rt, rt_len,
         oc_rep_array(links)))
     matches++;
 #endif
