@@ -141,9 +141,9 @@ coap_send_transaction(coap_transaction_t *t)
       oc_etimer_restart(&t->retrans_timer); /* interval updated above */
       OC_PROCESS_CONTEXT_END(transaction_handler_process);
 
-      coap_send_message(t->message);
-
       oc_message_add_ref(t->message);
+
+      coap_send_message(t->message);
 
       t = NULL;
     } else {
@@ -173,8 +173,9 @@ coap_send_transaction(coap_transaction_t *t)
       coap_clear_transaction(t);
     }
   } else {
-    coap_send_message(t->message);
     oc_message_add_ref(t->message);
+
+    coap_send_message(t->message);
 
     coap_clear_transaction(t);
   }
