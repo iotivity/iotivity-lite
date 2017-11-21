@@ -43,14 +43,14 @@ oc_sec_create_svr(void)
                               OC_IF_BASELINE, OC_IF_BASELINE,
                               OC_SECURE | OC_OBSERVABLE | OC_DISCOVERABLE,
                               get_pstat, 0, post_pstat, 0, 1, "oic.r.pstat");
-    oc_core_populate_resource(OCF_SEC_ACL, i, "/oic/sec/acl2", OC_IF_BASELINE,
-                              OC_IF_BASELINE, OC_OBSERVABLE | OC_SECURE,
-                              get_acl, 0, post_acl, delete_acl, 1,
-                              "oic.r.acl2");
-    oc_core_populate_resource(OCF_SEC_CRED, i, "/oic/sec/cred", OC_IF_BASELINE,
-                              OC_IF_BASELINE, OC_OBSERVABLE | OC_SECURE,
-                              get_cred, 0, post_cred, delete_cred, 1,
-                              "oic.r.cred");
+    oc_core_populate_resource(
+      OCF_SEC_ACL, i, "/oic/sec/acl2", OC_IF_BASELINE, OC_IF_BASELINE,
+      OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE, get_acl, 0, post_acl,
+      delete_acl, 1, "oic.r.acl2");
+    oc_core_populate_resource(
+      OCF_SEC_CRED, i, "/oic/sec/cred", OC_IF_BASELINE, OC_IF_BASELINE,
+      OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE, get_cred, 0, post_cred,
+      delete_cred, 1, "oic.r.cred");
   }
 }
 
