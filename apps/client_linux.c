@@ -26,19 +26,12 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static void
-set_device_custom_property(void *data)
-{
-  (void)data;
-  oc_set_custom_device_property(purpose, "operate lamp");
-}
-
 static int
 app_init(void)
 {
-  int ret = oc_init_platform("Apple", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
-                       "ocf.res.1.0.0", set_device_custom_property, NULL);
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "Phone", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
