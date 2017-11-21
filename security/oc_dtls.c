@@ -551,8 +551,8 @@ oc_sec_dtls_send_message(oc_message_t *message)
     } else {
       length = message->length;
     }
-    oc_message_unref(message);
   }
+  oc_message_unref(message);
   return length;
 }
 
@@ -568,6 +568,7 @@ write_application_data(void *ctx)
   while (message != NULL) {
     int ret = mbedtls_ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
                                 message->length);
+    oc_message_unref(message);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #ifdef OC_DEBUG
@@ -578,7 +579,6 @@ write_application_data(void *ctx)
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
       break;
     }
-    oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->send_q);
   }
   return DONE;
@@ -602,6 +602,17 @@ oc_sec_dtls_init_connection(oc_message_t *message)
   oc_sec_dtls_peer_t *peer =
     oc_sec_dtls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
   if (peer) {
+    oc_message_t *duplicate = oc_list_head(peer->send_q);
+    while (duplicate != NULL) {
+      if (duplicate == message) {
+        break;
+      }
+      duplicate = duplicate->next;
+    }
+    if (duplicate == NULL) {
+      oc_message_add_ref(message);
+      oc_list_add(peer->send_q, message);
+    }
     int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != MBEDTLS_ERR_SSL_CONN_EOF) {
@@ -611,15 +622,10 @@ oc_sec_dtls_init_connection(oc_message_t *message)
       OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
 #endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
-      goto init_conn_err;
-    }
-    oc_list_add(peer->send_q, message);
-    if (ret == 0) {
+    } else if (ret == 0) {
       oc_set_delayed_callback(peer, &write_application_data, 0);
     }
-    return;
   }
-init_conn_err:
   oc_message_unref(message);
 }
 #endif /* OC_CLIENT */
@@ -697,13 +703,15 @@ read_application_data(void *ctx)
     if (message) {
       memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
-      if (ret <= 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-          ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+      if (ret <= 0) {
+        oc_message_unref(message);
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
           oc_sec_dtls_remove_peer(&peer->endpoint, false);
         }
-        oc_message_unref(message);
+        if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
+          oc_sec_dtls_remove_peer(&peer->endpoint, false);
+        }
         return DONE;
       }
       message->length = ret;

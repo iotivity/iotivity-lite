@@ -29,8 +29,17 @@
 #include "security/oc_store.h"
 #include <stdlib.h>
 
+/* master branch uses LOW_QOS. But in larger or bad WiFi
+   networks this is unreliable. */
+#ifdef OC_USE_LOW_QOS
 #define DISCOVERY_CB_DELAY (5)
 #define OBT_CB_TIMEOUT (12)
+#define OC_OBT_QOS LOW_QOS
+#else /* OC_USE_LOW_QOS */
+#define DISCOVERY_CB_DELAY (10)
+#define OBT_CB_TIMEOUT (15)
+#define OC_OBT_QOS HIGH_QOS
+#endif /* !OC_USE_LOW_QOS */
 
 typedef struct
 {
@@ -323,7 +332,7 @@ obt_jw_12(oc_client_response_t *data)
 
   oc_sec_dtls_demote_anon_ciphersuite();
 
-  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, LOW_QOS, o);
+  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, OC_OBT_QOS, o);
 }
 
 static void
@@ -341,7 +350,7 @@ obt_jw_11(oc_client_response_t *data)
      */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-    if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, LOW_QOS, o)) {
+    if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, OC_OBT_QOS, o)) {
       oc_rep_start_root_object();
       oc_rep_set_object(root, dos);
       oc_rep_set_int(dos, s, OC_DOS_RFNOP);
@@ -366,7 +375,7 @@ obt_jw_10(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_11, LOW_QOS, o);
+  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_11, OC_OBT_QOS, o);
 }
 
 static void
@@ -382,7 +391,7 @@ obt_jw_9(oc_client_response_t *data)
     */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_10, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_10, OC_OBT_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RFPRO);
@@ -405,7 +414,7 @@ obt_jw_8(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_9, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_9, OC_OBT_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, owned, true);
     oc_rep_end_root_object();
@@ -426,7 +435,7 @@ obt_jw_7(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_8, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_8, OC_OBT_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[37];
     oc_uuid_to_str(my_uuid, uuid, 37);
@@ -473,7 +482,7 @@ obt_jw_6(oc_client_response_t *data)
 
   /**  6) post cred rowneruuid, cred
    */
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_7, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_7, OC_OBT_QOS, o)) {
     c->credid = credid;
     c->credtype = 1;
     memcpy(c->subjectuuid.id, device->uuid.id, 16);
@@ -534,7 +543,7 @@ obt_jw_5(oc_client_response_t *data)
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
 
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, OC_OBT_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[37];
     oc_uuid_to_str(my_uuid, uuid, 37);
@@ -559,7 +568,7 @@ obt_jw_4(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  oc_do_get("/oic/sec/doxm", ep, NULL, &obt_jw_5, LOW_QOS, o);
+  oc_do_get("/oic/sec/doxm", ep, NULL, &obt_jw_5, OC_OBT_QOS, o);
 }
 
 static void
@@ -577,7 +586,7 @@ obt_jw_3(oc_client_response_t *data)
      */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_4, LOW_QOS, o)) {
+    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_4, OC_OBT_QOS, o)) {
       oc_uuid_t *my_uuid = oc_core_get_device_id(0);
       char uuid[37];
       oc_uuid_to_str(my_uuid, uuid, 37);
@@ -607,7 +616,7 @@ obt_jw_2(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_3, LOW_QOS, o);
+  oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_3, OC_OBT_QOS, o);
 }
 
 /*
@@ -652,7 +661,7 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
   oc_sec_dtls_elevate_anon_ciphersuite();
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, LOW_QOS, o)) {
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, OC_OBT_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RESET);
@@ -729,9 +738,9 @@ obt_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
       device->endpoint = endpoint;
       oc_set_delayed_callback(device, free_device, DISCOVERY_CB_DELAY + 2);
       if ((long)user_data == OC_OBT_UNOWNED_DISCOVERY) {
-        oc_do_get(uri, ep, "owned=FALSE", &obt_check_owned, LOW_QOS, device);
+        oc_do_get(uri, ep, "owned=FALSE", &obt_check_owned, OC_OBT_QOS, device);
       } else {
-        oc_do_get(uri, ep, "owned=TRUE", &obt_check_owned, LOW_QOS, device);
+        oc_do_get(uri, ep, "owned=TRUE", &obt_check_owned, OC_OBT_QOS, device);
       }
       return OC_CONTINUE_DISCOVERY;
     }
@@ -844,7 +853,7 @@ pstat_POST_dos1_to_dos2(oc_client_response_t *data)
     return;
   }
   oc_endpoint_t *ep = get_secure_endpoint(d->device->endpoint);
-  if (!oc_do_get("/oic/sec/pstat", ep, NULL, &pstat_GET_dos2, LOW_QOS, d)) {
+  if (!oc_do_get("/oic/sec/pstat", ep, NULL, &pstat_GET_dos2, OC_OBT_QOS, d)) {
     free_switch_dos_ctx(d, -1);
   }
 }
@@ -869,7 +878,7 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   d->cb.cb = cb;
   d->cb.data = data;
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
-                   LOW_QOS, d)) {
+                   OC_OBT_QOS, d)) {
     oc_rep_start_root_object();
     if (dos == OC_DOS_RFPRO || dos == OC_DOS_SRESET) {
       oc_rep_set_boolean(root, isop, false);
@@ -1015,7 +1024,7 @@ device1_cred(oc_client_response_t *data)
   oc_endpoint_t *ep = get_secure_endpoint(p->device2->endpoint);
   int credid = oc_obt_get_next_id();
 
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, LOW_QOS, p)) {
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, OC_OBT_QOS, p)) {
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
@@ -1055,7 +1064,7 @@ device2_RFPRO(int status, void *data)
 
     int credid = oc_obt_get_next_id();
 
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, LOW_QOS, p)) {
+    if (oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, OC_OBT_QOS, p)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, creds);
       oc_rep_object_array_start_item(creds);
@@ -1285,7 +1294,7 @@ provision_ace(int status, void *data)
     oc_sec_ace_t *ace = r->ace;
     ;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
-    if (oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, LOW_QOS, r)) {
+    if (oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, OC_OBT_QOS, r)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, aclist2);
       oc_rep_object_array_start_item(aclist2);
