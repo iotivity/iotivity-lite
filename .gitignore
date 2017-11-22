@@ -30,6 +30,7 @@ port/contiki/*.map
 port/contiki/obj_native/
 port/contiki/*.native
 port/contiki/symbols.*
+port/openthread/output
 *.o
 *.cmd
 .clang-format
