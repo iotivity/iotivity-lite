@@ -1,0 +1,3 @@
+TARGET_TUPLE = ${shell ${OPENTHREAD_PATH}/third_party/nlbuild-autotools/repo/autoconf/config.guess | sed -e 's/[[:digit:].]*$$//g'}
+LDFLAGS = -L ${OPENTHREAD_PATH}/output/${TARGET_TUPLE}/lib
+BOARD_LIBS = -lstdc++
