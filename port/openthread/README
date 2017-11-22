@@ -1,0 +1,17 @@
+1) Download and build openthread https://openthread.io/guides/building/
+
+2) Set following variables in Makefile:
+    * OPENTHREAD_PATH     - path to openthread sources
+    * OPENTHREAD_LIB_PATH - path to openthread libraries
+                            ($(OPENTHREAD_PATH)/output/{platform}/lib})
+    * OPENTHREAD_BOARD    - openthread platform
+    * CC                  - gcc compiler (for cross compilation)
+    * other compiler flags related to your platform (for cross compilation)
+
+3) Perform the build:
+    make 
+    Add DEBUG=1 to include debug output from IoTivity-Constrained.
+
+4) Launch the demo:
+    ./server 1
+    ./client 2
