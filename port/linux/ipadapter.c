@@ -48,6 +48,9 @@
 #define IFA_FLAGS (IFA_MULTICAST+1)
 #endif
 
+/* Define to print incoming messages. */
+#undef OC_DEBUG_MESSAGES
+
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
   0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
@@ -57,6 +60,10 @@ static const uint8_t ALL_OCF_NODES_RL[] = {
 };
 static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
+};
+/* For some reason CTT 1.5.31 sends its multicast to ff0e::158 */
+static const uint8_t CTT_COAP_NODES[] = {
+  0xff, 0x0e, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
 static pthread_mutex_t mutex;
@@ -134,6 +141,19 @@ get_ip_context_for_device(int device)
   return dev;
 }
 
+#ifdef OC_DEBUG_MESSAGES
+static void print_printable(const char *s, size_t len)
+{
+    size_t i;
+    for (i=0; i < len; ++i)
+    {
+        if (s[i] > 31 && s[i] < 127)
+            printf("%c", s[i]);
+    }
+    printf("\n");
+}
+#endif /* OC_DEBUG_MESSAGES */
+
 static void *
 network_event_thread(void *data)
 {
@@ -186,6 +206,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("server sock input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV6;
         message->endpoint.device = dev->device;
@@ -200,6 +224,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("mcast sock input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV6 | MULTICAST;
         message->endpoint.device = dev->device;
@@ -215,6 +243,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("server sock4 input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV4;
         message->endpoint.device = dev->device;
@@ -229,6 +261,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("mcast sock4 input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV4 | MULTICAST;
         message->endpoint.device = dev->device;
@@ -245,6 +281,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("secure server sock input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV6 | SECURED;
         message->endpoint.device = dev->device;
@@ -258,6 +298,10 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
+#ifdef OC_DEBUG_MESSAGES
+        printf("secure server sock4 input\n");
+        print_printable(message->data, count);
+#endif /* OC_DEBUG_MESSAGES */
         message->length = count;
         message->endpoint.flags = IPV4 | SECURED;
         message->endpoint.device = dev->device;
@@ -754,6 +798,10 @@ oc_connectivity_init(int device)
   }
   if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
                                              ALL_OCF_NODES_SL) < 0) {
+    return -1;
+  }
+  if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
+                                             CTT_COAP_NODES) < 0) {
     return -1;
   }
 
