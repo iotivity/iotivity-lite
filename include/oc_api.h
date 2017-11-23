@@ -544,6 +544,8 @@ typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
   an attribute of the oic.wk.con resource is changed, the callback
   will be invoked.
 
+  @note The function and oic.wk.con are only available if
+   \c OC_CON_RES is defined during compilation.
   @param callback The callback to register or NULL to unset it.
    If the function is invoked a second time, then the previously
    set callback is simply replaced.

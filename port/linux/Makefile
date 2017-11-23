@@ -76,6 +76,9 @@ endif
 ifeq ($(DYNAMIC),1)
 	CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
+ifeq ($(CONRES),1)
+	CFLAGS += -DOC_CON_RES
+endif
 
 ifeq ($(SECURE),1)
 	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c

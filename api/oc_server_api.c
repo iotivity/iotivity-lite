@@ -359,6 +359,7 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
   handler->user_data = user_data;
 }
 
+#ifdef OC_CON_RES
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
@@ -368,6 +369,7 @@ oc_set_con_write_cb(oc_con_write_cb_t callback)
     res->post_handler.user_data = *(void **)(&callback);
   }
 }
+#endif /* OC_CON_RES*/
 
 bool
 oc_add_resource(oc_resource_t *resource)

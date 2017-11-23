@@ -119,9 +119,11 @@ process_device_resources(CborEncoder *links, const char *rt, int rt_len,
                       rt_len, oc_string(anchor), links))
     matches++;
 
+#ifdef OC_CON_RES
   if (filter_resource(oc_core_get_resource_by_index(OCF_CON, device_index), rt,
                       rt_len, oc_string(anchor), links))
     matches++;
+#endif /* OC_CON_RES*/
 
 #ifdef OC_SECURITY
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM, device_index),
@@ -305,11 +307,13 @@ process_oic_1_1_device_object(CborEncoder *device, const char *rt, int rt_len,
                               rt, rt_len, oc_rep_array(links)))
     matches++;
 
+#ifdef OC_CON_RES
   /* oic.wk.con */
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_CON, device_num), rt, rt_len,
         oc_rep_array(links)))
     matches++;
+#endif /* OC_CON_RES*/
 
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
