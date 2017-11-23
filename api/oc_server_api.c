@@ -365,7 +365,9 @@ oc_set_con_write_cb(oc_con_write_cb_t callback)
   int i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
-    res->post_handler.user_data = *(void **)(&callback);
+    if (res) {
+      res->post_handler.user_data = *(void **)(&callback);
+    }
   }
 }
 
