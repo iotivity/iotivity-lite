@@ -167,6 +167,7 @@ main(void)
   oc_storage_config("./client_creds");
 #endif /* OC_SECURITY */
 
+  oc_set_con_res_announced(false);
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
