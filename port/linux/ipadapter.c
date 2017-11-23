@@ -61,10 +61,6 @@ static const uint8_t ALL_OCF_NODES_RL[] = {
 static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
-/* For some reason CTT 1.5.31 sends its multicast to ff0e::158 */
-static const uint8_t CTT_COAP_NODES[] = {
-  0xff, 0x0e, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
-};
 #define ALL_COAP_NODES_V4 0xe00001bb
 static pthread_mutex_t mutex;
 
@@ -798,10 +794,6 @@ oc_connectivity_init(int device)
   }
   if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
                                              ALL_OCF_NODES_SL) < 0) {
-    return -1;
-  }
-  if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
-                                             CTT_COAP_NODES) < 0) {
     return -1;
   }
 
