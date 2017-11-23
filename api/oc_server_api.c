@@ -33,6 +33,8 @@
 
 #include "oc_core_res.h"
 
+static bool announce_con_res = true;
+
 void
 oc_set_device_id(oc_uuid_t *uuid)
 {
@@ -365,8 +367,22 @@ oc_set_con_write_cb(oc_con_write_cb_t callback)
   int i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
-    res->post_handler.user_data = *(void **)(&callback);
+    if (res) {
+      res->post_handler.user_data = *(void **)(&callback);
+    }
   }
+}
+
+bool
+oc_get_con_res_announced(void)
+{
+  return announce_con_res;
+}
+
+void
+oc_set_con_res_announced(bool announce)
+{
+  announce_con_res = announce;
 }
 
 bool

@@ -291,11 +291,13 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  /* Construct oic.wk.con resource for this device. */
-  oc_core_populate_resource(
-    OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-    OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
-    oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+  if (oc_get_con_res_announced) {
+    /* Construct oic.wk.con resource for this device. */
+    oc_core_populate_resource(
+      OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
+      oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+  }
 
   oc_create_discovery_resource(OCF_RES, device_count);
 
@@ -445,7 +447,9 @@ oc_core_get_resource_by_uri(const char *uri, int device)
       type = OCF_RES;
     } else if ((strlen(uri) - skip) == OC_NAMELEN_CON_RES &&
                memcmp(uri + skip, OC_NAME_CON_RES, OC_NAMELEN_CON_RES) == 0) {
-      type = OCF_CON;
+      if (oc_get_con_res_announced()) {
+        type = OCF_CON;
+      }
     } else if ((strlen(uri) - skip) == 5 &&
                memcmp(uri + skip, "oic/d", 5) == 0) {
       type = OCF_D;
