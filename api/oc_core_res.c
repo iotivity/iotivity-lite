@@ -443,7 +443,7 @@ oc_core_get_resource_by_uri(const char *uri, int device)
     int type = 0;
     if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oic/res", 7) == 0) {
       type = OCF_RES;
-    } else if ((strlen(uri) - skip) == 7 &&
+    } else if ((strlen(uri) - skip) == OC_NAMELEN_CON_RES &&
                memcmp(uri + skip, OC_NAME_CON_RES, OC_NAMELEN_CON_RES) == 0) {
       type = OCF_CON;
     } else if ((strlen(uri) - skip) == 5 &&
