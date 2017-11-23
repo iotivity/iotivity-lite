@@ -40,7 +40,16 @@ static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 static oc_platform_info_t oc_platform_info;
 
+static bool announce_con_res = true;
 static int device_count;
+
+/* Although used several times in the OCF spec, "/oic/con" is not
+   accepted by the spec. Use a private prefix instead.
+   Update OC_NAMELEN_CON_RES if changing the value.
+   String must not have a leading slash. */
+#define OC_NAME_CON_RES "oc/con"
+/* Number of characters of OC_NAME_CON_RES */
+#define OC_NAMELEN_CON_RES 6
 
 #ifdef OC_DYNAMIC_ALLOCATION
 void
@@ -215,6 +224,18 @@ oc_core_get_num_devices(void)
   return device_count;
 }
 
+bool
+oc_get_con_res_announced(void)
+{
+  return announce_con_res;
+}
+
+void
+oc_set_con_res_announced(bool announce)
+{
+  announce_con_res = announce;
+}
+
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
@@ -271,11 +292,13 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  /* Construct oic.wk.con resource for this device. */
-  oc_core_populate_resource(
-    OCF_CON, device_count, "/oic/con", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-    OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
-    oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+  if (oc_get_con_res_announced) {
+    /* Construct oic.wk.con resource for this device. */
+    oc_core_populate_resource(
+      OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
+      oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+  }
 
   oc_create_discovery_resource(OCF_RES, device_count);
 
@@ -423,9 +446,11 @@ oc_core_get_resource_by_uri(const char *uri, int device)
     int type = 0;
     if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oic/res", 7) == 0) {
       type = OCF_RES;
-    } else if ((strlen(uri) - skip) == 7 &&
-               memcmp(uri + skip, "oic/con", 7) == 0) {
-      type = OCF_CON;
+    } else if ((strlen(uri) - skip) == OC_NAMELEN_CON_RES &&
+               memcmp(uri + skip, OC_NAME_CON_RES, OC_NAMELEN_CON_RES) == 0) {
+      if (oc_get_con_res_announced()) {
+        type = OCF_CON;
+      }
     } else if ((strlen(uri) - skip) == 5 &&
                memcmp(uri + skip, "oic/d", 5) == 0) {
       type = OCF_D;

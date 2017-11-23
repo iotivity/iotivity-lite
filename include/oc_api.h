@@ -70,6 +70,23 @@ int oc_init_platform(const char *mfg_name,
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
+/**
+  @brief Returns whether the oic.wk.con res is announed.
+  @return true if announced (default) or false if not
+  @see oc_set_con_res_announced
+  @see oc_set_con_write_cb
+*/
+bool oc_get_con_res_announced(void);
+
+/**
+  @brief Sets whether the oic.wk.con res is announed.
+  @note This should be set before invoking \c oc_main_init().
+  @param announce true to announce (default) or false if not
+  @see oc_get_con_res_announced
+  @see oc_set_con_write_cb
+*/
+void oc_set_con_res_announced(bool announce);
+
 /** Server side */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, int device);
