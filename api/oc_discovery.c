@@ -482,8 +482,8 @@ void
 oc_create_discovery_resource(int resource_idx, int device)
 {
   oc_core_populate_resource(
-    resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
-    oc_core_discovery_handler, 0, 0, 0, 1, "oic.wk.res");
+    resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL,
+    OC_DISCOVERABLE, oc_core_discovery_handler, 0, 0, 0, 1, "oic.wk.res");
 }
 
 #ifdef OC_CLIENT
