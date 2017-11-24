@@ -326,7 +326,7 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_BASELINE, OC_DISCOVERABLE,
+                            OC_IF_R, OC_DISCOVERABLE,
                             oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
 
 #ifndef OC_SECURITY
