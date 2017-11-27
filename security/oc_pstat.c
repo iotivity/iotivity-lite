@@ -31,6 +31,7 @@ static oc_sec_pstat_t *pstat;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+static bool set_post_otm_acl = true;
 
 void
 oc_sec_pstat_init(void)
@@ -55,6 +56,30 @@ nil_uuid(oc_uuid_t *uuid)
   }
   return true;
 }
+
+#ifdef OC_DEBUG
+static void
+dump_pstat_dos(oc_sec_pstat_t *ps)
+{
+  switch (ps->s) {
+  case OC_DOS_RESET:
+    OC_DBG("oc_pstat: dos is RESET\n");
+    break;
+  case OC_DOS_RFOTM:
+    OC_DBG("oc_pstat: dos is RFOTM\n");
+    break;
+  case OC_DOS_RFPRO:
+    OC_DBG("oc_pstat: dos is RFPRO\n");
+    break;
+  case OC_DOS_RFNOP:
+    OC_DBG("oc_pstat: dos is RFNOP\n");
+    break;
+  case OC_DOS_SRESET:
+    OC_DBG("oc_pstat: dos is SRESET\n");
+    break;
+  }
+}
+#endif /* OC_DEBUG */
 
 static bool
 valid_transition(int device, oc_dostype_t state)
@@ -105,6 +130,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
     oc_sec_dtls_update_psk_identity(device);
+    set_post_otm_acl = true;
     ps->p = false;
   }
   case OC_DOS_RFOTM: {
@@ -299,6 +325,9 @@ pstat_state_error:
 oc_sec_pstat_t *
 oc_sec_get_pstat(int device)
 {
+#ifdef OC_DEBUG
+  dump_pstat_dos(&pstat[device]);
+#endif /* OC_DEBUG */
   return &pstat[device];
 }
 
@@ -318,6 +347,9 @@ oc_sec_pstat_default(int device)
 void
 oc_sec_encode_pstat(int device)
 {
+#ifdef OC_DEBUG
+  dump_pstat_dos(&pstat[device]);
+#endif /* OC_DEBUG */
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
@@ -351,6 +383,10 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
   oc_sec_pstat_t ps;
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
 
+#ifdef OC_DEBUG
+  dump_pstat_dos(&ps);
+#endif /* OC_DEBUG */
+
   while (rep != NULL) {
     switch (rep->type) {
     case OBJECT: {
@@ -382,7 +418,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       }
     } break;
     case BOOL:
-      if (oc_string_len(rep->name) == 4 &&
+      if (from_storage && oc_string_len(rep->name) == 4 &&
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         ps.isop = rep->value.boolean;
       } else {
@@ -390,7 +426,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       }
       break;
     case INT:
-      if (memcmp(oc_string(rep->name), "cm", 2) == 0) {
+      if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
         ps.cm = rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
         ps.tm = rep->value.integer;
@@ -403,7 +439,8 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       }
       break;
     case STRING:
-      if (oc_string_len(rep->name) == 10 &&
+      if (ps.s != OC_DOS_RFPRO && ps.s != OC_DOS_RFNOP &&
+          oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &ps.rowneruuid);
       } else {
@@ -423,10 +460,11 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
-      if (transition_success && ps.s == OC_DOS_RFNOP) {
+      if (transition_success && ps.s == OC_DOS_RFNOP && set_post_otm_acl) {
         oc_sec_set_post_otm_acl(device);
         oc_ri_add_timed_event_callback_ticks((void *)(long)device,
                                              &dump_acl_post_otm, 0);
+        set_post_otm_acl = false;
       }
       return transition_success;
     }
