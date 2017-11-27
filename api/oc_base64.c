@@ -133,7 +133,7 @@ oc_base64_decode(uint8_t *str, int len)
       val_s += 4;
     else if (val_s == '+')
       val_s = 62;
-    else if (val_s == '-')
+    else if (val_s == '/')
       val_s = 63;
     /* Break if we encounter the padding character.
      * The input buffer str now contains the fully decoded string.
@@ -172,6 +172,10 @@ oc_base64_decode(uint8_t *str, int len)
       val_c |= val_s;
       str[j++] = val_c;
     }
+  }
+
+  for (i = j; i < len; i++) {
+    str[i] = 0;
   }
 
   return j;
