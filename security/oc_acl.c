@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_cred.h"
 #include "oc_doxm.h"
 #include "oc_dtls.h"
 #include "oc_pstat.h"
@@ -319,18 +320,30 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #endif /* OC_DEBUG */
   oc_uuid_t *uuid = oc_sec_dtls_get_peer_uuid(endpoint);
 
-  if (uuid &&
-      memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
-      (memcmp(oc_string(resource->uri), "/oic/sec/acl2", 12) == 0 ||
-       memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0 ||
-       memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 ||
-       memcmp(oc_string(resource->uri), "/oic/sec/cred", 13) == 0)) {
-    return true;
-  }
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
-  if (uuid && doxm && memcmp(uuid->id, doxm->devowneruuid.id, 16) == 0) {
-    return true;
+  if (uuid) {
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
+    oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+    if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/acl2", 12) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid\n");
+      return true;
+    }
+    if (memcmp(uuid->id, doxm->rowneruuid.id, 16) == 0 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid\n");
+      return true;
+    }
+    if (memcmp(uuid->id, pstat->rowneruuid.id, 16) == 0 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid\n");
+      return true;
+    }
+    if (memcmp(uuid->id, creds->rowneruuid.id, 16) == 0 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/cred", 13) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid\n");
+      return true;
+    }
   }
 
   uint16_t permission = 0;
@@ -343,6 +356,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
       if (match) {
         permission |= oc_ace_get_permission(match, resource);
+        OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID\n",
+               permission);
       }
     } while (match);
   }
@@ -356,6 +371,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       0, endpoint->device);
       if (match) {
         permission |= oc_ace_get_permission(match, resource);
+        OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
+               "connection\n",
+               permission);
       }
     } while (match);
   }
@@ -368,6 +386,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                     endpoint->device);
     if (match) {
       permission |= oc_ace_get_permission(match, resource);
+      OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
+             "connection\n",
+             permission);
     }
   } while (match);
 
@@ -440,7 +461,16 @@ oc_sec_encode_acl(int device)
     while (res != NULL) {
       oc_rep_object_array_start_item(resources);
       if (res->wildcard == -1) {
-        oc_rep_set_text_string(resources, href, oc_string(res->href));
+        if (oc_string_len(res->href) > 0) {
+          oc_rep_set_text_string(resources, href, oc_string(res->href));
+        }
+        if (res->interfaces != 0) {
+          oc_core_encode_interfaces_mask(oc_rep_object(resources),
+                                         res->interfaces);
+        }
+        if (oc_string_array_get_allocated_size(res->types) > 0) {
+          oc_rep_set_string_array(resources, rt, res->types);
+        }
       } else {
         switch (res->wildcard) {
         case OC_ACE_WC_ALL_DISCOVERABLE:
@@ -456,8 +486,6 @@ oc_sec_encode_acl(int device)
           break;
         }
       }
-      oc_core_encode_interfaces_mask(oc_rep_object(resources), res->interfaces);
-      oc_rep_set_string_array(resources, rt, res->types);
       oc_rep_object_array_end_item(resources);
       res = res->next;
     }
@@ -675,17 +703,14 @@ oc_sec_acl_default(int device)
   for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
     resource = oc_core_get_resource_by_index(i, device);
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
-      success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
-                              oc_string(resource->uri), -1, 0, 0, device);
+      success &= oc_sec_ace_update_res(
+        OC_SUBJECT_CONN, &_anon_clear, 1, 2, oc_string(resource->uri), -1,
+        &resource->types, resource->interfaces, device);
     }
     if (i >= OCF_SEC_DOXM && i <= OCF_SEC_CRED) {
-      success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 6,
-                              oc_string(resource->uri), -1, 0, 0, device);
-      success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, 2, 6,
-                              oc_string(resource->uri), -1, 0, 0, device);
+      success &= oc_sec_ace_update_res(
+        OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
+        &resource->types, resource->interfaces, device);
     }
   }
   OC_DBG("ACL for core resources initialized %d\n", success);
@@ -703,42 +728,16 @@ oc_sec_set_post_otm_acl(int device)
 
   // pre otm:
   // anon-clear R: res, p, d
-  // anon-clear RW: doxm, pstat, acl, cred
-  // auth-crypt RW: doxm, pstat, acl, cred
+  // anon-clear RWD: doxm, pstat, acl2, cred
   // post otm:
   // anon-clear R: res, p, d
-  // anon-clear R: doxm
+  // anon-clear RWD: doxm, pstat
 
-  /* Remove auth-crypt RW access to doxm, pstat, acl, cred */
-  oc_sec_ace_t *auth_crypt = NULL;
-  do {
-    auth_crypt = oc_sec_acl_find_subject(auth_crypt, OC_SUBJECT_CONN,
-                                         &_auth_crypt, -1, 6, device);
-    if (auth_crypt) {
-      oc_ace_free_resources(device, &auth_crypt, "/oic/sec/doxm");
-    }
-    if (auth_crypt) {
-      oc_ace_free_resources(device, &auth_crypt, "/oic/sec/acl2");
-    }
-    if (auth_crypt) {
-      oc_ace_free_resources(device, &auth_crypt, "/oic/sec/cred");
-    }
-    if (auth_crypt) {
-      oc_ace_free_resources(device, &auth_crypt, "/oic/sec/pstat");
-    }
-  } while (auth_crypt);
-
-  /* Remove anon-clear RW access to doxm */
+  /* Remove anon-clear RWD access to acl2 and cred */
   oc_sec_ace_t *anon_clear = NULL;
   do {
     anon_clear = oc_sec_acl_find_subject(anon_clear, OC_SUBJECT_CONN,
-                                         &_anon_clear, -1, 6, device);
-    if (anon_clear) {
-      oc_ace_free_resources(device, &anon_clear, "/oic/sec/doxm");
-    }
-    if (anon_clear) {
-      oc_ace_free_resources(device, &anon_clear, "/oic/sec/pstat");
-    }
+                                         &_anon_clear, -1, 14, device);
     if (anon_clear) {
       oc_ace_free_resources(device, &anon_clear, "/oic/sec/acl2");
     }
@@ -746,23 +745,6 @@ oc_sec_set_post_otm_acl(int device)
       oc_ace_free_resources(device, &anon_clear, "/oic/sec/cred");
     }
   } while (anon_clear);
-
-  /* Add anon-clear R access to doxm */
-  oc_string_array_t rt;
-  oc_new_string_array(&rt, 1);
-  oc_string_array_add_item(rt, "oic.r.doxm");
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2, "/oic/sec/doxm",
-                        -1, &rt, 0, device);
-  oc_free_string_array(&rt);
-
-  int i;
-  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
-    oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
-    if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
-      oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 0, 2,
-                            oc_string(resource->uri), -1, 0, 0, device);
-    }
-  }
 }
 
 bool
@@ -1018,7 +1000,6 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     }
   } else if (ret == -1) {
     oc_sec_clear_acl(request->origin->device);
-    oc_sec_set_post_otm_acl(request->origin->device); //
     success = true;
   }
 
