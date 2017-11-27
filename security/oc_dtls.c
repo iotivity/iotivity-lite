@@ -547,6 +547,10 @@ oc_sec_dtls_send_message(oc_message_t *message)
       mbedtls_strerror(ret, buf, 256);
       OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
 #endif /* OC_DEBUG */
+      mbedtls_ssl_session_reset(&peer->ssl_ctx);
+      mbedtls_ssl_send_alert_message(&peer->ssl_ctx,
+                                     MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                     MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY);
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
     } else {
       length = message->length;
@@ -576,6 +580,10 @@ write_application_data(void *ctx)
       mbedtls_strerror(ret, buf, 256);
       OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
 #endif /* OC_DEBUG */
+      mbedtls_ssl_session_reset(&peer->ssl_ctx);
+      mbedtls_ssl_send_alert_message(&peer->ssl_ctx,
+                                     MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                     MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY);
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
       break;
     }
@@ -681,7 +689,11 @@ read_application_data(void *ctx)
           mbedtls_ssl_set_client_transport_id(
             &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
             sizeof(peer->endpoint.addr)) != 0) {
+        mbedtls_ssl_send_alert_message(&peer->ssl_ctx,
+                                       MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                       MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY);
         oc_sec_dtls_remove_peer(&peer->endpoint, false);
+        return DONE;
       }
     } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
                ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
@@ -691,7 +703,12 @@ read_application_data(void *ctx)
       mbedtls_strerror(ret, buf, 256);
       OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
 #endif /* OC_DEBUG */
+      mbedtls_ssl_session_reset(&peer->ssl_ctx);
+      mbedtls_ssl_send_alert_message(&peer->ssl_ctx,
+                                     MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                     MBEDTLS_SSL_ALERT_MSG_CLOSE_NOTIFY);
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
+      return DONE;
     }
 #ifdef OC_CLIENT
     if (ret == 0) {

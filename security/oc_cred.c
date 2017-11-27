@@ -122,6 +122,17 @@ oc_sec_remove_cred_by_credid(int credid, int device)
   return false;
 }
 
+static void
+oc_sec_clear_creds(int device)
+{
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
+  while (cred != NULL) {
+    next = cred->next;
+    oc_sec_remove_cred(cred, device);
+    cred = next;
+  }
+}
+
 oc_sec_cred_t *
 oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 {
@@ -160,10 +171,6 @@ oc_sec_encode_cred(bool persist, int device)
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_CRED, device));
   oc_rep_set_array(root, creds);
-  if (cr == NULL) {
-    oc_rep_object_array_start_item(creds);
-    oc_rep_object_array_end_item(creds);
-  }
   while (cr != NULL) {
     oc_rep_object_array_start_item(creds);
     oc_rep_set_int(creds, credid, cr->credid);
@@ -336,7 +343,6 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           oc_str_to_uuid(oc_string(*subjectuuid), &subject);
           if (!unique_credid(credid, device)) {
             oc_sec_remove_cred_by_credid(credid, device);
-            credid = -1;
           }
           if (credid == -1) {
             credid = get_new_credid(device);
@@ -402,15 +408,28 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  char *subjectuuid = 0;
-  int ret = oc_get_query_value(request, "subjectuuid", &subjectuuid);
-  if (ret != -1 &&
-      oc_cred_remove_subject(subjectuuid, request->resource->device)) {
+  bool success = false;
+  char *query_param = 0;
+  int ret = oc_get_query_value(request, "credid", &query_param);
+  int credid = 0;
+  if (ret != -1) {
+    credid = (int)strtoul(query_param, NULL, 10);
+    if (credid != 0) {
+      if (oc_sec_remove_cred_by_credid(credid, request->resource->device)) {
+        success = true;
+      }
+    }
+  } else {
+    oc_sec_clear_creds(request->resource->device);
+    success = true;
+  }
+
+  if (success) {
     oc_send_response(request, OC_STATUS_DELETED);
     oc_sec_dump_cred(request->resource->device);
-    return;
+  } else {
+    oc_send_response(request, OC_STATUS_NOT_FOUND);
   }
-  oc_send_response(request, OC_STATUS_NOT_FOUND);
 }
 
 void
