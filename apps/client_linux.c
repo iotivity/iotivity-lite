@@ -29,9 +29,9 @@ static int quit = 0;
 static int
 app_init(void)
 {
-  int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "Phone", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+  int ret = oc_init_platform("Intel Corporation", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "Generic Client", "ocf.1.0.0",
+                       "ocf.res.1.3.0", NULL, NULL);
   return ret;
 }
 
