@@ -441,6 +441,28 @@ provision_ace2(void)
       SCANF("%s", href);
 
       oc_obt_ace_resource_set_href(res, href);
+      oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+    } else {
+      PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
+      SCANF("%d", &c);
+      if (c == 1) {
+        PRINT("[1]: All resources\n[2]: All discoverable resources\n[3]: All "
+              "non-discoverable resources\n\nSelect wildcard resource: ");
+        SCANF("%d", &c);
+        switch (c) {
+        case 1:
+          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
+          break;
+        case 2:
+          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_DISCOVERABLE);
+          break;
+        case 3:
+          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_NON_DISCOVERABLE);
+          break;
+        default:
+          break;
+        }
+      }
     }
 
     PRINT("Enter number of resource types [0-None]: ");
@@ -497,26 +519,6 @@ provision_ace2(void)
     } else if (c < 0 || c > 7) {
       PRINT("\nWARNING: Invalid number of interfaces.. skipping interface "
             "selection\n");
-    }
-    PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
-    SCANF("%d", &c);
-    if (c == 1) {
-      PRINT("[1]: All resources\n[2]: All discoverable resources\n[3]: All "
-            "non-discoverable resources\n\nSelect wildcard resource: ");
-      SCANF("%d", &c);
-      switch (c) {
-      case 1:
-        oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
-        break;
-      case 2:
-        oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_DISCOVERABLE);
-        break;
-      case 3:
-        oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_NON_DISCOVERABLE);
-        break;
-      default:
-        break;
-      }
     }
     i++;
   }

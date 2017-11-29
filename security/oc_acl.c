@@ -460,17 +460,15 @@ oc_sec_encode_acl(int device)
 
     while (res != NULL) {
       oc_rep_object_array_start_item(resources);
-      if (res->wildcard == -1) {
-        if (oc_string_len(res->href) > 0) {
-          oc_rep_set_text_string(resources, href, oc_string(res->href));
-        }
-        if (res->interfaces != 0) {
-          oc_core_encode_interfaces_mask(oc_rep_object(resources),
-                                         res->interfaces);
-        }
-        if (oc_string_array_get_allocated_size(res->types) > 0) {
-          oc_rep_set_string_array(resources, rt, res->types);
-        }
+      if (res->interfaces != 0) {
+        oc_core_encode_interfaces_mask(oc_rep_object(resources),
+                                       res->interfaces);
+      }
+      if (oc_string_array_get_allocated_size(res->types) > 0) {
+        oc_rep_set_string_array(resources, rt, res->types);
+      }
+      if (oc_string_len(res->href) > 0) {
+        oc_rep_set_text_string(resources, href, oc_string(res->href));
       } else {
         switch (res->wildcard) {
         case OC_ACE_WC_ALL_DISCOVERABLE:
@@ -702,6 +700,9 @@ oc_sec_acl_default(int device)
 
   for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
     resource = oc_core_get_resource_by_index(i, device);
+    if (oc_string_len(resource->uri) <= 0) {
+      continue;
+    }
     if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
       success &= oc_sec_ace_update_res(
         OC_SUBJECT_CONN, &_anon_clear, 1, 2, oc_string(resource->uri), -1,
