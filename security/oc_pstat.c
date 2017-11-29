@@ -384,7 +384,9 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
 
 #ifdef OC_DEBUG
-  dump_pstat_dos(&ps);
+  if (!from_storage) {
+    dump_pstat_dos(&ps);
+  }
 #endif /* OC_DEBUG */
 
   while (rep != NULL) {
@@ -439,7 +441,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       }
       break;
     case STRING:
-      if (ps.s != OC_DOS_RFPRO && ps.s != OC_DOS_RFNOP &&
+      if ((from_storage || (ps.s != OC_DOS_RFPRO && ps.s != OC_DOS_RFNOP)) &&
           oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &ps.rowneruuid);

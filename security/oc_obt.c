@@ -355,7 +355,6 @@ obt_jw_11(oc_client_response_t *data)
       oc_rep_set_object(root, dos);
       oc_rep_set_int(dos, s, OC_DOS_RFNOP);
       oc_rep_close_object(root, dos);
-      oc_rep_set_boolean(root, isop, true);
       oc_rep_end_root_object();
       oc_do_post();
     }
@@ -880,11 +879,6 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
                    OC_OBT_QOS, d)) {
     oc_rep_start_root_object();
-    if (dos == OC_DOS_RFPRO || dos == OC_DOS_SRESET) {
-      oc_rep_set_boolean(root, isop, false);
-    } else if (dos == OC_DOS_RFNOP) {
-      oc_rep_set_boolean(root, isop, true);
-    }
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, dos);
     oc_rep_close_object(root, dos);
@@ -1292,19 +1286,22 @@ provision_ace(int status, void *data)
   if (status >= 0) {
     oc_device_t *device = r->device;
     oc_sec_ace_t *ace = r->ace;
-    ;
+
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
     if (oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, OC_OBT_QOS, r)) {
       oc_rep_start_root_object();
+
       oc_rep_set_array(root, aclist2);
       oc_rep_object_array_start_item(aclist2);
 
       oc_rep_set_object(aclist2, subject);
-      if (ace->subject_type == OC_SUBJECT_UUID) {
-        char c[37];
-        oc_uuid_to_str(&ace->subject.uuid, c, 37);
-        oc_rep_set_text_string(subject, uuid, c);
-      } else {
+      switch (ace->subject_type) {
+      case OC_SUBJECT_UUID: {
+        char uuid[37];
+        oc_uuid_to_str(&ace->subject.uuid, uuid, 37);
+        oc_rep_set_text_string(subject, uuid, uuid);
+      } break;
+      case OC_SUBJECT_CONN: {
         switch (ace->subject.conn) {
         case OC_CONN_AUTH_CRYPT:
           oc_rep_set_text_string(subject, conntype, "auth-crypt");
@@ -1313,31 +1310,16 @@ provision_ace(int status, void *data)
           oc_rep_set_text_string(subject, conntype, "anon-clear");
           break;
         }
+      } break;
+      default:
+        break;
       }
       oc_rep_close_object(aclist2, subject);
 
-      oc_rep_set_array(aclist2, resources);
       oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(ace->resources);
+      oc_rep_set_array(aclist2, resources);
       while (res != NULL) {
         oc_rep_object_array_start_item(resources);
-        if (oc_string_len(res->href) > 0) {
-          oc_rep_set_text_string(resources, href, oc_string(res->href));
-        }
-        if (res->wildcard != 0) {
-          switch (res->wildcard) {
-          case OC_ACE_WC_ALL:
-            oc_rep_set_text_string(resources, wc, "*");
-            break;
-          case OC_ACE_WC_ALL_DISCOVERABLE:
-            oc_rep_set_text_string(resources, wc, "+");
-            break;
-          case OC_ACE_WC_ALL_NON_DISCOVERABLE:
-            oc_rep_set_text_string(resources, wc, "-");
-            break;
-          default:
-            break;
-          }
-        }
         if (res->interfaces != 0) {
           oc_core_encode_interfaces_mask(oc_rep_object(resources),
                                          res->interfaces);
@@ -1345,15 +1327,37 @@ provision_ace(int status, void *data)
         if (oc_string_array_get_allocated_size(res->types) > 0) {
           oc_rep_set_string_array(resources, rt, res->types);
         }
+        if (oc_string_len(res->href) > 0) {
+          oc_rep_set_text_string(resources, href, oc_string(res->href));
+        } else {
+          switch (res->wildcard) {
+          case OC_ACE_WC_ALL_DISCOVERABLE:
+            oc_rep_set_text_string(resources, wc, "+");
+            break;
+          case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+            oc_rep_set_text_string(resources, wc, "-");
+            break;
+          case OC_ACE_WC_ALL:
+            oc_rep_set_text_string(resources, wc, "*");
+            break;
+          default:
+            break;
+          }
+        }
         oc_rep_object_array_end_item(resources);
         res = res->next;
       }
       oc_rep_close_array(aclist2, resources);
+
       oc_rep_set_uint(aclist2, permission, ace->permission);
+
       oc_rep_set_int(aclist2, aceid, ace->aceid);
+
       oc_rep_object_array_end_item(aclist2);
       oc_rep_close_array(root, aclist2);
+
       oc_rep_end_root_object();
+
       oc_do_post();
     }
   }
