@@ -18,6 +18,7 @@
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_discovery.h"
+#include "oc_introspection.h"
 #include "oc_rep.h"
 
 #ifdef OC_SECURITY
@@ -302,6 +303,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   oc_create_discovery_resource(OCF_RES, device_count);
 
+  oc_create_introspection_resource(device_count);
+
   oc_device_info[device_count].data = data;
 
   oc_connectivity_init(device_count);
@@ -451,6 +454,12 @@ oc_core_get_resource_by_uri(const char *uri, int device)
     type = OCF_CON;
   } else if ((strlen(uri) - skip) == 5 && memcmp(uri + skip, "oic/d", 5) == 0) {
     type = OCF_D;
+  } else if ((strlen(uri) - skip) == 19 &&
+             memcmp(uri + skip, "oc/wk/introspection", 19) == 0) {
+    type = OCF_INTROSPECTION_WK;
+  } else if ((strlen(uri) - skip) == 16 &&
+             memcmp(uri + skip, "oc/introspection", 16) == 0) {
+    type = OCF_INTROSPECTION_DATA;
   }
 #ifdef OC_SECURITY
   else if ((strlen(uri) - skip) == 11 &&
