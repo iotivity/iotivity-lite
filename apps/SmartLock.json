@@ -1,22 +1,11 @@
 {
-    "device": "Generic Client",
+    "device": "SmartLock",
     "company": "Intel Corporation",
     "role": "Client",
     "supportedVerticalProfile": [
         "Smart Home"
     ],
     "supportedDeviceTypes": [
-        "oic.d.airqualitymonitor",
-        "oic.d.camera",
-        "oic.d.cookerhood",
-        "oic.d.cooktop",
-        "oic.d.dehumidifier",
-        "oic.d.door",
-        "oic.d.garagedoor",
-        "oic.d.sensor",
-        "oic.d.oven",
-        "oic.d.multifunctionprinter",
-        "oic.d.receiver",
         "oic.d.smartlock"
     ],
     "icv": "ocf.1.0.0",

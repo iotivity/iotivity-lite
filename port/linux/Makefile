@@ -59,7 +59,7 @@ LIBS?= -lm -pthread -lrt
 
 SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
-	  client_scenes_linux server_scenes_linux
+	  client_scenes_linux server_scenes_linux smart_lock
 
 ifneq ($(IOT_NAME_SUFFIX),)
 SAMPLES := $(addsuffix $(IOT_NAME_SUFFIX),$(SAMPLES))
@@ -156,6 +156,10 @@ server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
+
+smart_lock$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 temp_sensor$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
