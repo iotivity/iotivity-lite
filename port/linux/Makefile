@@ -49,7 +49,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 OBT = onboarding_tool
 
@@ -133,6 +133,10 @@ server: libiotivity-constrained-server.a
 client: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+
+smart_lock: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 temp_sensor: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
