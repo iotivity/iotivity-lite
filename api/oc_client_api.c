@@ -324,8 +324,6 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
 
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "if=oic.if.ll&rt=", rt);
-  } else {
-    oc_new_string(&uri_query, "if=oic.if.ll", 12);
   }
 
   cb->discovery = true;

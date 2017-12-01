@@ -518,6 +518,20 @@ bool oc_add_scene_mapping(oc_resource_t *scene_member,
 
 void oc_resource_make_public(oc_resource_t *resource);
 
+/**
+   @brief Specifies whether the oic.wk.res resource is discoverable.
+   @note This function must be invoked after \c oc_main_init() and
+    should be invoked before the first \c oc_main_poll().
+   @param state true for discoverable, false for non-discoverable
+    (default). Setting the same value again has no effect.
+   @param device_index the resource of the specified zero-based
+    device, typically 0
+   @return true if the resource was found, false if not (usually means
+    that the function was invoked before \c oc_main_init() or that
+    a non existing index exists).
+ */
+bool oc_wk_res_set_discoverable(bool state, int device_index);
+
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 void oc_resource_set_observable(oc_resource_t *resource, bool state);
 void oc_resource_set_periodic_observable(oc_resource_t *resource,
