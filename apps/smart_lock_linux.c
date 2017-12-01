@@ -391,7 +391,9 @@ main(void)
                                        .signal_event_loop = signal_event_loop,
                                        .requests_entry = issue_requests };
 
+#ifdef OC_SECURE
   oc_storage_config("./smart_lock_creds");
+#endif /* OC_SECURE */
 
   oc_set_con_res_announced(false);
   init = oc_main_init(&handler);
