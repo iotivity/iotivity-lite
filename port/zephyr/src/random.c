@@ -15,7 +15,7 @@
  */
 
 #include "port/oc_random.h"
-#include <drivers/rand32.h>
+#include <random/rand32.h>
 
 void
 oc_random_init(void)
