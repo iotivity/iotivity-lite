@@ -308,6 +308,16 @@ oc_resource_make_public(oc_resource_t *resource)
 }
 #endif /* OC_SECURITY */
 
+bool
+oc_wk_res_set_discoverable(bool state, int device_index)
+{
+  oc_resource_t *res = oc_core_get_resource_by_index(OCF_RES, device_index);
+  if (res) {
+    oc_resource_set_discoverable(res, state);
+  }
+  return (res != NULL);
+}
+
 void
 oc_resource_set_discoverable(oc_resource_t *resource, bool state)
 {

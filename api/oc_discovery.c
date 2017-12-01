@@ -40,10 +40,6 @@ filter_resource(oc_resource_t *resource, const char *rt, int rt_len,
     return false;
   }
 
-  if (!(resource->properties & OC_DISCOVERABLE)) {
-    return false;
-  }
-
   oc_rep_start_object(*links, link);
 
   // anchor
@@ -113,6 +109,10 @@ process_device_resources(CborEncoder *links, const char *rt, int rt_len,
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_P, 0), rt, rt_len,
                       oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_RES, device_index), rt,
+                      rt_len, oc_string(anchor), links))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_D, device_index), rt,
@@ -212,26 +212,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, const char *rt, int rt_len,
                         CborEncoder *links)
 {
   int i;
-  bool match = true;
-  if (rt_len > 0) {
-    match = false;
-    for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-         i++) {
-      int size = oc_string_array_get_item_size(resource->types, i);
-      const char *t =
-        (const char *)oc_string_array_get_item(resource->types, i);
-      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
-        match = true;
-        break;
-      }
-    }
-  }
-
-  if (!match) {
-    return false;
-  }
-
-  if (!(resource->properties & OC_DISCOVERABLE)) {
+  if (!oc_ri_filter_rt(resource, rt, rt_len)) {
     return false;
   }
 
@@ -308,6 +289,10 @@ process_oic_1_1_device_object(CborEncoder *device, const char *rt, int rt_len,
   oc_rep_set_array(links, links);
 
   if (filter_oic_1_1_resource(oc_core_get_resource_by_index(OCF_P, device_num),
+                              rt, rt_len, oc_rep_array(links)))
+    matches++;
+
+  if (filter_oic_1_1_resource(oc_core_get_resource_by_index(OCF_RES, device_num),
                               rt, rt_len, oc_rep_array(links)))
     matches++;
 

@@ -354,7 +354,7 @@ oc_ri_add_resource(oc_resource_t *resource)
 bool
 oc_ri_filter_rt(oc_resource_t *resource, const char *rt, int rt_len)
 {
-  if (resource == NULL) {
+  if (resource == NULL || !(resource->properties & OC_DISCOVERABLE)) {
     return false;
   }
 

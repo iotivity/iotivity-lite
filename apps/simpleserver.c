@@ -137,6 +137,8 @@ main(void)
   if (oc_main_init(&handler) < 0)
     return;
 
+  oc_wk_res_set_discoverable(true, 0);
+
   oc_clock_time_t next_event;
 
   while (true) {
@@ -204,6 +206,8 @@ main(void)
   if (init < 0)
     return init;
 
+  oc_wk_res_set_discoverable(true, 0);
+
   while (quit != 1) {
     next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
@@ -266,6 +270,8 @@ main(void)
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+
+  oc_wk_res_set_discoverable(true, 0);
 
   while (quit != 1) {
     next_event = oc_main_poll();
