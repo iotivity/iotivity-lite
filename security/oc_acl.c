@@ -200,8 +200,6 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
               memcmp(oc_string(subject->role.authority),
                      oc_string(ace->subject.role.authority),
                      oc_string_len(subject->role.authority)) == 0) {
-            // TODO: check if role corresponds to credential used to secure
-            //       this connection.
             return ace;
           }
         }
@@ -279,8 +277,12 @@ dump_acl(int device)
         break;
       }
     } break;
-    case OC_SUBJECT_ROLE:
-      break;
+    case OC_SUBJECT_ROLE: {
+      PRINT("Role_RoleId: %s\n", oc_string(ace->subject.role.role));
+      if (oc_string_len(ace->subject.role.authority) > 0) {
+        PRINT("Role_Authority: %s\n", oc_string(ace->subject.role.authority));
+      }
+    } break;
     }
 
     oc_ace_res_t *r = oc_list_head(ace->resources);
@@ -360,6 +362,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                permission);
       }
     } while (match);
+
+    oc_sec_cred_t *role_cred = oc_sec_find_cred(uuid, endpoint->device);
+    if (role_cred && oc_string_len(role_cred->role.role) > 0) {
+      do {
+        match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
+                                        (oc_ace_subject_t *)&role_cred->role,
+                                        -1, 0, endpoint->device);
+
+        if (match) {
+          permission |= oc_ace_get_permission(match, resource);
+          OC_DBG(
+            "oc_check_acl: Found ACE with permission %d for matching role\n",
+            permission);
+        }
+      } while (match);
+    }
   }
 
   if (endpoint->flags & SECURED) {
@@ -391,8 +409,6 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
              permission);
     }
   } while (match);
-
-  // TODO: handle ACE bearing roleId.
 
   if (permission != 0) {
     switch (method) {
