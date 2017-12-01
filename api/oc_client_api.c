@@ -360,9 +360,7 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
   bool status = false;
 
   if (rt && strlen(rt) > 0) {
-    oc_concat_strings(&uri_query, "if=oic.if.ll&rt=", rt);
-  } else {
-    oc_new_string(&uri_query, "if=oic.if.ll", 12);
+    oc_concat_strings(&uri_query, "rt=", rt);
   }
 
   status = prepare_coap_request(cb);
