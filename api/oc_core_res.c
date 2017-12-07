@@ -44,6 +44,7 @@ static oc_platform_info_t oc_platform_info;
 static bool announce_con_res = true;
 static int device_count;
 static oc_uuid_t *next_di;
+static oc_id_updated_t id_updated_callback;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
@@ -108,6 +109,14 @@ oc_core_regen_unique_ids(int device)
   memcpy(d->di.id, doxm->deviceuuid.id, 16);
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
+
+  if (id_updated_callback) {
+    char di[37], piid[37], pi[37];
+    oc_uuid_to_str(&(d->di), di, 37);
+    oc_uuid_to_str(&(d->piid), piid, 37);
+    oc_uuid_to_str(&oc_platform_info.pi, pi, 37);
+    id_updated_callback(device, di, piid, pi);
+  }
 
   oc_sec_dtls_update_psk_identity(device);
 }
@@ -239,6 +248,12 @@ oc_set_con_res_announced(bool announce)
 }
 
 void
+oc_set_id_updated_callback(oc_id_updated_t callback)
+{
+  id_updated_callback = callback;
+}
+
+void
 oc_core_set_device_id(oc_uuid_t *uuid)
 {
   next_di = uuid;
@@ -296,6 +311,13 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
 #ifndef OC_SECURITY
   oc_gen_uuid(&oc_device_info[device_count].piid);
+  
+  if (id_updated_callback) {
+    char di[37], piid[37];
+    oc_uuid_to_str(&oc_device_info[device_count].di, di, 37);
+    oc_uuid_to_str(&oc_device_info[device_count].piid, piid, 37);
+    id_updated_callback(device_count, di, piid, NULL);
+  }
 #endif /* !OC_SECURITY */
 
   oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
@@ -369,6 +391,11 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
 #ifndef OC_SECURITY
   oc_gen_uuid(&oc_platform_info.pi);
+  if (id_updated_callback) {
+    char pi[37];
+    oc_uuid_to_str(&oc_platform_info.pi, pi, 37);
+    id_updated_callback(0, NULL, NULL, pi);
+  }
 #endif /* !OC_SECURITY */
 
   oc_new_string(&oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
