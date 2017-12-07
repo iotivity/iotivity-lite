@@ -103,6 +103,31 @@ bool oc_get_con_res_announced(void);
 */
 void oc_set_con_res_announced(bool announce);
 
+/**
+  @brief Callback to notify about updated IDs.
+  @note Unchanged IDs are set to NULL.
+  @note The callback shall not block for too long.
+  @param device_index zero based index of the device
+   for which the update happened (irrelevant for pi)
+  @param di updated device ID or NULL
+  @param piid updated protocol independent ID or NULL
+  @param pi updated platform ID or NULL
+ */
+typedef void (*oc_id_updated_t)(int device_index,
+                                const char *di,
+                                const char *piid,
+                                const char *pi);
+
+/**
+  @brief Sets the ID updated callback.
+
+  This is especially useful in case of security to notify
+  about updated IDs in case of onboarding.
+  @param callback Callback handler to receive the updated
+   IDs. May be NULL to unregister.
+ */
+void oc_set_id_updated_callback(oc_id_updated_t callback);
+
 /** Server side */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, int device);
