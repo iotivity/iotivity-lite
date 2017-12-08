@@ -496,7 +496,8 @@ oc_send_buffer(oc_message_t *message)
            sizeof(r->sin6_addr.s6_addr));
     r->sin6_family = AF_INET6;
     r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-    r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
+    /* Using incoming scope leads sometimes to a send failure. */
+    r->sin6_scope_id = 0; //message->endpoint.addr.ipv6.scope;
   }
   int send_sock = -1;
 
