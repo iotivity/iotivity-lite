@@ -323,7 +323,7 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
   memcpy(cb->token, ipv6_cb->token, cb->token_len);
 
   if (rt && strlen(rt) > 0) {
-    oc_concat_strings(&uri_query, "if=oic.if.ll&rt=", rt);
+    oc_concat_strings(&uri_query, "rt=", rt);
   }
 
   cb->discovery = true;
