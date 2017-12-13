@@ -715,10 +715,11 @@ obt_check_owned(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 obt_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
-                 oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+                 oc_interface_mask_t interfaces, oc_endpoint_t *endpoint, int bm,
                  void *user_data)
 {
   (void)interfaces;
+  (void)bm;
   int i;
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   oc_uuid_t uuid;

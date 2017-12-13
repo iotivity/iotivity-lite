@@ -79,8 +79,10 @@ check_resource_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
-    oc_interface_mask_t interfaces, oc_server_handle_t *server, void *user_data)
+    oc_interface_mask_t interfaces, oc_server_handle_t *server,  int bm,
+    void *user_data)
 {
+  (void)bm;
   int i, array_size;
   static int pos = 0;
 
