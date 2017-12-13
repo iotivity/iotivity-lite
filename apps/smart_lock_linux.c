@@ -321,7 +321,7 @@ post_lock_state(void)
 
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint, int bm,
           void *user_data)
 {
   (void)di;
@@ -329,6 +329,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   (void)user_data;
   (void)uri;
   (void)types;
+  (void)bm;
 
   oc_smartlock_t *l = (oc_smartlock_t *)oc_memb_alloc(&smartlocks_m);
   l->endpoint = endpoint;
@@ -345,7 +346,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 
 static oc_discovery_flags_t
 null_discovery(const char *di, const char *uri, oc_string_array_t types,
-               oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+               oc_interface_mask_t interfaces, oc_endpoint_t *endpoint, int bm,
                void *user_data)
 {
   (void)di;
@@ -354,6 +355,7 @@ null_discovery(const char *di, const char *uri, oc_string_array_t types,
   (void)uri;
   (void)types;
   (void)endpoint;
+  (void)bm;
   oc_free_server_endpoints(endpoint);
 
   return OC_STOP_DISCOVERY;

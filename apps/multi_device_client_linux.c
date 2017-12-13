@@ -277,11 +277,12 @@ get_device(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint, int bm,
           void *user_data)
 {
   (void)interfaces;
   (void)user_data;
+  (void)bm;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
