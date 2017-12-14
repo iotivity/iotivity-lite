@@ -547,7 +547,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
   while (links != NULL) {
     /* Reset bm in every round as this can be omitted if 0. */
-    int bm = 0;
+    oc_resource_properties_t bm = 0;
     oc_rep_t *link = links->value.object;
     while (link != NULL) {
       switch (link->type) {
