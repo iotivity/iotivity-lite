@@ -544,6 +544,8 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   }
 
   while (links != NULL) {
+    /* Reset bm in every round as this can be omitted if 0. */
+    oc_resource_properties_t bm = 0;
     oc_rep_t *link = links->value.object;
     while (link != NULL) {
       switch (link->type) {
@@ -609,7 +611,18 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           }
           eps = eps->next;
         }
-      }
+      } break;
+      case OBJECT: {
+        oc_rep_t *p = link->value.object;
+        if (p != NULL &&
+            oc_string_len(link->name) == 1 &&
+            *(oc_string(link->name)) == 'p' &&
+            p->type == INT &&
+            oc_string_len(p->name) == 2 &&
+            memcmp(oc_string(p->name), "bm", 2) == 0) {
+          bm = p->value.integer;
+        }
+      } break;
       default:
         break;
       }
@@ -617,7 +630,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     }
     if (eps_list &&
         handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
-                eps_list, user_data) == OC_STOP_DISCOVERY) {
+                eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
       ret = OC_STOP_DISCOVERY;
       goto done;
     }
