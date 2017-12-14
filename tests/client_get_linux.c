@@ -80,7 +80,7 @@ check_resource_cb(oc_client_response_t *data)
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
              oc_interface_mask_t interfaces, oc_server_handle_t *server,
-             oc_resource_t bm, void *user_data)
+             oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;
   int i, array_size;
@@ -115,7 +115,7 @@ app_init_client(void)
   int ret;
 
   ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.test-client", "Client Test", "1.0", "1.0", 
+  ret |= oc_add_device("/oic/d", "oic.d.test-client", "Client Test", "1.0", "1.0",
       NULL, NULL);
 
   return ret;
