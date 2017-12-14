@@ -45,7 +45,7 @@ typedef oc_discovery_flags_t (*oc_discovery_handler_t)(const char *,
                                                        oc_string_array_t,
                                                        oc_interface_mask_t,
                                                        oc_endpoint_t *,
-                                                       int,
+                                                       oc_resource_properties_t,
                                                        void *);
 
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
