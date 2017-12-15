@@ -449,6 +449,9 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
       doxm->deviceuuid.id, 16, owner->subjectuuid.id, 16, owner->key, 16);
   }
   if (!success) {
+    if (owner) {
+      oc_sec_remove_cred_by_credid(owner->credid, request->resource->device);
+    }
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {
     oc_send_response(request, OC_STATUS_CHANGED);
