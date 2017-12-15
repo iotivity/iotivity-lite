@@ -496,8 +496,7 @@ oc_send_buffer(oc_message_t *message)
            sizeof(r->sin6_addr.s6_addr));
     r->sin6_family = AF_INET6;
     r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-    /* Using incoming scope leads sometimes to a send failure. */
-    r->sin6_scope_id = 0; //message->endpoint.addr.ipv6.scope;
+    r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
   }
   int send_sock = -1;
 
@@ -568,6 +567,7 @@ oc_send_discovery_request(oc_message_t *message)
                  errno);
           goto done;
         }
+        message->endpoint.addr.ipv6.scope = mif;
         oc_send_buffer(message);
       }
 #ifdef OC_IPV4
@@ -700,14 +700,30 @@ connectivity_ipv4_init(ip_context_t *dev)
 static int
 add_mcast_sock_to_ipv6_multicast_group(int sock, const uint8_t *addr)
 {
-  struct ipv6_mreq mreq;
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining IPv6 multicast group %d\n", errno);
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interfaces: %d\n", errno);
     return -1;
   }
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+      continue;
+    struct sockaddr_in6 *if_addr = (struct sockaddr_in6 *)interface->ifa_addr;
+    if (IN6_IS_ADDR_LINKLOCAL(&if_addr->sin6_addr)) {
+      struct ipv6_mreq mreq;
+      memset(&mreq, 0, sizeof(mreq));
+      memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
+      mreq.ipv6mr_interface = if_addr->sin6_scope_id;
+
+      if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+                     sizeof(mreq)) == -1) {
+        OC_ERR("joining IPv6 multicast group %d\n", errno);
+        freeifaddrs(ifs);
+        return -1;
+      }
+    }
+  }
+  freeifaddrs(ifs);
   return 0;
 }
 
