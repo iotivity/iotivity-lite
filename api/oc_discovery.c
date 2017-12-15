@@ -496,6 +496,12 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_interface_mask_t interfaces = 0;
   oc_endpoint_t *eps_list = NULL;
 
+  /* Check if we've received this response over IPv6 */
+  bool sender_ipv6 = (endpoint->flags & IPV6) ? true : false;
+  /* Check if the sender's address is link-local */
+  bool sender_link_local =
+    (oc_ipv6_endpoint_is_link_local(endpoint) == 0) ? true : false;
+
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -588,6 +594,56 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                 memset(&temp_ep, 0, sizeof(oc_endpoint_t));
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
+                  /* Below are rules that govern the inclusion of endpoints
+                   * from the eps parameter to the list of endpoints passed
+                   * to the discovery callback.
+                   *
+                   * 1)
+                   * If the sender's address is a link-local IPv6 address and
+                   * temp_ep is a link-local IPv6 endpoint and temp_ep
+                   * does not match the sender's address, exclude it.
+                   *
+                   * 2)
+                   * If the sender's address is a non-link local IPv6 address
+                   * and temp_ep is a link-local IPv6 endpoint, exclude it.
+                   *
+                   * 3)
+                   * If the sender's address is IPv4 and temp_ep is IPv6,
+                   * exclude it.
+                   *
+                   * 4)
+                   * If ths sender's address is IPv6 and temp_ep is IPv4,
+                   * exclude it.
+                   *
+                   * Include all other endpoints
+                   */
+                  bool ep_ipv6 = (temp_ep.flags & IPV6) ? true : false;
+                  bool ep_link_local =
+                    (oc_ipv6_endpoint_is_link_local(&temp_ep)) ? true : false;
+                  /* 1) */
+                  if (sender_ipv6 && sender_link_local && ep_ipv6 &&
+                      ep_link_local) {
+                    if (oc_endpoint_compare(endpoint, &temp_ep) != 0) {
+                      goto next_ep;
+                    }
+                  }
+
+                  /* 2) */
+                  if (sender_ipv6 && !sender_link_local && ep_ipv6 &&
+                      ep_link_local) {
+                    goto next_ep;
+                  }
+
+                  /* 3) */
+                  if (!sender_ipv6 && ep_ipv6) {
+                    goto next_ep;
+                  }
+
+                  /* 4) */
+                  if (sender_ipv6 && !ep_ipv6) {
+                    goto next_ep;
+                  }
+
                   if (eps_cur) {
                     eps_cur->next = oc_new_endpoint();
                     eps_cur = eps_cur->next;
@@ -607,6 +663,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             default:
               break;
             }
+          next_ep:
             ep = ep->next;
           }
           eps = eps->next;
