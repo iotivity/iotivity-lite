@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define MAX_OWNED_DEVICES (50)
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
@@ -189,7 +190,7 @@ take_ownership_of_device(void)
     PRINT("\n\nPlease Re-Discover Un-Owned devices\n");
     return;
   }
-  oc_device_t *devices[50];
+  oc_device_t *devices[MAX_OWNED_DEVICES];
   oc_device_t *device = unowned_devices;
   int i = 0, c;
   PRINT("\nUnowned Devices:\n");
@@ -238,7 +239,7 @@ reset_device(void)
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
-  oc_device_t *devices[50];
+  oc_device_t *devices[MAX_OWNED_DEVICES];
   oc_device_t *device = my_devices;
   int i = 0, c;
   PRINT("\nMy Devices:\n");
@@ -286,7 +287,7 @@ provision_credentials(void)
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
-  oc_device_t *devices[50];
+  oc_device_t *devices[MAX_OWNED_DEVICES];
   oc_device_t *device = my_devices;
   int i = 0, c1, c2;
   PRINT("\nMy Devices:\n");
@@ -346,7 +347,7 @@ provision_ace2(void)
   const char *conn_types[2] = { "anon-clear", "auth-crypt" };
   int num_resources = 0;
 
-  oc_device_t *devices[50];
+  oc_device_t *devices[MAX_OWNED_DEVICES];
   oc_device_t *device = my_devices;
   int i = 0, dev, sub;
   PRINT("\nProvision ACL2\nMy Devices:\n");
