@@ -402,6 +402,7 @@ oc_sec_dtls_init_context(void)
                              16) != 0) {
       goto dtls_init_err;
     }
+    mbedtls_ssl_conf_handshake_timeout(&server_conf[i], 2500, 20000);
   }
 #ifdef OC_CLIENT
   mbedtls_ssl_config_init(&client_conf);
@@ -421,6 +422,7 @@ oc_sec_dtls_init_context(void)
       0) {
     goto dtls_init_err;
   }
+  mbedtls_ssl_conf_handshake_timeout(&client_conf, 2500, 20000);
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
@@ -785,8 +787,10 @@ read_application_data(oc_sec_dtls_peer_t *peer)
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
       if (ret <= 0) {
         oc_message_unref(message);
-        if (ret == 0) {
-          OC_DBG("oc_dtls: Received EOF\n");
+        if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
+            ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
+            ret == MBEDTLS_ERR_SSL_CONN_EOF) {
+          OC_DBG("oc_dtls: Received WantRead/WantWrite/EOF\n");
           return;
         }
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
