@@ -619,7 +619,8 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                    */
                   bool ep_ipv6 = (temp_ep.flags & IPV6) ? true : false;
                   bool ep_link_local =
-                    (oc_ipv6_endpoint_is_link_local(&temp_ep)) ? true : false;
+                    (oc_ipv6_endpoint_is_link_local(&temp_ep) == 0) ? true
+                                                                    : false;
                   /* 1) */
                   if (sender_ipv6 && sender_link_local && ep_ipv6 &&
                       ep_link_local) {
