@@ -35,9 +35,9 @@ typedef enum {
 
 typedef enum {
   OC_ACE_NO_WC = -1,
-  OC_ACE_WC_ALL = 0,
-  OC_ACE_WC_ALL_DISCOVERABLE,
-  OC_ACE_WC_ALL_NON_DISCOVERABLE,
+  OC_ACE_WC_ALL = 0x11,
+  OC_ACE_WC_ALL_DISCOVERABLE = 0x01,
+  OC_ACE_WC_ALL_NON_DISCOVERABLE = 0x10,
 } oc_ace_wildcard_t;
 
 typedef enum {
