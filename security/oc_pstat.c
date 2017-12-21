@@ -124,7 +124,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     ps->tm = 2;
     pstat->om = 3;
     ps->sm = 4;
-    memset(pstat[device].rowneruuid.id, 0, 16);
+    memset(ps->rowneruuid.id, 0, 16);
     oc_core_regen_unique_ids(device);
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
