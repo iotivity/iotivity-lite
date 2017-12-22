@@ -498,11 +498,13 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_interface_mask_t interfaces = 0;
   oc_endpoint_t *eps_list = NULL;
 
+#ifdef OC_EXPERIMENTAL_EPS_FILTER
   /* Check if we've received this response over IPv6 */
   bool sender_ipv6 = (endpoint->flags & IPV6) ? true : false;
   /* Check if the sender's address is link-local */
   bool sender_link_local =
     (oc_ipv6_endpoint_is_link_local(endpoint) == 0) ? true : false;
+#endif /* OC_EXPERIMENTAL_EPS_FILTER */
 
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -596,6 +598,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                 memset(&temp_ep, 0, sizeof(oc_endpoint_t));
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
+#ifdef OC_EXPERIMENTAL_EPS_FILTER
                   /* Below are rules that govern the inclusion of endpoints
                    * from the eps parameter to the list of endpoints passed
                    * to the discovery callback.
@@ -621,11 +624,12 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                    */
                   bool ep_ipv6 = (temp_ep.flags & IPV6) ? true : false;
                   bool ep_link_local =
-                    (oc_ipv6_endpoint_is_link_local(&temp_ep)) ? true : false;
+                    (oc_ipv6_endpoint_is_link_local(&temp_ep) == 0) ? true
+                                                                    : false;
                   /* 1) */
                   if (sender_ipv6 && sender_link_local && ep_ipv6 &&
                       ep_link_local) {
-                    if (oc_endpoint_compare(endpoint, &temp_ep) != 0) {
+                    if (oc_endpoint_compare_address(endpoint, &temp_ep) != 0) {
                       goto next_ep;
                     }
                   }
@@ -645,6 +649,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                   if (sender_ipv6 && !ep_ipv6) {
                     goto next_ep;
                   }
+#endif /* OC_EXPERIMENTAL_EPS_FILTER */
 
                   if (eps_cur) {
                     eps_cur->next = oc_new_endpoint();
@@ -665,7 +670,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             default:
               break;
             }
+#ifdef OC_EXPERIMENTAL_EPS_FILTER
           next_ep:
+#endif /* OC_EXPERIMENTAL_EPS_FILTER */
             ep = ep->next;
           }
           eps = eps->next;

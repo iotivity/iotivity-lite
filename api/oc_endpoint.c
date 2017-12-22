@@ -392,11 +392,49 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 }
 
 int
+oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
+{
+  if ((ep1->flags & ep2->flags) & IPV6) {
+    if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0) {
+      return 0;
+    }
+    return -1;
+  }
+#ifdef OC_IPV4
+  else if ((ep1->flags & ep2->flags) & IPV4) {
+    if (memcmp(ep1->addr.ipv4.address, ep2->addr.ipv4.address, 4) == 0) {
+      return 0;
+    }
+    return -1;
+  }
+#endif /* OC_IPV4 */
+  // TODO: Add support for other endpoint types
+  return -1;
+}
+
+int
 oc_endpoint_compare(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 {
-  if ((ep1->flags & ~MULTICAST) == (ep2->flags & ~MULTICAST) &&
-      ep1->device == ep2->device &&
-      memcmp(&ep1->addr, &ep2->addr, sizeof(union dev_addr)) == 0)
-    return 0;
-  return 1;
+  if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
+      ep1->device != ep2->device) {
+    return -1;
+  }
+  if (ep1->flags & IPV6) {
+    if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0 &&
+        ep1->addr.ipv6.port == ep2->addr.ipv6.port) {
+      return 0;
+    }
+    return -1;
+  }
+#ifdef OC_IPV4
+  else if (ep1->flags & IPV4) {
+    if (memcmp(ep1->addr.ipv4.address, ep2->addr.ipv4.address, 4) == 0 &&
+        ep1->addr.ipv4.port == ep2->addr.ipv4.port) {
+      return 0;
+    }
+    return -1;
+  }
+#endif /* OC_IPV4 */
+  // TODO: Add support for other endpoint types
+  return -1;
 }
