@@ -114,12 +114,10 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   while (res != NULL) {
     bool match = true;
     if (href && oc_string_len(res->href) > 0) {
-      if (oc_string_len(res->href) != 1 || oc_string(res->href)[0] == '*') {
-        if ((strlen(href) + skip) != oc_string_len(res->href) ||
-            memcmp(oc_string(res->href) + skip, href + skip,
-                   oc_string_len(res->href) - skip) != 0) {
-          match = false;
-        }
+      if ((strlen(href) + skip) != oc_string_len(res->href) ||
+          memcmp(oc_string(res->href) + skip, href,
+                 oc_string_len(res->href) - skip) != 0) {
+        match = false;
       }
     }
     if (match && rt && oc_string_array_get_allocated_size(res->types) > 0) {
@@ -221,10 +219,9 @@ static uint16_t
 oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
 {
   uint16_t permission = 0;
-  oc_ace_wildcard_t wc =
-    OC_ACE_WC_ALL | (resource->properties & OC_DISCOVERABLE)
-      ? OC_ACE_WC_ALL_DISCOVERABLE
-      : OC_ACE_WC_ALL_NON_DISCOVERABLE;
+  oc_ace_wildcard_t wc = (resource->properties & OC_DISCOVERABLE)
+                           ? OC_ACE_WC_ALL_DISCOVERABLE
+                           : OC_ACE_WC_ALL_NON_DISCOVERABLE;
   oc_ace_res_t *res =
     oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri),
                              &resource->types, resource->interfaces, wc);
@@ -555,6 +552,7 @@ new_ace:
   OC_LIST_STRUCT_INIT(ace, resources);
 
   if (type == OC_SUBJECT_ROLE) {
+    OC_DBG("Adding ACE for role %s\n", oc_string(subject->role.role));
     oc_new_string(&ace->subject.role.role, oc_string(subject->role.role),
                   oc_string_len(subject->role.role));
     if (oc_string_len(subject->role.authority) > 0) {
@@ -564,6 +562,19 @@ new_ace:
     }
   } else {
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
+#ifdef OC_DEBUG
+    if (type == OC_SUBJECT_UUID) {
+      char c[37];
+      oc_uuid_to_str(&ace->subject.uuid, c, 37);
+      OC_DBG("Adding ACE for subject %s\n", c);
+    } else if (type == OC_SUBJECT_CONN) {
+      if (ace->subject.conn == OC_CONN_ANON_CLEAR) {
+        OC_DBG("Adding ACE for anon-clear connection\n");
+      } else {
+        OC_DBG("Adding ACE for auth-crypt connection\n");
+      }
+    }
+#endif /* OC_DEBUG */
   }
 
   ace->subject_type = type;
@@ -586,13 +597,13 @@ new_res:
 #ifdef OC_DEBUG
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
-      OC_DBG("Adding ACE for + with permission\n\n", permission);
+      OC_DBG("Adding wildcard resource + with permission %d\n", permission);
       break;
     case OC_ACE_WC_ALL_NON_DISCOVERABLE:
-      OC_DBG("Adding ACE for - with permission\n\n", permission);
+      OC_DBG("Adding wildcard resource - with permission %d\n", permission);
       break;
     case OC_ACE_WC_ALL:
-      OC_DBG("Adding ACE for * with permission\n\n", permission);
+      OC_DBG("Adding wildcard resource * with permission %d\n", permission);
       break;
     default:
       break;
@@ -601,7 +612,7 @@ new_res:
 
     if (href) {
       oc_new_string(&res->href, href, strlen(href));
-      OC_DBG("Adding ACE for %s with permission %d\n\n", href, permission);
+      OC_DBG("Adding resource %s with permission %d\n", href, permission);
     }
 
     if (rt) {
