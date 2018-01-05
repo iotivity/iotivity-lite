@@ -426,8 +426,9 @@ coap_serialize_message(void *packet, uint8_t *buffer)
     memmove(option, coap_pkt->payload, coap_pkt->payload_len);
   } else {
     /* an error occurred: caller must check for !=0 */
+    OC_WRN("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u\n",
+           (unsigned int)(option - coap_pkt->buffer), COAP_MAX_HEADER_SIZE);
     coap_pkt->buffer = NULL;
-    OC_WRN("Serialized header exceeds COAP_MAX_HEADER_SIZE\n");
     return 0;
   }
 
