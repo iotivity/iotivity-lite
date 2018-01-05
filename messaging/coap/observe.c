@@ -121,6 +121,9 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     if (max > uri_len) {
       max = uri_len;
     }
+    else {
+      OC_WRN("Truncating observer URL %s\n", uri);
+    }
     memcpy(o->url, uri, max);
     o->url[max] = 0;
     memcpy(&o->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -245,13 +248,13 @@ coap_notify_observers(oc_resource_t *resource,
                       oc_endpoint_t *endpoint)
 {
   if (!resource) {
-    OC_DBG("coap_notify_observers: no resource passed; returning\n");
+    OC_WRN("coap_notify_observers: no resource passed; returning\n");
     return 0;
   }
 
   int num_observers = 0;
   if (!resource->num_observers) {
-    OC_DBG("coap_notify_observers: no observers; returning\n");
+    OC_WRN("coap_notify_observers: no observers; returning\n");
     return 0;
   }
   num_observers = resource->num_observers;
@@ -264,8 +267,10 @@ coap_notify_observers(oc_resource_t *resource,
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
-  if (!buffer)
+  if (!buffer) {
+    OC_WRN("coap_notify_observers: out of memory allocating buffer\n");
     goto leave_notify_observers;
+  }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_request_t request = { 0 };
