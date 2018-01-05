@@ -122,7 +122,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
       max = uri_len;
     }
     else {
-      OC_WRN("Truncating observer URL %s\n", uri);
+      OC_WRN("Truncating observer URL\n");
     }
     memcpy(o->url, uri, max);
     o->url[max] = 0;
