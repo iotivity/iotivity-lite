@@ -861,25 +861,25 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 
   if (forbidden) {
-    OC_DBG("ocri: Forbidden request\n");
+    OC_WRN("ocri: Forbidden request\n");
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
   } else if (entity_too_large) {
-    OC_DBG("ocri: Request payload too large (hence incomplete)\n");
+    OC_WRN("ocri: Request payload too large (hence incomplete)\n");
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE);
   } else if (bad_request) {
-    OC_DBG("ocri: Bad request\n");
+    OC_WRN("ocri: Bad request\n");
     /* Return a 4.00 response */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_BAD_REQUEST);
   } else if (!cur_resource) {
-    OC_DBG("ocri: Could not find resource\n");
+    OC_WRN("ocri: Could not find resource\n");
     /* Return a 4.04 response if the requested resource was not found */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_NOT_FOUND);
   } else if (!method_impl) {
-    OC_DBG("ocri: Could not find method\n");
+    OC_WRN("ocri: Could not find method\n");
     /* Return a 4.05 response if the resource does not implement the
      * request method.
      */
@@ -888,7 +888,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #ifdef OC_SECURITY
   else if (!authorized) {
-    OC_DBG("ocri: Subject not authorized\n");
+    OC_WRN("ocri: Subject not authorized\n");
     /* If the requestor (subject) does not have access granted via an
      * access control entry in the ACL, then it is not authorized to
      * access the resource. A 4.01 response is sent.

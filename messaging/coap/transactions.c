@@ -148,10 +148,10 @@ coap_send_transaction(coap_transaction_t *t)
       t = NULL;
     } else {
       /* timed out */
-      OC_DBG("Timeout\n");
+      OC_WRN("Timeout\n");
 
 #ifdef OC_SERVER
-      OC_DBG("timeout.. so removing observers\n");
+      OC_WRN("timeout.. so removing observers\n");
       /* handle observers */
       coap_remove_observer_by_client(&t->message->endpoint);
 #endif /* OC_SERVER */
