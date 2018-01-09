@@ -426,8 +426,9 @@ coap_serialize_message(void *packet, uint8_t *buffer)
     memmove(option, coap_pkt->payload, coap_pkt->payload_len);
   } else {
     /* an error occurred: caller must check for !=0 */
+    OC_WRN("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u\n",
+           (unsigned int)(option - coap_pkt->buffer), COAP_MAX_HEADER_SIZE);
     coap_pkt->buffer = NULL;
-    OC_DBG("Serialized header exceeds COAP_MAX_HEADER_SIZE\n");
     return 0;
   }
 
@@ -469,12 +470,12 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
   coap_pkt->mid = coap_pkt->buffer[2] << 8 | coap_pkt->buffer[3];
 
   if (coap_pkt->version != 1) {
-    OC_DBG("CoAP version must be 1\n");
+    OC_WRN("CoAP version must be 1\n");
     return BAD_REQUEST_4_00;
   }
 
   if (coap_pkt->token_len > COAP_TOKEN_LEN) {
-    OC_DBG("Token Length must not be more than 8\n");
+    OC_WRN("Token Length must not be more than 8\n");
     return BAD_REQUEST_4_00;
   }
 
@@ -703,6 +704,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       uint16_t version = coap_parse_int_option(current_option, option_length);
       OC_DBG("Content-format/accept-Version: [%u]\n", version);
       if (version != OCF_VER_1_0_0 && version != OIC_VER_1_1_0) {
+        OC_WRN("Unsupported version %u\n", version);
         return UNSUPPORTED_MEDIA_TYPE_4_15;
       }
     } break;
@@ -710,7 +712,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       OC_DBG("unknown (%u)\n", option_number);
       /* check if critical (odd) */
       if (option_number & 1) {
-        OC_DBG("Unsupported critical option\n");
+        OC_WRN("Unsupported critical option\n");
         return BAD_OPTION_4_02;
       }
     }
