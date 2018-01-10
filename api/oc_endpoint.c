@@ -73,7 +73,9 @@ oc_endpoint_t *
 oc_new_endpoint(void)
 {
   oc_endpoint_t *endpoint = oc_memb_alloc(&oc_endpoints_s);
-  memset(endpoint, 0, sizeof(oc_endpoint_t));
+  if (endpoint) {
+    memset(endpoint, 0, sizeof(oc_endpoint_t));
+  }
   return endpoint;
 }
 
