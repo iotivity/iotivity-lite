@@ -868,6 +868,10 @@ obt_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
     if (strlen(t) == 10 && strncmp(t, "oic.r.doxm", 10) == 0) {
       oc_endpoint_t *ep = get_unsecure_endpoint(endpoint);
       oc_device_t *device = oc_memb_alloc(&oc_devices_s);
+      if (!device) {
+        oc_free_server_endpoints(endpoint);
+        return OC_STOP_DISCOVERY;
+      }
       memcpy(device->uuid.id, uuid.id, 16);
       device->endpoint = endpoint;
       oc_set_delayed_callback(device, free_device, DISCOVERY_CB_DELAY + 2);
