@@ -1,25 +1,21 @@
 Getting Started
 ---------------
 
-IoTivity-Constrained is an open-source software stack and library that
-implements the Open Connectivity Foundation (OCF) standards for the
-Internet of Things (IoT).
+IoTivity-Constrained is a lightweight implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT).
 
-It was designed to build IoT applications for resource-constrained
-hardware and software environments. It targets the wide array of
-embedded devices using low-power and low-cost MCUs that will proliferate
-the
-IoT landscape.
+It was designed to build secure and interoperable IoT applications in full compliance with the `OCF specifications <https://openconnectivity.org/developer/specifications>`_ with a minimal footprint not exceeding the needs of the specifications. The stack architecture lends itself to be ported rapidly to any chosen hardware/OS environment.
+
+IoT applications may be built for a wide variety of rich and resource-constrained devices across the IoT landscape. As a general guideline, it should be feasible to deploy applications on class 2 constrained devices (>256KB Flash, >50KB RAM), or better.
+
+The project is open-source, and its code is distributed under the commercial-friendly Apache v2 license.
 
 Contents
 --------
 
 - `IoTivity-Constrained Architecture`_
 - `Project directory structure`_
-- `Pull dependencies`_
+- `Setup source tree`_
 - `Building sample applications on Linux`_
-- `Building sample applications on Zephyr (with QEMU)`_
-- `Building sample applications on RIOT OS and Contiki`_
 - `Framework configuration`_
 
 IoTivity-Constrained Architecture
@@ -30,68 +26,84 @@ IoTivity-Constrained Architecture
    :alt: IoTivity-Constrained Architecture
    :align: center
 
-Iotivity-Constrained's architecture addresses the following design
-goals:
+IoTivity-Constrained's design presents the following features:
 
-- **Laying down constraints**: This is achieved through build-time
-  configuration of a set of parameters that constrain the number of
-  serviceable connections and requests, payload sizes, memory pool sizes,
-  timeouts etc.  These collectively characterize an acceptable workload
-  for an application.
+- **OS agnostic core**: This cross-platform core (written in pure C)
+  encompasses the APIs, OCF resource model, protocol, security features,
+  memory management and event loop. The core interacts
+  with lower level platform-specific functionality via a very limited
+  collection of abstract interfaces. Such a  decoupling of the common
+  OCF standards related functionality from adaptations to any OS/target
+  facilitates greater ease of long-term maintenance and evolution of
+  the stack through successive releases of the OCF specifications.
 
-- **Determinism**: All memory is statically allocated, and requests fail
-  gracefully whenever a workload exceeds the set constraints.
+- **Platform abstraction**: These are a collection of abstract interfaces
+  with a small set of hooks to platform-specific features. These interfaces
+  are defined in generic terms and elicit a specific contract from
+  implementations. The core calls into these interfaces to interact with
+  the underlying OS/platform. The simplicity and boundedness of these
+  interface definitions allow them to be rapidly implemented on any chosen
+  OS/target. Such an implementation then constitutes a "port". A number of ports
+  (adaptations) currently exist for immediate use, and the project will
+  continue to expand this set.
 
-- **Common core**: IoTivity-Constrained will be employed on diverse
-  hardware-software environments.  The architecture is therefore
-  decoupled into a cross-platform common core with a set of interfaces
-  into implementations of platform-specific code. This decoupling isolates
-  all of the OCF standards related functionality from lower-level
-  platform/environment specific code, that varies per deployment.
+- **Support for static OR dynamic allocation of internal structures**:
+  On environments with a C library that supports heap allocation functions,
+  the stack can be configured at build-time to use dynamic memory allocation
+  to operate without any pre-determined set of resource constraints.
 
-- **Platform abstraction**: These are a collection of interfaces with a
-  key set of hooks that elicit a contract from implementations. The core
-  framework talks via these interfaces to interact with platform specific
-  functionality. Implementations may be built with any choice of embedded
-  RTOS, network stack and hardware. Any such implementation then becomes a
-  "port".  Ports currently exist for Linux, Zephyr, RIOT OS and Contiki.
+  Alternatively, the stack may be configured to statically allocate all
+  internal structures by setting a number of build-time parameters that
+  constrain the number of serviceable connections and requests,
+  payload sizes, memory pool sizes, timeouts etc.  These
+  collectively characterize an acceptable workload for an application.
 
-- **Lightweight design**: This is achieved through tight coupling
-  between stack layers and avoiding modularity unless warranted.
+- **Lightweight design and low complexity**: This is achieved through
+  the implementation of functionally cohesive modules, and weak coupling
+  between stack layers.
+
+- **Simple C APIs**: The APIs are defined so as to closely align to OCF
+  specification constructs aiding greater ease of understanding. Application
+  code utilizing these APIs are largely cross-platform as a consequence
+  of the design, and can be quickly migrated over to a any other target
+  environment.
 
 Project directory structure
 ---------------------------
 
-The IoTivity-Constrained source tree has the following directory
-structure:
-
 api/*
-  contains the implementations of client/server APIs, the resource model
-  and introspection layer, utility and helper functions to encode/decode
+  contains the implementations of client/server APIs, the resource model,
+  utility and helper functions to encode/decode
   to/from OCF’s data model, module for encoding and interpreting type 4
-  UUIDs, and handlers for the discovery, platform and device resources.
+  UUIDs, base64 strings, OCF endpoints, and handlers for the discovery, platform and device resources.
 
 messaging/coap/*
   contains a tailored CoAP implementation.
 
 security/*
-  contains the handlers for secure core OCF resources.
+  contains resource handlers that implement the OCF security model.
 
 utils/*
   contains a few primitive building blocks used internally by the core
   framework.
 
+onboarding_tool/*
+  contains the sample onboarding tool (OBT).
+
 deps/*
   contains external project dependencies.
 
 deps/tinycbor/*
-  contains the tinyCBOR project.
+  contains the tinyCBOR sources.
 
-deps/tinydtls/*
-  contains the tinyDTLS project.
+deps/mbedtls/*
+  contains the mbedTLS sources.
+
+patches/*
+  contains patches for deps/mbedTLS and need to be applied once.
 
 include/*
-  contains common (across modules) headers.
+  contains all common headers.
 
 include/oc_api.h
   contains client/server APIs.
@@ -102,90 +114,53 @@ include/oc_rep.h
 
 include/oc_helpers.h
   contains utility functions for allocating strings and
-  arrays from pre-allocated memory pools.
+  arrays either dynamically from the heap or from pre-allocated
+  memory pools.
+
+include/oc_obt.h
+  contains the collection of APIs for security onboarding
+  and provisioning.
 
 port/\*.h
-  outlines the platform abstraction.
+  collectively represents the platform abstraction.
 
-port/linux/*
-  contains an implementation of a Linux port.
-
-port/zephyr/*
-  contains an implementation of a Zephyr port.
-
-port/riot/*
-  contains an implementation of a RIOT OS port.
-
-port/contiki/*
-  contains an implementation of a Contiki port.
+port/<OS>/*
+  contains adaptations for each OS.
 
 apps/*
   contains sample OCF applications.
 
-Pull Dependencies
+Setup source tree
 -----------------
 
-Run ``git submodule update --init`` from
-``<iotivity-constrained-root>/``.
+Grab source and dependencies using:
+
+``git clone --recursive https://github.com/iotivity/iotivity-constrained.git``
+
+Apply mbedTLS patches into deps/mbedtls using:
+
+``patch -p1 < ../../patches/mbedtls_ocf_patch_1``
+
+``patch -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2``
 
 Building sample applications on Linux
 -------------------------------------
 
-The entire build is specified in ``port/linux/Makefile``. The output of
-the build consists of all sample application binaries that are stored
-under ``port/linux``.
+The entire build is specified in ``port/linux/Makefile``. The output of the build consists of all static and dynamic libraries, and sample application binaries which are stored under ``port/linux``.
 
-Run ``make`` for a release mode build without debug output and security.
+Run ``make`` for a release mode build without debug output, security support or support for dynamic memory allocation.
 
-Run ``make DEBUG=1`` for debug mode build with debug output and without
-security.
+Add ``DYNAMIC=1`` to support dynamic memory allocation.
 
-Add ``SECURE=1`` to the command-lines above for a complete build
-including tinyDTLS and modules that implement secure mode operation.
+Add ``SECURE=1`` to include the OCF security layer and mbedTLS.
 
-Building sample applications on Zephyr (with QEMU)
---------------------------------------------------
+Add ``DEBUG=1`` for a debug mode build with verbose debug output.
 
-First set up your Zephyr development environment following the Zephyr
-Project's
-`Getting Started Guide
-<https://www.zephyrproject.org/doc/getting_started/getting_started.html>`_.
-
-Before running ``make``, update ``port/zephyr/src/Makefile`` to include
-your choice of Zephyr sample from ``apps/``.
-
-Run ``source <Zephyr root>/zephyr-env.sh``.
-
-Run ``make pristine && make`` from ``port/zephyr``.
-
-This should result in a complete build of the Zephyr kernel
-and subsystems, the IoTivity-Constrained framework, and the sample app.
-
-Clone the net-tools repository from
-https://github.com/zephyrproject-rtos/net-tools.
-
-Follow its README to set up a tap interface using ``loop-socat.sh`` and
-``loop-slip-tap.sh.``
-
-This exposes a network interface on Linux to communicate with Zephyr’s
-IP stack and the sample app.
-
-Run ``make qemu`` from ``port/zephyr``. This runs the chosen sample on
-Zephyr in QEMU.
-
-Now run any appropriate Linux client/server sample against the Zephyr
-application to view the request/response flow.
-
-Building sample applications on RIOT OS and Contiki
----------------------------------------------------
-
-Please refer to ``port/riot/README`` and ``port/contiki/README`` for
-instructions.
+Note: The Linux port is the only adaptation layer that is actively maintained as of this writing (Jan 2018). The other ports will be updated imminently. Please watch for further updates on this matter.
 
 Framework configuration
 -----------------------
 
-Build-time configuration options for an application are set in the file
-named ``config.h``. This needs to be present in one of the include
-paths.  Pre-populated configurations for the samples for all targets are
-present in ``port/<platform>/config.h``.
+Build-time configuration options for an application are set in ``config.h``. This needs to be present in one of the include paths.
+
+Pre-populated (sample) configurations for the sample applications for all targets are present in ``port/<OS>/config.h``.
