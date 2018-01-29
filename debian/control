@@ -1,0 +1,20 @@
+Source: iotivity-constrained
+Section: extra
+Priority: optional
+Maintainer: Philippe Coval <philippe.coval@osg.samsung.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://git.debian.org/collab-maint/iotivity-constrained.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/iotivity-constrained.git;a=summary
+
+Package: iotivity-constrained
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: iotivity-constrained-doc
+Architecture: all
+Description: documentation for iotivity-constrained
+ <insert long description, indented with spaces>

@@ -1,0 +1,5 @@
+iotivity-constrained (0.0.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Philippe Coval <philippe.coval@osg.samsung.com>  Mon, 29 Jan 2018 01:41:44 +0100
