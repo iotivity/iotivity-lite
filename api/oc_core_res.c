@@ -27,11 +27,11 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
+#include "port/oc_assert.h"
 #include <stdarg.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_endpoint.h"
-#include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_resource_t *core_resources;
 static oc_device_info_t *oc_device_info;
@@ -307,7 +307,9 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   oc_device_info[device_count].data = data;
 
-  oc_connectivity_init(device_count);
+  if (oc_connectivity_init(device_count) < 0) {
+    oc_abort("error initializing connectivity for device\n");
+  }
 
   device_count++;
 
