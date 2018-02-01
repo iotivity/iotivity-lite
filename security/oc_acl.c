@@ -28,13 +28,13 @@
 #include "oc_rep.h"
 #include "oc_store.h"
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
-#include <stdlib.h>
 static oc_sec_acl_t *aclist;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];
