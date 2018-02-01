@@ -78,10 +78,10 @@ oc_network_event_handler_mutex_unlock(void)
   k_sem_give(&sem);
 }
 
-static void
-oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
-                   void *user_data)
-{
+void oc_network_event_handler_mutex_destroy(void) {}
+
+static void oc_network_receive(struct net_context *context, struct net_pkt *pkt,
+                               int status, void *user_data) {
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
