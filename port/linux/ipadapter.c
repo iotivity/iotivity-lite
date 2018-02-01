@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <ifaddrs.h>
-/*
-  This include creates issues with some toolchains and seems not
-  necessary for compilation.
-#include <linux/ipv6.h>
-*/
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
@@ -59,10 +54,13 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
-static pthread_mutex_t mutex;
 
-typedef struct ip_context_t
-{
+static pthread_mutex_t mutex;
+struct sockaddr_nl ifchange_nl;
+int ifchange_sock;
+bool ifchange_initialized;
+
+typedef struct ip_context_t {
   struct ip_context_t *next;
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;
@@ -101,7 +99,7 @@ void
 oc_network_event_handler_mutex_init(void)
 {
   if (pthread_mutex_init(&mutex, NULL) != 0) {
-    OC_ERR("initializing network event handler mutex\n");
+    oc_abort("error initializing network event handler mutex\n");
   }
 }
 
@@ -117,9 +115,12 @@ oc_network_event_handler_mutex_unlock(void)
   pthread_mutex_unlock(&mutex);
 }
 
-static ip_context_t *
-get_ip_context_for_device(int device)
-{
+void oc_network_event_handler_mutex_destroy(void) {
+  close(ifchange_sock);
+  pthread_mutex_destroy(&mutex);
+}
+
+static ip_context_t *get_ip_context_for_device(int device) {
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
@@ -134,9 +135,185 @@ get_ip_context_for_device(int device)
   return dev;
 }
 
-static void *
-network_event_thread(void *data)
-{
+#ifdef OC_IPV4
+static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
+                                              const struct in_addr *local,
+                                              int interface_index) {
+  struct ip_mreqn mreq;
+
+  memset(&mreq, 0, sizeof(mreq));
+  mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
+  mreq.imr_ifindex = interface_index;
+  memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
+
+  setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
+                 sizeof(mreq)) == -1) {
+    OC_ERR("joining IPv4 multicast group %d\n", errno);
+    return -1;
+  }
+
+  return 0;
+}
+#endif /* OC_IPV4 */
+
+static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
+                                              int interface_index) {
+  struct ipv6_mreq mreq;
+
+  /* Link-local scope */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_LL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+             sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+                 sizeof(mreq)) == -1) {
+    OC_ERR("joining link-local IPv6 multicast group %d\n", errno);
+    return -1;
+  }
+
+  /* Realm-local scope */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_RL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+             sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+                 sizeof(mreq)) == -1) {
+    OC_ERR("joining realm-local IPv6 multicast group %d\n", errno);
+    return -1;
+  }
+
+  /* Site-local scope */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_SL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+             sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
+                 sizeof(mreq)) == -1) {
+    OC_ERR("joining site-local IPv6 multicast group %d\n", errno);
+    return -1;
+  }
+
+  return 0;
+}
+
+static int configure_mcast_socket(int mcast_sock, int sa_family) {
+  int ret = 0;
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interface addrs\n");
+    return -1;
+  }
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    /* Ignore interfaces that are down and the loopback interface */
+    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK) {
+      continue;
+    }
+    /* Ignore interfaces not belonging to the address family under consideration
+     */
+    if (interface->ifa_addr->sa_family != sa_family) {
+      continue;
+    }
+    /* Obtain interface index for this address */
+    int if_index = if_nametoindex(interface->ifa_name);
+    /* Accordingly handle IPv6/IPv4 addresses */
+    if (sa_family == AF_INET6) {
+      struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
+      if (IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
+        ret += add_mcast_sock_to_ipv6_mcast_group(mcast_sock, if_index);
+      }
+    }
+#ifdef OC_IPV4
+    else if (sa_family == AF_INET) {
+      struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
+      ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
+                                                if_index);
+    }
+#endif /* OC_IPV4 */
+  }
+  freeifaddrs(ifs);
+  return ret;
+}
+
+/* Called after network interface up/down events.
+ * This function reconfigures IPv6/v4 multicast sockets for
+ * all logical devices.
+ */
+static int process_interface_change_event(void) {
+  int ret = 0, i, num_devices = oc_core_get_num_devices();
+  struct nlmsghdr *response = NULL;
+
+  int guess = 512, response_len;
+  do {
+    guess <<= 1;
+    uint8_t dummy[guess];
+    response_len = recv(ifchange_sock, dummy, guess, MSG_PEEK);
+    if (response_len < 0) {
+      OC_ERR("reading payload size from netlink interface\n");
+      return -1;
+    }
+  } while (response_len == guess);
+
+  uint8_t buffer[response_len];
+  response_len = recv(ifchange_sock, buffer, response_len, 0);
+  if (response_len < 0) {
+    OC_ERR("reading payload from netlink interface\n");
+    return -1;
+  }
+
+  response = (struct nlmsghdr *)buffer;
+  if (response->nlmsg_type == NLMSG_ERROR) {
+    OC_ERR("caught NLMSG_ERROR in payload from netlink interface\n");
+    return -1;
+  }
+
+  while (NLMSG_OK(response, response_len)) {
+    if (response->nlmsg_type == RTM_NEWADDR) {
+      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
+      if (ifa) {
+        struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
+        int att_len = IFA_PAYLOAD(response);
+        while (RTA_OK(attr, att_len)) {
+          if (attr->rta_type == IFA_ADDRESS) {
+#ifdef OC_IPV4
+            if (ifa->ifa_family == AF_INET) {
+              for (i = 0; i < num_devices; i++) {
+                ip_context_t *dev = get_ip_context_for_device(i);
+                ret += add_mcast_sock_to_ipv4_mcast_group(
+                    dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+              }
+            } else
+#endif /* OC_IPV4 */
+                if (ifa->ifa_family == AF_INET6 &&
+                    ifa->ifa_scope == RT_SCOPE_LINK) {
+              for (i = 0; i < num_devices; i++) {
+                ip_context_t *dev = get_ip_context_for_device(i);
+                ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
+                                                          ifa->ifa_index);
+              }
+            }
+          }
+          attr = RTA_NEXT(attr, att_len);
+        }
+      }
+    }
+    response = NLMSG_NEXT(response, response_len);
+  }
+
+  return ret;
+}
+
+static void *network_event_thread(void *data) {
   struct sockaddr_storage client;
   memset(&client, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *c = (struct sockaddr_in6 *)&client;
@@ -150,6 +327,12 @@ network_event_thread(void *data)
 
   fd_set rfds, setfds;
   FD_ZERO(&rfds);
+  /* Monitor network interface changes on the platform from only the 0th logical
+   * device
+   */
+  if (dev->device == 0) {
+    FD_SET(ifchange_sock, &rfds);
+  }
   FD_SET(dev->server_sock, &rfds);
   FD_SET(dev->mcast_sock, &rfds);
 #ifdef OC_SECURITY
@@ -172,6 +355,16 @@ network_event_thread(void *data)
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
     for (i = 0; i < n; i++) {
+      if (dev->device == 0) {
+        if (FD_ISSET(ifchange_sock, &setfds)) {
+          if (process_interface_change_event() < 0) {
+            OC_WRN("caught errors while handling a network interface change\n");
+          }
+          FD_CLR(ifchange_sock, &setfds);
+          continue;
+        }
+      }
+
       len = sizeof(client);
       oc_message_t *message = oc_allocate_message();
 
@@ -281,9 +474,11 @@ network_event_thread(void *data)
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
       }
 
-      OC_DBG("Incoming message from ");
-      OC_LOGipaddr(message->endpoint);
-      OC_DBG("\n");
+#ifdef OC_DEBUG
+      PRINT("Incoming message of size %d bytes from ", message->length);
+      PRINTipaddr(message->endpoint);
+      PRINT("\n\n");
+#endif /* OC_DEBUG */
 
       oc_network_event(message);
     }
@@ -350,65 +545,61 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
 
     oc_endpoint_t ep;
 
-    while
-      NLMSG_OK(response, response_len)
-      {
-        if (response->nlmsg_type == NLMSG_DONE) {
-          done = true;
-          break;
-        }
-        memset(&ep, 0, sizeof(oc_endpoint_t));
-        bool include = false;
-        struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
-        if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
-          include = true;
-          struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
-          int att_len = IFA_PAYLOAD(response);
-          while
-            RTA_OK(attr, att_len)
-            {
-              if (attr->rta_type == IFA_ADDRESS) {
+    while (NLMSG_OK(response, response_len)) {
+      if (response->nlmsg_type == NLMSG_DONE) {
+        done = true;
+        break;
+      }
+      memset(&ep, 0, sizeof(oc_endpoint_t));
+      bool include = false;
+      struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
+      if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
+        include = true;
+        struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
+        int att_len = IFA_PAYLOAD(response);
+        while (RTA_OK(attr, att_len)) {
+          if (attr->rta_type == IFA_ADDRESS) {
 #ifdef OC_IPV4
-                if (family == AF_INET) {
-                  memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
-                  ep.flags = IPV4;
-                } else
+            if (family == AF_INET) {
+              memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
+              ep.flags = IPV4;
+            } else
 #endif /* OC_IPV4 */
-                  if (family == AF_INET6) {
-                    memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-                    ep.flags = IPV6;
-                  }
-              } else if (attr->rta_type == IFA_FLAGS) {
-                if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
-                  include = false;
-                }
-              }
-              attr = RTA_NEXT(attr, att_len);
+                if (family == AF_INET6) {
+              memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
+              ep.flags = IPV6;
             }
+          } else if (attr->rta_type == IFA_FLAGS) {
+            if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+              include = false;
+            }
+          }
+          attr = RTA_NEXT(attr, att_len);
         }
-        if (include) {
-          if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
-            ep.addr.ipv6.scope = addrmsg->ifa_index;
-          }
-          if (secure) {
-            ep.flags |= SECURED;
-          }
+      }
+      if (include) {
+        if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
+          ep.addr.ipv6.scope = addrmsg->ifa_index;
+        }
+        if (secure) {
+          ep.flags |= SECURED;
+        }
 #ifdef OC_IPV4
-          if (family == AF_INET) {
-            ep.addr.ipv4.port = port;
-          } else
+        if (family == AF_INET) {
+          ep.addr.ipv4.port = port;
+        } else
 #endif /* OC_IPV4 */
             if (family == AF_INET6) {
-              ep.addr.ipv6.port = port;
-            }
-          if (oc_add_endpoint_to_list(&ep) == -1) {
-            close(nl_sock);
-            return;
-          }
+          ep.addr.ipv6.port = port;
         }
-
-        response = NLMSG_NEXT(response, response_len);
+        if (oc_add_endpoint_to_list(&ep) == -1) {
+          close(nl_sock);
+          return;
+        }
       }
+
+      response = NLMSG_NEXT(response, response_len);
+    }
   }
   close(nl_sock);
 }
@@ -431,12 +622,12 @@ oc_connectivity_get_endpoints(int device)
   return oc_get_endpoint_list();
 }
 
-void
-oc_send_buffer(oc_message_t *message)
-{
-  OC_DBG("Outgoing message to ");
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+void oc_send_buffer(oc_message_t *message) {
+#ifdef OC_DEBUG
+  PRINT("Outgoing message of size %d bytes to ", message->length);
+  PRINTipaddr(message->endpoint);
+  PRINT("\n\n");
+#endif /* OC_DEBUG */
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));
@@ -606,12 +797,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 
   dev->port4 = ntohs(l->sin_port);
 
-  struct ip_mreq mreq;
-  memset(&mreq, 0, sizeof(mreq));
-  mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  if (setsockopt(dev->mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining IPv4 multicast group %d\n", errno);
+  if (configure_mcast_socket(dev->mcast4_sock, AF_INET) < 0) {
     return -1;
   }
 
@@ -657,39 +843,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-static int
-add_mcast_sock_to_ipv6_multicast_group(int sock, const uint8_t *addr)
-{
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interfaces: %d\n", errno);
-    return -1;
-  }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
-      continue;
-    struct sockaddr_in6 *if_addr = (struct sockaddr_in6 *)interface->ifa_addr;
-    if (IN6_IS_ADDR_LINKLOCAL(&if_addr->sin6_addr)) {
-      struct ipv6_mreq mreq;
-      memset(&mreq, 0, sizeof(mreq));
-      memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
-      mreq.ipv6mr_interface = if_addr->sin6_scope_id;
-
-      if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                     sizeof(mreq)) == -1) {
-        OC_ERR("joining IPv6 multicast group %d\n", errno);
-        freeifaddrs(ifs);
-        return -1;
-      }
-    }
-  }
-  freeifaddrs(ifs);
-  return 0;
-}
-
-int
-oc_connectivity_init(int device)
-{
+int oc_connectivity_init(int device) {
   OC_DBG("Initializing connectivity for device %d\n", device);
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
@@ -761,16 +915,7 @@ oc_connectivity_init(int device)
 
   dev->port = ntohs(l->sin6_port);
 
-  if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
-                                             ALL_OCF_NODES_LL) < 0) {
-    return -1;
-  }
-  if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
-                                             ALL_OCF_NODES_RL) < 0) {
-    return -1;
-  }
-  if (add_mcast_sock_to_ipv6_multicast_group(dev->mcast_sock,
-                                             ALL_OCF_NODES_SL) < 0) {
+  if (configure_mcast_socket(dev->mcast_sock, AF_INET6) < 0) {
     return -1;
   }
 
@@ -813,6 +958,30 @@ oc_connectivity_init(int device)
     OC_ERR("Could not initialize IPv4\n");
   }
 #endif /* OC_IPV4 */
+
+  /* Netlink socket to listen for network interface changes.
+   * Only initialized once, and change events are captured by only
+   * the network event thread for the 0th logical device.
+   */
+  if (!ifchange_initialized) {
+    memset(&ifchange_nl, 0, sizeof(struct sockaddr_nl));
+    ifchange_nl.nl_family = AF_NETLINK;
+    ifchange_nl.nl_groups =
+        RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+    ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+    if (ifchange_sock < 0) {
+      OC_ERR(
+          "creating netlink socket to monitor network interface changes %d\n",
+          errno);
+      return -1;
+    }
+    if (bind(ifchange_sock, (struct sockaddr *)&ifchange_nl,
+             sizeof(ifchange_nl)) == -1) {
+      OC_ERR("binding netlink socket %d\n", errno);
+      return -1;
+    }
+    ifchange_initialized = true;
+  }
 
   if (pthread_create(&dev->event_thread, NULL, &network_event_thread, dev) !=
       0) {
