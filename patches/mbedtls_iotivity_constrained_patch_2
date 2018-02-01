@@ -1,8 +1,8 @@
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 0f7e29b..9d057ce 100644
+index 0f7e29b..436c5b6 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2600 +1,111 @@
+@@ -1,2600 +1,113 @@
 -/**
 - * \file config.h
 - *
@@ -212,7 +212,10 @@ index 0f7e29b..9d057ce 100644
 -//#define MBEDTLS_DEPRECATED_REMOVED
 -
 -/* \} name SECTION: System support */
--
++#include <config.h>
++#include "port/oc_connectivity.h"
++#include "port/oc_assert.h"
+ 
 -/**
 - * \name SECTION: mbed TLS feature support
 - *
@@ -422,10 +425,7 @@ index 0f7e29b..9d057ce 100644
 -#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
 -#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
 -#define MBEDTLS_CIPHER_PADDING_ZEROS
-+#include <config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
- 
+-
 -/**
 - * \def MBEDTLS_ENABLE_WEAK_CIPHERSUITES
 - *
@@ -2649,6 +2649,7 @@ index 0f7e29b..9d057ce 100644
 -#if defined(TARGET_LIKE_MBED) && defined(YOTTA_CFG_MBEDTLS_TARGET_CONFIG_FILE)
 -#include YOTTA_CFG_MBEDTLS_TARGET_CONFIG_FILE
 -#endif
++#define MBEDTLS_SSL_EXTENDED_MASTER_SECRET
 +#define MBEDTLS_SSL_ALL_ALERT_MESSAGES
  
 -/*
@@ -2665,6 +2666,7 @@ index 0f7e29b..9d057ce 100644
 -#endif
 +#ifdef OC_DEBUG
 +#define MBEDTLS_ERROR_C
++#define MBEDTLS_DEBUG_C
 +#endif /* OC_DEBUG */
  
 -#include "check_config.h"
