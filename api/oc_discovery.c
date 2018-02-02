@@ -496,14 +496,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_interface_mask_t interfaces = 0;
   oc_endpoint_t *eps_list = NULL;
 
-#ifdef OC_EXPERIMENTAL_EPS_FILTER
-  /* Check if we've received this response over IPv6 */
-  bool sender_ipv6 = (endpoint->flags & IPV6) ? true : false;
-  /* Check if the sender's address is link-local */
-  bool sender_link_local =
-    (oc_ipv6_endpoint_is_link_local(endpoint) == 0) ? true : false;
-#endif /* OC_EXPERIMENTAL_EPS_FILTER */
-
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
