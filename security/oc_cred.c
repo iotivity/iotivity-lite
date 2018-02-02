@@ -28,13 +28,13 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#include <stdlib.h>
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
-#include <stdlib.h>
 static oc_sec_creds_t *devices;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];

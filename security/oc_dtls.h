@@ -61,6 +61,7 @@ typedef struct oc_sec_dtls_peer_s
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
+  bool read_master_secret;
 } oc_sec_dtls_peer_t;
 
 #endif /* OC_DTLS_H */

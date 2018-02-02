@@ -198,6 +198,9 @@ oc_main_shutdown(void)
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
   }
+
+  oc_network_event_handler_mutex_destroy();
+
   oc_ri_shutdown();
 
   app_callbacks = NULL;

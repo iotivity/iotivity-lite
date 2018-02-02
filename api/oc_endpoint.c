@@ -150,11 +150,15 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     ip[str_idx++] = ':';
   }
   int i = str_idx;
-  while (i > max_zeros_start) {
+  while (max_zeros_start != 0 && i > max_zeros_start) {
     ip[i] = ip[i - 1];
     i--;
   }
-  sprintf(&ip[str_idx + 1], "]:%u", endpoint->addr.ipv6.port);
+  if (max_zeros_start != 0) {
+    sprintf(&ip[str_idx + 1], "]:%u", endpoint->addr.ipv6.port);
+  } else {
+    sprintf(&ip[str_idx], "]:%u", endpoint->addr.ipv6.port);
+  }
   if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
