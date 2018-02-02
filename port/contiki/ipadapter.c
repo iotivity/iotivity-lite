@@ -191,7 +191,6 @@ oc_network_event_handler_mutex_lock(void)
 {
 }
 
-void
-oc_network_event_handler_mutex_unlock(void)
-{
-}
+void oc_network_event_handler_mutex_unlock(void) {}
+
+void oc_network_event_handler_mutex_destroy(void) {}

@@ -125,6 +125,14 @@ oc_network_event_handler_mutex_unlock(void)
   ReleaseMutex(mutex);
 }
 
+void
+oc_network_event_handler_mutex_destroy(void) 
+{
+    /* cv does not need to be released, there is no such function */
+    CloseHandle(mutex);
+    DeleteCriticalSection(&cs);
+}
+
 static ip_context_t *
 get_ip_context_for_device(int device)
 {
@@ -296,7 +304,6 @@ network_event_thread(void *data)
     }
   }
 
-  CloseHandle(mutex);
   return NULL;
 }
 

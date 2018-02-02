@@ -28,6 +28,7 @@
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
 #ifdef OC_DEBUG
+#include "mbedtls/debug.h"
 #include "mbedtls/error.h"
 #endif /* OC_DEBUG */
 
@@ -74,9 +75,16 @@ static const int anon_ciphers[3] = {
 };
 #endif /* OC_CLIENT */
 
-static bool
-is_peer_active(oc_sec_dtls_peer_t *peer)
-{
+#ifdef OC_DEBUG
+static void oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
+                             const char *str) {
+  (void)ctx;
+  (void)level;
+  PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
+}
+#endif /* OC_DEBUG */
+
+static bool is_peer_active(oc_sec_dtls_peer_t *peer) {
   oc_sec_dtls_peer_t *p = (oc_sec_dtls_peer_t *)oc_list_head(dtls_peers);
   while (p != NULL) {
     if (p == peer) {
@@ -180,6 +188,22 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)ctx;
+  if (!peer->read_master_secret &&
+      peer->ssl_ctx.state < MBEDTLS_SSL_HANDSHAKE_OVER &&
+      peer->ssl_ctx.state >= 12) {
+    memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
+           sizeof(peer->master_secret));
+#ifdef OC_DEBUG
+    size_t i;
+    OC_DBG("oc_dtls: Got master secret\n");
+    for (i = 0; i < 48; i++) {
+      PRINT(" %02X ", peer->master_secret[i]);
+    }
+    PRINT("\n");
+#endif /* OC_DEBUG */
+    peer->read_master_secret = true;
+  }
+
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
   message.data = malloc(OC_PDU_SIZE);
@@ -403,7 +427,13 @@ oc_sec_dtls_init_context(void)
       goto dtls_init_err;
     }
     mbedtls_ssl_conf_handshake_timeout(&server_conf[i], 2500, 20000);
+#ifdef OC_DEBUG
+    mbedtls_ssl_conf_dbg(&server_conf[i], oc_mbedtls_debug, stdout);
+#endif /* OC_DEBUG */
   }
+#ifdef OC_DEBUG
+  mbedtls_debug_set_threshold(4);
+#endif /* OC_DEBUG */
 #ifdef OC_CLIENT
   mbedtls_ssl_config_init(&client_conf);
   mbedtls_ssl_conf_rng(&client_conf, mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
@@ -423,6 +453,9 @@ oc_sec_dtls_init_context(void)
     goto dtls_init_err;
   }
   mbedtls_ssl_conf_handshake_timeout(&client_conf, 2500, 20000);
+#ifdef OC_DEBUG
+  mbedtls_ssl_conf_dbg(&client_conf, oc_mbedtls_debug, stdout);
+#endif /* OC_DEBUG */
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
@@ -729,18 +762,6 @@ read_application_data(oc_sec_dtls_peer_t *peer)
   if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
     int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
 
-    if (peer->ssl_ctx.session_negotiate) {
-      memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
-             sizeof(peer->master_secret));
-#ifdef OC_DEBUG
-      size_t i;
-      OC_DBG("oc_dtls: Got master secret\n");
-      for (i = 0; i < 48; i++) {
-        PRINT(" %02X ", peer->master_secret[i]);
-      }
-      PRINT("\n");
-#endif /* OC_DEBUG */
-    }
     if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
         peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
       memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,

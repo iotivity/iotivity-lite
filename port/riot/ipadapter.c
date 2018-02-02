@@ -63,9 +63,9 @@ oc_network_event_handler_mutex_unlock(void)
   mutex_unlock(&mutex);
 }
 
-void
-oc_send_buffer(oc_message_t *message)
-{
+void oc_network_event_handler_mutex_destroy(void) {}
+
+void oc_send_buffer(oc_message_t *message) {
   OC_DBG("Outgoing message to ");
   OC_LOGipaddr(message->endpoint);
   OC_DBG("\n");

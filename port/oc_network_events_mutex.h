@@ -23,4 +23,6 @@ void oc_network_event_handler_mutex_lock(void);
 
 void oc_network_event_handler_mutex_unlock(void);
 
+void oc_network_event_handler_mutex_destroy(void);
+
 #endif /* OC_NETWORK_EVENTS_MUTEX_H */
