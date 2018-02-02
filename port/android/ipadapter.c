@@ -116,6 +116,10 @@ oc_network_event_handler_mutex_unlock(void)
   pthread_mutex_unlock(&mutex);
 }
 
+void oc_network_event_handler_mutex_destroy(void) {
+  pthread_mutex_destroy(&mutex);
+}
+
 static ip_context_t *
 get_ip_context_for_device(int device)
 {
