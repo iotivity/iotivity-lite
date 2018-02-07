@@ -494,7 +494,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_string_t *anchor = NULL;
   oc_string_array_t *types = NULL;
   oc_interface_mask_t interfaces = 0;
-  oc_endpoint_t *eps_list = NULL;
 
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -546,6 +545,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   while (links != NULL) {
     /* Reset bm in every round as this can be omitted if 0. */
     oc_resource_properties_t bm = 0;
+    oc_endpoint_t *eps_list = NULL;
     oc_rep_t *link = links->value.object;
     while (link != NULL) {
       switch (link->type) {
@@ -641,8 +641,10 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
         handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
                 eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
       ret = OC_STOP_DISCOVERY;
+      oc_free_server_endpoints(eps_list);
       goto done;
     }
+    oc_free_server_endpoints(eps_list);
     links = links->next;
   }
 
