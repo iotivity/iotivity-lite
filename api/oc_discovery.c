@@ -639,9 +639,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       }
       link = link->next;
     }
-    if (eps_list &&
-        handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
-                eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
+    if (handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
+                (eps_list ? eps_list : endpoint),
+                bm, user_data) == OC_STOP_DISCOVERY) {
       ret = OC_STOP_DISCOVERY;
       oc_free_server_endpoints(eps_list);
       goto done;
