@@ -163,7 +163,6 @@ process_device_resources(CborEncoder *links, const char *rt, int rt_len,
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
-
     if (resource->device != device_index ||
         !(resource->properties & OC_DISCOVERABLE))
       continue;
@@ -412,7 +411,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   int response_length = oc_rep_finalize();
 
   if (matches && response_length) {
-    request->response->response_buffer->response_length = response_length;
+    request->response->response_buffer->response_length =
+      (uint16_t)response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if ((request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
@@ -463,10 +463,10 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   default:
     break;
   }
-
   int response_length = oc_rep_finalize();
   if (matches && response_length > 0) {
-    request->response->response_buffer->response_length = response_length;
+    request->response->response_buffer->response_length =
+      (uint16_t)response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if ((request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
@@ -531,7 +531,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     /*  Ignore other oic.wk.res properties over here as they're known
      *  and fixed. Only process the "links" property.
      */
-    case OBJECT_ARRAY: {
+    case OC_REP_OBJECT_ARRAY: {
       if (oc_string_len(rep->name) == 5 &&
           memcmp(oc_string(rep->name), "links", 5) == 0) {
         links = rep->value.object_array;
@@ -549,7 +549,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     oc_rep_t *link = links->value.object;
     while (link != NULL) {
       switch (link->type) {
-      case STRING: {
+      case OC_REP_STRING: {
         if (oc_string_len(link->name) == 6 &&
             memcmp(oc_string(link->name), "anchor", 6) == 0) {
           anchor = &link->value.string;
@@ -558,7 +558,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           uri = &link->value.string;
         }
       } break;
-      case STRING_ARRAY: {
+      case OC_REP_STRING_ARRAY: {
         int i;
         if (oc_string_len(link->name) == 2 &&
             strncmp(oc_string(link->name), "rt", 2) == 0) {
@@ -574,14 +574,14 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           }
         }
       } break;
-      case OBJECT_ARRAY: {
+      case OC_REP_OBJECT_ARRAY: {
         oc_rep_t *eps = link->value.object_array;
         oc_endpoint_t *eps_cur = NULL;
         while (eps != NULL) {
           oc_rep_t *ep = eps->value.object;
           while (ep != NULL) {
             switch (ep->type) {
-            case STRING: {
+            case OC_REP_STRING: {
               if (oc_string_len(ep->name) == 2 &&
                   memcmp(oc_string(ep->name), "ep", 2) == 0) {
                 oc_endpoint_t temp_ep;
@@ -621,15 +621,13 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           eps = eps->next;
         }
       } break;
-      case OBJECT: {
-        oc_rep_t *p = link->value.object;
-        if (p != NULL &&
-            oc_string_len(link->name) == 1 &&
-            *(oc_string(link->name)) == 'p' &&
-            p->type == INT &&
-            oc_string_len(p->name) == 2 &&
-            memcmp(oc_string(p->name), "bm", 2) == 0) {
-          bm = p->value.integer;
+      case OC_REP_OBJECT: {
+        oc_rep_t *policy = link->value.object;
+        if (policy != NULL && oc_string_len(link->name) == 1 &&
+            *(oc_string(link->name)) == 'p' && policy->type == OC_REP_INT &&
+            oc_string_len(policy->name) == 2 &&
+            memcmp(oc_string(policy->name), "bm", 2) == 0) {
+          bm = policy->value.integer;
         }
       } break;
       default:
@@ -637,6 +635,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       }
       link = link->next;
     }
+
     if (eps_list &&
         handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
                 eps_list, bm, user_data) == OC_STOP_DISCOVERY) {

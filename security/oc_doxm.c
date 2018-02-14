@@ -117,7 +117,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
   while (t != NULL) {
     len = oc_string_len(t->name);
     switch (t->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(t->name), "owned", 5) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
           OC_ERR("oc_doxm: Can set owned property only in RFOTM\n");
@@ -128,7 +128,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
       break;
-    case INT:
+    case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "oxmsel", 6) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
           OC_ERR("oc_doxm: Can set oxmsel property only in RFOTM\n");
@@ -141,7 +141,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
       break;
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "deviceuuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
           OC_ERR("oc_doxm: Can set deviceuuid property only in RFOTM\n");
@@ -164,7 +164,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
       break;
-    case INT_ARRAY:
+    case OC_REP_INT_ARRAY:
       if (!from_storage && len == 4 &&
           memcmp(oc_string(t->name), "oxms", 4) == 0) {
         OC_ERR("oc_doxm: Can set oxms property\n");
@@ -186,12 +186,12 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(rep->name), "owned", 5) == 0) {
         doxm[device].owned = rep->value.boolean;
       }
       break;
-    case INT:
+    case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
         doxm[device].oxmsel = rep->value.integer;
       } else if (from_storage && len == 3 &&
@@ -199,7 +199,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         doxm[device].sct = rep->value.integer;
       }
       break;
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm[device].deviceuuid);
         oc_uuid_t *deviceuuid = oc_core_get_device_id(device);

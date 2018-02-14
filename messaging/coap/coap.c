@@ -60,7 +60,7 @@
 /*---------------------------------------------------------------------------*/
 static uint16_t current_mid = 0;
 
-coap_status_t coap_status_code = NO_ERROR;
+coap_status_t coap_status_code = COAP_NO_ERROR;
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -94,7 +94,7 @@ static uint8_t
 coap_option_nibble(unsigned int value)
 {
   if (value < 13) {
-    return value;
+    return (uint8_t)value;
   } else if (value <= 0xFF + 13) {
     return 13;
   } else {
@@ -113,7 +113,7 @@ coap_set_option_header(unsigned int delta, size_t length, uint8_t *buffer)
     buffer[++written] = ((delta - 269) >> 8) & 0xff;
     buffer[++written] = (delta - 269) & 0xff;
   } else if (delta > 12) {
-    buffer[++written] = (delta - 13);
+    buffer[++written] = (uint8_t)(delta - 13);
   }
 
   if (length > 268) {
@@ -501,7 +501,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
      * reserved */
     if ((current_option[0] & 0xF0) == 0xF0) {
       coap_pkt->payload = ++current_option;
-      coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
+      coap_pkt->payload_len = data_len - (uint16_t)(coap_pkt->payload - data);
 
       if (coap_pkt->payload_len > (uint16_t)OC_BLOCK_SIZE) {
         coap_pkt->payload_len = (uint16_t)OC_BLOCK_SIZE;
@@ -549,7 +549,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
     switch (option_number) {
     case COAP_OPTION_CONTENT_FORMAT:
       coap_pkt->content_format =
-        coap_parse_int_option(current_option, option_length);
+        (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("Content-Format [%u]\n", coap_pkt->content_format);
       if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR &&
           coap_pkt->content_format != APPLICATION_CBOR)
@@ -569,7 +569,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
              coap_pkt->etag[7]); /*FIXME always prints 8 bytes */
       break;
     case COAP_OPTION_ACCEPT:
-      coap_pkt->accept = coap_parse_int_option(current_option, option_length);
+      coap_pkt->accept =
+        (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("Accept [%u]\n", coap_pkt->accept);
       if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR &&
           coap_pkt->accept != APPLICATION_CBOR)
@@ -622,7 +623,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       break;
 #endif
     case COAP_OPTION_URI_PORT:
-      coap_pkt->uri_port = coap_parse_int_option(current_option, option_length);
+      coap_pkt->uri_port =
+        (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("Uri-Port [%u]\n", coap_pkt->uri_port);
       break;
     case COAP_OPTION_URI_PATH:
@@ -701,7 +703,8 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       break;
     case OCF_OPTION_CONTENT_FORMAT_VER:
     case OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER: {
-      uint16_t version = coap_parse_int_option(current_option, option_length);
+      uint16_t version =
+        (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("Content-format/accept-Version: [%u]\n", version);
       if (version != OCF_VER_1_0_0 && version != OIC_VER_1_1_0) {
         OC_WRN("Unsupported version %u\n", version);
@@ -720,7 +723,7 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
   } /* for */
   OC_DBG("-Done parsing-------\n");
 
-  return NO_ERROR;
+  return COAP_NO_ERROR;
 }
 #if 0
 int
@@ -786,7 +789,7 @@ coap_set_header_content_format(void *packet, unsigned int format)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->content_format = format;
+  coap_pkt->content_format = (uint16_t)format;
   SET_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT);
   return 1;
 }
@@ -808,7 +811,7 @@ coap_set_header_accept(void *packet, unsigned int accept)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->accept = accept;
+  coap_pkt->accept = (uint16_t)accept;
   SET_OPTION(coap_pkt, COAP_OPTION_ACCEPT);
   return 1;
 }

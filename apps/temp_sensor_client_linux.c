@@ -36,7 +36,7 @@ stop_observe(void *data)
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(temp_1, temp_sensor);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -46,7 +46,7 @@ get_temp(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
-    case INT:
+    case OC_REP_INT:
       PRINT("%d\n", rep->value.integer);
       temperature = rep->value.integer;
       break;

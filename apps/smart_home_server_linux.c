@@ -125,7 +125,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case DOUBLE:
+    case OC_REP_DOUBLE:
       temp = rep->value.double_p;
       break;
     default:
@@ -188,7 +188,7 @@ post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       state = rep->value.boolean;
       break;
     default:
@@ -246,7 +246,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t interface,
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       state = rep->value.boolean;
       break;
     default:

@@ -15,6 +15,16 @@
 */
 
 #include "oc_api.h"
+#include "port/oc_clock.h"
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+
+pthread_mutex_t mutex;
+pthread_cond_t cv;
+struct timespec ts;
+
+int quit = 0;
 
 static bool state = false;
 int power;
@@ -63,15 +73,15 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       state = rep->value.boolean;
       PRINT("value: %d\n", state);
       break;
-    case INT:
+    case OC_REP_INT:
       power = rep->value.integer;
       PRINT("value: %d\n", power);
       break;
-    case STRING:
+    case OC_REP_STRING:
       oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
@@ -110,58 +120,6 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
 }
-
-#if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
-
-#include <string.h>
-#include <zephyr.h>
-
-static struct nano_sem block;
-
-static void
-signal_event_loop(void)
-{
-  nano_sem_give(&block);
-}
-
-void
-main(void)
-{
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
-
-  nano_sem_init(&block);
-
-  if (oc_main_init(&handler) < 0)
-    return;
-
-  oc_clock_time_t next_event;
-
-  while (true) {
-    next_event = oc_main_poll();
-    if (next_event == 0)
-      next_event = TICKS_UNLIMITED;
-    else
-      next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
-  }
-
-  oc_main_shutdown();
-}
-
-#elif defined(__linux__) /* Linux */
-#include "port/oc_clock.h"
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-int quit = 0;
 
 static void
 signal_event_loop(void)
@@ -220,4 +178,3 @@ main(void)
   oc_main_shutdown();
   return 0;
 }
-#endif /* __linux__ */

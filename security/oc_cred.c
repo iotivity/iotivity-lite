@@ -214,7 +214,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
   while (t != NULL) {
     len = oc_string_len(t->name);
     switch (t->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
           OC_ERR("oc_cred: Can set rowneruuid only in RFOTM/SRESET\n");
@@ -222,7 +222,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
         }
       }
       break;
-    case OBJECT_ARRAY: {
+    case OC_REP_OBJECT_ARRAY: {
       if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET &&
           ps->s != OC_DOS_RFPRO) {
         OC_ERR("oc_cred: Can set cred only in RFOTM/SRESET/RFPRO\n");
@@ -238,13 +238,13 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
                        &devices[device].rowneruuid);
       }
       break;
-    case OBJECT_ARRAY: {
+    case OC_REP_OBJECT_ARRAY: {
       oc_rep_t *creds_array = rep->value.object_array;
       while (creds_array != NULL) {
         oc_rep_t *cred = creds_array->value.object;
@@ -257,26 +257,26 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           len = oc_string_len(cred->name);
           non_empty = true;
           switch (cred->type) {
-          case INT:
+          case OC_REP_INT:
             if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0)
               credid = cred->value.integer;
             else if (len == 8 &&
                      memcmp(oc_string(cred->name), "credtype", 8) == 0)
               credtype = cred->value.integer;
             break;
-          case STRING:
+          case OC_REP_STRING:
             if (len == 11 &&
                 memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
               subjectuuid = &cred->value.string;
             }
             break;
-          case OBJECT: {
+          case OC_REP_OBJECT: {
             oc_rep_t *data = cred->value.object;
             if (len == 11 &&
                 memcmp(oc_string(cred->name), "privatedata", 11) == 0) {
               while (data != NULL) {
                 switch (data->type) {
-                case STRING: {
+                case OC_REP_STRING: {
                   if (oc_string_len(data->name) == 8 &&
                       memcmp("encoding", oc_string(data->name), 8) == 0) {
                     if (oc_string_len(data->value.string) == 23 &&
@@ -298,7 +298,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                     memcpy(key, p, size);
                   }
                 } break;
-                case BYTE_STRING: {
+                case OC_REP_BYTE_STRING: {
                   uint8_t *p = oc_cast(data->value.string, uint8_t);
                   int size = oc_string_len(data->value.string);
                   if (size == 0)

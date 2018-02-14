@@ -198,20 +198,20 @@ int oc_rep_finalize(void);
 CborError oc_rep_get_cbor_errno(void);
 
 typedef enum {
-  NIL = 0,
-  INT = 0x01,
-  DOUBLE = 0x02,
-  BOOL = 0x03,
-  BYTE_STRING = 0x04,
-  STRING = 0x05,
-  OBJECT = 0x06,
-  ARRAY = 0x08,
-  INT_ARRAY = 0x09,
-  DOUBLE_ARRAY = 0x0A,
-  BOOL_ARRAY = 0x0B,
-  BYTE_STRING_ARRAY = 0x0C,
-  STRING_ARRAY = 0x0D,
-  OBJECT_ARRAY = 0x0E
+  OC_REP_NIL = 0,
+  OC_REP_INT = 0x01,
+  OC_REP_DOUBLE = 0x02,
+  OC_REP_BOOL = 0x03,
+  OC_REP_BYTE_STRING = 0x04,
+  OC_REP_STRING = 0x05,
+  OC_REP_OBJECT = 0x06,
+  OC_REP_ARRAY = 0x08,
+  OC_REP_INT_ARRAY = 0x09,
+  OC_REP_DOUBLE_ARRAY = 0x0A,
+  OC_REP_BOOL_ARRAY = 0x0B,
+  OC_REP_BYTE_STRING_ARRAY = 0x0C,
+  OC_REP_STRING_ARRAY = 0x0D,
+  OC_REP_OBJECT_ARRAY = 0x0E
 } oc_rep_value_type_t;
 
 typedef struct oc_rep_s
@@ -233,8 +233,8 @@ typedef struct oc_rep_s
 
 void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 
-uint16_t oc_parse_rep(const uint8_t *payload, uint16_t payload_size,
-                      oc_rep_t **value_list);
+int oc_parse_rep(const uint8_t *payload, int payload_size,
+                 oc_rep_t **value_list);
 
 void oc_free_rep(oc_rep_t *rep);
 
