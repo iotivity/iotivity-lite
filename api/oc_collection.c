@@ -308,6 +308,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     oc_response_buffer_t response_buffer;
     bool method_not_found = false, get_delete = false;
     oc_rep_t *rep = request->request_payload;
+    oc_string_t href = { 0 };
 
     response.response_buffer = &response_buffer;
     rest_request.response = &response;
@@ -326,16 +327,16 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
     while (rep != NULL) {
       switch (rep->type) {
-      case OBJECT: {
+      case OC_REP_OBJECT: {
+        memset(&href, 0, sizeof(oc_string_t));
         oc_rep_t *pay = rep->value.object;
-        oc_string_t href;
         while (pay != NULL) {
           switch (pay->type) {
-          case STRING:
+          case OC_REP_STRING:
             oc_new_string(&href, oc_string(pay->value.string),
                           oc_string_len(pay->value.string));
             break;
-          case OBJECT:
+          case OC_REP_OBJECT:
             rest_request.request_payload = pay->value.object;
             break;
           default:
@@ -452,7 +453,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   int size = oc_rep_finalize();
   size = (size <= 2) ? 0 : size;
 
-  request->response->response_buffer->response_length = size;
+  request->response->response_buffer->response_length = (uint16_t)size;
   request->response->response_buffer->code = code;
 
   return true;

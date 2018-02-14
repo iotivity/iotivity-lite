@@ -15,6 +15,16 @@
 */
 
 #include "oc_api.h"
+#include "port/oc_clock.h"
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+
+pthread_mutex_t mutex;
+pthread_cond_t cv;
+struct timespec ts;
+
+int quit = 0;
 
 static int
 app_init(void)
@@ -39,7 +49,7 @@ stop_observe(void *data)
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(a_light, light_server);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -50,15 +60,15 @@ observe_light(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       PRINT("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
-    case INT:
+    case OC_REP_INT:
       PRINT("%d\n", rep->value.integer);
       power = rep->value.integer;
       break;
-    case STRING:
+    case OC_REP_STRING:
       PRINT("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
@@ -143,15 +153,15 @@ get_light(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       PRINT("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
-    case INT:
+    case OC_REP_INT:
       PRINT("%d\n", rep->value.integer);
       power = rep->value.integer;
       break;
-    case STRING:
+    case OC_REP_STRING:
       PRINT("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
@@ -190,7 +200,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
@@ -220,57 +229,6 @@ issue_requests(void)
 {
   oc_do_ip_discovery("core.light", &discovery, NULL);
 }
-
-#if defined(CONFIG_MICROKERNEL) || defined(CONFIG_NANOKERNEL) /* Zephyr */
-
-#include <string.h>
-#include <zephyr.h>
-
-static struct nano_sem block;
-
-static void
-signal_event_loop(void)
-{
-  nano_sem_give(&block);
-}
-
-void
-main(void)
-{
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
-
-  nano_sem_init(&block);
-
-  if (oc_main_init(&handler) < 0)
-    return;
-
-  oc_clock_time_t next_event;
-
-  while (true) {
-    next_event = oc_main_poll();
-    if (next_event == 0)
-      next_event = TICKS_UNLIMITED;
-    else
-      next_event -= oc_clock_time();
-    nano_task_sem_take(&block, next_event);
-  }
-
-  oc_main_shutdown();
-}
-
-#elif defined(__linux__) /* Linux */
-#include "port/oc_clock.h"
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-int quit = 0;
 
 static void
 signal_event_loop(void)
@@ -328,66 +286,3 @@ main(void)
   oc_main_shutdown();
   return 0;
 }
-#elif defined(WIN32) /* windows */
-
-#include "port/oc_clock.h"
-#include <signal.h>
-
-int quit = 0;
-
-void event_has_arrived();
-void infinite_wait_for_event();
-void ms_wait_for_event(oc_clock_time_t ms);
-
-static void
-signal_event_loop(void)
-{
-  event_has_arrived();
-}
-
-void
-handle_signal(int signal)
-{
-  signal_event_loop();
-  quit = 1;
-}
-
-int
-main(void)
-{
-  int init;
-
-  signal(SIGINT, handle_signal);
-
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
-
-  oc_clock_time_t next_event;
-
-#ifdef OC_SECURITY
-  oc_storage_config("./simpleclient_creds");
-#endif /* OC_SECURITY */
-
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    if (next_event == 0)
-      infinite_wait_for_event();
-    else
-      ms_wait_for_event(next_event / (1000 * OC_CLOCK_SECOND));
-  }
-
-  oc_main_shutdown();
-  return 0;
-}
-
-void
-abort_impl(void)
-{
-  abort();
-}
-#endif /* __windows__ */

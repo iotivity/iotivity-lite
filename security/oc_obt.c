@@ -159,13 +159,13 @@ parse_dos(oc_rep_t *rep)
   oc_dostype_t s = 0;
   while (rep != NULL) {
     switch (rep->type) {
-    case OBJECT: {
+    case OC_REP_OBJECT: {
       if (oc_string_len(rep->name) == 3 &&
           memcmp(oc_string(rep->name), "dos", 3) == 0) {
         oc_rep_t *dos = rep->value.object;
         while (dos != NULL) {
           switch (dos->type) {
-          case INT: {
+          case OC_REP_INT: {
             if (oc_string_len(dos->name) == 1 &&
                 oc_string(dos->name)[0] == 's') {
               s = dos->value.integer;
@@ -200,7 +200,7 @@ free_device(void *data)
   oc_free_server_endpoints(device->endpoint);
   purge_cache(device);
   oc_memb_free(&oc_devices_s, device);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -244,7 +244,7 @@ oc_obt_load_state(void)
     if (err == 0) {
       while (rep != NULL) {
         switch (rep->type) {
-        case INT:
+        case OC_REP_INT:
           if (oc_string_len(rep->name) == 2 &&
               memcmp(oc_string(rep->name), "id", 2) == 0) {
             id = rep->value.integer;
@@ -314,7 +314,7 @@ static oc_event_callback_retval_t
 otm_request_timeout_cb(void *data)
 {
   free_otm_state(data, -1);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -621,7 +621,7 @@ obt_jw_5(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &peer);
@@ -821,7 +821,7 @@ obt_check_owned(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 5 &&
           memcmp(oc_string(rep->name), "owned", 5) == 0) {
         owned = rep->value.boolean;
@@ -895,7 +895,7 @@ trigger_unowned_device_cb(void *data)
   oc_device_t *device_list = (oc_device_t *)oc_list_head(oc_cache);
   c->cb(device_list, c->data);
   oc_memb_free(&oc_devicelist_s, c);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 int
@@ -929,7 +929,7 @@ trigger_owned_device_cb(void *data)
   oc_device_t *device_list = (oc_device_t *)oc_list_head(oc_devices);
   c->cb(device_list, c->data);
   oc_memb_free(&oc_devicelist_s, c);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 int
@@ -1081,7 +1081,7 @@ static oc_event_callback_retval_t
 hard_reset_timeout_cb(void *data)
 {
   free_hard_reset_ctx(data, -1);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -1140,7 +1140,7 @@ static oc_event_callback_retval_t
 credprov_request_timeout_cb(void *data)
 {
   free_credprov_state(data, -1);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -1493,7 +1493,7 @@ static oc_event_callback_retval_t
 acl2prov_timeout_cb(void *data)
 {
   free_acl2prov_state(data, -1);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void

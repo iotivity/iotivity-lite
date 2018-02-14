@@ -57,19 +57,19 @@ post_lights_oic_if_b(oc_client_response_t *data)
     oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
-      case STRING:
+      case OC_REP_STRING:
         PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
               oc_string(link->value.string));
         break;
-      case OBJECT: {
+      case OC_REP_OBJECT: {
         PRINT("\t\tkey: %s value: { ", oc_string(link->name));
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
-          case BOOL:
+          case OC_REP_BOOL:
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
-          case INT:
+          case OC_REP_INT:
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           default:
@@ -104,19 +104,19 @@ get_lights_oic_if_b(oc_client_response_t *data)
     oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
-      case STRING:
+      case OC_REP_STRING:
         PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
               oc_string(link->value.string));
         break;
-      case OBJECT: {
+      case OC_REP_OBJECT: {
         PRINT("\t\tkey: %s value: { ", oc_string(link->name));
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
-          case BOOL:
+          case OC_REP_BOOL:
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
-          case INT:
+          case OC_REP_INT:
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.integer);
             break;
           default:
@@ -180,10 +180,10 @@ get_lights_oic_if_ll(oc_client_response_t *data)
     while (link != NULL) {
       PRINT("\t\tkey: %s value: ", oc_string(link->name));
       switch (link->type) {
-      case STRING:
+      case OC_REP_STRING:
         PRINT("%s\n", oc_string(link->value.string));
         break;
-      case STRING_ARRAY: {
+      case OC_REP_STRING_ARRAY: {
         PRINT("[ ");
         int i;
         for (i = 0;
@@ -193,19 +193,19 @@ get_lights_oic_if_ll(oc_client_response_t *data)
         }
         PRINT(" ]\n");
       } break;
-      case OBJECT: {
+      case OC_REP_OBJECT: {
         PRINT("{ ");
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           PRINT(" %s : ", oc_string(rep->name));
           switch (rep->type) {
-          case BOOL:
+          case OC_REP_BOOL:
             PRINT("%d ", rep->value.boolean);
             break;
-          case INT:
+          case OC_REP_INT:
             PRINT("%d ", rep->value.integer);
             break;
-          case STRING:
+          case OC_REP_STRING:
             PRINT("%s ", oc_string(rep->value.string));
             break;
           default:

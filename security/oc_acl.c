@@ -762,17 +762,17 @@ oc_sec_set_post_otm_acl(int device)
   // anon-clear RWD: doxm, pstat
 
   /* Remove anon-clear RWD access to acl2 and cred */
-  oc_sec_ace_t *anon_clear = NULL;
+  oc_sec_ace_t *__anon_clear = NULL;
   do {
-    anon_clear = oc_sec_acl_find_subject(anon_clear, OC_SUBJECT_CONN,
-                                         &_anon_clear, -1, 14, device);
-    if (anon_clear) {
-      oc_ace_free_resources(device, &anon_clear, "/oic/sec/acl2");
+    __anon_clear = oc_sec_acl_find_subject(__anon_clear, OC_SUBJECT_CONN,
+                                           &_anon_clear, -1, 14, device);
+    if (__anon_clear) {
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl2");
     }
-    if (anon_clear) {
-      oc_ace_free_resources(device, &anon_clear, "/oic/sec/cred");
+    if (__anon_clear) {
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/cred");
     }
-  } while (anon_clear);
+  } while (__anon_clear);
 }
 
 bool
@@ -785,7 +785,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
   while (t != NULL) {
     len = oc_string_len(t->name);
     switch (t->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
         if (!from_storage && (ps->s == OC_DOS_RFNOP || ps->s == OC_DOS_RFPRO)) {
           OC_ERR("oc_acl: Cannot set rowneruuid in RFNOP/RFPRO\n");
@@ -793,7 +793,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
         }
       }
       break;
-    case OBJECT_ARRAY: {
+    case OC_REP_OBJECT_ARRAY: {
       if (!from_storage && ps->s == OC_DOS_RFNOP) {
         OC_ERR("oc_acl: Cannot provision ACE in RFNOP\n");
         return false;
@@ -808,13 +808,13 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
                        &aclist[device].rowneruuid);
       }
       break;
-    case OBJECT_ARRAY: {
+    case OC_REP_OBJECT_ARRAY: {
       oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
         oc_ace_subject_t subject;
@@ -827,20 +827,20 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
         while (ace != NULL) {
           len = oc_string_len(ace->name);
           switch (ace->type) {
-          case INT:
+          case OC_REP_INT:
             if (len == 10 &&
                 memcmp(oc_string(ace->name), "permission", 10) == 0) {
-              permission = ace->value.integer;
+              permission = (uint16_t)ace->value.integer;
             } else if (len == 5 &&
                        memcmp(oc_string(ace->name), "aceid", 5) == 0) {
               aceid = ace->value.integer;
             }
             break;
-          case OBJECT_ARRAY:
+          case OC_REP_OBJECT_ARRAY:
             if (len == 9 && memcmp(oc_string(ace->name), "resources", 9) == 0)
               resources = ace->value.object_array;
             break;
-          case OBJECT: {
+          case OC_REP_OBJECT: {
             oc_rep_t *sub = ace->value.object;
             while (sub != NULL) {
               len = oc_string_len(sub->name);
@@ -898,7 +898,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
 
           while (resource != NULL) {
             switch (resource->type) {
-            case STRING:
+            case OC_REP_STRING:
               if (oc_string_len(resource->name) == 4 &&
                   memcmp(oc_string(resource->name), "href", 4) == 0) {
                 href = oc_string(resource->value.string);
@@ -924,7 +924,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
                 }
               }
               break;
-            case STRING_ARRAY: {
+            case OC_REP_STRING_ARRAY: {
               if (oc_string_len(resource->name) == 2) {
                 if (memcmp(oc_string(resource->name), "if", 2) == 0) {
                   for (i = 0; i < (int)oc_string_array_get_allocated_size(

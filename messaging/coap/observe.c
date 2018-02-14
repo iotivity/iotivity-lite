@@ -67,7 +67,7 @@
 #include "oc_rep.h"
 #include "oc_ri.h"
 /*-------------------*/
-uint64_t observe_counter = 3;
+int32_t observe_counter = 3;
 /*---------------------------------------------------------------------------*/
 OC_LIST(observers_list);
 OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
@@ -124,7 +124,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     memcpy(o->url, uri, max);
     o->url[max] = 0;
     memcpy(&o->endpoint, endpoint, sizeof(oc_endpoint_t));
-    o->token_len = token_len;
+    o->token_len = (uint8_t)token_len;
     memcpy(o->token, token, token_len);
     o->last_mid = 0;
     o->obs_counter = observe_counter;
@@ -278,7 +278,7 @@ coap_notify_observers(oc_resource_t *resource,
     OC_DBG("coap_notify_observers: Issue GET request to resource\n");
     response_buffer.buffer = buffer;
 
-    response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
+    response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
     response.response_buffer = &response_buffer;
     request.resource = resource;
     request.response = &response;

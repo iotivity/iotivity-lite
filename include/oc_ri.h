@@ -136,7 +136,10 @@ struct oc_resource_s
 typedef struct oc_link_s oc_link_t;
 typedef struct oc_collection_s oc_collection_t;
 
-typedef enum { DONE = 0, CONTINUE } oc_event_callback_retval_t;
+typedef enum {
+  OC_EVENT_DONE = 0,
+  OC_EVENT_CONTINUE
+} oc_event_callback_retval_t;
 
 typedef oc_event_callback_retval_t (*oc_trigger_t)(void *);
 
