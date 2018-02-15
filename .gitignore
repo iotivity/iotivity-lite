@@ -19,6 +19,11 @@ port/linux/iotivity-constrained-client.pc
 port/linux/iotivity-constrained-client-server.pc
 port/linux/tests/*
 port/linux/obj/
+port/linux/onboarding_tool_creds/
+port/linux/smart_lock
+port/windows/.vs/
+port/windows/Debug/
+port/windows/simpleserver_creds/
 port/zephyr/outdir/
 port/contiki/*.a
 port/contiki/*.map
