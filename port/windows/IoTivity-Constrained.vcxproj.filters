@@ -1,0 +1,492 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="abort.c" />
+    <ClCompile Include="clock.c" />
+    <ClCompile Include="ipadapter.c" />
+    <ClCompile Include="random.c" />
+    <ClCompile Include="storage.c" />
+    <ClCompile Include="..\..\deps\mbedtls\library\aes.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\aesni.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\arc4.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\asn1parse.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\asn1write.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\bignum.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\base64.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\blowfish.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\camellia.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborencoder.c">
+      <Filter>tinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborencoder_close_container_checked.c">
+      <Filter>tinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\tinycbor\src\cborparser.c">
+      <Filter>tinyCBOR</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ccm.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\cipher.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\cipher_wrap.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\cmac.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\coap.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ctr_drbg.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\debug.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\des.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\dhm.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ecdh.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ecdsa.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ecjpake.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ecp.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ecp_curves.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\engine.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\entropy.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\entropy_poll.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\error.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\gcm.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\havege.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\hmac_drbg.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\md.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\md_wrap.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\md2.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\md4.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\md5.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\net_sockets.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\observe.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_acl.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_base64.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_blockwise.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_buffer.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_client_api.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_collection.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_core_res.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_cred.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_discovery.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_doxm.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_dtls.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_endpoint.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_etimer.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_helpers.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_introspection.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_list.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_main.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_memb.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_mmem.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_network_events.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_process.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_pstat.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_rep.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_ri.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_server_api.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_store.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\security\oc_svr.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\util\oc_timer.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_uuid.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\oid.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\padlock.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pem.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pk.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pk_wrap.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pkcs5.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pkcs11.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pkcs12.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pkparse.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\platform.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\pkwrite.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ripemd160.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\rsa.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\sha1.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\sha256.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\sha512.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_cache.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_ciphersuites.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_cli.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_cookie.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_srv.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_ticket.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\ssl_tls.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\threading.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\timing.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\version.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\version_features.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\x509.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\x509_crt.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\xtea.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\separate.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\messaging\coap\transactions.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="..\..\deps\tinycbor\src\cbor.h">
+      <Filter>tinyCBOR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\deps\tinycbor\src\cborjson.h">
+      <Filter>tinyCBOR</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\conf.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\coap.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\constants.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\engine.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc-addrlabels.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\lc-switch.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\observe.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_acl.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_api.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_assert.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_base64.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_blockwise.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_buffer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_buffer_settings.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_client_state.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_clock.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\oc_coap.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_collection.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_connectivity.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_core_res.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_cred.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_discovery.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_doxm.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_dtls.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_etimer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\api\oc_events.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_list.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_memb.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_mmem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_process.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_pstat.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_store.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_svr.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\oc_timer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\pt.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\util\pt\pt-sem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\separate.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\messaging\coap\transactions.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_introspection.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_network_events.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_obt.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_rep.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_ri.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_uuid.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_log.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_network_events_mutex.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_random.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_signal_event_loop.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\oc_storage.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="mbedTLS">
+      <UniqueIdentifier>{9bdeef2e-1d5c-411c-b11c-aabb1c6478ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tinyCBOR">
+      <UniqueIdentifier>{33b70029-8c20-4c7d-8034-34f7504757bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{55347d70-cba2-4bfc-9df7-1f52462264a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{dc57e016-d04c-4c39-b827-5d052b3bcdf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Port">
+      <UniqueIdentifier>{00c2e29b-e86c-4224-9f02-56e1b25e8afb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
