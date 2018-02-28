@@ -348,7 +348,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   char *u = 0;
   if (p) {
     p += 1;
-    uint16_t port = strtoul(p, (char **)&u, 10);
+    uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
     if (u && (u - oc_string(*endpoint_str)) < len) {
       oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
     }

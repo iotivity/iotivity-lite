@@ -75,7 +75,7 @@ stop_observe(void *data)
   } else
     PRINT("Could not init POST\n");
 
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -87,7 +87,7 @@ get_array(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
-    case INT_ARRAY: {
+    case OC_REP_INT_ARRAY: {
       int *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
         PRINT("(%d %d) ", i, arr[i]);

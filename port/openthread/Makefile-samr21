@@ -1,0 +1,9 @@
+CC = arm-none-eabi-gcc
+
+RETARGET = 1
+
+CFLAGS  = -mcpu=cortex-m0plus -mfloat-abi=soft -mthumb
+CFLAGS += -fdata-sections -ffunction-sections
+
+LDFLAGS  = -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections -Wl,--entry=Reset_Handler
+LDFLAGS += -T ${OPENTHREAD_PATH}/third_party/microchip/include/samr21x18a.ld

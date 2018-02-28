@@ -71,7 +71,7 @@ stop_client(void *data)
   (void)data;
   PRINT("Stopping client...\n");
   handle_signal(0);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void get_platform(oc_client_response_t *data);
@@ -91,7 +91,7 @@ get_p_and_d(void *data)
 
   oc_set_delayed_callback(NULL, &stop_client, 3);
 
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void get_temp(oc_client_response_t *data);
@@ -119,7 +119,7 @@ get_temp(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case DOUBLE:
+    case OC_REP_DOUBLE:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "temperature", 11) == 0) {
         thermostat = rep->value.double_p;
@@ -169,14 +169,14 @@ get_fridge(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case INT:
+    case OC_REP_INT:
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "filter", 6) == 0) {
         fridge_state.filter = rep->value.integer;
         PRINT("value: %d\n", fridge_state.filter);
       }
       break;
-    case BOOL:
+    case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "rapidFreeze", 11) == 0) {
         fridge_state.rapid_freeze = rep->value.boolean;
@@ -218,7 +218,7 @@ get_platform(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if ((oc_string_len(rep->name) == 2 &&
            memcmp(oc_string(rep->name), "pi", 2) == 0) ||
           (oc_string_len(rep->name) == 4 &&
@@ -241,7 +241,7 @@ get_device(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if ((oc_string_len(rep->name) == 3 &&
            memcmp(oc_string(rep->name), "pid", 3) == 0) ||
           (oc_string_len(rep->name) == 3 &&
@@ -254,7 +254,7 @@ get_device(oc_client_response_t *data)
               oc_string(rep->value.string));
       }
       break;
-    case STRING_ARRAY:
+    case OC_REP_STRING_ARRAY:
       if (oc_string_len(rep->name) == 2 &&
           (memcmp(oc_string(rep->name), "rt", 2) == 0 ||
            memcmp(oc_string(rep->name), "if", 2) == 0)) {

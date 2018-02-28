@@ -67,7 +67,7 @@ post_count(oc_request_t *request, oc_interface_mask_t interface,
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case INT:
+    case OC_REP_INT:
       counter = rep->value.integer;
       PRINT("value: %d\n", counter);
       break;
@@ -114,7 +114,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       light_state = rep->value.boolean;
       PRINT("value: %d\n", light_state);
       break;

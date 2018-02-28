@@ -50,10 +50,10 @@ dump_rep(oc_rep_t *rep, int n)
     if (oc_string_len(rep->name) > 0)
       PRINT("%*skey: %s value: ", SPACES(n), oc_string(rep->name));
     switch (rep->type) {
-      case STRING:
+      case OC_REP_STRING:
         PRINT("%s\n", oc_string(rep->value.string));
         break;
-      case STRING_ARRAY: {
+      case OC_REP_STRING_ARRAY: {
         PRINT("[ ");
         int i;
         for (i = 0;
@@ -74,14 +74,14 @@ dump_rep(oc_rep_t *rep, int n)
           }
         }
       } break;
-      case BOOL:
+      case OC_REP_BOOL:
         PRINT("%d\n", rep->value.boolean);
         break;
-      case INT:
+      case OC_REP_INT:
         PRINT("%d\n", rep->value.integer);
         break;
-      case OBJECT:
-      case OBJECT_ARRAY:
+      case OC_REP_OBJECT:
+      case OC_REP_OBJECT_ARRAY:
         PRINT("\n");
         dump_rep(rep->value.object, n + 2);
         break;
@@ -129,12 +129,12 @@ trigger_scene(void *data)
     else
       PRINT("Could not init POST\n\n");
 
-    return CONTINUE;
+    return OC_EVENT_CONTINUE;
   }
   oc_free_string_array(&scenes);
   PRINT("So long, and thanks for all the fish!\n");
   handle_signal(0);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void

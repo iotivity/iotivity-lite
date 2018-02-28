@@ -85,7 +85,7 @@ oc_blockwise_request_timeout(void *data)
     oc_free_string(&buffer->uri_query);
   oc_blockwise_free_buffer(oc_blockwise_requests,
                            &oc_blockwise_request_states_s, data);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static oc_event_callback_retval_t
@@ -93,7 +93,7 @@ oc_blockwise_response_timeout(void *data)
 {
   oc_blockwise_free_buffer(oc_blockwise_responses,
                            &oc_blockwise_response_states_s, data);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 oc_blockwise_state_t *
@@ -267,10 +267,10 @@ oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer, uint32_t block_offset,
 {
   if (block_offset < buffer->payload_size) {
     if (buffer->payload_size < requested_block_size)
-      *payload_size = buffer->payload_size;
+      *payload_size = (uint16_t)buffer->payload_size;
     else {
-      *payload_size =
-        MIN(requested_block_size, buffer->payload_size - block_offset);
+      *payload_size = MIN(requested_block_size,
+                          (uint16_t)(buffer->payload_size - block_offset));
     }
     buffer->next_block_offset = block_offset + *payload_size;
     return (const void *)&buffer->buffer[block_offset];

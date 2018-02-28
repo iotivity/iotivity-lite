@@ -161,13 +161,13 @@ oc_sec_dtls_inactive(void *data)
     time -= peer->timestamp;
     if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
       OC_DBG("oc_dtls: Resetting DTLS inactivity callback\n");
-      return CONTINUE;
+      return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
     oc_sec_dtls_remove_peer(&peer->endpoint, true);
   }
   OC_DBG("oc_dtls: Terminating DTLS inactivity callback\n");
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static int
@@ -261,9 +261,10 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 {
   if (fin_ms != 0) {
     oc_sec_dtls_retr_timer_t *timer = (oc_sec_dtls_retr_timer_t *)ctx;
-    timer->int_ticks = (int_ms * OC_CLOCK_SECOND) / 1.e03;
+    timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
     oc_etimer_stop(&timer->fin_timer);
-    timer->fin_timer.timer.interval = (fin_ms * OC_CLOCK_SECOND) / 1.e03;
+    timer->fin_timer.timer.interval =
+      (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
     OC_PROCESS_CONTEXT_BEGIN(&oc_dtls_handler);
     oc_etimer_restart(&timer->fin_timer);
     OC_PROCESS_CONTEXT_END(&oc_dtls_handler);
