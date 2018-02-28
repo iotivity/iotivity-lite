@@ -98,7 +98,7 @@ typedef enum { COAP_GET = 1, COAP_POST, COAP_PUT, COAP_DELETE } coap_method_t;
 
 /* CoAP response codes */
 typedef enum {
-  NO_ERROR = 0,
+  COAP_NO_ERROR = 0,
 
   CREATED_2_01 = 65,  /* CREATED */
   DELETED_2_02 = 66,  /* DELETED */

@@ -75,7 +75,8 @@ response_length(void)
 void
 oc_send_response(oc_request_t *request, oc_status_t response_code)
 {
-  request->response->response_buffer->response_length = response_length();
+  request->response->response_buffer->response_length =
+    (uint16_t)response_length();
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
@@ -435,7 +436,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
 {
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
-  response_buffer.response_length = response_length();
+  response_buffer.response_length = (uint16_t)response_length();
   response_buffer.code = oc_status_code(response_code);
 
   coap_separate_t *cur = oc_list_head(handle->requests), *next = NULL;
@@ -447,8 +448,8 @@ oc_send_separate_response(oc_separate_response_t *handle,
       coap_transaction_t *t =
         coap_new_transaction(coap_get_mid(), &cur->endpoint);
       if (t) {
-        coap_separate_resume(response, cur, oc_status_code(response_code),
-                             t->mid);
+        coap_separate_resume(response, cur,
+                             (uint8_t)oc_status_code(response_code), t->mid);
         if (cur->endpoint.version == OIC_VER_1_1_0) {
           coap_set_header_content_format(response, APPLICATION_CBOR);
         } else {

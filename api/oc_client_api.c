@@ -29,6 +29,8 @@ oc_string_t uri_query;
 static oc_blockwise_state_t *request_buffer;
 #endif /* OC_BLOCK_WISE */
 
+oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
+
 static bool
 dispatch_coap_request(void)
 {
@@ -71,8 +73,6 @@ dispatch_coap_request(void)
 
   if (oc_string_len(uri_query))
     oc_free_string(&uri_query);
-
-  extern oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 
 #ifdef OC_BLOCK_WISE
   request_buffer = 0;
@@ -307,9 +307,8 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
                      oc_discovery_handler_t handler, void *user_data)
 {
   bool status = false;
-  oc_client_handler_t client_handler = {
-    .discovery = handler,
-  };
+  oc_client_handler_t client_handler;
+  client_handler.discovery = handler;
 
   oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
 

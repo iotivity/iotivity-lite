@@ -119,7 +119,7 @@ show_discovered_locks(void *data)
     i++;
     l = l->next;
   }
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -176,7 +176,7 @@ POST_handler(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
         PRINT("\n\n%s : %s\n\n", oc_string(rep->name),
@@ -205,7 +205,7 @@ GET_handler(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
-    case STRING:
+    case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
         PRINT("\n\n%s : %s\n\n", oc_string(rep->name),

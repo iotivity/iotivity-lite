@@ -1,0 +1,12 @@
+CC = arm-none-eabi-gcc
+
+RETARGET = 1
+
+CFLAGS  = -mcpu=cortex-m4 -mfloat-abi=soft -mthumb
+CFLAGS += -fdata-sections -ffunction-sections
+
+LDFLAGS  = -nostartfiles -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections
+LDFLAGS += -T ${OPENTHREAD_PATH}/third_party/silabs/gecko_sdk_suite/v2.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld
+
+BOARD_LIBS = -L${OPENTHREAD_PATH}/third_party/silabs/gecko_sdk_suite/v2.0/platform/radio/rail_lib/autogen/librail_release/ \
+             -lrail_efr32xg12_gcc_release -lopenthread-efr32

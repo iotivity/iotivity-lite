@@ -46,7 +46,7 @@ stop_observe(void *data)
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, light_server);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -67,7 +67,7 @@ observe_light(oc_client_response_t *data)
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
-    case BOOL:
+    case OC_REP_BOOL:
       PRINT("%d\n", rep->value.boolean);
       light_state = rep->value.boolean;
       break;

@@ -29,13 +29,14 @@
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-#define gen_svr_tag(name, name_len, device_index)                              \
-  int svr_tag_max = name_len + 5;                                              \
-  char svr_tag[svr_tag_max];                                                   \
-  int svr_tag_len =                                                            \
-    snprintf(svr_tag, svr_tag_max, "%s_%d", name, device_index);               \
-  svr_tag_len = (svr_tag_len < svr_tag_max) ? svr_tag_len + 1 : svr_tag_max;   \
+#define SVR_TAG_MAX (32)
+static void
+gen_svr_tag(const char *name, int device_index, char *svr_tag)
+{
+  int svr_tag_len = snprintf(svr_tag, SVR_TAG_MAX, "%s_%d", name, device_index);
+  svr_tag_len = (svr_tag_len < SVR_TAG_MAX) ? svr_tag_len + 1 : SVR_TAG_MAX;
   svr_tag[svr_tag_len] = '\0';
+}
 
 void
 oc_sec_load_doxm(int device)
@@ -53,7 +54,8 @@ oc_sec_load_doxm(int device)
 #else  /* OC_DYNAMIC_ALLOCATION */
     uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    gen_svr_tag("doxm", 4, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("doxm", device, svr_tag);
     ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -68,7 +70,7 @@ oc_sec_load_doxm(int device)
       struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
-      oc_parse_rep(buf, ret, &rep);
+      oc_parse_rep(buf, (uint16_t)ret, &rep);
       oc_sec_decode_doxm(rep, true, device);
       oc_free_rep(rep);
     }
@@ -99,7 +101,8 @@ oc_sec_load_pstat(int device)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-  gen_svr_tag("pstat", 5, device);
+  char svr_tag[SVR_TAG_MAX];
+  gen_svr_tag("pstat", device, svr_tag);
   ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -114,7 +117,7 @@ oc_sec_load_pstat(int device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, ret, &rep);
+    oc_parse_rep(buf, (uint16_t)ret, &rep);
     oc_sec_decode_pstat(rep, true, device);
     oc_free_rep(rep);
   }
@@ -142,7 +145,9 @@ oc_sec_load_cred(int device)
 #else  /* OC_DYNAMIC_ALLOCATION */
     uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    gen_svr_tag("cred", 4, device);
+
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("cred", device, svr_tag);
     ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
 
     if (ret <= 0)
@@ -160,7 +165,7 @@ oc_sec_load_cred(int device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, ret, &rep);
+    oc_parse_rep(buf, (uint16_t)ret, &rep);
     oc_sec_decode_cred(rep, NULL, true, device);
     oc_free_rep(rep);
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -185,7 +190,9 @@ oc_sec_load_acl(int device)
 #else  /* OC_DYNAMIC_ALLOCATION */
     uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    gen_svr_tag("acl", 3, device);
+
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("acl", device, svr_tag);
     ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -200,7 +207,7 @@ oc_sec_load_acl(int device)
       struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
-      oc_parse_rep(buf, ret, &rep);
+      oc_parse_rep(buf, (uint16_t)ret, &rep);
       oc_sec_decode_acl(rep, true, device);
       oc_free_rep(rep);
     }
@@ -226,7 +233,8 @@ oc_sec_dump_pstat(int device)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded pstat size %d\n", size);
-    gen_svr_tag("pstat", 5, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("pstat", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
   }
 
@@ -251,7 +259,8 @@ oc_sec_dump_cred(int device)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d\n", size);
-    gen_svr_tag("cred", 4, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("cred", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
   }
 
@@ -277,7 +286,8 @@ oc_sec_dump_doxm(int device)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d\n", size);
-    gen_svr_tag("doxm", 4, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("doxm", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
   }
 
@@ -302,7 +312,8 @@ oc_sec_dump_acl(int device)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d\n", size);
-    gen_svr_tag("acl", 3, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("acl", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
   }
 
@@ -328,7 +339,8 @@ oc_sec_load_unique_ids(int device)
 #else  /* OC_DYNAMIC_ALLOCATION */
     uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    gen_svr_tag("u_ids", 5, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("u_ids", device, svr_tag);
     ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
     if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -343,12 +355,12 @@ oc_sec_load_unique_ids(int device)
       struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_rep_set_pool(&rep_objects);
-      uint16_t err = oc_parse_rep(buf, ret, &rep);
+      int err = oc_parse_rep(buf, ret, &rep);
       oc_rep_t *p = rep;
       if (err == 0) {
         while (rep != NULL) {
           switch (rep->type) {
-          case STRING:
+          case OC_REP_STRING:
             if (oc_string_len(rep->name) == 2 &&
                 memcmp(oc_string(rep->name), "pi", 2) == 0) {
               oc_str_to_uuid(oc_string(rep->value.string), &platform_info->pi);
@@ -398,7 +410,8 @@ oc_sec_dump_unique_ids(int device)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("oc_store: encoded unique identifiers: size %d\n", size);
-    gen_svr_tag("u_ids", 5, device);
+    char svr_tag[SVR_TAG_MAX];
+    gen_svr_tag("u_ids", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
   }
 

@@ -56,7 +56,7 @@ handle_array_response(void *data)
     oc_rep_end_root_object();
     oc_send_separate_response(&array_response, OC_STATUS_OK);
   }
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -80,7 +80,7 @@ post_array(oc_request_t *request, oc_interface_mask_t interface,
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case INT_ARRAY: {
+    case OC_REP_INT_ARRAY: {
       int *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
         PRINT("(%d %d) ", i, arr[i]);

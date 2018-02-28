@@ -69,6 +69,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
+  memset(&uri, 0, sizeof(oc_string_t));
   while (eps != NULL) {
     if (!(eps->flags & SECURED)) {
       if (oc_endpoint_to_string(eps, &ep) == 0) {

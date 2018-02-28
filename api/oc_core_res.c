@@ -195,7 +195,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
 
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "n") == 0) {
-      if (rep->type != STRING || oc_string_len(rep->value.string) == 0) {
+      if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;
       }

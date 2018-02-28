@@ -426,7 +426,7 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
     next = event_cb->next;
 
     if (oc_etimer_expired(&event_cb->timer)) {
-      if (event_cb->callback(event_cb->data) == DONE) {
+      if (event_cb->callback(event_cb->data) == OC_EVENT_DONE) {
         oc_list_remove(list, event_cb);
         oc_memb_free(cb_pool, event_cb);
         event_cb = oc_list_head(list);
@@ -457,7 +457,7 @@ oc_observe_notification_delayed(void *data)
 {
   (void)data;
   coap_notify_observers((oc_resource_t *)data, NULL, NULL);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 #endif
 
@@ -468,10 +468,10 @@ periodic_observe_handler(void *data)
   oc_resource_t *resource = (oc_resource_t *)data;
 
   if (coap_notify_observers(resource, NULL, NULL)) {
-    return CONTINUE;
+    return OC_EVENT_CONTINUE;
   }
 
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 static oc_event_callback_t *
@@ -1048,7 +1048,7 @@ oc_event_callback_retval_t
 oc_ri_remove_client_cb(void *data)
 {
   free_client_cb(data);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 void
@@ -1179,8 +1179,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         return true;
       }
     } else {
-      int err =
-        oc_parse_rep(payload, payload_len, &client_response.payload);
+      int err = oc_parse_rep(payload, payload_len, &client_response.payload);
       if (err == 0) {
         oc_response_handler_t handler =
           (oc_response_handler_t)cb->handler.response;

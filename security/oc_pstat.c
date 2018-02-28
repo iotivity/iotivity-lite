@@ -373,7 +373,7 @@ dump_acl_post_otm(void *data)
 {
   oc_sec_dump_acl((long)data);
   oc_sec_dump_unique_ids((long)data);
-  return DONE;
+  return OC_EVENT_DONE;
 }
 
 bool
@@ -391,13 +391,13 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
 
   while (rep != NULL) {
     switch (rep->type) {
-    case OBJECT: {
+    case OC_REP_OBJECT: {
       if (oc_string_len(rep->name) == 3 &&
           memcmp(oc_string(rep->name), "dos", 3) == 0) {
         oc_rep_t *dos = rep->value.object;
         while (dos != NULL) {
           switch (dos->type) {
-          case INT: {
+          case OC_REP_INT: {
             if (oc_string_len(dos->name) == 1 &&
                 oc_string(dos->name)[0] == 's') {
               ps.s = dos->value.integer;
@@ -419,7 +419,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
     } break;
-    case BOOL:
+    case OC_REP_BOOL:
       if (from_storage && oc_string_len(rep->name) == 4 &&
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         ps.isop = rep->value.boolean;
@@ -427,7 +427,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
       break;
-    case INT:
+    case OC_REP_INT:
       if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
         ps.cm = rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
@@ -440,7 +440,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
         return false;
       }
       break;
-    case STRING:
+    case OC_REP_STRING:
       if ((from_storage || (ps.s != OC_DOS_RFPRO && ps.s != OC_DOS_RFNOP)) &&
           oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {

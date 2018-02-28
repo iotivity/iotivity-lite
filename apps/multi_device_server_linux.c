@@ -79,7 +79,7 @@ post_fridge(oc_request_t *request, oc_interface_mask_t interface,
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case INT:
+    case OC_REP_INT:
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "filter", 6) == 0) {
         fridge_state.filter = rep->value.integer;
@@ -89,7 +89,7 @@ post_fridge(oc_request_t *request, oc_interface_mask_t interface,
         return;
       }
       break;
-    case BOOL:
+    case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "rapidFreeze", 11) == 0) {
         fridge_state.rapid_freeze = rep->value.boolean;
@@ -151,7 +151,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   while (rep != NULL) {
     PRINT("key: %s ", oc_string(rep->name));
     switch (rep->type) {
-    case DOUBLE:
+    case OC_REP_DOUBLE:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "temperature", 11) == 0) {
         thermostat = rep->value.double_p;
