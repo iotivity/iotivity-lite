@@ -81,7 +81,7 @@
       <AdditionalOptions>/ignore:4221 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CustomBuildStep>
-      <Command>if not exist "$(ProjectDirDir)..\..\deps\mbedtls\patched.txt" $(ProjectDir)patch-mbedtls.bat</Command>
+      <Command>if not exist "$(ProjectDir)..\..\deps\mbedtls\patched.txt" $(ProjectDir)patch-mbedtls.bat</Command>
     </CustomBuildStep>
     <CustomBuildStep>
       <Message>Patch mbedTLS</Message>
