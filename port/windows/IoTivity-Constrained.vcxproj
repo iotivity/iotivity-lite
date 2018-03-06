@@ -46,11 +46,13 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -78,6 +80,13 @@
     <Lib>
       <AdditionalOptions>/ignore:4221 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
+    <CustomBuildStep>
+      <Command>if not exist "$(ProjectDirDir)..\..\deps\mbedtls\patched.txt" $(ProjectDir)patch-mbedtls.bat</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Patch mbedTLS</Message>
+      <Outputs>$(ProjectDir)..\..\deps\mbedtls\patched.txt</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -96,6 +105,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <CustomBuildStep>
+      <Command>if not exist "$(ProjectDir)..\..\deps\mbedtls\patched.txt" $(ProjectDir)patch-mbedtls.bat</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Patch mbedTLS</Message>
+      <Outputs>$(ProjectDir)..\..\deps\mbedtls\patched.txt</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\api\oc_events.h" />
