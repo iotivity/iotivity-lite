@@ -11,7 +11,7 @@ set GIT_CMD=git
 for /f "tokens=*" %%i in ('where %GIT_CMD%') do set GIT_LOCATION=%%~pi
 set PATCH_CMD=%GIT_LOCATION%..\usr\bin\patch.exe
 
-cd ..\..\deps\mbedtls || goto error
+cd %~dp0..\..\deps\mbedtls || goto error
 "%GIT_CMD%" clean -xdf .  || goto error
 "%GIT_CMD%" reset --hard  || goto error
 @rem git apply cannot deal with "/dev/null" as input to create a new
