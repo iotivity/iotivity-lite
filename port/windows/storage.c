@@ -50,8 +50,9 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
     return -ENOENT;
 
-  strncpy(store_path + store_path_len, store, store_len);
-  store_path[store_path_len + store_len] = '\0';
+  store_path[store_path_len] = '\\';
+  strncpy(store_path + store_path_len + 1, store, store_len);
+  store_path[1 + store_path_len + store_len] = '\0';
   fp = fopen(store_path, "rb");
   if (!fp)
     return -EINVAL;
@@ -70,8 +71,9 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
     return -ENOENT;
 
-  strncpy(store_path + store_path_len, store, store_len);
-  store_path[store_path_len + store_len] = '\0';
+  store_path[store_path_len] = '\\';
+  strncpy(store_path + store_path_len + 1, store, store_len);
+  store_path[1 + store_path_len + store_len] = '\0';
   fp = fopen(store_path, "wb");
   if (!fp)
     return -EINVAL;
