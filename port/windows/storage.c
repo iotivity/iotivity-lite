@@ -31,11 +31,20 @@ static bool path_set = false;
 int
 oc_storage_config(const char *store)
 {
+  if (!store || !*store)
+    return -EINVAL;
   store_path_len = strlen(store);
   if (store_path_len >= STORE_PATH_SIZE)
     return -ENOENT;
 
   strncpy(store_path, store, store_path_len);
+  if (store_path[store_path_len - 1] != '/' &&
+      store_path[store_path_len - 1] != '\\') {
+    ++store_path_len;
+    if (store_path_len >= STORE_PATH_SIZE)
+      return -ENOENT;
+    store_path[store_path_len - 1] = '\\';
+  }
   path_set = true;
 
   return 0;
