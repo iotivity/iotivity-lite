@@ -23,7 +23,6 @@
 static coap_transaction_t *transaction;
 coap_packet_t request[1];
 oc_client_cb_t *client_cb;
-oc_string_t uri_query;
 
 #ifdef OC_BLOCK_WISE
 static oc_blockwise_state_t *request_buffer;
@@ -70,9 +69,6 @@ dispatch_coap_request(void)
     coap_serialize_message(request, transaction->message->data);
 
   coap_send_transaction(transaction);
-
-  if (oc_string_len(uri_query))
-    oc_free_string(&uri_query);
 
 #ifdef OC_BLOCK_WISE
   request_buffer = 0;
@@ -122,6 +118,7 @@ prepare_coap_request(oc_client_cb_t *cb)
     oc_rep_new(request_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 
     request_buffer->mid = cb->mid;
+    request_buffer->client_cb = cb;
   }
 #endif /* OC_BLOCK_WISE */
 
@@ -136,8 +133,8 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->observe_seq != -1)
     coap_set_header_observe(request, cb->observe_seq);
 
-  if (oc_string_len(uri_query)) {
-    coap_set_header_uri_query(request, oc_string(uri_query));
+  if (oc_string_len(cb->query) > 0) {
+    coap_set_header_uri_query(request, oc_string(cb->query));
   }
 
   client_cb = cb;
@@ -163,7 +160,7 @@ oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE, NULL,
                                              client_handler, qos, user_data);
 
   if (!cb)
@@ -186,15 +183,12 @@ oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET, query,
                                              client_handler, qos, user_data);
   if (!cb)
     return false;
 
   bool status = false;
-
-  if (query && strlen(query) > 0)
-    oc_new_string(&uri_query, query, strlen(query));
 
   status = prepare_coap_request(cb);
 
@@ -211,13 +205,10 @@ oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_PUT,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_PUT, query,
                                              client_handler, qos, user_data);
   if (!cb)
     return false;
-
-  if (query && strlen(query) > 0)
-    oc_new_string(&uri_query, query, strlen(query));
 
   return prepare_coap_request(cb);
 }
@@ -229,14 +220,11 @@ oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_POST,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_POST, query,
                                              client_handler, qos, user_data);
   if (!cb) {
     return false;
   }
-
-  if (query && strlen(query) > 0)
-    oc_new_string(&uri_query, query, strlen(query));
 
   return prepare_coap_request(cb);
 }
@@ -260,7 +248,7 @@ oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET, query,
                                              client_handler, qos, user_data);
   if (!cb)
     return false;
@@ -268,9 +256,6 @@ oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
   cb->observe_seq = 0;
 
   bool status = false;
-
-  if (query && strlen(query) > 0)
-    oc_new_string(&uri_query, query, strlen(query));
 
   status = prepare_coap_request(cb);
 
@@ -303,7 +288,7 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
 
 #ifdef OC_IPV4
 static bool
-oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
+oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *query,
                      oc_discovery_handler_t handler, void *user_data)
 {
   bool status = false;
@@ -313,17 +298,13 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb, const char *rt,
   oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", &mcast4, OC_GET, client_handler, LOW_QOS, user_data);
+    "/oic/res", &mcast4, OC_GET, query, client_handler, LOW_QOS, user_data);
 
   if (!cb)
     return false;
 
   cb->mid = ipv6_cb->mid;
   memcpy(cb->token, ipv6_cb->token, cb->token_len);
-
-  if (rt && strlen(rt) > 0) {
-    oc_concat_strings(&uri_query, "rt=", rt);
-  }
 
   cb->discovery = true;
   status = prepare_coap_request(cb);
@@ -346,8 +327,15 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
   oc_client_handler_t client_handler;
   client_handler.discovery = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", &mcast, OC_GET, client_handler, LOW_QOS, user_data);
+  oc_string_t uri_query;
+  memset(&uri_query, 0, sizeof(oc_string_t));
+  if (rt && strlen(rt) > 0) {
+    oc_concat_strings(&uri_query, "rt=", rt);
+  }
+
+  oc_client_cb_t *cb =
+    oc_ri_alloc_client_cb("/oic/res", &mcast, OC_GET, oc_string(uri_query),
+                          client_handler, LOW_QOS, user_data);
 
   if (!cb)
     return false;
@@ -356,10 +344,6 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 
   bool status = false;
 
-  if (rt && strlen(rt) > 0) {
-    oc_concat_strings(&uri_query, "rt=", rt);
-  }
-
   status = prepare_coap_request(cb);
 
   if (status)
@@ -367,8 +351,12 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 
 #ifdef OC_IPV4
   if (status)
-    status = oc_do_ipv4_discovery(cb, rt, handler, user_data);
+    status = oc_do_ipv4_discovery(cb, oc_string(uri_query), handler, user_data);
 #endif
+
+  if (oc_string_len(uri_query) > 0) {
+    oc_free_string(&uri_query);
+  }
 
   return status;
 }
