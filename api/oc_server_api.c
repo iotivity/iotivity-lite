@@ -344,7 +344,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         if (response_buffer.response_length > cur->block2_size) {
           response_state = oc_blockwise_find_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, OC_BLOCKWISE_SERVER);
+            cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             goto clear_separate_store;
           }

@@ -146,7 +146,7 @@ main(void)
   oc_storage_config("./server_block_linux_creds");
 #endif /* OC_SECURITY */
 
-  oc_set_mtu_size(100);
+  oc_set_mtu_size(200);
   oc_set_max_app_data_size(2048);
 
   init = oc_main_init(&handler);

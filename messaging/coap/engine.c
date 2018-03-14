@@ -86,6 +86,7 @@ check_if_duplicate(uint16_t mid, uint8_t device)
   size_t i;
   for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
     if (history[i] == mid && history_dev[i] == device) {
+      OC_DBG("dropping duplicate request\n");
       return true;
     }
   }
@@ -115,7 +116,12 @@ coap_receive(oc_message_t *msg)
 {
   coap_status_code = COAP_NO_ERROR;
 
-  OC_DBG("\n\nCoAP Engine: received datalen=%u \n", (unsigned int)msg->length);
+  OC_DBG("\n\nCoAP Engine: received datalen=%u from ",
+         (unsigned int)msg->length);
+#ifdef OC_DEBUG
+  PRINTipaddr(msg->endpoint);
+  PRINT("\n\n");
+#endif /* OC_DEBUG */
 
   /* static declaration reduces stack peaks and program code size */
   static coap_packet_t
@@ -224,35 +230,40 @@ coap_receive(oc_message_t *msg)
         const uint8_t *incoming_block;
         int incoming_block_len = coap_get_payload(message, &incoming_block);
         if (block1) {
+          OC_DBG("processing block1 option\n");
           request_buffer = oc_blockwise_find_request_buffer(
-            href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
+            href, href_len, &msg->endpoint, message->code, message->uri_query,
+            message->uri_query_len, OC_BLOCKWISE_SERVER);
 
           if (!request_buffer && block1_num == 0) {
+            OC_DBG("creating new block-wise request buffer\n");
             request_buffer = oc_blockwise_alloc_request_buffer(
               href, href_len, &msg->endpoint, message->code,
               OC_BLOCKWISE_SERVER);
 
             if (request_buffer) {
               if (message->uri_query_len > 0) {
-                oc_blockwise_request_state_t *bwt_request_state =
-                  (oc_blockwise_request_state_t *)request_buffer;
-                oc_new_string(&bwt_request_state->uri_query, message->uri_query,
+                oc_new_string(&request_buffer->uri_query, message->uri_query,
                               message->uri_query_len);
               }
             }
           }
 
           if (request_buffer) {
+            OC_DBG("processing incoming block\n");
             if (oc_blockwise_handle_block(
                   request_buffer, block1_offset, incoming_block,
                   MIN((uint16_t)incoming_block_len, block1_size))) {
               if (block1_more) {
+                OC_DBG(
+                  "more blocks expected; issuing request for the next block\n");
                 response->code = CONTINUE_2_31;
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
                 request_buffer->ref_count = 1;
                 goto send_message;
               } else {
+                OC_DBG("received all blocks for payload\n");
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
                 request_buffer->payload_size =
@@ -261,21 +272,30 @@ coap_receive(oc_message_t *msg)
 
                 response_buffer = oc_blockwise_find_response_buffer(
                   href, href_len, &msg->endpoint, message->code,
+                  message->uri_query, message->uri_query_len,
                   OC_BLOCKWISE_SERVER);
                 if (!response_buffer) {
+                  OC_DBG("creating new block-wise response buffer\n");
                   response_buffer = oc_blockwise_alloc_response_buffer(
                     href, href_len, &msg->endpoint, message->code,
                     OC_BLOCKWISE_SERVER);
-                  if (response_buffer)
+                  if (response_buffer) {
+                    if (message->uri_query_len > 0) {
+                      oc_new_string(&response_buffer->uri_query,
+                                    message->uri_query, message->uri_query_len);
+                    }
                     goto request_handler;
+                  }
                 } else {
                   goto request_handler;
                 }
               }
             }
           }
+          OC_ERR("could not create block-wise request buffer\n");
           goto init_reset_message;
         } else if (block2) {
+          OC_DBG("processing block2 option\n");
           unsigned int accept = 0;
           if (coap_get_header_accept(message, &accept) == 1) {
             coap_set_header_content_format(response, accept);
@@ -283,12 +303,15 @@ coap_receive(oc_message_t *msg)
             coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
           }
           response_buffer = oc_blockwise_find_response_buffer(
-            href, href_len, &msg->endpoint, message->code, OC_BLOCKWISE_SERVER);
+            href, href_len, &msg->endpoint, message->code, message->uri_query,
+            message->uri_query_len, OC_BLOCKWISE_SERVER);
           if (response_buffer) {
+            OC_DBG("continuing ongoing block-wise transfer\n");
             uint16_t payload_size = 0;
             const void *payload = oc_blockwise_dispatch_block(
               response_buffer, block2_offset, block2_size, &payload_size);
             if (payload) {
+              OC_DBG("dispatching next block\n");
               uint8_t more = (response_buffer->next_block_offset <
                               response_buffer->payload_size)
                                ? 1
@@ -301,16 +324,25 @@ coap_receive(oc_message_t *msg)
                                    COAP_ETAG_LEN);
               response_buffer->ref_count = more;
               goto send_message;
+            } else {
+              OC_ERR("could not dispatch block\n");
             }
           } else {
+            OC_DBG("requesting block-wise transfer; creating new block-wise "
+                   "response buffer\n");
             if (block2_num == 0) {
               response_buffer = oc_blockwise_alloc_response_buffer(
                 href, href_len, &msg->endpoint, message->code,
                 OC_BLOCKWISE_SERVER);
               if (response_buffer) {
+                if (message->uri_query_len > 0) {
+                  oc_new_string(&response_buffer->uri_query, message->uri_query,
+                                message->uri_query_len);
+                }
                 if (incoming_block_len > 0) {
                   request_buffer = oc_blockwise_find_request_buffer(
                     href, href_len, &msg->endpoint, message->code,
+                    message->uri_query, message->uri_query_len,
                     OC_BLOCKWISE_SERVER);
                   if (!request_buffer) {
                     request_buffer = oc_blockwise_alloc_request_buffer(
@@ -319,42 +351,63 @@ coap_receive(oc_message_t *msg)
                     if (!(request_buffer && oc_blockwise_handle_block(
                                               request_buffer, 0, incoming_block,
                                               (uint16_t)incoming_block_len))) {
+                      OC_ERR(
+                        "could not create buffer to hold request payload\n");
                       goto init_reset_message;
+                    }
+                    if (message->uri_query_len > 0) {
+                      oc_new_string(&request_buffer->uri_query,
+                                    message->uri_query, message->uri_query_len);
                     }
                     request_buffer->payload_size = incoming_block_len;
                   }
                 }
                 goto request_handler;
+              } else {
+                OC_ERR("could not create response buffer\n");
               }
+            } else {
+              OC_ERR("initiating block-wise transfer with request for "
+                     "block_num > 0\n");
             }
           }
           goto init_reset_message;
         } else {
+          OC_DBG("no block options; processing regular request\n");
           if (incoming_block_len <= block1_size) {
+            OC_DBG("creating response buffer\n");
             response_buffer = oc_blockwise_alloc_response_buffer(
               href, href_len, &msg->endpoint, message->code,
               OC_BLOCKWISE_SERVER);
             if (response_buffer) {
+              if (message->uri_query_len > 0) {
+                oc_new_string(&response_buffer->uri_query, message->uri_query,
+                              message->uri_query_len);
+              }
               if (incoming_block_len > 0) {
+                OC_DBG("creating request buffer\n");
                 request_buffer = oc_blockwise_alloc_request_buffer(
                   href, href_len, &msg->endpoint, message->code,
                   OC_BLOCKWISE_SERVER);
                 if (!(request_buffer && oc_blockwise_handle_block(
                                           request_buffer, 0, incoming_block,
                                           (uint16_t)incoming_block_len))) {
+                  OC_ERR("could not create buffer to hold request payload\n");
                   goto init_reset_message;
                 }
                 if (message->uri_query_len > 0) {
-                  oc_blockwise_request_state_t *bwt_request_state =
-                    (oc_blockwise_request_state_t *)request_buffer;
-                  oc_new_string(&bwt_request_state->uri_query,
-                                message->uri_query, message->uri_query_len);
+                  oc_new_string(&request_buffer->uri_query, message->uri_query,
+                                message->uri_query_len);
                 }
                 request_buffer->payload_size = incoming_block_len;
                 request_buffer->ref_count = 0;
               }
               goto request_handler;
+            } else {
+              OC_ERR("could not create response buffer\n");
             }
+          } else {
+            OC_ERR("incoming payload size exceeds block size\n");
           }
           goto init_reset_message;
         }
@@ -432,18 +485,15 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_CLIENT
 #ifdef OC_BLOCK_WISE
       if (client_cb) {
-        request_buffer = oc_blockwise_find_request_buffer(
-          oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-          &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
-        if (request_buffer) {
-          request_buffer->client_cb = client_cb;
-        }
+        request_buffer = oc_blockwise_find_request_buffer_by_client_cb(
+          &msg->endpoint, client_cb);
       } else {
-        request_buffer = oc_blockwise_find_request_buffer_by_mid(
-          message->mid, OC_BLOCKWISE_CLIENT);
+        request_buffer = oc_blockwise_find_request_buffer_by_mid(message->mid);
       }
       if (request_buffer &&
           (block1 || message->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
+        OC_DBG("found request buffer for uri %s\n",
+               oc_string(request_buffer->href));
         client_cb = (oc_client_cb_t *)request_buffer->client_cb;
         uint16_t payload_size = 0;
         const void *payload = 0;
@@ -453,6 +503,7 @@ coap_receive(oc_message_t *msg)
                                                 block1_offset + block1_size,
                                                 block1_size, &payload_size);
         } else {
+          OC_DBG("initiating block-wise transfer with block1 option\n");
           uint32_t peer_mtu = 0;
           if (coap_get_header_size1(message, (uint32_t *)&peer_mtu) == 1) {
             block1_size = MIN((uint16_t)peer_mtu, (uint16_t)OC_BLOCK_SIZE);
@@ -464,6 +515,7 @@ coap_receive(oc_message_t *msg)
           request_buffer->ref_count = 1;
         }
         if (payload) {
+          OC_DBG("dispatching next block\n");
           transaction = coap_new_transaction(response_mid, &msg->endpoint);
           if (transaction) {
             coap_init_message(response, COAP_TYPE_CON, client_cb->method,
@@ -482,6 +534,9 @@ coap_receive(oc_message_t *msg)
               coap_set_header_block1(response, 0, more, block1_size);
               coap_set_header_size1(response, request_buffer->payload_size);
             }
+            if (oc_string_len(client_cb->query) > 0) {
+              coap_set_header_uri_query(response, oc_string(client_cb->query));
+            }
             request_buffer->mid = response_mid;
             goto send_message;
           }
@@ -491,22 +546,25 @@ coap_receive(oc_message_t *msg)
       }
 
       if (client_cb) {
-        response_buffer = oc_blockwise_find_response_buffer(
-          oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-          &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
+        response_buffer = oc_blockwise_find_response_buffer_by_client_cb(
+          &msg->endpoint, client_cb);
         if (!response_buffer) {
           response_buffer = oc_blockwise_alloc_response_buffer(
             oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
             &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
-        }
-        if (response_buffer) {
-          response_buffer->client_cb = client_cb;
+          if (response_buffer) {
+            OC_DBG("created new response buffer for uri %s\n",
+                   oc_string(response_buffer->href));
+            response_buffer->client_cb = client_cb;
+          }
         }
       } else {
-        response_buffer = oc_blockwise_find_response_buffer_by_mid(
-          message->mid, OC_BLOCKWISE_CLIENT);
+        response_buffer =
+          oc_blockwise_find_response_buffer_by_mid(message->mid);
       }
       if (response_buffer) {
+        OC_DBG("got response buffer for uri %s\n",
+               oc_string(response_buffer->href));
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;
         oc_blockwise_response_state_t *response_state =
           (oc_blockwise_response_state_t *)response_buffer;
@@ -519,7 +577,9 @@ coap_receive(oc_message_t *msg)
             oc_blockwise_handle_block(response_buffer, block2_offset,
                                       incoming_block,
                                       (uint16_t)incoming_block_len)) {
+          OC_DBG("processing incoming block\n");
           if (block2 && block2_more) {
+            OC_DBG("issuing request for next block\n");
             transaction = coap_new_transaction(response_mid, &msg->endpoint);
             if (transaction) {
               coap_init_message(response, COAP_TYPE_CON, client_cb->method,
@@ -528,6 +588,10 @@ coap_receive(oc_message_t *msg)
               coap_set_header_block2(response, block2_num + 1, 0, block2_size);
               coap_set_header_uri_path(response, oc_string(client_cb->uri),
                                        oc_string_len(client_cb->uri));
+              if (oc_string_len(client_cb->query) > 0) {
+                coap_set_header_uri_query(response,
+                                          oc_string(client_cb->query));
+              }
               goto send_message;
             }
           }
@@ -542,6 +606,7 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_BLOCK_WISE */
 
       if (client_cb) {
+        OC_DBG("calling oc_ri_invoke_client_cb\n");
 #ifdef OC_BLOCK_WISE
         oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
                                &msg->endpoint);
