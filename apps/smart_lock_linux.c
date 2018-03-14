@@ -236,7 +236,7 @@ get_lock_state(bool observe)
     PRINT("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
-    if (c > oc_list_length(smartlocks)) {
+    if (c < 0 || c > oc_list_length(smartlocks)) {
       PRINT("\nERROR: Invalid selection.. Try again..\n");
     } else {
       if (observe) {
@@ -264,7 +264,7 @@ stop_observe_lock_state(void)
     PRINT("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
-    if (c > oc_list_length(smartlocks)) {
+    if (c < 0 || c > oc_list_length(smartlocks)) {
       PRINT("\nERROR: Invalid selection.. Try again..\n");
     } else {
       oc_stop_observe(locks[c]->uri, locks[c]->endpoint);
@@ -286,7 +286,7 @@ post_lock_state(void)
     PRINT("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
-    if (c > oc_list_length(smartlocks)) {
+    if (c < 0 || c > oc_list_length(smartlocks)) {
       PRINT("\nERROR: Invalid selection.. Try again..\n");
     } else {
       int s;
@@ -332,16 +332,21 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   (void)bm;
 
   oc_smartlock_t *l = (oc_smartlock_t *)oc_memb_alloc(&smartlocks_m);
-  l->endpoint = endpoint;
-  memcpy(l->uri, uri, strlen(uri));
-  l->uri[strlen(uri)] = '\0';
-  oc_list_add(smartlocks, l);
+  if (l) {
+    l->endpoint = endpoint;
+    int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
+    memcpy(l->uri, uri, uri_len);
+    l->uri[uri_len] = '\0';
+    oc_list_add(smartlocks, l);
 
-  PRINT("\nDiscovering...\n");
+    PRINT("\nDiscovering...\n");
 
-  display_menu();
+    display_menu();
 
-  return OC_CONTINUE_DISCOVERY;
+    return OC_CONTINUE_DISCOVERY;
+  }
+  oc_free_server_endpoints(endpoint);
+  return OC_STOP_DISCOVERY;
 }
 
 static oc_discovery_flags_t

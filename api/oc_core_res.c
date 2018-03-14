@@ -122,16 +122,17 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
 
   char di[37], piid[37];
   oc_uuid_to_str(&oc_device_info[device].di, di, 37);
-  if (request->origin->version != OIC_VER_1_1_0) {
+  if (request->origin && request->origin->version != OIC_VER_1_1_0) {
     oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
   }
 
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_text_string(root, di, di);
-    if (request->origin->version != OIC_VER_1_1_0) {
+    if (request->origin && request->origin->version != OIC_VER_1_1_0) {
       oc_rep_set_text_string(root, piid, piid);
     }
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
@@ -160,7 +161,7 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
   switch (interface) {
     case OC_IF_BASELINE:
       oc_process_baseline_interface(request->resource);
-      /* intentionally no break here */
+    /* fall through */
     case OC_IF_RW: {
       /* oic.wk.d attribute n shall always be the same value as
       oic.wk.con attribute n. */
@@ -256,7 +257,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     if (!core_resources) {
       oc_abort("Insufficient memory");
     }
-    memset(&core_resources[new_num - OCF_D], 0, OCF_D * sizeof(oc_resource_t));
+    oc_resource_t *device = &core_resources[new_num - OCF_D];
+    memset(device, 0, OCF_D * sizeof(oc_resource_t));
 
     oc_device_info = (oc_device_info_t *)realloc(
       oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
@@ -329,6 +331,7 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_text_string(root, pi, pi);
     oc_rep_set_text_string(root, mnmn, oc_string(oc_platform_info.mfg_name));

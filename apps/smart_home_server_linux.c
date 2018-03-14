@@ -67,6 +67,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "home_thermostat");
+  /* fall through */
   case OC_IF_A:
   case OC_IF_S:
     oc_rep_set_double(root, temperature, temp);
@@ -166,6 +167,7 @@ get_pswitch(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "purifier_switch");
+  /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, value, pswitch_state);
     break;
@@ -224,6 +226,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "thermostat_switch");
+  /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, value, switch_state);
     break;

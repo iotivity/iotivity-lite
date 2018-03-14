@@ -563,6 +563,7 @@ oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
 
 exit_tls_prf:
 #undef MBEDTLS_MD
+  va_end(msg_list);
   mbedtls_md_free(&hmacA);
   mbedtls_md_free(&hmacA_next);
   return gen_output;

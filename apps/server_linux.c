@@ -52,6 +52,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_RW:
     oc_rep_set_boolean(root, state, light_state);
     break;

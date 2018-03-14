@@ -414,8 +414,9 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  } else if ((request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
+  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
@@ -427,13 +428,13 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)data;
 
-  if (request->origin->version == OIC_VER_1_1_0) {
+  if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     oc_core_1_1_discovery_handler(request, interface, data);
     return;
   }
 
   char *rt = NULL;
-  int rt_len = 0, matches = 0, device = request->origin->device;
+  int rt_len = 0, matches = 0, device = request->resource->device;
   if (request->query_len) {
     rt_len =
       oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
@@ -468,8 +469,9 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  } else if ((request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_BAD_REQUEST);
+  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
