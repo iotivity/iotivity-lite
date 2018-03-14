@@ -276,18 +276,18 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
-  int str_idx = 0, addr_idx = 0, split = -1, remaining = 0;
-  while (addr_idx < OC_IPV6_ADDRLEN && str_idx < (int)len) {
-    if (strncmp(&address[str_idx], "::", 2) == 0) {
+  int str_idx = 0, addr_idx = 0, split = -1, seg_len = 0;
+  while (addr_idx < OC_IPV6_ADDRLEN - 2 && str_idx < (int)len) {
+    if (split == -1 && strncmp(&address[str_idx], "::", 2) == 0) {
       split = addr_idx;
       str_idx += 2;
     }
-    remaining = len - str_idx;
-    const char *next_seg = memchr(&address[str_idx], ':', remaining);
+    seg_len = len - str_idx;
+    const char *next_seg = memchr(&address[str_idx], ':', seg_len);
     if (next_seg) {
-      remaining = next_seg - &address[str_idx];
+      seg_len = next_seg - &address[str_idx];
     }
-    switch (remaining) {
+    switch (seg_len) {
     case 4: {
       addr[addr_idx++] = hex_to_bin(&address[str_idx], 2);
       str_idx += 2;

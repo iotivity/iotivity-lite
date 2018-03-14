@@ -133,6 +133,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     set_post_otm_acl = true;
     ps->p = false;
   }
+  /* fall through */
   case OC_DOS_RFOTM: {
     ps->p = true;
     ps->s = OC_DOS_RFOTM;

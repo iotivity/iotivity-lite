@@ -1022,12 +1022,12 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
   if (ret != -1) {
     aceid = (int)strtoul(query_param, NULL, 10);
     if (aceid != 0) {
-      if (oc_acl_remove_ace(aceid, request->origin->device)) {
+      if (oc_acl_remove_ace(aceid, request->resource->device)) {
         success = true;
       }
     }
   } else if (ret == -1) {
-    oc_sec_clear_acl(request->origin->device);
+    oc_sec_clear_acl(request->resource->device);
     success = true;
   }
 

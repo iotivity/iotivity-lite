@@ -146,7 +146,8 @@ static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
   mreq.imr_ifindex = interface_index;
   memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
 
-  setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
+  (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
+                   sizeof(mreq));
 
   if (setsockopt(mcast_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
@@ -167,8 +168,8 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_LL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-             sizeof(mreq));
+  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+                   sizeof(mreq));
 
   if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
@@ -181,8 +182,8 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_RL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-             sizeof(mreq));
+  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+                   sizeof(mreq));
 
   if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
@@ -195,8 +196,8 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_SL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-             sizeof(mreq));
+  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
+                   sizeof(mreq));
 
   if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
@@ -503,6 +504,10 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
   request.addrmsg.ifa_family = family;
 
   int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+  if (nl_sock < 0) {
+    return;
+  }
+
   if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
     close(nl_sock);
     return;
