@@ -188,22 +188,6 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)ctx;
-  if (!peer->read_master_secret &&
-      peer->ssl_ctx.state < MBEDTLS_SSL_HANDSHAKE_OVER &&
-      peer->ssl_ctx.state >= 12) {
-    memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
-           sizeof(peer->master_secret));
-#ifdef OC_DEBUG
-    size_t i;
-    OC_DBG("oc_dtls: Got master secret\n");
-    for (i = 0; i < 48; i++) {
-      PRINT(" %02X ", peer->master_secret[i]);
-    }
-    PRINT("\n");
-#endif /* OC_DEBUG */
-    peer->read_master_secret = true;
-  }
-
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
   message.data = malloc(OC_PDU_SIZE);
@@ -762,42 +746,57 @@ read_application_data(oc_sec_dtls_peer_t *peer)
   }
 
   if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
-    int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
-
-    if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
-        peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
-      memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,
-             sizeof(peer->client_server_random));
+    int ret = 0;
+    do {
+      ret = mbedtls_ssl_handshake_step(&peer->ssl_ctx);
+      if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC ||
+          peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
+        memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
+               sizeof(peer->master_secret));
 #ifdef OC_DEBUG
-      size_t i;
-      OC_DBG("oc_dtls: Got nonce\n");
-      for (i = 0; i < 64; i++) {
-        PRINT(" %02X ", peer->client_server_random[i]);
-      }
-      PRINT("\n");
+        size_t i;
+        OC_DBG("oc_dtls: Got master secret\n");
+        for (i = 0; i < 48; i++) {
+          PRINT(" %02X ", peer->master_secret[i]);
+        }
+        PRINT("\n");
 #endif /* OC_DEBUG */
-    }
-    if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
-      mbedtls_ssl_session_reset(&peer->ssl_ctx);
-      /* For HelloVerifyRequest cookies */
-      if (peer->role == MBEDTLS_SSL_IS_SERVER &&
-          mbedtls_ssl_set_client_transport_id(
-            &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-            sizeof(peer->endpoint.addr)) != 0) {
+      }
+      if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
+          peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
+        memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,
+               sizeof(peer->client_server_random));
+#ifdef OC_DEBUG
+        size_t i;
+        OC_DBG("oc_dtls: Got nonce\n");
+        for (i = 0; i < 64; i++) {
+          PRINT(" %02X ", peer->client_server_random[i]);
+        }
+        PRINT("\n");
+#endif /* OC_DEBUG */
+      }
+      if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
+        mbedtls_ssl_session_reset(&peer->ssl_ctx);
+        /* For HelloVerifyRequest cookies */
+        if (peer->role == MBEDTLS_SSL_IS_SERVER &&
+            mbedtls_ssl_set_client_transport_id(
+              &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+              sizeof(peer->endpoint.addr)) != 0) {
+          oc_sec_dtls_remove_peer(&peer->endpoint, false);
+          return;
+        }
+      } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
+                 ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                 ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+#ifdef OC_DEBUG
+        char buf[256];
+        mbedtls_strerror(ret, buf, 256);
+        OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+#endif /* OC_DEBUG */
         oc_sec_dtls_remove_peer(&peer->endpoint, false);
         return;
       }
-    } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-               ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
-               ret != MBEDTLS_ERR_SSL_CONN_EOF) {
-#ifdef OC_DEBUG
-      char buf[256];
-      mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
-#endif /* OC_DEBUG */
-      oc_sec_dtls_remove_peer(&peer->endpoint, false);
-      return;
-    }
+    } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
 #ifdef OC_CLIENT
     if (ret == 0) {
       oc_dtls_handler_schedule_write(peer);
