@@ -150,6 +150,9 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 
   while (i < (n - 1) && current != NULL) {
     current = memchr(start, '&', end - start);
+    if (current == NULL) {
+      return -1;
+    }
     i++;
     start = current + 1;
   }
