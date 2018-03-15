@@ -487,3 +487,30 @@ oc_core_get_resource_by_uri(const char *uri, int device)
   int res = OCF_D * device + type;
   return &core_resources[res];
 }
+
+bool
+oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
+{
+  bool match = true, more_query_params = false;
+  char *rt = NULL;
+  int rt_len = -1;
+  oc_init_query_iterator();
+  do {
+    more_query_params =
+      oc_iterate_query_get_values(request, "rt", &rt, &rt_len);
+    if (rt_len > 0) {
+      match = false;
+      int i;
+      for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+           i++) {
+        int size = oc_string_array_get_item_size(resource->types, i);
+        const char *t =
+          (const char *)oc_string_array_get_item(resource->types, i);
+        if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+          return true;
+        }
+      }
+    }
+  } while (more_query_params);
+  return match;
+}
