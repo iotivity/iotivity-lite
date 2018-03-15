@@ -194,6 +194,11 @@ post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
       state = rep->value.boolean;
       break;
     default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
       bad_request = true;
       break;
     }
@@ -253,6 +258,11 @@ post_switch(oc_request_t *request, oc_interface_mask_t interface,
       state = rep->value.boolean;
       break;
     default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
       bad_request = true;
       break;
     }
