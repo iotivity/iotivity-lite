@@ -183,36 +183,11 @@ oc_collection_add(oc_collection_t *collection)
   oc_list_add(oc_collections, collection);
 }
 
-static bool
-oc_link_filter_rt(oc_link_t *link, const char *rt, int rt_len)
-{
-  bool match = true;
-  if (rt_len > 0) {
-    match = false;
-    int i;
-    for (i = 0;
-         i < (int)oc_string_array_get_allocated_size(link->resource->types);
-         i++) {
-      int size = oc_string_array_get_item_size(link->resource->types, i);
-      const char *t =
-        (const char *)oc_string_array_get_item(link->resource->types, i);
-      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
-        match = true;
-        break;
-      }
-    }
-  }
-  return match;
-}
-
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t interface)
 {
   int code = 69;
-  char *rt;
-  int rt_len =
-    oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   oc_link_t *link = oc_list_head(collection->links);
   switch (interface) {
@@ -221,7 +196,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     oc_process_baseline_interface(request->resource);
     oc_rep_set_array(root, links);
     while (link != NULL) {
-      if (oc_link_filter_rt(link, rt, rt_len)) {
+      if (oc_filter_resource_by_rt(link->resource, request)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -263,7 +238,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   case OC_IF_LL: {
     oc_rep_start_links_array();
     while (link != NULL) {
-      if (oc_link_filter_rt(link, rt, rt_len)) {
+      if (oc_filter_resource_by_rt(link->resource, request)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -348,7 +323,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         link = oc_list_head(collection->links);
         while (link != NULL) {
           if (link->resource) {
-            if (oc_link_filter_rt(link, rt, rt_len)) {
+            if (oc_filter_resource_by_rt(link->resource, request)) {
               if (!get_delete && oc_string_len(href) > 0 &&
                   memcmp(oc_string(href), oc_string(link->resource->uri),
                          oc_string_len(href)) != 0) {
@@ -430,8 +405,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         next:
           link = link->next;
         }
-        if (get_delete)
+        if (get_delete) {
           goto processed_request;
+        }
         if (oc_string_len(href) > 0) {
           oc_free_string(&href);
         }
@@ -441,7 +417,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       }
       rep = rep->next;
     }
-
   processed_request:
     memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
     oc_rep_end_links_array();
