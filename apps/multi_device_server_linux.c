@@ -55,6 +55,7 @@ get_fridge(oc_request_t *request, oc_interface_mask_t interface,
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, rapidFreeze, fridge_state.rapid_freeze);
     oc_rep_set_boolean(root, defrost, fridge_state.defrost);
@@ -125,6 +126,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_A:
   case OC_IF_S:
     oc_rep_set_double(root, temperature, thermostat);

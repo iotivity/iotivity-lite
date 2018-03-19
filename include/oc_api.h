@@ -607,8 +607,10 @@ typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
 void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
 void oc_init_query_iterator(void);
-int oc_interate_query(oc_request_t *request, char **key, int *key_len,
-                      char **value, int *value_len);
+int oc_iterate_query(oc_request_t *request, char **key, int *key_len,
+                     char **value, int *value_len);
+bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
+                                 char **value, int *value_len);
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
 
 void oc_send_response(oc_request_t *request, oc_status_t response_code);

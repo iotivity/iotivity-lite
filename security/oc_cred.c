@@ -340,6 +340,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
         }
         if (non_empty) {
           oc_uuid_t subject;
+          if (!subjectuuid) {
+            return false;
+          }
           oc_str_to_uuid(oc_string(*subjectuuid), &subject);
           if (!unique_credid(credid, device)) {
             oc_sec_remove_cred_by_credid(credid, device);
@@ -348,6 +351,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             credid = get_new_credid(device);
           }
           oc_sec_cred_t *credobj = oc_sec_get_cred(&subject, device);
+          if (!credobj) {
+            return false;
+          }
           credobj->credid = credid;
           credobj->credtype = credtype;
           if (role) {
