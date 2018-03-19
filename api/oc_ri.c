@@ -155,6 +155,9 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 
   while (i < (n - 1) && current != NULL) {
     current = memchr(start, '&', end - start);
+    if (current == NULL) {
+      return -1;
+    }
     i++;
     start = current + 1;
   }
@@ -350,32 +353,6 @@ oc_ri_add_resource(oc_resource_t *resource)
   return valid;
 }
 #endif /* OC_SERVER */
-
-bool
-oc_ri_filter_rt(oc_resource_t *resource, const char *rt, int rt_len)
-{
-  if (resource == NULL || !(resource->properties & OC_DISCOVERABLE)) {
-    return false;
-  }
-
-  bool match = true;
-  if (rt_len > 0 && rt && *rt) {
-    match = false;
-    int i;
-    for (i = 0;
-         i < (int)oc_string_array_get_allocated_size(resource->types);
-         i++) {
-      int size = oc_string_array_get_item_size(resource->types, i);
-      const char *t =
-        (const char *)oc_string_array_get_item(resource->types, i);
-      if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
-        match = true;
-        break;
-      }
-    }
-  }
-  return match;
-}
 
 void
 oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
@@ -671,11 +648,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
 #ifdef OC_BLOCK_WISE
   if (request_state) {
-    oc_blockwise_request_state_t *bwt_request_state =
-      (oc_blockwise_request_state_t *)request_state;
-    uri_query_len = oc_string_len(bwt_request_state->uri_query);
+    uri_query_len = oc_string_len(request_state->uri_query);
     if (uri_query_len > 0) {
-      uri_query = oc_string(bwt_request_state->uri_query);
+      uri_query = oc_string(request_state->uri_query);
     }
   } else
 #endif /* OC_BLOCK_WISE */
@@ -1041,6 +1016,9 @@ free_client_cb(oc_client_cb_t *cb)
 #endif /* OC_BLOCK_WISE */
   oc_list_remove(client_cbs, cb);
   oc_free_string(&cb->uri);
+  if (oc_string_len(cb->query)) {
+    oc_free_string(&cb->query);
+  }
   oc_memb_free(&client_cbs_s, cb);
 }
 
@@ -1236,8 +1214,9 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
 
 oc_client_cb_t *
 oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
-                      oc_method_t method, oc_client_handler_t handler,
-                      oc_qos_t qos, void *user_data)
+                      oc_method_t method, const char *query,
+                      oc_client_handler_t handler, oc_qos_t qos,
+                      void *user_data)
 {
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
   if (!cb) {
@@ -1263,7 +1242,9 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   cb->timestamp = oc_clock_time();
   cb->observe_seq = -1;
   cb->endpoint = endpoint;
-
+  if (query && strlen(query) > 0) {
+    oc_new_string(&cb->query, query, strlen(query));
+  }
   oc_list_add(client_cbs, cb);
   return cb;
 }

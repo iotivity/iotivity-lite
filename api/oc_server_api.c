@@ -33,6 +33,8 @@
 
 #include "oc_core_res.h"
 
+static int query_iterator;
+
 void
 oc_set_device_id(oc_uuid_t *uuid)
 {
@@ -108,8 +110,47 @@ oc_process_baseline_interface(oc_resource_t *resource)
   oc_core_encode_interfaces_mask(oc_rep_object(root), resource->interfaces);
 }
 
+void
+oc_init_query_iterator(void)
+{
+  query_iterator = 0;
+}
+
+int
+oc_iterate_query(oc_request_t *request, char **key, int *key_len, char **value,
+                 int *value_len)
+{
+  query_iterator++;
+  return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
+                                       key_len, value, value_len,
+                                       query_iterator);
+}
+
+bool
+oc_iterate_query_get_values(oc_request_t *request, const char *key,
+                            char **value, int *value_len)
+{
+  char *current_key = 0;
+  int key_len = 0, pos = 0;
+
+  do {
+    pos = oc_iterate_query(request, &current_key, &key_len, value, value_len);
+    if (pos != -1 && strlen(key) == (size_t)key_len &&
+        memcmp(key, current_key, key_len) == 0) {
+      goto more_or_done;
+    }
+  } while (pos != -1);
+
+  *value_len = -1;
+
+more_or_done:
+  if (pos == -1 || pos >= request->query_len) {
+    return false;
+  }
+  return true;
+}
+
 #ifdef OC_SERVER
-static int query_iterator;
 
 static void
 oc_populate_resource_object(oc_resource_t *resource, const char *name,
@@ -395,24 +436,6 @@ oc_delete_resource(oc_resource_t *resource)
 }
 
 void
-oc_init_query_iterator(void)
-{
-  query_iterator = 0;
-}
-
-int
-oc_interate_query(oc_request_t *request, char **key, int *key_len, char **value,
-                  int *value_len)
-{
-  if (query_iterator >= request->query_len)
-    return -1;
-  query_iterator = oc_ri_get_query_nth_key_value(
-    request->query + query_iterator, request->query_len - query_iterator, key,
-    key_len, value, value_len, 1);
-  return 1;
-}
-
-void
 oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
 {
@@ -464,7 +487,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         if (response_buffer.response_length > cur->block2_size) {
           response_state = oc_blockwise_find_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, OC_BLOCKWISE_SERVER);
+            cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             goto clear_separate_store;
           }

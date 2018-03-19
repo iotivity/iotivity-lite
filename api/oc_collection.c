@@ -248,9 +248,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t interface)
 {
   int code = 69; /* status ok */
-  char *rt;
-  int rt_len =
-    oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   oc_link_t *link = oc_list_head(collection->links);
 
@@ -279,7 +276,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 #endif
     oc_rep_set_array(root, links);
     while (link != NULL) {
-      if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+      if (oc_filter_resource_by_rt(link->resource, request)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -321,7 +318,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   case OC_IF_LL: {
     oc_rep_start_links_array();
     while (link != NULL) {
-      if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+      if (oc_filter_resource_by_rt(link->resource, request)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
@@ -412,7 +409,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         link = oc_list_head(collection->links);
         while (link != NULL) {
           if (link->resource) {
-            if (oc_ri_filter_rt(link->resource, rt, rt_len)) {
+            if (oc_filter_resource_by_rt(link->resource, request)) {
               if (!get_delete && oc_string_len(href) > 0 &&
                   memcmp(oc_string(href), oc_string(link->resource->uri),
                          oc_string_len(href)) != 0) {
@@ -494,8 +491,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         next:
           link = link->next;
         }
-        if (get_delete)
+        if (get_delete) {
           goto processed_request;
+        }
         if (oc_string_len(href) > 0) {
           oc_free_string(&href);
         }
@@ -505,7 +503,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       }
       rep = rep->next;
     }
-
   processed_request:
     memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
     oc_rep_end_links_array();

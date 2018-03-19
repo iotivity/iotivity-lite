@@ -92,6 +92,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_array(root, urlInfo);
     oc_rep_object_array_start_item(urlInfo);

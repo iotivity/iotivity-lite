@@ -918,6 +918,7 @@ oc_obt_discover_unowned_devices(oc_obt_devicelist_cb_t cb, void *data)
     oc_set_delayed_callback(c, trigger_unowned_device_cb, DISCOVERY_CB_DELAY);
     return 0;
   }
+  oc_memb_free(&oc_devicelist_s, c);
   return -1;
 }
 
@@ -953,6 +954,7 @@ oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data)
     oc_set_delayed_callback(c, trigger_owned_device_cb, DISCOVERY_CB_DELAY);
     return 0;
   }
+  oc_memb_free(&oc_devicelist_s, c);
   return -1;
 }
 

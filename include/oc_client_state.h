@@ -59,6 +59,7 @@ typedef struct oc_client_cb_s
   uint8_t token[COAP_TOKEN_LEN];
   uint8_t token_len;
   uint16_t mid;
+  oc_string_t query;
   oc_endpoint_t *endpoint;
   oc_client_handler_t handler;
   void *user_data;
@@ -79,7 +80,7 @@ bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* !OC_BLOCK_WISE */
 
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
-                                      oc_method_t method,
+                                      oc_method_t method, const char *query,
                                       oc_client_handler_t handler, oc_qos_t qos,
                                       void *user_data);
 

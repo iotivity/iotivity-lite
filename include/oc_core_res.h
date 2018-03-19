@@ -82,4 +82,6 @@ void oc_core_populate_resource(
 
 void oc_core_regen_unique_ids(int device);
 
+bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
+
 #endif /* OC_CORE_RES_H */
