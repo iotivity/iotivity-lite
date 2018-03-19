@@ -266,11 +266,8 @@ reprocess:
       oc_rep_end_root_object();
     } break;
     case OC_IF_LL: {
-      char *rt;
-      int rt_len =
-        oc_ri_get_query_value(request->query, request->query_len, "rt", &rt);
       oc_rep_set_array(root, links);
-      if (oc_ri_filter_rt(member->resource, rt, rt_len)) {
+      if (oc_filter_resource_by_rt(member->resource, request)) {
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(member->resource->uri));
         oc_rep_set_string_array(links, rt, member->resource->types);

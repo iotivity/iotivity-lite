@@ -43,7 +43,7 @@ typedef struct oc_blockwise_state_s
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
+  oc_string_t uri_query;
 #ifdef OC_CLIENT
   uint16_t mid;
   void *client_cb;
@@ -53,7 +53,6 @@ typedef struct oc_blockwise_state_s
 typedef struct oc_blockwise_request_state_s
 {
   oc_blockwise_state_t base;
-  oc_string_t uri_query;
 } oc_blockwise_request_state_t;
 
 typedef struct oc_blockwise_response_state_s
@@ -66,19 +65,23 @@ typedef struct oc_blockwise_response_state_s
 #endif /* OC_CLIENT */
 } oc_blockwise_response_state_t;
 
-oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_mid(
-  uint16_t mid, oc_blockwise_role_t role);
+oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_mid(uint16_t mid);
 
-oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(
-  uint16_t mid, oc_blockwise_role_t role);
+oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(uint16_t mid);
+
+oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
+  oc_endpoint_t *endpoint, void *client_cb);
+
+oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
+  oc_endpoint_t *endpoint, void *client_cb);
 
 oc_blockwise_state_t *oc_blockwise_find_request_buffer(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *query, int query_len, oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *query, int query_len, oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,

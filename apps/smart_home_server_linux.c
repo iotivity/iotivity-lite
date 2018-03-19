@@ -67,6 +67,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "home_thermostat");
+  /* fall through */
   case OC_IF_A:
   case OC_IF_S:
     oc_rep_set_double(root, temperature, temp);
@@ -166,6 +167,7 @@ get_pswitch(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "purifier_switch");
+  /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, value, pswitch_state);
     break;
@@ -192,6 +194,11 @@ post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
       state = rep->value.boolean;
       break;
     default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
       bad_request = true;
       break;
     }
@@ -224,6 +231,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t interface,
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "thermostat_switch");
+  /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, value, switch_state);
     break;
@@ -250,6 +258,11 @@ post_switch(oc_request_t *request, oc_interface_mask_t interface,
       state = rep->value.boolean;
       break;
     default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
       bad_request = true;
       break;
     }

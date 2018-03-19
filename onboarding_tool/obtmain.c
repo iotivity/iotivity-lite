@@ -23,6 +23,8 @@
 #include <stdio.h>
 
 #define MAX_OWNED_DEVICES (50)
+#define MAX_NUM_RESOURCES (100)
+#define MAX_NUM_RT (50)
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
@@ -204,7 +206,7 @@ take_ownership_of_device(void)
   }
   PRINT("\n\nSelect device: ");
   SCANF("%d", &c);
-  if (c >= i) {
+  if (c < 0 || c >= i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
@@ -253,7 +255,7 @@ reset_device(void)
   }
   PRINT("\nSelect device: ");
   SCANF("%d", &c);
-  if (c >= i) {
+  if (c < 0 || c >= i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
@@ -301,13 +303,13 @@ provision_credentials(void)
   }
   PRINT("\nSelect device 1: ");
   SCANF("%d", &c1);
-  if (c1 >= i) {
+  if (c1 < 0 || c1 >= i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
   PRINT("Select device 2:");
   SCANF("%d", &c2);
-  if (c2 >= i || c2 == c1) {
+  if (c2 < 0 || c2 >= i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
@@ -368,7 +370,7 @@ provision_ace2(void)
 
   PRINT("\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
-  if (dev >= i) {
+  if (dev < 0 || dev >= i) {
     PRINT("ERROR: Invalid selection\n");
     my_devices = NULL;
     return;
@@ -412,13 +414,12 @@ provision_ace2(void)
     return;
   }
 
-  while (num_resources <= 0) {
-    PRINT("\nEnter number of resources in this ACE: ");
-    SCANF("%d", &num_resources);
-
-    if (num_resources <= 0) {
+  while (num_resources <= 0 || num_resources > MAX_NUM_RESOURCES) {
+    if (num_resources != 0) {
       PRINT("\n\nERROR: Enter valid number\n\n");
     }
+    PRINT("\nEnter number of resources in this ACE: ");
+    SCANF("%d", &num_resources);
   }
 
   int c;
@@ -439,7 +440,7 @@ provision_ace2(void)
     if (c == 1) {
       PRINT("Enter resource href (eg. /a/light): ");
       char href[64];
-      SCANF("%s", href);
+      SCANF("%63s", href);
 
       oc_obt_ace_resource_set_href(res, href);
       oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
@@ -468,14 +469,14 @@ provision_ace2(void)
 
     PRINT("Enter number of resource types [0-None]: ");
     SCANF("%d", &c);
-    if (c > 0) {
+    if (c > 0 && c <= MAX_NUM_RT) {
       oc_obt_ace_resource_set_num_rt(res, c);
 
       char rt[128];
       int j = 0;
       while (j < c) {
         PRINT("Enter resource type [%d]: ", j + 1);
-        SCANF("%s", rt);
+        SCANF("%127s", rt);
         oc_obt_ace_resource_bind_rt(res, rt);
         j++;
       }

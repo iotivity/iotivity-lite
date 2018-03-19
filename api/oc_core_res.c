@@ -132,16 +132,17 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
 
   char di[37], piid[37];
   oc_uuid_to_str(&oc_device_info[device].di, di, 37);
-  if (request->origin->version != OIC_VER_1_1_0) {
+  if (request->origin && request->origin->version != OIC_VER_1_1_0) {
     oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
   }
 
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_text_string(root, di, di);
-    if (request->origin->version != OIC_VER_1_1_0) {
+    if (request->origin && request->origin->version != OIC_VER_1_1_0) {
       oc_rep_set_text_string(root, piid, piid);
     }
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
@@ -170,7 +171,7 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
   switch (interface) {
     case OC_IF_BASELINE:
       oc_process_baseline_interface(request->resource);
-      /* intentionally no break here */
+    /* fall through */
     case OC_IF_RW: {
       /* oic.wk.d attribute n shall always be the same value as
       oic.wk.con attribute n. */
@@ -280,7 +281,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     if (!core_resources) {
       oc_abort("Insufficient memory");
     }
-    memset(&core_resources[new_num - OCF_D], 0, OCF_D * sizeof(oc_resource_t));
+    oc_resource_t *device = &core_resources[new_num - OCF_D];
+    memset(device, 0, OCF_D * sizeof(oc_resource_t));
 
     oc_device_info = (oc_device_info_t *)realloc(
       oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
@@ -363,6 +365,7 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_text_string(root, pi, pi);
     oc_rep_set_text_string(root, mnmn, oc_string(oc_platform_info.mfg_name));
@@ -522,4 +525,31 @@ oc_core_get_resource_by_uri(const char *uri, int device)
   }
   int res = OCF_D * device + type;
   return &core_resources[res];
+}
+
+bool
+oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
+{
+  bool match = true, more_query_params = false;
+  char *rt = NULL;
+  int rt_len = -1;
+  oc_init_query_iterator();
+  do {
+    more_query_params =
+      oc_iterate_query_get_values(request, "rt", &rt, &rt_len);
+    if (rt_len > 0) {
+      match = false;
+      int i;
+      for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+           i++) {
+        int size = oc_string_array_get_item_size(resource->types, i);
+        const char *t =
+          (const char *)oc_string_array_get_item(resource->types, i);
+        if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+          return true;
+        }
+      }
+    }
+  } while (more_query_params);
+  return match;
 }

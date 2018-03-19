@@ -192,9 +192,6 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len,
 
 oc_resource_t *oc_ri_get_app_resources(void);
 
-bool oc_ri_filter_rt(oc_resource_t *resource,
-                     const char *rt, int rt_len);
-
 #ifdef OC_SERVER
 oc_resource_t *oc_ri_alloc_resource(void);
 bool oc_ri_add_resource(oc_resource_t *resource);
