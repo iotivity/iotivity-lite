@@ -95,13 +95,13 @@ oc_network_event_handler_mutex_init(void)
 void
 oc_network_event_handler_mutex_lock(void)
 {
-  WaitForSingleObject(mutex, 0);
+  WaitForSingleObject(mutex, INFINITE);
 }
 
 void
 oc_network_event_handler_mutex_unlock(void)
 {
-  ReleaseMutex(mutex);
+    ReleaseMutex(mutex);
 }
 
 void
