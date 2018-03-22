@@ -72,6 +72,7 @@ typedef struct ip_context_t
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   HANDLE event_thread_handle;
+  HANDLE event_server_handle;
   DWORD event_thread;
   BOOL terminate;
   int device;
@@ -378,6 +379,7 @@ network_event_thread(void *data)
 
   WSAEVENT server6_event = WSACreateEvent();
   OC_WSAEVENTSELECT(dev->server_sock, server6_event, FD_READ);
+  dev->event_server_handle = server6_event;
 
 #ifdef OC_SECURITY
   WSAEVENT secure6_event = WSACreateEvent();
@@ -451,7 +453,7 @@ network_event_thread(void *data)
                                      INFINITE, FALSE);
     index -= WSA_WAIT_EVENT_0;
 
-    for (i = index; i < events_list_size; i++) {
+    for (i = index; !dev->terminate && i < events_list_size; i++) {
       index = WSAWaitForMultipleEvents(1, &events_list[i], TRUE, 0, FALSE);
       if (index != WSA_WAIT_TIMEOUT && index != WSA_WAIT_FAILED) {
         if (WSAResetEvent(events_list[i]) == FALSE) {
@@ -550,6 +552,7 @@ network_event_thread(void *data)
           message->length = count;
           message->endpoint.flags = IPV6 | SECURED;
           message->endpoint.device = dev->device;
+          goto common;
         }
 #ifdef OC_IPV4
         if (i == SECURE4) {
@@ -590,6 +593,10 @@ network_event_thread(void *data)
         oc_network_event(message);
       }
     }
+  }
+
+  for (i = 0; i < events_list_size; ++i) {
+    WSACloseEvent(events_list[i]);
   }
 
   return NULL;
@@ -1052,6 +1059,8 @@ oc_connectivity_shutdown(int device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = TRUE;
+  /* signal WSASelectEvent() in the thread to leave */
+  WSASetEvent(dev->event_server_handle);
 
   closesocket(dev->server_sock);
   closesocket(dev->mcast_sock);
