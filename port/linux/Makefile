@@ -80,6 +80,10 @@ ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
 endif
 
+ifeq ($(TCP),1)
+	CFLAGS += -DOC_TCP
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
