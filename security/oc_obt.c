@@ -874,7 +874,7 @@ obt_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
       }
       memcpy(device->uuid.id, uuid.id, 16);
       device->endpoint = endpoint;
-      oc_set_delayed_callback(device, free_device, DISCOVERY_CB_DELAY + 2);
+      oc_set_delayed_callback(device, free_device, OBT_CB_TIMEOUT);
       if ((long)user_data == OC_OBT_UNOWNED_DISCOVERY) {
         oc_do_get(uri, ep, "owned=FALSE", &obt_check_owned, HIGH_QOS, device);
       } else {
