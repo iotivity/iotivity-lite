@@ -32,4 +32,6 @@ ${prep_files}:
 	git submodule sync ${@D}
 	git submodule update ${@D}
 
+test: rule/test
+
 .PHONY: default help
