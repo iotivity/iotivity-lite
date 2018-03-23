@@ -1,3 +1,9 @@
+debian/.debhelper/
+debian/files
+debian/*.debhelper.log
+debian/*.substvars
+debian/iotivity-constrained*/
+debian/tmp
 port/linux/client
 port/linux/server
 port/linux/temp_sensor
@@ -48,6 +54,7 @@ port/openthread/output
 *.o
 *.cmd
 *.tmp
+*~
 .clang-format
 _clang-format
 port/linux/platformtest
