@@ -224,6 +224,11 @@ clean:
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 
+distclean: cleanall
+
+test:
+	echo "TODO"
+
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
 	$(INSTALL) -d $(libdir)
