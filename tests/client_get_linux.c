@@ -47,6 +47,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   quit = true;
   signal_event_loop();
 }
@@ -83,6 +84,10 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
+  
   int i, array_size;
   static int pos = 0;
 
@@ -277,6 +282,7 @@ start_server(void)
 static void
 child_handler(int sig)
 {
+ (void) sig;
   pid_t pid;
   int status;
   static int child_count = 0;
@@ -301,6 +307,8 @@ child_handler(int sig)
 
 int main(int argc, const char *argv[])
 {
+  (void) argc;
+  (void) argv;
   struct sigaction sa;
 
   sigemptyset(&sa.sa_mask);
