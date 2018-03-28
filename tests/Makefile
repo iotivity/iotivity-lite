@@ -5,7 +5,8 @@ port?=linux
 default: all
 	sync
 
-prep_files+=deps/tinycbor/LICENSE deps/mbedtls/LICENSE
+prep_files+=${CURDIR}/../deps/tinycbor/LICENSE
+prep_files+=${CURDIR}/../deps/mbedtls/LICENSE
 
 %: ${prep_files}
 	${MAKE} -C ${CURDIR}/../port/${port} $@
@@ -15,9 +16,12 @@ help: README.rst
 	@echo "# Usage: "
 	@echo "# make all : to build port=${port}"
 
-${prep_files}:
+${prep_files}: prep
+	@ls $@
+
+prep:
 	git submodule init
 	git submodule sync
 	git submodule update
 
-.PHONY: default help
+.PHONY: default help prep
