@@ -35,3 +35,4 @@ port/openthread/output
 *.cmd
 .clang-format
 _clang-format
+*~
