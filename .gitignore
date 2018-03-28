@@ -36,4 +36,4 @@ port/openthread/output
 *.tmp
 .clang-format
 _clang-format
-
+*~
