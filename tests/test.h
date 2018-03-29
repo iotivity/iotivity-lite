@@ -25,7 +25,7 @@
     do { \
         if ((!(expr))) { \
             fprintf(stderr, "%s:%d: %s: Assertion: `" # expr "' failed.\n", \
-                __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+                __FILE__, __LINE__, __func__); \
             exit(1); \
         } \
     } while (0)
