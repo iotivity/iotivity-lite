@@ -86,7 +86,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
   if (t) {
     t->message = oc_allocate_message();
     if (t->message) {
-      OC_DBG("Created new transaction %d %d\n", mid, (int)t->message->length);
+      OC_DBG("Created new transaction %u: %p\n", mid, (void *)t);
       t->mid = mid;
       t->retrans_counter = 0;
 
@@ -112,7 +112,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  OC_DBG("Sending transaction %u\n", t->mid);
+  OC_DBG("Sending transaction %u: %p\n", t->mid, (void *)t);
   bool confirmable = false;
 
   confirmable =
@@ -121,10 +121,14 @@ coap_send_transaction(coap_transaction_t *t)
       ? true
       : false;
 
+#ifdef OC_TCP
+  if (!(t->message->endpoint.flags & TCP) && confirmable) {
+#else /* OC_TCP */
   if (confirmable) {
+#endif /* !OC_TCP */
     if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
-      OC_DBG("Keeping transaction %u\n", t->mid);
+      OC_DBG("Keeping transaction %u: %p\n", t->mid, (void *)t);
 
       if (t->retrans_counter == 0) {
         t->retrans_timer.timer.interval =

@@ -140,8 +140,16 @@ coap_receive(oc_message_t *msg)
   oc_blockwise_state_t *request_buffer = 0, *response_buffer = 0;
 #endif /* OC_BLOCK_WISE */
 
-  coap_status_code =
-    coap_parse_message(message, msg->data, (uint16_t)msg->length);
+#ifdef OC_TCP
+  if (msg->endpoint.flags & TCP) {
+    coap_status_code =
+      coap_tcp_parse_message(message, msg->data, (uint32_t)msg->length);
+  } else
+#endif /* OC_TCP */
+  {
+    coap_status_code =
+      coap_parse_message(message, msg->data, (uint16_t)msg->length);
+  }
 
   if (coap_status_code == COAP_NO_ERROR) {
 
@@ -180,10 +188,15 @@ coap_receive(oc_message_t *msg)
     block2_size = MIN(block2_size, (uint16_t)OC_BLOCK_SIZE);
 #endif /* OC_BLOCK_WISE */
 
-    transaction = coap_get_transaction_by_mid(message->mid);
-    if (transaction)
-      coap_clear_transaction(transaction);
-    transaction = NULL;
+#ifdef OC_TCP
+    if (!(msg->endpoint.flags & TCP))
+#endif /* OC_TCP */
+    {
+      transaction = coap_get_transaction_by_mid(message->mid);
+      if (transaction)
+        coap_clear_transaction(transaction);
+      transaction = NULL;
+    }
 
     /* handle requests */
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
@@ -207,17 +220,24 @@ coap_receive(oc_message_t *msg)
       OC_DBG("  Payload: %.*s\n", (int)message->payload_len, message->payload);
 #endif
 
-      if (message->type == COAP_TYPE_CON) {
-        coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
-      } else {
-        if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
-          return 0;
+#ifdef OC_TCP
+      if (msg->endpoint.flags & TCP) {
+        coap_tcp_init_message(response, CONTENT_2_05);
+      } else
+#endif /* OC_TCP */
+      {
+        if (message->type == COAP_TYPE_CON) {
+          coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
+        } else {
+          if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
+            return 0;
+          }
+          history[idx] = message->mid;
+          history_dev[idx] = (uint8_t)msg->endpoint.device;
+          idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
+          coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
+                            coap_get_mid());
         }
-        history[idx] = message->mid;
-        history_dev[idx] = (uint8_t)msg->endpoint.device;
-        idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
-        coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
-                          coap_get_mid());
       }
 
       /* create transaction for response */
@@ -228,7 +248,8 @@ coap_receive(oc_message_t *msg)
         const char *href;
         int href_len = coap_get_header_uri_path(message, &href);
         const uint8_t *incoming_block;
-        int incoming_block_len = coap_get_payload(message, &incoming_block);
+        uint32_t incoming_block_len =
+            (uint32_t)coap_get_payload(message, &incoming_block);
         if (block1) {
           OC_DBG("processing block1 option\n");
           request_buffer = oc_blockwise_find_request_buffer(
@@ -307,7 +328,7 @@ coap_receive(oc_message_t *msg)
             message->uri_query_len, OC_BLOCKWISE_SERVER);
           if (response_buffer) {
             OC_DBG("continuing ongoing block-wise transfer\n");
-            uint16_t payload_size = 0;
+            uint32_t payload_size = 0;
             const void *payload = oc_blockwise_dispatch_block(
               response_buffer, block2_offset, block2_size, &payload_size);
             if (payload) {
@@ -374,7 +395,14 @@ coap_receive(oc_message_t *msg)
           goto init_reset_message;
         } else {
           OC_DBG("no block options; processing regular request\n");
+#ifdef OC_TCP
+          if ((msg->endpoint.flags & TCP &&
+              incoming_block_len <= OC_MAX_APP_DATA_SIZE) ||
+              (!(msg->endpoint.flags & TCP) &&
+              incoming_block_len <= block1_size)) {
+#else /* OC_TCP */
           if (incoming_block_len <= block1_size) {
+#endif /* !OC_TCP */
             OC_DBG("creating response buffer\n");
             response_buffer = oc_blockwise_alloc_response_buffer(
               href, href_len, &msg->endpoint, message->code,
@@ -428,7 +456,16 @@ coap_receive(oc_message_t *msg)
                                              &msg->endpoint)) {
 #endif /* !OC_BLOCK_WISE */
 #ifdef OC_BLOCK_WISE
-          uint16_t payload_size = 0;
+          uint32_t payload_size = 0;
+#ifdef OC_TCP
+          if (msg->endpoint.flags & TCP) {
+            const void *payload = oc_blockwise_dispatch_block(
+              response_buffer, 0, response_buffer->payload_size + 1, &payload_size);
+            if (payload && response_buffer->payload_size > 0) {
+              coap_set_payload(response, payload, payload_size);
+            }
+          } else {
+#endif /* OC_TCP */
           const void *payload = oc_blockwise_dispatch_block(
             response_buffer, 0, block2_size, &payload_size);
           if (payload) {
@@ -446,6 +483,9 @@ coap_receive(oc_message_t *msg)
           } else {
             response_buffer->ref_count = 0;
           }
+#ifdef OC_TCP
+          }
+#endif /* OC_TCP */
 #endif /* OC_BLOCK_WISE */
         }
 #ifdef OC_BLOCK_WISE
@@ -495,7 +535,7 @@ coap_receive(oc_message_t *msg)
         OC_DBG("found request buffer for uri %s\n",
                oc_string(request_buffer->href));
         client_cb = (oc_client_cb_t *)request_buffer->client_cb;
-        uint16_t payload_size = 0;
+        uint32_t payload_size = 0;
         const void *payload = 0;
 
         if (block1) {
@@ -544,7 +584,6 @@ coap_receive(oc_message_t *msg)
           request_buffer->ref_count = 0;
         }
       }
-
       if (client_cb) {
         response_buffer = oc_blockwise_find_response_buffer_by_client_cb(
           &msg->endpoint, client_cb);
@@ -572,11 +611,12 @@ coap_receive(oc_message_t *msg)
                                 (uint32_t *)&response_state->observe_seq);
 
         const uint8_t *incoming_block;
-        int incoming_block_len = coap_get_payload(message, &incoming_block);
+        uint32_t incoming_block_len =
+            (uint32_t)coap_get_payload(message, &incoming_block);
         if (incoming_block_len > 0 &&
             oc_blockwise_handle_block(response_buffer, block2_offset,
                                       incoming_block,
-                                      (uint16_t)incoming_block_len)) {
+                                      (uint32_t)incoming_block_len)) {
           OC_DBG("processing incoming block\n");
           if (block2 && block2_more) {
             OC_DBG("issuing request for next block\n");
@@ -620,7 +660,14 @@ coap_receive(oc_message_t *msg)
   }
 
 init_reset_message:
-  coap_init_message(response, COAP_TYPE_RST, 0, message->mid);
+#ifdef OC_TCP
+  if (msg->endpoint.flags & TCP) {
+    coap_tcp_init_message(response, INTERNAL_SERVER_ERROR_5_00);
+  } else
+#endif /* OC_TCP */
+  {
+    coap_init_message(response, COAP_TYPE_RST, 0, message->mid);
+  }
 #ifdef OC_BLOCK_WISE
 #ifdef OC_CLIENT
 free_blockwise_buffers:
