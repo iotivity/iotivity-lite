@@ -61,11 +61,14 @@ enum
   OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 #endif /* !OC_SECURITY */
 };
+
+#define OC_TCP_PACKET_SIZE (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
 #else /* !OC_DYNAMIC_ALLOCATION */
 #include "oc_buffer_settings.h"
 #define OC_PDU_SIZE (oc_get_mtu_size())
 #define OC_BLOCK_SIZE (oc_get_block_size())
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
+#define OC_TCP_PACKET_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 typedef struct
@@ -130,7 +133,11 @@ struct oc_message_s
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *data;
 #else  /* OC_DYNAMIC_ALLOCATION */
+#ifdef OC_TCP
+  uint8_t data[OC_TCP_PACKET_SIZE];
+#else /* OC_TCP */
   uint8_t data[OC_PDU_SIZE];
+#endif /* !OC_TCP */
 #endif /* OC_DYNAMIC_ALLOCATION */
 };
 

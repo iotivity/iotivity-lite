@@ -1201,7 +1201,15 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
     return cb;
   }
 
-  cb->mid = coap_get_mid();
+
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) {
+    cb->mid = 0;
+  } else
+#endif /* OC_TCP */
+  {
+    cb->mid = coap_get_mid();
+  }
   oc_new_string(&cb->uri, uri, strlen(uri));
   cb->method = method;
   cb->qos = qos;
