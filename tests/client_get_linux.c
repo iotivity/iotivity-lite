@@ -130,7 +130,7 @@ static int
 start_client()
 {
   int ret;
-  struct sigaction sa = { };
+  struct sigaction sa;
   static const oc_handler_t handler = {
     .init = app_init_client,
     .signal_event_loop = signal_event_loop,
@@ -213,7 +213,7 @@ register_resources(void)
 
   for (i = 0; i < NUM_LIGHTS; i++) {
     int r;
-    char name[128] = { };
+    char name[128];
     oc_resource_t *res;
 
     r = snprintf(name, sizeof(name), "/test/%d", i);
@@ -235,7 +235,7 @@ static int
 start_server(void)
 {
   int ret;
-  struct sigaction sa = { };
+  struct sigaction sa;
   static const oc_handler_t handler = {
     .init = app_init,
     .signal_event_loop = signal_event_loop,
