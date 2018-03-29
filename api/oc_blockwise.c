@@ -296,15 +296,15 @@ oc_blockwise_find_response_buffer(const char *href, int href_len,
 
 const void *
 oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer, uint32_t block_offset,
-                            uint16_t requested_block_size,
-                            uint16_t *payload_size)
+                            uint32_t requested_block_size,
+                            uint32_t *payload_size)
 {
   if (block_offset < buffer->payload_size) {
     if (buffer->payload_size < requested_block_size)
-      *payload_size = (uint16_t)buffer->payload_size;
+      *payload_size = (uint32_t)buffer->payload_size;
     else {
       *payload_size = MIN(requested_block_size,
-                          (uint16_t)(buffer->payload_size - block_offset));
+                          (uint32_t)(buffer->payload_size - block_offset));
     }
     buffer->next_block_offset = block_offset + *payload_size;
     return (const void *)&buffer->buffer[block_offset];
@@ -316,7 +316,7 @@ bool
 oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                           uint32_t incoming_block_offset,
                           const uint8_t *incoming_block,
-                          uint16_t incoming_block_size)
+                          uint32_t incoming_block_size)
 {
   if (incoming_block_offset >= (unsigned)OC_MAX_APP_DATA_SIZE ||
       incoming_block_size > (OC_MAX_APP_DATA_SIZE - incoming_block_offset) ||

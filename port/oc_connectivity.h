@@ -55,15 +55,23 @@
 
 enum
 {
+#ifdef OC_TCP //TODO: need to check about tls packet.
+  OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
+#else /* OC_TCP */
 #ifdef OC_SECURITY
   OC_PDU_SIZE = (2 * OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 #else  /* OC_SECURITY */
   OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 #endif /* !OC_SECURITY */
+#endif /* !OC_TCP */
 };
 #else /* !OC_DYNAMIC_ALLOCATION */
 #include "oc_buffer_settings.h"
+#ifdef OC_TCP
+#define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
+#else /* OC_TCP */
 #define OC_PDU_SIZE (oc_get_mtu_size())
+#endif /* !OC_TCP */
 #define OC_BLOCK_SIZE (oc_get_block_size())
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */

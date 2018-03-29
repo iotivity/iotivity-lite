@@ -82,22 +82,18 @@ enum
 #define IS_OPTION(packet, opt)                                                 \
   ((packet)->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE)))
 
-#ifdef OC_TCP
-/* enum value for coap header type  */
+/* enum value for coap transport type  */
 typedef enum {
   COAP_TRANSPORT_UDP,
   COAP_TRANSPORT_TCP
 } coap_transport_type_t;
-#endif
 
 /* parsed message struct */
 typedef struct
 {
   uint8_t *buffer; /* pointer to CoAP header / incoming packet buffer / memory
                       to serialize packet */
-#ifdef OC_TCP
   coap_transport_type_t transport_type;
-#endif
   uint8_t version;
   coap_message_type_t type;
   uint8_t code;
@@ -145,7 +141,7 @@ typedef struct
   const char *uri_query;
   uint8_t if_none_match;
 
-  uint16_t payload_len;
+  uint32_t payload_len;
   uint8_t *payload;
 } coap_packet_t;
 

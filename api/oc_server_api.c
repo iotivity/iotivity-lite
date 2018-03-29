@@ -364,7 +364,12 @@ oc_send_separate_response(oc_separate_response_t *handle,
 
 #ifdef OC_BLOCK_WISE
         oc_blockwise_state_t *response_state = 0;
+#ifdef OC_TCP
+        if (!(cur->endpoint.flags & TCP) &&
+            response_buffer.response_length > cur->block2_size) {
+#else /* OC_TCP */
         if (response_buffer.response_length > cur->block2_size) {
+#endif /* !OC_TCP */
           response_state = oc_blockwise_find_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
@@ -382,7 +387,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
                  response_buffer.response_length);
           response_state->payload_size = response_buffer.response_length;
 
-          uint16_t payload_size = 0;
+          uint32_t payload_size = 0;
           const void *payload = oc_blockwise_dispatch_block(
             response_state, 0, cur->block2_size, &payload_size);
           if (payload) {
