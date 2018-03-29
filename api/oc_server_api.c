@@ -348,8 +348,15 @@ oc_send_separate_response(oc_separate_response_t *handle,
   while (cur != NULL) {
     next = cur->next;
     if (cur->observe > 0) {
+      uint16_t mid = 0;
+#ifdef OC_TCP
+      if (cur->endpoint.flags & ~TCP)
+#endif /* OC_TCP */
+      {
+        mid = coap_get_mid();
+      }
       coap_transaction_t *t =
-        coap_new_transaction(coap_get_mid(), &cur->endpoint);
+        coap_new_transaction(mid, &cur->endpoint);
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);
@@ -364,7 +371,12 @@ oc_send_separate_response(oc_separate_response_t *handle,
 
 #ifdef OC_BLOCK_WISE
         oc_blockwise_state_t *response_state = 0;
+#ifdef OC_TCP
+        if (cur->endpoint.flags & ~TCP && 
+            response_buffer.response_length > cur->block2_size) {
+#else /* OC_TCP */
         if (response_buffer.response_length > cur->block2_size) {
+#endif /* !OC_TCP */
           response_state = oc_blockwise_find_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);

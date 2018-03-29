@@ -157,7 +157,14 @@ void
 coap_separate_resume(void *response, coap_separate_t *separate_store,
                      uint8_t code, uint16_t mid)
 {
-  coap_init_message(response, separate_store->type, code, mid);
+#ifdef OC_TCP
+  if (separate_store->endpoint.flags & TCP) { 
+    coap_tcp_init_message(response, code);
+  } else
+#endif /* OC_TCP */
+  {
+    coap_init_message(response, separate_store->type, code, mid);
+  }
   if (separate_store->token_len) {
     coap_set_token(response, separate_store->token, separate_store->token_len);
   }

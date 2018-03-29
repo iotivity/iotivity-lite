@@ -23,6 +23,9 @@
 
 OC_PROCESS_NAME(message_buffer_handler);
 oc_message_t *oc_allocate_message(void);
+#ifdef OC_TCP
+oc_message_t *oc_allocate_tcp_message(void);
+#endif /* OC_TCP */
 void oc_message_add_ref(oc_message_t *message);
 void oc_message_unref(oc_message_t *message);
 

@@ -311,7 +311,14 @@ coap_notify_observers(oc_resource_t *resource,
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
       coap_packet_t req[1];
-      coap_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+#ifdef OC_TCP
+      if (obs->endpoint.flags & TCP) { 
+        coap_tcp_init_message(req, COAP_GET);
+      } else
+#endif /* OC_TCP */
+      {
+        coap_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+      }
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
 
@@ -332,10 +339,23 @@ coap_notify_observers(oc_resource_t *resource,
       coap_transaction_t *transaction = NULL;
       if (response_buf) {
         coap_packet_t notification[1];
-        coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+
+#ifdef OC_TCP
+        if (obs->endpoint.flags & TCP) { 
+          coap_tcp_init_message(notification, CONTENT_2_05);
+        } else
+#endif /* OC_TCP */
+        {
+          coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+        }
 
 #ifdef OC_BLOCK_WISE
+#ifdef OC_TCP
+        if (obs->endpoint.flags & ~TCP && 
+            response_buf->response_length > obs->block2_size) {
+#else /* OC_TCP */
         if (response_buf->response_length > obs->block2_size) {
+#endif /* !OC_TCP */
           notification->type = COAP_TYPE_CON;
           response_state = oc_blockwise_find_response_buffer(
             oc_string(obs->resource->uri) + 1,
@@ -393,7 +413,12 @@ coap_notify_observers(oc_resource_t *resource,
                                          APPLICATION_VND_OCF_CBOR);
         }
         coap_set_token(notification, obs->token, obs->token_len);
-        transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+        uint16_t mid = 0;
+#ifdef OC_TCP
+        if (obs->endpoint.flags & ~TCP)
+#endif /* OC_TCP */
+          mid = coap_get_mid();
+        transaction = coap_new_transaction(mid, &obs->endpoint);
         if (transaction) {
           obs->last_mid = transaction->mid;
           notification->mid = transaction->mid;

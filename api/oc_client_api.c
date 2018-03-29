@@ -41,7 +41,12 @@ dispatch_coap_request(void)
 #ifdef OC_BLOCK_WISE
     request_buffer->payload_size = payload_size;
     uint16_t block_size;
+#ifdef OC_TCP
+    if (transaction->message->endpoint.flags & ~TCP && 
+        payload_size > OC_BLOCK_SIZE) {
+#else /* OC_TCP */
     if (payload_size > OC_BLOCK_SIZE) {
+#endif /* !OC_TCP */
       const void *payload = oc_blockwise_dispatch_block(
         request_buffer, 0, (uint16_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
@@ -122,7 +127,14 @@ prepare_coap_request(oc_client_cb_t *cb)
   }
 #endif /* OC_BLOCK_WISE */
 
-  coap_init_message(request, type, cb->method, cb->mid);
+#ifdef OC_TCP
+  if (cb->endpoint->flags & TCP) { 
+    coap_tcp_init_message(request, cb->method);
+  } else
+#endif /* OC_TCP */
+  {
+    coap_init_message(request, type, cb->method, cb->mid);
+  }
 
   coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
 
@@ -273,7 +285,14 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
   if (!cb)
     return false;
 
-  cb->mid = coap_get_mid();
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) { 
+    cb->mid = 0;
+  } else
+#endif /* OC_TCP */
+  {
+    cb->mid = coap_get_mid();
+  }
   cb->observe_seq = 1;
 
   bool status = false;

@@ -803,7 +803,15 @@ read_application_data(oc_sec_dtls_peer_t *peer)
     }
 #endif /* OC_CLIENT */
   } else {
-    oc_message_t *message = oc_allocate_message();
+    oc_message_t *message = NULL;
+#ifdef OC_TCP
+    if (peer->endpoint.flags & TCP) { 
+      message = oc_allocate_tcp_message();
+    } else
+#endif /* OC_TCP */
+    {
+      message = oc_allocate_message();
+    }
     if (message) {
       memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);

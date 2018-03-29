@@ -62,6 +62,36 @@ oc_allocate_message(void)
   return message;
 }
 
+#ifdef OC_TCP
+oc_message_t *
+oc_allocate_tcp_message(void)
+{
+  oc_message_t *message = (oc_message_t *)oc_memb_alloc(&oc_buffers_s);
+  if (message) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    message->data = malloc(OC_TCP_PACKET_SIZE);
+    if (!message->data) {
+      oc_memb_free(&oc_buffers_s, message);
+      return NULL;
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
+    message->length = 0;
+    message->next = 0;
+    message->ref_count = 1;
+#ifndef OC_DYNAMIC_ALLOCATION
+    OC_DBG("buffer: Allocated TX/RX buffer; num free: %d\n",
+           oc_memb_numfree(&oc_buffers_s));
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  }
+#ifndef OC_DYNAMIC_ALLOCATION
+  else {
+    OC_WRN("buffer: No free TX/RX buffers!\n");
+  }
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  return message;
+}
+#endif /* OC_TCP */
+
 void
 oc_message_add_ref(oc_message_t *message)
 {
