@@ -62,7 +62,7 @@ check_resource_cb(oc_client_response_t *data)
 
   for (oc_rep_t *rep = data->payload; rep; rep = rep->next) {
     switch (rep->type) {
-      case BOOL:
+      case OC_REP_BOOL:
         if (light != rep->value.boolean)
           exit(EXIT_FAILURE);
         break;
