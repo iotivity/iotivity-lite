@@ -103,7 +103,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   coap_separate_t *separate_store = oc_memb_alloc(&separate_requests);
 
   if (!separate_store) {
-    OC_WRN("insufficient memory to store new request for separate response\n");
+    OC_WRN("insufficient memory to store new request for separate response");
     return 0;
   }
 
@@ -112,7 +112,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   coap_status_code = CLEAR_TRANSACTION;
   /* send separate ACK for CON */
   if (coap_req->type == COAP_TYPE_CON) {
-    OC_DBG("Sending ACK for separate response\n");
+    OC_DBG("Sending ACK for separate response");
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
