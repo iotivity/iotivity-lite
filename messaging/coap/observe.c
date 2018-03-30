@@ -119,7 +119,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
       max = uri_len;
     }
     else {
-      OC_WRN("Truncating observer URL\n");
+      OC_WRN("Truncating observer URL");
     }
     memcpy(o->url, uri, max);
     o->url[max] = 0;
@@ -134,18 +134,18 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 #endif /* OC_BLOCK_WISE */
     resource->num_observers++;
 #ifdef OC_DYNAMIC_ALLOCATION
-    OC_DBG("Adding observer (%u) for /%s [0x%02X%02X]\n",
+    OC_DBG("Adding observer (%u) for /%s [0x%02X%02X]",
            oc_list_length(observers_list) + 1, o->url, o->token[0],
            o->token[1]);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]\n",
+    OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]",
            oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS, o->url,
            o->token[0], o->token[1]);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_list_add(observers_list, o);
     return dup;
   }
-  OC_WRN("insufficient memory to add new observer\n");
+  OC_WRN("insufficient memory to add new observer");
   return -1;
 }
 /*---------------------------------------------------------------------------*/
@@ -154,7 +154,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 void
 coap_remove_observer(coap_observer_t *o)
 {
-  OC_DBG("Removing observer for /%s [0x%02X%02X]\n", o->url, o->token[0],
+  OC_DBG("Removing observer for /%s [0x%02X%02X]", o->url, o->token[0],
          o->token[1]);
 
 #ifdef OC_BLOCK_WISE
@@ -188,7 +188,7 @@ coap_remove_observer_by_client(oc_endpoint_t *endpoint)
     }
     obs = next;
   }
-  OC_DBG("Removed %d observers\n", removed);
+  OC_DBG("Removed %d observers", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -198,7 +198,7 @@ coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
-  OC_DBG("Unregistering observers for request token 0x%02X%02X\n", token[0],
+  OC_DBG("Unregistering observers for request token 0x%02X%02X", token[0],
          token[1]);
   while (obs) {
     if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0 &&
@@ -211,7 +211,7 @@ coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
     }
     obs = obs->next;
   }
-  OC_DBG("Removed %d observers\n", removed);
+  OC_DBG("Removed %d observers", removed);
   return removed;
 }
 /*---------------------------------------------------------------------------*/
@@ -220,7 +220,7 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
 {
   int removed = 0;
   coap_observer_t *obs = NULL;
-  OC_DBG("Unregistering observers for request MID %u\n", mid);
+  OC_DBG("Unregistering observers for request MID %u", mid);
 
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
        obs = obs->next) {
@@ -232,7 +232,7 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
       break;
     }
   }
-  OC_DBG("Removed %d observers\n", removed);
+  OC_DBG("Removed %d observers", removed);
   return removed;
 }
 
@@ -245,13 +245,13 @@ coap_notify_observers(oc_resource_t *resource,
                       oc_endpoint_t *endpoint)
 {
   if (!resource) {
-    OC_WRN("coap_notify_observers: no resource passed; returning\n");
+    OC_WRN("coap_notify_observers: no resource passed; returning");
     return 0;
   }
 
   int num_observers = 0;
   if (!resource->num_observers) {
-    OC_WRN("coap_notify_observers: no observers; returning\n");
+    OC_WRN("coap_notify_observers: no observers; returning");
     return 0;
   }
   num_observers = resource->num_observers;
@@ -265,7 +265,7 @@ coap_notify_observers(oc_resource_t *resource,
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buffer) {
-    OC_WRN("coap_notify_observers: out of memory allocating buffer\n");
+    OC_WRN("coap_notify_observers: out of memory allocating buffer");
     goto leave_notify_observers;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -275,7 +275,7 @@ coap_notify_observers(oc_resource_t *resource,
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   if (!response_buf && resource) {
-    OC_DBG("coap_notify_observers: Issue GET request to resource\n");
+    OC_DBG("coap_notify_observers: Issue GET request to resource");
     response_buffer.buffer = buffer;
 
     response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
@@ -294,7 +294,7 @@ coap_notify_observers(oc_resource_t *resource,
                                resource->get_handler.user_data);
     response_buf = &response_buffer;
     if (response_buf->code == OC_IGNORE) {
-      OC_DBG("coap_notify_observers: Resource ignored request\n");
+      OC_DBG("coap_notify_observers: Resource ignored request");
       goto leave_notify_observers;
     }
   }
@@ -325,7 +325,7 @@ coap_notify_observers(oc_resource_t *resource,
       coap_set_header_uri_path(req, oc_string(resource->uri),
                                oc_string_len(resource->uri));
 
-      OC_DBG("Resource is SLOW; creating separate response\n");
+      OC_DBG("Resource is SLOW; creating separate response");
 #ifdef OC_BLOCK_WISE
       if (coap_separate_accept(req, response.separate_response, &obs->endpoint,
                                0, obs->block2_size) == 1)
@@ -335,7 +335,7 @@ coap_notify_observers(oc_resource_t *resource,
 #endif /* !OC_BLOCK_WISE */
         response.separate_response->active = 1;
     } else {
-      OC_DBG("coap_notify_observers: notifying observer\n");
+      OC_DBG("coap_notify_observers: notifying observer");
       coap_transaction_t *transaction = NULL;
       if (response_buf) {
         coap_packet_t notification[1];
@@ -396,7 +396,7 @@ coap_notify_observers(oc_resource_t *resource,
           if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
             OC_DBG("coap_observe_notify: forcing CON notification to check for "
-                   "client liveness\n");
+                   "client liveness");
             notification->type = COAP_TYPE_CON;
           }
           coap_set_payload(notification, response_buf->buffer,

@@ -456,7 +456,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_rep_t *links = 0, *rep, *p;
   int s = oc_parse_rep(payload, len, &p);
   if (s != 0) {
-    OC_WRN("error parsing discovery response\n");
+    OC_WRN("error parsing discovery response");
   }
   links = rep = p;
   /*  While the oic.wk.res schema over the baseline interface provides for an

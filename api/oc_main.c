@@ -90,14 +90,14 @@ int
 oc_set_mtu_size(long mtu_size)
 {
   (void)mtu_size;
-  OC_WRN("Dynamic memory not available\n");
+  OC_WRN("Dynamic memory not available");
   return -1;
 }
 
 long
 oc_get_mtu_size(void)
 {
-  OC_WRN("Dynamic memory not available\n");
+  OC_WRN("Dynamic memory not available");
   return -1;
 }
 
@@ -105,13 +105,13 @@ void
 oc_set_max_app_data_size(long size)
 {
   (void)size;
-  OC_WRN("Dynamic memory not available\n");
+  OC_WRN("Dynamic memory not available");
 }
 
 long
 oc_get_max_app_data_size(void)
 {
-  OC_WRN("Dynamic memory not available\n");
+  OC_WRN("Dynamic memory not available");
   return -1;
 }
 
@@ -162,7 +162,7 @@ oc_main_init(const oc_handler_t *handler)
   }
 #endif
 
-  OC_DBG("oc_main: stack initialized\n");
+  OC_DBG("oc_main: stack initialized");
 
 #ifdef OC_CLIENT
   if (app_callbacks->requests_entry)
@@ -173,7 +173,7 @@ oc_main_init(const oc_handler_t *handler)
   return 0;
 
 err:
-  oc_abort("oc_main: error in stack initialization\n");
+  oc_abort("oc_main: error in stack initialization");
   return ret;
 }
 
