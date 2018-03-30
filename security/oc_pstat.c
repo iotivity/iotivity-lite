@@ -63,19 +63,19 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
 {
   switch (ps->s) {
   case OC_DOS_RESET:
-    OC_DBG("oc_pstat: dos is RESET\n");
+    OC_DBG("oc_pstat: dos is RESET");
     break;
   case OC_DOS_RFOTM:
-    OC_DBG("oc_pstat: dos is RFOTM\n");
+    OC_DBG("oc_pstat: dos is RFOTM");
     break;
   case OC_DOS_RFPRO:
-    OC_DBG("oc_pstat: dos is RFPRO\n");
+    OC_DBG("oc_pstat: dos is RFPRO");
     break;
   case OC_DOS_RFNOP:
-    OC_DBG("oc_pstat: dos is RFNOP\n");
+    OC_DBG("oc_pstat: dos is RFNOP");
     break;
   case OC_DOS_SRESET:
-    OC_DBG("oc_pstat: dos is SRESET\n");
+    OC_DBG("oc_pstat: dos is SRESET");
     break;
   }
 }
@@ -143,9 +143,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
         (ps->cm & 0xC3) != 2 || (ps->tm & 0xC3) != 0) {
 #ifdef OC_DEBUG
       if (!nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("non-Nil doxm:devowneruuid in RFOTM\n");
+        OC_ERR("non-Nil doxm:devowneruuid in RFOTM");
       }
-      OC_ERR("ERROR in RFOTM\n\n");
+      OC_ERR("ERROR in RFOTM\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }
@@ -167,39 +167,39 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
         !oc_sec_find_cred(&creds->rowneruuid, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
-        OC_ERR("doxm:owned is false\n");
+        OC_ERR("doxm:owned is false");
       }
       if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil\n");
+        OC_ERR("doxm:devowneruuid is nil");
       }
       if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil\n");
+        OC_ERR("doxm:deviceuuid is nil");
       }
       if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil\n");
+        OC_ERR("pstat:rowneruuid is nil");
       }
       if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil\n");
+        OC_ERR("doxm:rowneruuid is nil");
       }
       if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil\n");
+        OC_ERR("acl2:rowneruuid is nil");
       }
       if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil\n");
+        OC_ERR("cred:rowneruuid is nil");
       }
       if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid\n");
+        OC_ERR("Could not find credential for pstat:rowneruuid");
       }
       if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid\n");
+        OC_ERR("Could not find credential for doxm:rowneruuid");
       }
       if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid\n");
+        OC_ERR("Could not find credential for acl2:rowneruuid");
       }
       if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid\n");
+        OC_ERR("Could not find credential for cred:rowneruuid");
       }
-      OC_ERR("ERROR in RFPRO\n\n");
+      OC_ERR("ERROR in RFPRO\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }
@@ -221,39 +221,39 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
         !oc_sec_find_cred(&creds->rowneruuid, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
-        OC_ERR("doxm:owned is false\n");
+        OC_ERR("doxm:owned is false");
       }
       if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil\n");
+        OC_ERR("doxm:devowneruuid is nil");
       }
       if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil\n");
+        OC_ERR("doxm:deviceuuid is nil");
       }
       if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil\n");
+        OC_ERR("pstat:rowneruuid is nil");
       }
       if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil\n");
+        OC_ERR("doxm:rowneruuid is nil");
       }
       if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil\n");
+        OC_ERR("acl2:rowneruuid is nil");
       }
       if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil\n");
+        OC_ERR("cred:rowneruuid is nil");
       }
       if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid\n");
+        OC_ERR("Could not find credential for pstat:rowneruuid");
       }
       if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid\n");
+        OC_ERR("Could not find credential for doxm:rowneruuid");
       }
       if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid\n");
+        OC_ERR("Could not find credential for acl2:rowneruuid");
       }
       if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid\n");
+        OC_ERR("Could not find credential for cred:rowneruuid");
       }
-      OC_ERR("ERROR in RFNOP\n\n");
+      OC_ERR("ERROR in RFNOP\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }
@@ -275,39 +275,39 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
         !oc_sec_find_cred(&creds->rowneruuid, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
-        OC_ERR("doxm:owned is false\n");
+        OC_ERR("doxm:owned is false");
       }
       if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil\n");
+        OC_ERR("doxm:devowneruuid is nil");
       }
       if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil\n");
+        OC_ERR("doxm:deviceuuid is nil");
       }
       if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil\n");
+        OC_ERR("pstat:rowneruuid is nil");
       }
       if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil\n");
+        OC_ERR("doxm:rowneruuid is nil");
       }
       if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil\n");
+        OC_ERR("acl2:rowneruuid is nil");
       }
       if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil\n");
+        OC_ERR("cred:rowneruuid is nil");
       }
       if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid\n");
+        OC_ERR("Could not find credential for pstat:rowneruuid");
       }
       if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid\n");
+        OC_ERR("Could not find credential for doxm:rowneruuid");
       }
       if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid\n");
+        OC_ERR("Could not find credential for acl2:rowneruuid");
       }
       if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid\n");
+        OC_ERR("Could not find credential for cred:rowneruuid");
       }
-      OC_ERR("ERROR in SRESET\n\n");
+      OC_ERR("ERROR in SRESET\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }

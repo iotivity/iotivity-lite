@@ -115,7 +115,7 @@ oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint, bool inactivity_cb)
 {
   oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
   if (peer) {
-    OC_DBG("\noc_dtls: removing peer\n");
+    OC_DBG("\noc_dtls: removing peer");
     if (!inactivity_cb) {
       oc_ri_remove_timed_event_callback(peer, oc_sec_dtls_inactive);
     }
@@ -154,19 +154,19 @@ oc_dtls_handler_schedule_write(oc_sec_dtls_peer_t *peer)
 static oc_event_callback_retval_t
 oc_sec_dtls_inactive(void *data)
 {
-  OC_DBG("oc_dtls: DTLS inactivity callback\n");
+  OC_DBG("oc_dtls: DTLS inactivity callback");
   oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)data;
   if (is_peer_active(peer)) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
     if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
-      OC_DBG("oc_dtls: Resetting DTLS inactivity callback\n");
+      OC_DBG("oc_dtls: Resetting DTLS inactivity callback");
       return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
     oc_sec_dtls_remove_peer(&peer->endpoint, true);
   }
-  OC_DBG("oc_dtls: Terminating DTLS inactivity callback\n");
+  OC_DBG("oc_dtls: Terminating DTLS inactivity callback");
   return OC_EVENT_DONE;
 }
 
@@ -261,7 +261,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 {
   (void)data;
   (void)identity_len;
-  OC_DBG("oc_dtls: In PSK callback\n");
+  OC_DBG("oc_dtls: In PSK callback");
   oc_sec_dtls_peer_t *peer = oc_list_head(dtls_peers);
   while (peer != NULL) {
     if (&peer->ssl_ctx == ssl) {
@@ -270,24 +270,18 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     peer = peer->next;
   }
   if (peer) {
-    OC_DBG("oc_dtls: Found peer object\n");
+    OC_DBG("oc_dtls: Found peer object");
     oc_sec_cred_t *cred =
       oc_sec_find_cred((oc_uuid_t *)identity, peer->endpoint.device);
     if (cred) {
-      OC_DBG("oc_dtls: Found peer credential\n");
+      OC_DBG("oc_dtls: Found peer credential");
       memcpy(peer->uuid.id, identity, 16);
-#ifdef OC_DEBUG
-      size_t i;
-      OC_DBG("oc_dtls: Setting the key:\n");
-      for (i = 0; i < 16; i++) {
-        PRINT(" %02X ", cred->key[i]);
-      }
-      PRINT("\n");
-#endif /* OC_DEBUG */
+      OC_DBG("oc_dtls: Setting the key:");
+      OC_LOGbytes(cred->key, 16);
       if (mbedtls_ssl_set_hs_psk(ssl, cred->key, 16) != 0) {
         return -1;
       }
-      OC_DBG("oc_dtls: Set peer credential to SSL handle\n");
+      OC_DBG("oc_dtls: Set peer credential to SSL handle");
       return 0;
     }
   }
@@ -318,7 +312,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint, int role)
   if (!peer) {
     peer = oc_memb_alloc(&dtls_peers_s);
     if (peer) {
-      OC_DBG("oc_dtls: Allocating new DTLS peer\n");
+      OC_DBG("oc_dtls: Allocating new DTLS peer");
       memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
       OC_LIST_STRUCT_INIT(peer, recv_q);
       OC_LIST_STRUCT_INIT(peer, send_q);
@@ -361,7 +355,7 @@ oc_sec_dtls_add_peer(oc_endpoint_t *endpoint, int role)
       oc_ri_add_timed_event_callback_seconds(peer, oc_sec_dtls_inactive,
                                              OC_DTLS_INACTIVITY_TIMEOUT);
     } else {
-      OC_WRN("DTLS peers exhausted\n");
+      OC_WRN("DTLS peers exhausted");
     }
   }
   return peer;
@@ -444,7 +438,7 @@ oc_sec_dtls_init_context(void)
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
-  OC_ERR("oc_dtls: DTLS initialization error\n");
+  OC_ERR("oc_dtls: DTLS initialization error");
 #ifdef OC_DYNAMIC_ALLOCATION
   free(server_conf);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -593,29 +587,15 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                  obt_uuid_len, server_uuid, server_uuid_len) != (int)key_len) {
     return false;
   }
-#ifdef OC_DEBUG
-  size_t i;
-  OC_DBG("oc_dtls: master secret:\n");
-  for (i = 0; i < 48; i++) {
-    PRINT(" %02X ", peer->master_secret[i]);
-  }
-  PRINT("\n");
-  OC_DBG("oc_dtls: client_server_random:\n");
-  for (i = 0; i < 64; i++) {
-    PRINT(" %02X ", peer->client_server_random[i]);
-  }
-  PRINT("\n");
-  OC_DBG("oc_dtls: key_block\n");
-  for (i = 0; i < 96; i++) {
-    PRINT(" %02X ", key_block[i]);
-  }
-  PRINT("\n");
+  OC_DBG("oc_dtls: master secret:");
+  OC_LOGbytes(peer->master_secret, 48);
+  OC_DBG("oc_dtls: client_server_random:");
+  OC_LOGbytes(peer->client_server_random, 64);
+  OC_DBG("oc_dtls: key_block");
+  OC_LOGbytes(key_block, 96);
   OC_DBG("oc_dtls: PSK ");
-  for (i = 0; i < key_len; i++) {
-    PRINT(" %02X ", key[i]);
-  }
-  PRINT("\n");
-#endif /* OC_DEBUG */
+  OC_LOGbytes(key, key_len);
+
   return true;
 }
 
@@ -632,7 +612,7 @@ oc_sec_dtls_send_message(oc_message_t *message)
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
     } else {
@@ -648,7 +628,7 @@ static void
 write_application_data(oc_sec_dtls_peer_t *peer)
 {
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_dtls: write_application_data: Peer not active\n");
+    OC_DBG("oc_dtls: write_application_data: Peer not active");
     return;
   }
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -661,7 +641,7 @@ write_application_data(oc_sec_dtls_peer_t *peer)
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
       break;
@@ -705,7 +685,7 @@ oc_sec_dtls_init_connection(oc_message_t *message)
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
       oc_sec_dtls_remove_peer(&peer->endpoint, false);
     } else if (ret == 0) {
@@ -739,9 +719,9 @@ oc_sec_dtls_connected(oc_endpoint_t *endpoint)
 static void
 read_application_data(oc_sec_dtls_peer_t *peer)
 {
-  OC_DBG("oc_dtls: In read_application_data\n");
+  OC_DBG("oc_dtls: In read_application_data");
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_dtls: read_application_data: Peer not active\n");
+    OC_DBG("oc_dtls: read_application_data: Peer not active");
     return;
   }
 
@@ -753,27 +733,15 @@ read_application_data(oc_sec_dtls_peer_t *peer)
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
         memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
                sizeof(peer->master_secret));
-#ifdef OC_DEBUG
-        size_t i;
-        OC_DBG("oc_dtls: Got master secret\n");
-        for (i = 0; i < 48; i++) {
-          PRINT(" %02X ", peer->master_secret[i]);
-        }
-        PRINT("\n");
-#endif /* OC_DEBUG */
+        OC_DBG("oc_dtls: Got master secret");
+        OC_LOGbytes(peer->master_secret, 48);
       }
       if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
         memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,
                sizeof(peer->client_server_random));
-#ifdef OC_DEBUG
-        size_t i;
-        OC_DBG("oc_dtls: Got nonce\n");
-        for (i = 0; i < 64; i++) {
-          PRINT(" %02X ", peer->client_server_random[i]);
-        }
-        PRINT("\n");
-#endif /* OC_DEBUG */
+        OC_DBG("oc_dtls: Got nonce");
+        OC_LOGbytes(peer->client_server_random, 64);
       }
       if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
         mbedtls_ssl_session_reset(&peer->ssl_ctx);
@@ -791,7 +759,7 @@ read_application_data(oc_sec_dtls_peer_t *peer)
 #ifdef OC_DEBUG
         char buf[256];
         mbedtls_strerror(ret, buf, 256);
-        OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+        OC_ERR("oc_dtls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         oc_sec_dtls_remove_peer(&peer->endpoint, false);
         return;
@@ -812,18 +780,18 @@ read_application_data(oc_sec_dtls_peer_t *peer)
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
             ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
             ret == MBEDTLS_ERR_SSL_CONN_EOF) {
-          OC_DBG("oc_dtls: Received WantRead/WantWrite/EOF\n");
+          OC_DBG("oc_dtls: Received WantRead/WantWrite/EOF");
           return;
         }
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-          OC_DBG("oc_dtls: Close-Notify received\n");
+          OC_DBG("oc_dtls: Close-Notify received");
         } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-          OC_DBG("oc_dtls: Client wants to reconnect\n");
+          OC_DBG("oc_dtls: Client wants to reconnect");
         } else {
 #ifdef OC_DEBUG
           char buf[256];
           mbedtls_strerror(ret, buf, 256);
-          OC_ERR("oc_dtls: mbedtls_error: %s\n", buf);
+          OC_ERR("oc_dtls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         }
         mbedtls_ssl_close_notify(&peer->ssl_ctx);
@@ -832,7 +800,7 @@ read_application_data(oc_sec_dtls_peer_t *peer)
       }
       message->length = ret;
       oc_recv_message(message);
-      OC_DBG("oc_dtls: Decrypted incoming message\n");
+      OC_DBG("oc_dtls: Decrypted incoming message");
     }
   }
 }
@@ -847,7 +815,7 @@ oc_sec_dtls_recv_message(oc_message_t *message)
 #ifdef OC_DEBUG
     char u[37];
     oc_uuid_to_str(&peer->uuid, u, 37);
-    OC_DBG("oc_dtls: Received message from device %s\n", u);
+    OC_DBG("oc_dtls: Received message from device %s", u);
 #endif /* OC_DEBUG */
 
     oc_list_add(peer->recv_q, message);
