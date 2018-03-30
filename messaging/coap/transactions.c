@@ -86,7 +86,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
   if (t) {
     t->message = oc_allocate_message();
     if (t->message) {
-      OC_DBG("Created new transaction %d %d\n", mid, (int)t->message->length);
+      OC_DBG("Created new transaction %d %d", mid, (int)t->message->length);
       t->mid = mid;
       t->retrans_counter = 0;
 
@@ -102,7 +102,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
     }
   }
   else {
-    OC_WRN("insufficient memory to create transaction\n");
+    OC_WRN("insufficient memory to create transaction");
   }
 
   return t;
@@ -112,7 +112,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  OC_DBG("Sending transaction %u\n", t->mid);
+  OC_DBG("Sending transaction %u", t->mid);
   bool confirmable = false;
 
   confirmable =
@@ -124,17 +124,17 @@ coap_send_transaction(coap_transaction_t *t)
   if (confirmable) {
     if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
       /* not timed out yet */
-      OC_DBG("Keeping transaction %u\n", t->mid);
+      OC_DBG("Keeping transaction %u", t->mid);
 
       if (t->retrans_counter == 0) {
         t->retrans_timer.timer.interval =
           COAP_RESPONSE_TIMEOUT_TICKS +
           (oc_random_value() %
            (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        OC_DBG("Initial interval %d\n", (int)t->retrans_timer.timer.interval);
+        OC_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
       } else {
         t->retrans_timer.timer.interval <<= 1; /* double */
-        OC_DBG("Doubled %d\n", (int)t->retrans_timer.timer.interval);
+        OC_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
       }
 
       OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
@@ -148,10 +148,10 @@ coap_send_transaction(coap_transaction_t *t)
       t = NULL;
     } else {
       /* timed out */
-      OC_WRN("Timeout\n");
+      OC_WRN("Timeout");
 
 #ifdef OC_SERVER
-      OC_WRN("timeout.. so removing observers\n");
+      OC_WRN("timeout.. so removing observers");
       /* handle observers */
       coap_remove_observer_by_client(&t->message->endpoint);
 #endif /* OC_SERVER */
@@ -185,7 +185,7 @@ void
 coap_clear_transaction(coap_transaction_t *t)
 {
   if (t) {
-    OC_DBG("Freeing transaction %u: %p\n", t->mid, (void *)t);
+    OC_DBG("Freeing transaction %u: %p", t->mid, (void *)t);
 
     oc_etimer_stop(&t->retrans_timer);
     oc_message_unref(t->message);
@@ -201,7 +201,7 @@ coap_get_transaction_by_mid(uint16_t mid)
   for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
        t = t->next) {
     if (t->mid == mid) {
-      OC_DBG("Found transaction for MID %u: %p\n", t->mid, (void *)t);
+      OC_DBG("Found transaction for MID %u: %p", t->mid, (void *)t);
       return t;
     }
   }
@@ -218,7 +218,7 @@ coap_check_transactions(void)
     next = t->next;
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
-      OC_DBG("Retransmitting %u (%u)\n", t->mid, t->retrans_counter);
+      OC_DBG("Retransmitting %u (%u)", t->mid, t->retrans_counter);
       coap_send_transaction(t);
     }
     t = next;

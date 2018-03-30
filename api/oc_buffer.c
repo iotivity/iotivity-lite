@@ -50,13 +50,13 @@ oc_allocate_message(void)
     message->next = 0;
     message->ref_count = 1;
 #ifndef OC_DYNAMIC_ALLOCATION
-    OC_DBG("buffer: Allocated TX/RX buffer; num free: %d\n",
+    OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
            oc_memb_numfree(&oc_buffers_s));
 #endif /* !OC_DYNAMIC_ALLOCATION */
   }
 #ifndef OC_DYNAMIC_ALLOCATION
   else {
-    OC_WRN("buffer: No free TX/RX buffers!\n");
+    OC_WRN("buffer: No free TX/RX buffers!");
   }
 #endif /* !OC_DYNAMIC_ALLOCATION */
   return message;
@@ -80,7 +80,7 @@ oc_message_unref(oc_message_t *message)
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_memb_free(&oc_buffers_s, message);
 #ifndef OC_DYNAMIC_ALLOCATION
-      OC_DBG("buffer: freed TX/RX buffer; num free: %d\n",
+      OC_DBG("buffer: freed TX/RX buffer; num free: %d",
              oc_memb_numfree(&oc_buffers_s));
 #endif /* !OC_DYNAMIC_ALLOCATION */
     }
@@ -109,7 +109,7 @@ oc_send_message(oc_message_t *message)
 OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
-  OC_DBG("Started buffer handler process\n");
+  OC_DBG("Started buffer handler process");
   while (1) {
     OC_PROCESS_YIELD();
 
@@ -117,14 +117,14 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 #ifdef OC_SECURITY
       uint8_t b = (uint8_t)((oc_message_t *)data)->data[0];
       if (b > 19 && b < 64) {
-        OC_DBG("Inbound network event: encrypted request\n");
+        OC_DBG("Inbound network event: encrypted request");
         oc_process_post(&oc_dtls_handler, oc_events[UDP_TO_DTLS_EVENT], data);
       } else {
-        OC_DBG("Inbound network event: decrypted request\n");
+        OC_DBG("Inbound network event: decrypted request");
         oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
       }
 #else  /* OC_SECURITY */
-      OC_DBG("Inbound network event: decrypted request\n");
+      OC_DBG("Inbound network event: decrypted request");
       oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
 #endif /* !OC_SECURITY */
     } else if (ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
@@ -132,30 +132,30 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 
 #ifdef OC_CLIENT
       if (message->endpoint.flags & DISCOVERY) {
-        OC_DBG("Outbound network event: multicast request\n");
+        OC_DBG("Outbound network event: multicast request");
         oc_send_discovery_request(message);
         oc_message_unref(message);
       } else
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
         if (message->endpoint.flags & SECURED) {
-        OC_DBG("Outbound network event: forwarding to DTLS\n");
+        OC_DBG("Outbound network event: forwarding to DTLS");
 
 #ifdef OC_CLIENT
         if (!oc_sec_dtls_connected(&message->endpoint)) {
-          OC_DBG("Posting INIT_DTLS_CONN_EVENT\n");
+          OC_DBG("Posting INIT_DTLS_CONN_EVENT");
           oc_process_post(&oc_dtls_handler, oc_events[INIT_DTLS_CONN_EVENT],
                           data);
         } else
 #endif /* OC_CLIENT */
         {
-          OC_DBG("Posting RI_TO_DTLS_EVENT\n");
+          OC_DBG("Posting RI_TO_DTLS_EVENT");
           oc_process_post(&oc_dtls_handler, oc_events[RI_TO_DTLS_EVENT], data);
         }
       } else
 #endif /* OC_SECURITY */
       {
-        OC_DBG("Outbound network event: unicast message\n");
+        OC_DBG("Outbound network event: unicast message");
         oc_send_buffer(message);
         oc_message_unref(message);
       }

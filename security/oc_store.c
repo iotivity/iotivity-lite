@@ -231,7 +231,7 @@ oc_sec_dump_pstat(int device)
   oc_sec_encode_pstat(device);
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_store: encoded pstat size %d\n", size);
+    OC_DBG("oc_store: encoded pstat size %d", size);
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("pstat", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
@@ -257,7 +257,7 @@ oc_sec_dump_cred(int device)
   oc_sec_encode_cred(true, device);
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_store: encoded cred size %d\n", size);
+    OC_DBG("oc_store: encoded cred size %d", size);
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("cred", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
@@ -284,7 +284,7 @@ oc_sec_dump_doxm(int device)
   oc_sec_encode_doxm(device);
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_store: encoded doxm size %d\n", size);
+    OC_DBG("oc_store: encoded doxm size %d", size);
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("doxm", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
@@ -310,7 +310,7 @@ oc_sec_dump_acl(int device)
   oc_sec_encode_acl(device);
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_store: encoded ACL size %d\n", size);
+    OC_DBG("oc_store: encoded ACL size %d", size);
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("acl", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
@@ -408,7 +408,7 @@ oc_sec_dump_unique_ids(int device)
 
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_store: encoded unique identifiers: size %d\n", size);
+    OC_DBG("oc_store: encoded unique identifiers: size %d", size);
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("u_ids", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);

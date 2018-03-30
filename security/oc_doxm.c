@@ -120,54 +120,54 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(t->name), "owned", 5) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set owned property only in RFOTM\n");
+          OC_ERR("oc_doxm: Can set owned property only in RFOTM");
           return false;
         }
       } else {
-        OC_ERR("oc_doxm: Unknown property %s\n", oc_string(t->name));
+        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
       }
       break;
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "oxmsel", 6) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set oxmsel property only in RFOTM\n");
+          OC_ERR("oc_doxm: Can set oxmsel property only in RFOTM");
           return false;
         }
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(t->name), "sct", 3) == 0) {
       } else {
-        OC_ERR("oc_doxm: Unknown property %s\n", oc_string(t->name));
+        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
       }
       break;
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "deviceuuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set deviceuuid property only in RFOTM\n");
+          OC_ERR("oc_doxm: Can set deviceuuid property only in RFOTM");
           return false;
         }
       } else if (len == 12 &&
                  memcmp(oc_string(t->name), "devowneruuid", 12) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set devowneruuid property only in RFOTM\n");
+          OC_ERR("oc_doxm: Can set devowneruuid property only in RFOTM");
           return false;
         }
       } else if (len == 10 &&
                  memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
-          OC_ERR("oc_doxm: Can set rowneruuid property only in RFOTM\n");
+          OC_ERR("oc_doxm: Can set rowneruuid property only in RFOTM");
           return false;
         }
       } else {
-        OC_ERR("oc_doxm: Unknown property %s\n", oc_string(t->name));
+        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
       }
       break;
     case OC_REP_INT_ARRAY:
       if (!from_storage && len == 4 &&
           memcmp(oc_string(t->name), "oxms", 4) == 0) {
-        OC_ERR("oc_doxm: Can set oxms property\n");
+        OC_ERR("oc_doxm: Can set oxms property");
         return false;
       }
       break;
@@ -175,7 +175,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
       if (!((len == 2 && (memcmp(oc_string(t->name), "rt", 2) == 0 ||
                           memcmp(oc_string(t->name), "if", 2) == 0))) &&
           !(len == 4 && memcmp(oc_string(t->name), "oxms", 4) == 0)) {
-        OC_ERR("oc_doxm: Unknown property %s\n", oc_string(t->name));
+        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
       }
     } break;
