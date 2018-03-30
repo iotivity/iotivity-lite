@@ -35,7 +35,7 @@ static void udp_receive_cbk(void *context, otMessage *ot_message,
 {
   (void)context;
 
-  OC_DBG("Receive udp cbk\n");
+  OC_DBG("Receive udp cbk);
 
   oc_message_t *oc_message = oc_allocate_message();
 
@@ -44,7 +44,7 @@ static void udp_receive_cbk(void *context, otMessage *ot_message,
                              otMessageGetOffset(ot_message);
     if (otMessageRead(ot_message, otMessageGetOffset(ot_message),
                       oc_message->data, payloadLength) != payloadLength) {
-      OC_ERR("Can't read message\n");
+      OC_ERR("Can't read message);
       return;
     }
     oc_message->length = payloadLength;
@@ -53,9 +53,11 @@ static void udp_receive_cbk(void *context, otMessage *ot_message,
 	   ot_message_info->mPeerAddr.mFields.m8, OT_IP6_ADDRESS_SIZE);
     oc_message->endpoint.addr.ipv6.port = ot_message_info->mPeerPort;
 
-    OC_DBG("Incoming message from ");
-    OC_LOGipaddr(oc_message->endpoint);
-    OC_DBG("\n");
+#ifdef OC_DEBUG
+    PRINT("Incoming message from ");
+    PRINTipaddr(message->endpoint);
+    PRINT("\n\n");
+#endif /* OC_DEBUG */
 
     oc_network_event(oc_message);
   }
@@ -81,9 +83,8 @@ oc_connectivity_get_endpoints(int device)
     ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
     ep.device = 0;
 
-    OC_DBG("Endpoint ");
+    OC_DBG("Endpoint");
     OC_LOGipaddr(ep);
-    OC_DBG("\n");
 
     oc_add_endpoint_to_list(&ep);
 
@@ -98,13 +99,13 @@ oc_send_buffer(oc_message_t *message)
   otMessage *ot_message = otUdpNewMessage(ot_instance, true);
 
   if (!ot_message) {
-    OC_ERR("No more buffer to send\n");
+    OC_ERR("No more buffer to send);
     return;
   }
 
   if (otMessageAppend(ot_message,
                       message->data, message->length) != OT_ERROR_NONE) {
-    OC_ERR("Can't append message\n");
+    OC_ERR("Can't append message);
     return;
   }
 
@@ -118,12 +119,14 @@ oc_send_buffer(oc_message_t *message)
 	 OT_IP6_ADDRESS_SIZE);
   message_info.mPeerPort = message->endpoint.addr.ipv6.port;
 
-  OC_DBG("Send message to ");
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+#ifdef OC_DEBUG
+  PRINT("Outgoing message to ");
+  PRINTipaddr(message->endpoint);
+  PRINT("\n\n");
+#endif /* OC_DEBUG */
 
   if (otUdpSend(&unicast_socket, ot_message, &message_info) != OT_ERROR_NONE) {
-    OC_ERR("Can't send message\n");
+    OC_ERR("Can't send message");
     return;
   }
 }
@@ -133,23 +136,23 @@ oc_connectivity_init(int device)
 {
   (void)device;
 
-  OC_DBG("Connectivity init\n");
+  OC_DBG("Connectivity init);
 
   otIp6Address maddr;
 
   if (otIp6AddressFromString("ff02::158", &maddr) != OT_ERROR_NONE) {
-    OC_ERR("Can't convert mcast address\n");
+    OC_ERR("Can't convert mcast address);
     return -1;
   }
 
   if (otIp6SubscribeMulticastAddress(ot_instance, &maddr) != OT_ERROR_NONE) {
-    OC_ERR("Can't subscribe mcast address\n");
+    OC_ERR("Can't subscribe mcast address);
     return -1;
   }
 
   if (otUdpOpen(ot_instance, &unicast_socket,
                 udp_receive_cbk, NULL) != OT_ERROR_NONE) {
-    OC_ERR("Can't open unicast socket\n");
+    OC_ERR("Can't open unicast socket);
     return -1;
   }
 
@@ -160,20 +163,20 @@ oc_connectivity_init(int device)
   sockaddr.mPort = OCF_SERVER_PORT_UNSECURED;
 
   if (otUdpBind(&unicast_socket, &sockaddr) != OT_ERROR_NONE) {
-    OC_ERR("Can't bind unicast port\n");
+    OC_ERR("Can't bind unicast port);
     return -1;
   }
 
   if (otUdpOpen(ot_instance, &multicast_socket,
                 udp_receive_cbk, NULL) != OT_ERROR_NONE) {
-    OC_ERR("Can't open multicast socket\n");
+    OC_ERR("Can't open multicast socket);
     return -1;
   }
 
   sockaddr.mPort = OCF_MCAST_PORT_UNSECURED;
 
   if (otUdpBind(&multicast_socket, &sockaddr) != OT_ERROR_NONE) {
-    OC_ERR("Can't bind multicast port\n");
+    OC_ERR("Can't bind multicast port);
     return -1;
   }
 
@@ -185,7 +188,7 @@ oc_connectivity_shutdown(int device)
 {
   (void)device;
 
-  OC_DBG("Connectivity shutdown: %d\n", device);
+  OC_DBG("Connectivity shutdown: %d, device);
 
   otIp6SetEnabled(ot_instance, false);
 }
@@ -194,7 +197,7 @@ oc_connectivity_shutdown(int device)
 void
 oc_send_discovery_request(oc_message_t *message)
 {
-  OC_DBG("Send discovery request\n");
+  OC_DBG("Send discovery request);
 
   oc_send_buffer(message);
 }
@@ -208,23 +211,23 @@ oc_send_discovery_request(oc_message_t *message)
 void
 oc_network_event_handler_mutex_init(void)
 {
-  OC_DBG("Network mutex init\n");
+  OC_DBG("Network mutex init);
 }
 
 void
 oc_network_event_handler_mutex_lock(void)
 {
-  OC_DBG("Network mutex lock\n");
+  OC_DBG("Network mutex lock);
 }
 
 void
 oc_network_event_handler_mutex_unlock(void)
 {
-  OC_DBG("Network mutex unlock\n");
+  OC_DBG("Network mutex unlock);
 }
 
 void
 oc_network_event_handler_mutex_destroy(void)
 {
-  OC_DBG("Network mutex destroy\n");
+  OC_DBG("Network mutex destroy);
 }

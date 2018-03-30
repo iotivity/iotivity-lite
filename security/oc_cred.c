@@ -156,7 +156,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
       memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
       oc_list_add(devices[device].creds, cred);
     } else {
-      OC_WRN("insufficient memory to add new credential\n");
+      OC_WRN("insufficient memory to add new credential");
     }
   }
   return cred;
@@ -217,7 +217,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
-          OC_ERR("oc_cred: Can set rowneruuid only in RFOTM/SRESET\n");
+          OC_ERR("oc_cred: Can set rowneruuid only in RFOTM/SRESET");
           return false;
         }
       }
@@ -225,7 +225,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
     case OC_REP_OBJECT_ARRAY: {
       if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET &&
           ps->s != OC_DOS_RFPRO) {
-        OC_ERR("oc_cred: Can set cred only in RFOTM/SRESET/RFPRO\n");
+        OC_ERR("oc_cred: Can set cred only in RFOTM/SRESET/RFPRO");
         return false;
       }
     } break;
@@ -291,7 +291,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                     if (size == 0)
                       goto next_item;
                     if (size != 24) {
-                      OC_ERR("oc_cred: Invalid key\n");
+                      OC_ERR("oc_cred: Invalid key");
                       return false;
                     }
                     got_key = true;
@@ -304,7 +304,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   if (size == 0)
                     goto next_item;
                   if (size != 16) {
-                    OC_ERR("oc_cred: Invalid key\n");
+                    OC_ERR("oc_cred: Invalid key");
                     return false;
                   }
                   got_key = true;

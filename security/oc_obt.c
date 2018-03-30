@@ -217,7 +217,7 @@ oc_obt_dump_state(void)
 
   int size = oc_rep_finalize();
   if (size > 0) {
-    OC_DBG("oc_obt: dumped current state: size %d\n", size);
+    OC_DBG("oc_obt: dumped current state: size %d", size);
     oc_storage_write("obt_state", buf, size);
   }
 
@@ -331,7 +331,7 @@ obt_jw_13(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_13\n");
+  OC_DBG("In obt_jw_13");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     free_otm_ctx(o, -1);
@@ -355,7 +355,7 @@ obt_jw_12(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_12\n");
+  OC_DBG("In obt_jw_12");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_12;
@@ -385,7 +385,7 @@ obt_jw_11(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_11\n");
+  OC_DBG("In obt_jw_11");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_11;
@@ -420,7 +420,7 @@ obt_jw_10(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_10\n");
+  OC_DBG("In obt_jw_10");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_10;
@@ -445,7 +445,7 @@ obt_jw_9(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_9\n");
+  OC_DBG("In obt_jw_9");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_9;
@@ -477,7 +477,7 @@ obt_jw_8(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_8\n");
+  OC_DBG("In obt_jw_8");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_8;
@@ -507,7 +507,7 @@ obt_jw_7(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_7\n");
+  OC_DBG("In obt_jw_7");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_7;
@@ -541,7 +541,7 @@ obt_jw_6(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_6\n");
+  OC_DBG("In obt_jw_6");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_6;
@@ -611,7 +611,7 @@ obt_jw_5(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_5\n");
+  OC_DBG("In obt_jw_5");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_5;
@@ -666,7 +666,7 @@ obt_jw_4(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_4\n");
+  OC_DBG("In obt_jw_4");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_4;
@@ -691,7 +691,7 @@ obt_jw_3(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_3\n");
+  OC_DBG("In obt_jw_3");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_3;
@@ -732,7 +732,7 @@ obt_jw_2(oc_client_response_t *data)
     return;
   }
 
-  OC_DBG("In obt_jw_2\n");
+  OC_DBG("In obt_jw_2");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_jw_2;
@@ -770,7 +770,7 @@ int
 oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
                               void *data)
 {
-  OC_DBG("In oc_obt_perform_just_works_otm\n");
+  OC_DBG("In oc_obt_perform_just_works_otm");
 
   /* Remove device from temporary cache */
   if (owned_device(&device->uuid)) {
