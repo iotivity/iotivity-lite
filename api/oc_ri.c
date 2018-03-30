@@ -381,7 +381,7 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
     oc_list_add(timed_callbacks, event_cb);
   }
   else {
-    OC_WRN("insufficient memory to add timed event callback\n");
+    OC_WRN("insufficient memory to add timed event callback");
   }
 }
 
@@ -485,7 +485,7 @@ add_periodic_observe_callback(oc_resource_t *resource)
     event_cb = (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
 
     if (!event_cb) {
-      OC_WRN("insufficient memory to add periodic observe callback\n");
+      OC_WRN("insufficient memory to add periodic observe callback");
       return false;
     }
 
@@ -693,7 +693,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int parse_error =
       oc_parse_rep(payload, payload_len, &request_obj.request_payload);
     if (parse_error != 0) {
-      OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d\n",
+      OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
              parse_error);
       if (parse_error == CborErrorUnexpectedEOF)
         entity_too_large = true;
@@ -813,25 +813,25 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 
   if (forbidden) {
-    OC_WRN("ocri: Forbidden request\n");
+    OC_WRN("ocri: Forbidden request");
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
   } else if (entity_too_large) {
-    OC_WRN("ocri: Request payload too large (hence incomplete)\n");
+    OC_WRN("ocri: Request payload too large (hence incomplete)");
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE);
   } else if (bad_request) {
-    OC_WRN("ocri: Bad request\n");
+    OC_WRN("ocri: Bad request");
     /* Return a 4.00 response */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_BAD_REQUEST);
   } else if (!cur_resource) {
-    OC_WRN("ocri: Could not find resource\n");
+    OC_WRN("ocri: Could not find resource");
     /* Return a 4.04 response if the requested resource was not found */
     response_buffer.response_length = 0;
     response_buffer.code = oc_status_code(OC_STATUS_NOT_FOUND);
   } else if (!method_impl) {
-    OC_WRN("ocri: Could not find method\n");
+    OC_WRN("ocri: Could not find method");
     /* Return a 4.05 response if the resource does not implement the
      * request method.
      */
@@ -840,7 +840,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #ifdef OC_SECURITY
   else if (!authorized) {
-    OC_WRN("ocri: Subject not authorized\n");
+    OC_WRN("ocri: Subject not authorized");
     /* If the requestor (subject) does not have access granted via an
      * access control entry in the ACL, then it is not authorized to
      * access the resource. A 4.01 response is sent.
@@ -1197,7 +1197,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
 {
   oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
   if (!cb) {
-    OC_WRN("insufficient memory to add client callback\n");
+    OC_WRN("insufficient memory to add client callback");
     return cb;
   }
 
