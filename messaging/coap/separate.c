@@ -115,7 +115,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     OC_DBG("Sending ACK for separate response\n");
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
-    coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
+    coap_udp_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
     if (observe < 2) {
       coap_set_header_observe(ack, observe);
     }
@@ -157,7 +157,7 @@ void
 coap_separate_resume(void *response, coap_separate_t *separate_store,
                      uint8_t code, uint16_t mid)
 {
-  coap_init_message(response, separate_store->type, code, mid);
+  coap_udp_init_message(response, separate_store->type, code, mid);
   if (separate_store->token_len) {
     coap_set_token(response, separate_store->token, separate_store->token_len);
   }

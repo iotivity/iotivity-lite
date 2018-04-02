@@ -311,7 +311,7 @@ coap_notify_observers(oc_resource_t *resource,
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
       coap_packet_t req[1];
-      coap_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+      coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
 
@@ -332,7 +332,7 @@ coap_notify_observers(oc_resource_t *resource,
       coap_transaction_t *transaction = NULL;
       if (response_buf) {
         coap_packet_t notification[1];
-        coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+        coap_udp_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
 
 #ifdef OC_BLOCK_WISE
         if (response_buf->response_length > obs->block2_size) {

@@ -122,7 +122,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   }
 #endif /* OC_BLOCK_WISE */
 
-  coap_init_message(request, type, cb->method, cb->mid);
+  coap_udp_init_message(request, type, cb->method, cb->mid);
 
   coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
 
