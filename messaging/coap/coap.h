@@ -195,11 +195,11 @@ extern char *coap_error_message;
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
-void coap_init_message(void *packet, coap_message_type_t type, uint8_t code,
+void coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
                        uint16_t mid);
 size_t coap_serialize_message(void *packet, uint8_t *buffer);
 void coap_send_message(oc_message_t *message);
-coap_status_t coap_parse_message(void *request, uint8_t *data,
+coap_status_t coap_udp_parse_message(void *request, uint8_t *data,
                                  uint16_t data_len);
 
 int coap_get_query_variable(void *packet, const char *name,
