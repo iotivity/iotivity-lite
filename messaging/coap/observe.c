@@ -317,7 +317,7 @@ coap_notify_observers(oc_resource_t *resource,
       } else
 #endif /* OC_TCP */
       {
-        coap_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+        coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
       }
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
@@ -346,7 +346,7 @@ coap_notify_observers(oc_resource_t *resource,
         } else
 #endif /* OC_TCP */
         {
-          coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+          coap_udp_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
         }
 
 #ifdef OC_BLOCK_WISE

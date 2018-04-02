@@ -133,7 +133,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   } else
 #endif /* OC_TCP */
   {
-    coap_init_message(request, type, cb->method, cb->mid);
+    coap_udp_init_message(request, type, cb->method, cb->mid);
   }
 
   coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);

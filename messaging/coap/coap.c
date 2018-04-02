@@ -348,7 +348,7 @@ static size_t coap_serialize_options(void *packet, uint8_t *option_array)
   return (option - option_array);
 }
 /*---------------------------------------------------------------------------*/
-static coap_status_t coap_parse_message_common(void *packet,
+static coap_status_t coap_parse_token_option(void *packet,
                                                uint8_t *data,
                                                uint32_t data_len,
                                                uint8_t *current_option)
@@ -707,7 +707,7 @@ coap_get_mid(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-coap_init_message(void *packet, coap_message_type_t type, uint8_t code,
+coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
                   uint16_t mid)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -846,7 +846,7 @@ coap_send_message(oc_message_t *message)
 }
 /*---------------------------------------------------------------------------*/
 coap_status_t
-coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
+coap_udp_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   /* initialize packet */
@@ -876,10 +876,10 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
 
   uint8_t *current_option = data + COAP_HEADER_LEN;
 
-  coap_status_t ret = coap_parse_message_common(packet, data,
+  coap_status_t ret = coap_parse_token_option(packet, data,
                                                 data_len, current_option);
   if (COAP_NO_ERROR != ret) {
-    OC_DBG("coap_parse_message_common failed!\n");
+    OC_DBG("coap_parse_token_option failed!\n");
     return ret;
   }
 
@@ -933,10 +933,10 @@ coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_
   uint8_t *current_option = data + COAP_TCP_DEFAULT_HEADER_LEN +
                             num_extended_length_bytes;
 
-  coap_status_t ret = coap_parse_message_common(packet, data,
+  coap_status_t ret = coap_parse_token_option(packet, data,
                                                 data_len, current_option);
   if (COAP_NO_ERROR != ret) {
-    OC_DBG("coap_parse_message_common failed!\n");
+    OC_DBG("coap_parse_token_option failed!\n");
     return ret;
   }
 

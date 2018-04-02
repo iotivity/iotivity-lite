@@ -97,7 +97,7 @@ void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
-  coap_init_message(ack, COAP_TYPE_ACK, 0, mid);
+  coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
   oc_message_t *ack_message = oc_allocate_message();
   if (ack_message) {
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
@@ -148,7 +148,7 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_TCP */
   {
     coap_status_code =
-      coap_parse_message(message, msg->data, (uint16_t)msg->length);
+      coap_udp_parse_message(message, msg->data, (uint16_t)msg->length);
   }
 
   if (coap_status_code == COAP_NO_ERROR) {
@@ -227,7 +227,7 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_TCP */
       {
         if (message->type == COAP_TYPE_CON) {
-          coap_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
+          coap_udp_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, message->mid);
         } else {
           if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
             return 0;
@@ -235,7 +235,7 @@ coap_receive(oc_message_t *msg)
           history[idx] = message->mid;
           history_dev[idx] = (uint8_t)msg->endpoint.device;
           idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
-          coap_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
+          coap_udp_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
                             coap_get_mid());
         }
       }
@@ -558,7 +558,7 @@ coap_receive(oc_message_t *msg)
           OC_DBG("dispatching next block\n");
           transaction = coap_new_transaction(response_mid, &msg->endpoint);
           if (transaction) {
-            coap_init_message(response, COAP_TYPE_CON, client_cb->method,
+            coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
                               response_mid);
             uint8_t more =
               (request_buffer->next_block_offset < request_buffer->payload_size)
@@ -622,7 +622,7 @@ coap_receive(oc_message_t *msg)
             OC_DBG("issuing request for next block\n");
             transaction = coap_new_transaction(response_mid, &msg->endpoint);
             if (transaction) {
-              coap_init_message(response, COAP_TYPE_CON, client_cb->method,
+              coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
                                 response_mid);
               response_buffer->mid = response_mid;
               coap_set_header_block2(response, block2_num + 1, 0, block2_size);
@@ -666,7 +666,7 @@ init_reset_message:
   } else
 #endif /* OC_TCP */
   {
-    coap_init_message(response, COAP_TYPE_RST, 0, message->mid);
+    coap_udp_init_message(response, COAP_TYPE_RST, 0, message->mid);
   }
 #ifdef OC_BLOCK_WISE
 #ifdef OC_CLIENT
