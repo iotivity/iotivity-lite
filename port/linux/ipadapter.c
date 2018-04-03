@@ -15,6 +15,8 @@
 */
 
 #define __USE_GNU
+#include "ipcontext.h"
+#include "tcpadapter.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
@@ -27,13 +29,11 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
-#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
-#include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -59,35 +59,6 @@ static pthread_mutex_t mutex;
 struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
 bool ifchange_initialized;
-
-typedef struct ip_context_t {
-  struct ip_context_t *next;
-  struct sockaddr_storage mcast;
-  struct sockaddr_storage server;
-  int mcast_sock;
-  int server_sock;
-  uint16_t port;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure;
-  int secure_sock;
-  uint16_t dtls_port;
-#endif /* OC_SECURITY */
-#ifdef OC_IPV4
-  struct sockaddr_storage mcast4;
-  struct sockaddr_storage server4;
-  int mcast4_sock;
-  int server4_sock;
-  uint16_t port4;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure4;
-  int secure4_sock;
-  uint16_t dtls4_port;
-#endif /* OC_SECURITY */
-#endif /* OC_IPV4 */
-  pthread_t event_thread;
-  int terminate;
-  int device;
-} ip_context_t;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 OC_LIST(ip_contexts);
@@ -348,11 +319,18 @@ static void *network_event_thread(void *data) {
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 
+#ifdef OC_TCP
+  oc_tcp_set_default_fds(dev, &rfds);
+#endif /* OC_TCP */
+
   int i, n;
 
   while (dev->terminate != 1) {
     len = sizeof(client);
     setfds = rfds;
+#ifdef OC_TCP
+    oc_tcp_set_session_fds(&setfds);
+#endif /* OC_TCP */
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
     for (i = 0; i < n; i++) {
@@ -443,6 +421,7 @@ static void *network_event_thread(void *data) {
         message->endpoint.flags = IPV6 | SECURED;
         message->endpoint.device = dev->device;
         FD_CLR(dev->secure_sock, &setfds);
+        goto common;
       }
 #ifdef OC_IPV4
       if (FD_ISSET(dev->secure4_sock, &setfds)) {
@@ -456,9 +435,23 @@ static void *network_event_thread(void *data) {
         message->endpoint.flags = IPV4 | SECURED;
         message->endpoint.device = dev->device;
         FD_CLR(dev->secure4_sock, &setfds);
+        goto common;
       }
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
+
+#ifdef OC_TCP
+      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
+                                                              &setfds,
+                                                              message);
+      if (tcp_status == TCP_STATUS_RECEIVE) {
+        goto common_tcp;
+      } else {
+        oc_message_unref(message);
+        continue;
+      }
+#endif /* OC_TCP */
+
     common:
 #ifdef OC_IPV4
       if (message->endpoint.flags & IPV4) {
@@ -474,7 +467,9 @@ static void *network_event_thread(void *data) {
         message->endpoint.addr.ipv6.scope = c->sin6_scope_id;
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
       }
-
+#ifdef OC_TCP
+    common_tcp:
+#endif /* OC_TCP */
 #ifdef OC_DEBUG
       PRINT("Incoming message of size %d bytes from ", message->length);
       PRINTipaddr(message->endpoint);
@@ -487,8 +482,8 @@ static void *network_event_thread(void *data) {
   pthread_exit(NULL);
 }
 
-static void
-get_interface_addresses(unsigned char family, uint16_t port, bool secure)
+static bool
+get_interface_address(unsigned char family, oc_endpoint_t *ep)
 {
   struct
   {
@@ -505,12 +500,12 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
 
   int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
   if (nl_sock < 0) {
-    return;
+    return false;
   }
 
   if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
     close(nl_sock);
-    return;
+    return false;
   }
 
   fd_set rfds;
@@ -519,7 +514,7 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
 
   if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
     close(nl_sock);
-    return;
+    return false;
   }
 
   bool done = false;
@@ -531,7 +526,7 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
       response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
       if (response_len < 0) {
         close(nl_sock);
-        return;
+        return false;
       }
     } while (response_len == guess);
 
@@ -539,23 +534,21 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
     response_len = recv(nl_sock, buffer, response_len, 0);
     if (response_len < 0) {
       close(nl_sock);
-      return;
+      return false;
     }
 
     response = (struct nlmsghdr *)buffer;
     if (response->nlmsg_type == NLMSG_ERROR) {
       close(nl_sock);
-      return;
+      return false;
     }
-
-    oc_endpoint_t ep;
 
     while (NLMSG_OK(response, response_len)) {
       if (response->nlmsg_type == NLMSG_DONE) {
         done = true;
         break;
       }
-      memset(&ep, 0, sizeof(oc_endpoint_t));
+      memset(ep, 0, sizeof(oc_endpoint_t));
       bool include = false;
       struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
@@ -566,40 +559,27 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
           if (attr->rta_type == IFA_ADDRESS) {
 #ifdef OC_IPV4
             if (family == AF_INET) {
-              memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
-              ep.flags = IPV4;
+              memcpy(ep->addr.ipv4.address, RTA_DATA(attr), 4);
+              ep->flags = IPV4;
             } else
 #endif /* OC_IPV4 */
                 if (family == AF_INET6) {
-              memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-              ep.flags = IPV6;
+              memcpy(ep->addr.ipv6.address, RTA_DATA(attr), 16);
+              ep->flags = IPV6;
             }
           } else if (attr->rta_type == IFA_FLAGS) {
             if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
               include = false;
             }
           }
+
           attr = RTA_NEXT(attr, att_len);
         }
       }
+
       if (include) {
-        if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
-          ep.addr.ipv6.scope = addrmsg->ifa_index;
-        }
-        if (secure) {
-          ep.flags |= SECURED;
-        }
-#ifdef OC_IPV4
-        if (family == AF_INET) {
-          ep.addr.ipv4.port = port;
-        } else
-#endif /* OC_IPV4 */
-            if (family == AF_INET6) {
-          ep.addr.ipv6.port = port;
-        }
-        if (oc_add_endpoint_to_list(&ep) == -1) {
-          close(nl_sock);
-          return;
+        if (family == AF_INET6 && addrmsg->ifa_scope == RT_SCOPE_LINK) {
+          ep->addr.ipv6.scope = addrmsg->ifa_index;
         }
       }
 
@@ -607,6 +587,31 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure)
     }
   }
   close(nl_sock);
+
+  return done;
+}
+
+static void set_endpoint_with(oc_endpoint_t *endpoint,
+                              uint16_t port,
+                              bool secure) {
+  oc_endpoint_t ep;
+  memcpy(&ep, endpoint, sizeof(oc_endpoint_t));
+
+  if (secure) {
+    ep.flags |= SECURED;
+  }
+#ifdef OC_IPV4
+  if (ep.flags & IPV4) {
+    ep.addr.ipv4.port = port;
+  } else
+#endif /* OC_IPV4 */
+      if (ep.flags & IPV6) {
+    ep.addr.ipv6.port = port;
+  }
+
+  if (oc_add_endpoint_to_list(&ep) == -1) {
+    OC_ERR("oc_add_endpoint_to_list failed.\n");
+  }
 }
 
 oc_endpoint_t *
@@ -614,16 +619,49 @@ oc_connectivity_get_endpoints(int device)
 {
   oc_init_endpoint_list();
   ip_context_t *dev = get_ip_context_for_device(device);
-  get_interface_addresses(AF_INET6, dev->port, false);
+  if (!dev) {
+    OC_ERR("Can't get ip context for device(%d)\n", device);
+    return NULL;
+  }
+
+  oc_endpoint_t ep;
+  if (!get_interface_address(AF_INET6, &ep)) {
+    OC_ERR("Can't get ipv6 address.\n");
+    return NULL;
+  }
+#ifdef OC_IPV4
+  oc_endpoint_t ep_v4;
+  if (!get_interface_address(AF_INET, &ep_v4)) {
+    OC_ERR("Can't get ipv4 address.\n");
+    return NULL;
+  }
+#endif
+
+  set_endpoint_with(&ep, dev->port, false);
 #ifdef OC_SECURITY
-  get_interface_addresses(AF_INET6, dev->dtls_port, true);
+  set_endpoint_with(&ep, dev->dtls_port, true);
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  get_interface_addresses(AF_INET, dev->port4, false);
+  set_endpoint_with(&ep_v4, dev->port4, false);
 #ifdef OC_SECURITY
-  get_interface_addresses(AF_INET, dev->dtls4_port, true);
+  set_endpoint_with(&ep_v4, dev->dtls4_port, true);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
+
+#ifdef OC_TCP
+  ep.flags |= TCP;
+  set_endpoint_with(&ep, dev->tcp.port, false);
+#ifdef OC_SECURITY
+  set_endpoint_with(&ep, dev->tcp.tls_port, true);
+#endif /* OC_SECURITY */
+#ifdef OC_IPV4
+  ep_v4.flags |= TCP;
+  set_endpoint_with(&ep_v4, dev->tcp.port4, false);
+#ifdef OC_SECURITY
+  set_endpoint_with(&ep_v4, dev->tcp.tls4_port, true);
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+#endif /* OC_TCP */
   return oc_get_endpoint_list();
 }
 
@@ -657,6 +695,13 @@ void oc_send_buffer(oc_message_t *message) {
   int send_sock = -1;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
+#ifdef OC_TCP
+  if (message->endpoint.flags & TCP) {
+    oc_tcp_send_buffer(message, &receiver);
+    return;
+  }
+#endif /* OC_TCP */
 
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
@@ -964,6 +1009,24 @@ int oc_connectivity_init(int device) {
   }
 #endif /* OC_IPV4 */
 
+  OC_DBG("=======ip port info.========\n");
+  OC_DBG("  ipv6 port   : %u\n", dev->port);
+#ifdef OC_SECURITY
+  OC_DBG("  ipv6 secure : %u\n", dev->dtls_port);
+#endif
+#ifdef OC_IPV4
+  OC_DBG("  ipv4 port   : %u\n", dev->port4);
+#ifdef OC_SECURITY
+  OC_DBG("  ipv4 secure : %u\n", dev->dtls4_port);
+#endif
+#endif
+
+#ifdef OC_TCP
+  if (oc_tcp_connectivity_init(dev) != 0) {
+    OC_ERR("Could not initialize TCP adapter\n");
+  }
+#endif /* OC_TCP */
+
   /* Netlink socket to listen for network interface changes.
    * Only initialized once, and change events are captured by only
    * the network event thread for the 0th logical device.
@@ -1019,6 +1082,10 @@ oc_connectivity_shutdown(int device)
   close(dev->secure4_sock);
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
+
+#ifdef OC_TCP
+  oc_tcp_connectivity_shutdown(dev);
+#endif /* OC_TCP */
 
   pthread_cancel(dev->event_thread);
   pthread_join(dev->event_thread, NULL);
