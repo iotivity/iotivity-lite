@@ -67,6 +67,62 @@ oc_core_init(void)
     oc_abort("Insufficient memory");
   }
 }
+
+static void
+oc_core_free_resource_properties(oc_resource_t *core_resources_item)
+{
+  if(core_resources_item)
+  {
+    if(oc_string_len(core_resources_item->name)) 
+      oc_free_string(&(core_resources_item->name));
+    if(oc_string_len(core_resources_item->uri))
+      oc_free_string(&(core_resources_item->uri));
+    if(oc_string_array_get_allocated_size(core_resources_item->types))
+      oc_free_string_array(&(core_resources_item->types));
+  }
+}
+
+static void
+oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
+{
+
+  if(oc_device_info_item)
+  {
+    if(oc_string_len(oc_device_info_item->name)) 
+      oc_free_string(&(oc_device_info_item->name));
+    if(oc_string_len(oc_device_info_item->icv))
+      oc_free_string(&(oc_device_info_item->icv));
+    if(oc_string_len(oc_device_info_item->dmv))
+      oc_free_string(&(oc_device_info_item->dmv));
+    if( oc_device_info_item->data)
+      free(oc_device_info_item->data);
+    }
+}
+
+void
+oc_core_shutdown(void)
+{
+  if(oc_string_len(oc_platform_info.mfg_name))
+    oc_free_string(&(oc_platform_info.mfg_name));
+
+  if(oc_device_info){
+    for(int i=0; i<OC_NUM_CORE_RESOURCES_PER_DEVICE;++i ){
+      oc_device_info_t *oc_device_info_item=&oc_device_info[i];
+      oc_core_free_device_info_properties(oc_device_info_item);
+    }
+    free(oc_device_info);
+    oc_device_info=NULL;
+  }
+  
+  if (core_resources) {
+    for(int i=0; i<OC_NUM_CORE_RESOURCES_PER_DEVICE;++i ){
+      oc_resource_t *core_resources_item=&core_resources[i];
+      oc_core_free_resource_properties(core_resources_item);
+    }
+    free(core_resources);
+    core_resources=NULL;
+  }
+}
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 void
