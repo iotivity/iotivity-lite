@@ -112,7 +112,11 @@ void oc_memb_init(struct oc_memb *m);
  *
  * \param m A memory block previously declared with MEMB().
  */
-void *oc_memb_alloc(struct oc_memb *m);
+void *__oc_memb_alloc(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_memb *m);
 
 /**
  * Deallocate a memory block from a memory block previously declared
@@ -126,7 +130,19 @@ void *oc_memb_alloc(struct oc_memb *m);
  * if successfully deallocated) or -1 if the pointer "ptr" did not
  * point to a legal memory block.
  */
-char oc_memb_free(struct oc_memb *m, void *ptr);
+char __oc_memb_free(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_memb *m, void *ptr);
+
+#ifdef OC_MEMORY_TRACE
+#define oc_memb_alloc(m) (void *)__oc_memb_alloc(__func__, m)
+#define oc_memb_free(m, ptr) (char)__oc_memb_free(__func__, m, ptr)
+#else
+#define oc_memb_alloc(m) (void *)__oc_memb_alloc(m)
+#define oc_memb_free(m, ptr) (char)__oc_memb_free(m, ptr)
+#endif
 
 int oc_memb_inmemb(struct oc_memb *m, void *ptr);
 
