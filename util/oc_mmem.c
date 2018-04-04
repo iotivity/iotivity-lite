@@ -39,6 +39,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef OC_MEMORY_TRACE
+#include "oc_mem_trace.h"
+#endif
+
 #ifndef OC_DYNAMIC_ALLOCATION
 #if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
   !defined(OC_DOUBLES_POOL_SIZE)
@@ -58,8 +62,18 @@ OC_LIST(doubles_list);
 #endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
 int
-oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
+__oc_mmem_alloc(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_mmem *m, unsigned int size, pool pool_type)
 {
+
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return 0;
+  }
+
   switch (pool_type) {
   case BYTE_POOL:
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -109,12 +123,31 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
   default:
     break;
   }
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func, size, MEM_TRACE_ALLOC, m->ptr);
+#endif
+
   return 1;
 }
 
 void
-oc_mmem_free(struct oc_mmem *m, pool pool_type)
+__oc_mmem_free(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_mmem *m, pool pool_type)
 {
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return;
+  }
+
+#ifdef OC_MEMORY_TRACE
+  unsigned int size= m->size;
+  void *address= m->ptr;
+#endif
+
+
 #ifndef OC_DYNAMIC_ALLOCATION
   struct oc_mmem *n;
 
@@ -162,6 +195,11 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
   free(m->ptr);
   m->size = 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func, size, MEM_TRACE_FREE, address);
+#endif /* OC_MEMORY_TRACE */
+
 }
 
 void
