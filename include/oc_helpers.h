@@ -29,22 +29,59 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
 #define oc_string(ocstring) (oc_cast(ocstring, char))
 
-void oc_new_string(oc_string_t *ocstring, const char *str, int str_len);
-void oc_alloc_string(oc_string_t *ocstring, int size);
-void oc_free_string(oc_string_t *ocstring);
-void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
-#define oc_string_len(ocstring) ((ocstring).size ? (ocstring).size - 1 : 0)
+#ifdef OC_MEMORY_TRACE
+#define oc_alloc_string(ocstring, size)                                        \
+  _oc_alloc_string(__func__, ocstring, size)
+#define oc_new_string(ocstring, str, str_len)                                  \
+  _oc_new_string(__func__, ocstring, str, str_len)
 
-void _oc_new_array(oc_array_t *ocarray, int size, pool type);
-void _oc_free_array(oc_array_t *ocarray, pool type);
+#define oc_free_string(ocstring) _oc_free_string(__func__, ocstring)
+#define oc_free_int_array(ocarray) (_oc_free_array(__func__, ocarray, INT_POOL))
+#define oc_free_bool_array(ocarray)                                            \
+  (_oc_free_array(__func__, ocarray, BYTE_POOL))
+#define oc_free_double_array(ocarray)                                          \
+  (_oc_free_array(__func__, ocarray, DOUBLE_POOL))
+
+#define oc_new_int_array(ocarray, size)                                        \
+  (_oc_new_array(__func__, ocarray, size, INT_POOL))
+#define oc_new_bool_array(ocarray, size)                                       \
+  (_oc_new_array(__func__, ocarray, size, BYTE_POOL))
+#define oc_new_double_array(ocarray, size)                                     \
+  (_oc_new_array(__func__, ocarray, size, DOUBLE_POOL))
+
+#define oc_new_string_array(ocstringarray, size)                               \
+  (_oc_alloc_string_array(__func__, ocstringarray, size))
+
+#define oc_free_string_array(ocstringarray)                                    \
+  (_oc_free_string(__func__, ocstringarray))
+
+#else /* OC_MEMORY_TRACE */
+
+#define oc_alloc_string(ocstring, size) _oc_alloc_string((ocstring), (size))
+#define oc_new_string(ocstring, str, str_len)                                  \
+  _oc_new_string(ocstring, str, str_len)
+
+#define oc_free_string(ocstring) _oc_free_string(ocstring)
+#define oc_free_int_array(ocarray) (_oc_free_array(ocarray, INT_POOL))
+#define oc_free_bool_array(ocarray) (_oc_free_array(ocarray, BYTE_POOL))
+#define oc_free_double_array(ocarray) (_oc_free_array(ocarray, DOUBLE_POOL))
+
 #define oc_new_int_array(ocarray, size) (_oc_new_array(ocarray, size, INT_POOL))
 #define oc_new_bool_array(ocarray, size)                                       \
   (_oc_new_array(ocarray, size, BYTE_POOL))
 #define oc_new_double_array(ocarray, size)                                     \
   (_oc_new_array(ocarray, size, DOUBLE_POOL))
-#define oc_free_int_array(ocarray) (_oc_free_array(ocarray, INT_POOL))
-#define oc_free_bool_array(ocarray) (_oc_free_array(ocarray, BYTE_POOL))
-#define oc_free_double_array(ocarray) (_oc_free_array(ocarray, DOUBLE_POOL))
+
+#define oc_new_string_array(ocstringarray, size)                               \
+  (_oc_alloc_string_array(ocstringarray, size))
+
+#define oc_free_string_array(ocstringarray) (_oc_free_string(ocstringarray))
+
+#endif /* !OC_MEMORY_TRACE */
+
+void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
+#define oc_string_len(ocstring) ((ocstring).size ? (ocstring).size - 1 : 0)
+
 #define oc_int_array_size(ocintarray) ((ocintarray).size)
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size)
 #define oc_double_array_size(ocdoublearray) ((ocdoublearray).size)
@@ -57,16 +94,14 @@ void _oc_free_array(oc_array_t *ocarray, pool type);
 #else /* OC_DYNAMIC_ALLOCATION */
 #define STRING_ARRAY_ITEM_MAX_LEN 32
 #endif /* !OC_DYNAMIC_ALLOCATION */
-void _oc_alloc_string_array(oc_string_array_t *ocstringarray, int size);
+
 bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
                                      const char str[], int index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[]);
 void oc_join_string_array(oc_string_array_t *ocstringarray,
                           oc_string_t *ocstring);
-#define oc_new_string_array(ocstringarray, size)                               \
-  (_oc_alloc_string_array(ocstringarray, size))
-#define oc_free_string_array(ocstringarray) (oc_free_string(ocstringarray))
+
 #define oc_string_array_add_item(ocstringarray, str)                           \
   (_oc_string_array_add_item(&(ocstringarray), str))
 #define oc_string_array_get_item(ocstringarray, index)                         \
@@ -77,5 +112,41 @@ void oc_join_string_array(oc_string_array_t *ocstringarray,
   (strlen((const char *)oc_string_array_get_item(ocstringarray, index)))
 #define oc_string_array_get_allocated_size(ocstringarray)                      \
   ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)
+
+void _oc_new_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, const char *str, int str_len);
+
+void _oc_alloc_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, int size);
+
+void _oc_free_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring);
+
+void _oc_free_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_array_t *ocarray, pool type);
+
+void _oc_new_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_array_t *ocarray, int size, pool type);
+
+void _oc_alloc_string_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_array_t *ocstringarray, int size);
 
 #endif /* OC_HELPERS_H */

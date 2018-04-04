@@ -104,6 +104,15 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
+# TODO
+# this DYNAMIC condition would be removed after managing static memory in trace
+ifeq ($(DYNAMIC),1)
+ifeq ($(MEMTRACE),1)
+	CFLAGS += -DOC_MEMORY_TRACE
+endif
+endif
+
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \

@@ -91,6 +91,8 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
       oc_free_string(&(oc_device_info_item->icv));
     if (oc_string_len(oc_device_info_item->dmv))
       oc_free_string(&(oc_device_info_item->dmv));
+    if (oc_device_info_item->data)
+      free(oc_device_info_item->data);
   }
 }
 
