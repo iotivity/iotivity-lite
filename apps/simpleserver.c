@@ -175,7 +175,6 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
-
   oc_main_shutdown();
   return 0;
 }
