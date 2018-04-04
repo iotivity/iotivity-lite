@@ -23,6 +23,10 @@
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
 
+#ifdef OC_MEMORY_TRACE
+#include "util/oc_mem_trace.h"
+#endif
+
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -269,6 +273,10 @@ oc_ri_init(void)
   oc_clock_init();
   set_mpro_status_codes();
 
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_init();
+#endif
+
 #ifdef OC_SERVER
   oc_list_init(app_resources);
   oc_list_init(observe_callbacks);
@@ -293,6 +301,11 @@ oc_ri_shutdown(void)
 {
   oc_random_destroy();
   stop_processes();
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_shutdown();
+#endif
+
 }
 
 #ifdef OC_SERVER
