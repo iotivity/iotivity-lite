@@ -34,6 +34,11 @@
 
 #include "oc_memb.h"
 #include <string.h>
+#include "port/oc_log.h"
+
+#ifdef OC_MEMORY_TRACE
+#include "oc_mem_trace.h"
+#endif
 
 /*---------------------------------------------------------------------------*/
 void
@@ -48,38 +53,76 @@ oc_memb_init(struct oc_memb *m)
 }
 /*---------------------------------------------------------------------------*/
 void *
-oc_memb_alloc(struct oc_memb *m)
+_oc_memb_alloc(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_memb *m)
 {
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return NULL;
+  }
+
+  void *ptr=NULL;
+
 #ifdef OC_DYNAMIC_ALLOCATION
-  return calloc(1, m->size);
+  ptr=calloc(1, m->size);
+
 #else  /* OC_DYNAMIC_ALLOCATION */
   int i;
 
-  for (i = 0; i < m->num; ++i) {
+  for (i = 0; i < m->num && !ptr; ++i) {
     if (m->count[i] == 0) {
       /* If this block was unused, we increase the reference count to
    indicate that it now is used and return a pointer to the
    memory block. */
       ++(m->count[i]);
-      void *mem = (void *)((char *)m->mem + (i * m->size));
-      memset(mem, 0, m->size);
-      return mem;
+      ptr = (void *)((char *)m->mem + (i * m->size));
+      memset(ptr, 0, m->size);
     }
   }
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
+  if(!ptr){
   /* No free block was found, so we return NULL to indicate failure to
      allocate block. */
-  return NULL;
-#endif /* !OC_DYNAMIC_ALLOCATION */
+    return NULL;
+  }
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func,  m->size, MEM_TRACE_ALLOC, ptr);
+#endif
+
+  return ptr;
 }
 /*---------------------------------------------------------------------------*/
 char
-oc_memb_free(struct oc_memb *m, void *ptr)
+_oc_memb_free(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_memb *m, void *ptr)
 {
+
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return -1;
+  }
+
+  char ret=-1;
+
+#ifdef OC_MEMORY_TRACE
+  unsigned int size= m->size;
+  void *address= ptr;
+#endif
+
 #ifdef OC_DYNAMIC_ALLOCATION
   (void)m;
   free(ptr);
-  return 0;
+  ret = 0;
+  goto exit;
+
 #else  /* OC_DYNAMIC_ALLOCATION */
   int i;
   char *ptr2;
@@ -96,12 +139,20 @@ oc_memb_free(struct oc_memb *m, void *ptr)
         /* Make sure that we don't deallocate free memory. */
         --(m->count[i]);
       }
-      return m->count[i];
+      ret= m->count[i];
+      goto exit;
     }
     ptr2 += m->size;
   }
   return -1;
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+exit:
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func,  size, MEM_TRACE_FREE, address);
+#endif
+
+  return ret;
 }
 /*---------------------------------------------------------------------------*/
 #ifndef OC_DYNAMIC_ALLOCATION
