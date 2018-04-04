@@ -109,6 +109,10 @@ endif
 
 CFLAGS += $(EXTRA_CFLAGS)
 
+ifeq ($(MEMTRACE),1)
+	CFLAGS += -DOC_MEMORY_TRACE
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \

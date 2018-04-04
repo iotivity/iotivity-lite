@@ -23,6 +23,10 @@
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
 
+#ifdef OC_MEMORY_TRACE
+#include "util/oc_mem_trace.h"
+#endif
+
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -287,6 +291,10 @@ oc_ri_init(void)
   oc_clock_init();
   set_mpro_status_codes();
 
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_init();
+#endif
+
 #ifdef OC_SERVER
   oc_list_init(app_resources);
   oc_list_init(observe_callbacks);
@@ -315,6 +323,10 @@ oc_ri_shutdown(void)
 #endif
 
   oc_core_shutdown();
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_shutdown();
+#endif
 }
 
 #ifdef OC_SERVER
@@ -636,14 +648,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   response_buffer.code = 0;
   response_buffer.response_length = 0;
 
-  response_obj.separate_response = 0;
+  response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
 
   request_obj.response = &response_obj;
-  request_obj.request_payload = 0;
-  request_obj.query = 0;
+  request_obj.request_payload = NULL;
+  request_obj.query = NULL;
   request_obj.query_len = 0;
-  request_obj.resource = 0;
+  request_obj.resource = NULL;
   request_obj.origin = endpoint;
 
   /* Initialize OCF interface selector. */
