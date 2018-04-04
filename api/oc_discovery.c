@@ -503,7 +503,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
    *  object. It is traversed in the following loop to obtain a handle to its
    *  array of links.
    */
-  if (rep->value.object) {
+  if (rep != NULL && rep->value.object) {
     rep = rep->value.object;
   }
 
