@@ -35,9 +35,13 @@
 #include "oc_mmem.h"
 #include "config.h"
 #include "oc_list.h"
-#include "port/oc_log.h"
 #include <stdint.h>
 #include <string.h>
+#include "port/oc_log.h"
+
+#ifdef OC_MEMORY_TRACE
+#include "oc_mem_trace.h"
+#endif
 
 #ifndef OC_DYNAMIC_ALLOCATION
 #if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
@@ -57,15 +61,46 @@ OC_LIST(doubles_list);
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
-int
-oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
+
+#if defined(OC_DYNAMIC_ALLOCATION) || defined(OC_MEMORY_TRACE)
+static unsigned int
+oc_mmem_get_sizeof_avail_item (pool pool_type)
 {
+  unsigned int sizeof_item=0;
+
   switch (pool_type) {
   case BYTE_POOL:
+    sizeof_item=sizeof(unsigned char);
+    break;
+  case INT_POOL:
+    sizeof_item=sizeof(int);
+    break;
+  case DOUBLE_POOL:
+    sizeof_item=sizeof(double);
+    break;
+  }
+  return sizeof_item;
+}
+#endif
+
+int
+_oc_mmem_alloc(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_mmem *m, unsigned int size, pool pool_type)
+{
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return 0;
+  }
+
 #ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size);
-    m->size = size;
+  m->ptr = malloc(size*oc_mmem_get_sizeof_avail_item(pool_type));
+  m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
+  switch (pool_type) {
+  case BYTE_POOL:
     if (avail_bytes < size) {
       OC_WRN("byte pool exhausted\n");
       return 0;
@@ -74,13 +109,8 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &bytes[OC_BYTES_POOL_SIZE - avail_bytes];
     m->size = size;
     avail_bytes -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
-#ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(int));
-    m->size = size;
-#else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_ints < size) {
       OC_WRN("int pool exhausted\n");
       return 0;
@@ -89,13 +119,8 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &ints[OC_INTS_POOL_SIZE - avail_ints];
     m->size = size;
     avail_ints -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case DOUBLE_POOL:
-#ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(double));
-    m->size = size;
-#else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_doubles < size) {
       OC_WRN("double pool exhausted\n");
       return 0;
@@ -104,17 +129,39 @@ oc_mmem_alloc(struct oc_mmem *m, unsigned int size, pool pool_type)
     m->ptr = &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles];
     m->size = size;
     avail_doubles -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   default:
-    break;
+    OC_ERR("unknown pool type");
+    return 0;
   }
+#endif
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func, size*oc_mmem_get_sizeof_avail_item(pool_type),
+                        MEM_TRACE_ALLOC, m->ptr);
+#endif
+
   return 1;
 }
 
 void
-oc_mmem_free(struct oc_mmem *m, pool pool_type)
+_oc_mmem_free(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  struct oc_mmem *m, pool pool_type)
 {
+  if(!m) {
+    OC_ERR("oc_mmem is NULL");
+    return;
+  }
+
+#ifdef OC_MEMORY_TRACE
+  unsigned int size= m->size;
+  void *address= m->ptr;
+#endif
+
+
 #ifndef OC_DYNAMIC_ALLOCATION
   struct oc_mmem *n;
 
@@ -162,6 +209,12 @@ oc_mmem_free(struct oc_mmem *m, pool pool_type)
   free(m->ptr);
   m->size = 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_add_pace(func, size*oc_mmem_get_sizeof_avail_item(pool_type),
+                          MEM_TRACE_FREE, address);
+#endif /* OC_MEMORY_TRACE */
+
 }
 
 void
