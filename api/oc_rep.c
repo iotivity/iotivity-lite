@@ -384,6 +384,8 @@ oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
         return err;
       err |= cbor_value_advance(&map);
     }
+  } else {
+    *out_rep = 0;
   }
   return err;
 }
