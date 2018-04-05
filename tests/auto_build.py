@@ -6,6 +6,13 @@ import platform
 import subprocess
 import multiprocessing
 
+build_option_param = {
+    "DINAMIC": 1,
+    "IPV4": 1,
+    "SECURE": 1,
+    "TCP": 1
+}
+
 # help message
 def helpmsg(script):
     helpstr = '''
@@ -47,7 +54,7 @@ def build_all(flag, extra_option_str):
 
 def build_linux(flag, extra_option_str):
     print ("*********** Build for linux ************")
-    build_options = {}
+    build_options = build_option_param
     call_make(build_options, extra_option_str)
 
 
