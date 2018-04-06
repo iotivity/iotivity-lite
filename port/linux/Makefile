@@ -1,9 +1,12 @@
 CC = gcc
+CXX = g++
 SED = sed
 INSTALL = install
+MAKE = make
 CHECK_SCRIPT = ../../tools/check.py
 
 DESTDIR ?= /usr/local
+
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
 exec_prefix = $(prefix)
@@ -11,6 +14,21 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+
+GTEST_DIR = ../../deps/gtest
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
+GTEST = gtest_build
+TEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive
+IOTIVITY_ROOT_DIR = ../..
+IOTIVITY_HEADER_DIR = $(IOTIVITY_ROOT_DIR)/include
+OUT_DIR = ./
+API_TEST_DIR = $(IOTIVITY_ROOT_DIR)/api/unittest
+API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+UNIT_TESTS =  apitest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -39,6 +57,7 @@ HEADERS_UTIL = $(wildcard ../../util/*.h)
 HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
+
 
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
@@ -92,9 +111,19 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(GTEST) $(UNIT_TESTS)
 
 .PHONY: clean
+
+$(GTEST):
+	cd $(GTEST_DIR)/make && $(MAKE)
+
+$(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(IOTIVITY_HEADER_DIR) -I$(IOTIVITY_ROOT_DIR) -I$(OUT_DIR) -c $< -o $@
+
+apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(IOTIVITY_HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L../../port/linux -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -206,10 +235,11 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@includedir@,$(includedir),'
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS}
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(UNIT_TESTS)
+	cd $(GTEST_DIR)/make && $(MAKE) clean
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
