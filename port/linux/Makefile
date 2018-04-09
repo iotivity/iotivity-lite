@@ -5,6 +5,9 @@ OS = linux
 ROOT_DIR = ../..
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
+VERSION_MAJOR = 1
+VERSION_MINOR = 0
+VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
@@ -224,21 +227,24 @@ iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),'
 
 iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),'
 
 iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),'
 
 ifeq ($(SECURE),1)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))

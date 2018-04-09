@@ -19,7 +19,7 @@ includedir=@includedir@
 
 Name: iotivity-constrained-client
 Description: Iotivity constrained client library
-Version: 1.0
+Version: @version@
 Libs.private: -lm -pthread
 Cflags: -I${includedir}/iotivity-constrained -DOC_CLIENT
 Libs: -L${libdir} -liotivity-constrained-client
