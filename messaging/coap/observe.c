@@ -320,7 +320,14 @@ coap_notify_observers(oc_resource_t *resource,
     if (response.separate_response != NULL &&
         response_buf->code == oc_status_code(OC_STATUS_OK)) {
       coap_packet_t req[1];
-      coap_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+#ifdef OC_TCP
+      if (obs->endpoint.flags & TCP) {
+        coap_tcp_init_message(req, COAP_GET);
+      } else
+#endif /* OC_TCP */
+      {
+        coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+      }
       memcpy(req->token, obs->token, obs->token_len);
       req->token_len = obs->token_len;
 
@@ -341,10 +348,23 @@ coap_notify_observers(oc_resource_t *resource,
       coap_transaction_t *transaction = NULL;
       if (response_buf) {
         coap_packet_t notification[1];
-        coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+
+#ifdef OC_TCP
+        if (obs->endpoint.flags & TCP) {
+          coap_tcp_init_message(notification, CONTENT_2_05);
+        } else
+#endif /* OC_TCP */
+        {
+          coap_udp_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0);
+        }
 
 #ifdef OC_BLOCK_WISE
+#ifdef OC_TCP
+        if (!(obs->endpoint.flags & TCP) &&
+            response_buf->response_length > obs->block2_size) {
+#else /* OC_TCP */
         if (response_buf->response_length > obs->block2_size) {
+#endif /* !OC_TCP */
           notification->type = COAP_TYPE_CON;
           response_state = oc_blockwise_find_response_buffer(
             oc_string(obs->resource->uri) + 1,
@@ -363,7 +383,7 @@ coap_notify_observers(oc_resource_t *resource,
           memcpy(response_state->buffer, response_buf->buffer,
                  response_buf->response_length);
           response_state->payload_size = response_buf->response_length;
-          uint16_t payload_size = 0;
+          uint32_t payload_size = 0;
           const void *payload = oc_blockwise_dispatch_block(
             response_state, 0, obs->block2_size, &payload_size);
           if (payload) {
@@ -378,7 +398,12 @@ coap_notify_observers(oc_resource_t *resource,
         } else
 #endif /* OC_BLOCK_WISE */
         {
+#ifdef OC_TCP
+          if (!(obs->endpoint.flags & TCP) &&
+              obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
+#else /* OC_TCP */
           if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
+#endif /* !OC_TCP */
             OC_DBG("coap_observe_notify: forcing CON notification to check for "
                    "client liveness\n");
             notification->type = COAP_TYPE_CON;

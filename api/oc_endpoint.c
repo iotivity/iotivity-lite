@@ -23,6 +23,8 @@
 
 #define OC_SCHEME_COAP "coap://"
 #define OC_SCHEME_COAPS "coaps://"
+#define OC_SCHEME_COAP_TCP "coap+tcp://"
+#define OC_SCHEME_COAPS_TCP "coaps+tcp://"
 
 #define OC_IPV6_ADDRSTRLEN (46)
 #define OC_IPV4_ADDRSTRLEN (16)
@@ -93,6 +95,15 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   uint8_t *addr = endpoint->addr.ipv4.address;
   sprintf(ip, "%u.%u.%u.%u:%u", addr[0], addr[1], addr[2], addr[3],
           endpoint->addr.ipv4.port);
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) {
+    if (endpoint->flags & SECURED) {
+      oc_concat_strings(endpoint_str, OC_SCHEME_COAPS_TCP, ip);
+    } else {
+      oc_concat_strings(endpoint_str, OC_SCHEME_COAP_TCP, ip);
+    }
+  } else
+#endif
   if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
@@ -159,6 +170,15 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   } else {
     sprintf(&ip[str_idx], "]:%u", endpoint->addr.ipv6.port);
   }
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) {
+    if (endpoint->flags & SECURED) {
+      oc_concat_strings(endpoint_str, OC_SCHEME_COAPS_TCP, ip);
+    } else {
+      oc_concat_strings(endpoint_str, OC_SCHEME_COAP_TCP, ip);
+    }
+  } else
+#endif
   if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
@@ -334,6 +354,15 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                          oc_string_t *uri)
 {
   endpoint->flags = 0;
+#ifdef OC_TCP
+  if (memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
+             strlen(OC_SCHEME_COAPS_TCP)) == 0) {
+    endpoint->flags = TCP | SECURED;
+  } else if (memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
+                    strlen(OC_SCHEME_COAP_TCP)) == 0) {
+    endpoint->flags = TCP;
+  } else
+#endif
   if (memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
              strlen(OC_SCHEME_COAPS)) == 0) {
     endpoint->flags = SECURED;
