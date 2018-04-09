@@ -17,6 +17,7 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+EXTRA_CFLAGS =
 
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -80,7 +81,7 @@ else
 endif
 
 ifeq ($(DYNAMIC),1)
-	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(SECURE),1)
@@ -93,17 +94,20 @@ ifeq ($(DYNAMIC),1)
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 endif
-	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
+	CFLAGS += ${DTLSFLAGS}
+	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
 endif
 
 ifeq ($(IPV4),1)
-	CFLAGS += -DOC_IPV4
+	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
 ifeq ($(TCP),1)
-	CFLAGS += -DOC_TCP
+	EXTRA_CFLAGS += -DOC_TCP
 endif
+
+CFLAGS += $(EXTRA_CFLAGS)
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
@@ -226,7 +230,8 @@ iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 	$(SED) > $@ < $< \
@@ -234,7 +239,8 @@ iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 	$(SED) > $@ < $< \
@@ -242,7 +248,8 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 ifeq ($(SECURE),1)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
