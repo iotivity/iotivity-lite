@@ -97,13 +97,13 @@ void oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer);
 
 const void *oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer,
                                         uint32_t block_offset,
-                                        uint16_t requested_block_size,
-                                        uint16_t *payload_size);
+                                        uint32_t requested_block_size,
+                                        uint32_t *payload_size);
 
 bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                                uint32_t incoming_block_offset,
                                const uint8_t *incoming_block,
-                               uint16_t incoming_block_size);
+                               uint32_t incoming_block_size);
 
 void oc_blockwise_scrub_buffers();
 

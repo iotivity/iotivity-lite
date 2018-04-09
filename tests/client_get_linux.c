@@ -47,6 +47,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   quit = true;
   signal_event_loop();
 }
@@ -61,7 +62,7 @@ check_resource_cb(oc_client_response_t *data)
 
   for (oc_rep_t *rep = data->payload; rep; rep = rep->next) {
     switch (rep->type) {
-      case BOOL:
+      case OC_REP_BOOL:
         if (light != rep->value.boolean)
           exit(EXIT_FAILURE);
         break;
@@ -83,6 +84,10 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;
+  (void)di;
+  (void)interfaces;
+  (void)user_data;
+  
   int i, array_size;
   static int pos = 0;
 
@@ -125,7 +130,7 @@ static int
 start_client()
 {
   int ret;
-  struct sigaction sa = { };
+  struct sigaction sa;
   static const oc_handler_t handler = {
     .init = app_init_client,
     .signal_event_loop = signal_event_loop,
@@ -208,7 +213,7 @@ register_resources(void)
 
   for (i = 0; i < NUM_LIGHTS; i++) {
     int r;
-    char name[128] = { };
+    char name[128];
     oc_resource_t *res;
 
     r = snprintf(name, sizeof(name), "/test/%d", i);
@@ -230,7 +235,7 @@ static int
 start_server(void)
 {
   int ret;
-  struct sigaction sa = { };
+  struct sigaction sa;
   static const oc_handler_t handler = {
     .init = app_init,
     .signal_event_loop = signal_event_loop,
@@ -277,6 +282,7 @@ start_server(void)
 static void
 child_handler(int sig)
 {
+ (void) sig;
   pid_t pid;
   int status;
   static int child_count = 0;
@@ -301,6 +307,8 @@ child_handler(int sig)
 
 int main(int argc, const char *argv[])
 {
+  (void) argc;
+  (void) argv;
   struct sigaction sa;
 
   sigemptyset(&sa.sa_mask);

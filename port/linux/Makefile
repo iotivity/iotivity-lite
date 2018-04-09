@@ -101,6 +101,10 @@ ifneq ($(findstring cygwin,$(shell $(CC) -dumpmachine)),)
 	CFLAGS := $(filter-out -fPIC,$(CFLAGS)) -D__linux__
 endif
 
+ifeq ($(TCP),1)
+	CFLAGS += -DOC_TCP
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS := libiotivity-constrained-server$(IOT_NAME_SUFFIX).a libiotivity-constrained-client$(IOT_NAME_SUFFIX).a \

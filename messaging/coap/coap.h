@@ -82,12 +82,18 @@ enum
 #define IS_OPTION(packet, opt)                                                 \
   ((packet)->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE)))
 
+/* enum value for coap transport type  */
+typedef enum {
+  COAP_TRANSPORT_UDP,
+  COAP_TRANSPORT_TCP
+} coap_transport_type_t;
+
 /* parsed message struct */
 typedef struct
 {
   uint8_t *buffer; /* pointer to CoAP header / incoming packet buffer / memory
                       to serialize packet */
-
+  coap_transport_type_t transport_type;
   uint8_t version;
   coap_message_type_t type;
   uint8_t code;
@@ -135,7 +141,7 @@ typedef struct
   const char *uri_query;
   uint8_t if_none_match;
 
-  uint16_t payload_len;
+  uint32_t payload_len;
   uint8_t *payload;
 } coap_packet_t;
 
@@ -189,11 +195,11 @@ extern char *coap_error_message;
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
-void coap_init_message(void *packet, coap_message_type_t type, uint8_t code,
+void coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
                        uint16_t mid);
 size_t coap_serialize_message(void *packet, uint8_t *buffer);
 void coap_send_message(oc_message_t *message);
-coap_status_t coap_parse_message(void *request, uint8_t *data,
+coap_status_t coap_udp_parse_message(void *request, uint8_t *data,
                                  uint16_t data_len);
 
 int coap_get_query_variable(void *packet, const char *name,
@@ -285,5 +291,13 @@ int coap_set_header_size1(void *packet, uint32_t size);
 
 int coap_get_payload(void *packet, const uint8_t **payload);
 int coap_set_payload(void *packet, const void *payload, size_t length);
+
+#ifdef OC_TCP
+void coap_tcp_init_message(void *packet, uint8_t code);
+
+size_t coap_tcp_get_packet_size(const uint8_t *data);
+
+coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len);
+#endif /* OC_TCP */
 
 #endif /* COAP_H */
