@@ -33,5 +33,7 @@ port/contiki/symbols.*
 port/openthread/output
 *.o
 *.cmd
+*.tmp
 .clang-format
 _clang-format
+
