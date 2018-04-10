@@ -52,15 +52,15 @@ configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
 {
   int reuse = 1;
   if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr option %d\n", errno);
+    OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
   if (bind(sock, (struct sockaddr *)sock_info, sizeof(*sock_info)) == -1) {
-    OC_ERR("binding socket %d\n", errno);
+    OC_ERR("binding socket %d", errno);
     return -1;
   }
   if (listen(sock, OC_TCP_LISTEN_BACKLOG) == -1) {
-    OC_ERR("listening socket %d\n", errno);
+    OC_ERR("listening socket %d", errno);
     return -1;
   }
 
@@ -73,7 +73,7 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
 
   socklen_t socklen = sizeof(*sock_info);
   if (getsockname(sock, (struct sockaddr *)sock_info, &socklen) == -1) {
-    OC_ERR("obtaining socket information %d\n", errno);
+    OC_ERR("obtaining socket information %d", errno);
     return -1;
   }
 
@@ -102,7 +102,7 @@ add_new_session(int sock, const oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
-    OC_ERR("session alloc failed\n");
+    OC_ERR("session alloc failed");
     return -1;
   }
 
@@ -123,10 +123,10 @@ accecpt_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   int new_socket = accept(fd, (struct sockaddr *)&receive_from, &receive_len);
   if (new_socket < 0) {
-    OC_ERR("failed to accept incoming TCP connection\n");
+    OC_ERR("failed to accept incoming TCP connection");
     return -1;
   }
-  OC_DBG("accepted incomming TCP connection\n");
+  OC_DBG("accepted incomming TCP connection");
 
   if (endpoint->flags & IPV6) {
     struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receive_from;
@@ -145,7 +145,7 @@ accecpt_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   FD_CLR(fd, setfds);
   if (add_new_session(new_socket, endpoint) < 0) {
-    OC_ERR("recorded new TCP session\n");
+    OC_ERR("recorded new TCP session");
     close(new_socket);
     return -1;
   }
@@ -163,11 +163,11 @@ find_session_by_endpoint(oc_endpoint_t *endpoint)
     session = session->next;
   }
   if (!session) {
-    OC_DBG("could not find ongoing TCP session for endpoint:\n");
+    OC_DBG("could not find ongoing TCP session for endpoint:");
     OC_LOGipaddr(*endpoint);
     return NULL;
   }
-  OC_DBG("found TCP session for endpoint:\n");
+  OC_DBG("found TCP session for endpoint:");
   OC_LOGipaddr(*endpoint);
   return session;
 }
@@ -180,10 +180,10 @@ get_ready_to_read_session(fd_set *setfds)
     session = session->next;
   }
   if (!session) {
-    OC_DBG("No exist TCP session\n");
+    OC_DBG("No exist TCP session");
     return NULL;
   }
-  OC_DBG("The session is found\n");
+  OC_DBG("The session is found");
   return session;
 }
 
@@ -248,10 +248,10 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } else if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
     if (len < 0) {
-      OC_ERR("read error! %d\n", errno);
+      OC_ERR("read error! %d", errno);
       return TCP_STATUS_ERROR;
     }
-    OC_DBG("received new connection event [%.*s]\n", len,
+    OC_DBG("received new connection event [%.*s]", len,
            (char *)message->data);
     return TCP_STATUS_NONE;
   }
@@ -259,7 +259,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   // find session.
   tcp_session_t *session = get_ready_to_read_session(fds);
   if (!session) {
-    OC_DBG("could not find TCP session socket in fd set\n");
+    OC_DBG("could not find TCP session socket in fd set");
     return TCP_STATUS_NONE;
   }
 
@@ -271,14 +271,14 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     int count =
       recv(session->sock, message->data + message->length, want_read, 0);
     if (count < 0) {
-      OC_ERR("recv error! %d\n", errno);
+      OC_ERR("recv error! %d", errno);
       FD_CLR(session->sock, &dev->rfds);
       close(session->sock);
       oc_list_remove(session_list, session);
       oc_memb_free(&tcp_session_s, session);
       return TCP_STATUS_ERROR;
     } else if (count == 0) {
-      OC_DBG("peer closed TCP session\n");
+      OC_DBG("peer closed TCP session");
       FD_CLR(session->sock, &dev->rfds);
       close(session->sock);
       oc_list_remove(session_list, session);
@@ -286,7 +286,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       return TCP_STATUS_NONE;
     }
 
-    OC_DBG("recv(): %d bytes.\n", count);
+    OC_DBG("recv(): %d bytes.", count);
     message->length += (size_t)count;
     want_read -= (size_t)count;
 
@@ -294,12 +294,12 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       total_length = get_total_length_from_header(message, &session->endpoint);
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)\n",
+        OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)",
                total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
-        OC_ERR("It may occur buffer overflow.\n");
+        OC_ERR("It may occur buffer overflow.");
         return TCP_STATUS_ERROR;
       }
-      OC_DBG("tcp packet total length : %ld bytes.\n", total_length);
+      OC_DBG("tcp packet total length : %ld bytes.", total_length);
 
       want_read = total_length - (size_t)count;
     }
@@ -345,14 +345,14 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
 
   socklen_t receiver_size = sizeof(*receiver);
   if (connect(sock, (struct sockaddr *)receiver, receiver_size) < 0) {
-    OC_ERR("could not initiate TCP connection\n");
+    OC_ERR("could not initiate TCP connection");
     close(sock);
     return -1;
   }
-  OC_DBG("successfully initiated TCP connection\n");
+  OC_DBG("successfully initiated TCP connection");
 
   if (add_new_session(sock, endpoint) < 0) {
-    OC_ERR("could not add new TCP session\n");
+    OC_ERR("could not add new TCP session");
     close(sock);
     return -1;
   }
@@ -366,7 +366,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
       write(dev->tcp.connect_pipe[1], oc_string(ep_str), oc_string_len(ep_str));
   } while (len == -1 && errno == EINTR);
   oc_free_string(&ep_str);
-  OC_DBG("sent connection event to receive thread\n");
+  OC_DBG("sent connection event to receive thread");
 
   return sock;
 }
@@ -380,7 +380,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
   if (send_sock < 0) {
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
-      OC_ERR("could not initiate new TCP session\n");
+      OC_ERR("could not initiate new TCP session");
       return;
     }
   }
@@ -390,20 +390,20 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     ssize_t send_len = send(send_sock, message->data + bytes_sent,
                             message->length - bytes_sent, 0);
     if (send_len < 0) {
-      OC_WRN("send() returned errno %d\n", errno);
+      OC_WRN("send() returned errno %d", errno);
       return;
     }
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %d bytes\n", bytes_sent);
+  OC_DBG("Sent %d bytes", bytes_sent);
 }
 
 #ifdef OC_IPV4
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter IPv4 for device %d\n", dev->device);
+  OC_DBG("Initializing TCP adapter IPv4 for device %d", dev->device);
 
   memset(&dev->tcp.server4, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in *l = (struct sockaddr_in *)&dev->tcp.server4;
@@ -422,44 +422,44 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
   dev->tcp.server4_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
   if (dev->tcp.server4_sock < 0) {
-    OC_ERR("creating TCP server socket\n");
+    OC_ERR("creating TCP server socket");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->tcp.secure4_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (dev->tcp.secure4_sock < 0) {
-    OC_ERR("creating TCP secure socket\n");
+    OC_ERR("creating TCP secure socket");
     return -1;
   }
 #endif /* OC_SECURITY */
 
   if (configure_tcp_socket(dev->tcp.server4_sock, &dev->tcp.server4) < 0) {
-    OC_ERR("set socket option in server socket\n");
+    OC_ERR("set socket option in server socket");
     return -1;
   }
 
   if (get_assigned_tcp_port(dev->tcp.server4_sock, &dev->tcp.server4) < 0) {
-    OC_ERR("get port for server socket\n");
+    OC_ERR("get port for server socket");
     return -1;
   }
   dev->tcp.port4 = ntohs(((struct sockaddr_in *)&dev->tcp.server4)->sin_port);
 
 #ifdef OC_SECURITY
   if (configure_tcp_socket(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0) {
-    OC_ERR("set socket option in secure socket\n");
+    OC_ERR("set socket option in secure socket");
     return -1;
   }
 
   if (get_assigned_tcp_port(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0) {
-    OC_ERR("get port for secure socket\n");
+    OC_ERR("get port for secure socket");
     return -1;
   }
   dev->tcp.tls4_port =
     ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized TCP adapter IPv4 for device %d\n",
+  OC_DBG("Successfully initialized TCP adapter IPv4 for device %d",
          dev->device);
 
   return 0;
@@ -469,7 +469,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter for device %d\n", dev->device);
+  OC_DBG("Initializing TCP adapter for device %d", dev->device);
 
   memset(&dev->tcp.server, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)&dev->tcp.server;
@@ -488,37 +488,37 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   dev->tcp.server_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 
   if (dev->tcp.server_sock < 0) {
-    OC_ERR("creating TCP server socket\n");
+    OC_ERR("creating TCP server socket");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->tcp.secure_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
   if (dev->tcp.secure_sock < 0) {
-    OC_ERR("creating TCP secure socket\n");
+    OC_ERR("creating TCP secure socket");
     return -1;
   }
 #endif /* OC_SECURITY */
 
   if (configure_tcp_socket(dev->tcp.server_sock, &dev->tcp.server) < 0) {
-    OC_ERR("set socket option in server socket\n");
+    OC_ERR("set socket option in server socket");
     return -1;
   }
 
   if (get_assigned_tcp_port(dev->tcp.server_sock, &dev->tcp.server) < 0) {
-    OC_ERR("get port for server socket\n");
+    OC_ERR("get port for server socket");
     return -1;
   }
   dev->tcp.port = ntohs(((struct sockaddr_in *)&dev->tcp.server)->sin_port);
 
 #ifdef OC_SECURITY
   if (configure_tcp_socket(dev->tcp.secure_sock, &dev->tcp.secure) < 0) {
-    OC_ERR("set socket option in secure socket\n");
+    OC_ERR("set socket option in secure socket");
     return -1;
   }
 
   if (get_assigned_tcp_port(dev->tcp.secure_sock, &dev->tcp.secure) < 0) {
-    OC_ERR("get port for secure socket\n");
+    OC_ERR("get port for secure socket");
     return -1;
   }
   dev->tcp.tls_port = ntohs(((struct sockaddr_in *)&dev->tcp.secure)->sin_port);
@@ -526,27 +526,27 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 
 #ifdef OC_IPV4
   if (tcp_connectivity_ipv4_init(dev) != 0) {
-    OC_ERR("Could not initialize IPv4 for TCP\n");
+    OC_ERR("Could not initialize IPv4 for TCP");
   }
 #endif /* OC_IPV4 */
 
   if (pipe(dev->tcp.connect_pipe) < 0) {
-    OC_ERR("Could not initialize connection pipe\n");
+    OC_ERR("Could not initialize connection pipe");
   }
 
-  OC_DBG("=======tcp port info.========\n");
-  OC_DBG("  ipv6 port   : %u\n", dev->tcp.port);
+  OC_DBG("=======tcp port info.========");
+  OC_DBG("  ipv6 port   : %u", dev->tcp.port);
 #ifdef OC_SECURITY
-  OC_DBG("  ipv6 secure : %u\n", dev->tcp.tls_port);
+  OC_DBG("  ipv6 secure : %u", dev->tcp.tls_port);
 #endif
 #ifdef OC_IPV4
-  OC_DBG("  ipv4 port   : %u\n", dev->tcp.port4);
+  OC_DBG("  ipv4 port   : %u", dev->tcp.port4);
 #ifdef OC_SECURITY
-  OC_DBG("  ipv4 secure : %u\n", dev->tcp.tls4_port);
+  OC_DBG("  ipv4 secure : %u", dev->tcp.tls4_port);
 #endif
 #endif
 
-  OC_DBG("Successfully initialized TCP adapter for device %d\n", dev->device);
+  OC_DBG("Successfully initialized TCP adapter for device %d", dev->device);
 
   return 0;
 }
@@ -580,7 +580,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
     session = next;
   }
 
-  OC_DBG("oc_tcp_connectivity_shutdown for device %d\n", dev->device);
+  OC_DBG("oc_tcp_connectivity_shutdown for device %d", dev->device);
 }
 
 #endif /* OC_TCP */

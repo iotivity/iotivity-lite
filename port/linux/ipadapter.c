@@ -307,6 +307,7 @@ static void *network_event_thread(void *data) {
   if (dev->device == 0) {
     FD_SET(ifchange_sock, &dev->rfds);
   }
+  FD_SET(dev->shutdown_pipe[0], &dev->rfds);
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -328,9 +329,18 @@ static void *network_event_thread(void *data) {
   int i, n;
 
   while (dev->terminate != 1) {
-    len = sizeof(client);
     setfds = dev->rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+
+    if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
+      char buf;
+      // write to pipe shall not block - so read the byte we wrote
+      (void)read(dev->shutdown_pipe[0], &buf, 1);
+    }
+
+    if (dev->terminate) {
+      break;
+    }
 
     for (i = 0; i < n; i++) {
       if (dev->device == 0) {
@@ -884,6 +894,11 @@ int oc_connectivity_init(int device) {
 #endif /* !OC_DYNAMIC_ALLOCATION */
   dev->device = device;
 
+  if (pipe(dev->shutdown_pipe) < 0) {
+    OC_ERR("shutdown pipe: %d", errno);
+    return -1;
+  }
+
   memset(&dev->mcast, 0, sizeof(struct sockaddr_storage));
   memset(&dev->server, 0, sizeof(struct sockaddr_storage));
 
@@ -987,21 +1002,21 @@ int oc_connectivity_init(int device) {
   }
 #endif /* OC_IPV4 */
 
-  OC_DBG("=======ip port info.========\n");
-  OC_DBG("  ipv6 port   : %u\n", dev->port);
+  OC_DBG("=======ip port info.========");
+  OC_DBG("  ipv6 port   : %u", dev->port);
 #ifdef OC_SECURITY
-  OC_DBG("  ipv6 secure : %u\n", dev->dtls_port);
+  OC_DBG("  ipv6 secure : %u", dev->dtls_port);
 #endif
 #ifdef OC_IPV4
-  OC_DBG("  ipv4 port   : %u\n", dev->port4);
+  OC_DBG("  ipv4 port   : %u", dev->port4);
 #ifdef OC_SECURITY
-  OC_DBG("  ipv4 secure : %u\n", dev->dtls4_port);
+  OC_DBG("  ipv4 secure : %u", dev->dtls4_port);
 #endif
 #endif
 
 #ifdef OC_TCP
   if (oc_tcp_connectivity_init(dev) != 0) {
-    OC_ERR("Could not initialize TCP adapter\n");
+    OC_ERR("Could not initialize TCP adapter");
   }
 #endif /* OC_TCP */
 
@@ -1045,6 +1060,7 @@ oc_connectivity_shutdown(int device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;
+  (void)write(dev->shutdown_pipe[1], "\n", 1);
 
   close(dev->server_sock);
   close(dev->mcast_sock);
@@ -1065,8 +1081,10 @@ oc_connectivity_shutdown(int device)
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-  pthread_cancel(dev->event_thread);
   pthread_join(dev->event_thread, NULL);
+
+  close(dev->shutdown_pipe[1]);
+  close(dev->shutdown_pipe[0]);
 
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_list_remove(ip_contexts, dev);
