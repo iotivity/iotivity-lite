@@ -372,4 +372,45 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 
   return status;
 }
+
+bool
+oc_do_ip_discovery_with_endpoint(const char *rt, oc_discovery_handler_t handler,
+                                 oc_endpoint_t *endpoint, void *user_data)
+{
+  if (!endpoint) {
+    OC_WRN("endpoint field should required.");
+    return false;
+  }
+
+  oc_client_handler_t client_handler;
+  client_handler.discovery = handler;
+
+  oc_string_t uri_query;
+  memset(&uri_query, 0, sizeof(oc_string_t));
+  if (rt && strlen(rt) > 0) {
+    oc_concat_strings(&uri_query, "rt=", rt);
+  }
+
+  oc_client_cb_t *cb =
+    oc_ri_alloc_client_cb("/oic/res", endpoint, OC_GET, oc_string(uri_query),
+                          client_handler, LOW_QOS, user_data);
+
+  if (!cb)
+    return false;
+
+  cb->discovery = true;
+
+  bool status = false;
+
+  status = prepare_coap_request(cb);
+
+  if (status)
+    status = dispatch_coap_request();
+
+  if (oc_string_len(uri_query) > 0) {
+    oc_free_string(&uri_query);
+  }
+
+  return status;
+}
 #endif /* OC_CLIENT */
