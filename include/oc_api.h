@@ -311,6 +311,18 @@ int oc_notify_observers(oc_resource_t *resource);
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
 
+/**
+  @brief  Discover resources in specific endpoint.
+  @param  rt         Resource type query to discover.
+  @param  handler    The callback for discovered resources. Must not be NULL.
+  @param  endpoint   Endpoint at which to discover resources. Must not be NULL.
+  @param  user_data  Callback parameter for user defined value.
+  @return Returns true if it successfully makes and dispatches a coap packet.
+*/
+bool oc_do_ip_discovery_at_endpoint(const char *rt,
+                                    oc_discovery_handler_t handler,
+                                    oc_endpoint_t *endpoint, void *user_data);
+
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
