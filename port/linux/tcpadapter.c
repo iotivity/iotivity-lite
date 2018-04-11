@@ -359,14 +359,19 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   FD_SET(sock, &dev->rfds);
 
   oc_string_t ep_str;
-  oc_endpoint_to_string(endpoint, &ep_str);
-  ssize_t len = 0;
-  do {
-    len =
-      write(dev->tcp.connect_pipe[1], oc_string(ep_str), oc_string_len(ep_str));
-  } while (len == -1 && errno == EINTR);
-  oc_free_string(&ep_str);
-  OC_DBG("sent connection event to receive thread\n");
+  if (oc_endpoint_to_string(endpoint, &ep_str) == 0) {
+    ssize_t len = 0;
+    do {
+      len = write(dev->tcp.connect_pipe[1], oc_string(ep_str),
+                  oc_string_len(ep_str));
+    } while (len == -1 && errno == EINTR);
+    oc_free_string(&ep_str);
+    OC_DBG("sent connection event to receive thread\n");
+  } else {
+    OC_ERR("could not create endpoint string");
+    close(sock);
+    return -1;
+  }
 
   return sock;
 }
