@@ -46,13 +46,18 @@ OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 OBT = onboarding_tool
+
+SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c) 
+CFLAGS_ES=-I../../service/easy-setup/enrollee/include
+CFLAGS_ES+=-I../../service/easy-setup/enrollee/
+OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -90,13 +95,18 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a \
+		   libiotivity-constrained-easysetup.a
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
 all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 .PHONY: clean
+
+obj/es/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES}
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -131,6 +141,9 @@ libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
+
+libiotivity-constrained-easysetup.a: $(OBJ_ES) libiotivity-constrained-server.a 
+	$(AR) -rcs $@ $(OBJ_ES)
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
