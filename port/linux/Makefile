@@ -1,6 +1,8 @@
 CC = gcc
+CXX = g++
 SED = sed
 INSTALL = install
+MAKE = make
 CHECK_SCRIPT = ../../tools/check.py
 
 DESTDIR ?= /usr/local
@@ -11,6 +13,21 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+
+GTEST_DIR = ../../deps/gtest
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
+GTEST = gtest_build
+TEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive
+IOTIVITY_ROOT_DIR = ../..
+IOTIVITY_HEADER_DIR = $(IOTIVITY_ROOT_DIR)/include
+OUT_DIR = ./
+API_TEST_DIR = $(IOTIVITY_ROOT_DIR)/api/unittest
+API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+UNIT_TESTS =  apitest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -94,9 +111,19 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(GTEST) $(UNIT_TESTS)
 
-.PHONY: clean
+.PHONY: $(GTEST) clean
+
+$(GTEST):
+	$(MAKE) --directory=$(GTEST_DIR)/make
+
+$(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(IOTIVITY_HEADER_DIR) -I$(IOTIVITY_ROOT_DIR) -I$(OUT_DIR) -I$(IOTIVITY_ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(TEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(IOTIVITY_HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L../../port/linux -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -219,10 +246,11 @@ $(MBEDTLS_PATCH_FILE):
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	cd $(GTEST_DIR)/make && $(MAKE) clean
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
