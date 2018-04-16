@@ -31,6 +31,8 @@ MBEDTLS_DIR := ../../deps/mbedtls
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
+SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
+SRC_RD_CLIENT=$(wildcard ../../service/resource-directory/client/src/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/config.h
@@ -42,11 +44,15 @@ HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
+CFLAGS_CA=-I../../service/cloud-access/include
+CFLAGS_RD_CLIENT=-I../../service/resource-directory/client/include
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
+OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
+OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
@@ -90,7 +96,9 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+		   libiotivity-constrained-client-server.a libiotivity-constrained-client-server.so \
+		   libiotivity-constrained-cloudaccess.a libiotivity-constrained-cloudaccess.so \
+		   libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
@@ -114,6 +122,14 @@ obj/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+obj/ca/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CA}
+
+obj/rd_client/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
@@ -131,6 +147,18 @@ libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
+
+libiotivity-constrained-cloudaccess.a: $(OBJ_CA)
+	$(AR) -rcs $@ $(OBJ_CA)
+
+libiotivity-constrained-cloudaccess.so: $(OBJ_CA)
+	$(CC) -shared -o $@ $(OBJ_CA) $(LIBS)
+
+libiotivity-constrained-rd-client.a: $(OBJ_RD_CLIENT)
+	$(AR) -rcs $@ $(OBJ_RD_CLIENT)
+
+libiotivity-constrained-rd-client.so: $(OBJ_RD_CLIENT)
+	$(CC) -shared -o $@ $(OBJ_RD_CLIENT) $(LIBS)
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
