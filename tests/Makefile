@@ -35,4 +35,6 @@ ${CURDIR}/prep-stamp.tmp:
 	git submodule update
 	touch $@
 
+test: rule/test
+
 .PHONY: default help
