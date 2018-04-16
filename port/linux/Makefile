@@ -94,9 +94,11 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 .PHONY: clean
+
+${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
