@@ -1,0 +1,15 @@
+#
+# For a description of the syntax of this configuration file,
+# see kconfig-language at https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+#
+
+config ENABLE_IOTIVIVIY_CONSTRAINED
+	bool "IoTivity Constrained"
+	default n
+	---help---
+		Enable IoTivity-constrained framework
+
+if ENABLE_IOTIVIVIY_CONSTRAINED
+
+endif #ENABLE_IOTIVIVIY_CONSTRAINED
+
