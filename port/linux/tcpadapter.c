@@ -37,6 +37,9 @@
 
 #define TLS_HEADER_SIZE 5
 
+#define DEFAULT_RECEIVE_SIZE                                                   \
+  (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
 typedef struct tcp_session
 {
   struct tcp_session *next;
@@ -265,7 +268,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
   // receive message.
   size_t total_length = 0;
-  size_t want_read = OC_PDU_SIZE;
+  size_t want_read = DEFAULT_RECEIVE_SIZE;
   message->length = 0;
   do {
     int count =
