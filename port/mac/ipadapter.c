@@ -98,7 +98,7 @@ void
 oc_network_event_handler_mutex_init(void)
 {
   if (pthread_mutex_init(&mutex, NULL) != 0) {
-    OC_ERR("initializing network event handler mutex\n");
+    OC_ERR("initializing network event handler mutex");
   }
 }
 
@@ -281,7 +281,7 @@ network_event_thread(void *data)
 
       OC_DBG("Incoming message from ");
       OC_LOGipaddr(message->endpoint);
-      OC_DBG("\n");
+      OC_DBG("");
 
       oc_network_event(message);
     }
@@ -305,11 +305,11 @@ get_interface_addresses(uint16_t port
     struct ifaddrs *ifs = NULL, *interface = NULL;
     int io_socket6 = -1;
     if (getifaddrs(&ifs) < 0) {
-      OC_ERR("querying interfaces: %d\n", errno);
+      OC_ERR("querying interfaces: %d", errno);
       goto done;
     }
     if ((io_socket6 = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
-      OC_ERR("cannot open AF_INET6 socket: %d\n", errno);
+      OC_ERR("cannot open AF_INET6 socket: %d", errno);
       goto done;
     }
 
@@ -317,7 +317,7 @@ get_interface_addresses(uint16_t port
       if (interface->ifa_addr == NULL ||
           (interface->ifa_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
           OCF_IF_FLAGS) {
-        OC_DBG("skipping %s\n", (interface->ifa_name ? interface->ifa_name : "<none>"));
+        OC_DBG("skipping %s", (interface->ifa_name ? interface->ifa_name : "<none>"));
         continue;
       }
 
@@ -329,7 +329,7 @@ get_interface_addresses(uint16_t port
         strncpy(ifreq6.ifr_name, interface->ifa_name, sizeof(ifreq6.ifr_name));
         ifreq6.ifr_addr = *addr;
         if (ioctl(io_socket6, SIOCGIFAFLAG_IN6, &ifreq6) < 0) {
-          OC_ERR("cannot get flags for %s\n", interface->ifa_name);
+          OC_ERR("cannot get flags for %s", interface->ifa_name);
           continue;
         }
 
@@ -401,7 +401,7 @@ oc_send_buffer(oc_message_t *message)
 {
   OC_DBG("Outgoing message to ");
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+  OC_DBG("");
 
   socklen_t receiver_size;
   struct sockaddr *receiver;
@@ -465,12 +465,12 @@ oc_send_buffer(oc_message_t *message)
         message->length - bytes_sent, 0, (struct sockaddr *)receiver,
         receiver_size);
     if (x < 0) {
-      OC_WRN("sendto() returned errno %d\n", errno);
+      OC_WRN("sendto() returned errno %d", errno);
       return;
     }
     bytes_sent += x;
   }
-  OC_DBG("Sent %d bytes\n", bytes_sent);
+  OC_DBG("Sent %d bytes", bytes_sent);
 }
 
 #ifdef OC_CLIENT
@@ -479,7 +479,7 @@ oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
   if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interfaces: %d\n", errno);
+    OC_ERR("querying interfaces: %d", errno);
     goto done;
   }
 
@@ -488,7 +488,7 @@ oc_send_discovery_request(oc_message_t *message)
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     if ((interface->ifa_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
         OCF_IF_FLAGS) {
-      OC_DBG("skipping %s\n", (interface->ifa_name ? interface->ifa_name : "<none>"));
+      OC_DBG("skipping %s", (interface->ifa_name ? interface->ifa_name : "<none>"));
       continue;
     }
     if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
@@ -498,7 +498,7 @@ oc_send_discovery_request(oc_message_t *message)
         int mif = addr->sin6_scope_id;
         if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
                        sizeof(mif)) == -1) {
-          OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d\n",
+          OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d",
                  errno);
           goto done;
         }
@@ -510,7 +510,7 @@ oc_send_discovery_request(oc_message_t *message)
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
       if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF,
                      &addr->sin_addr, sizeof(addr->sin_addr)) == -1) {
-        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d\n",
+        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d",
                errno);
         goto done;
       }
@@ -529,7 +529,7 @@ done:
 static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing IPv4 connectivity for device %d\n", dev->device);
+  OC_DBG("Initializing IPv4 connectivity for device %d", dev->device);
   memset(&dev->mcast4, 0, sizeof(dev->mcast4));
   memset(&dev->server4, 0, sizeof(dev->server4));
 
@@ -552,7 +552,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 
   dev->secure4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (dev->secure4_sock < 0) {
-    OC_ERR("creating secure IPv4 socket\n");
+    OC_ERR("creating secure IPv4 socket");
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -561,20 +561,20 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (dev->server4_sock < 0 || dev->mcast4_sock < 0) {
-    OC_ERR("creating IPv4 server sockets\n");
+    OC_ERR("creating IPv4 server sockets");
     return -1;
   }
 
   if (bind(dev->server4_sock, (struct sockaddr *)&dev->server4,
            sizeof(dev->server4)) == -1) {
-    OC_ERR("binding server4 socket %d\n", errno);
+    OC_ERR("binding server4 socket %d", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(dev->server4);
   if (getsockname(dev->server4_sock, (struct sockaddr *)&dev->server4,
                   &socklen) == -1) {
-    OC_ERR("obtaining server4 socket information %d\n", errno);
+    OC_ERR("obtaining server4 socket information %d", errno);
     return -1;
   }
 
@@ -585,53 +585,53 @@ connectivity_ipv4_init(ip_context_t *dev)
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   if (setsockopt(dev->mcast4_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
-    OC_ERR("joining IPv4 multicast group %d\n", errno);
+    OC_ERR("joining IPv4 multicast group %d", errno);
     return -1;
   }
 
   int reuse = 1;
   if (setsockopt(dev->mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
                  sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr IPv4 option %d\n", errno);
+    OC_ERR("setting reuseaddr IPv4 option %d", errno);
     return -1;
   }
   // Mac requires also an explicit set of re-use port.
   if (setsockopt(dev->mcast4_sock, SOL_SOCKET, SO_REUSEPORT, &reuse,
 		 sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseport IPv4 option %d\n", errno);
+    OC_ERR("setting reuseport IPv4 option %d", errno);
     return -1;
   }
 
   if (bind(dev->mcast4_sock, (struct sockaddr *)&dev->mcast4,
 	   sizeof(dev->mcast4)) == -1) {
-    OC_ERR("binding mcast IPv4 socket %d\n", errno);
+    OC_ERR("binding mcast IPv4 socket %d", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
                  sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr IPv4 security option %d\n", errno);
+    OC_ERR("setting reuseaddr IPv4 security option %d", errno);
     return -1;
   }
   // Mac requires also an explicit set of re-use port.
   if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEPORT, &reuse,
 		 sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseport IPv4 security option %d\n", errno);
+    OC_ERR("setting reuseport IPv4 security option %d", errno);
     return -1;
   }
 
   socklen = sizeof(dev->secure4);
   if (getsockname(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
                   &socklen) == -1) {
-    OC_ERR("obtaining DTLS4 socket information %d\n", errno);
+    OC_ERR("obtaining DTLS4 socket information %d", errno);
     return -1;
   }
 
   dev->dtls4_port = ntohs(sm->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized IPv4 connectivity for device %d\n",
+  OC_DBG("Successfully initialized IPv4 connectivity for device %d",
          dev->device);
 
   return 0;
@@ -646,7 +646,7 @@ add_mcast_sock_to_ipv6_multicast_group(int sock, const uint8_t *addr)
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, 16);
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
                  sizeof(mreq)) == -1) {
-    OC_ERR("joining IPv6 multicast group %d\n", errno);
+    OC_ERR("joining IPv6 multicast group %d", errno);
     return -1;
   }
   return 0;
@@ -655,7 +655,7 @@ add_mcast_sock_to_ipv6_multicast_group(int sock, const uint8_t *addr)
 int
 oc_connectivity_init(int device)
 {
-  OC_DBG("Initializing connectivity for device %d\n", device);
+  OC_DBG("Initializing connectivity for device %d", device);
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
   if (!dev) {
@@ -692,14 +692,14 @@ oc_connectivity_init(int device)
   dev->mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
   if (dev->server_sock < 0 || dev->mcast_sock < 0) {
-    OC_ERR("creating server sockets\n");
+    OC_ERR("creating server sockets");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (dev->secure_sock < 0) {
-    OC_ERR("creating secure socket\n");
+    OC_ERR("creating secure socket");
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -707,20 +707,20 @@ oc_connectivity_init(int device)
   int opt = 1;
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt,
                  sizeof(opt)) == -1) {
-    OC_ERR("setting sock option %d\n", errno);
+    OC_ERR("setting sock option %d", errno);
     return -1;
   }
 
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
            sizeof(dev->server)) == -1) {
-    OC_ERR("binding server socket %d\n", errno);
+    OC_ERR("binding server socket %d", errno);
     return -1;
   }
 
   socklen_t socklen = sizeof(dev->server);
   if (getsockname(dev->server_sock, (struct sockaddr *)&dev->server,
                   &socklen) == -1) {
-    OC_ERR("obtaining server socket information %d\n", errno);
+    OC_ERR("obtaining server socket information %d", errno);
     return -1;
   }
 
@@ -742,43 +742,43 @@ oc_connectivity_init(int device)
   int reuse = 1;
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
 		 sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr IPv6 option %d\n", errno);
+    OC_ERR("setting reuseaddr IPv6 option %d", errno);
     return -1;
   }
   // Mac requires also an explicit set of re-use port.
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEPORT, &reuse,
 		 sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseport IPv6 option %d\n", errno);
+    OC_ERR("setting reuseport IPv6 option %d", errno);
     return -1;
   }
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
            sizeof(dev->mcast)) == -1) {
-    OC_ERR("binding mcast socket %d\n", errno);
+    OC_ERR("binding mcast socket %d", errno);
     return -1;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
                  sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr IPv6 security option %d\n", errno);
+    OC_ERR("setting reuseaddr IPv6 security option %d", errno);
     return -1;
   }
   // Mac requires also an explicit set of re-use port.
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEPORT, &reuse,
 		 sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseport IPv6 security option %d\n", errno);
+    OC_ERR("setting reuseport IPv6 security option %d", errno);
     return -1;
   }
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
            sizeof(dev->secure)) == -1) {
-    OC_ERR("binding IPv6 secure socket %d\n", errno);
+    OC_ERR("binding IPv6 secure socket %d", errno);
     return -1;
   }
 
   socklen = sizeof(dev->secure);
   if (getsockname(dev->secure_sock, (struct sockaddr *)&dev->secure,
                   &socklen) == -1) {
-    OC_ERR("obtaining secure socket information %d\n", errno);
+    OC_ERR("obtaining secure socket information %d", errno);
     return -1;
   }
 
@@ -787,17 +787,17 @@ oc_connectivity_init(int device)
 
 #ifdef OC_IPV4
   if (connectivity_ipv4_init(dev) != 0) {
-    OC_ERR("Could not initialize IPv4\n");
+    OC_ERR("Could not initialize IPv4");
   }
 #endif /* OC_IPV4 */
 
   if (pthread_create(&dev->event_thread, NULL, &network_event_thread, dev) !=
       0) {
-    OC_ERR("creating network polling thread\n");
+    OC_ERR("creating network polling thread");
     return -1;
   }
 
-  OC_DBG("Successfully initialized connectivity for device %d\n", device);
+  OC_DBG("Successfully initialized connectivity for device %d", device);
 
   return 0;
 }
@@ -831,5 +831,5 @@ oc_connectivity_shutdown(int device)
   free(dev);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG("oc_connectivity_shutdown for device %d\n", device);
+  OC_DBG("oc_connectivity_shutdown for device %d", device);
 }

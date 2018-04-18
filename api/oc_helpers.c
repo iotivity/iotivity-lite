@@ -144,7 +144,7 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
       success = oc_string_array_set_item(*ocstringarray, str, i);
     }
     else {
-      OC_WRN("insufficient memory to add increase string array size\n");
+      OC_WRN("insufficient memory to add increase string array size");
     }
   }
 #endif

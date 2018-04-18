@@ -36,6 +36,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
+MBEDTLS_DIR := ../../deps/mbedtls
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
@@ -79,6 +80,7 @@ endif
 
 ifeq ($(SECURE),1)
 	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
 	SRC_COMMON += ${DTLS}
 	SRC += oc_obt.c
@@ -115,11 +117,12 @@ PC := iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
-default: all
 
 .PHONY: clean
 
-${OBJDIR}/%.o: %.c
+${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
+
+obj/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS}
 
@@ -236,11 +239,22 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),'
 
+ifeq ($(SECURE),1)
+$(MBEDTLS_PATCH_FILE):
+	git submodule update --init && \
+	cd $(MBEDTLS_DIR) && \
+	git clean -fdx . && \
+	git reset --hard && \
+	patch -r - -s -N -p1 < ../../patches/mbedtls_ocf_patch_1 && \
+	patch -r - -s -N -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2 && \
+	echo patches applied > $(MBEDTLS_PATCH_FILE)
+endif
+
 clean:
 	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	$(RM) -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS}
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
