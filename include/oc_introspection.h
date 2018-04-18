@@ -17,6 +17,32 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
+/**
+ * @brief functions for introspection .
+ * @file
+ *
+ * the IDD information is served up as encoded CBOR contents (e.g. read as is).
+ * the file is read and passed to the requesting client on each call.
+ * if the file size is to big for the buffer, then an internal error is given back.
+*/
+
+
+/**
+  @brief sets the filename of the introspection resource.
+  if not set the file is "server_introspection.dat" is read from the location where the executable resides
+
+  @param device index of the device to which the resource is to be created
+  @param filename filename of the IDD file in cbor.
+*/
+void oc_set_introspection_file(int device, const char* filename);
+
+
+/**
+  @brief Creation of the oic.wk.introspection resource.
+
+  @param device index of the device to which the resource is to be created
+*/
 void oc_create_introspection_resource(int device);
+
 
 #endif /* OC_INTROSPECTION_H */
