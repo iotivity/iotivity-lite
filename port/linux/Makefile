@@ -122,7 +122,7 @@ all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
-obj/%.o: %.c
+${OBJDIR}/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS}
 
