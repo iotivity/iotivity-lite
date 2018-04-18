@@ -91,7 +91,7 @@ ocInstance::onPollRequest()
 {
   oc_clock_time_t time = oc_main_poll();
 
-  OC_DBG("Poll %lu\n", time);
+  OC_DBG("Poll %lu", time);
 
   if (time){
     mPollTimer.StartAt(time, 0);

@@ -43,16 +43,17 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     message->endpoint.flags = IPV6;
     memcpy(message->endpoint.addr.ipv6.address, addr, 16);
     message->endpoint.addr.ipv6.port = port;
-
-    OC_DBG("Incoming message from ");
-    OC_LOGipaddr(message->endpoint);
-    OC_DBG("\n");
+#ifdef OC_DEBUG
+    PRINT("Incoming message from ");
+    PRINTipaddr(message->endpoint);
+    PRINT("\n\n");
+#endif /* OC_DEBUG */
 
     oc_network_event(message);
     return;
   }
 
-  OC_WRN("ipadapter: No free RX/TX buffers to handle incoming message\n");
+  OC_WRN("ipadapter: No free RX/TX buffers to handle incoming message");
 }
 
 static void
@@ -61,7 +62,7 @@ receive(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
         uint16_t receiver_port, const uint8_t *data, uint16_t datalen)
 {
   OC_DBG(
-    "ipadapter: Incoming message from network...dispatch for processing\n");
+    "ipadapter: Incoming message from network...dispatch for processing");
   handle_incoming_message((uint8_t *)data, datalen, (uint8_t *)sender_addr,
                           sender_port);
 }
@@ -94,9 +95,9 @@ set_global_address(void)
   uip_ip6addr(&mcastaddr, 0xff02, 0, 0, 0, 0, 0, 0, 0x0158);
   uip_ds6_maddr_t *rv = uip_ds6_maddr_add(&mcastaddr);
   if (rv)
-    OC_DBG("Joined OCF multicast group\n");
+    OC_DBG("Joined OCF multicast group");
   else
-    OC_WRN("Failed to join OCF multicast group\n");
+    OC_WRN("Failed to join OCF multicast group");
 
   return &ipaddr;
 }
@@ -113,9 +114,9 @@ create_rpl_dag(uip_ipaddr_t *ipaddr)
     dag = rpl_get_any_dag();
     uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
     rpl_set_prefix(dag, &prefix, 64);
-    OC_DBG("Created new RPL DAG\n");
+    OC_DBG("Created new RPL DAG");
   } else {
-    OC_WRN("Failed to create new RPL DAG\n");
+    OC_WRN("Failed to create new RPL DAG");
   }
 }
 
@@ -133,7 +134,7 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
 
   simple_udp_register(&server, OCF_SERVER_PORT_UNSECURED, NULL, 0, receive);
 
-  OC_DBG("ipadapter: Initialized ip_adapter_process\n");
+  OC_DBG("ipadapter: Initialized ip_adapter_process");
   while (ev != PROCESS_EVENT_EXIT) {
     PROCESS_WAIT_EVENT();
   }
@@ -143,9 +144,11 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
 void
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message to ");
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+#ifdef OC_DEBUG
+  PRINT("Outgoing message to ");
+  PRINTipaddr(message->endpoint);
+  PRINT("\n\n");
+#endif /* OC_DEBUG */
 
   simple_udp_sendto_port(
     &server, message->data, message->length,

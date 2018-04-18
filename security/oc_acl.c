@@ -325,22 +325,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
     if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
         memcmp(oc_string(resource->uri), "/oic/sec/acl2", 12) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid\n");
+      OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, doxm->rowneruuid.id, 16) == 0 &&
         memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid\n");
+      OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, pstat->rowneruuid.id, 16) == 0 &&
         memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid\n");
+      OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, creds->rowneruuid.id, 16) == 0 &&
         memcmp(oc_string(resource->uri), "/oic/sec/cred", 13) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid\n");
+      OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid");
       return true;
     }
   }
@@ -355,7 +355,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
       if (match) {
         permission |= oc_ace_get_permission(match, resource);
-        OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID\n",
+        OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
     } while (match);
@@ -370,7 +370,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
         if (match) {
           permission |= oc_ace_get_permission(match, resource);
           OC_DBG(
-            "oc_check_acl: Found ACE with permission %d for matching role\n",
+            "oc_check_acl: Found ACE with permission %d for matching role",
             permission);
         }
       } while (match);
@@ -387,7 +387,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       if (match) {
         permission |= oc_ace_get_permission(match, resource);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
-               "connection\n",
+               "connection",
                permission);
       }
     } while (match);
@@ -402,7 +402,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     if (match) {
       permission |= oc_ace_get_permission(match, resource);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
-             "connection\n",
+             "connection",
              permission);
     }
   } while (match);
@@ -545,14 +545,14 @@ new_ace:
   ace = oc_memb_alloc(&ace_l);
 
   if (!ace) {
-    OC_WRN("insufficient memory to add new ACE\n");
+    OC_WRN("insufficient memory to add new ACE");
     goto done;
   }
 
   OC_LIST_STRUCT_INIT(ace, resources);
 
   if (type == OC_SUBJECT_ROLE) {
-    OC_DBG("Adding ACE for role %s\n", oc_string(subject->role.role));
+    OC_DBG("Adding ACE for role %s", oc_string(subject->role.role));
     oc_new_string(&ace->subject.role.role, oc_string(subject->role.role),
                   oc_string_len(subject->role.role));
     if (oc_string_len(subject->role.authority) > 0) {
@@ -566,12 +566,12 @@ new_ace:
     if (type == OC_SUBJECT_UUID) {
       char c[37];
       oc_uuid_to_str(&ace->subject.uuid, c, 37);
-      OC_DBG("Adding ACE for subject %s\n", c);
+      OC_DBG("Adding ACE for subject %s", c);
     } else if (type == OC_SUBJECT_CONN) {
       if (ace->subject.conn == OC_CONN_ANON_CLEAR) {
-        OC_DBG("Adding ACE for anon-clear connection\n");
+        OC_DBG("Adding ACE for anon-clear connection");
       } else {
-        OC_DBG("Adding ACE for auth-crypt connection\n");
+        OC_DBG("Adding ACE for auth-crypt connection");
       }
     }
 #endif /* OC_DEBUG */
@@ -597,13 +597,13 @@ new_res:
 #ifdef OC_DEBUG
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
-      OC_DBG("Adding wildcard resource + with permission %d\n", permission);
+      OC_DBG("Adding wildcard resource + with permission %d", permission);
       break;
     case OC_ACE_WC_ALL_NON_DISCOVERABLE:
-      OC_DBG("Adding wildcard resource - with permission %d\n", permission);
+      OC_DBG("Adding wildcard resource - with permission %d", permission);
       break;
     case OC_ACE_WC_ALL:
-      OC_DBG("Adding wildcard resource * with permission %d\n", permission);
+      OC_DBG("Adding wildcard resource * with permission %d", permission);
       break;
     default:
       break;
@@ -612,7 +612,7 @@ new_res:
 
     if (href) {
       oc_new_string(&res->href, href, strlen(href));
-      OC_DBG("Adding resource %s with permission %d\n", href, permission);
+      OC_DBG("Adding resource %s with permission %d", href, permission);
     }
 
     if (rt) {
@@ -627,7 +627,7 @@ new_res:
 
     oc_list_add(ace->resources, res);
   } else {
-    OC_WRN("insufficient memory to add new resource to ACE\n");
+    OC_WRN("insufficient memory to add new resource to ACE");
   }
 
 done:
@@ -741,7 +741,7 @@ oc_sec_acl_default(int device)
         &resource->types, resource->interfaces, device);
     }
   }
-  OC_DBG("ACL for core resources initialized %d\n", success);
+  OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
 }
 
@@ -788,14 +788,14 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
         if (!from_storage && (ps->s == OC_DOS_RFNOP || ps->s == OC_DOS_RFPRO)) {
-          OC_ERR("oc_acl: Cannot set rowneruuid in RFNOP/RFPRO\n");
+          OC_ERR("oc_acl: Cannot set rowneruuid in RFNOP/RFPRO");
           return false;
         }
       }
       break;
     case OC_REP_OBJECT_ARRAY: {
       if (!from_storage && ps->s == OC_DOS_RFNOP) {
-        OC_ERR("oc_acl: Cannot provision ACE in RFNOP\n");
+        OC_ERR("oc_acl: Cannot provision ACE in RFNOP");
         return false;
       }
     } break;

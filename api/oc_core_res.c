@@ -268,7 +268,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   (void)data;
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
-    OC_ERR("device limit reached\n");
+    OC_ERR("device limit reached");
     return NULL;
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
@@ -344,7 +344,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_device_info[device_count].data = data;
 
   if (oc_connectivity_init(device_count) < 0) {
-    oc_abort("error initializing connectivity for device\n");
+    oc_abort("error initializing connectivity for device");
   }
 
   device_count++;

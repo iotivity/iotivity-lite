@@ -11,6 +11,9 @@ typedef uint64_t oc_clock_time_t;
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
 
+/* Maximum wait time for select function */
+#define SELECT_TIMEOUT_SEC (1)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
@@ -58,6 +61,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Maximum number of concurrent DTLS sessions */
 #define OC_MAX_DTLS_PEERS (1)
+
+/* Maximum number of peer for TCP channel */
+#define OC_MAX_TCP_PEERS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 

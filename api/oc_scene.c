@@ -72,7 +72,7 @@ oc_add_scene_mapping(oc_resource_t *scene_member,
       return true;
     }
     else {
-      OC_WRN("insufficient memory to create new scene mapping\n");
+      OC_WRN("insufficient memory to create new scene mapping");
     }
   }
   return false;
@@ -86,7 +86,7 @@ oc_scene_member_alloc(void)
     OC_LIST_STRUCT_INIT(member, scene_mapping);
     return member;
   }
-  OC_WRN("insufficient memory to create new scene member\n");
+  OC_WRN("insufficient memory to create new scene member");
   return NULL;
 }
 

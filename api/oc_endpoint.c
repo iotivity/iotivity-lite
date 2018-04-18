@@ -137,9 +137,9 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
       if (addr_idx > 0 && addr_idx <= 14) {
         ip[str_idx++] = ':';
       }
-    next_octect:
+    next_octet:
       if (addr_idx % 2 == 0 && addr[addr_idx] == 0) {
-        /* Skip zero octect */
+        /* Skip zero octet */
       } else if ((addr_idx % 2 == 0 ||
                   (addr_idx > 0 && addr[addr_idx - 1]) == 0) &&
                  addr[addr_idx] <= 0x0f) {
@@ -150,7 +150,7 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
       }
       addr_idx++;
       if (addr_idx % 2 != 0) {
-        goto next_octect;
+        goto next_octet;
       }
     }
   }
@@ -297,7 +297,7 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
   int str_idx = 0, addr_idx = 0, split = -1, seg_len = 0;
-  while (addr_idx < OC_IPV6_ADDRLEN - 2 && str_idx < (int)len) {
+  while (addr_idx < OC_IPV6_ADDRLEN - 1 && str_idx < (int)len) {
     if (split == -1 && strncmp(&address[str_idx], "::", 2) == 0) {
       split = addr_idx;
       str_idx += 2;

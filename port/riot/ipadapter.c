@@ -66,9 +66,11 @@ oc_network_event_handler_mutex_unlock(void)
 void oc_network_event_handler_mutex_destroy(void) {}
 
 void oc_send_buffer(oc_message_t *message) {
-  OC_DBG("Outgoing message to ");
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+#ifdef OC_DEBUG
+  PRINT("Outgoing message to ");
+  PRINTipaddr(message->endpoint);
+  PRINT("\n\n");
+#endif /* OC_DEBUG */
 
   conn_udp_sendto(message->data, message->length, local_addr, 16,
                   message->endpoint.addr.ipv6.address, 16, AF_INET6,
@@ -88,9 +90,11 @@ handle_incoming_message(uint8_t *buffer, int *size, uint8_t *addr,
     memcpy(message->endpoint.addr.ipv6.address, addr, 16);
     message->endpoint.addr.ipv6.port = *port;
 
-    OC_DBG("Incoming message from ");
-    OC_LOGipaddr(message->endpoint);
-    OC_DBG("\n");
+#ifdef OC_DEBUG
+    PRINT("Incoming message from ");
+    PRINTipaddr(message->endpoint);
+    PRINT("\n\n");
+#endif /* OC_DEBUG */
 
     oc_network_event(message);
   }
