@@ -817,14 +817,18 @@ obt_check_owned(oc_client_response_t *data)
 {
   oc_remove_delayed_callback(data->user_data, free_device);
 
-  bool owned = false;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return;
+  }
+
+  int owned = -1;
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 5 &&
           memcmp(oc_string(rep->name), "owned", 5) == 0) {
-        owned = rep->value.boolean;
+        owned = (int)rep->value.boolean;
       }
       break;
     default:
@@ -833,9 +837,13 @@ obt_check_owned(oc_client_response_t *data)
     rep = rep->next;
   }
 
+  if (owned == -1) {
+    return;
+  }
+
   oc_device_t *device = (oc_device_t *)data->user_data;
 
-  if (!owned) {
+  if (owned == 0) {
     oc_list_add(oc_cache, device);
   } else {
     /* Device is owned by somebody else */
