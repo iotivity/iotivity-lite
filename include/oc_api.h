@@ -369,6 +369,7 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
   OC_PROCESS(name##_interrupt_x, "");                                          \
   OC_PROCESS_THREAD(name##_interrupt_x, ev, data)                              \
   {                                                                            \
+    (void)data;                                                                \
     OC_PROCESS_POLLHANDLER(name##_interrupt_x_handler());                      \
     OC_PROCESS_BEGIN();                                                        \
     while (oc_process_is_running(&(name##_interrupt_x))) {                     \
