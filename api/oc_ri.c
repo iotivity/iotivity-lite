@@ -605,6 +605,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifndef OC_SERVER
   (void)block2_size;
 #endif /* !OC_SERVER */
+  response_state->buffer = oc_blockwise_alloc_inner_buffer(response_state);
   response_buffer.buffer = response_state->buffer;
   response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
 #else  /* OC_BLOCK_WISE */
@@ -659,18 +660,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
-  /* Obtain handle to buffer containing the serialized payload */
-  const uint8_t *payload = NULL;
-  int payload_len = 0;
-#ifdef OC_BLOCK_WISE
-  if (request_state) {
-    payload = request_state->buffer;
-    payload_len = request_state->payload_size;
-  }
-#else  /* OC_BLOCK_WISE */
-  payload_len = coap_get_payload(request, &payload);
-#endif /* !OC_BLOCK_WISE */
-
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -682,6 +671,19 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
+
+  /* Obtain handle to buffer containing the serialized payload */
+  const uint8_t *payload = NULL;
+  int payload_len = 0;
+#ifdef OC_BLOCK_WISE
+  if (request_state) {
+    request_state->buffer = oc_blockwise_alloc_inner_buffer(request_state);
+    payload = request_state->buffer;
+    payload_len = request_state->payload_size;
+  }
+#else  /* OC_BLOCK_WISE */
+  payload_len = coap_get_payload(request, &payload);
+#endif /* !OC_BLOCK_WISE */
 
   if (payload_len > 0) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
@@ -699,6 +701,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
+
+#ifdef OC_BLOCK_WISE
+    oc_blockwise_free_inner_buffer(request_state);
+#endif
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -989,7 +995,7 @@ static void
 free_client_cb(oc_client_cb_t *cb)
 {
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_scrub_buffers_for_client_cb(cb);
+  oc_blockwise_scrub_states_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
   oc_list_remove(client_cbs, cb);
   oc_free_string(&cb->uri);
