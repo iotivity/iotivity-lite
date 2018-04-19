@@ -70,7 +70,7 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=${topdir}/messaging/coap/:${topdir}/util/:${topdir}/api/:${topdir}/deps/tinycbor/src/:${topdir}/deps/mbedtls/library:
-LIBS?=
+LIBS?= -lm -pthread -lrt
 
 SAMPLES?=
 
@@ -96,6 +96,7 @@ endif
 	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
 	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
 endif
+
 
 CFLAGS+=-I${tinyara_dir}/include/
 CFLAGS+=-I${topdir}
