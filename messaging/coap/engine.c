@@ -134,7 +134,7 @@ coap_receive(oc_message_t *msg)
   bool block1 = false, block2 = false;
 
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_state_t *request_buffer = 0, *response_buffer = 0;
+  oc_blockwise_state_t *request_buffer = NULL, *response_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_TCP
@@ -366,6 +366,7 @@ coap_receive(oc_message_t *msg)
                     request_buffer = oc_blockwise_alloc_request_buffer(
                       href, href_len, &msg->endpoint, message->code,
                       OC_BLOCKWISE_SERVER);
+
                     if (!(request_buffer && oc_blockwise_handle_block(
                                               request_buffer, 0, incoming_block,
                                               (uint16_t)incoming_block_len))) {
@@ -414,6 +415,7 @@ coap_receive(oc_message_t *msg)
                 request_buffer = oc_blockwise_alloc_request_buffer(
                   href, href_len, &msg->endpoint, message->code,
                   OC_BLOCKWISE_SERVER);
+
                 if (!(request_buffer && oc_blockwise_handle_block(
                                           request_buffer, 0, incoming_block,
                                           (uint16_t)incoming_block_len))) {

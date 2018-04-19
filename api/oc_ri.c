@@ -627,12 +627,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifndef OC_SERVER
   (void)block2_size;
 #endif /* !OC_SERVER */
-  response_buffer.buffer = response_state->buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
-#else  /* OC_BLOCK_WISE */
-  response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
-#endif /* !OC_BLOCK_WISE */
+#endif
+
+  /* Postpone allocating response's inner buffer right after calling
+   * oc_parse_rep()
+   *  in order to reducing peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
+   */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
 
@@ -721,6 +721,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
+
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+    /* Free request's inner buffer cause it isn't used any more
+     */
+    oc_blockwise_free_inner_buffer(request_state);
+#endif
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -776,6 +782,24 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       bad_request = true;
     }
   }
+
+/* Alloc response's inner buffer and map it to response_buffer.
+ *  It also affects request_obj.response.
+ */
+#ifdef OC_BLOCK_WISE
+#ifdef OC_DYNAMIC_ALLOCATION
+  response_state->buffer = oc_blockwise_alloc_inner_buffer(response_state);
+  if (!(response_state->buffer)) {
+    OC_ERR("Fail to alloc buffer");
+    // need more description
+  }
+#endif
+  response_buffer.buffer = response_state->buffer;
+  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+#else  /* OC_BLOCK_WISE */
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
+#endif /* !OC_BLOCK_WISE */
 
   if (cur_resource && !bad_request) {
     /* Process a request against a valid resource, request payload, and
