@@ -18,6 +18,14 @@
 #include "port/oc_random.h"
 #include "port/oc_assert.h"
 
+#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 void
 oc_random_init(void)

@@ -15,13 +15,16 @@
 // limitations under the License.
 */
 
+#include <math.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "port/oc_clock.h"
 #include "port/oc_assert.h"
 
 void
 oc_clock_init(void)
 {
-  oc_abort(__func__);
 }
 
 oc_clock_time_t

@@ -70,9 +70,10 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=${topdir}/messaging/coap/:${topdir}/util/:${topdir}/api/:${topdir}/deps/tinycbor/src/:${topdir}/deps/mbedtls/library:
-LIBS?=
+LIBS?= -lm -pthread -lrt
 
 SAMPLES?=
+
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -110,13 +111,23 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES}
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 libiotivity-constrained-client-server.a
 
+all?= $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES)
+all+= .built
+BIN ?= ${os_dir}/../external/libexternal$(LIBEXT)
+OBJS+= $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
-all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES)
+
+all: ${all}
+	ls $<
+
+build: $(CONSTRAINED_LIBS) 
+	ls $<
 
 .PHONY: clean
 
@@ -167,3 +178,7 @@ distclean: cleanall
 
 test:
 	@echo "TODO: https://jira.iotivity.org/browse/LITE-4"
+
+.built: $(OBJS)
+	$(call ARCHIVE, $(BIN), $(OBJS))
+	$(Q) touch .built
