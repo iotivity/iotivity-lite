@@ -18,6 +18,7 @@
 
 #include "cloud_access.h"
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_log.h"
 
 bool
@@ -29,10 +30,23 @@ oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
     OC_ERR("Error of input parameters");
     return false;
   }
-  (void)handler;
-  (void)user_data;
 
-  return true;
+  if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
+                   user_data)) {
+    char uuid[37];
+    oc_uuid_to_str(oc_core_get_device_id(0), uuid, 37);
+
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, OC_RSRVD_AUTHPROVIDER, auth_provider);
+    oc_rep_set_text_string(root, OC_RSRVD_AUTHCODE, auth_code);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for sign up");
+    return false;
+  }
+
+  return oc_do_post();
 }
 
 static bool
@@ -44,10 +58,25 @@ oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
-  (void)handler;
-  (void)user_data;
 
-  return true;
+  if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
+                   LOW_QOS, user_data)) {
+    char uuid[37];
+    oc_uuid_to_str(oc_core_get_device_id(0), uuid, 37);
+
+    oc_rep_start_root_object();
+    if (is_sign_in)
+      oc_rep_set_text_string(root, OC_RSRVD_USER_UUID, uid);
+    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, OC_RSRVD_ACCESS_TOKEN, access_token);
+    oc_rep_set_boolean(root, OC_RSRVD_LOGIN, is_sign_in);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for sign in/out");
+    return false;
+  }
+
+  return oc_do_post();
 }
 
 bool
@@ -73,8 +102,23 @@ oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
-  (void)handler;
-  (void)user_data;
 
-  return true;
+  if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
+                   LOW_QOS, user_data)) {
+    char uuid[37];
+    oc_uuid_to_str(oc_core_get_device_id(0), uuid, 37);
+
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, OC_RSRVD_USER_UUID, uid);
+    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, OC_RSRVD_GRANT_TYPE,
+                           OC_RSRVD_GRANT_TYPE_REFRESH_TOKEN);
+    oc_rep_set_text_string(root, OC_RSRVD_REFRESH_TOKEN, refresh_token);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for refresh access token");
+    return false;
+  }
+
+  return oc_do_post();
 }
