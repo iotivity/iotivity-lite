@@ -1,0 +1,12 @@
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+1: jaehyun Cho <jaehyun3.cho@samsung.com>
+Code-Review+1: Phil Coval <philippe.coval@osg.samsung.com>
+Code-Review+1: George Nash <george.nash@intel.com>
+Code-Review+1: Trevor Bramwell <tbramwell@linuxfoundation.org>
+Code-Review+2: Kishen Maloor <kishen.maloor@intel.com>
+Verified+1: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-by: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-at: Thu, 19 Apr 2018 18:02:13 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/24671
+Project: iotivity-constrained
+Branch: refs/heads/master
