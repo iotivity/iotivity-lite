@@ -158,7 +158,7 @@ coap_remove_observer(coap_observer_t *o)
          o->token[1]);
 
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
+  oc_blockwise_state_t *response_state = oc_blockwise_find_response_state(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
     &o->endpoint, OC_GET, NULL, 0, OC_BLOCKWISE_SERVER);
   if (response_state) {
@@ -357,20 +357,21 @@ coap_notify_observers(oc_resource_t *resource,
         if (response_buf->response_length > obs->block2_size) {
 #endif /* !OC_TCP */
           notification->type = COAP_TYPE_CON;
-          response_state = oc_blockwise_find_response_buffer(
+          response_state = oc_blockwise_find_response_state(
             oc_string(obs->resource->uri) + 1,
             oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, NULL,
             0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             continue;
           }
-          response_state = oc_blockwise_alloc_response_buffer(
+          response_state = oc_blockwise_alloc_response_state(
             oc_string(obs->resource->uri) + 1,
             oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
             OC_BLOCKWISE_SERVER);
           if (!response_state) {
             goto leave_notify_observers;
           }
+          response_state->buffer=oc_blockwise_alloc_inner_buffer(response_state);
           memcpy(response_state->buffer, response_buf->buffer,
                  response_buf->response_length);
           response_state->payload_size = response_buf->response_length;

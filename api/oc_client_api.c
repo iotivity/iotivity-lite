@@ -113,13 +113,17 @@ prepare_coap_request(oc_client_cb_t *cb)
   oc_rep_new(transaction->message->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
 #else  /* !OC_BLOCK_WISE */
   if (cb->method == OC_PUT || cb->method == OC_POST) {
-    request_buffer = oc_blockwise_alloc_request_buffer(
+    request_buffer = oc_blockwise_alloc_request_state(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
       return false;
     }
-
+    request_buffer->buffer=oc_blockwise_alloc_inner_buffer(request_buffer);
+    if (!(request_buffer->buffer)) {
+      oc_blockwise_free_request_state(request_buffer);
+      return false;
+    }
     oc_rep_new(request_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 
     request_buffer->mid = cb->mid;
