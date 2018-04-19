@@ -30,6 +30,34 @@ OC_MEMB(oc_blockwise_response_states_s, oc_blockwise_response_state_t,
 OC_LIST(oc_blockwise_requests);
 OC_LIST(oc_blockwise_responses);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+uint8_t *
+oc_blockwise_alloc_inner_buffer(oc_blockwise_state_t *buffer)
+{
+  if (!buffer) {
+    OC_ERR("buffer is NULL");
+    return NULL;
+  }
+  if (buffer->buffer) {
+    return (buffer->buffer);
+  }
+  return ((uint8_t *)malloc(OC_MAX_APP_DATA_SIZE));
+}
+
+void
+oc_blockwise_free_inner_buffer(oc_blockwise_state_t *buffer)
+{
+  if (!buffer) {
+    OC_ERR("buffer is NULL");
+    return;
+  }
+  if (buffer->buffer) {
+    free(buffer->buffer);
+    buffer->buffer = NULL;
+  }
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 static oc_blockwise_state_t *
 oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
                          oc_endpoint_t *endpoint, oc_method_t method,
@@ -40,24 +68,20 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
 
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_memb_alloc(pool);
   if (buffer) {
-#ifdef OC_DYNAMIC_ALLOCATION
-    buffer->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
-    if (!buffer->buffer) {
-      oc_memb_free(pool, buffer);
-      return NULL;
-    }
-#endif /* OC_DYNAMIC_ALLOCATION */
     buffer->next_block_offset = 0;
     buffer->payload_size = 0;
     buffer->ref_count = 1;
+#ifdef OC_DYNAMIC_ALLOCATION
+    buffer->buffer = NULL;
+#endif /* OC_DYNAMIC_ALLOCATION */
     buffer->method = method;
     buffer->role = role;
     memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
     oc_new_string(&buffer->href, href, href_len);
-    buffer->next = 0;
+    buffer->next = NULL;
 #ifdef OC_CLIENT
     buffer->mid = 0;
-    buffer->client_cb = 0;
+    buffer->client_cb = NULL;
 #endif /* OC_CLIENT */
     return buffer;
   }
@@ -69,13 +93,19 @@ static void
 oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
                          oc_blockwise_state_t *buffer)
 {
+
+  if (!buffer) {
+    OC_ERR("buffer is NULL");
+    return;
+  }
+
   if (oc_string_len(buffer->uri_query))
     oc_free_string(&buffer->uri_query);
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buffer->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_blockwise_free_inner_buffer(buffer);
+#endif
   oc_memb_free(pool, buffer);
 }
 
@@ -103,7 +133,19 @@ oc_blockwise_alloc_request_buffer(const char *href, int href_len,
   oc_blockwise_request_state_t *buffer =
     (oc_blockwise_request_state_t *)oc_blockwise_init_buffer(
       &oc_blockwise_request_states_s, href, href_len, endpoint, method, role);
+
   if (buffer) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    ((oc_blockwise_state_t *)buffer)->buffer =
+      oc_blockwise_alloc_inner_buffer((oc_blockwise_state_t *)buffer);
+
+    if (!(((oc_blockwise_state_t *)buffer)->buffer)) {
+      oc_blockwise_free_buffer(oc_blockwise_requests,
+                               &oc_blockwise_request_states_s,
+                               (oc_blockwise_state_t *)buffer);
+    }
+#endif
+
     oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_request_timeout,
                                            OC_EXCHANGE_LIFETIME);
     oc_list_add(oc_blockwise_requests, buffer);
@@ -324,6 +366,12 @@ oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
     return false;
 
   if (buffer->next_block_offset == incoming_block_offset) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    buffer->buffer = oc_blockwise_alloc_inner_buffer(buffer);
+    if (!(buffer->buffer)) {
+      return false;
+    }
+#endif
     memcpy(&buffer->buffer[buffer->next_block_offset], incoming_block,
            incoming_block_size);
 

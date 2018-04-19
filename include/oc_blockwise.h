@@ -109,4 +109,7 @@ void oc_blockwise_scrub_buffers(void);
 
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
 
+uint8_t *oc_blockwise_alloc_inner_buffer(oc_blockwise_state_t *buffer);
+void oc_blockwise_free_inner_buffer(oc_blockwise_state_t *buffer);
+
 #endif /* OC_BLOCKWISE_H */
