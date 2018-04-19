@@ -150,7 +150,7 @@ coap_receive(oc_message_t *msg)
 
   if (coap_status_code == COAP_NO_ERROR) {
 
-#if OC_DEBUG
+#ifdef OC_DEBUG
     OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u",
            message->version, message->token[0], message->token[1],
            message->mid);
@@ -198,7 +198,7 @@ coap_receive(oc_message_t *msg)
     /* handle requests */
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
-#if OC_DEBUG
+#ifdef OC_DEBUG
       switch (message->code) {
       case COAP_GET:
         OC_DBG("  method: GET");
