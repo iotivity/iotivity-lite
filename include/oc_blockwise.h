@@ -105,7 +105,7 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                                const uint8_t *incoming_block,
                                uint32_t incoming_block_size);
 
-void oc_blockwise_scrub_buffers();
+void oc_blockwise_scrub_buffers(void);
 
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
 
