@@ -65,35 +65,35 @@ typedef struct oc_blockwise_response_state_s
 #endif /* OC_CLIENT */
 } oc_blockwise_response_state_t;
 
-oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_mid(uint16_t mid);
+oc_blockwise_state_t *oc_blockwise_find_request_state_by_mid(uint16_t mid);
 
-oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(uint16_t mid);
+oc_blockwise_state_t *oc_blockwise_find_response_state_by_mid(uint16_t mid);
 
-oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
+oc_blockwise_state_t *oc_blockwise_find_request_state_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
 
-oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
+oc_blockwise_state_t *oc_blockwise_find_response_state_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
 
-oc_blockwise_state_t *oc_blockwise_find_request_buffer(
+oc_blockwise_state_t *oc_blockwise_find_request_state(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
   const char *query, int query_len, oc_blockwise_role_t role);
 
-oc_blockwise_state_t *oc_blockwise_find_response_buffer(
+oc_blockwise_state_t *oc_blockwise_find_response_state(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
   const char *query, int query_len, oc_blockwise_role_t role);
 
-oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
+oc_blockwise_state_t *oc_blockwise_alloc_request_state(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
   oc_blockwise_role_t role);
 
-oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
+oc_blockwise_state_t *oc_blockwise_alloc_response_state(
   const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
   oc_blockwise_role_t role);
 
-void oc_blockwise_free_request_buffer(oc_blockwise_state_t *buffer);
+void oc_blockwise_free_request_state(oc_blockwise_state_t *buffer);
 
-void oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer);
+void oc_blockwise_free_response_state(oc_blockwise_state_t *buffer);
 
 const void *oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer,
                                         uint32_t block_offset,
@@ -105,8 +105,13 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                                const uint8_t *incoming_block,
                                uint32_t incoming_block_size);
 
-void oc_blockwise_scrub_buffers();
+void oc_blockwise_scrub_states();
 
-void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
+void oc_blockwise_scrub_states_for_client_cb(void *cb);
+
+
+uint8_t *oc_blockwise_alloc_inner_buffer(oc_blockwise_state_t *buffer);
+
+void oc_blockwise_free_inner_buffer(oc_blockwise_state_t *buffer);
 
 #endif /* OC_BLOCKWISE_H */
