@@ -1,0 +1,3 @@
+config ENTRY_IOTIVITY_CONSTRAINED_EXAMPLE
+	bool "IoTivitiy constrained example"
+	depends on EXAMPLES_IOTIVITY_CONSTRAINED
