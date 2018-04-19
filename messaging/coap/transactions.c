@@ -171,7 +171,7 @@ coap_send_transaction(coap_transaction_t *t)
 #endif /* OC_CLIENT */
 
 #ifdef OC_BLOCK_WISE
-      oc_blockwise_scrub_buffers();
+      oc_blockwise_scrub_states();
 #endif /* OC_BLOCK_WISE */
 
       coap_clear_transaction(t);

@@ -370,19 +370,25 @@ oc_send_separate_response(oc_separate_response_t *handle,
 #else /* OC_TCP */
         if (response_buffer.response_length > cur->block2_size) {
 #endif /* !OC_TCP */
-          response_state = oc_blockwise_find_response_buffer(
+          response_state = oc_blockwise_find_response_state(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             goto clear_separate_store;
           }
-          response_state = oc_blockwise_alloc_response_buffer(
+          response_state = oc_blockwise_alloc_response_state(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, OC_BLOCKWISE_SERVER);
           if (!response_state) {
             goto clear_separate_store;
           }
+          response_state->buffer =
+            oc_blockwise_alloc_inner_buffer(response_state);
 
+          if (!(response_state->buffer)) {
+            oc_blockwise_free_response_state(response_state);
+            goto clear_separate_store;
+          }
           memcpy(response_state->buffer, response_buffer.buffer,
                  response_buffer.response_length);
           response_state->payload_size = response_buffer.response_length;
