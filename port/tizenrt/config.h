@@ -20,7 +20,10 @@
 
 /* Time resolution */
 #include <stdint.h>
+#include <time.h>
 typedef uint64_t oc_clock_time_t;
+#define FD_SETSIZE	(CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
+
 #define OC_CLOCK_CONF_TICKS_PER_SECOND 1
 
 /* Security Layer */

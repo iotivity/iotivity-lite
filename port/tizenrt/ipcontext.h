@@ -20,6 +20,7 @@
 #define IPCONTEXT_H
 
 #include <stdint.h>
+#include <pthread.h>
 
 #ifdef OC_TCP
 typedef struct tcp_context_t {
@@ -70,9 +71,9 @@ typedef struct ip_context_t {
 #ifdef OC_TCP
   tcp_context_t tcp;
 #endif
+  pthread_t event_thread;
   int terminate;
   int device;
   int shutdown_pipe[2];
 } ip_context_t;
-
 #endif /* IPCONTEXT_H */
