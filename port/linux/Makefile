@@ -228,8 +228,8 @@ cleanall: clean
 
 distclean: cleanall
 
-test:
-	echo "TODO"
+test: check
+	echo "TODO: https://jira.iotivity.org/browse/IOT-3029"
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
