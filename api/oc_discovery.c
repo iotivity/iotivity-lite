@@ -524,6 +524,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     /* Reset bm in every round as this can be omitted if 0. */
     oc_resource_properties_t bm = 0;
     oc_endpoint_t *eps_list = NULL;
+    oc_endpoint_t *unmatched_eps_list = NULL;
     oc_rep_t *link = links->value.object;
     while (link != NULL) {
       switch (link->type) {
@@ -555,6 +556,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       case OC_REP_OBJECT_ARRAY: {
         oc_rep_t *eps = link->value.object_array;
         oc_endpoint_t *eps_cur = NULL;
+        oc_endpoint_t *unmatched_cur = NULL;
         while (eps != NULL) {
           oc_rep_t *ep = eps->value.object;
           while (ep != NULL) {
@@ -566,25 +568,39 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                 memset(&temp_ep, 0, sizeof(oc_endpoint_t));
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
+                  oc_endpoint_t **work_ep = &eps_cur;
+                  oc_endpoint_t **work_list_ep = &eps_list;
                   /* Return all endpoints whose address matches with the source
                    * address of this response.
+                   *
+                   * In case the eps does not contain any address that matches
+                   * the actual source address, pass through the eps instead.
+                   *
+                   * Note: Do not use the source address as a replacement
+                   *       in case there is no match, since IoTivity refuses
+                   *       secure connections to addresses not listed
+                   *       in its eps.
                    */
                   if (oc_endpoint_compare_address(&temp_ep, endpoint) != 0) {
-                    goto next_ep;
+                    if (eps_list) {
+                      goto next_ep;
+                    }
+                    work_ep = &unmatched_cur;
+                    work_list_ep = &unmatched_eps_list;
                   }
 
-                  if (eps_cur) {
-                    eps_cur->next = oc_new_endpoint();
-                    eps_cur = eps_cur->next;
+                  if (*work_ep) {
+                    (*work_ep)->next = oc_new_endpoint();
+                    (*work_ep) = (*work_ep)->next;
                   } else {
-                    eps_cur = eps_list = oc_new_endpoint();
+                    *work_ep = *work_list_ep = oc_new_endpoint();
                   }
 
-                  if (eps_cur) {
-                    memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
-                    if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
+                  if (*work_ep) {
+                    memcpy(*work_ep, &temp_ep, sizeof(oc_endpoint_t));
+                    if (oc_ipv6_endpoint_is_link_local(*work_ep) == 0 &&
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
-                      eps_cur->addr.ipv6.scope = endpoint->addr.ipv6.scope;
+                      (*work_ep)->addr.ipv6.scope = endpoint->addr.ipv6.scope;
                     }
                   }
                 }
@@ -614,6 +630,14 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
 
+    if (unmatched_eps_list) {
+      if (!eps_list) {
+        eps_list = unmatched_eps_list;
+      }
+      else {
+        oc_free_server_endpoints(unmatched_eps_list);
+      }
+    }
     if (eps_list &&
         handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
                 eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
