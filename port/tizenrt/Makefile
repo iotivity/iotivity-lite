@@ -66,9 +66,9 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=${topdir}/messaging/coap/:${topdir}/util/:${topdir}/api/:${topdir}/deps/tinycbor/src/:${topdir}/deps/mbedtls/library:
-LIBS?=
+LIBS?= -lm -pthread -lrt
 
-SAMPLES?= 
+SAMPLES?=
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -93,7 +93,7 @@ endif
 	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
 endif
 
-CFLAGS+=-I${topdir}/include/ -I${topdir}
+CFLAGS+=-I${topdir}/include/ -I${topdir} -I${topdir}/deps/TizenRT/os/include/
 CFLAGS+=-I.
 
 ifeq ($(IPV4),1)

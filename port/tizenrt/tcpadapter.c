@@ -49,7 +49,7 @@ configure_tcp_socket(int sock, void *sock_info)
 static int
 get_assigned_tcp_port(int sock, void *sock_info)
 {
-  oc_abort(__func__);    
+  oc_abort(__func__);
   return 0;
 }
 
@@ -78,7 +78,7 @@ static tcp_session_t *
 find_session_by_endpoint(oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_list_head(session_list);
-  oc_abort(__func__);  
+  oc_abort(__func__);
   return session;
 }
 
@@ -109,7 +109,7 @@ static int
 get_session_socket(oc_endpoint_t *endpoint)
 {
   int sock = -1;
-  oc_abort(__func__);  
+  oc_abort(__func__);
   return sock;
 }
 
@@ -118,7 +118,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
                      const void *receiver)
 {
   int sock = -1;
-  oc_abort(__func__);  
+  oc_abort(__func__);
   return sock;
 }
 
@@ -126,7 +126,7 @@ void
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const void *receiver)
 {
-  oc_abort(__func__);  
+  oc_abort(__func__);
 }
 
 #ifdef OC_IPV4
