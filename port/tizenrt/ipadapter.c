@@ -24,6 +24,21 @@
 #include "oc_endpoint.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include <arpa/inet.h>
+#include <assert.h>
+#include <errno.h>
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -176,10 +191,12 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
 static int configure_mcast_socket(int mcast_sock, int sa_family) {
   int ret = 0;
   struct ifaddrs *ifs = NULL, *interface = NULL;
+#ifdef TODO_IS_DONE
   if (getifaddrs(&ifs) < 0) {
     OC_ERR("querying interface addrs\n");
     return -1;
   }
+#endif
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if ((!interface->ifa_flags) & IFF_UP || interface->ifa_flags & IFF_LOOPBACK) {
@@ -620,11 +637,12 @@ void
 oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
+#ifdef TODO_IS_DONE
   if (getifaddrs(&ifs) < 0) {
     OC_ERR("querying interfaces: %d\n", errno);
     goto done;
   }
-
+#endif
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
@@ -662,7 +680,7 @@ oc_send_discovery_request(oc_message_t *message)
 #endif /* !OC_IPV4 */
   }
 done:
-  freeifaddrs(ifs);
+  OC_DBG("TODO: freeifaddrs(ifs)");
 }
 #endif /* OC_CLIENT */
 

@@ -15,6 +15,7 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#include <tinyara/config.h>
 
 #include "tcpadapter.h"
 #include "ipcontext.h"
@@ -22,6 +23,7 @@
 #include "oc_endpoint.h"
 #include "util/oc_memb.h"
 #include "port/oc_assert.h"
+#include <pthread.h>
 
 #ifdef OC_TCP
 
