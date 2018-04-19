@@ -363,7 +363,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         }
 
 #ifdef OC_BLOCK_WISE
-        oc_blockwise_state_t *response_state = 0;
+        oc_blockwise_state_t *response_state = NULL;
 #ifdef OC_TCP
         if (!(cur->endpoint.flags & TCP) &&
             response_buffer.response_length > cur->block2_size) {
@@ -382,7 +382,6 @@ oc_send_separate_response(oc_separate_response_t *handle,
           if (!response_state) {
             goto clear_separate_store;
           }
-
           memcpy(response_state->buffer, response_buffer.buffer,
                  response_buffer.response_length);
           response_state->payload_size = response_buffer.response_length;

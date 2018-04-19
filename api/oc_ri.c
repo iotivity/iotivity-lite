@@ -579,8 +579,8 @@ does_interface_support_method(oc_interface_mask_t interface, oc_method_t method)
 #ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response,
-                                 oc_blockwise_state_t *request_state,
-                                 oc_blockwise_state_t *response_state,
+                                 oc_blockwise_state_t **request_state,
+                                 oc_blockwise_state_t **response_state,
                                  uint16_t block2_size, oc_endpoint_t *endpoint)
 #else  /* OC_BLOCK_WISE */
 bool
@@ -627,12 +627,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifndef OC_SERVER
   (void)block2_size;
 #endif /* !OC_SERVER */
-  response_buffer.buffer = response_state->buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
-#else  /* OC_BLOCK_WISE */
-  response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
-#endif /* !OC_BLOCK_WISE */
+#endif
+
+  /* Postpone allocating response's inner buffer right after calling
+   * oc_parse_rep()
+   *  in order to reducing peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
+   */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
 
@@ -658,10 +658,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   int uri_query_len = 0;
 
 #ifdef OC_BLOCK_WISE
-  if (request_state) {
-    uri_query_len = oc_string_len(request_state->uri_query);
+  if (*request_state) {
+    uri_query_len = oc_string_len((*request_state)->uri_query);
     if (uri_query_len > 0) {
-      uri_query = oc_string(request_state->uri_query);
+      uri_query = oc_string((*request_state)->uri_query);
     }
   } else
 #endif /* OC_BLOCK_WISE */
@@ -685,9 +685,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   const uint8_t *payload = NULL;
   int payload_len = 0;
 #ifdef OC_BLOCK_WISE
-  if (request_state) {
-    payload = request_state->buffer;
-    payload_len = request_state->payload_size;
+  if (*request_state) {
+    payload = (*request_state)->buffer;
+    payload_len = (*request_state)->payload_size;
   }
 #else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(request, &payload);
@@ -721,6 +721,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
+
+#if defined(OC_BLOCK_WISE)
+    /* Free request_state cause it isn't used any more
+     */
+    oc_blockwise_free_request_buffer(*request_state);
+    *request_state = NULL;
+#endif
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -776,6 +783,39 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       bad_request = true;
     }
   }
+
+/* Alloc response's inner buffer and map it to response_buffer.
+ *  It also affects request_obj.response.
+ */
+#ifdef OC_BLOCK_WISE
+
+  if (!(*response_state)) {
+    const char *href;
+    int href_len = coap_get_header_uri_path((coap_packet_t *)request, &href);
+
+    OC_DBG("creating new block-wise response state");
+    *response_state = oc_blockwise_alloc_response_buffer(
+      href, href_len, endpoint, ((coap_packet_t *)request)->code,
+      OC_BLOCKWISE_SERVER);
+
+    if (!(*response_state)) {
+      OC_ERR("failure to alloc response state");
+      return success;
+    } else {
+      if (((coap_packet_t *)request)->uri_query_len > 0) {
+        oc_new_string(&((*response_state)->uri_query),
+                      ((coap_packet_t *)request)->uri_query,
+                      ((coap_packet_t *)request)->uri_query_len);
+      }
+    }
+  }
+
+  response_buffer.buffer = (*response_state)->buffer;
+  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+#else  /* OC_BLOCK_WISE */
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
+#endif /* !OC_BLOCK_WISE */
 
   if (cur_resource && !bad_request) {
     /* Process a request against a valid resource, request payload, and
@@ -981,7 +1021,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {
 #ifdef OC_BLOCK_WISE
-      response_state->payload_size = response_buffer.response_length;
+      (*response_state)->payload_size = response_buffer.response_length;
 #else  /* OC_BLOCK_WISE */
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
