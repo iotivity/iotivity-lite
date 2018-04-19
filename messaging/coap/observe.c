@@ -257,7 +257,7 @@ coap_notify_observers(oc_resource_t *resource,
   num_observers = resource->num_observers;
 
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_state_t *response_state;
+  oc_blockwise_state_t *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -368,6 +368,7 @@ coap_notify_observers(oc_resource_t *resource,
             oc_string(obs->resource->uri) + 1,
             oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
             OC_BLOCKWISE_SERVER);
+
           if (!response_state) {
             goto leave_notify_observers;
           }
