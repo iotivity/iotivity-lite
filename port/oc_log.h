@@ -47,7 +47,7 @@
     }                                                                          \
   } while (0)
 
-#if OC_DEBUG
+#ifdef OC_DEBUG
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \
     PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
