@@ -21,7 +21,7 @@
 void
 abort_impl(void)
 {
-  exit(1);
+  abort();
 }
 
 void

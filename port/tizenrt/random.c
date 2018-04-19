@@ -17,24 +17,35 @@
 
 #include "port/oc_random.h"
 #include "port/oc_assert.h"
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+static int urandom_fd;
 
 void
 oc_random_init(void)
 {
-   oc_abort(__func__);
+  urandom_fd = open("/dev/urandom", O_RDONLY);
 }
 
 unsigned int
 oc_random_value(void)
 {
   unsigned int rand = 0;
-  oc_abort(__func__);
+  int ret = read(urandom_fd, &rand, sizeof(rand));
+  assert(ret != -1);
+#ifndef DEBUG
+  (void)ret;
+#endif
   return rand;
 }
 
 void
 oc_random_destroy(void)
 {
-  oc_abort(__func__);
+  close(urandom_fd);
 }

@@ -17,32 +17,40 @@
 
 #include "port/oc_clock.h"
 #include "port/oc_assert.h"
+#include "port/oc_log.h"
+#include <math.h>
+#include <time.h>
+#include <unistd.h>
 
 void
 oc_clock_init(void)
 {
-  abort_impl();
 }
 
 oc_clock_time_t
 oc_clock_time(void)
 {
   oc_clock_time_t time = 0;
-  oc_abort(__func__);
+  struct timespec t;
+  if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
+    time = (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
+           (oc_clock_time_t)ceil(t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
+  }
   return time;
 }
 
 unsigned long
 oc_clock_seconds(void)
 {
-  oc_abort(__func__);
+  struct timespec t;
+  if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
+    return t.tv_sec;
+  }
   return 0;
 }
 
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  (void) t;
-  oc_abort(__func__);
+  usleep(t * 1.e03);
 }
-
