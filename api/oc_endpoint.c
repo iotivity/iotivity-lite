@@ -31,6 +31,7 @@
 #define OC_IPV4_ADDRSTRLEN (16)
 #define OC_IPV6_ADDRLEN (16)
 #define OC_IPV4_ADDRLEN (4)
+#define OC_IPV6_INTERFACELEN (16)
 
 OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
 OC_LIST(oc_endpoints);
@@ -165,10 +166,25 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     ip[i] = ip[i - 1];
     i--;
   }
-  if (max_zeros_start != 0) {
-    sprintf(&ip[str_idx + 1], "]:%u", endpoint->addr.ipv6.port);
+
+  if (oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
+    char if_str[OC_IPV6_INTERFACELEN + 1];
+    if (oc_connectivity_if_index_to_name(endpoint->addr.ipv6.scope, if_str) <
+        0) {
+      OC_ERR("fail to get interface name.");
+      return;
+    }
+    if (max_zeros_start != 0) {
+      sprintf(&ip[str_idx + 1], "%%%s]:%u", if_str, endpoint->addr.ipv6.port);
+    } else {
+      sprintf(&ip[str_idx], "%%%s]:%u", if_str, endpoint->addr.ipv6.port);
+    }
   } else {
-    sprintf(&ip[str_idx], "]:%u", endpoint->addr.ipv6.port);
+    if (max_zeros_start != 0) {
+      sprintf(&ip[str_idx + 1], "]:%u", endpoint->addr.ipv6.port);
+    } else {
+      sprintf(&ip[str_idx], "]:%u", endpoint->addr.ipv6.port);
+    }
   }
 #ifdef OC_TCP
   if (endpoint->flags & TCP) {
@@ -388,7 +404,32 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     if (address[0] == '[' && address[address_len - 1] == ']') {
       endpoint->flags |= IPV6;
       endpoint->addr.ipv6.port = port;
-      oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
+
+      if ((strncmp(address + 1, "fe80", 4) == 0 ||
+           strncmp(address + 1, "FE80", 4) == 0)) {
+        char *if_ptr = strchr(address, '%');
+        if (!if_ptr) {
+          return -1;
+        }
+
+        int if_length = &address[address_len - 1] - (if_ptr++) - 1;
+        if (if_length > OC_IPV6_INTERFACELEN) {
+          return -1;
+        }
+        char if_str[OC_IPV6_INTERFACELEN + 1];
+        strncpy(if_str, if_ptr, if_length);
+        if_str[if_length] = '\0';
+
+        int if_index = oc_connectivity_if_name_to_index(if_str);
+        if (if_index <= 0) {
+          return -1;
+        }
+        endpoint->addr.ipv6.scope = if_index;
+        oc_parse_ipv6_address(&address[1], address_len - 3 - if_length,
+                              endpoint);
+      } else {
+        oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
+      }
     }
 #ifdef OC_IPV4
     else {

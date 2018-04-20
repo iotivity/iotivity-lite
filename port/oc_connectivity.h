@@ -157,4 +157,8 @@ void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
+int oc_connectivity_if_name_to_index(const char *name);
+
+int oc_connectivity_if_index_to_name(int index, char *name);
+
 #endif /* OC_CONNECTIVITY_H */
