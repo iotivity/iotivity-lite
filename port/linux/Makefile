@@ -22,7 +22,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
-	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c	rsa_internal.c	\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
@@ -214,9 +214,14 @@ $(MBEDTLS_PATCH_FILE):
 	git submodule update --init && \
 	cd $(MBEDTLS_DIR) && \
 	git clean -fdx . && \
-	git reset --hard && \
-	patch -r - -s -N -p1 < ../../patches/mbedtls_ocf_patch_1 && \
-	patch -r - -s -N -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2 && \
+	git reset --hard mbedtls-2.7.0 && \
+	git am ../../patches/01_mbedtls_dynamic-content-length_p1.patch && \
+	git am ../../patches/02_mbedtls_dynamic-content-length_p2.patch && \
+	git am ../../patches/03_mbedtls_dynamic-content-length_p3.patch && \
+	git am ../../patches/04_mbedtls_dynamic-content-length_p4.patch && \
+	git am ../../patches/05_mbedtls_ocf-samsung.patch && \
+	git am ../../patches/06_mbedtls_ocf-microsoft.patch && \
+	git am ../../patches/07_mbedtls_constrained.patch && \
 	echo patches applied > $(MBEDTLS_PATCH_FILE)
 endif
 
