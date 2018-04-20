@@ -31,6 +31,8 @@
 #define OC_IPV6_ADDRLEN (16)
 #define OC_IPV4_ADDRLEN (4)
 
+#define OC_LINK_LOCAL_SCOPE_ID (0x2)
+
 OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
 OC_LIST(oc_endpoints);
 
@@ -389,6 +391,8 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
       endpoint->flags |= IPV6;
       endpoint->addr.ipv6.port = port;
       oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
+      if (oc_ipv6_endpoint_is_link_local(endpoint) == 0)
+        endpoint->addr.ipv6.scope = OC_LINK_LOCAL_SCOPE_ID;
     }
 #ifdef OC_IPV4
     else {
