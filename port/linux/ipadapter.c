@@ -878,7 +878,30 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-int oc_connectivity_init(int device) {
+int
+oc_connectivity_if_name_to_index(const char *name)
+{
+  if (!name)
+    return -1;
+
+  return if_nametoindex(name);
+}
+
+int
+oc_connectivity_if_index_to_name(int index, char *name)
+{
+  if (!name)
+    return -1;
+
+  if (!if_indextoname(index, name))
+    return -1;
+
+  return 0;
+}
+
+int
+oc_connectivity_init(int device)
+{
   OC_DBG("Initializing connectivity for device %d", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
