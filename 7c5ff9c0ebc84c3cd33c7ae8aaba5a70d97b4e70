@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_35a77a51",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-22T03:12:55Z",
+      "side": 1,
+      "message": "The scope attribute here is used only to store and retrieve the scope_id attribute from sockaddr_in6 after receive and before send calls. It is not used to store the scope of the address (as in link-local, global, etc.).\n\nAlso, the oc_string_to_endpoint() function is called only from oc_discovery.c while handling an oic/res response, where the actual, platform specific scope id, if known, is set in the resulting oc_endpoint_t. You can see this in oc_discovery:oc_ri_process_discovery_payload.",
+      "revId": "7c5ff9c0ebc84c3cd33c7ae8aaba5a70d97b4e70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
