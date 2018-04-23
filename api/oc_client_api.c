@@ -349,7 +349,9 @@ dispatch_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 
   oc_client_cb_t *cb =
     oc_ri_alloc_client_cb("/oic/res", endpoint, OC_GET, oc_string(uri_query),
-                          client_handler, LOW_QOS, user_data);
+                          client_handler,
+                          endpoint->flags & DISCOVERY ? LOW_QOS : HIGH_QOS,
+                          user_data);
 
   if (!cb)
     goto exit;
