@@ -69,6 +69,71 @@ oc_core_init(void)
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+static void
+oc_core_free_resource_properties(oc_resource_t *core_resources_item)
+{
+  if (core_resources_item) {
+    if (oc_string_len(core_resources_item->name))
+      oc_free_string(&(core_resources_item->name));
+    if (oc_string_len(core_resources_item->uri))
+      oc_free_string(&(core_resources_item->uri));
+    if (oc_string_array_get_allocated_size(core_resources_item->types))
+      oc_free_string_array(&(core_resources_item->types));
+  }
+}
+
+static void
+oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
+{
+
+  if (oc_device_info_item) {
+    if (oc_string_len(oc_device_info_item->name))
+      oc_free_string(&(oc_device_info_item->name));
+    if (oc_string_len(oc_device_info_item->icv))
+      oc_free_string(&(oc_device_info_item->icv));
+    if (oc_string_len(oc_device_info_item->dmv))
+      oc_free_string(&(oc_device_info_item->dmv));
+#ifdef OC_DYNAMIC_ALLOCATION
+    if (oc_device_info_item->data)
+      free(oc_device_info_item->data);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+}
+
+void
+oc_core_shutdown(void)
+{
+  int i;
+  if (oc_string_len(oc_platform_info.mfg_name))
+    oc_free_string(&(oc_platform_info.mfg_name));
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (oc_device_info) {
+#endif /* OC_DYNAMIC_ALLOCATION */
+    for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
+      oc_device_info_t *oc_device_info_item = &oc_device_info[i];
+      oc_core_free_device_info_properties(oc_device_info_item);
+    }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(oc_device_info);
+    oc_device_info = NULL;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (core_resources) {
+#endif /* OC_DYNAMIC_ALLOCATION */
+    for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
+      oc_resource_t *core_resources_item = &core_resources[i];
+      oc_core_free_resource_properties(core_resources_item);
+    }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(core_resources);
+    core_resources = NULL;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
 void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
                                oc_interface_mask_t interface)
