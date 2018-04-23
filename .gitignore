@@ -14,6 +14,8 @@ port/linux/onboarding_tool
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*
 port/linux/libiotivity-constrained-client-server.*
+port/linux/libiotivity-constrained-cloudaccess.*
+port/linux/libiotivity-constrained-rd-client.*
 port/linux/iotivity-constrained-server.pc
 port/linux/iotivity-constrained-client.pc
 port/linux/iotivity-constrained-client-server.pc
@@ -37,3 +39,5 @@ port/openthread/output
 .clang-format
 _clang-format
 
+#vscode setting files
+.vscode
