@@ -16,6 +16,24 @@
       "revId": "7c5ff9c0ebc84c3cd33c7ae8aaba5a70d97b4e70",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f52192b5",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-04-23T01:13:59Z",
+      "side": 1,
+      "message": "Actually, I added sample app in https://gerrit.iotivity.org/gerrit/#/c/24803/ and this sample uses oc_ip_discovery_at_endpoint API.\nWhen I use this api in sample app, oc_string_to_endpoint() api need to use to convert user defined address to endpoint structure. But without scope id(especially link local attribute) tcp connect is not success. So I added this logic.\n\nIs there any way to make TCP connect success using ipv6 case? (without setting scope id to endpoint)",
+      "parentUuid": "da33351e_35a77a51",
+      "revId": "7c5ff9c0ebc84c3cd33c7ae8aaba5a70d97b4e70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
