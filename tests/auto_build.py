@@ -19,7 +19,7 @@ def helpmsg(script):
 Usage:
     build:
         python %s <targetbuild>
-        Allowed values for <target_build>: all, linux
+        Allowed values for <target_build>: all, linux, linux_test
     clean:
         python %s -c
     '''
@@ -51,12 +51,16 @@ def call_make(build_options, extra_option_str):
 def build_all(flag, extra_option_str):
     if platform.system() == "Linux":
         build_linux(flag, extra_option_str)
+        build_linux_test(flag, extra_option_str)
 
 def build_linux(flag, extra_option_str):
     print ("*********** Build for linux ************")
     build_options = build_option_param
     call_make(build_options, extra_option_str)
 
+def build_linux_test(flag, extra_option_str):
+    print ("*********** Build for linux ************")
+    build_linux("true", "test" + extra_option_str)
 
 # Main module starts here
 if os.getenv("MAKEFLAGS", "") == "":
@@ -84,6 +88,9 @@ elif arg_num == 2:
 
     elif str(sys.argv[1]) == "linux":
         build_linux("true", "")
+
+    elif str(sys.argv[1]) == "linux_test":
+        build_linux_test("true", "")
 
     else:
         helpmsg(script_name)
