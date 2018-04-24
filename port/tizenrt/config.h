@@ -18,11 +18,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <tinyara/config.h>
+
 /* Time resolution */
 #include <stdint.h>
 #include <time.h>
+
 typedef uint64_t oc_clock_time_t;
-#define FD_SETSIZE	(CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
+
+/* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
+#define FD_SETSIZE (CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
 
 #define OC_CLOCK_CONF_TICKS_PER_SECOND 1
 

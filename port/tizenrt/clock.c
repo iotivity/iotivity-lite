@@ -25,7 +25,6 @@
 void
 oc_clock_init(void)
 {
-  abort_impl();
 }
 
 oc_clock_time_t

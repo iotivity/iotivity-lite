@@ -24,24 +24,28 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+static int urandom_fd;
 
 void
 oc_random_init(void)
 {
-  uint64_t currentTime = 0;
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  currentTime = tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
-  srand(currentTime);
+  urandom_fd = open("/dev/urandom", O_RDONLY);
 }
 
 unsigned int
 oc_random_value(void)
 {
-  return rand();
+  unsigned int rand = 0;
+  int ret = read(urandom_fd, &rand, sizeof(rand));
+  assert(ret != -1);
+#ifndef DEBUG
+  (void)ret;
+#endif
+  return rand;
 }
 
 void
 oc_random_destroy(void)
 {
+  close(urandom_fd);
 }
