@@ -328,7 +328,7 @@ bool oc_do_ip_discovery_at_endpoint(const char *rt,
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
-bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
+bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
                   oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
 bool oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,

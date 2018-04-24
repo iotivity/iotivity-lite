@@ -168,13 +168,13 @@ oc_free_server_endpoints(oc_endpoint_t *endpoint)
 }
 
 bool
-oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
+oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE, NULL,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE, query,
                                              client_handler, qos, user_data);
 
   if (!cb)
