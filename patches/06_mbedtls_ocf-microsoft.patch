@@ -1,64 +1,50 @@
-From 733d8f0e5ada9a77a4fbc917c9e0fd9366d720e4 Mon Sep 17 00:00:00 2001
-From: Dan Mihai <Daniel.Mihai@microsoft.com>
-Date: Thu, 17 Aug 2017 21:23:23 -0700
-Subject: [PATCH] Avoid MBEDTLS_ERR_ASN1_OUT_OF_DATA error
+From 08f1c215cdfc270db2669f702401b3920cabecaa Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Fri, 20 Apr 2018 14:37:12 +0300
+Subject: [PATCH 2/2] ocf Microsoft
 
-Missing public key was already detected by checking for an
-MBEDTLS_ERR_ASN1_UNEXPECTED_TAG error code. But, (p == end) also means
-that the public key is missing.
 ---
- include/mbedtls/certs.h                     |   4 +
- include/mbedtls/check_config.h              |   5 +
- include/mbedtls/compat-1.3.h                |   5 +
- include/mbedtls/net_sockets.h               |  19 ++-
- include/mbedtls/ssl.h                       |  50 ++++++-
- include/mbedtls/ssl_ciphersuites.h          |   6 +-
- include/mbedtls/ssl_internal.h              |  15 +-
- include/mbedtls/x509.h                      |   2 +-
- include/mbedtls/x509_crt.h                  |  44 ++++++
- library/asn1write.c                         |   5 +-
- library/bignum.c                            |   6 +-
- library/certs.c                             |  17 +++
- library/ctr_drbg.c                          |   2 +-
- library/ecp.c                               |   2 +-
- library/entropy_poll.c                      |  15 +-
- library/md.c                                |   3 +-
- library/net_sockets.c                       |  34 ++---
- library/pkcs5.c                             |   5 +-
- library/pkparse.c                           |  53 +++----
- library/rsa.c                               |   5 +-
- library/ssl_ciphersuites.c                  |  18 +++
- library/ssl_cli.c                           | 144 +++++++++++++-----
- library/ssl_srv.c                           |  42 ++++--
- library/ssl_tls.c                           |  95 ++++++++++--
- library/version_features.c                  |   6 +
- library/x509.c                              |  40 ++++-
- library/x509_create.c                       |   8 +-
- library/x509_crl.c                          |   2 +-
- library/x509_crt.c                          | 225 +++++++++++++++++++++++++++-
- library/x509write_crt.c                     |  57 +++++++
- programs/ssl/ssl_client2.c                  |  74 +++++++++
- programs/ssl/ssl_server2.c                  |  75 ++++++++++
- programs/x509/cert_write.c                  | 174 +++++++++++++++++++++
- tests/data_files/server1-bothnames.crt      |  22 +++
- tests/data_files/server1-directoryname.crt  |  22 +++
- tests/data_files/server1-dnsname.crt        |  21 +++
- tests/data_files/server11-directoryname.crt |  10 ++
- tests/ssl-opt.sh                            |  18 +++
- tests/suites/test_suite_x509parse.data      |  16 ++
- tests/suites/test_suite_x509write.data      |  12 ++
- tests/suites/test_suite_x509write.function  | 125 ++++++++++++++++
- 41 files changed, 1362 insertions(+), 141 deletions(-)
- create mode 100644 tests/data_files/server1-bothnames.crt
- create mode 100644 tests/data_files/server1-directoryname.crt
- create mode 100644 tests/data_files/server1-dnsname.crt
- create mode 100644 tests/data_files/server11-directoryname.crt
+ include/mbedtls/certs.h                    |   4 +
+ include/mbedtls/config.h                   |  18 +--
+ include/mbedtls/net_sockets.h              |  19 ++-
+ include/mbedtls/ssl.h                      |  47 ++++++
+ include/mbedtls/ssl_internal.h             |  11 ++
+ include/mbedtls/x509.h                     |   2 +-
+ include/mbedtls/x509_crt.h                 |  44 ++++++
+ library/asn1write.c                        |   5 +-
+ library/bignum.c                           |   6 +-
+ library/certs.c                            |  17 +++
+ library/ctr_drbg.c                         |   2 +-
+ library/ecp.c                              |   2 +-
+ library/entropy_poll.c                     |  15 +-
+ library/md.c                               |   3 +-
+ library/net_sockets.c                      |  34 ++---
+ library/pkcs5.c                            |   5 +-
+ library/pkparse.c                          |  53 +++----
+ library/rsa.c                              |   3 +
+ library/ssl_cli.c                          |  22 ++-
+ library/ssl_srv.c                          |  10 +-
+ library/ssl_tls.c                          |  82 +++++++++--
+ library/version_features.c                 |   3 +
+ library/x509.c                             |  40 ++++-
+ library/x509_create.c                      |   8 +-
+ library/x509_crl.c                         |   2 +-
+ library/x509_crt.c                         | 225 ++++++++++++++++++++++++++++-
+ library/x509write_crt.c                    |  57 ++++++++
+ programs/ssl/ssl_client2.c                 |  74 ++++++++++
+ programs/ssl/ssl_server2.c                 |  74 ++++++++++
+ programs/x509/cert_write.c                 | 174 ++++++++++++++++++++++
+ tests/ssl-opt.sh                           |  18 +++
+ tests/suites/test_suite_x509parse.data     |  16 ++
+ tests/suites/test_suite_x509write.data     |  12 ++
+ tests/suites/test_suite_x509write.function | 125 ++++++++++++++++
+ 34 files changed, 1127 insertions(+), 105 deletions(-)
 
 diff --git a/include/mbedtls/certs.h b/include/mbedtls/certs.h
-index ca49086e..e41de293 100644
+index 8dab7b5..834b654 100644
 --- a/include/mbedtls/certs.h
 +++ b/include/mbedtls/certs.h
-@@ -73,6 +73,10 @@ extern const char   mbedtls_test_cli_crt_ec[];
+@@ -74,6 +74,10 @@ extern const char   mbedtls_test_cli_crt_ec[];
  extern const size_t mbedtls_test_cli_crt_ec_len;
  extern const char   mbedtls_test_cli_key_ec[];
  extern const size_t mbedtls_test_cli_key_ec_len;
@@ -69,57 +55,54 @@ index ca49086e..e41de293 100644
  #endif
  
  #if defined(MBEDTLS_RSA_C)
-diff --git a/include/mbedtls/check_config.h b/include/mbedtls/check_config.h
-index fe86c1e8..e4583d6c 100644
---- a/include/mbedtls/check_config.h
-+++ b/include/mbedtls/check_config.h
-@@ -189,6 +189,11 @@
- #error "MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED defined, but not all prerequisites"
- #endif
+diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
+index 57145a4..79eedff 100644
+--- a/include/mbedtls/config.h
++++ b/include/mbedtls/config.h
+@@ -787,21 +787,6 @@
+ #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
  
-+#if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED) &&                 \
-+    ( !defined(MBEDTLS_ECDH_C) )
-+#error "MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED defined, but not all prerequisites"
-+#endif
-+
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) &&                 \
-     ( !defined(MBEDTLS_ECDH_C) || !defined(MBEDTLS_ECDSA_C) ||          \
-       !defined(MBEDTLS_X509_CRT_PARSE_C) )
-diff --git a/include/mbedtls/compat-1.3.h b/include/mbedtls/compat-1.3.h
-index af51b5f8..71af7eed 100644
---- a/include/mbedtls/compat-1.3.h
-+++ b/include/mbedtls/compat-1.3.h
-@@ -264,6 +264,9 @@
- #if defined MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
- #define POLARSSL_KEY_EXCHANGE_ECDHE_RSA_ENABLED MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
- #endif
-+#if defined MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-+#define POLARSSL_KEY_EXCHANGE_ECDH_ANON_ENABLED MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-+#endif
- #if defined MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
- #define POLARSSL_KEY_EXCHANGE_ECDH_ECDSA_ENABLED MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
- #endif
-@@ -1273,6 +1276,7 @@
- #define POLARSSL_KEY_EXCHANGE_ECDHE_ECDSA MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA
- #define POLARSSL_KEY_EXCHANGE_ECDHE_PSK MBEDTLS_KEY_EXCHANGE_ECDHE_PSK
- #define POLARSSL_KEY_EXCHANGE_ECDHE_RSA MBEDTLS_KEY_EXCHANGE_ECDHE_RSA
-+#define POLARSSL_KEY_EXCHANGE_ECDH_ANON MBEDTLS_KEY_EXCHANGE_ECDH_ANON
- #define POLARSSL_KEY_EXCHANGE_ECDH_ECDSA MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA
- #define POLARSSL_KEY_EXCHANGE_ECDH_RSA MBEDTLS_KEY_EXCHANGE_ECDH_RSA
- #define POLARSSL_KEY_EXCHANGE_NONE MBEDTLS_KEY_EXCHANGE_NONE
-@@ -1616,6 +1620,7 @@
- #define TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384 MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384
- #define TLS_ECDHE_RSA_WITH_NULL_SHA MBEDTLS_TLS_ECDHE_RSA_WITH_NULL_SHA
- #define TLS_ECDHE_RSA_WITH_RC4_128_SHA MBEDTLS_TLS_ECDHE_RSA_WITH_RC4_128_SHA
-+#define TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
- #define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA MBEDTLS_TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
- #define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
- #define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
+ /**
+- * \def MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
+- *
+- * Enable the ECDHE-ANON based ciphersuite modes in SSL / TLS.
+- *
+- * Requires: MBEDTLS_ECDH_C
+- *
+- *
+- * This enables the following ciphersuites (if other requisites are
+- * enabled as well):
+- *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
+- */
+-#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
+-
+-
+-/**
+  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+  *
+  * Enable the ECDHE-ECDSA based ciphersuite modes in SSL / TLS.
+@@ -1394,7 +1379,7 @@
+  *
+  * Comment this macro to disable support for SSL session tickets
+  */
+-//#define MBEDTLS_SSL_SESSION_TICKETS
++#define MBEDTLS_SSL_SESSION_TICKETS
+ 
+ /**
+  * \def MBEDTLS_SSL_EXPORT_KEYS
+@@ -1634,7 +1619,6 @@
+  *      MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256
+  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256
+  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA
+- *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
+  *
+  * PEM_PARSE uses AES for decrypting encrypted keys.
+  */
 diff --git a/include/mbedtls/net_sockets.h b/include/mbedtls/net_sockets.h
-index de335526..a835534d 100644
+index 54e612c..5638e3a 100644
 --- a/include/mbedtls/net_sockets.h
 +++ b/include/mbedtls/net_sockets.h
-@@ -29,6 +29,10 @@
+@@ -30,6 +30,10 @@
  #include MBEDTLS_CONFIG_FILE
  #endif
  
@@ -130,7 +113,7 @@ index de335526..a835534d 100644
  #include "ssl.h"
  
  #include <stddef.h>
-@@ -51,6 +55,19 @@
+@@ -52,6 +56,19 @@
  #define MBEDTLS_NET_PROTO_TCP 0 /**< The TCP transport protocol */
  #define MBEDTLS_NET_PROTO_UDP 1 /**< The UDP transport protocol */
  
@@ -150,7 +133,7 @@ index de335526..a835534d 100644
  #ifdef __cplusplus
  extern "C" {
  #endif
-@@ -64,7 +81,7 @@ extern "C" {
+@@ -65,7 +82,7 @@ extern "C" {
   */
  typedef struct
  {
@@ -160,20 +143,10 @@ index de335526..a835534d 100644
  mbedtls_net_context;
  
 diff --git a/include/mbedtls/ssl.h b/include/mbedtls/ssl.h
-index 495e02cb..f12a5419 100644
+index 2181c35..e606934 100644
 --- a/include/mbedtls/ssl.h
 +++ b/include/mbedtls/ssl.h
-@@ -358,7 +358,8 @@ union mbedtls_ssl_premaster_secret
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)    || \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)  || \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)     || \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)   || \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-     unsigned char _pms_ecdh[MBEDTLS_ECP_MAX_BYTES];    /* RFC 4492 5.10 */
- #endif
- #if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
-@@ -652,6 +653,12 @@ struct mbedtls_ssl_config
+@@ -666,6 +666,12 @@ struct mbedtls_ssl_config
      mbedtls_ssl_key_cert *key_cert; /*!< own certificate/key pair(s)        */
      mbedtls_x509_crt *ca_chain;     /*!< trusted CAs                        */
      mbedtls_x509_crl *ca_crl;       /*!< trusted CAs CRLs                   */
@@ -186,7 +159,7 @@ index 495e02cb..f12a5419 100644
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
  #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
-@@ -1615,6 +1622,47 @@ void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
+@@ -1637,6 +1643,47 @@ void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
  int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
                                mbedtls_x509_crt *own_cert,
                                mbedtls_pk_context *pk_key );
@@ -234,53 +207,11 @@ index 495e02cb..f12a5419 100644
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
  #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
-diff --git a/include/mbedtls/ssl_ciphersuites.h b/include/mbedtls/ssl_ciphersuites.h
-index deaaa375..4f10540c 100644
---- a/include/mbedtls/ssl_ciphersuites.h
-+++ b/include/mbedtls/ssl_ciphersuites.h
-@@ -158,6 +158,8 @@ extern "C" {
- #define MBEDTLS_TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256     0xC031 /**< TLS 1.2 */
- #define MBEDTLS_TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384     0xC032 /**< TLS 1.2 */
- 
-+#define MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256    0xFF00 /**< TLS 1.2 */
-+
- #define MBEDTLS_TLS_ECDHE_PSK_WITH_RC4_128_SHA           0xC033 /**< Not in SSL3! */
- #define MBEDTLS_TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA      0xC034 /**< Not in SSL3! */
- #define MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA       0xC035 /**< Not in SSL3! */
-@@ -247,6 +249,7 @@ typedef enum {
-     MBEDTLS_KEY_EXCHANGE_ECDH_RSA,
-     MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA,
-     MBEDTLS_KEY_EXCHANGE_ECJPAKE,
-+    MBEDTLS_KEY_EXCHANGE_ECDH_ANON,
- } mbedtls_key_exchange_type_t;
- 
- /* Key exchanges using a certificate */
-@@ -271,7 +274,8 @@ typedef enum {
- /* Key exchanges using a ECDHE */
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)     || \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)   || \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)     || \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
- #define MBEDTLS_KEY_EXCHANGE__SOME__ECDHE_ENABLED
- #endif
- 
 diff --git a/include/mbedtls/ssl_internal.h b/include/mbedtls/ssl_internal.h
-index 668c0f56..3c33fadf 100644
+index 203b0e5..f691494 100644
 --- a/include/mbedtls/ssl_internal.h
 +++ b/include/mbedtls/ssl_internal.h
-@@ -165,8 +165,8 @@ struct mbedtls_ssl_handshake_params
-     /*
-      * Handshake specific crypto variables
-      */
--    int sig_alg;                        /*!<  Hash algorithm for signature   */
--    int verify_sig_alg;                 /*!<  Signature algorithm for verify */
-+    unsigned char sig_alg;              /*!<  Hash algorithm for signature   */
-+    unsigned char verify_sig_alg;       /*!<  Signature algorithm for verify */
- #if defined(MBEDTLS_DHM_C)
-     mbedtls_dhm_context dhm_ctx;                /*!<  DHM key exchange        */
- #endif
-@@ -437,6 +437,8 @@ static inline mbedtls_x509_crt *mbedtls_ssl_own_cert( mbedtls_ssl_context *ssl )
+@@ -582,6 +582,8 @@ static inline mbedtls_x509_crt *mbedtls_ssl_own_cert( mbedtls_ssl_context *ssl )
  int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
                            const mbedtls_ssl_ciphersuite_t *ciphersuite,
                            int cert_endpoint,
@@ -289,7 +220,7 @@ index 668c0f56..3c33fadf 100644
                            uint32_t *flags );
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
-@@ -493,6 +495,15 @@ static inline int mbedtls_ssl_safer_memcmp( const void *a, const void *b, size_t
+@@ -644,6 +646,15 @@ static inline int mbedtls_ssl_safer_memcmp( const void *a, const void *b, size_t
      return( diff );
  }
  
@@ -302,14 +233,14 @@ index 668c0f56..3c33fadf 100644
 +            message_type == MBEDTLS_SSL_MSG_APPLICATION_DATA );
 +}
 +
- #ifdef __cplusplus
- }
- #endif
+ #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
+     defined(MBEDTLS_SSL_PROTO_TLS1_1)
+ int mbedtls_ssl_get_key_exchange_md_ssl_tls( mbedtls_ssl_context *ssl,
 diff --git a/include/mbedtls/x509.h b/include/mbedtls/x509.h
-index f219bf12..c94de9d0 100644
+index d6db9c6..111ad7c 100644
 --- a/include/mbedtls/x509.h
 +++ b/include/mbedtls/x509.h
-@@ -310,7 +310,7 @@ int mbedtls_x509_set_extension( mbedtls_asn1_named_data **head, const char *oid,
+@@ -312,7 +312,7 @@ int mbedtls_x509_set_extension( mbedtls_asn1_named_data **head, const char *oid,
  int mbedtls_x509_write_extensions( unsigned char **p, unsigned char *start,
                             mbedtls_asn1_named_data *first );
  int mbedtls_x509_write_names( unsigned char **p, unsigned char *start,
@@ -319,10 +250,10 @@ index f219bf12..c94de9d0 100644
                      const char *oid, size_t oid_len,
                      unsigned char *sig, size_t size );
 diff --git a/include/mbedtls/x509_crt.h b/include/mbedtls/x509_crt.h
-index 383e484f..d4cdae1c 100644
+index 2dbb7ec..8417991 100644
 --- a/include/mbedtls/x509_crt.h
 +++ b/include/mbedtls/x509_crt.h
-@@ -46,6 +46,31 @@ extern "C" {
+@@ -47,6 +47,31 @@ extern "C" {
   * \{
   */
  
@@ -354,7 +285,7 @@ index 383e484f..d4cdae1c 100644
  /**
   * Container for an X.509 certificate. The certificate may be chained.
   */
-@@ -72,7 +97,11 @@ typedef struct mbedtls_x509_crt
+@@ -73,7 +98,11 @@ typedef struct mbedtls_x509_crt
      mbedtls_x509_buf issuer_id;         /**< Optional X.509 v2/v3 issuer unique identifier. */
      mbedtls_x509_buf subject_id;        /**< Optional X.509 v2/v3 subject unique identifier. */
      mbedtls_x509_buf v3_ext;            /**< Optional X.509 v3 extensions.  */
@@ -366,7 +297,7 @@ index 383e484f..d4cdae1c 100644
  
      int ext_types;              /**< Bit string containing detected and parsed extensions */
      int ca_istrue;              /**< Optional Basic Constraint extension value: 1 if this certificate belongs to a CA, 0 otherwise. */
-@@ -593,6 +622,21 @@ int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
+@@ -602,6 +631,21 @@ int mbedtls_x509write_crt_set_key_usage( mbedtls_x509write_cert *ctx,
  int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
                                      unsigned char ns_cert_type );
  
@@ -389,7 +320,7 @@ index 383e484f..d4cdae1c 100644
   * \brief           Free the contents of a CRT write context
   *
 diff --git a/library/asn1write.c b/library/asn1write.c
-index 69b61b20..3fe98e6c 100644
+index 69b61b2..3fe98e6 100644
 --- a/library/asn1write.c
 +++ b/library/asn1write.c
 @@ -232,6 +232,9 @@ int mbedtls_asn1_write_int( unsigned char **p, unsigned char *start, int val )
@@ -412,10 +343,10 @@ index 69b61b20..3fe98e6c 100644
      if( val > 0 && **p & 0x80 )
      {
 diff --git a/library/bignum.c b/library/bignum.c
-index 8b9082cd..cd976de3 100644
+index d27c130..6fdf317 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
-@@ -1242,9 +1242,9 @@ static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
+@@ -1251,9 +1251,9 @@ static mbedtls_mpi_uint mbedtls_int_div_int( mbedtls_mpi_uint u1,
       */
      if( 0 == d || u1 >= d )
      {
@@ -427,7 +358,7 @@ index 8b9082cd..cd976de3 100644
      }
  
  #if defined(MBEDTLS_HAVE_UDBL)
-@@ -1370,7 +1370,7 @@ int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, c
+@@ -1379,7 +1379,7 @@ int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, c
      for( i = n; i > t ; i-- )
      {
          if( X.p[i] >= Y.p[t] )
@@ -437,12 +368,12 @@ index 8b9082cd..cd976de3 100644
          {
              Z.p[i - t - 1] = mbedtls_int_div_int( X.p[i], X.p[i - 1],
 diff --git a/library/certs.c b/library/certs.c
-index ffe6bc98..812969da 100644
+index f1379b8..e482185 100644
 --- a/library/certs.c
 +++ b/library/certs.c
-@@ -114,6 +114,23 @@ const size_t mbedtls_test_srv_crt_ec_len = sizeof( mbedtls_test_srv_crt_ec );
- const size_t mbedtls_test_srv_key_ec_len = sizeof( mbedtls_test_srv_key_ec );
- const size_t mbedtls_test_cli_crt_ec_len = sizeof( mbedtls_test_cli_crt_ec );
+@@ -113,6 +113,23 @@ const char mbedtls_test_cli_key_ec[] =
+ "wNUYFHDlf5/VS0UY5bBs1Vz4lo+HcKPkxw==\r\n"
+ "-----END EC PRIVATE KEY-----\r\n";
  const size_t mbedtls_test_cli_key_ec_len = sizeof( mbedtls_test_cli_key_ec );
 +
 +#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
@@ -461,27 +392,27 @@ index ffe6bc98..812969da 100644
 +const size_t mbedtls_test_srv_directoryname_ec_crt_len = sizeof( mbedtls_test_srv_directoryname_ec_crt );
 +#endif
 +
- #else
- #define TEST_CA_CRT_EC
  #endif /* MBEDTLS_ECDSA_C */
+ 
+ #if defined(MBEDTLS_RSA_C)
 diff --git a/library/ctr_drbg.c b/library/ctr_drbg.c
-index 55612c7f..574f04fb 100644
+index c2310cb..4e6687d 100644
 --- a/library/ctr_drbg.c
 +++ b/library/ctr_drbg.c
-@@ -178,7 +178,7 @@ static int block_cipher_df( unsigned char *output,
+@@ -183,7 +183,7 @@ static int block_cipher_df( unsigned char *output,
      buf_len = MBEDTLS_CTR_DRBG_BLOCKSIZE + 8 + data_len + 1;
  
      for( i = 0; i < MBEDTLS_CTR_DRBG_KEYSIZE; i++ )
 -        key[i] = i;
 +        key[i] = (unsigned char)i;
  
-     mbedtls_aes_setkey_enc( &aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS );
- 
+     if( ( ret = mbedtls_aes_setkey_enc( &aes_ctx, key, MBEDTLS_CTR_DRBG_KEYBITS ) ) != 0 )
+     {
 diff --git a/library/ecp.c b/library/ecp.c
-index f51f2251..9ae38388 100644
+index b41baef..5f83e2f 100644
 --- a/library/ecp.c
 +++ b/library/ecp.c
-@@ -483,7 +483,7 @@ int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp, const mbedtls_
+@@ -488,7 +488,7 @@ int mbedtls_ecp_point_write_binary( const mbedtls_ecp_group *grp, const mbedtls_
          if( buflen < *olen )
              return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
  
@@ -491,7 +422,7 @@ index f51f2251..9ae38388 100644
      }
  
 diff --git a/library/entropy_poll.c b/library/entropy_poll.c
-index a116e605..c022caf2 100644
+index a116e60..c022caf 100644
 --- a/library/entropy_poll.c
 +++ b/library/entropy_poll.c
 @@ -54,28 +54,29 @@
@@ -532,10 +463,10 @@ index a116e605..c022caf2 100644
  
      return( 0 );
 diff --git a/library/md.c b/library/md.c
-index eda98f63..c2b5d52a 100644
+index 00249af..56cc512 100644
 --- a/library/md.c
 +++ b/library/md.c
-@@ -449,7 +449,8 @@ unsigned char mbedtls_md_get_size( const mbedtls_md_info_t *md_info )
+@@ -456,7 +456,8 @@ unsigned char mbedtls_md_get_size( const mbedtls_md_info_t *md_info )
      if( md_info == NULL )
          return( 0 );
  
@@ -546,7 +477,7 @@ index eda98f63..c2b5d52a 100644
  
  mbedtls_md_type_t mbedtls_md_get_type( const mbedtls_md_info_t *md_info )
 diff --git a/library/net_sockets.c b/library/net_sockets.c
-index 80be6ec6..2e43a795 100644
+index 345f102..3f6fbcf 100644
 --- a/library/net_sockets.c
 +++ b/library/net_sockets.c
 @@ -127,7 +127,7 @@ static int net_prepare( void )
@@ -568,7 +499,7 @@ index 80be6ec6..2e43a795 100644
          if( ctx->fd < 0 )
          {
              ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
-@@ -297,7 +296,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
+@@ -302,7 +301,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
                          mbedtls_net_context *client_ctx,
                          void *client_ip, size_t buf_size, size_t *ip_len )
  {
@@ -577,7 +508,7 @@ index 80be6ec6..2e43a795 100644
      int type;
  
      struct sockaddr_storage client_addr;
-@@ -322,7 +321,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
+@@ -327,7 +326,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
      if( type == SOCK_STREAM )
      {
          /* TCP: actual accept() */
@@ -586,7 +517,7 @@ index 80be6ec6..2e43a795 100644
                                               (struct sockaddr *) &client_addr, &n );
      }
      else
-@@ -330,8 +329,8 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
+@@ -335,8 +334,8 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
          /* UDP: wait for a message, but keep it in the queue */
          char buf[1] = { 0 };
  
@@ -597,7 +528,7 @@ index 80be6ec6..2e43a795 100644
  
  #if defined(_WIN32)
          if( ret == SOCKET_ERROR &&
-@@ -343,7 +342,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
+@@ -348,7 +347,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
  #endif
      }
  
@@ -606,7 +537,7 @@ index 80be6ec6..2e43a795 100644
      {
          if( net_would_block( bind_ctx ) != 0 )
              return( MBEDTLS_ERR_SSL_WANT_READ );
-@@ -362,13 +361,14 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
+@@ -367,13 +366,14 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
              return( MBEDTLS_ERR_NET_ACCEPT_FAILED );
  
          client_ctx->fd = bind_ctx->fd;
@@ -624,7 +555,7 @@ index 80be6ec6..2e43a795 100644
              setsockopt( bind_ctx->fd, SOL_SOCKET, SO_REUSEADDR,
                          (const char *) &one, sizeof( one ) ) != 0 )
          {
-@@ -459,7 +459,7 @@ void mbedtls_net_usleep( unsigned long usec )
+@@ -464,7 +464,7 @@ void mbedtls_net_usleep( unsigned long usec )
  int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
  {
      int ret;
@@ -633,7 +564,7 @@ index 80be6ec6..2e43a795 100644
  
      if( fd < 0 )
          return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
-@@ -498,7 +498,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
+@@ -503,7 +503,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
      int ret;
      struct timeval tv;
      fd_set read_fds;
@@ -642,7 +573,7 @@ index 80be6ec6..2e43a795 100644
  
      if( fd < 0 )
          return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
-@@ -509,7 +509,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
+@@ -514,7 +514,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
      tv.tv_sec  = timeout / 1000;
      tv.tv_usec = ( timeout % 1000 ) * 1000;
  
@@ -651,7 +582,7 @@ index 80be6ec6..2e43a795 100644
  
      /* Zero fds ready means we timed out */
      if( ret == 0 )
-@@ -539,7 +539,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
+@@ -544,7 +544,7 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
  int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
  {
      int ret;
@@ -660,7 +591,7 @@ index 80be6ec6..2e43a795 100644
  
      if( fd < 0 )
          return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
-@@ -574,13 +574,13 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
+@@ -579,13 +579,13 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
   */
  void mbedtls_net_free( mbedtls_net_context *ctx )
  {
@@ -677,7 +608,7 @@ index 80be6ec6..2e43a795 100644
  
  #endif /* MBEDTLS_NET_C */
 diff --git a/library/pkcs5.c b/library/pkcs5.c
-index e28d5a84..7405fc3f 100644
+index e28d5a8..7405fc3 100644
 --- a/library/pkcs5.c
 +++ b/library/pkcs5.c
 @@ -219,12 +219,13 @@ int mbedtls_pkcs5_pbkdf2_hmac( mbedtls_md_context_t *ctx, const unsigned char *p
@@ -697,10 +628,10 @@ index e28d5a84..7405fc3f 100644
      unsigned char counter[4];
  
 diff --git a/library/pkparse.c b/library/pkparse.c
-index efdf4374..fcd5ea82 100644
+index b4def4f..e19511e 100644
 --- a/library/pkparse.c
 +++ b/library/pkparse.c
-@@ -793,34 +793,37 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
+@@ -862,34 +862,37 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
           * Is 'publickey' present? If not, or if we can't read it (eg because it
           * is compressed), create it from the private key.
           */
@@ -764,76 +695,24 @@ index efdf4374..fcd5ea82 100644
      }
  
 diff --git a/library/rsa.c b/library/rsa.c
-index 40ef2a94..29d7a5b3 100644
+index 6526978..b37b022 100644
 --- a/library/rsa.c
 +++ b/library/rsa.c
-@@ -1083,6 +1083,9 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
-          *
-          * Digest ::= OCTET STRING
-          */
-+        if ( hashlen > 127 )
-+            return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
+@@ -1650,6 +1650,9 @@ static int rsa_rsassa_pkcs1_v15_encode( mbedtls_md_type_t md_alg,
+      *                                 TAG-NULL + LEN [ NULL ] ]
+      *                 TAG-OCTET + LEN [ HASH ] ]
+      */
++     if ( hashlen > 127 )
++        return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
 +
-         *p++ = MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED;
-         *p++ = (unsigned char) ( 0x08 + oid_size + hashlen );
-         *p++ = MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED;
-@@ -1094,7 +1097,7 @@ int mbedtls_rsa_rsassa_pkcs1_v15_sign( mbedtls_rsa_context *ctx,
-         *p++ = MBEDTLS_ASN1_NULL;
-         *p++ = 0x00;
-         *p++ = MBEDTLS_ASN1_OCTET_STRING;
--        *p++ = hashlen;
-+        *p++ = (unsigned char)hashlen;
-         memcpy( p, hash, hashlen );
-     }
- 
-diff --git a/library/ssl_ciphersuites.c b/library/ssl_ciphersuites.c
-index a762bf7c..021ab509 100644
---- a/library/ssl_ciphersuites.c
-+++ b/library/ssl_ciphersuites.c
-@@ -95,6 +95,7 @@ static const int ciphersuite_preference[] =
-     MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-     MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
-     MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CCM_8,
-+    MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
- 
-     /* All CAMELLIA-128 ephemeral suites */
-     MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256,
-@@ -407,6 +408,22 @@ static const mbedtls_ssl_ciphersuite_t ciphersuite_definitions[] =
- #endif /* MBEDTLS_CIPHER_NULL_CIPHER */
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
- 
-+
-+#if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-+#if defined(MBEDTLS_AES_C)
-+#if defined(MBEDTLS_SHA256_C)
-+#if defined(MBEDTLS_CIPHER_MODE_CBC)
-+    { MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256, "TLS-ECDH-ANON-WITH-AES-128-CBC-SHA256",
-+      MBEDTLS_CIPHER_AES_128_CBC, MBEDTLS_MD_SHA256, MBEDTLS_KEY_EXCHANGE_ECDH_ANON,
-+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
-+      MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
-+      0 },
-+#endif /* MBEDTLS_CIPHER_MODE_CBC */
-+#endif /* MBEDTLS_SHA256_C */
-+#endif /* MBEDTLS_AES_C */
-+#endif /* MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
-+
-+
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)
- #if defined(MBEDTLS_AES_C)
- #if defined(MBEDTLS_SHA1_C)
-@@ -1829,6 +1846,7 @@ int mbedtls_ssl_ciphersuite_uses_ec( const mbedtls_ssl_ciphersuite_t *info )
-         case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
-         case MBEDTLS_KEY_EXCHANGE_ECDH_RSA:
-         case MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA:
-+        case MBEDTLS_KEY_EXCHANGE_ECDH_ANON:
-             return( 1 );
- 
-         default:
+     *p++ = MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED;
+     *p++ = (unsigned char)( 0x08 + oid_size + hashlen );
+     *p++ = MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED;
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index 223823b3..2a148d53 100644
+index fdb07e4..e9b0d82 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
-@@ -433,7 +433,14 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
+@@ -450,7 +450,14 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
  
      *olen = 0;
  
@@ -849,7 +728,7 @@ index 223823b3..2a148d53 100644
          return;
      }
  
-@@ -451,7 +458,7 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
+@@ -468,7 +475,7 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
      *p++ = 0x00;
      *p++ = 1;
  
@@ -858,7 +737,7 @@ index 223823b3..2a148d53 100644
  
      *olen = 5;
  }
-@@ -907,7 +914,7 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
+@@ -928,7 +935,7 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
      {
          MBEDTLS_SSL_DEBUG_MSG( 3, ( "adding FALLBACK_SCSV" ) );
          *p++ = (unsigned char)( MBEDTLS_SSL_FALLBACK_SCSV_VALUE >> 8 );
@@ -867,167 +746,16 @@ index 223823b3..2a148d53 100644
          n++;
      }
  #endif
-@@ -1904,7 +1911,8 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) ||                    \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
- static int ssl_check_server_ecdh_params( const mbedtls_ssl_context *ssl )
- {
-     const mbedtls_ecp_curve_info *curve_info;
-@@ -1934,11 +1942,13 @@ static int ssl_check_server_ecdh_params( const mbedtls_ssl_context *ssl )
-           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED ||
--          MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED */
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED ||
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
- 
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
- static int ssl_parse_server_ecdh_params( mbedtls_ssl_context *ssl,
-                                          unsigned char **p,
-                                          unsigned char *end )
-@@ -1970,40 +1980,80 @@ static int ssl_parse_server_ecdh_params( mbedtls_ssl_context *ssl,
- }
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
--          MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED */
-+          MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED*/
- 
- #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
- static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
-                                       unsigned char **p,
-                                       unsigned char *end )
- {
--    int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
--    size_t  len;
--    ((void) ssl);
-+    int ret = 0;
-+    size_t n;
-+
-+    if( ssl->conf->f_psk == NULL &&
-+        ( ssl->conf->psk == NULL || ssl->conf->psk_identity == NULL ||
-+          ssl->conf->psk_identity_len == 0 || ssl->conf->psk_len == 0 ) )
-+    {
-+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no pre-shared key" ) );
-+        return( MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED );
-+    }
- 
-     /*
--     * PSK parameters:
--     *
--     * opaque psk_identity_hint<0..2^16-1>;
-+     * Receive client pre-shared key identity name
-      */
--    len = (*p)[0] << 8 | (*p)[1];
-+    if( *p + 2 > end )
-+    {
-+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message" ) );
-+        return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE );
-+    }
-+
-+    n = ( (*p)[0] << 8 ) | (*p)[1];
-     *p += 2;
- 
--    if( (*p) + len > end )
-+    if (n == 0)
-     {
--        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message (psk_identity_hint length)" ) );
--        return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_KEY_EXCHANGE );
-+        return ( 0 );
-     }
- 
--    /*
--     * Note: we currently ignore the PKS identity hint, as we only allow one
--     * PSK to be provisionned on the client. This could be changed later if
--     * someone needs that feature.
--     */
--    *p += len;
--    ret = 0;
-+    if( n < 1 || n > 65535 || *p + n > end )
-+    {
-+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message" ) );
-+        return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE );
-+    }
- 
--    return( ret );
-+    if( ssl->conf->f_psk != NULL )
-+    {
-+        if( ssl->conf->f_psk( ssl->conf->p_psk, ssl, *p, n ) != 0 )
-+            ret = MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY;
-+    }
-+    else
-+    {
-+        /* Identity is not a big secret since clients send it in the clear,
-+         * but treat it carefully anyway, just in case */
-+        if( n != ssl->conf->psk_identity_len ||
-+            mbedtls_ssl_safer_memcmp( ssl->conf->psk_identity, *p, n ) != 0 )
-+        {
-+            ret = MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY;
-+        }
-+    }
-+
-+    if( ret == MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY )
-+    {
-+        MBEDTLS_SSL_DEBUG_BUF( 3, "Unknown PSK identity", *p, n );
-+        if( ( ret = mbedtls_ssl_send_alert_message( ssl,
-+                              MBEDTLS_SSL_ALERT_LEVEL_FATAL,
-+                              MBEDTLS_SSL_ALERT_MSG_UNKNOWN_PSK_IDENTITY ) ) != 0 )
-+        {
-+            return( ret );
-+        }
-+
-+        return( MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY );
-+    }
-+
-+    *p += n;
-+
-+    return( 0 );
- }
- #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
- 
-@@ -2299,10 +2349,12 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
-           MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED */
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_RSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         if( ssl_parse_server_ecdh_params( ssl, &p, end ) != 0 )
-         {
-@@ -2313,7 +2365,8 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
-     else
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
--          MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
-+          MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
- #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-     {
-@@ -2339,12 +2392,14 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_RSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA )
+@@ -2487,12 +2494,14 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
+ #if defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED)
+     if( mbedtls_ssl_ciphersuite_uses_server_signature( ciphersuite_info ) )
      {
 +#if !defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
          size_t sig_len, hashlen;
          unsigned char hash[64];
 -        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
 -        mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
-         unsigned char *params = ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl );
+         unsigned char *params = ssl->in.msg + mbedtls_ssl_hs_hdr_len( ssl );
          size_t params_len = p - params;
 +#endif
 +        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
@@ -1035,110 +763,28 @@ index 223823b3..2a148d53 100644
  
          /*
           * Handle the digitally-signed structure
-@@ -2384,6 +2439,13 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
-             return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
+@@ -2542,7 +2551,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
+         {
+             goto exit;
          }
- 
-+// Anonymous cipher suite without sign, ecdh param only
-+#if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-+        if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-+        {
-+            goto exit;
-+        }
+-#endif
 +#else
          /*
           * Read signature
           */
-@@ -2505,6 +2567,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
+@@ -2624,6 +2633,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
              MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_pk_verify", ret );
              return( ret );
          }
 +#endif /* MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
      }
- #endif /* MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
-@@ -2534,7 +2597,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
-         ssl->state++;
-@@ -2559,7 +2623,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
-         ssl->state++;
-@@ -2773,11 +2838,13 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) ||                    \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_RSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_RSA ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON)
-     {
-         /*
-          * ECDH key exchange -- send client public value
-@@ -2812,7 +2879,8 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED ||
--          MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED */
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-+          MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
- #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-@@ -3002,7 +3070,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
-         ssl->state++;
-@@ -3035,7 +3104,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
-         ssl->state++;
+ #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
+ 
 diff --git a/library/ssl_srv.c b/library/ssl_srv.c
-index fc0d2d7b..ec987743 100644
+index 70888d5..2bfab37 100644
 --- a/library/ssl_srv.c
 +++ b/library/ssl_srv.c
-@@ -224,8 +224,8 @@ static int ssl_parse_signature_algorithms_ext( mbedtls_ssl_context *ssl,
-     return( 0 );
- 
- have_sig_alg:
--    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello v3, signature_algorithm ext: %d",
--                   ssl->handshake->sig_alg ) );
-+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello v3, signature_algorithm ext: %u",
-+                   (unsigned int)ssl->handshake->sig_alg ) );
- 
-     return( 0 );
- }
-@@ -648,7 +648,15 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
+@@ -730,7 +730,15 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
           * and decrypting with the same RSA key.
           */
          if( mbedtls_ssl_check_cert_usage( cur->cert, ciphersuite_info,
@@ -1155,133 +801,53 @@ index fc0d2d7b..ec987743 100644
          {
              MBEDTLS_SSL_DEBUG_MSG( 3, ( "certificate mismatch: "
                                  "(extended) key usage extension" ) );
-@@ -2498,6 +2506,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON ||
-         authmode == MBEDTLS_SSL_VERIFY_NONE )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate request" ) );
-@@ -2675,7 +2684,8 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
--    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) ||                        \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-     unsigned char *p = ssl->out_msg + 4;
-     unsigned char *dig_signed = p;
-     size_t dig_signed_len = 0, len;
-@@ -2736,12 +2746,11 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
-     {
--        /* Note: we don't support identity hints, until someone asks
--         * for them. */
--        *(p++) = 0x00;
--        *(p++) = 0x00;
--
--        n += 2;
-+        *(p++) = (unsigned char)( ssl->conf->psk_identity_len >> 8 );
-+        *(p++) = (unsigned char)( ssl->conf->psk_identity_len      );
-+        memcpy(p, ssl->conf->psk_identity, ssl->conf->psk_identity_len);
-+        p += ssl->conf->psk_identity_len;
-+        n += ssl->conf->psk_identity_len + 2;
-     }
- #endif /* MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED ||
-           MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED */
-@@ -2798,7 +2807,8 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
- #if defined(MBEDTLS_KEY_EXCHANGE__SOME__ECDHE_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_RSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON)
-     {
-         /*
-          * Ephemeral ECDH parameters:
-@@ -3336,11 +3346,13 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
-     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
--    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) ||                    \
-+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_RSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_RSA ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
-                                       p, end - p) ) != 0 )
-@@ -3539,7 +3551,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
-         ssl->state++;
-@@ -3570,6 +3583,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON ||
-         ssl->session_negotiate->peer_cert == NULL )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index d9ab8329..eff6e1d5 100644
+index bf8e428..d51230d 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
-@@ -1360,8 +1360,14 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
+@@ -1390,8 +1390,14 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
          unsigned char taglen = ssl->transform_out->ciphersuite_info->flags &
                                 MBEDTLS_CIPHERSUITE_SHORT_TAG ? 8 : 16;
  
-+        if ( !mbedtls_ssl_message_type_valid(ssl->out_msgtype) )
++        if ( !mbedtls_ssl_message_type_valid(ssl->out.msgtype) )
 +        {
 +            MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
 +            return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
 +        }
 +
-         memcpy( add_data, ssl->out_ctr, 8 );
--        add_data[8]  = ssl->out_msgtype;
-+        add_data[8]  = (unsigned char)ssl->out_msgtype;
+         memcpy( add_data, ssl->out.ctr, 8 );
+-        add_data[8]  = ssl->out.msgtype;
++        add_data[8]  = (unsigned char)ssl->out.msgtype;
          mbedtls_ssl_write_version( ssl->major_ver, ssl->minor_ver,
                             ssl->conf->transport, add_data + 9 );
-         add_data[11] = ( ssl->out_msglen >> 8 ) & 0xFF;
-@@ -1630,6 +1636,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
+         add_data[11] = ( ssl->out.msglen >> 8 ) & 0xFF;
+@@ -1658,6 +1664,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
          size_t explicit_iv_len = ssl->transform_in->ivlen -
                                   ssl->transform_in->fixed_ivlen;
  
-+        if ( !mbedtls_ssl_message_type_valid(ssl->in_msgtype) )
++        if ( !mbedtls_ssl_message_type_valid(ssl->in.msgtype) )
 +        {
 +            MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
 +            return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
 +        }
 +
-         if( ssl->in_msglen < explicit_iv_len + taglen )
+         if( ssl->in.msglen < explicit_iv_len + taglen )
          {
              MBEDTLS_SSL_DEBUG_MSG( 1, ( "msglen (%d) < explicit_iv_len (%d) "
-@@ -1644,7 +1656,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
-         ssl->in_msglen = dec_msglen;
+@@ -1672,7 +1684,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
+         ssl->in.msglen = dec_msglen;
  
-         memcpy( add_data, ssl->in_ctr, 8 );
--        add_data[8]  = ssl->in_msgtype;
-+        add_data[8]  = (unsigned char)ssl->in_msgtype;
+         memcpy( add_data, ssl->in.ctr, 8 );
+-        add_data[8]  = ssl->in.msgtype;
++        add_data[8]  = (unsigned char)ssl->in.msgtype;
          mbedtls_ssl_write_version( ssl->major_ver, ssl->minor_ver,
                             ssl->conf->transport, add_data + 9 );
-         add_data[11] = ( ssl->in_msglen >> 8 ) & 0xFF;
-@@ -2473,6 +2485,12 @@ static int ssl_flight_append( mbedtls_ssl_context *ssl )
+         add_data[11] = ( ssl->in.msglen >> 8 ) & 0xFF;
+@@ -2548,6 +2560,12 @@ static int ssl_flight_append( mbedtls_ssl_context *ssl )
  {
      mbedtls_ssl_flight_item *msg;
  
-+    if ( !mbedtls_ssl_message_type_valid(ssl->out_msgtype) )
++    if ( !mbedtls_ssl_message_type_valid(ssl->out.msgtype) )
 +    {
 +        MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
 +        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
@@ -1290,70 +856,30 @@ index d9ab8329..eff6e1d5 100644
      /* Allocate space for current message */
      if( ( msg = mbedtls_calloc( 1, sizeof(  mbedtls_ssl_flight_item ) ) ) == NULL )
      {
-@@ -2491,7 +2509,7 @@ static int ssl_flight_append( mbedtls_ssl_context *ssl )
+@@ -2566,7 +2584,7 @@ static int ssl_flight_append( mbedtls_ssl_context *ssl )
      /* Copy current handshake message with headers */
-     memcpy( msg->p, ssl->out_msg, ssl->out_msglen );
-     msg->len = ssl->out_msglen;
--    msg->type = ssl->out_msgtype;
-+    msg->type = (unsigned char)ssl->out_msgtype;
+     memcpy( msg->p, ssl->out.msg, ssl->out.msglen );
+     msg->len = ssl->out.msglen;
+-    msg->type = ssl->out.msgtype;
++    msg->type = (unsigned char)ssl->out.msgtype;
      msg->next = NULL;
  
      /* Append to the current flight */
-@@ -4066,7 +4084,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
-         ssl->state++;
-@@ -4086,7 +4105,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
-         ssl->state++;
-@@ -4109,7 +4129,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
-         ssl->state++;
-@@ -4225,7 +4246,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
-     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
-         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
--        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
-+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ANON )
-     {
-         MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
-         ssl->state++;
-@@ -4476,6 +4498,13 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
+@@ -4724,6 +4742,13 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
          if( mbedtls_ssl_check_cert_usage( ssl->session_negotiate->peer_cert,
-                                   ciphersuite_info,
-                                   ! ssl->conf->endpoint,
+                                  ciphersuite_info,
+                                  ! ssl->conf->endpoint,
 +#if defined(MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE)
-+                                  ssl->conf->client_oid, ssl->conf->client_oid_len,
-+                                  ssl->conf->server_oid, ssl->conf->server_oid_len,
++                                 ssl->conf->client_oid, ssl->conf->client_oid_len,
++                                 ssl->conf->server_oid, ssl->conf->server_oid_len,
 +#else
-+                                  NULL, 0,
-+                                  NULL, 0,
++                                 NULL, 0,
++                                 NULL, 0,
 +#endif
                                   &ssl->session_negotiate->verify_result ) != 0 )
          {
              MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad certificate (usage extensions)" ) );
-@@ -5759,6 +5788,28 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
+@@ -6154,6 +6179,28 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
      return( ssl_append_key_cert( &conf->key_cert, own_cert, pk_key ) );
  }
  
@@ -1382,7 +908,7 @@ index d9ab8329..eff6e1d5 100644
  void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
                                 mbedtls_x509_crt *ca_chain,
                                 mbedtls_x509_crl *ca_crl )
-@@ -6033,14 +6084,14 @@ const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl )
+@@ -6480,14 +6527,14 @@ const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl )
  
  void mbedtls_ssl_conf_max_version( mbedtls_ssl_config *conf, int major, int minor )
  {
@@ -1401,7 +927,7 @@ index d9ab8329..eff6e1d5 100644
  }
  
  #if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
-@@ -7255,6 +7306,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
+@@ -7789,6 +7836,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
              }
  #endif
  
@@ -1415,7 +941,7 @@ index d9ab8329..eff6e1d5 100644
      /*
       * Preset-specific defaults
       */
-@@ -7502,6 +7560,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
+@@ -8100,6 +8154,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
  int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
                            const mbedtls_ssl_ciphersuite_t *ciphersuite,
                            int cert_endpoint,
@@ -1424,7 +950,7 @@ index d9ab8329..eff6e1d5 100644
                            uint32_t *flags )
  {
      int ret = 0;
-@@ -7518,6 +7578,10 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -8116,6 +8172,10 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
      ((void) cert);
      ((void) cert_endpoint);
      ((void) flags);
@@ -1435,15 +961,7 @@ index d9ab8329..eff6e1d5 100644
  #endif
  
  #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
-@@ -7548,6 +7612,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
-             case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
-             case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
-             case MBEDTLS_KEY_EXCHANGE_ECJPAKE:
-+            case MBEDTLS_KEY_EXCHANGE_ECDH_ANON:
-                 usage = 0;
-         }
-     }
-@@ -7569,13 +7634,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -8168,13 +8228,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
  #if defined(MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE)
      if( cert_endpoint == MBEDTLS_SSL_IS_SERVER )
      {
@@ -1462,20 +980,10 @@ index d9ab8329..eff6e1d5 100644
  
      if( mbedtls_x509_crt_check_extended_key_usage( cert, ext_oid, ext_len ) != 0 )
 diff --git a/library/version_features.c b/library/version_features.c
-index e866e67a..7798b27a 100644
+index db7e21e..c0bf0d5 100644
 --- a/library/version_features.c
 +++ b/library/version_features.c
-@@ -264,6 +264,9 @@ static const char *features[] = {
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)
-     "MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED",
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED */
-+#if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-+    "MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED",
-+#endif /* MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
- #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
-     "MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED",
- #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED */
-@@ -423,6 +426,9 @@ static const char *features[] = {
+@@ -495,6 +495,9 @@ static const char *features[] = {
  #if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
      "MBEDTLS_X509_RSASSA_PSS_SUPPORT",
  #endif /* MBEDTLS_X509_RSASSA_PSS_SUPPORT */
@@ -1486,10 +994,10 @@ index e866e67a..7798b27a 100644
      "MBEDTLS_ZLIB_SUPPORT",
  #endif /* MBEDTLS_ZLIB_SUPPORT */
 diff --git a/library/x509.c b/library/x509.c
-index e4387707..e9df5c71 100644
+index 371d6da..8f77559 100644
 --- a/library/x509.c
 +++ b/library/x509.c
-@@ -1040,6 +1040,10 @@ int mbedtls_x509_self_test( int verbose )
+@@ -1046,6 +1046,10 @@ int mbedtls_x509_self_test( int verbose )
      uint32_t flags;
      mbedtls_x509_crt cacert;
      mbedtls_x509_crt clicert;
@@ -1500,7 +1008,7 @@ index e4387707..e9df5c71 100644
  
      if( verbose != 0 )
          mbedtls_printf( "  X.509 certificate load: " );
-@@ -1080,11 +1084,45 @@ int mbedtls_x509_self_test( int verbose )
+@@ -1086,11 +1090,45 @@ int mbedtls_x509_self_test( int verbose )
          return( ret );
      }
  
@@ -1548,7 +1056,7 @@ index e4387707..e9df5c71 100644
      return( 0 );
  #else
 diff --git a/library/x509_create.c b/library/x509_create.c
-index df20ec8e..fa4a4805 100644
+index df20ec8..fa4a480 100644
 --- a/library/x509_create.c
 +++ b/library/x509_create.c
 @@ -174,7 +174,7 @@ int mbedtls_x509_set_extension( mbedtls_asn1_named_data **head, const char *oid,
@@ -1580,7 +1088,7 @@ index df20ec8e..fa4a4805 100644
                                              cur->val.p, cur->val.len ) );
          cur = cur->next;
 diff --git a/library/x509_crl.c b/library/x509_crl.c
-index 76c49f13..67efec03 100644
+index 55d12ac..58646c9 100644
 --- a/library/x509_crl.c
 +++ b/library/x509_crl.c
 @@ -491,7 +491,7 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
@@ -1593,7 +1101,7 @@ index 76c49f13..67efec03 100644
      int is_pem = 0;
  
 diff --git a/library/x509_crt.c b/library/x509_crt.c
-index 234f1456..0d3f0eac 100644
+index c6209fb..3597480 100644
 --- a/library/x509_crt.c
 +++ b/library/x509_crt.c
 @@ -62,6 +62,7 @@
@@ -1604,7 +1112,7 @@ index 234f1456..0d3f0eac 100644
  #else
  #include <time.h>
  #endif
-@@ -438,17 +439,31 @@ static int x509_get_ext_key_usage( unsigned char **p,
+@@ -440,17 +441,31 @@ static int x509_get_ext_key_usage( unsigned char **p,
   *      nameAssigner            [0]     DirectoryString OPTIONAL,
   *      partyName               [1]     DirectoryString }
   *
@@ -1638,7 +1146,7 @@ index 234f1456..0d3f0eac 100644
  
      /* Get main sequence tag */
      if( ( ret = mbedtls_asn1_get_tag( p, end, &len,
-@@ -474,6 +489,49 @@ static int x509_get_subject_alt_name( unsigned char **p,
+@@ -476,6 +491,49 @@ static int x509_get_subject_alt_name( unsigned char **p,
              return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS +
                      MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
  
@@ -1688,7 +1196,7 @@ index 234f1456..0d3f0eac 100644
          /* Skip everything but DNS name */
          if( tag != ( MBEDTLS_ASN1_CONTEXT_SPECIFIC | 2 ) )
          {
-@@ -501,6 +559,7 @@ static int x509_get_subject_alt_name( unsigned char **p,
+@@ -503,6 +561,7 @@ static int x509_get_subject_alt_name( unsigned char **p,
          buf->p = *p;
          buf->len = tag_len;
          *p += buf->len;
@@ -1696,7 +1204,7 @@ index 234f1456..0d3f0eac 100644
      }
  
      /* Set final sequence entry's next pointer to NULL */
-@@ -1108,6 +1167,7 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
+@@ -1110,6 +1169,7 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
      char filename[MAX_PATH];
      char *p;
      size_t len = strlen( path );
@@ -1704,7 +1212,7 @@ index 234f1456..0d3f0eac 100644
  
      WIN32_FIND_DATAW file_data;
      HANDLE hFind;
-@@ -1122,7 +1182,10 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
+@@ -1124,7 +1184,10 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
      p = filename + len;
      filename[len++] = '*';
  
@@ -1716,7 +1224,7 @@ index 234f1456..0d3f0eac 100644
                                   MAX_PATH - 3 );
      if( w_ret == 0 )
          return( MBEDTLS_ERR_X509_BAD_INPUT_DATA );
-@@ -1139,8 +1202,11 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
+@@ -1141,8 +1204,11 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
          if( file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
              continue;
  
@@ -1729,7 +1237,7 @@ index 234f1456..0d3f0eac 100644
                                       p, (int) len - 1,
                                       NULL, NULL );
          if( w_ret == 0 )
-@@ -1219,6 +1285,98 @@ cleanup:
+@@ -1225,6 +1291,98 @@ cleanup:
  }
  #endif /* MBEDTLS_FS_IO */
  
@@ -1828,7 +1336,7 @@ index 234f1456..0d3f0eac 100644
  static int x509_info_subject_alt_name( char **buf, size_t *size,
                                         const mbedtls_x509_sequence *subject_alt_name )
  {
-@@ -1256,6 +1414,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+@@ -1262,6 +1420,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
  
      return( 0 );
  }
@@ -1836,7 +1344,7 @@ index 234f1456..0d3f0eac 100644
  
  #define PRINT_ITEM(i)                           \
      {                                           \
-@@ -2197,7 +2356,11 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
+@@ -2203,7 +2362,11 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
      int pathlen = 0, selfsigned = 0;
      mbedtls_x509_crt *parent;
      mbedtls_x509_name *name;
@@ -1847,8 +1355,8 @@ index 234f1456..0d3f0eac 100644
 +#endif
      mbedtls_pk_type_t pk_type;
  
-     if( profile == NULL )
-@@ -2216,6 +2379,22 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
+     *flags = 0;
+@@ -2225,6 +2388,22 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
  
              while( cur != NULL )
              {
@@ -1871,7 +1379,7 @@ index 234f1456..0d3f0eac 100644
                  if( cur->buf.len == cn_len &&
                      x509_memcasecmp( cn, cur->buf.p, cn_len ) == 0 )
                      break;
-@@ -2226,6 +2405,7 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
+@@ -2235,6 +2414,7 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
                  {
                      break;
                  }
@@ -1879,7 +1387,7 @@ index 234f1456..0d3f0eac 100644
  
                  cur = cur->next;
              }
-@@ -2327,6 +2507,10 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+@@ -2349,6 +2529,10 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
      mbedtls_x509_crt *cert_prv;
      mbedtls_x509_name *name_cur;
      mbedtls_x509_name *name_prv;
@@ -1890,7 +1398,7 @@ index 234f1456..0d3f0eac 100644
      mbedtls_x509_sequence *seq_cur;
      mbedtls_x509_sequence *seq_prv;
  
-@@ -2368,6 +2552,38 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+@@ -2390,6 +2574,38 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
              mbedtls_free( seq_prv );
          }
  
@@ -1929,7 +1437,7 @@ index 234f1456..0d3f0eac 100644
          seq_cur = cert_cur->subject_alt_names.next;
          while( seq_cur != NULL )
          {
-@@ -2376,6 +2592,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+@@ -2398,6 +2614,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
              mbedtls_zeroize( seq_prv, sizeof( mbedtls_x509_sequence ) );
              mbedtls_free( seq_prv );
          }
@@ -1938,10 +1446,10 @@ index 234f1456..0d3f0eac 100644
          if( cert_cur->raw.p != NULL )
          {
 diff --git a/library/x509write_crt.c b/library/x509write_crt.c
-index d1d9a22a..55f194d0 100644
+index 41dfe87..da9a4b4 100644
 --- a/library/x509write_crt.c
 +++ b/library/x509write_crt.c
-@@ -263,6 +263,63 @@ int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
+@@ -269,6 +269,63 @@ int mbedtls_x509write_crt_set_ns_cert_type( mbedtls_x509write_cert *ctx,
      return( 0 );
  }
  
@@ -2003,10 +1511,10 @@ index d1d9a22a..55f194d0 100644
 +#endif /* MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT */
 +
  static int x509_write_time( unsigned char **p, unsigned char *start,
-                             const char *time, size_t size )
+                             const char *t, size_t size )
  {
 diff --git a/programs/ssl/ssl_client2.c b/programs/ssl/ssl_client2.c
-index a1d71e1b..b3346565 100644
+index 8e2feb1..393acda 100644
 --- a/programs/ssl/ssl_client2.c
 +++ b/programs/ssl/ssl_client2.c
 @@ -58,6 +58,7 @@ int main( void )
@@ -2017,7 +1525,7 @@ index a1d71e1b..b3346565 100644
  
  #include <stdio.h>
  #include <stdlib.h>
-@@ -103,6 +104,8 @@ int main( void )
+@@ -108,6 +109,8 @@ int main( void )
  #define DFL_FALLBACK            -1
  #define DFL_EXTENDED_MS         -1
  #define DFL_ETM                 -1
@@ -2026,7 +1534,7 @@ index a1d71e1b..b3346565 100644
  
  #define GET_REQUEST "GET %s HTTP/1.0\r\nExtra-header: "
  #define GET_REQUEST_END "\r\n\r\n"
-@@ -222,6 +225,14 @@ int main( void )
+@@ -238,6 +241,14 @@ int main( void )
  #define USAGE_ECJPAKE ""
  #endif
  
@@ -2041,15 +1549,15 @@ index a1d71e1b..b3346565 100644
  #define USAGE \
      "\n usage: ssl_client2 param=<>...\n"                   \
      "\n acceptable parameters:\n"                           \
-@@ -261,6 +272,7 @@ int main( void )
-     USAGE_ETM                                               \
+@@ -278,6 +289,7 @@ int main( void )
+     USAGE_CURVES                                            \
      USAGE_RECSPLIT                                          \
      USAGE_DHMLEN                                            \
 +    USAGE_EKU                                               \
      "\n"                                                    \
      "    arc4=%%d             default: (library default: 0)\n" \
-     "    min_version=%%s      default: (library default: tls1)\n"       \
-@@ -317,6 +329,10 @@ struct options
+     "    allow_sha1=%%d       default: 0\n"                             \
+@@ -340,6 +352,10 @@ struct options
      int fallback;               /* is this a fallback connection?           */
      int extended_ms;            /* negotiate extended master secret?        */
      int etm;                    /* negotiate encrypt then mac?              */
@@ -2060,7 +1568,7 @@ index a1d71e1b..b3346565 100644
  } opt;
  
  static void my_debug( void *ctx, int level,
-@@ -507,6 +523,10 @@ int main( int argc, char *argv[] )
+@@ -558,6 +574,10 @@ int main( int argc, char *argv[] )
      opt.fallback            = DFL_FALLBACK;
      opt.extended_ms         = DFL_EXTENDED_MS;
      opt.etm                 = DFL_ETM;
@@ -2071,7 +1579,7 @@ index a1d71e1b..b3346565 100644
  
      for( i = 1; i < argc; i++ )
      {
-@@ -797,6 +817,47 @@ int main( int argc, char *argv[] )
+@@ -860,6 +880,47 @@ int main( int argc, char *argv[] )
              if( opt.dhmlen < 0 )
                  goto usage;
          }
@@ -2119,7 +1627,7 @@ index a1d71e1b..b3346565 100644
          else
              goto usage;
      }
-@@ -1088,6 +1149,19 @@ int main( int argc, char *argv[] )
+@@ -1207,6 +1268,19 @@ int main( int argc, char *argv[] )
          goto exit;
      }
  
@@ -2137,10 +1645,10 @@ index a1d71e1b..b3346565 100644
 +#endif
 +
  #if defined(MBEDTLS_X509_CRT_PARSE_C)
-     if( opt.debug_level > 0 )
-         mbedtls_ssl_conf_verify( &conf, my_verify, NULL );
+     /* The default algorithms profile disables SHA-1, but our tests still
+        rely on it heavily. */
 diff --git a/programs/ssl/ssl_server2.c b/programs/ssl/ssl_server2.c
-index 96bd35f6..018d1492 100644
+index cc29b49..0ca015c 100644
 --- a/programs/ssl/ssl_server2.c
 +++ b/programs/ssl/ssl_server2.c
 @@ -59,6 +59,7 @@ int main( void )
@@ -2151,7 +1659,7 @@ index 96bd35f6..018d1492 100644
  
  #include <stdio.h>
  #include <stdlib.h>
-@@ -141,6 +142,8 @@ int main( void )
+@@ -144,6 +145,8 @@ int main( void )
  #define DFL_BADMAC_LIMIT        -1
  #define DFL_EXTENDED_MS         -1
  #define DFL_ETM                 -1
@@ -2160,8 +1668,8 @@ index 96bd35f6..018d1492 100644
  
  #define LONG_RESPONSE "<p>01-blah-blah-blah-blah-blah-blah-blah-blah-blah\r\n" \
      "02-blah-blah-blah-blah-blah-blah-blah-blah-blah-blah-blah-blah-blah\r\n"  \
-@@ -309,6 +312,14 @@ int main( void )
- #define USAGE_ECJPAKE ""
+@@ -323,6 +326,14 @@ int main( void )
+ #define USAGE_CURVES ""
  #endif
  
 +#if defined(MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE)
@@ -2175,15 +1683,15 @@ index 96bd35f6..018d1492 100644
  #define USAGE \
      "\n usage: ssl_server2 param=<>...\n"                   \
      "\n acceptable parameters:\n"                           \
-@@ -343,6 +354,7 @@ int main( void )
-     USAGE_ALPN                                              \
+@@ -360,6 +371,7 @@ int main( void )
      USAGE_EMS                                               \
      USAGE_ETM                                               \
+     USAGE_CURVES                                            \
 +    USAGE_EKU                                               \
      "\n"                                                    \
      "    arc4=%%d             default: (library default: 0)\n" \
-     "    min_version=%%s      default: (library default: tls1)\n"       \
-@@ -418,6 +430,10 @@ struct options
+     "    allow_sha1=%%d       default: 0\n"                             \
+@@ -442,6 +454,10 @@ struct options
      uint32_t hs_to_min;         /* Initial value of DTLS handshake timer    */
      uint32_t hs_to_max;         /* Max value of DTLS handshake timer        */
      int badmac_limit;           /* Limit of records with bad MAC            */
@@ -2194,7 +1702,7 @@ index 96bd35f6..018d1492 100644
  } opt;
  
  static void my_debug( void *ctx, int level,
-@@ -961,6 +977,10 @@ int main( int argc, char *argv[] )
+@@ -1013,6 +1029,10 @@ int main( int argc, char *argv[] )
      opt.badmac_limit        = DFL_BADMAC_LIMIT;
      opt.extended_ms         = DFL_EXTENDED_MS;
      opt.etm                 = DFL_ETM;
@@ -2205,7 +1713,7 @@ index 96bd35f6..018d1492 100644
  
      for( i = 1; i < argc; i++ )
      {
-@@ -1255,6 +1275,47 @@ int main( int argc, char *argv[] )
+@@ -1324,6 +1344,47 @@ int main( int argc, char *argv[] )
          {
              opt.sni = q;
          }
@@ -2253,7 +1761,7 @@ index 96bd35f6..018d1492 100644
          else
              goto usage;
      }
-@@ -1631,6 +1692,20 @@ int main( int argc, char *argv[] )
+@@ -1756,6 +1817,19 @@ int main( int argc, char *argv[] )
          goto exit;
      }
  
@@ -2270,15 +1778,14 @@ index 96bd35f6..018d1492 100644
 +    }
 +#endif
 +
-+
-     if( opt.auth_mode != DFL_AUTH_MODE )
-         mbedtls_ssl_conf_authmode( &conf, opt.auth_mode );
- 
+ #if defined(MBEDTLS_X509_CRT_PARSE_C)
+     /* The default algorithms profile disables SHA-1, but our tests still
+        rely on it heavily. Hence we allow it here. A real-world server
 diff --git a/programs/x509/cert_write.c b/programs/x509/cert_write.c
-index 66e5f1da..1405e711 100644
+index 9cc582d..1e2c582 100644
 --- a/programs/x509/cert_write.c
 +++ b/programs/x509/cert_write.c
-@@ -66,6 +66,16 @@ int main( void )
+@@ -67,6 +67,16 @@ int main( void )
  #define USAGE_CSR ""
  #endif /* MBEDTLS_X509_CSR_PARSE_C */
  
@@ -2295,16 +1802,16 @@ index 66e5f1da..1405e711 100644
  #define DFL_ISSUER_CRT          ""
  #define DFL_REQUEST_FILE        ""
  #define DFL_SUBJECT_KEY         "subject.key"
-@@ -127,6 +137,7 @@ int main( void )
-     "                          ssl_ca\n"                \
-     "                          email_ca\n"              \
-     "                          object_signing_ca\n"     \
-+    USAGE_SUBJ_ALT_NAME                                 \
+@@ -148,6 +158,7 @@ int main( void )
+     "                            ssl_ca\n"                \
+     "                            email_ca\n"              \
+     "                            object_signing_ca\n"     \
++    USAGE_SUBJ_ALT_NAME                                   \
      "\n"
  
  /*
-@@ -151,6 +162,9 @@ struct options
-     int max_pathlen;            /* maximum CA path length               */
+@@ -177,6 +188,9 @@ struct options
+     mbedtls_md_type_t md;       /* Hash used for signing                */
      unsigned char key_usage;    /* key usage flags                      */
      unsigned char ns_cert_type; /* NS cert type                         */
 +#if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
@@ -2313,7 +1820,7 @@ index 66e5f1da..1405e711 100644
  } opt;
  
  int write_certificate( mbedtls_x509write_cert *crt, const char *output_file,
-@@ -182,6 +196,58 @@ int write_certificate( mbedtls_x509write_cert *crt, const char *output_file,
+@@ -209,6 +223,58 @@ int write_certificate( mbedtls_x509write_cert *crt, const char *output_file,
      return( 0 );
  }
  
@@ -2372,7 +1879,7 @@ index 66e5f1da..1405e711 100644
  int main( int argc, char *argv[] )
  {
      int ret = 0;
-@@ -202,6 +268,10 @@ int main( int argc, char *argv[] )
+@@ -229,6 +295,10 @@ int main( int argc, char *argv[] )
      mbedtls_entropy_context entropy;
      mbedtls_ctr_drbg_context ctr_drbg;
      const char *pers = "crt example app";
@@ -2383,17 +1890,17 @@ index 66e5f1da..1405e711 100644
  
      /*
       * Set to sane values
-@@ -243,6 +313,9 @@ int main( int argc, char *argv[] )
-     opt.max_pathlen         = DFL_MAX_PATHLEN;
-     opt.key_usage           = DFL_KEY_USAGE;
-     opt.ns_cert_type        = DFL_NS_CERT_TYPE;
+@@ -274,6 +344,9 @@ int main( int argc, char *argv[] )
+     opt.subject_identifier   = DFL_SUBJ_IDENT;
+     opt.authority_identifier = DFL_AUTH_IDENT;
+     opt.basic_constraints    = DFL_CONSTRAINTS;
 +#if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
 +    memset( &opt.subj_alt_names, 0, sizeof( opt.subj_alt_names ) );
 +#endif
  
      for( i = 1; i < argc; i++ )
      {
-@@ -358,6 +431,86 @@ int main( int argc, char *argv[] )
+@@ -460,6 +533,86 @@ int main( int argc, char *argv[] )
                  q = r;
              }
          }
@@ -2480,7 +1987,7 @@ index 66e5f1da..1405e711 100644
          else
              goto usage;
      }
-@@ -632,6 +785,24 @@ int main( int argc, char *argv[] )
+@@ -771,6 +924,24 @@ int main( int argc, char *argv[] )
          mbedtls_printf( " ok\n" );
      }
  
@@ -2505,7 +2012,7 @@ index 66e5f1da..1405e711 100644
      /*
       * 1.2. Writing the request
       */
-@@ -649,6 +820,9 @@ int main( int argc, char *argv[] )
+@@ -789,6 +960,9 @@ int main( int argc, char *argv[] )
      mbedtls_printf( " ok\n" );
  
  exit:
@@ -2515,110 +2022,11 @@ index 66e5f1da..1405e711 100644
      mbedtls_x509write_crt_free( &crt );
      mbedtls_pk_free( &loaded_subject_key );
      mbedtls_pk_free( &loaded_issuer_key );
-diff --git a/tests/data_files/server1-bothnames.crt b/tests/data_files/server1-bothnames.crt
-new file mode 100644
-index 00000000..b7e1f40d
---- /dev/null
-+++ b/tests/data_files/server1-bothnames.crt
-@@ -0,0 +1,22 @@
-+-----BEGIN CERTIFICATE-----
-+MIIDoTCCAomgAwIBAgIBATANBgkqhkiG9w0BAQsFADA7MQswCQYDVQQGEwJOTDER
-+MA8GA1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwHhcN
-+MTEwMjEyMTQ0NDA2WhcNMjEwMjEyMTQ0NDA2WjA8MQswCQYDVQQGEwJOTDERMA8G
-+A1UEChMIUG9sYXJTU0wxGjAYBgNVBAMTEVBvbGFyU1NMIFNlcnZlciAxMIIBIjAN
-+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQIfPUBq1VVTi/027oJlLhVhXom/
-+uOhFkNvuiBZS0/FDUEeWEllkh2v9K+BG+XO+3c+S4ZFb7Wagb4kpeUWA0INq1UFD
-+d185fAkER4KwVzlw7aPsFRkeqDMIR8EFQqn9TMO0390GH00QUUBncxMPQPhtgSVf
-+CrFTxjB+FTms+Vruf5KepgVb5xOXhbUjktnUJAbVCSWJdQfdphqPPwkZvq1lLGTr
-+lZvc/kFeF6babFtpzAK6FCwWJJxK3M3Q91Jnc/EtoCP9fvQxyi1wyokLBNsupk9w
-+bp7OvViJ4lNZnm5akmXiiD8MlBmj3eXonZUT7Snbq3AS3FrKaxerUoJUsQIDAQAB
-+o4GuMIGrMAkGA1UdEwQCMAAwHQYDVR0OBBYEFB901j8pwXR0RTsFEiw9qL1DWQKm
-+MB8GA1UdIwQYMBaAFLRa5KWz3tJS9rnVppUP6z68x/3/MF4GA1UdEQRXMFWkPzA9
-+MQswCQYDVQQGEwJOTDERMA8GA1UEChMIUG9sYXJTU0wxGzAZBgNVBAMTElBvbGFy
-+U1NMIFNlcnZlciAxQYISb3RoZXIucG9sYXJzc2wub3JnMA0GCSqGSIb3DQEBCwUA
-+A4IBAQCUqTN1WjWPMNpflyDTOEq+DEbNgj83ghhB6cCxHCGNT12CpBvQDh4bj5QC
-+c77x8kN5fwy+HO1QIwHhBtjLC0IUfKvJUaTbwvIDH1NotrxSg/ft3HG/ijbTrX9/
-+kxDXDcHkOlNX4Y5cJnU7UBm81n7WInGvGqperXTIDgW5CEkQp2ErtxvSZkNtYe82
-+0DwVIQwjbF5hxFxQPGEzM1AANMyzOYKNtg6S7ElbtU4NQqvcBNr3vaG5ipMrkf2u
-+kfJZAs+bPo+UyuFBCRGmOMgOAUrK4WvvxtqKFZDdty+pyTiR25x55Upfum7jxeBt
-+Nnu2TUYcY472fXbZA5Y7/gGnmmRe
-+-----END CERTIFICATE-----
-diff --git a/tests/data_files/server1-directoryname.crt b/tests/data_files/server1-directoryname.crt
-new file mode 100644
-index 00000000..b220230a
---- /dev/null
-+++ b/tests/data_files/server1-directoryname.crt
-@@ -0,0 +1,22 @@
-+-----BEGIN CERTIFICATE-----
-+MIIDjTCCAnWgAwIBAgIBATANBgkqhkiG9w0BAQsFADA7MQswCQYDVQQGEwJOTDER
-+MA8GA1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwHhcN
-+MTEwMjEyMTQ0NDA2WhcNMjEwMjEyMTQ0NDA2WjA8MQswCQYDVQQGEwJOTDERMA8G
-+A1UEChMIUG9sYXJTU0wxGjAYBgNVBAMTEVBvbGFyU1NMIFNlcnZlciAxMIIBIjAN
-+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQIfPUBq1VVTi/027oJlLhVhXom/
-+uOhFkNvuiBZS0/FDUEeWEllkh2v9K+BG+XO+3c+S4ZFb7Wagb4kpeUWA0INq1UFD
-+d185fAkER4KwVzlw7aPsFRkeqDMIR8EFQqn9TMO0390GH00QUUBncxMPQPhtgSVf
-+CrFTxjB+FTms+Vruf5KepgVb5xOXhbUjktnUJAbVCSWJdQfdphqPPwkZvq1lLGTr
-+lZvc/kFeF6babFtpzAK6FCwWJJxK3M3Q91Jnc/EtoCP9fvQxyi1wyokLBNsupk9w
-+bp7OvViJ4lNZnm5akmXiiD8MlBmj3eXonZUT7Snbq3AS3FrKaxerUoJUsQIDAQAB
-+o4GaMIGXMAkGA1UdEwQCMAAwHQYDVR0OBBYEFB901j8pwXR0RTsFEiw9qL1DWQKm
-+MB8GA1UdIwQYMBaAFLRa5KWz3tJS9rnVppUP6z68x/3/MEoGA1UdEQRDMEGkPzA9
-+MQswCQYDVQQGEwJOTDERMA8GA1UEChMIUG9sYXJTU0wxGzAZBgNVBAMTElBvbGFy
-+U1NMIFNlcnZlciAxQTANBgkqhkiG9w0BAQsFAAOCAQEAYb6K1UU+6eUdfMD/vayr
-+36VEOFd2SA2AxBgj2GKAB7IyKgT6bZTo6SyfJWtvWlp7Ofjc9nQ2iObNRqN1499t
-+DmAb3IM9yXuG00GVVg5brC3RtX1w4KJci2z+R2FX+HPAJW5E2rlU7OIm0FfF2aV6
-+0qhHeJSCwi8DkS6U6dQW3vmFXf4sEVtyRkY5Zh3pEcSb3mNpvxNdq1Ro8TRmOGHe
-+HrHAWxgBTeUJ0Dv/TNn39FNyvzwvWDFFxhwgs4+43N7FuSM6XUA86mkwLAsrjfWx
-+fKNjq7fpJX2dS08ISV/RismU6RGt/TW4PXrtvEIfy1+kaMDSt+ffz1C1cuSen7xz
-+6w==
-+-----END CERTIFICATE-----
-diff --git a/tests/data_files/server1-dnsname.crt b/tests/data_files/server1-dnsname.crt
-new file mode 100644
-index 00000000..f3bad522
---- /dev/null
-+++ b/tests/data_files/server1-dnsname.crt
-@@ -0,0 +1,21 @@
-+-----BEGIN CERTIFICATE-----
-+MIIDXjCCAkagAwIBAgIBATANBgkqhkiG9w0BAQsFADA7MQswCQYDVQQGEwJOTDER
-+MA8GA1UEChMIUG9sYXJTU0wxGTAXBgNVBAMTEFBvbGFyU1NMIFRlc3QgQ0EwHhcN
-+MTEwMjEyMTQ0NDA2WhcNMjEwMjEyMTQ0NDA2WjA8MQswCQYDVQQGEwJOTDERMA8G
-+A1UEChMIUG9sYXJTU0wxGjAYBgNVBAMTEVBvbGFyU1NMIFNlcnZlciAxMIIBIjAN
-+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQIfPUBq1VVTi/027oJlLhVhXom/
-+uOhFkNvuiBZS0/FDUEeWEllkh2v9K+BG+XO+3c+S4ZFb7Wagb4kpeUWA0INq1UFD
-+d185fAkER4KwVzlw7aPsFRkeqDMIR8EFQqn9TMO0390GH00QUUBncxMPQPhtgSVf
-+CrFTxjB+FTms+Vruf5KepgVb5xOXhbUjktnUJAbVCSWJdQfdphqPPwkZvq1lLGTr
-+lZvc/kFeF6babFtpzAK6FCwWJJxK3M3Q91Jnc/EtoCP9fvQxyi1wyokLBNsupk9w
-+bp7OvViJ4lNZnm5akmXiiD8MlBmj3eXonZUT7Snbq3AS3FrKaxerUoJUsQIDAQAB
-+o2wwajAJBgNVHRMEAjAAMB0GA1UdDgQWBBQfdNY/KcF0dEU7BRIsPai9Q1kCpjAf
-+BgNVHSMEGDAWgBS0WuSls97SUva51aaVD+s+vMf9/zAdBgNVHREEFjAUghJvdGhl
-+ci5wb2xhcnNzbC5vcmcwDQYJKoZIhvcNAQELBQADggEBAFTQDT3BP8qKss7yVjZM
-+8RkFF9GuqgCYPWyyuixzxYU5OJzzo/g5ZQ37wfcOMIUA7Ygs0Pv/L0n5PzncJqwO
-+mJpQRghbI4yp2qVsKpdx+SVTS9aDm/madjREbSzk/tXVskINbuaWQ/azKbB6MReu
-+XXgcw/iROpKJl+WCVr0cy6EAWPd3QBNLYyoAKpMQT2HXfQT/AhEZJINSYrkJeHCt
-+BgTGq8tvXE2OtcjTcmp+KIpkXA6A0laRx5up1xET9wDrdll5AEhXSXDzIEOwIBhJ
-+3cExQNdWbO6JdjBi5Qaoq9o7ItQOFSTM6PvRC3MYRwN+WhFdb+4Kmvd5oIArRaHo
-+MEM=
-+-----END CERTIFICATE-----
-diff --git a/tests/data_files/server11-directoryname.crt b/tests/data_files/server11-directoryname.crt
-new file mode 100644
-index 00000000..d9e0a165
---- /dev/null
-+++ b/tests/data_files/server11-directoryname.crt
-@@ -0,0 +1,10 @@
-+-----BEGIN CERTIFICATE-----
-+MIIBVzCB/qADAgECAgkAkWvgYjFeWV0wCgYIKoZIzj0EAwIwEzERMA8GA1UEAwwI
-+VGVzdENlcnQwHhcNMTYxMjEzMjMwNDM3WhcNMzAwODIyMjMwNDM3WjATMREwDwYD
-+VQQDDAhUZXN0Q2VydDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOkrKfbStoGN
-+oOUTet2ryyRul++FE++6vpEup83bHywiOO1a4JtDgzNJcjj8/uAKsECYQrI1T4Y/
-+rpnYu8ff9VGjOzA5MDcGA1UdEQQwMC6kLDAqMRYwFAYDVQQLDA1OYW1lIEFzc2ln
-+bmVyMRAwDgYDVQQDDAdNeSBSb2xlMAoGCCqGSM49BAMCA0gAMEUCIGdd/GGuoOXJ
-+8Ipl3hy69gb35MmkwEQKuYrud+Qs5XfFAiEAsmEOP4KFZadL23XJfMfGuPn2MDLr
-+G9lDDpiediVxGO0=
-+-----END CERTIFICATE-----
 diff --git a/tests/ssl-opt.sh b/tests/ssl-opt.sh
-index 41fbc3d2..1f5614ed 100755
+index fbdd694..3399b19 100755
 --- a/tests/ssl-opt.sh
 +++ b/tests/ssl-opt.sh
-@@ -2539,6 +2539,16 @@ run_test    "extKeyUsage cli: codeSign -> fail" \
+@@ -3047,6 +3047,16 @@ run_test    "extKeyUsage cli: codeSign -> fail" \
              -c "Processing of the Certificate handshake message failed" \
              -C "Ciphersuite is TLS-"
  
@@ -2635,7 +2043,7 @@ index 41fbc3d2..1f5614ed 100755
  # Tests for extendedKeyUsage, part 3: server-side checking of client cert
  
  run_test    "extKeyUsage cli-auth: clientAuth -> OK" \
-@@ -2581,6 +2591,14 @@ run_test    "extKeyUsage cli-auth: codeSign -> fail (hard)" \
+@@ -3089,6 +3099,14 @@ run_test    "extKeyUsage cli-auth: codeSign -> fail (hard)" \
              -s "bad certificate (usage extensions)" \
              -s "Processing of the Certificate handshake message failed"
  
@@ -2651,7 +2059,7 @@ index 41fbc3d2..1f5614ed 100755
  
  run_test    "DHM parameters: reference" \
 diff --git a/tests/suites/test_suite_x509parse.data b/tests/suites/test_suite_x509parse.data
-index 11605aba..4563982d 100644
+index d4cc11a..44f1043 100644
 --- a/tests/suites/test_suite_x509parse.data
 +++ b/tests/suites/test_suite_x509parse.data
 @@ -122,6 +122,22 @@ X509 certificate v1 with extension
@@ -2678,12 +2086,12 @@ index 11605aba..4563982d 100644
  depends_on:MBEDTLS_PEM_PARSE_C:MBEDTLS_SHA1_C
  mbedtls_x509_crl_info:"data_files/crl_expired.pem":"CRL version   \: 1\nissuer name   \: C=NL, O=PolarSSL, CN=PolarSSL Test CA\nthis update   \: 2011-02-20 10\:24\:19\nnext update   \: 2011-02-20 11\:24\:19\nRevoked certificates\:\nserial number\: 01 revocation date\: 2011-02-12 14\:44\:07\nserial number\: 03 revocation date\: 2011-02-12 14\:44\:07\nsigned using  \: RSA with SHA1\n"
 diff --git a/tests/suites/test_suite_x509write.data b/tests/suites/test_suite_x509write.data
-index d4d2a98c..57c2ad24 100644
+index 5b54d85..31e4487 100644
 --- a/tests/suites/test_suite_x509write.data
 +++ b/tests/suites/test_suite_x509write.data
-@@ -58,6 +58,18 @@ Certificate write check Server1 SHA1, version 1
+@@ -74,6 +74,18 @@ Certificate write check Server1 SHA1, RSA_ALT, version 1
  depends_on:MBEDTLS_SHA1_C:MBEDTLS_RSA_C:MBEDTLS_PKCS1_V15:MBEDTLS_DES_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_MD5_C
- x509_crt_check:"data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"data_files/test-ca.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"1":"20110212144406":"20210212144406":MBEDTLS_MD_SHA1:0:0:MBEDTLS_X509_CRT_VERSION_1:"data_files/server1.v1.crt"
+ x509_crt_check:"data_files/server1.key":"":"C=NL,O=PolarSSL,CN=PolarSSL Server 1":"data_files/test-ca.key":"PolarSSLTest":"C=NL,O=PolarSSL,CN=PolarSSL Test CA":"1":"20110212144406":"20210212144406":MBEDTLS_MD_SHA1:0:0:0:MBEDTLS_X509_CRT_VERSION_1:"data_files/server1.v1.crt":1
  
 +Certificate write check Server1 SHA256 with dNSName
 +depends_on:MBEDTLS_SHA1_C:MBEDTLS_RSA_C:MBEDTLS_PKCS1_V15:MBEDTLS_DES_C:MBEDTLS_CIPHER_MODE_CBC:MBEDTLS_MD5_C:MBEDTLS_SHA256_C:MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
@@ -2701,10 +2109,10 @@ index d4d2a98c..57c2ad24 100644
  mbedtls_x509_string_to_names:"C=NL,O=Offspark\, Inc., OU=PolarSSL":"C=NL, O=Offspark, Inc., OU=PolarSSL":0
  
 diff --git a/tests/suites/test_suite_x509write.function b/tests/suites/test_suite_x509write.function
-index 89be31f9..184ac2ce 100644
+index ca76e86..7641101 100644
 --- a/tests/suites/test_suite_x509write.function
 +++ b/tests/suites/test_suite_x509write.function
-@@ -157,6 +157,131 @@ exit:
+@@ -204,6 +204,131 @@ exit:
  }
  /* END_CASE */
  
@@ -2837,5 +2245,5 @@ index 89be31f9..184ac2ce 100644
  void mbedtls_x509_string_to_names( char *name, char *parsed_name, int result )
  {
 -- 
-2.11.0.windows.1
+1.9.1
 
