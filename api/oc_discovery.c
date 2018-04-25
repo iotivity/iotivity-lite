@@ -211,29 +211,58 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
   oc_rep_set_object(res, p);
   oc_rep_set_uint(p, bm,
                   (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
+
 #ifdef OC_SECURITY
   /** Tag all resources with sec=true for OIC 1.1 to pass the CTT script. */
   oc_rep_set_boolean(p, sec, true);
+#endif /* OC_SECURITY */
 
+  // port, x.org.iotivity.tcp and x.org.iotivity.tls
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
   while (eps != NULL) {
-    if (eps->flags & SECURED) {
-      break;
+    if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+      goto next_eps;
     }
+
+#ifdef OC_TCP
+    if (eps->flags & TCP) {
+      if (eps->flags & SECURED) {
+        if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+          oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv6.port);
+        }
+#ifdef OC_IPV4
+        else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+          oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv4.port);
+        }
+#endif /* OC_IPV4 */
+      }
+      else {
+        if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+          oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv6.port);
+        }
+#ifdef OC_IPV4
+        else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+          oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv4.port);
+        }
+#endif /* OC_IPV4 */
+      }
+    }
+    else
+#endif /* OC_TCP */
+    if (eps->flags & SECURED) {
+      if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+        oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+      }
+#ifdef OC_IPV4
+      else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+        oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+      }
+#endif /* OC_IPV4 */
+    }
+    next_eps:
     eps = eps->next;
   }
-  if (eps) {
-    if (eps->flags & IPV6) {
-      oc_rep_set_uint(p, port, eps->addr.ipv6.port);
-    }
-#ifdef OC_IPV4
-    else {
-      oc_rep_set_uint(p, port, eps->addr.ipv4.port);
-    }
-#endif /* OC_IPV4 */
-  }
   oc_free_endpoint_list();
-#endif /* OC_SECURITY */
 
   oc_rep_close_object(res, p);
 
