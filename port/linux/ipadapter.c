@@ -1100,7 +1100,11 @@ oc_connectivity_shutdown(int device)
 
 #ifdef OC_TCP
 void oc_connectivity_end_session(oc_endpoint_t *endpoint) {
-  (void)endpoint;
-  // TODO
+  if (endpoint->flags & TCP) {
+    ip_context_t *dev = get_ip_context_for_device(endpoint->device);
+    if (dev) {
+      oc_tcp_end_session(dev, endpoint);
+    }
+  }
 }
 #endif /* OC_TCP */
