@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,14 +39,15 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
-#include "oc_dtls.h"
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
+#include "oc_session_events.h"
 #include "oc_svr.h"
+#include "oc_tls.h"
 
-OC_PROCESS(oc_dtls_handler, "DTLS Process");
-OC_MEMB(dtls_peers_s, oc_sec_dtls_peer_t, OC_MAX_DTLS_PEERS);
-OC_LIST(dtls_peers);
+OC_PROCESS(oc_tls_handler, "TLS Process");
+OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
+OC_LIST(tls_peers);
 
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
@@ -54,38 +55,49 @@ static mbedtls_ssl_cookie_ctx cookie_ctx;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 static mbedtls_ssl_config *server_conf;
-#else /* OC_DYNAMIC_ALLOCATION */
+#ifdef OC_TCP
+static mbedtls_ssl_config *server_conf_tls;
+#endif /* OC_TCP */
+#else  /* OC_DYNAMIC_ALLOCATION */
 #define MBEDTLS_ALLOC_BUF_SIZE (20000)
+#ifdef OC_TCP
+static mbedtls_ssl_config server_conf_tls[OC_MAX_NUM_DEVICES];
+#endif /* OC_TCP */
 static mbedtls_ssl_config server_conf[OC_MAX_NUM_DEVICES];
 static unsigned char alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #include "mbedtls/memory_buffer_alloc.h"
 #endif /* !OC_DYNAMIC_ALLOCATION */
 #ifdef OC_CLIENT
-static mbedtls_ssl_config client_conf;
+#ifdef OC_TCP
+static mbedtls_ssl_config client_conf_tls[1];
+#endif /* OC_TCP */
+static mbedtls_ssl_config client_conf[1];
 #endif /* OC_CLIENT */
-static mbedtls_ecp_group_id curves[1] = { MBEDTLS_ECP_DP_SECP256R1 };
 #define PERSONALIZATION_STR "IoTivity-Constrained"
-static const int ciphers[3] = { MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-                                MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-                                0 };
+static const int ciphers[3] = {MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+                               MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
+                               0};
 #ifdef OC_CLIENT
 static const int anon_ciphers[3] = {
-  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
-};
+    MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
+    MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0};
 #endif /* OC_CLIENT */
 
 #ifdef OC_DEBUG
-static void oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
-                             const char *str) {
+static void
+oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
+                 const char *str)
+{
   (void)ctx;
   (void)level;
   PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
 }
 #endif /* OC_DEBUG */
 
-static bool is_peer_active(oc_sec_dtls_peer_t *peer) {
-  oc_sec_dtls_peer_t *p = (oc_sec_dtls_peer_t *)oc_list_head(dtls_peers);
+static bool
+is_peer_active(oc_tls_peer_t *peer)
+{
+  oc_tls_peer_t *p = (oc_tls_peer_t *)oc_list_head(tls_peers);
   while (p != NULL) {
     if (p == peer) {
       return true;
@@ -95,10 +107,45 @@ static bool is_peer_active(oc_sec_dtls_peer_t *peer) {
   return false;
 }
 
-static oc_sec_dtls_peer_t *
-oc_sec_dtls_get_peer(oc_endpoint_t *endpoint)
+static oc_event_callback_retval_t oc_tls_inactive(void *data);
+
+static void
+oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
-  oc_sec_dtls_peer_t *peer = oc_list_head(dtls_peers);
+  OC_DBG("\noc_tls: removing peer");
+
+#ifdef OC_TCP
+  if (peer->endpoint.flags & TCP) {
+    oc_connectivity_end_session(&peer->endpoint);
+  } else
+#endif /* OC_TCP */
+  {
+    oc_handle_session(&peer->endpoint, OC_SESSION_DISCONNECTED);
+  }
+
+  if (!inactivity_cb) {
+    oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
+  }
+  mbedtls_ssl_free(&peer->ssl_ctx);
+  oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->send_q);
+  }
+  message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  }
+  oc_etimer_stop(&peer->timer.fin_timer);
+  oc_list_remove(tls_peers, peer);
+  oc_memb_free(&tls_peers_s, peer);
+}
+
+static oc_tls_peer_t *
+oc_tls_get_peer(oc_endpoint_t *endpoint)
+{
+  oc_tls_peer_t *peer = oc_list_head(tls_peers);
   while (peer != NULL) {
     if (oc_endpoint_compare(&peer->endpoint, endpoint) == 0) {
       return peer;
@@ -108,86 +155,82 @@ oc_sec_dtls_get_peer(oc_endpoint_t *endpoint)
   return NULL;
 }
 
-static oc_event_callback_retval_t oc_sec_dtls_inactive(void *data);
-
-static void
-oc_sec_dtls_remove_peer(oc_endpoint_t *endpoint, bool inactivity_cb)
+void
+oc_tls_remove_peer(oc_endpoint_t *endpoint)
 {
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
-    OC_DBG("\noc_dtls: removing peer");
-    if (!inactivity_cb) {
-      oc_ri_remove_timed_event_callback(peer, oc_sec_dtls_inactive);
-    }
-    mbedtls_ssl_free(&peer->ssl_ctx);
-    oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
-    while (message != NULL) {
-      oc_message_unref(message);
-      message = (oc_message_t *)oc_list_pop(peer->send_q);
-    }
-    message = (oc_message_t *)oc_list_pop(peer->recv_q);
-    while (message != NULL) {
-      oc_message_unref(message);
-      message = (oc_message_t *)oc_list_pop(peer->recv_q);
-    }
-    oc_etimer_stop(&peer->timer.fin_timer);
-    oc_list_remove(dtls_peers, peer);
-    oc_memb_free(&dtls_peers_s, peer);
+    oc_tls_free_peer(peer, false);
   }
 }
 
 static void
-oc_dtls_handler_schedule_read(oc_sec_dtls_peer_t *peer)
+oc_tls_handler_schedule_read(oc_tls_peer_t *peer)
 {
-  oc_process_post(&oc_dtls_handler, oc_events[DTLS_READ_DECRYPTED_DATA], peer);
+  oc_process_post(&oc_tls_handler, oc_events[TLS_READ_DECRYPTED_DATA], peer);
 }
 
 #ifdef OC_CLIENT
 static void
-oc_dtls_handler_schedule_write(oc_sec_dtls_peer_t *peer)
+oc_tls_handler_schedule_write(oc_tls_peer_t *peer)
 {
-  oc_process_post(&oc_dtls_handler, oc_events[DTLS_WRITE_APPLICATION_DATA],
-                  peer);
+  oc_process_post(&oc_tls_handler, oc_events[TLS_WRITE_APPLICATION_DATA], peer);
 }
 #endif /* OC_CLIENT */
 
 static oc_event_callback_retval_t
-oc_sec_dtls_inactive(void *data)
+oc_tls_inactive(void *data)
 {
-  OC_DBG("oc_dtls: DTLS inactivity callback");
-  oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)data;
+  OC_DBG("oc_tls: DTLS inactivity callback");
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)data;
   if (is_peer_active(peer)) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
     if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
-      OC_DBG("oc_dtls: Resetting DTLS inactivity callback");
+      OC_DBG("oc_tls: Resetting DTLS inactivity callback");
       return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    oc_sec_dtls_remove_peer(&peer->endpoint, true);
+    oc_tls_free_peer(peer, true);
   }
-  OC_DBG("oc_dtls: Terminating DTLS inactivity callback");
+  OC_DBG("oc_tls: Terminating DTLS inactivity callback");
   return OC_EVENT_DONE;
 }
 
 static int
 ssl_recv(void *ctx, unsigned char *buf, size_t len)
 {
-  oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)ctx;
-  oc_message_t *message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
+  oc_message_t *message = (oc_message_t *)oc_list_head(peer->recv_q);
   if (message) {
-    size_t recv_len = (message->length < len) ? message->length : len;
-    memcpy(buf, message->data, recv_len);
-    oc_message_unref(message);
+    size_t recv_len = 0;
+#ifdef OC_TCP
+    if (message->endpoint.flags & TCP) {
+      recv_len = message->length - message->read_offset;
+      recv_len = (recv_len < len) ? recv_len : len;
+      memcpy(buf, message->data + message->read_offset, recv_len);
+      message->read_offset += recv_len;
+      if (message->read_offset == message->length) {
+        oc_list_remove(peer->recv_q, message);
+        oc_message_unref(message);
+      }
+    } else
+#endif /* OC_TCP */
+    {
+      recv_len = (message->length < len) ? message->length : len;
+      memcpy(buf, message->data, recv_len);
+      oc_list_remove(peer->recv_q, message);
+      oc_message_unref(message);
+    }
     return recv_len;
   }
-  return 0;
+  return MBEDTLS_ERR_SSL_WANT_READ;
 }
 
 static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
-  oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)ctx;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
   message.data = malloc(OC_PDU_SIZE);
@@ -208,8 +251,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 static void
 check_retr_timers()
 {
-  oc_sec_dtls_peer_t *peer = (oc_sec_dtls_peer_t *)oc_list_head(dtls_peers),
-                     *next;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers), *next;
   while (peer != NULL) {
     next = peer->next;
     if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
@@ -219,20 +261,21 @@ check_retr_timers()
           mbedtls_ssl_session_reset(&peer->ssl_ctx);
           if (peer->role == MBEDTLS_SSL_IS_SERVER &&
               mbedtls_ssl_set_client_transport_id(
-                &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-                sizeof(peer->endpoint.addr)) != 0) {
-            oc_sec_dtls_remove_peer(&peer->endpoint, false);
+                  &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+                  sizeof(peer->endpoint.addr)) != 0) {
+            oc_tls_free_peer(peer, false);
+            peer = next;
+            continue;
           }
         }
-        if (ret != 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-            ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
-            ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+        if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
+            ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #ifdef OC_DEBUG
           char buf[256];
           mbedtls_strerror(ret, buf, 256);
-          OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+          OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
-          oc_sec_dtls_remove_peer(&peer->endpoint, false);
+          oc_tls_free_peer(peer, false);
         }
       }
     }
@@ -244,14 +287,14 @@ static void
 ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 {
   if (fin_ms != 0) {
-    oc_sec_dtls_retr_timer_t *timer = (oc_sec_dtls_retr_timer_t *)ctx;
+    oc_tls_retr_timer_t *timer = (oc_tls_retr_timer_t *)ctx;
     timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
     oc_etimer_stop(&timer->fin_timer);
     timer->fin_timer.timer.interval =
-      (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
-    OC_PROCESS_CONTEXT_BEGIN(&oc_dtls_handler);
+        (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
+    OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler);
     oc_etimer_restart(&timer->fin_timer);
-    OC_PROCESS_CONTEXT_END(&oc_dtls_handler);
+    OC_PROCESS_CONTEXT_END(&oc_tls_handler);
   }
 }
 
@@ -261,8 +304,8 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 {
   (void)data;
   (void)identity_len;
-  OC_DBG("oc_dtls: In PSK callback");
-  oc_sec_dtls_peer_t *peer = oc_list_head(dtls_peers);
+  OC_DBG("oc_tls: In PSK callback");
+  oc_tls_peer_t *peer = oc_list_head(tls_peers);
   while (peer != NULL) {
     if (&peer->ssl_ctx == ssl) {
       break;
@@ -270,18 +313,18 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     peer = peer->next;
   }
   if (peer) {
-    OC_DBG("oc_dtls: Found peer object");
+    OC_DBG("oc_tls: Found peer object");
     oc_sec_cred_t *cred =
-      oc_sec_find_cred((oc_uuid_t *)identity, peer->endpoint.device);
+        oc_sec_find_cred((oc_uuid_t *)identity, peer->endpoint.device);
     if (cred) {
-      OC_DBG("oc_dtls: Found peer credential");
+      OC_DBG("oc_tls: Found peer credential");
       memcpy(peer->uuid.id, identity, 16);
-      OC_DBG("oc_dtls: Setting the key:");
+      OC_DBG("oc_tls: Setting the key:");
       OC_LOGbytes(cred->key, 16);
       if (mbedtls_ssl_set_hs_psk(ssl, cred->key, 16) != 0) {
         return -1;
       }
-      OC_DBG("oc_dtls: Set peer credential to SSL handle");
+      OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
     }
   }
@@ -291,7 +334,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 static int
 ssl_get_timer(void *ctx)
 {
-  oc_sec_dtls_retr_timer_t *timer = (oc_sec_dtls_retr_timer_t *)ctx;
+  oc_tls_retr_timer_t *timer = (oc_tls_retr_timer_t *)ctx;
   if (timer->fin_timer.timer.interval == 0)
     return -1;
   if (oc_etimer_expired(&timer->fin_timer)) {
@@ -305,71 +348,98 @@ ssl_get_timer(void *ctx)
   return 0;
 }
 
-static oc_sec_dtls_peer_t *
-oc_sec_dtls_add_peer(oc_endpoint_t *endpoint, int role)
+static oc_tls_peer_t *
+oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
-    peer = oc_memb_alloc(&dtls_peers_s);
+    peer = oc_memb_alloc(&tls_peers_s);
     if (peer) {
-      OC_DBG("oc_dtls: Allocating new DTLS peer");
+      OC_DBG("oc_tls: Allocating new peer");
       memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
       OC_LIST_STRUCT_INIT(peer, recv_q);
       OC_LIST_STRUCT_INIT(peer, send_q);
       peer->next = 0;
       peer->role = role;
-      memset(&peer->timer, 0, sizeof(oc_sec_dtls_retr_timer_t)); // fix
+      memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
       mbedtls_ssl_init(&peer->ssl_ctx);
 
       mbedtls_ssl_config *conf = 0;
 #ifdef OC_CLIENT
       if (role == MBEDTLS_SSL_IS_CLIENT) {
-        conf = &client_conf;
+        if (endpoint->flags & TCP) {
+#ifdef OC_TCP
+          OC_DBG("oc_tls: initializing TLS client");
+          conf = &client_conf_tls[0];
+#endif /* OC_TCP */
+        } else {
+          OC_DBG("oc_tls: initializing DTLS client");
+          conf = &client_conf[0];
+        }
       } else
 #endif /* OC_CLIENT */
       {
-        conf = &server_conf[endpoint->device];
+        if (endpoint->flags & TCP) {
+#ifdef OC_TCP
+          OC_DBG("oc_tls: initializing TLS server");
+          conf = &server_conf_tls[endpoint->device];
+#endif /* OC_TCP */
+        } else {
+          OC_DBG("oc_tls: initializing DTLS server");
+          conf = &server_conf[endpoint->device];
+        }
       }
 
       int err = mbedtls_ssl_setup(&peer->ssl_ctx, conf);
 
       if (err != 0) {
-        oc_memb_free(&dtls_peers_s, peer);
+        OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
+        oc_memb_free(&tls_peers_s, peer);
         return NULL;
       }
-
-      mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
-                               ssl_get_timer);
 
       mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
 
       if (role == MBEDTLS_SSL_IS_SERVER &&
           mbedtls_ssl_set_client_transport_id(
-            &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
-            sizeof(endpoint->addr)) != 0) {
-        oc_memb_free(&dtls_peers_s, peer);
+              &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
+              sizeof(endpoint->addr)) != 0) {
+        oc_memb_free(&tls_peers_s, peer);
         return NULL;
       }
-      oc_list_add(dtls_peers, peer);
+      oc_list_add(tls_peers, peer);
 
-      oc_ri_add_timed_event_callback_seconds(peer, oc_sec_dtls_inactive,
-                                             OC_DTLS_INACTIVITY_TIMEOUT);
+      if (!(endpoint->flags & TCP)) {
+        mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
+                                 ssl_get_timer);
+        oc_ri_add_timed_event_callback_seconds(peer, oc_tls_inactive,
+                                               OC_DTLS_INACTIVITY_TIMEOUT);
+      }
     } else {
-      OC_WRN("DTLS peers exhausted");
+      OC_WRN("TLS peers exhausted");
     }
   }
   return peer;
 }
 
 int
-oc_sec_dtls_init_context(void)
+oc_tls_init_context(void)
 {
-#ifdef OC_DYNAMIC_ALLOCATION // Should we free this?
+#ifdef OC_DYNAMIC_ALLOCATION
   server_conf = (mbedtls_ssl_config *)calloc(oc_core_get_num_devices(),
                                              sizeof(mbedtls_ssl_config));
+#ifdef OC_TCP
+  server_conf_tls = (mbedtls_ssl_config *)calloc(oc_core_get_num_devices(),
+                                                 sizeof(mbedtls_ssl_config));
+#endif /* OC_TCP */
 #else  /* OC_DYNAMIC_ALLOCATION */
   mbedtls_memory_buffer_alloc_init(alloc_buf, sizeof(alloc_buf));
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_DEBUG
+  mbedtls_debug_set_threshold(4);
+#endif /* OC_DEBUG */
+
   mbedtls_entropy_init(&entropy_ctx);
   mbedtls_ssl_cookie_init(&cookie_ctx);
   mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
@@ -383,62 +453,110 @@ oc_sec_dtls_init_context(void)
     goto dtls_init_err;
   }
   int i;
+
+#ifdef OC_TCP
+#define mbedtls_config_tls(func_name, conf, index, ...)                        \
+  do {                                                                         \
+    func_name(&conf##_tls[index], __VA_ARGS__);                                \
+  } while (0)
+#else /* OC_TCP */
+#define mbedtls_config_tls(func_name, conf, index, ...)                        \
+  do {                                                                         \
+  } while (0)
+#endif /* !OC_TCP */
+
+#define mbedtls_config(func_name, conf, index, ...)                            \
+  do {                                                                         \
+    func_name(&conf[index], __VA_ARGS__);                                      \
+    mbedtls_config_tls(func_name, conf, index, __VA_ARGS__);                   \
+  } while (0)
+
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     mbedtls_ssl_config_init(&server_conf[i]);
-    mbedtls_ssl_conf_rng(&server_conf[i], mbedtls_ctr_drbg_random,
-                         &ctr_drbg_ctx);
-    mbedtls_ssl_conf_curves(&server_conf[i], curves);
-    mbedtls_ssl_conf_min_version(&server_conf[i], MBEDTLS_SSL_MAJOR_VERSION_3,
-                                 MBEDTLS_SSL_MINOR_VERSION_3);
     if (mbedtls_ssl_config_defaults(&server_conf[i], MBEDTLS_SSL_IS_SERVER,
                                     MBEDTLS_SSL_TRANSPORT_DATAGRAM,
                                     MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
       goto dtls_init_err;
     }
-    mbedtls_ssl_conf_dtls_cookies(&server_conf[i], mbedtls_ssl_cookie_write,
-                                  mbedtls_ssl_cookie_check, &cookie_ctx);
-    mbedtls_ssl_conf_ciphersuites(&server_conf[i], ciphers);
-    mbedtls_ssl_conf_authmode(&server_conf[i], MBEDTLS_SSL_VERIFY_REQUIRED);
-    mbedtls_ssl_conf_psk_cb(&server_conf[i], get_psk_cb, NULL);
     oc_uuid_t *device_id = oc_core_get_device_id(i);
     if (mbedtls_ssl_conf_psk(&server_conf[i], device_id->id, 0, device_id->id,
                              16) != 0) {
       goto dtls_init_err;
     }
-    mbedtls_ssl_conf_handshake_timeout(&server_conf[i], 2500, 20000);
 #ifdef OC_DEBUG
     mbedtls_ssl_conf_dbg(&server_conf[i], oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
-  }
+#ifdef OC_TCP
+    mbedtls_ssl_config_init(&server_conf_tls[i]);
+    if (mbedtls_ssl_config_defaults(&server_conf_tls[i], MBEDTLS_SSL_IS_SERVER,
+                                    MBEDTLS_SSL_TRANSPORT_STREAM,
+                                    MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
+      goto dtls_init_err;
+    }
+    if (mbedtls_ssl_conf_psk(&server_conf_tls[i], device_id->id, 0,
+                             device_id->id, 16) != 0) {
+      goto dtls_init_err;
+    }
 #ifdef OC_DEBUG
-  mbedtls_debug_set_threshold(4);
+    mbedtls_ssl_conf_dbg(&server_conf_tls[i], oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
+#endif /* OC_TCP */
+    mbedtls_config(mbedtls_ssl_conf_rng, server_conf, i,
+                   mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
+    mbedtls_config(mbedtls_ssl_conf_min_version, server_conf, i,
+                   MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+    mbedtls_config(mbedtls_ssl_conf_ciphersuites, server_conf, i, ciphers);
+    mbedtls_config(mbedtls_ssl_conf_authmode, server_conf, i,
+                   MBEDTLS_SSL_VERIFY_REQUIRED);
+    mbedtls_config(mbedtls_ssl_conf_psk_cb, server_conf, i, get_psk_cb, NULL);
+
+    mbedtls_ssl_conf_dtls_cookies(&server_conf[i], mbedtls_ssl_cookie_write,
+                                  mbedtls_ssl_cookie_check, &cookie_ctx);
+    mbedtls_ssl_conf_handshake_timeout(&server_conf[i], 2500, 20000);
+  }
+
 #ifdef OC_CLIENT
-  mbedtls_ssl_config_init(&client_conf);
-  mbedtls_ssl_conf_rng(&client_conf, mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
-  mbedtls_ssl_conf_min_version(&client_conf, MBEDTLS_SSL_MAJOR_VERSION_3,
-                               MBEDTLS_SSL_MINOR_VERSION_3);
-  mbedtls_ssl_conf_curves(&client_conf, curves);
-  if (mbedtls_ssl_config_defaults(&client_conf, MBEDTLS_SSL_IS_CLIENT,
+  mbedtls_ssl_config_init(&client_conf[0]);
+  if (mbedtls_ssl_config_defaults(&client_conf[0], MBEDTLS_SSL_IS_CLIENT,
                                   MBEDTLS_SSL_TRANSPORT_DATAGRAM,
                                   MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
     goto dtls_init_err;
   }
-  mbedtls_ssl_conf_ciphersuites(&client_conf, ciphers);
-  mbedtls_ssl_conf_psk_cb(&client_conf, get_psk_cb, NULL);
   oc_uuid_t *device_id = oc_core_get_device_id(0);
-  if (mbedtls_ssl_conf_psk(&client_conf, device_id->id, 0, device_id->id, 16) !=
-      0) {
+  if (mbedtls_ssl_conf_psk(&client_conf[0], device_id->id, 0, device_id->id,
+                           16) != 0) {
     goto dtls_init_err;
   }
-  mbedtls_ssl_conf_handshake_timeout(&client_conf, 2500, 20000);
 #ifdef OC_DEBUG
-  mbedtls_ssl_conf_dbg(&client_conf, oc_mbedtls_debug, stdout);
+  mbedtls_ssl_conf_dbg(&client_conf[0], oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
+#ifdef OC_TCP
+  mbedtls_ssl_config_init(&client_conf_tls[0]);
+  if (mbedtls_ssl_config_defaults(&client_conf_tls[0], MBEDTLS_SSL_IS_CLIENT,
+                                  MBEDTLS_SSL_TRANSPORT_STREAM,
+                                  MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
+    goto dtls_init_err;
+  }
+  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], device_id->id, 0, device_id->id,
+                           16) != 0) {
+    goto dtls_init_err;
+  }
+#ifdef OC_DEBUG
+  mbedtls_ssl_conf_dbg(&client_conf_tls[0], oc_mbedtls_debug, stdout);
+#endif /* OC_DEBUG */
+#endif /* OC_TCP */
+  mbedtls_config(mbedtls_ssl_conf_rng, client_conf, 0, mbedtls_ctr_drbg_random,
+                 &ctr_drbg_ctx);
+  mbedtls_config(mbedtls_ssl_conf_min_version, client_conf, 0,
+                 MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+  mbedtls_config(mbedtls_ssl_conf_ciphersuites, client_conf, 0, ciphers);
+  mbedtls_config(mbedtls_ssl_conf_psk_cb, client_conf, 0, get_psk_cb, NULL);
+
+  mbedtls_ssl_conf_handshake_timeout(&client_conf[0], 2500, 20000);
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
-  OC_ERR("oc_dtls: DTLS initialization error");
+  OC_ERR("oc_tls: TLS initialization error");
 #ifdef OC_DYNAMIC_ALLOCATION
   free(server_conf);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -446,30 +564,41 @@ dtls_init_err:
 }
 
 int
-oc_sec_dtls_update_psk_identity(int device)
+oc_tls_update_psk_identity(int device)
 {
   oc_uuid_t *device_id = oc_core_get_device_id(device);
   if (mbedtls_ssl_conf_psk(&server_conf[device], device_id->id, 0,
                            device_id->id, 16) != 0) {
     return -1;
   }
+#ifdef OC_TCP
+  if (mbedtls_ssl_conf_psk(&server_conf_tls[device], device_id->id, 0,
+                           device_id->id, 16) != 0) {
+    return -1;
+  }
+#endif /* OC_TCP */
 #ifdef OC_CLIENT
   oc_uuid_t *client_device_id = oc_core_get_device_id(0);
-  if (mbedtls_ssl_conf_psk(&client_conf, client_device_id->id, 0,
+  if (mbedtls_ssl_conf_psk(&client_conf[0], client_device_id->id, 0,
                            client_device_id->id, 16) != 0) {
     return -1;
   }
+#ifdef OC_TCP
+  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], client_device_id->id, 0,
+                           client_device_id->id, 16) != 0) {
+    return -1;
+  }
+#endif /* OC_TCP */
 #endif /* OC_CLIENT */
   return 0;
 }
 
 void
-oc_sec_dtls_close_connection(oc_endpoint_t *endpoint)
+oc_tls_close_connection(oc_endpoint_t *endpoint)
 {
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    oc_sec_dtls_remove_peer(&peer->endpoint, false);
   }
 }
 
@@ -547,14 +676,12 @@ exit_tls_prf:
   return gen_output;
 }
 
-bool
-oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
-                        const size_t oxm_len, const uint8_t *server_uuid,
-                        const size_t server_uuid_len, const uint8_t *obt_uuid,
-                        const size_t obt_uuid_len, uint8_t *key,
-                        const size_t key_len)
-{
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+                             const size_t oxm_len, const uint8_t *server_uuid,
+                             const size_t server_uuid_len,
+                             const uint8_t *obt_uuid, const size_t obt_uuid_len,
+                             uint8_t *key, const size_t key_len) {
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
     return false;
   }
@@ -587,23 +714,23 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                  obt_uuid_len, server_uuid, server_uuid_len) != (int)key_len) {
     return false;
   }
-  OC_DBG("oc_dtls: master secret:");
+  OC_DBG("oc_tls: master secret:");
   OC_LOGbytes(peer->master_secret, 48);
-  OC_DBG("oc_dtls: client_server_random:");
+  OC_DBG("oc_tls: client_server_random:");
   OC_LOGbytes(peer->client_server_random, 64);
-  OC_DBG("oc_dtls: key_block");
+  OC_DBG("oc_tls: key_block");
   OC_LOGbytes(key_block, 96);
-  OC_DBG("oc_dtls: PSK ");
+  OC_DBG("oc_tls: PSK ");
   OC_LOGbytes(key, key_len);
 
   return true;
 }
 
 int
-oc_sec_dtls_send_message(oc_message_t *message)
+oc_tls_send_message(oc_message_t *message)
 {
   int length = 0;
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(&message->endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
   if (peer) {
     int ret = mbedtls_ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
                                 message->length);
@@ -612,9 +739,9 @@ oc_sec_dtls_send_message(oc_message_t *message)
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+      OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
-      oc_sec_dtls_remove_peer(&peer->endpoint, false);
+      oc_tls_free_peer(peer, false);
     } else {
       length = message->length;
     }
@@ -625,10 +752,10 @@ oc_sec_dtls_send_message(oc_message_t *message)
 
 #ifdef OC_CLIENT
 static void
-write_application_data(oc_sec_dtls_peer_t *peer)
+write_application_data(oc_tls_peer_t *peer)
 {
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_dtls: write_application_data: Peer not active");
+    OC_DBG("oc_tls: write_application_data: Peer not active");
     return;
   }
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -641,9 +768,9 @@ write_application_data(oc_sec_dtls_peer_t *peer)
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+      OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
-      oc_sec_dtls_remove_peer(&peer->endpoint, false);
+      oc_tls_free_peer(peer, false);
       break;
     }
     message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -651,22 +778,28 @@ write_application_data(oc_sec_dtls_peer_t *peer)
 }
 
 void
-oc_sec_dtls_elevate_anon_ciphersuite(void)
+oc_tls_elevate_anon_ciphersuite(void)
 {
-  mbedtls_ssl_conf_ciphersuites(&client_conf, anon_ciphers);
+  mbedtls_ssl_conf_ciphersuites(&client_conf[0], anon_ciphers);
+#ifdef OC_TCP
+  mbedtls_ssl_conf_ciphersuites(&client_conf_tls[0], anon_ciphers);
+#endif /* OC_TCP */
 }
 
 void
-oc_sec_dtls_demote_anon_ciphersuite(void)
+oc_tls_demote_anon_ciphersuite(void)
 {
-  mbedtls_ssl_conf_ciphersuites(&client_conf, ciphers);
+  mbedtls_ssl_conf_ciphersuites(&client_conf[0], ciphers);
+#ifdef OC_TCP
+  mbedtls_ssl_conf_ciphersuites(&client_conf_tls[0], ciphers);
+#endif /* OC_TCP */
 }
 
 static void
-oc_sec_dtls_init_connection(oc_message_t *message)
+oc_tls_init_connection(oc_message_t *message)
 {
-  oc_sec_dtls_peer_t *peer =
-    oc_sec_dtls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+  oc_tls_peer_t *peer =
+    oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
   if (peer) {
     oc_message_t *duplicate = oc_list_head(peer->send_q);
     while (duplicate != NULL) {
@@ -681,15 +814,15 @@ oc_sec_dtls_init_connection(oc_message_t *message)
     }
     int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-        ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+        ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #ifdef OC_DEBUG
       char buf[256];
       mbedtls_strerror(ret, buf, 256);
-      OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+      OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
-      oc_sec_dtls_remove_peer(&peer->endpoint, false);
+      oc_tls_free_peer(peer, false);
     } else if (ret == 0) {
-      oc_dtls_handler_schedule_write(peer);
+      oc_tls_handler_schedule_write(peer);
     }
   }
   oc_message_unref(message);
@@ -697,9 +830,9 @@ oc_sec_dtls_init_connection(oc_message_t *message)
 #endif /* OC_CLIENT */
 
 oc_uuid_t *
-oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint)
+oc_tls_get_peer_uuid(oc_endpoint_t *endpoint)
 {
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     return &peer->uuid;
   }
@@ -707,9 +840,9 @@ oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint)
 }
 
 bool
-oc_sec_dtls_connected(oc_endpoint_t *endpoint)
+oc_tls_connected(oc_endpoint_t *endpoint)
 {
-  oc_sec_dtls_peer_t *peer = oc_sec_dtls_get_peer(endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     return (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER);
   }
@@ -717,11 +850,11 @@ oc_sec_dtls_connected(oc_endpoint_t *endpoint)
 }
 
 static void
-read_application_data(oc_sec_dtls_peer_t *peer)
+read_application_data(oc_tls_peer_t *peer)
 {
-  OC_DBG("oc_dtls: In read_application_data");
+  OC_DBG("oc_tls: In read_application_data");
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_dtls: read_application_data: Peer not active");
+    OC_DBG("oc_tls: read_application_data: Peer not active");
     return;
   }
 
@@ -733,14 +866,14 @@ read_application_data(oc_sec_dtls_peer_t *peer)
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
         memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
                sizeof(peer->master_secret));
-        OC_DBG("oc_dtls: Got master secret");
+        OC_DBG("oc_tls: Got master secret");
         OC_LOGbytes(peer->master_secret, 48);
       }
       if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
         memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,
                sizeof(peer->client_server_random));
-        OC_DBG("oc_dtls: Got nonce");
+        OC_DBG("oc_tls: Got nonce");
         OC_LOGbytes(peer->client_server_random, 64);
       }
       if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
@@ -748,26 +881,28 @@ read_application_data(oc_sec_dtls_peer_t *peer)
         /* For HelloVerifyRequest cookies */
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             mbedtls_ssl_set_client_transport_id(
-              &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-              sizeof(peer->endpoint.addr)) != 0) {
-          oc_sec_dtls_remove_peer(&peer->endpoint, false);
+                &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+                sizeof(peer->endpoint.addr)) != 0) {
+          oc_tls_free_peer(peer, false);
           return;
         }
       } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-                 ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
-                 ret != MBEDTLS_ERR_SSL_CONN_EOF) {
+                 ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #ifdef OC_DEBUG
         char buf[256];
         mbedtls_strerror(ret, buf, 256);
-        OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+        OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
-        oc_sec_dtls_remove_peer(&peer->endpoint, false);
+        oc_tls_free_peer(peer, false);
         return;
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
+    if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
+      oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
+    }
 #ifdef OC_CLIENT
     if (ret == 0) {
-      oc_dtls_handler_schedule_write(peer);
+      oc_tls_handler_schedule_write(peer);
     }
 #endif /* OC_CLIENT */
   } else {
@@ -778,76 +913,76 @@ read_application_data(oc_sec_dtls_peer_t *peer)
       if (ret <= 0) {
         oc_message_unref(message);
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
-            ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
-            ret == MBEDTLS_ERR_SSL_CONN_EOF) {
-          OC_DBG("oc_dtls: Received WantRead/WantWrite/EOF");
+            ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+          OC_DBG("oc_tls: Received WantRead/WantWrite");
           return;
         }
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-          OC_DBG("oc_dtls: Close-Notify received");
+          OC_DBG("oc_tls: Close-Notify received");
         } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-          OC_DBG("oc_dtls: Client wants to reconnect");
+          OC_DBG("oc_tls: Client wants to reconnect");
         } else {
 #ifdef OC_DEBUG
           char buf[256];
           mbedtls_strerror(ret, buf, 256);
-          OC_ERR("oc_dtls: mbedtls_error: %s", buf);
+          OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         }
-        mbedtls_ssl_close_notify(&peer->ssl_ctx);
-        oc_sec_dtls_remove_peer(&peer->endpoint, false);
+        if (peer->role != MBEDTLS_SSL_IS_CLIENT) {
+          mbedtls_ssl_close_notify(&peer->ssl_ctx);
+        }
+        oc_tls_free_peer(peer, false);
         return;
       }
       message->length = ret;
       oc_recv_message(message);
-      OC_DBG("oc_dtls: Decrypted incoming message");
+      OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
 }
 
 static void
-oc_sec_dtls_recv_message(oc_message_t *message)
+oc_tls_recv_message(oc_message_t *message)
 {
-  oc_sec_dtls_peer_t *peer =
-    oc_sec_dtls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER);
+  oc_tls_peer_t *peer =
+    oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER);
 
   if (peer) {
 #ifdef OC_DEBUG
     char u[37];
     oc_uuid_to_str(&peer->uuid, u, 37);
-    OC_DBG("oc_dtls: Received message from device %s", u);
+    OC_DBG("oc_tls: Received message from device %s", u);
 #endif /* OC_DEBUG */
 
     oc_list_add(peer->recv_q, message);
     peer->timestamp = oc_clock_time();
-    oc_dtls_handler_schedule_read(peer);
+    oc_tls_handler_schedule_read(peer);
   }
 }
 
-OC_PROCESS_THREAD(oc_dtls_handler, ev, data)
-{
+OC_PROCESS_THREAD(oc_tls_handler, ev, data) {
   OC_PROCESS_BEGIN();
 
   while (1) {
     OC_PROCESS_YIELD();
 
-    if (ev == oc_events[UDP_TO_DTLS_EVENT]) {
-      oc_sec_dtls_recv_message(data);
+    if (ev == oc_events[UDP_TO_TLS_EVENT]) {
+      oc_tls_recv_message(data);
     }
 #ifdef OC_CLIENT
-    else if (ev == oc_events[INIT_DTLS_CONN_EVENT]) {
-      oc_sec_dtls_init_connection(data);
+    else if (ev == oc_events[INIT_TLS_CONN_EVENT]) {
+      oc_tls_init_connection(data);
     }
 #endif /* OC_CLIENT */
-    else if (ev == oc_events[RI_TO_DTLS_EVENT]) {
-      oc_sec_dtls_send_message(data);
+    else if (ev == oc_events[RI_TO_TLS_EVENT]) {
+      oc_tls_send_message(data);
     } else if (ev == OC_PROCESS_EVENT_TIMER) {
       check_retr_timers();
-    } else if (ev == oc_events[DTLS_READ_DECRYPTED_DATA]) {
+    } else if (ev == oc_events[TLS_READ_DECRYPTED_DATA]) {
       read_application_data(data);
     }
 #ifdef OC_CLIENT
-    else if (ev == oc_events[DTLS_WRITE_APPLICATION_DATA]) {
+    else if (ev == oc_events[TLS_WRITE_APPLICATION_DATA]) {
       write_application_data(data);
     }
 #endif /* OC_CLIENT */

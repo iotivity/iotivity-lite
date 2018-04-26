@@ -16,6 +16,7 @@
 
 #include "messaging/coap/engine.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_network_events_mutex.h"
 #include "util/oc_memb.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -24,7 +25,7 @@
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 #include "config.h"
@@ -37,7 +38,9 @@ OC_MEMB(oc_buffers_s, oc_message_t, (OC_MAX_NUM_CONCURRENT_REQUESTS * 2));
 oc_message_t *
 oc_allocate_message(void)
 {
+  oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(&oc_buffers_s);
+  oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
     message->data = malloc(OC_PDU_SIZE);
@@ -118,7 +121,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       uint8_t b = (uint8_t)((oc_message_t *)data)->data[0];
       if (b > 19 && b < 64) {
         OC_DBG("Inbound network event: encrypted request");
-        oc_process_post(&oc_dtls_handler, oc_events[UDP_TO_DTLS_EVENT], data);
+        oc_process_post(&oc_tls_handler, oc_events[UDP_TO_TLS_EVENT], data);
       } else {
         OC_DBG("Inbound network event: decrypted request");
         oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
@@ -138,19 +141,19 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       } else
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
-        if (message->endpoint.flags & SECURED) {
-        OC_DBG("Outbound network event: forwarding to DTLS");
+          if (message->endpoint.flags & SECURED) {
+        OC_DBG("Outbound network event: forwarding to TLS");
 
 #ifdef OC_CLIENT
-        if (!oc_sec_dtls_connected(&message->endpoint)) {
-          OC_DBG("Posting INIT_DTLS_CONN_EVENT");
-          oc_process_post(&oc_dtls_handler, oc_events[INIT_DTLS_CONN_EVENT],
+        if (!oc_tls_connected(&message->endpoint)) {
+          OC_DBG("Posting INIT_TLS_CONN_EVENT");
+          oc_process_post(&oc_tls_handler, oc_events[INIT_TLS_CONN_EVENT],
                           data);
         } else
 #endif /* OC_CLIENT */
         {
-          OC_DBG("Posting RI_TO_DTLS_EVENT");
-          oc_process_post(&oc_dtls_handler, oc_events[RI_TO_DTLS_EVENT], data);
+          OC_DBG("Posting RI_TO_TLS_EVENT");
+          oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], data);
         }
       } else
 #endif /* OC_SECURITY */

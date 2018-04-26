@@ -20,7 +20,7 @@
 #include "oc_signal_event_loop.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 #if defined(OC_SERVER)
 #include "messaging/coap/observe.h"
@@ -30,7 +30,9 @@
 OC_LIST(session_start_events);
 OC_LIST(session_end_events);
 
-static void oc_process_session_event(void) {
+static void
+oc_process_session_event(void)
+{
   oc_network_event_handler_mutex_lock();
   oc_endpoint_t *head = (oc_endpoint_t *)oc_list_pop(session_start_events);
   while (head != NULL) {
@@ -58,7 +60,9 @@ OC_PROCESS_THREAD(oc_session_events, ev, data) {
   OC_PROCESS_END();
 }
 
-void oc_session_start_event(oc_endpoint_t *endpoint) {
+void
+oc_session_start_event(oc_endpoint_t *endpoint)
+{
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -70,7 +74,9 @@ void oc_session_start_event(oc_endpoint_t *endpoint) {
   _oc_signal_event_loop();
 }
 
-void oc_session_end_event(oc_endpoint_t *endpoint) {
+void
+oc_session_end_event(oc_endpoint_t *endpoint)
+{
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -83,13 +89,20 @@ void oc_session_end_event(oc_endpoint_t *endpoint) {
 }
 #endif /* OC_TCP */
 
-void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state) {
+void
+oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
+{
   if (state == OC_SESSION_DISCONNECTED) {
 #ifdef OC_SERVER
     coap_remove_observer_by_client(endpoint);
 #else  /* OC_SERVER */
     (void)endpoint;
 #endif /* !OC_SERVER */
+#ifdef OC_SECURITY
+    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
+      oc_tls_remove_peer(endpoint);
+    }
+#endif /* OC_SECURITY */
   }
   _oc_session_state(endpoint, state);
 }
