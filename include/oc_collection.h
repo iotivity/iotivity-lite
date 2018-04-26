@@ -45,6 +45,8 @@ struct oc_collection_s
   OC_LIST_STRUCT(links);
 };
 
+bool oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
+                                  oc_interface_mask_t interface);
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t interface);
 oc_collection_t *oc_collection_alloc(void);
