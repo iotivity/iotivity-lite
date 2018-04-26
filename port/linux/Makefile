@@ -65,7 +65,7 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
 	SRC_COMMON += ${DTLS}

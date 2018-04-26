@@ -61,7 +61,7 @@
 #endif /* OC_CLIENT */
 
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -162,7 +162,7 @@ coap_send_transaction(coap_transaction_t *t)
 
 #ifdef OC_SECURITY
       if (t->message->endpoint.flags & SECURED) {
-        oc_sec_dtls_close_connection(&t->message->endpoint);
+        oc_tls_close_connection(&t->message->endpoint);
       }
 #endif /* OC_SECURITY */
 
