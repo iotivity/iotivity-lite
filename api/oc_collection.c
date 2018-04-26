@@ -183,10 +183,274 @@ oc_collection_add(oc_collection_t *collection)
   oc_list_add(oc_collections, collection);
 }
 
+static bool
+oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
+                             oc_interface_mask_t interface)
+{
+  int code = 69;
+  oc_collection_t *collection = (oc_collection_t *)request->resource;
+  oc_link_t *link = oc_list_head(collection->links);
+  switch (interface) {
+  case OC_IF_BASELINE: {
+    oc_rep_start_root_object();
+    oc_process_baseline_interface(request->resource);
+    oc_rep_set_array(root, links);
+    while (link != NULL) {
+      //TODO: Does links has to be filtered against query paramter?
+      oc_rep_object_array_start_item(links);
+      oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
+      oc_rep_set_string_array(links, rt, link->resource->types);
+      oc_core_encode_interfaces_mask(oc_rep_object(links),
+                                     link->resource->interfaces);
+      oc_rep_set_string_array(links, rel, link->rel);
+      if (oc_string_len(link->ins) > 0) {
+        oc_rep_set_text_string(links, ins, oc_string(link->ins));
+      }
+      oc_rep_set_object(links, p);
+      oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
+                                       ~(OC_PERIODIC | OC_SECURE)));
+#ifdef OC_SECURITY
+      oc_rep_set_boolean(p, sec, true);
+#endif /* OC_SECURITY */
+      // port, x.org.iotivity.tcp and x.org.iotivity.tls
+      oc_endpoint_t *eps = oc_connectivity_get_endpoints(link->resource->device);
+      while (eps != NULL) {
+        if (link->resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+          eps = eps->next;
+          continue;
+        }
+#ifdef OC_TCP
+        if (eps->flags & TCP) {
+          if (eps->flags & SECURED) {
+            if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+              oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv6.port);
+            }
+#ifdef OC_IPV4
+            else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+              oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv4.port);
+            }
+#endif /* OC_IPV4 */
+          }
+          else {
+            if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+              oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv6.port);
+            }
+#ifdef OC_IPV4
+            else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+              oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv4.port);
+            }
+#endif /* OC_IPV4 */
+          }
+        }
+        else
+#endif /* OC_TCP */
+        if (eps->flags & SECURED) {
+          if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+            oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+          }
+#ifdef OC_IPV4
+          else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+            oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+          }
+#endif /* OC_IPV4 */
+        }
+        eps = eps->next;
+      }
+      oc_free_endpoint_list();
+      oc_rep_close_object(links, p);
+      oc_rep_object_array_end_item(links);
+      link = link->next;
+    }
+    oc_rep_close_array(root, links);
+    oc_rep_end_root_object();
+  } break;
+  case OC_IF_LL: {
+    oc_rep_start_links_array();
+    while (link != NULL) {
+      //TODO: Does links has to be filtered against query paramter?
+      oc_rep_object_array_start_item(links);
+      oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
+      oc_rep_set_string_array(links, rt, link->resource->types);
+      oc_core_encode_interfaces_mask(oc_rep_object(links),
+                                     link->resource->interfaces);
+      oc_rep_set_string_array(links, rel, link->rel);
+      if (oc_string_len(link->ins) > 0) {
+        oc_rep_set_text_string(links, ins, oc_string(link->ins));
+      }
+      oc_rep_set_object(links, p);
+      oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
+                                       ~(OC_PERIODIC | OC_SECURE)));
+#ifdef OC_SECURITY
+      oc_rep_set_boolean(p, sec, true);
+#endif /* OC_SECURITY */
+      // port, x.org.iotivity.tcp and x.org.iotivity.tls
+      oc_endpoint_t *eps = oc_connectivity_get_endpoints(link->resource->device);
+      while (eps != NULL) {
+        if (link->resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+          eps = eps->next;
+          continue;
+        }
+#ifdef OC_TCP
+        if (eps->flags & TCP) {
+          if (eps->flags & SECURED) {
+            if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+              oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv6.port);
+            }
+#ifdef OC_IPV4
+            else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+              oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv4.port);
+            }
+#endif /* OC_IPV4 */
+          }
+          else {
+            if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+              oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv6.port);
+            }
+#ifdef OC_IPV4
+            else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+              oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv4.port);
+            }
+#endif /* OC_IPV4 */
+          }
+        }
+        else
+#endif /* OC_TCP */
+        if (eps->flags & SECURED) {
+          if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+            oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+          }
+#ifdef OC_IPV4
+          else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+            oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+          }
+#endif /* OC_IPV4 */
+        }
+        eps = eps->next;
+      }
+      oc_free_endpoint_list();
+      oc_rep_close_object(links, p);
+      oc_rep_object_array_end_item(links);
+      link = link->next;
+    }
+    oc_rep_end_links_array();
+  } break;
+  case OC_IF_B: {
+    CborEncoder encoder, prev_link;
+    oc_request_t rest_request = { 0 };
+    oc_response_t response = { 0 };
+    oc_response_buffer_t response_buffer;
+    bool method_not_found = false;
+
+    response.response_buffer = &response_buffer;
+    rest_request.response = &response;
+    rest_request.origin = request->origin;
+
+    oc_rep_start_links_array();
+    memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+
+    link = oc_list_head(collection->links);
+    while (link != NULL) {
+      if (link->resource) {
+        //TODO: Does links has to be filtered against query paramter?
+        memcpy(&prev_link, &links_array, sizeof(CborEncoder));
+        oc_rep_object_array_start_item(links);
+
+        rest_request.query = 0;
+        rest_request.query_len = 0;
+
+        oc_rep_set_text_string(links, href,
+                               oc_string(link->resource->uri));
+        oc_rep_set_key(*oc_rep_object(links), "rep");
+        memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+
+        int size_before = oc_rep_finalize();
+        rest_request.resource = link->resource;
+        response_buffer.code = 0;
+        response_buffer.response_length = 0;
+        method_not_found = false;
+
+        switch (method) {
+        case OC_GET:
+          if (link->resource->get_handler.cb)
+            link->resource->get_handler.cb(
+              &rest_request, link->resource->default_interface,
+              link->resource->get_handler.user_data);
+          else
+            method_not_found = true;
+            break;
+        case OC_PUT:
+          if (link->resource->put_handler.cb)
+            link->resource->put_handler.cb(
+              &rest_request, link->resource->default_interface,
+              link->resource->put_handler.user_data);
+          else
+            method_not_found = true;
+          break;
+        case OC_POST:
+          if (link->resource->post_handler.cb)
+            link->resource->post_handler.cb(
+              &rest_request, link->resource->default_interface,
+              link->resource->post_handler.user_data);
+          else
+            method_not_found = true;
+          break;
+        case OC_DELETE:
+          if (link->resource->delete_handler.cb)
+            link->resource->delete_handler.cb(
+              &rest_request, link->resource->default_interface,
+              link->resource->delete_handler.user_data);
+          else
+            method_not_found = true;
+          break;
+        }
+
+        if (method_not_found ||
+            response_buffer.code >=
+              oc_status_code(OC_STATUS_BAD_REQUEST)) {
+          code = response_buffer.code;
+          memcpy(&links_array, &prev_link, sizeof(CborEncoder));
+          goto next;
+        } else {
+          if (code < oc_status_code(OC_STATUS_BAD_REQUEST))
+            code = response_buffer.code;
+          int size_after = oc_rep_finalize();
+          if (size_before == size_after) {
+            oc_rep_start_root_object();
+            oc_rep_end_root_object();
+          }
+        }
+
+        memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
+        oc_rep_object_array_end_item(links);
+      }
+    next:
+      link = link->next;
+    }
+
+    memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
+    oc_rep_end_links_array();
+  } break;
+  default:
+    break;
+  }
+
+  int size = oc_rep_finalize();
+  size = (size <= 2) ? 0 : size;
+
+  request->response->response_buffer->response_length = (uint16_t)size;
+  request->response->response_buffer->code = code;
+
+  return true;
+}
+
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t interface)
 {
+  if (request->origin->version == OIC_VER_1_1_0) {
+    return oc_handle_oic_1_1_collection_request(method, request, interface);
+  }
+
   int code = 69;
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   oc_link_t *link = oc_list_head(collection->links);
