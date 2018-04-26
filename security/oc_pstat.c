@@ -21,8 +21,8 @@
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
-#include "oc_dtls.h"
 #include "oc_store.h"
+#include "oc_tls.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -129,7 +129,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
-    oc_sec_dtls_update_psk_identity(device);
+    oc_tls_update_psk_identity(device);
     set_post_otm_acl = true;
     ps->p = false;
   }

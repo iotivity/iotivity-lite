@@ -24,9 +24,9 @@
 #include "security/oc_acl.h"
 #include "security/oc_cred.h"
 #include "security/oc_doxm.h"
-#include "security/oc_dtls.h"
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"
+#include "security/oc_tls.h"
 #include <stdlib.h>
 
 #define DISCOVERY_CB_DELAY (5)
@@ -297,8 +297,8 @@ static void
 free_otm_state(oc_otm_ctx_t *o, int status)
 {
   oc_endpoint_t *ep = get_secure_endpoint(o->device->endpoint);
-  oc_sec_dtls_close_connection(ep);
-  oc_sec_dtls_demote_anon_ciphersuite();
+  oc_tls_close_connection(ep);
+  oc_tls_demote_anon_ciphersuite();
   if (status == -1) {
     char suuid[37];
     oc_uuid_to_str(&o->device->uuid, suuid, 37);
@@ -366,9 +366,9 @@ obt_jw_12(oc_client_response_t *data)
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
 
-  oc_sec_dtls_close_connection(ep);
+  oc_tls_close_connection(ep);
 
-  oc_sec_dtls_demote_anon_ciphersuite();
+  oc_tls_demote_anon_ciphersuite();
 
   if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
     return;
@@ -789,7 +789,7 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
 
   /**  1) <anon ecdh>+post pstat s=reset
    */
-  oc_sec_dtls_elevate_anon_ciphersuite();
+  oc_tls_elevate_anon_ciphersuite();
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, HIGH_QOS, o)) {
@@ -1071,7 +1071,7 @@ free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
   oc_endpoint_t *ep = get_secure_endpoint(ctx->device->endpoint);
   char subjectuuid[37];
   oc_uuid_to_str(&ctx->device->uuid, subjectuuid, 37);
-  oc_sec_dtls_close_connection(ep);
+  oc_tls_close_connection(ep);
   free_device(ctx->device);
   if (ctx->switch_dos) {
     free_switch_dos_state(ctx->switch_dos);
@@ -1133,9 +1133,9 @@ static void
 free_credprov_state(oc_credprov_ctx_t *p, int status)
 {
   oc_endpoint_t *ep = get_secure_endpoint(p->device1->endpoint);
-  oc_sec_dtls_close_connection(ep);
+  oc_tls_close_connection(ep);
   ep = get_secure_endpoint(p->device2->endpoint);
-  oc_sec_dtls_close_connection(ep);
+  oc_tls_close_connection(ep);
   free_device(p->device1);
   free_device(p->device2);
   p->cb.cb(status, p->cb.data);
@@ -1489,7 +1489,7 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
 {
   free_ace(request->ace);
   oc_endpoint_t *ep = get_secure_endpoint(request->device->endpoint);
-  oc_sec_dtls_close_connection(ep);
+  oc_tls_close_connection(ep);
   free_device(request->device);
   if (request->switch_dos) {
     free_switch_dos_state(request->switch_dos);

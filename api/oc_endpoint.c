@@ -16,6 +16,7 @@
 
 #include "oc_endpoint.h"
 #include "oc_core_res.h"
+#include "port/oc_network_events_mutex.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,13 +72,10 @@ oc_free_endpoint_list(void)
   oc_init_endpoint_list();
 }
 
-oc_endpoint_t *
-oc_new_endpoint(void)
-{
+oc_endpoint_t *oc_new_endpoint(void) {
+  oc_network_event_handler_mutex_lock();
   oc_endpoint_t *endpoint = oc_memb_alloc(&oc_endpoints_s);
-  if (endpoint) {
-    memset(endpoint, 0, sizeof(oc_endpoint_t));
-  }
+  oc_network_event_handler_mutex_unlock();
   return endpoint;
 }
 

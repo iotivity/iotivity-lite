@@ -18,7 +18,7 @@
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 #ifdef OC_CLIENT
 
@@ -406,7 +406,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 void oc_close_session(oc_endpoint_t *endpoint) {
   if (endpoint->flags & SECURED) {
 #ifdef OC_SECURITY
-    oc_sec_dtls_close_connection(endpoint);
+    oc_tls_close_connection(endpoint);
 #endif /* OC_SECURITY */
   } else if (endpoint->flags & TCP) {
 #ifdef OC_TCP

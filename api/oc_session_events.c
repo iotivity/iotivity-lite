@@ -20,7 +20,7 @@
 #include "oc_signal_event_loop.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 #if defined(OC_SERVER)
 #include "messaging/coap/observe.h"
@@ -90,6 +90,11 @@ void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state) {
 #else  /* OC_SERVER */
     (void)endpoint;
 #endif /* !OC_SERVER */
+#ifdef OC_SECURITY
+    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
+      oc_tls_remove_peer(endpoint);
+    }
+#endif /* OC_SECURITY */
   }
   _oc_session_state(endpoint, state);
 }

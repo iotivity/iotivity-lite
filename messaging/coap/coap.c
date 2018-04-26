@@ -52,7 +52,7 @@
 #include "transactions.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif
 
 /*---------------------------------------------------------------------------*/

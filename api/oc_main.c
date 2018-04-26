@@ -26,11 +26,13 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_session_state.h"
+#include "oc_signal_event_loop.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_dtls.h"
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 static bool initialized = false;
@@ -151,7 +153,7 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
-  oc_sec_dtls_init_context();
+  oc_tls_init_context();
   int device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_load_pstat(device);
@@ -207,9 +209,14 @@ oc_main_shutdown(void)
   initialized = false;
 }
 
-void
-_oc_signal_event_loop(void)
-{
-  if (app_callbacks)
+void _oc_signal_event_loop(void) {
+  if (app_callbacks) {
     app_callbacks->signal_event_loop();
+  }
+}
+
+void _oc_session_state(oc_endpoint_t *endpoint, oc_session_state_t state) {
+  if (app_callbacks && app_callbacks->session_state) {
+    app_callbacks->session_state(endpoint, state);
+  }
 }

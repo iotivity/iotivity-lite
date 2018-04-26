@@ -34,6 +34,9 @@
 #include "oc_discovery.h"
 #include "oc_events.h"
 #include "oc_network_events.h"
+#ifdef OC_TCP
+#include "oc_session_events.h"
+#endif /* OC_TCP */
 #include "oc_ri.h"
 #include "oc_uuid.h"
 
@@ -47,7 +50,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
-#include "security/oc_dtls.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -215,23 +218,27 @@ start_processes(void)
   oc_process_start(&message_buffer_handler, NULL);
 
 #ifdef OC_SECURITY
-  oc_process_start(&oc_dtls_handler, NULL);
-#endif
+  oc_process_start(&oc_tls_handler, NULL);
+#endif /* OC_SECURITY */
 
   oc_process_start(&oc_network_events, NULL);
+#ifdef OC_TCP
+  oc_process_start(&oc_session_events, NULL);
+#endif /* OC_TCP */
 }
 
-static void
-stop_processes(void)
-{
+static void stop_processes(void) {
+#ifdef OC_TCP
+  oc_process_exit(&oc_session_events);
+#endif /* OC_TCP */
   oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&timed_callback_events);
   oc_process_exit(&coap_engine);
 
 #ifdef OC_SECURITY
-  oc_process_exit(&oc_dtls_handler);
-#endif
+  oc_process_exit(&oc_tls_handler);
+#endif /* OC_SECURITY */
 
   oc_process_exit(&message_buffer_handler);
 }
