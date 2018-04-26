@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_231d80be",
+        "filename": "include/oc_api.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-04-26T06:20:37Z",
+      "side": 1,
+      "message": "This sentence need to remove.",
+      "range": {
+        "startLine": 180,
+        "startChar": 39,
+        "endLine": 180,
+        "endChar": 56
+      },
+      "revId": "c5032ef615980b3c02bfaa6457a5680cf12bf3de",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
