@@ -59,11 +59,11 @@ oc_new_link(oc_resource_t *resource)
   if (resource) {
     oc_link_t *link = oc_memb_alloc(&oc_links_s);
     if (link) {
+      link->resource = resource;
+      link->ins = 0;
       oc_new_string_array(&link->rel, 3);
       oc_string_array_add_item(link->rel, "hosts");
-      link->resource = resource;
       link->next = 0;
-      memset(&link->ins, 0, sizeof(oc_string_t));
       return link;
     }
     OC_WRN("insufficient memory to create new link");
@@ -75,18 +75,15 @@ void
 oc_delete_link(oc_link_t *link)
 {
   if (link) {
-    if (oc_string_len(link->ins) > 0) {
-      oc_free_string(&(link->ins));
-    }
     oc_free_string_array(&(link->rel));
     oc_memb_free(&oc_links_s, link);
   }
 }
 
 void
-oc_link_set_ins(oc_link_t *link, const char *ins)
+oc_link_set_ins(oc_link_t *link, int ins)
 {
-  oc_new_string(&link->ins, ins, strlen(ins));
+  link->ins = ins;
 }
 
 void
@@ -203,9 +200,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_core_encode_interfaces_mask(oc_rep_object(links),
                                        link->resource->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
-        if (oc_string_len(link->ins) > 0) {
-          oc_rep_set_text_string(links, ins, oc_string(link->ins));
-        }
+        oc_rep_set_int(links, ins, link->ins);
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));
@@ -245,9 +240,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_core_encode_interfaces_mask(oc_rep_object(links),
                                        link->resource->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
-        if (oc_string_len(link->ins) > 0) {
-          oc_rep_set_text_string(links, ins, oc_string(link->ins));
-        }
+        oc_rep_set_int(links, ins, link->ins);
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));

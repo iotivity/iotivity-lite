@@ -179,7 +179,7 @@ void oc_link_add_rel(oc_link_t *link, const char *rel);
   @param link The link to set the instance on. Must not be NULL.
   @param ins The link instance to set. Must not be NULL.
 */
-void oc_link_set_ins(oc_link_t *link, const char *ins);
+void oc_link_set_ins(oc_link_t *link, int ins);
 
 /**
   @brief Adds the link to the collection.

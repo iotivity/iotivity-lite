@@ -24,7 +24,7 @@ struct oc_link_s
 {
   struct oc_link_s *next;
   oc_resource_t *resource;
-  oc_string_t ins;
+  int ins;
   oc_string_array_t rel;
 };
 
