@@ -20,6 +20,8 @@
 #define ES_COMMON_H
 
 #include "stdbool.h"
+#include "oc_api.h"
+#include "oc_rep.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -54,6 +56,7 @@ extern "C"
 #define OC_RSRVD_ES_CRED                   "cd"
 #define OC_RSRVD_ES_AUTHTYPE               "wat"
 #define OC_RSRVD_ES_ENCTYPE                "wet"
+#define OC_RSRVD_ES_AUTHCODE               "ac"
 #define OC_RSRVD_ES_ACCESSTOKEN            "at"
 #define OC_RSRVD_ES_ACCESSTOKEN_TYPE       "att"
 #define OC_RSRVD_ES_AUTHPROVIDER           "apn"
@@ -82,7 +85,9 @@ extern "C"
 typedef enum
 {
     WIFI_24G = 0,      // 2.4G
-    WIFI_5G            // 5G
+    WIFI_5G,           // 5G
+    WIFI_BOTH,         // 2.4G and 5G
+    WIFI_FREQ_NONE     // EOF
 } wifi_freq;
 
 /**
@@ -94,7 +99,8 @@ typedef enum
     WIFI_11B,           // 802.11b
     WIFI_11G,           // 802.11g
     WIFI_11N,           // 802.11n
-    WIFI_11AC           // 802.11ac
+    WIFI_11AC,           // 802.11ac
+    WiFi_EOF = 999
 } wifi_mode;
 
 /**

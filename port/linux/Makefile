@@ -50,14 +50,13 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock easysetup_linux
 
 OBT = onboarding_tool
 
 ifeq ($(EASYSETUP),1)
 	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c)
-	CFLAGS_ES=-I../../service/easy-setup/enrollee/include
-	CFLAGS_ES+=-I../../service/easy-setup/enrollee/
+	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port
 	CFLAGS_ES+= -DEASYSETUP
 	OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
 endif
@@ -99,7 +98,8 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
 		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a \
-		   libiotivity-constrained-easysetup.a
+                   libiotivity-constrained-easysetup.a
+
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
@@ -109,7 +109,7 @@ all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 obj/es/%.o: %.c
 	@mkdir -p ${@D}
-	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} -DOC_SERVER
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -197,6 +197,10 @@ multi_device_server: libiotivity-constrained-server.a
 multi_device_client: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+easysetup_linux: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/easysetup_linux.c libiotivity-constrained-server.a libiotivity-constrained-easysetup.a -DOC_SERVER ${CFLAGS} ${CFLAGS_ES} ${LIBS}	
 
 ${OBT}: libiotivity-constrained-client.a
 	@mkdir -p $@_creds

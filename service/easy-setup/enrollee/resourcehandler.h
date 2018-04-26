@@ -19,10 +19,8 @@
 #ifndef ES_ES_RESOURCES_H
 #define ES_ES_RESOURCES_H
 
-#include "estypes.h"
-#include "enrolleecommon.h"
-#include "oc_rep.h"
-#include "oc_ri.h"
+#include "escommon.h"
+#include "ESEnrolleeCommon.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,26 +31,21 @@ typedef void (*es_wifi_conf_cb) (es_result_e, es_wifi_conf_data *);
 typedef void (*es_coap_cloud_conf_cb) (es_result_e, es_coap_cloud_conf_data *);
 typedef void (*es_dev_conf_cb) (es_result_e, es_dev_conf_data *);
 
-typedef void (*es_write_userdata_cb) (oc_rep_t* payload, char* resource_type);
-typedef void (*es_read_userdata_cb) (oc_rep_t* payload, char* resource_type, void** userdata);
-
-/* Structure to represent a Light resource */
 typedef struct
 {
-    oc_resource_t handle;
+    oc_resource_t* handle;
     prov_status status;
     es_error_code last_err_code;
     es_connect_type connect_request[NUM_CONNECT_TYPE];
-    int numRequest;
+    int num_request;
 } easy_setup_resource;
 
 typedef struct
 {
-    oc_resource_t handle;
+    oc_resource_t* handle;
     wifi_mode supported_mode[NUM_WIFIMODE];
     uint8_t num_mode;
-    wifi_freq supported_freq[NUM_WIFIFREQ];
-    uint8_t num_supported_freq;
+    wifi_freq supported_freq;
     wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
     uint8_t num_supported_authtype;
     wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
@@ -65,7 +58,8 @@ typedef struct
 
 typedef struct
 {
-    oc_resource_t handle;
+    oc_resource_t* handle;
+    char auth_code[OC_STRING_MAX_VALUE];
     char access_token[OC_STRING_MAX_VALUE];
     oauth_tokentype access_token_type;
     char auth_provider[OC_STRING_MAX_VALUE];
@@ -74,7 +68,7 @@ typedef struct
 
 typedef struct
 {
-    oc_resource_t handle;
+    oc_resource_t* handle;
     char dev_name[OC_STRING_MAX_VALUE];
     char model_number[OC_STRING_MAX_VALUE];
     char location[OC_STRING_MAX_VALUE];
@@ -82,7 +76,7 @@ typedef struct
     char country[OC_STRING_MAX_VALUE];
 } dev_conf_resource;
 
-void create_easysetup_resources(void);
+es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask);
 es_result_e delete_easysetup_resources(void);
 
 es_result_e set_device_property(es_device_property *device_property);
@@ -93,7 +87,7 @@ void resgister_wifi_rsrc_event_callback(es_wifi_conf_cb);
 void register_cloud_rsrc_event_callback(es_coap_cloud_conf_cb);
 void register_devconf_rsrc_event_callback(es_dev_conf_cb);
 void register_connect_request_event_callback(es_connect_request_cb cb);
-void unregister_resource_event_callback (void);
+void unregister_resource_event_callback(void);
 es_result_e set_callback_for_userdata(es_read_userdata_cb readCb, es_write_userdata_cb writeCb);
 
 #ifdef __cplusplus

@@ -20,7 +20,6 @@
 #define ES_ENROLLEE_COMMON_H
 
 #include "stdint.h"
-#include "estypes.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -61,6 +60,7 @@ typedef struct
  */
 typedef struct
 {
+    char auth_code[OC_STRING_MAX_VALUE];         // auth code issued by OAuth2.0-compatible account server
     char access_token[OC_STRING_MAX_VALUE];      // access token resolved with an auth code
     oauth_tokentype access_token_type;           // access token type
     char auth_provider[OC_STRING_MAX_VALUE];     // auth provider ID
@@ -80,13 +80,7 @@ typedef struct
     struct
     {
         wifi_mode supported_mode[NUM_WIFIMODE];
-        uint8_t num_supported_mode;
-        wifi_freq supported_freq[NUM_WIFIFREQ];
-        uint8_t num_supported_freq;
-        wifi_authtype supported_auth_type[NUM_WIFIAUTHTYPE];
-        uint8_t num_supported_auth_type;
-        wifi_enctype supported_enc_type[NUM_WIFIENCTYPE];
-        uint8_t num_supported_enc_type;
+        wifi_freq supported_freq;
     } WiFi;
 
     /**
