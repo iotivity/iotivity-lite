@@ -17,7 +17,9 @@
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
-
+#ifdef OC_SECURITY
+#include "security/oc_dtls.h"
+#endif /* OC_SECURITY */
 #ifdef OC_CLIENT
 
 static coap_transaction_t *transaction;
@@ -400,4 +402,17 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 {
   return dispatch_ip_discovery(rt, handler, endpoint, user_data) ? true : false;
 }
+
+void oc_close_session(oc_endpoint_t *endpoint) {
+  if (endpoint->flags & SECURED) {
+#ifdef OC_SECURITY
+    oc_sec_dtls_close_connection(endpoint);
+#endif /* OC_SECURITY */
+  } else if (endpoint->flags & TCP) {
+#ifdef OC_TCP
+    oc_connectivity_end_session(endpoint);
+#endif /* OC_TCP */
+  }
+}
+
 #endif /* OC_CLIENT */

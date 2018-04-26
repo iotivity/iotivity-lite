@@ -33,13 +33,14 @@
 #include "oc_buffer_settings.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
+#include "oc_session_state.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 
-typedef struct
-{
+typedef struct {
   int (*init)(void);
   void (*signal_event_loop)(void);
+  void (*session_state)(oc_endpoint_t *, oc_session_state_t);
 
 #ifdef OC_SERVER
   void (*register_resources)(void);
@@ -346,6 +347,8 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
+
+void oc_close_session(oc_endpoint_t *endpoint);
 
 /** Common operations */
 

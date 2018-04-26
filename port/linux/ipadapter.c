@@ -1097,3 +1097,10 @@ oc_connectivity_shutdown(int device)
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);
 }
+
+#ifdef OC_TCP
+void oc_connectivity_end_session(oc_endpoint_t *endpoint) {
+  (void)endpoint;
+  // TODO
+}
+#endif /* OC_TCP */
