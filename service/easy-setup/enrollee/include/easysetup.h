@@ -19,9 +19,8 @@
 #ifndef EASYSETUP_ENROLLEE_H
 #define EASYSETUP_ENROLLEE_H
 
-#include "estypes.h"
-#include "esresources.h"
-#include "enrolleecommon.h"
+#include "escommon.h"
+#include "ESEnrolleeCommon.h"
 
 /**
  * @file
@@ -32,6 +31,27 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
+/**
+ * A function pointer for registering a user-defined function to set user-specific properties to a
+ * response going back to a client.
+ * @param payload Represents a response. You can set a specific value with specific property key
+ * to the payload. If a client receives the response and know the property key, then it can
+ * extract the value.
+ * @param resource_type Used to distinguish which resource the received property belongs to.
+ */
+typedef void (*es_write_userdata_cb) (oc_rep_t* payload, char* resource_type);
+
+/**
+ * A function pointer for registering a user-defined function to parse user-specific properties
+ * from received POST request.
+ * @param payload Represents a received POST request. If you know user-specific property key,
+ * then you can extract a corresponding value if it exists.
+ * @param resource_type Used to distinguish which resource the received property belongs to
+ * @param userdata User-specific data you want to deliver to desired users, i.e. application.
+ * The user should know a data structure of passed userdata.
+ */
+typedef void (*es_read_userdata_cb) (oc_rep_t* payload, char* resource_type, void** userdata);
 
 /**
  * This function initializes the EasySetup. This API must be called prior to invoking any other API.

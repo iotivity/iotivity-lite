@@ -23,9 +23,8 @@
  */
 
 #include "easysetup.h"
-#include "enrolleecommon.h"
-#include "estypes.h"
-#include "port/oc_log.h"
+#include "oc_log.h"
+#include "resourcehandler.h"
 
 static bool gIsSecured = false;
 

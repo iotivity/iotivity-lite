@@ -46,7 +46,7 @@ OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/es_util/src/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
@@ -55,9 +55,8 @@ SAMPLES = server client temp_sensor simpleserver simpleclient client_collections
 OBT = onboarding_tool
 
 ifeq ($(EASYSETUP),1)
-	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c)
-	CFLAGS_ES=-I../../service/easy-setup/enrollee/include
-	CFLAGS_ES+=-I../../service/easy-setup/enrollee/
+	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c ../../service/easy-setup/es_util/src/*.c)
+	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port -I../../service/easy-setup/es_util/inc
 	CFLAGS_ES+= -DEASYSETUP
 	OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
 endif
