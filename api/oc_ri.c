@@ -34,6 +34,7 @@
 #include "oc_discovery.h"
 #include "oc_events.h"
 #include "oc_network_events.h"
+#include "oc_network_monitors.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 
@@ -219,11 +220,13 @@ start_processes(void)
 #endif
 
   oc_process_start(&oc_network_events, NULL);
+  oc_process_start(&oc_network_monitors, NULL);
 }
 
 static void
 stop_processes(void)
 {
+  oc_process_exit(&oc_network_monitors);
   oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&timed_callback_events);

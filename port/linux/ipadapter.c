@@ -22,8 +22,10 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
+#include "oc_network_monitors.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -64,6 +66,104 @@ bool ifchange_initialized;
 
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
+
+/**
+ * Structure to manage interface list.
+ */
+typedef struct ip_interface
+{
+  struct ip_interface *next;
+  int if_index;
+} ip_interface_t;
+
+OC_LIST(ip_interface_list);
+OC_MEMB(ip_interface_s, ip_interface_t, OC_MAX_IP_INTERFACES);
+
+/**
+ * Structure to manage adapter status monitoring callback list.
+ */
+typedef struct ip_adapter_cb
+{
+  struct ip_adapter_cb *next;
+  ip_adapter_changed_cb_t callback;
+} ip_adapter_cb_t;
+
+OC_LIST(ip_adapter_cb_list);
+OC_MEMB(ip_adapter_cb_s, ip_adapter_cb_t, OC_MAX_IP_ADAPTER_CBS);
+static pthread_mutex_t ip_adapter_cb_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+bool
+oc_set_ip_adapter_changed_cb(ip_adapter_changed_cb_t callback)
+{
+  if (!callback)
+    return false;
+
+  ip_adapter_cb_t *cb_item = oc_memb_alloc(&ip_adapter_cb_s);
+  if (!cb_item) {
+    OC_ERR("ip adapter callback item alloc failed");
+    return false;
+  }
+
+  cb_item->callback = callback;
+  pthread_mutex_lock(&ip_adapter_cb_mutex);
+  oc_list_add(ip_adapter_cb_list, cb_item);
+  pthread_mutex_unlock(&ip_adapter_cb_mutex);
+  return true;
+}
+
+bool
+oc_unset_ip_adapter_changed_cb(ip_adapter_changed_cb_t callback)
+{
+  if (!callback)
+    return false;
+
+  pthread_mutex_lock(&ip_adapter_cb_mutex);
+  ip_adapter_cb_t *cb_item = oc_list_head(ip_adapter_cb_list);
+  while (cb_item != NULL && cb_item->callback != callback) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    pthread_mutex_unlock(&ip_adapter_cb_mutex);
+    return false;
+  }
+  oc_list_remove(ip_adapter_cb_list, cb_item);
+  pthread_mutex_unlock(&ip_adapter_cb_mutex);
+
+  oc_memb_free(&ip_adapter_cb_s, cb_item);
+  return true;
+}
+
+static void
+handle_ip_adapter_changed_cb(bool up)
+{
+  if (oc_list_length(ip_adapter_cb_list) > 0) {
+    pthread_mutex_lock(&ip_adapter_cb_mutex);
+    ip_adapter_cb_t *cb_item = oc_list_head(ip_adapter_cb_list);
+    while (cb_item) {
+      oc_network_status_t item = {.type = OC_ADAPTER_CHANGED,
+                                  .status.adapter = {
+                                    .callback = cb_item->callback, .up = up } };
+
+      oc_networt_monitor_dispatch_event(&item);
+      cb_item = cb_item->next;
+    }
+    pthread_mutex_unlock(&ip_adapter_cb_mutex);
+  }
+}
+
+static void
+remove_all_ip_adapter_changed_cb(void)
+{
+  pthread_mutex_lock(&ip_adapter_cb_mutex);
+  ip_adapter_cb_t *cb_item = oc_list_head(ip_adapter_cb_list), *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(ip_adapter_cb_list, cb_item);
+    oc_memb_free(&ip_adapter_cb_s, cb_item);
+    cb_item = next;
+  }
+  pthread_mutex_unlock(&ip_adapter_cb_mutex);
+}
 
 void
 oc_network_event_handler_mutex_init(void)
@@ -214,6 +314,82 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
   return ret;
 }
 
+static ip_interface_t *
+get_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list);
+  while (if_item != NULL && if_item->if_index != target_index) {
+    if_item = if_item->next;
+  }
+  return if_item;
+}
+
+static bool
+add_ip_interface(int target_index)
+{
+  if (get_ip_interface(target_index))
+    return false;
+
+  ip_interface_t *new_if = oc_memb_alloc(&ip_interface_s);
+  if (!new_if) {
+    OC_ERR("interface item alloc failed");
+    return false;
+  }
+  new_if->if_index = target_index;
+  oc_list_add(ip_interface_list, new_if);
+  OC_DBG("New interface added: %d", new_if->if_index);
+  return true;
+}
+
+static bool
+check_new_ip_interfaces(void)
+{
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interface addrs");
+    return false;
+  }
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    /* Ignore interfaces that are down and the loopback interface */
+    if (!(interface->ifa_flags & IFF_UP) ||
+        interface->ifa_flags & IFF_LOOPBACK) {
+      continue;
+    }
+    /* Obtain interface index for this address */
+    int if_index = if_nametoindex(interface->ifa_name);
+
+    add_ip_interface(if_index);
+  }
+  freeifaddrs(ifs);
+  return true;
+}
+
+static bool
+remove_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = get_ip_interface(target_index);
+  if (!if_item) {
+    return false;
+  }
+
+  oc_list_remove(ip_interface_list, if_item);
+  oc_memb_free(&ip_interface_s, if_item);
+  OC_DBG("Removed from ip interface list: %d", target_index);
+  return true;
+}
+
+static void
+remove_all_ip_interface(void)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list), *next;
+  while (if_item != NULL) {
+    next = if_item->next;
+    oc_list_remove(ip_interface_list, if_item);
+    oc_memb_free(&ip_interface_s, if_item);
+    if_item = next;
+  }
+}
+
 /* Called after network interface up/down events.
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
@@ -250,6 +426,8 @@ static int process_interface_change_event(void) {
     if (response->nlmsg_type == RTM_NEWADDR) {
       struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {
+        if (add_ip_interface(ifa->ifa_index))
+          handle_ip_adapter_changed_cb(true);
         struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
@@ -274,6 +452,12 @@ static int process_interface_change_event(void) {
           }
           attr = RTA_NEXT(attr, att_len);
         }
+      }
+    } else if (response->nlmsg_type == RTM_DELADDR) {
+      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
+      if (ifa) {
+        if (remove_ip_interface(ifa->ifa_index))
+          handle_ip_adapter_changed_cb(false);
       }
     }
     response = NLMSG_NEXT(response, response_len);
@@ -1035,6 +1219,10 @@ int oc_connectivity_init(int device) {
       OC_ERR("binding netlink socket %d", errno);
       return -1;
     }
+    if (!check_new_ip_interfaces()) {
+      OC_ERR("checking new IP interfaces failed.");
+      return -1;
+    }
     ifchange_initialized = true;
   }
 
@@ -1087,6 +1275,11 @@ oc_connectivity_shutdown(int device)
 
   if (oc_list_length(ip_contexts) == 0 && ifchange_initialized) {
     close(ifchange_sock);
+    remove_all_ip_interface();
+    remove_all_ip_adapter_changed_cb();
+#ifdef OC_TCP
+    remove_all_tcp_connection_changed_cb();
+#endif /* OC_TCP */
     ifchange_initialized = false;
   }
 

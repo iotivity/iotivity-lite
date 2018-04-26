@@ -45,4 +45,6 @@ void oc_tcp_set_session_fds(fd_set *fds);
 tcp_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
                                            oc_message_t *message);
 
+void remove_all_tcp_connection_changed_cb(void);
+
 #endif /* TCP_ADAPTER_H */

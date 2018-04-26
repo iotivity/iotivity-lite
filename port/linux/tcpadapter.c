@@ -22,6 +22,7 @@
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "oc_endpoint.h"
+#include "oc_network_monitors.h"
 #include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
@@ -49,6 +50,94 @@ typedef struct tcp_session
 
 OC_LIST(session_list);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
+
+/**
+ * Structure to manage tcp connection status monitoring callback list.
+ */
+typedef struct tcp_conn_cb
+{
+  struct tcp_conn_cb *next;
+  tcp_connection_changed_cb_t callback;
+} tcp_conn_cb_t;
+
+OC_LIST(tcp_conn_cb_list);
+OC_MEMB(tcp_conn_cb_s, tcp_conn_cb_t, OC_MAX_TCP_CONNECTION_CBS);
+static pthread_mutex_t tcp_conn_cb_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+bool
+oc_set_tcp_connection_changed_cb(tcp_connection_changed_cb_t callback)
+{
+  if (!callback)
+    return false;
+
+  tcp_conn_cb_t *cb_item = oc_memb_alloc(&tcp_conn_cb_s);
+  if (!cb_item) {
+    OC_ERR("tcp connection callback item alloc failed");
+    return false;
+  }
+
+  cb_item->callback = callback;
+  pthread_mutex_lock(&tcp_conn_cb_mutex);
+  oc_list_add(tcp_conn_cb_list, cb_item);
+  pthread_mutex_unlock(&tcp_conn_cb_mutex);
+  return true;
+}
+
+bool
+oc_unset_tcp_connection_changed_cb(tcp_connection_changed_cb_t callback)
+{
+  if (!callback)
+    return false;
+
+  pthread_mutex_lock(&tcp_conn_cb_mutex);
+  tcp_conn_cb_t *cb_item = oc_list_head(tcp_conn_cb_list);
+  while (cb_item != NULL && cb_item->callback != callback) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    return false;
+  }
+  oc_list_remove(tcp_conn_cb_list, cb_item);
+  pthread_mutex_unlock(&tcp_conn_cb_mutex);
+
+  oc_memb_free(&tcp_conn_cb_s, cb_item);
+  return true;
+}
+
+static void
+handle_tcp_connection_changed_cb(oc_endpoint_t *endpoint, bool connected)
+{
+  if (oc_list_length(tcp_conn_cb_list) > 0) {
+    pthread_mutex_lock(&tcp_conn_cb_mutex);
+    tcp_conn_cb_t *cb_item = oc_list_head(tcp_conn_cb_list);
+    while (cb_item) {
+      oc_network_status_t item = {.type = OC_CONNECTION_CHANGED,
+                                  .status.connection = {
+                                    .callback = cb_item->callback,
+                                    .connected = connected } };
+
+      memcpy(&item.status.connection.endpoint, endpoint, sizeof(oc_endpoint_t));
+
+      oc_networt_monitor_dispatch_event(&item);
+      cb_item = cb_item->next;
+    }
+    pthread_mutex_unlock(&tcp_conn_cb_mutex);
+  }
+}
+
+void
+remove_all_tcp_connection_changed_cb(void)
+{
+  pthread_mutex_lock(&tcp_conn_cb_mutex);
+  tcp_conn_cb_t *cb_item = oc_list_head(tcp_conn_cb_list), *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(tcp_conn_cb_list, cb_item);
+    oc_memb_free(&tcp_conn_cb_s, cb_item);
+    cb_item = next;
+  }
+  pthread_mutex_unlock(&tcp_conn_cb_mutex);
+}
 
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
@@ -153,6 +242,8 @@ accecpt_new_session(ip_context_t *dev, int fd, fd_set *setfds,
     return -1;
   }
   FD_SET(new_socket, &dev->rfds);
+
+  handle_tcp_connection_changed_cb(endpoint, true);
 
   return 0;
 }
@@ -279,6 +370,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       close(session->sock);
       oc_list_remove(session_list, session);
       oc_memb_free(&tcp_session_s, session);
+      handle_tcp_connection_changed_cb(&session->endpoint, false);
       return TCP_STATUS_ERROR;
     } else if (count == 0) {
       OC_DBG("peer closed TCP session");
@@ -286,6 +378,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       close(session->sock);
       oc_list_remove(session_list, session);
       oc_memb_free(&tcp_session_s, session);
+      handle_tcp_connection_changed_cb(&session->endpoint, false);
       return TCP_STATUS_NONE;
     }
 
@@ -370,6 +463,8 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   } while (len == -1 && errno == EINTR);
   oc_free_string(&ep_str);
   OC_DBG("sent connection event to receive thread");
+
+  handle_tcp_connection_changed_cb(endpoint, true);
 
   return sock;
 }

@@ -22,6 +22,7 @@
 #include "oc_network_events.h"
 #include "port/oc_log.h"
 #include "util/oc_process.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -142,6 +143,23 @@ struct oc_message_s
 #endif /* OC_DYNAMIC_ALLOCATION */
 };
 
+/**
+  @brief Callback function to pass the adapter up/down infomation to App.
+  @param up  true when IP adapter is available. false when IP adapter is down.
+*/
+typedef void (*ip_adapter_changed_cb_t)(bool up);
+
+#ifdef OC_TCP
+/**
+  @brief Callback function to pass the tcp connection infomation to App.
+  @param endpoint   endpoint info which the connection event is happened.
+  @param connected  true when tcp channel connect successfully.
+                    false when channel is destroyed.
+*/
+typedef void (*tcp_connection_changed_cb_t)(const oc_endpoint_t *endpoint,
+                                            bool connected);
+#endif /* OC_TCP */
+
 void oc_send_buffer(oc_message_t *message);
 
 int oc_connectivity_init(int device);
@@ -151,5 +169,35 @@ void oc_connectivity_shutdown(int device);
 void oc_send_discovery_request(oc_message_t *message);
 
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
+
+/**
+  @brief Set the callback to receive change notifications for
+   IP adapter status.
+  @param callback  The callback to register. Must not be NULL.
+*/
+bool oc_set_ip_adapter_changed_cb(ip_adapter_changed_cb_t callback);
+
+/**
+  @brief Unset the callback to receive change notifications for
+   IP adapter status.
+  @param callback  The callback to unregister. Must not be NULL.
+*/
+bool oc_unset_ip_adapter_changed_cb(ip_adapter_changed_cb_t callback);
+
+#ifdef OC_TCP
+/**
+  @brief Set the callback to receive change notifications for
+   TCP connection status.
+  @param callback  The callback to register. Must not be NULL.
+*/
+bool oc_set_tcp_connection_changed_cb(tcp_connection_changed_cb_t callback);
+
+/**
+  @brief Unset the callback to receive change notifications for
+   TCP connection status.
+  @param callback  The callback to unregister. Must not be NULL.
+*/
+bool oc_unset_tcp_connection_changed_cb(tcp_connection_changed_cb_t callback);
+#endif /* OC_TCP */
 
 #endif /* OC_CONNECTIVITY_H */
