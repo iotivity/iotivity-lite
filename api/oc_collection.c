@@ -59,11 +59,12 @@ oc_new_link(oc_resource_t *resource)
   if (resource) {
     oc_link_t *link = oc_memb_alloc(&oc_links_s);
     if (link) {
+      link->resource = resource;
+      link->ins_type = OC_INS_INT;
+      link->ins.value_int = 0;
       oc_new_string_array(&link->rel, 3);
       oc_string_array_add_item(link->rel, "hosts");
-      link->resource = resource;
       link->next = 0;
-      memset(&link->ins, 0, sizeof(oc_string_t));
       return link;
     }
     OC_WRN("insufficient memory to create new link");
@@ -75,8 +76,9 @@ void
 oc_delete_link(oc_link_t *link)
 {
   if (link) {
-    if (oc_string_len(link->ins) > 0) {
-      oc_free_string(&(link->ins));
+    if (OC_INS_STRING == link->ins_type &&
+        oc_string_len(link->ins.value_str) > 0) {
+      oc_free_string(&(link->ins.value_str));
     }
     oc_free_string_array(&(link->rel));
     oc_memb_free(&oc_links_s, link);
@@ -84,9 +86,33 @@ oc_delete_link(oc_link_t *link)
 }
 
 void
-oc_link_set_ins(oc_link_t *link, const char *ins)
+oc_link_set_ins_int(oc_link_t *link, int ins)
 {
-  oc_new_string(&link->ins, ins, strlen(ins));
+  link->ins_type = OC_INS_INT;
+  link->ins.value_int = ins;
+}
+
+void
+oc_link_set_ins_str(oc_link_t *link, const char *ins)
+{
+  if (!ins)
+    OC_ERR("Error of input parameters");
+
+  if (oc_string_len(link->ins.value_str))
+    oc_free_string(&link->ins.value_str);
+
+  link->ins_type = OC_INS_STRING;
+  oc_new_string(&link->ins.value_str, ins, strlen(ins));
+}
+
+void
+oc_link_set_ins_uuid(oc_link_t *link, oc_uuid_t ins)
+{
+  link->ins_type = OC_INS_UUID;
+  int i=0;
+  for (; i < 16; i++) {
+    link->ins.value_uuid.id[i] = ins.id[i];
+  }
 }
 
 void
@@ -203,8 +229,15 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_core_encode_interfaces_mask(oc_rep_object(links),
                                        link->resource->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
-        if (oc_string_len(link->ins) > 0) {
-          oc_rep_set_text_string(links, ins, oc_string(link->ins));
+        if (OC_INS_INT == link->ins_type) {
+           oc_rep_set_int(links, ins, link->ins.value_int);
+        } else if (OC_INS_STRING == link->ins_type) {
+          if (oc_string_len(link->ins.value_str) > 0)
+            oc_rep_set_text_string(links, ins, oc_string(link->ins.value_str));
+        } else {
+          char uuid[37];
+          oc_uuid_to_str(&link->ins.value_uuid, uuid, 37);
+          oc_rep_set_text_string(links, ins, uuid);
         }
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
@@ -245,8 +278,15 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_core_encode_interfaces_mask(oc_rep_object(links),
                                        link->resource->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
-        if (oc_string_len(link->ins) > 0) {
-          oc_rep_set_text_string(links, ins, oc_string(link->ins));
+        if (OC_INS_INT == link->ins_type) {
+           oc_rep_set_int(links, ins, link->ins.value_int);
+        } else if (OC_INS_STRING == link->ins_type) {
+          if (oc_string_len(link->ins.value_str) > 0)
+            oc_rep_set_text_string(links, ins, oc_string(link->ins.value_str));
+        } else {
+          char uuid[37];
+          oc_uuid_to_str(&link->ins.value_uuid, uuid, 37);
+          oc_rep_set_text_string(links, ins, uuid);
         }
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
