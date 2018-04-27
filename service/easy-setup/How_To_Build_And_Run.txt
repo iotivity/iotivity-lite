@@ -1,0 +1,16 @@
+
+
+Build :
+
+cd port/linux
+
+make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPv4=1 SECURE=0
+
+Run:
+
+./easysetup_linux
+
+Clean
+
+make cleanall EASYSETUP=1
+
