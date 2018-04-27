@@ -102,6 +102,10 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(OIC),1)
+        CFLAGS += -DOC_SPEC_VER_OIC
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
