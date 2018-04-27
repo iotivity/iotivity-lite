@@ -25,7 +25,8 @@ extern "C" {
     #include "oc_rep.h"
 }
 
-TEST(TestRep,OCRepFinalizeTest_P) {
+TEST(TestRep, OCRepFinalizeTest_P)
+{
     int repSize = oc_rep_finalize();
     EXPECT_NE(repSize, -1);
 }

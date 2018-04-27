@@ -27,7 +27,8 @@ extern "C" {
 
 #define UUID "12345678123412341234123456789012"
 
-TEST(UUIDGeneration, StrToUUIDTest_P) {
+TEST(UUIDGeneration, StrToUUIDTest_P)
+{
     oc_uuid_t uuid;
     memset(&uuid, 0, sizeof(oc_uuid_t));
     oc_uuid_t uuidTemp = uuid;
