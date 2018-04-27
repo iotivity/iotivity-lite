@@ -20,11 +20,22 @@
 #include "oc_ri.h"
 #include "util/oc_list.h"
 
+typedef enum {
+  OC_INS_INT = 0,
+  OC_INS_STRING = 0x01,
+  OC_INS_UUID = 0x02
+} oc_ins_type_t;
+
 struct oc_link_s
 {
+  oc_ins_type_t ins_type;
   struct oc_link_s *next;
   oc_resource_t *resource;
-  oc_string_t ins;
+  union {
+    int value_int;
+    oc_string_t value_str;
+    oc_uuid_t value_uuid;
+  } ins;
   oc_string_array_t rel;
 };
 
