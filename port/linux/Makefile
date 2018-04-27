@@ -62,13 +62,25 @@ OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
+ifeq ($(EASYSETUP),1)
+SAMPLES += easysetup_linux
+endif
+
+
 OBT = onboarding_tool
+
+ifeq ($(EASYSETUP),1)
+	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c)
+	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port
+	CFLAGS_ES+= -DEASYSETUP
+	OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
+endif
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -110,7 +122,8 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a \
+           libiotivity-constrained-easysetup.a
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
@@ -131,6 +144,11 @@ apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
+
+obj/es/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} -DOC_SERVER
+
 
 obj/%.o: %.c
 	@mkdir -p ${@D}
@@ -165,6 +183,9 @@ libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
+
+libiotivity-constrained-easysetup.a: $(OBJ_ES) libiotivity-constrained-server.a
+	$(AR) -rcs $@ $(OBJ_ES)
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
@@ -215,6 +236,10 @@ multi_device_server: libiotivity-constrained-server.a
 multi_device_client: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+easysetup_linux: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/easysetup_linux.c libiotivity-constrained-server.a libiotivity-constrained-easysetup.a -DOC_SERVER ${CFLAGS} ${CFLAGS_ES} ${LIBS}	
 
 ${OBT}: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
