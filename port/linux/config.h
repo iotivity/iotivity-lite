@@ -57,8 +57,8 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of authorized clients */
 #define OC_MAX_NUM_SUBJECTS (2)
 
-/* Maximum number of concurrent DTLS sessions */
-#define OC_MAX_DTLS_PEERS (1)
+/* Maximum number of concurrent (D)TLS sessions */
+#define OC_MAX_TLS_PEERS (1)
 
 /* Maximum number of peer for TCP channel */
 #define OC_MAX_TCP_PEERS (2)

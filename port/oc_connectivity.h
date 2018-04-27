@@ -140,6 +140,9 @@ struct oc_message_s
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t data[OC_PDU_SIZE];
 #endif /* OC_DYNAMIC_ALLOCATION */
+#ifdef OC_TCP
+  size_t read_offset;
+#endif /* OC_TCP */
 };
 
 void oc_send_buffer(oc_message_t *message);
@@ -149,6 +152,8 @@ int oc_connectivity_init(int device);
 void oc_connectivity_shutdown(int device);
 
 void oc_send_discovery_request(oc_message_t *message);
+
+void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
