@@ -304,7 +304,8 @@ free_otm_state(oc_otm_ctx_t *o, int status)
     oc_uuid_to_str(&o->device->uuid, suuid, 37);
     oc_cred_remove_subject(suuid, 0);
   }
-  free_device(o->device);
+  // Do not free pointer coming from application invocation.
+  //free_device(o->device);
   o->cb.cb(status, o->cb.data);
   oc_list_remove(oc_otm_ctx_l, o);
   oc_memb_free(&oc_otm_ctx_m, o);
@@ -774,7 +775,8 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
 
   /* Remove device from temporary cache */
   if (owned_device(&device->uuid)) {
-    free_device(device);
+    // Do not free pointer coming from application invocation.
+    //free_device(device);
     return -1;
   }
 
@@ -804,8 +806,8 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
       return 0;
     }
   }
-
-  free_device(o->device);
+  // Do not free pointer coming from application invocation.
+  //free_device(o->device);
   oc_memb_free(&oc_otm_ctx_m, o);
 
   return -1;
@@ -1072,7 +1074,8 @@ free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
   char subjectuuid[37];
   oc_uuid_to_str(&ctx->device->uuid, subjectuuid, 37);
   oc_sec_dtls_close_connection(ep);
-  free_device(ctx->device);
+  // Do not free pointer coming from application invocation.
+  //free_device(ctx->device);
   if (ctx->switch_dos) {
     free_switch_dos_state(ctx->switch_dos);
   }
@@ -1118,7 +1121,8 @@ oc_obt_device_hard_reset(oc_device_t *device, oc_obt_status_cb_t cb, void *data)
 
   d->switch_dos = switch_dos(device, OC_DOS_RESET, hard_reset_cb, d);
   if (!d->switch_dos) {
-    free_device(device);
+    // Do not free pointer coming from application invocation.
+    //free_device(device);
     oc_memb_free(&oc_hard_reset_ctx_m, d);
     return -1;
   }
@@ -1136,8 +1140,9 @@ free_credprov_state(oc_credprov_ctx_t *p, int status)
   oc_sec_dtls_close_connection(ep);
   ep = get_secure_endpoint(p->device2->endpoint);
   oc_sec_dtls_close_connection(ep);
-  free_device(p->device1);
-  free_device(p->device2);
+  // Do not free pointer coming from application invocation.
+  //free_device(p->device1);
+  //free_device(p->device2);
   p->cb.cb(status, p->cb.data);
   if (p->switch_dos) {
     free_switch_dos_state(p->switch_dos);
@@ -1348,8 +1353,9 @@ oc_obt_provision_pairwise_credentials(oc_device_t *device1,
 
   p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1_RFPRO, p);
   if (!p->switch_dos) {
-    free_device(device1);
-    free_device(device2);
+    // Do not free pointer coming from application invocation.
+    //free_device(device1);
+    //free_device(device2);
     oc_memb_free(&oc_credprov_ctx_m, p);
     return -1;
   }
@@ -1490,7 +1496,8 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
   free_ace(request->ace);
   oc_endpoint_t *ep = get_secure_endpoint(request->device->endpoint);
   oc_sec_dtls_close_connection(ep);
-  free_device(request->device);
+  // Do not free pointer coming from application invocation.
+  //free_device(request->device);
   if (request->switch_dos) {
     free_switch_dos_state(request->switch_dos);
   }
@@ -1661,7 +1668,8 @@ oc_obt_provision_ace(oc_device_t *device, oc_sec_ace_t *ace,
 
   r->switch_dos = switch_dos(device, OC_DOS_RFPRO, provision_ace, r);
   if (!r->switch_dos) {
-    free_device(device);
+    // Do not free pointer coming from application invocation.
+    //free_device(device);
     free_ace(ace);
     oc_memb_free(&oc_acl2prov_m, r);
     return -1;
