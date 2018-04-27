@@ -112,7 +112,8 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-test: $(GTEST) $(UNIT_TESTS)
+test: $(UNIT_TESTS)
+	for test in $^ ; do ./$${test} ; done
 
 .PHONY: test clean
 
