@@ -40,7 +40,6 @@
 typedef struct {
   int (*init)(void);
   void (*signal_event_loop)(void);
-  void (*session_state)(oc_endpoint_t *, oc_session_state_t);
 
 #ifdef OC_SERVER
   void (*register_resources)(void);
@@ -49,6 +48,8 @@ typedef struct {
 #ifdef OC_CLIENT
   void (*requests_entry)(void);
 #endif /* OC_CLIENT */
+
+  void (*session_state)(oc_endpoint_t *, oc_session_state_t);
 } oc_handler_t;
 
 typedef void (*oc_init_platform_cb_t)(void *data);
