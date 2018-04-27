@@ -1,6 +1,9 @@
 CC = gcc
 SED = sed
 INSTALL = install
+OS = linux
+ROOT_DIR = ../..
+OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
 
 DESTDIR ?= /usr/local
@@ -11,6 +14,19 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+
+GTEST_DIR = $(ROOT_DIR)/deps/gtest
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
+GTEST = gtest_build
+GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT
+HEADER_DIR = $(ROOT_DIR)/include
+API_TEST_DIR = $(ROOT_DIR)/api/unittest
+API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+UNIT_TESTS = apitest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -65,7 +81,7 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
 	SRC_COMMON += ${DTLS}
@@ -94,9 +110,21 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
+test: $(GTEST) $(UNIT_TESTS)
+
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-.PHONY: clean
+.PHONY: test clean
+
+$(GTEST):
+	$(MAKE) --directory=$(GTEST_DIR)/make
+
+$(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -221,15 +249,13 @@ $(MBEDTLS_PATCH_FILE):
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
-
-test:
-	echo "TODO"
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)

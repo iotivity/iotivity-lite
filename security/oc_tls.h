@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#ifndef OC_DTLS_H
-#define OC_DTLS_H
+#ifndef OC_TLS_H
+#define OC_TLS_H
 
 #include "mbedtls/ssl.h"
 
@@ -26,41 +26,43 @@
 #include "util/oc_process.h"
 #include <stdbool.h>
 
-OC_PROCESS_NAME(oc_dtls_handler);
+OC_PROCESS_NAME(oc_tls_handler);
 
-void oc_sec_dtls_close_connection(oc_endpoint_t *endpoint);
-int oc_sec_dtls_update_psk_identity(int device);
+int oc_tls_init_context(void);
+void oc_tls_close_connection(oc_endpoint_t *endpoint);
+
+int oc_tls_update_psk_identity(int device);
 bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t oxm_len, const uint8_t *server_uuid,
                              const size_t server_uuid_len,
                              const uint8_t *obt_uuid, const size_t obt_uuid_len,
                              uint8_t *key, const size_t key_len);
-int oc_sec_dtls_init_context(void);
-int oc_sec_dtls_send_message(oc_message_t *message);
-oc_uuid_t *oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint);
-bool oc_sec_dtls_connected(oc_endpoint_t *endpoint);
-void oc_sec_dtls_elevate_anon_ciphersuite(void);
-void oc_sec_dtls_demote_anon_ciphersuite(void);
 
-typedef struct
-{
+void oc_tls_remove_peer(oc_endpoint_t *endpoint);
+int oc_tls_send_message(oc_message_t *message);
+oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
+bool oc_tls_connected(oc_endpoint_t *endpoint);
+
+void oc_tls_elevate_anon_ciphersuite(void);
+void oc_tls_demote_anon_ciphersuite(void);
+
+typedef struct {
   struct oc_etimer fin_timer;
   oc_clock_time_t int_ticks;
-} oc_sec_dtls_retr_timer_t;
+} oc_tls_retr_timer_t;
 
-typedef struct oc_sec_dtls_peer_s
-{
-  struct oc_sec_dtls_peer_s *next;
+typedef struct oc_tls_peer_s {
+  struct oc_tls_peer_s *next;
   OC_LIST_STRUCT(recv_q);
   OC_LIST_STRUCT(send_q);
   mbedtls_ssl_context ssl_ctx;
   oc_endpoint_t endpoint;
   int role;
-  oc_sec_dtls_retr_timer_t timer;
+  oc_tls_retr_timer_t timer;
   uint8_t master_secret[48];
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
-} oc_sec_dtls_peer_t;
+} oc_tls_peer_t;
 
-#endif /* OC_DTLS_H */
+#endif /* OC_TLS_H */
