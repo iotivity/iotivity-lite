@@ -1,0 +1,1 @@
+make DEBUG=1 IPV4=1 TCP=1 DYNAMIC=1 SECURE=1 OCF12=1 easysetup_linux
