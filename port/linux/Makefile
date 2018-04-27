@@ -112,8 +112,6 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-test: $(GTEST) $(UNIT_TESTS)
-
 .PHONY: test clean
 
 $(GTEST):
@@ -125,6 +123,9 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 
 apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+test: $(UNIT_TESTS)
+	for test in $^ ; do ./$${test} ; done
 
 ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
