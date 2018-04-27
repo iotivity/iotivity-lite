@@ -20,8 +20,8 @@
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
-#include "oc_dtls.h"
 #include "oc_pstat.h"
+#include "oc_tls.h"
 #include "port/oc_storage.h"
 #include <config.h>
 
@@ -82,7 +82,7 @@ oc_sec_load_doxm(int device)
   oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   memcpy(deviceuuid, &doxm->deviceuuid, sizeof(oc_uuid_t));
-  oc_sec_dtls_update_psk_identity(device);
+  oc_tls_update_psk_identity(device);
 }
 
 void

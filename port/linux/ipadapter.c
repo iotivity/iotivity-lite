@@ -1097,3 +1097,16 @@ oc_connectivity_shutdown(int device)
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);
 }
+
+#ifdef OC_TCP
+void
+oc_connectivity_end_session(oc_endpoint_t *endpoint)
+{
+  if (endpoint->flags & TCP) {
+    ip_context_t *dev = get_ip_context_for_device(endpoint->device);
+    if (dev) {
+      oc_tcp_end_session(dev, endpoint);
+    }
+  }
+}
+#endif /* OC_TCP */
