@@ -23,8 +23,8 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
-#include "security/oc_dtls.h"
 #include "security/oc_pstat.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 #include "port/oc_assert.h"
@@ -108,7 +108,7 @@ oc_core_regen_unique_ids(int device)
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
 
-  oc_sec_dtls_update_psk_identity(device);
+  oc_tls_update_psk_identity(device);
 }
 #endif /* OC_SECURITY */
 
