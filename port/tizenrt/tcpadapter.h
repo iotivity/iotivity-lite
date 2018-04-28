@@ -22,6 +22,9 @@
 
 #include "ipcontext.h"
 #include "port/oc_connectivity.h"
+#include <net/if.h>
+#include <sys/select.h>
+#include <sys/socket.h>
 
 typedef enum {
   TCP_STATUS_NONE = 0,
@@ -35,13 +38,13 @@ int oc_tcp_connectivity_init(ip_context_t *dev);
 void oc_tcp_connectivity_shutdown(ip_context_t *dev);
 
 void oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
-                        const void *receiver);
+                        const struct sockaddr_storage *receiver);
 
 void oc_tcp_add_socks_to_fd_set(ip_context_t *dev);
 
-void oc_tcp_set_session_fds(void *fds);
+void oc_tcp_set_session_fds(fd_set *fds);
 
-tcp_receive_state_t oc_tcp_receive_message(ip_context_t *dev, void *fds,
+tcp_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
                                            oc_message_t *message);
 
 #endif /* TCP_ADAPTER_H */

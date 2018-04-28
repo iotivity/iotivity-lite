@@ -1,0 +1,76 @@
+##### clone TizenRT code from open source below mentioned link
+
+git clone https://github.com/Samsung/TizenRT
+
+git checkout 13aa00554e0b7a416ff3c453bf3192c40c71ae86
+
+Copy ~/port/tizenrt/iotlite_apps folder to TizenRT/apps/
+
+Copy ~/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
+
+Create folder "iotivity-constrained" in this path (TizenRT/external/) (EX:mkdir iotivity-constrained)
+
+Clone iotivity-constrained code in this path TizenRT/external/iotivity-constrained/
+
+Copy ~/port/tizenrt to TizenRT/external/iotivity-constrained/iotivity-constrained/port/
+
+Copy tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
+
+Copy tinycbor folder from TizenRT/external/iotivity/iotivity_1.2-rel/extlibs/ to
+ TizenRT/external/iotivity-constrained/iotivity-constrained/deps/
+
+#### How to Build the TizenRT with constrained IOT  ####################
+
+
+#### Configure the build from *$TIZENRT_BASEDIR/os/tools* directory
+
+cd os/tools
+
+#### To check the different board configurations combinations supported, type below:
+
+./configure.sh --help
+
+#### To configure the specific board.
+
+./configure.sh <board>/<configuration_set>   (Example: ./configure.sh artik053/iotliteconfig)
+
+
+#### After configuring above, configuration can be modified through *make menuconfig* from *$TIZENRT_BASEDIR/os*.
+
+cd ..
+
+make
+
+
+#### Built binaries are in *$TIZENRT_BASEDIR/build/output/bin*.
+
+
+#### How  to dumping the code to board. ########################
+
+### connect the device to linux pc.
+#### change the path to  *$TIZENRT_BASEDIR/os*.
+#### example : make download ALL
+#### make download [ALL | BOOTLOADER | RESOURCE | KERNEL | APP]
+
+sudo make download ALL
+
+
+##### How to run a sample apps ##################################
+
+sudo cutecom
+
+open the device.
+
+#### press restart button.
+
+wifi startsta
+
+wifi join <ssid_name> ------  for wifi open mode
+OR
+wifi join <ssid_name> <password> ------  for wifi secured mode
+
+ifconfig wl1 dhcp
+
+###### run sample app ##########################
+
+iotlite 1 2
