@@ -1,5 +1,4 @@
 /*
-// Copyright (c) 2018 Samsung Electronics France SAS
 // Copyright (c) 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,25 +15,32 @@
 */
 
 #include "port/oc_random.h"
-#include "port/oc_assert.h"
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 
 void
 oc_random_init(void)
 {
-   oc_abort(__func__);
+  uint64_t currentTime = 0;
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  currentTime = tv.tv_sec * (uint64_t)1000000 + tv.tv_usec;
+  srand(currentTime);
 }
 
 unsigned int
 oc_random_value(void)
 {
-  unsigned int rand = 0;
-  oc_abort(__func__);
-  return rand;
+  return rand();
 }
 
 void
 oc_random_destroy(void)
 {
-  oc_abort(__func__);
+  //close(urandom_fd);
 }
