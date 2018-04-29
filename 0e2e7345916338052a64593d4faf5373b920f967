@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_a9b96feb",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "Please get rid of tabs and trailing whitespaces. \nPlease also use consistent 2-space indentations as elsewhere.\nAnd cleanup any previously work-in-progress code that is currently commented out ;-).",
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_feda0fe8",
         "filename": "api/oc_introspection.c",
         "patchSetId": 2
@@ -36,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_49c8a374",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "You may decide to designate a store name to refer to the empty swagger description, or set them directly in the code. I\u0027d probably pick the latter. Either way, we need this for introspection tests to pass in a client, for e.g.",
+      "parentUuid": "da33351e_ded74bbe",
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3ee597a8",
         "filename": "api/oc_introspection.c",
         "patchSetId": 2
@@ -53,6 +88,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_09ce9b83",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "Please use oc_storage.* for this. And drop the IDD files (For eg. airconditioner, etc.) into the oc_storage_config() path (eg. simpleserver_creds/) of the app.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 1
+      },
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_1ee2539f",
         "filename": "api/oc_introspection.c",
         "patchSetId": 2
@@ -64,6 +122,98 @@
       "writtenOn": "2018-04-27T15:22:03Z",
       "side": 1,
       "message": "Hey, this should be shall. ;-)",
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e9ca576d",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "You can get rid of this logic. This is superfluous. This is something that a developer deploying an app needs to take care of beforehand, because If OC_MAX_APP_DATA_SIZE is not made large enough to be able to serve up the representation, that\u0027s a bigger problem.\n\nOC_MAX_APP_DATA_SIZE is a parameter that the app developer needs to control for all resources the app can access or expose.",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 5
+      },
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_69bf67d1",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "As I understand, this is meant to be a public API for apps, so you may move it into oc_api.h.\n\nAlso, I see that you\u0027d like to set an appropriately named store per logical device, and store those names inside IDD_0, IDD_1, etc in the persisted store.\nIt means that this API needs to be called as many times as there are logical devices. This is not what I had in mind, but I guess its okay, and makes it extensible to other kinds non-filename references.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 65
+      },
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_29c55f5b",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "filename is too specific. You could say something like \"ref\" which could mean a uri (link to an external resource), a filename or any other kind of resource.",
+      "range": {
+        "startLine": 37,
+        "startChar": 55,
+        "endLine": 37,
+        "endChar": 63
+      },
+      "revId": "0e2e7345916338052a64593d4faf5373b920f967",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_89a10bac",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-04-29T22:27:20Z",
+      "side": 1,
+      "message": "Please use \"oc_set_introspection_data\" instead so that the same API could be used when \"ref\" is \"http://...\" or \"airconditioner\" (filename).\n\nWhenever the use of external links is formalized, the logic for handling that could be added to the .c.",
+      "range": {
+        "startLine": 37,
+        "startChar": 5,
+        "endLine": 37,
+        "endChar": 30
+      },
       "revId": "0e2e7345916338052a64593d4faf5373b920f967",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
