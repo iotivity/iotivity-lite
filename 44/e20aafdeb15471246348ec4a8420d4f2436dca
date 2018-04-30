@@ -1,0 +1,10 @@
+Code-Review+1: Phil Coval <philippe.coval@osg.samsung.com>
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+1: Mats Wichmann <mats@linux.com>
+Code-Review+1: Ziran Sun <ziran.sun@samsung.com>
+Code-Review+2: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-by: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-at: Mon, 30 Apr 2018 21:58:42 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/24713
+Project: iotivity-constrained
+Branch: refs/heads/master
