@@ -35,19 +35,19 @@ es_dev_conf_cb gDevConfRsrcEvtCb = NULL;
 es_read_userdata_cb gReadUserdataCb = NULL;
 es_write_userdata_cb gWriteUserdataCb = NULL;
 
-es_result_e oc_compare_property(oc_rep_t *rep, char *property_name)
+bool oc_compare_property(oc_rep_t *rep, char *property_name)
 {
     int prop_len = strlen(property_name);
-    if ( (int)oc_string_len(rep->name) == prop_len &&
+    if ((int)oc_string_len(rep->name) == prop_len &&
          memcmp(oc_string(rep->name), property_name, prop_len) == 0) {
-        return ES_OK;
+        return true;
     }
-    return ES_ERROR;
+    return false;
 }
 
 void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
-    OC_DBG("update_wifi_conf_resource in");
+    OC_DBG("in");
 
     (void)interface;
     es_wifi_conf_data wifi_data;
@@ -58,15 +58,11 @@ void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interf
     wifi_data.enctype = NONE_AUTH;
     wifi_data.userdata = NULL;
 
-    int bIsValid  = 0xFF;
-    bIsValid = bIsValid & ~0x01;
-    bIsValid = bIsValid & ~0x02;
-    bIsValid = bIsValid & ~0x04;
-    bIsValid = bIsValid & ~0x08;
+    bool bIsValid = false;
 
     oc_rep_t *rep   = request->request_payload;
     while(rep != NULL) {
-        OC_DBG("key %s, value ", oc_string(rep->name));
+        OC_DBG("key %s", oc_string(rep->name));
         switch (rep->type) {
             case OC_REP_STRING:
             {
@@ -77,32 +73,32 @@ void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interf
                         oc_strncpy(wifi_data.ssid, oc_string(rep->value.string),
                                    sizeof(wifi_data.ssid));
                         OC_DBG("g_ESWiFiConfResource.ssid : %s", g_ESWiFiConfResource.ssid);
-                        bIsValid = bIsValid | 0x01;
+                        bIsValid = true;
                     }
-                } else if(oc_compare_property(rep, OC_RSRVD_ES_CRED)) {
+                } else if (oc_compare_property(rep, OC_RSRVD_ES_CRED)) {
                     if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESWiFiConfResource.cred, oc_string(rep->value.string),
                                    sizeof(g_ESWiFiConfResource.cred));
                         oc_strncpy(wifi_data.pwd, oc_string(rep->value.string),
                                    sizeof(wifi_data.pwd));
                         OC_DBG("g_ESWiFiConfResource.cred : %s", g_ESWiFiConfResource.cred);
-                        bIsValid = bIsValid | 0x02;
+                        bIsValid = true;
                     }
                 }
             }
             break;
             case OC_REP_INT:
             {
-                if(oc_compare_property(rep, OC_RSRVD_ES_AUTHTYPE)) {
+                if (oc_compare_property(rep, OC_RSRVD_ES_AUTHTYPE)) {
                     g_ESWiFiConfResource.auth_type = rep->value.integer;
                     wifi_data.authtype = g_ESWiFiConfResource.auth_type;
                     OC_DBG("g_ESWiFiConfResource.auth_type %u", g_ESWiFiConfResource.auth_type);
-                    bIsValid = bIsValid | 0x04;
-                } else if(oc_compare_property(rep, OC_RSRVD_ES_ENCTYPE)) {
+                    bIsValid = true;
+                } else if (oc_compare_property(rep, OC_RSRVD_ES_ENCTYPE)) {
                     g_ESWiFiConfResource.enc_type = rep->value.integer;
                     wifi_data.enctype = g_ESWiFiConfResource.enc_type;
                     OC_DBG("g_ESWiFiConfResource.enc_type %u", g_ESWiFiConfResource.enc_type);
-                    bIsValid = bIsValid | 0x08;
+                    bIsValid = true;
                 }
             }
             break;
@@ -112,11 +108,11 @@ void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interf
         rep = rep->next;
     }
 
-    if(gReadUserdataCb) {
+    if (gReadUserdataCb) {
         gReadUserdataCb(rep, OC_RSRVD_ES_RES_TYPE_WIFICONF, &wifi_data.userdata);
     }
 
-    if(bIsValid == 0xFF) {
+    if (bIsValid) {
         OC_DBG("Send WiFiConfRsrc Callback To ES");
 
         if(gWifiConfRsrcEvtCb != NULL) {
@@ -132,12 +128,12 @@ void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interf
         OC_DBG("Enrollee doesn't have any observers for wifi RESOURCE.");
     }
 
-    OC_DBG("update_wifi_conf_resource out");
+    OC_DBG("out");
 }
 
 void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
-    OC_DBG("update_coap_cloud_conf_resource in");
+    OC_DBG("in");
 
     (void)interface;
     es_coap_cloud_conf_data cloud_data;
@@ -149,54 +145,49 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
     memset(cloud_data.ci_server, 0, OC_STRING_MAX_VALUE);
     cloud_data.userdata = NULL;
 
-    int bIsValid  = 0xFF;
-    bIsValid = bIsValid & ~0x01;
-    bIsValid = bIsValid & ~0x02;
-    bIsValid = bIsValid & ~0x04;
-    bIsValid = bIsValid & ~0x08;
-    bIsValid = bIsValid & ~0x16;
+    int bIsValid = false;
 
-   oc_rep_t *rep = request->request_payload;
-    while(rep != NULL) {
-        OC_DBG("key %s, value ", oc_string(rep->name));
+    oc_rep_t *rep = request->request_payload;
+    while (rep != NULL) {
+        OC_DBG("key %s", oc_string(rep->name));
         switch (rep->type) {
             case OC_REP_STRING:
             {
-                if(oc_compare_property(rep, OC_RSRVD_ES_AUTHCODE)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                if (oc_compare_property(rep, OC_RSRVD_ES_AUTHCODE)) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.auth_code, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.auth_code));
                         oc_strncpy(cloud_data.auth_code, oc_string(rep->value.string),
                                    sizeof(cloud_data.auth_code));
                         OC_DBG("g_ESCoapCloudConfResource.auth_code : %s", g_ESCoapCloudConfResource.auth_code);
-                        bIsValid = bIsValid | 0x01;
+                        bIsValid = true;
                     }
-                } else if(oc_compare_property(rep, OC_RSRVD_ES_ACCESSTOKEN)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                } else if (oc_compare_property(rep, OC_RSRVD_ES_ACCESSTOKEN)) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.access_token, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.access_token));
                         oc_strncpy(cloud_data.access_token, oc_string(rep->value.string),
                                    sizeof(cloud_data.access_token));
                         OC_DBG("g_ESCoapCloudConfResource.access_token : %s", g_ESCoapCloudConfResource.access_token);
-                        bIsValid = bIsValid | 0x02;
+                        bIsValid = true;
                     }
-                } else if(oc_compare_property(rep, OC_RSRVD_ES_AUTHPROVIDER)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                } else if (oc_compare_property(rep, OC_RSRVD_ES_AUTHPROVIDER)) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.auth_provider, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.auth_provider));
                         oc_strncpy(cloud_data.auth_provider, oc_string(rep->value.string),
                                    sizeof(cloud_data.auth_provider));
                         OC_DBG("g_ESCoapCloudConfResource.auth_provider : %s", g_ESCoapCloudConfResource.auth_provider);
-                        bIsValid = bIsValid | 0x04;
+                        bIsValid = true;
                     }
-                } else if(oc_compare_property(rep, OC_RSRVD_ES_CISERVER)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                } else if (oc_compare_property(rep, OC_RSRVD_ES_CISERVER)) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.ci_server, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.ci_server));
                         oc_strncpy(cloud_data.ci_server, oc_string(rep->value.string),
                                    sizeof(cloud_data.ci_server));
                         OC_DBG("g_ESCoapCloudConfResource.ci_server : %s", g_ESCoapCloudConfResource.ci_server);
-                        bIsValid = bIsValid | 0x08;
+                        bIsValid = true;
                     }
                 }
             }
@@ -207,7 +198,7 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
                     g_ESCoapCloudConfResource.access_token_type = rep->value.integer;
                     cloud_data.access_token_type = g_ESCoapCloudConfResource.access_token_type;
                     OC_DBG("g_ESCoapCloudConfResource.access_token_type %u", g_ESCoapCloudConfResource.access_token_type);
-                    bIsValid = bIsValid | 0x16;
+                    bIsValid = true;
                 }
             }
             break;
@@ -217,14 +208,14 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
         rep = rep->next;
     }
 
-    if(gReadUserdataCb) {
+    if (gReadUserdataCb) {
         gReadUserdataCb(rep, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF, &cloud_data.userdata);
     }
 
-    if(bIsValid == 0xFF) {
+    if (bIsValid) {
         OC_DBG("Send CoapCloudConfRsrc Callback To ES");
 
-        if(gCoapCloudConfRsrcEvtCb != NULL) {
+        if(gCoapCloudConfRsrcEvtCb) {
             gCoapCloudConfRsrcEvtCb(ES_OK, &cloud_data);
         } else {
             OC_ERR("gCoapCloudConfRsrcEvtCb is NULL");
@@ -235,22 +226,22 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
         OC_DBG("Enrollee doesn't have any observers for cloud conf RESOURCE.");
     }
 
-    OC_DBG("update_coap_cloud_conf_resource out");
+    OC_DBG("out");
 }
 
 void update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
-    OC_DBG("update_devconf_resource in");
+    OC_DBG("in");
 
     (void)interface;
     es_dev_conf_data dev_conf_data;
     dev_conf_data.userdata = NULL;
 
-    if(gReadUserdataCb) {
+    if (gReadUserdataCb) {
         gReadUserdataCb(request->request_payload, OC_RSRVD_ES_RES_TYPE_DEVCONF, &dev_conf_data.userdata);
     }
 
-    if(dev_conf_data.userdata != NULL) {
+    if (dev_conf_data.userdata != NULL) {
         OC_DBG("Send DevConfRsrc Callback To ES");
 
         if(gDevConfRsrcEvtCb != NULL) {
@@ -263,12 +254,12 @@ void update_devconf_resource(oc_request_t *request, oc_interface_mask_t interfac
     if (0 == oc_notify_observers(g_ESDevConfResource.handle)) {
         OC_DBG("Enrollee doesn't have any observers for dev conf RESOURCE.");
     }
-    OC_DBG("update_devconf_resource out");
+    OC_DBG("out");
 }
 
 void update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
-    OC_DBG("update_easysetup_resource in");
+    OC_DBG("in");
     OC_DBG("g_ESEasySetupResource.status %d", g_ESEasySetupResource.status);
 
     (void)interface;
@@ -276,11 +267,11 @@ void update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interf
     oc_rep_t *rep = request->request_payload;
 
     while (rep != NULL) {
-        OC_DBG("key %s, value ", oc_string(rep->name));
+        OC_DBG("key %s", oc_string(rep->name));
         switch (rep->type) {
             case OC_REP_INT_ARRAY:
             {
-                if(oc_compare_property(rep, OC_RSRVD_ES_CONNECT)) {
+                if (oc_compare_property(rep, OC_RSRVD_ES_CONNECT)) {
                     int i=0;
                     int connect_req_size = (int)oc_int_array_size(rep->value.array);
                     int *connect_req = oc_int_array(rep->value.array);
@@ -295,7 +286,7 @@ void update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interf
                         g_ESEasySetupResource.connect_request[i] = ES_CONNECT_NONE;
                         connect_request.connect[i] = ES_CONNECT_NONE;
 
-                        if(i < connect_req_size &&
+                        if (i < connect_req_size &&
                             (connect_req[i] == ES_CONNECT_WIFI ||
                             connect_req[i] == ES_CONNECT_COAPCLOUD)) {
                             g_ESEasySetupResource.connect_request[cnt_request] = connect_req[i];
@@ -305,10 +296,11 @@ void update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interf
                             cnt_request++;
                         }
                     }
+
                     connect_request.num_request = cnt_request;
                     g_ESEasySetupResource.num_request = cnt_request;
 
-                    if(g_ESEasySetupResource.connect_request[0] != ES_CONNECT_NONE)
+                    if (g_ESEasySetupResource.connect_request[0] != ES_CONNECT_NONE)
                     {
                         OC_DBG("Send ConnectRequest Callback To ES");
 
@@ -327,21 +319,12 @@ void update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interf
         rep = rep->next;
     }
 
-#if 0
-    if(interface == OC_IF_B) {
-        // When Provisioning resource has a POST with BatchInterface
-        update_coap_cloud_conf_resource(request, interface);
-        update_wifi_conf_resource(request, interface);
-        update_devconf_resource(request, interface);
-    }
-#endif
-
-    OC_DBG("update_easysetup_resource out");
+    OC_DBG("out");
 }
 
 es_result_e construct_response_of_coapcloudconf(void)
 {
-    OC_DBG("construct_response_of_coapcloudconf in");
+    OC_DBG("in");
 
     if(g_ESCoapCloudConfResource.handle == NULL) {
         OC_ERR("WiFiConf resource is not created");
@@ -349,6 +332,8 @@ es_result_e construct_response_of_coapcloudconf(void)
     }
 
     oc_rep_start_root_object();
+
+    ///TODO: Call this only when interface is baseline
     oc_process_baseline_interface(g_ESCoapCloudConfResource.handle);
 
     oc_rep_set_text_string(root, ac, g_ESCoapCloudConfResource.auth_code);
@@ -362,15 +347,14 @@ es_result_e construct_response_of_coapcloudconf(void)
     }
 
     oc_rep_end_root_object();
-    OC_DBG("construct_response_of_coapcloudconf out");
+    OC_DBG("out");
     return ES_OK;
 }
 
 es_result_e construct_response_of_wificonf(void)
 {
-    OC_DBG("construct_response_of_wificonf in");
+    OC_DBG("in");
 
-    int i = 0;
     if(g_ESWiFiConfResource.handle == NULL) {
         OC_ERR("WiFiConf resource is not created");
         return ES_ERROR;
@@ -380,7 +364,7 @@ es_result_e construct_response_of_wificonf(void)
     oc_process_baseline_interface(g_ESWiFiConfResource.handle);
 
     oc_rep_set_array(root, swmt);
-    for( i = 0; i< g_ESWiFiConfResource.num_mode; i++ ) {
+    for (int i = 0; i< g_ESWiFiConfResource.num_mode; i++) {
         oc_rep_add_int(swmt, (int)g_ESWiFiConfResource.supported_mode[i]);
     }
 
@@ -419,54 +403,54 @@ es_result_e construct_response_of_devconf(void)
     }
 
     oc_rep_end_root_object();
-    OC_DBG("construct_response_of_devconf out");
+    OC_DBG("out");
     return ES_OK;
 }
 
 es_result_e set_callback_for_userdata(es_read_userdata_cb readcb, es_write_userdata_cb writecb)
 {
-    OC_DBG("set_callback_for_userdata in");
+    OC_DBG("in");
     if (!readcb && !writecb) {
         OC_ERR("Both of callbacks for user data are Null");
         return ES_ERROR;
     }
     gReadUserdataCb = readcb;
     gWriteUserdataCb = writecb;
-    OC_DBG("set_callback_for_userdata out");
+    OC_DBG("out");
     return ES_OK;
 }
 
 void resgister_wifi_rsrc_event_callback(es_wifi_conf_cb cb)
 {
-    OC_DBG("resgister_wifi_rsrc_event_callback in");
+    OC_DBG("in");
     gWifiConfRsrcEvtCb = cb;
-    OC_DBG("resgister_wifi_rsrc_event_callback out");
+    OC_DBG("out");
 }
 
 void register_cloud_rsrc_event_callback(es_coap_cloud_conf_cb cb)
 {
-    OC_DBG("register_cloud_rsrc_event_callback in");
+    OC_DBG("in");
     gCoapCloudConfRsrcEvtCb = cb;
-    OC_DBG("register_cloud_rsrc_event_callback out");
+    OC_DBG("out");
 }
 
 void register_devconf_rsrc_event_callback(es_dev_conf_cb cb)
 {
-    OC_DBG("register_devconf_rsrc_event_callback in");
+    OC_DBG("in");
     gDevConfRsrcEvtCb = cb;
-    OC_DBG("register_devconf_rsrc_event_callback out");
+    OC_DBG("out");
 }
 
 void register_connect_request_event_callback(es_connect_request_cb cb)
 {
-    OC_DBG("register_connect_request_event_callback in");
+    OC_DBG("in");
     gConnectRequestEvtCb = cb;
-    OC_DBG("register_connect_request_event_callback out");
+    OC_DBG("out");
 }
 
 void unregister_resource_event_callback(void)
 {
-    OC_DBG("unregister_resource_event_callback in");
+    OC_DBG("in");
     if (gWifiConfRsrcEvtCb) {
         gWifiConfRsrcEvtCb = NULL;
     }
@@ -479,129 +463,155 @@ void unregister_resource_event_callback(void)
     if (gConnectRequestEvtCb) {
         gConnectRequestEvtCb = NULL;
     }
-    OC_DBG("unregister_resource_event_callback out");
+    OC_DBG("out");
 }
 
 static void get_devconf(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("get_devconf in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_devconf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("get_devconf out");
+  OC_DBG("out");
 }
 
 static void post_devconf(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("post_devconf in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     update_devconf_resource(request, interface);
     construct_response_of_devconf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("post_devconf out");
+  OC_DBG("out");
 }
 
 static void get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("get_cloud in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_coapcloudconf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("get_cloud out");
+  OC_DBG("out");
 }
 
 static void post_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("post_cloud in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     update_coap_cloud_conf_resource(request, interface);
     construct_response_of_coapcloudconf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("post_cloud out");
+  OC_DBG("out");
 }
 
 static void get_wifi(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("get_wifi in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_wificonf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("get_wifi out");
+  OC_DBG("out");
 }
 
 static void post_wifi(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("post_wifi in");
+  OC_DBG("in");
 
   if (interface == OC_IF_BASELINE) {
     update_wifi_conf_resource(request, interface);
     construct_response_of_wificonf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  OC_DBG("post_wifi out");
+  OC_DBG("out");
 }
 
 static void get_easysetup(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
-  (void)user_data;
+    (void)request;
+    (void)interface;
+    (void)user_data;
 
-  OC_DBG("get_easysetup in");
-  oc_handle_collection_request(OC_GET, request, interface);
-  OC_DBG("get_easysetup out");
+    OC_DBG("in");
+
+    oc_rep_start_root_object();
+    oc_rep_set_int(root, ps, 0);
+    oc_rep_set_int(root, lec, 0);
+    oc_rep_end_root_object();
+
+    OC_DBG("out");
 }
 
 static void post_easysetup(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
 
-  OC_DBG("post_easysetup in");
+  OC_DBG("in");
 
-  if ((interface == OC_IF_B) || (interface == OC_IF_BASELINE)) {
+  OC_DBG("interface = %d", interface);
+
+
+  ///TODO: Check below comment:
+  // RI stack is sending default interface i.e. oic.if.ll for collection in request.
+  // For time being ignoring the error response sending due to wrong interface.
+  // It should be fixed in RI stack by sending interface received in request.
+
+  //if ((interface == OC_IF_B) || (interface == OC_IF_BASELINE)) {
     update_easysetup_resource(request, interface);
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
-  OC_DBG("post_easysetup out");
+  //} else {
+    //OC_ERR("Error");
+    //oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  //}
+  OC_DBG("out");
 }
 
 es_result_e init_easysetup_resource(bool is_secured)
 {
-    OC_DBG("init_easysetup_resource in");
+    OC_DBG("in");
 
 #ifndef OC_SECURITY
     (void)is_secured;
@@ -615,62 +625,60 @@ es_result_e init_easysetup_resource(bool is_secured)
     g_ESEasySetupResource.num_request = 0;
     oc_resource_t *col = oc_new_collection("easysetup", OC_RSRVD_ES_URI_EASYSETUP, 2, 0);
 
-    if (NULL != col) {
-        oc_resource_bind_resource_type(col, OC_RSRVD_ES_RES_TYPE_EASYSETUP);
-        oc_resource_bind_resource_type(col, "oic.wk.col");
-        oc_resource_bind_resource_interface(col,OC_IF_LL);
-        oc_resource_bind_resource_interface(col,OC_IF_B);
-        oc_resource_set_discoverable(col, true);
-        oc_resource_set_observable(col, true);
-        oc_resource_set_request_handler(col, OC_GET, get_easysetup, NULL);
-        oc_resource_set_request_handler(col, OC_POST, post_easysetup, NULL);
-
-#ifdef OC_SECURITY
-        if(!is_secured) {
-            oc_resource_make_public(col);
-        }
-#endif
-        /** Add Self Link for Easy Setup Resource */
-        oc_link_t *l_es = oc_new_link(col);
-        oc_collection_add_link(col, l_es);
-
-        if (g_ESWiFiConfResource.handle != NULL) {
-            oc_link_t *l1 = oc_new_link(g_ESWiFiConfResource.handle);
-            oc_collection_add_link(col, l1);
-        } else {
-            OC_ERR("wifi resource is not added to collection resource");
-        }
-
-        if (g_ESCoapCloudConfResource.handle != NULL) {
-            oc_link_t *l2 = oc_new_link(g_ESCoapCloudConfResource.handle);
-            oc_collection_add_link(col, l2);
-        } else {
-            OC_ERR("cloud config is not added to collection resource");
-        }
-
-        if (g_ESDevConfResource.handle != NULL) {
-            oc_link_t *l3 = oc_new_link(g_ESDevConfResource.handle);
-            oc_collection_add_link(col, l3);
-        } else {
-            OC_ERR("dev config is not added to collection resource");
-        }
-
-        oc_add_collection(col);
-
-        g_ESEasySetupResource.handle = col;
-        OC_DBG("Created Easysetup resource with result: success");
-        return ES_OK;
-    }
-    else {
-        OC_ERR("Created Easysetup resource with result: failure");
+    if (NULL == col) {
+        OC_ERR("Error in creating WiFiConf Resource!");
         return ES_ERROR;
     }
-    OC_DBG("init_easysetup_resource out");
+
+    oc_resource_bind_resource_type(col, OC_RSRVD_ES_RES_TYPE_EASYSETUP);
+    oc_resource_bind_resource_type(col, "oic.wk.col");
+    oc_resource_bind_resource_interface(col,OC_IF_LL);
+    oc_resource_bind_resource_interface(col,OC_IF_B);
+    oc_resource_set_discoverable(col, true);
+    oc_resource_set_observable(col, true);
+    oc_resource_set_request_handler(col, OC_GET, get_easysetup, NULL);
+    oc_resource_set_request_handler(col, OC_POST, post_easysetup, NULL);
+
+#ifdef OC_SECURITY
+    if(!is_secured) {
+        oc_resource_make_public(col);
+    }
+#endif
+    /** Add Self Link for Easy Setup Resource */
+    oc_link_t *l_es = oc_new_link(col);
+    oc_collection_add_link(col, l_es);
+
+    if (g_ESWiFiConfResource.handle != NULL) {
+        oc_link_t *l1 = oc_new_link(g_ESWiFiConfResource.handle);
+        oc_collection_add_link(col, l1);
+    } else {
+        OC_ERR("wifi resource is not added to collection resource");
+    }
+
+    if (g_ESCoapCloudConfResource.handle != NULL) {
+        oc_link_t *l2 = oc_new_link(g_ESCoapCloudConfResource.handle);
+        oc_collection_add_link(col, l2);
+    } else {
+        OC_ERR("cloud config is not added to collection resource");
+    }
+
+    if (g_ESDevConfResource.handle != NULL) {
+        oc_link_t *l3 = oc_new_link(g_ESDevConfResource.handle);
+        oc_collection_add_link(col, l3);
+    } else {
+        OC_ERR("dev config is not added to collection resource");
+    }
+
+    oc_add_collection(col);
+
+    g_ESEasySetupResource.handle = col;
+    OC_DBG("Created EasySetup Resource with success");
+    return ES_OK;
 }
 
 es_result_e init_wifi_conf_resource(bool is_secured)
 {
-    OC_DBG("init_wifi_conf_resource in");
+    OC_DBG("in");
 
 #ifndef OC_SECURITY
     (void)is_secured;
@@ -709,7 +717,7 @@ es_result_e init_wifi_conf_resource(bool is_secured)
     oc_add_resource(wifi);
 
     g_ESWiFiConfResource.handle = wifi;
-    OC_DBG("Created WiFiConf resource with result: success");
+    OC_DBG("Created WiFiConf Resource with success");
     return ES_OK;
 }
 
@@ -744,7 +752,7 @@ es_result_e init_coap_cloudconf_resource(bool is_secured)
     oc_add_resource(cloud);
     g_ESCoapCloudConfResource.handle = cloud;
 
-    OC_DBG("Created CoapCloudConf Resource with result: success");
+    OC_DBG("Created CoapCloudConf Resource success");
     return ES_OK;
 
 }
@@ -775,13 +783,13 @@ es_result_e init_devconf_resource(bool is_secured)
     oc_resource_set_request_handler(devconf, OC_POST, post_devconf, NULL);
     oc_add_resource(devconf);
     g_ESDevConfResource.handle = devconf;
-    OC_DBG("Created DefConf resource with result: success");
+    OC_DBG("Created DevConf Resource with success");
     return ES_OK;
 }
 
 es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask)
 {
-    OC_DBG("create_easysetup_resources in");
+    OC_DBG("in");
     es_result_e res = ES_ERROR;
     bool mask_flag = false;
 
@@ -808,7 +816,7 @@ es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resou
         res = init_devconf_resource(is_secured);
         if(res != ES_OK) {
             OC_ERR("initDevConf result: failed");
-            return ES_ERROR;
+            return res;
         }
     }
 
@@ -824,13 +832,13 @@ es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resou
     }
 
     OC_DBG("Created all resources with result: success");
-    OC_DBG("create_easysetup_resources out");
+    OC_DBG("out");
     return ES_OK;
 }
 
 es_result_e delete_easysetup_resources()
 {
-    OC_DBG("delete_easysetup_resources in");
+    OC_DBG("in");
     if (g_ESEasySetupResource.handle != NULL) {
         oc_delete_collection(g_ESEasySetupResource.handle);
         g_ESEasySetupResource.handle = NULL;
@@ -851,13 +859,13 @@ es_result_e delete_easysetup_resources()
         g_ESDevConfResource.handle = NULL;
     }
 
-    OC_DBG("delete_easysetup_resources out");
+    OC_DBG("out");
     return ES_OK;
 }
 
 es_result_e set_device_property(es_device_property *device_property)
 {
-    OC_DBG("set_device_property in");
+    OC_DBG("in");
 
     g_ESWiFiConfResource.supported_freq = (device_property->WiFi).supported_freq;
     OC_DBG("WiFi Freq : %d", g_ESWiFiConfResource.supported_freq);
@@ -881,7 +889,7 @@ es_result_e set_device_property(es_device_property *device_property)
         OC_DBG("devConfResource doesn't have any observers.");
     }
 
-    OC_DBG("set_device_property out");
+    OC_DBG("out");
     return ES_OK;
 }
 

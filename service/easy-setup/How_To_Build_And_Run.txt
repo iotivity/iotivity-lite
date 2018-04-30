@@ -1,16 +1,121 @@
 
+We need Enrollee (Device) Application and Mediator (Controller) applications
+to test Easy Setup functionality. Steps for both of them are given below:
+
+[A]
+==== Enrollee Application (based on IoTivity Lite) =====
 
 Build :
 
-cd port/linux
+	cd port/linux
+	make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPv4=1 SECURE=0
 
-make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPv4=1 SECURE=0
+Build Options:
+	DEBUG = 0 / 1 based on requirement.
+	SECURE = 0 (Only un-secure mode is supported currently).
+
+Clean:
+	make cleanall EASYSETUP=1
+
 
 Run:
+	./easysetup_linux
 
-./easysetup_linux
+	*Note: Sample app will run on its on. No further action needed.
 
-Clean
+==========================================================
 
-make cleanall EASYSETUP=1
+[B]
+==== Mediator Application (based on IoTivity Main) =======
 
+
+How To Test Start Easy Setup Mediator (Linux Console App) :
+
+1. Clone IoTivity Code from Samsung CODE Repo.
+	https://github.sec.samsung.net/RS7-IOTIVITY/IoTivity
+
+	Branch to use: 1.2-rel
+
+2. Build Easy Setup
+
+	scons service/easy-setup/ RELEASE=0 SECURED=0
+
+	RELEASE=0 / 1 : Up-to requirement.
+	SECURED=0: Currently only un-secure mode is supported.
+
+3. Run Mediator Linux Sample app :
+
+	cd out/linux/x86/debug/service/easy-setup/sampleapp/mediator/linux/richsdk_sample/
+
+	export LD_LIBRARY_PATH=../../../../../..
+
+	./mediator
+
+	*Note: Please make sure that Enrollee Sample app is running on same local network already.
+
+4. Use options shown on screen.
+
+1 ==> Discovery
+	========================================================
+	1. Discovery Enrollee Resource
+	2. Provision Security to Enrollee
+	3. Get Status from Enrollee
+	4. Get Configuration from Enrollee
+	5. Provision Device Property
+	6. Request to Connect
+	7. Provision Cloud Property
+	========================================================
+
+	DISCOVERED Resource:
+        URI of the resource: /EasySetupResURI
+        Host address of the resource: coap://[fe80::ea11:32ff:fe3b:f93b%25p5p1]:47423
+        List of resource types:
+                oic.r.easysetup
+                oic.wk.col
+        List of resource interfaces:
+                oic.if.ll
+                oic.if.b
+                oic.if.baseline
+
+4 ==> Get Configuration from Enrollee
+
+	GetConfigurationStatus is success.
+	===========================================
+        ProvStatus : 0
+        LastErrCode : 0
+        Device Name : Test Device
+        Supported WiFi modes : 2
+        Supported WiFi modes : 3
+        Supported WiFi modes : 4
+        Supported WiFi freq : 1
+        Cloud accessibility: 0
+	===========================================
+
+5 ==> Provision Device Property
+	Device Provisioning is success.
+
+	(Enrollee Sample app on Device side will show callbacks & logs with received data.)
+
+	===========================================
+	[ES App] WiFiProvCbInApp IN
+	SSID : Iotivity_PWD
+	Password : Iotivity_SSID
+	AuthType : 5
+	EncType : 3
+	[ES App] WiFiProvCbInApp OUT
+	===========================================
+
+
+7 ==> Provision Cloud Property
+
+	Cloud Provisioning is success.
+
+	(Enrollee Sample app on Device side will show callbacks & logs with received data.)
+
+	===========================================
+	[ES App] CloudDataProvCbInApp IN
+	AuthCode :
+	AuthProvider :
+	CI Server :
+	[ES App] CloudDataProvCbInApp OUT
+	===========================================
