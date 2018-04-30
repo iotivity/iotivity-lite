@@ -35,14 +35,14 @@ es_dev_conf_cb gDevConfRsrcEvtCb = NULL;
 es_read_userdata_cb gReadUserdataCb = NULL;
 es_write_userdata_cb gWriteUserdataCb = NULL;
 
-es_result_e oc_compare_property(oc_rep_t *rep, char *property_name)
+bool oc_compare_property(oc_rep_t *rep, char *property_name)
 {
     int prop_len = strlen(property_name);
-    if ( (int)oc_string_len(rep->name) == prop_len &&
+    if ((int)oc_string_len(rep->name) == prop_len &&
          memcmp(oc_string(rep->name), property_name, prop_len) == 0) {
-        return ES_OK;
+        return true;
     }
-    return ES_ERROR;
+    return false;
 }
 
 void update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
@@ -163,7 +163,7 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
             case OC_REP_STRING:
             {
                 if(oc_compare_property(rep, OC_RSRVD_ES_AUTHCODE)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.auth_code, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.auth_code));
                         oc_strncpy(cloud_data.auth_code, oc_string(rep->value.string),
@@ -172,7 +172,7 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
                         bIsValid = bIsValid | 0x01;
                     }
                 } else if(oc_compare_property(rep, OC_RSRVD_ES_ACCESSTOKEN)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.access_token, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.access_token));
                         oc_strncpy(cloud_data.access_token, oc_string(rep->value.string),
@@ -181,7 +181,7 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
                         bIsValid = bIsValid | 0x02;
                     }
                 } else if(oc_compare_property(rep, OC_RSRVD_ES_AUTHPROVIDER)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.auth_provider, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.auth_provider));
                         oc_strncpy(cloud_data.auth_provider, oc_string(rep->value.string),
@@ -190,7 +190,7 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
                         bIsValid = bIsValid | 0x04;
                     }
                 } else if(oc_compare_property(rep, OC_RSRVD_ES_CISERVER)) {
-                    if ( oc_string_len(rep->value.string) > 0 ) {
+                    if (oc_string_len(rep->value.string) > 0) {
                         oc_strncpy(g_ESCoapCloudConfResource.ci_server, oc_string(rep->value.string),
                                    sizeof(g_ESCoapCloudConfResource.ci_server));
                         oc_strncpy(cloud_data.ci_server, oc_string(rep->value.string),
@@ -221,14 +221,13 @@ void update_coap_cloud_conf_resource(oc_request_t *request, oc_interface_mask_t 
         gReadUserdataCb(rep, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF, &cloud_data.userdata);
     }
 
-    if(bIsValid == 0xFF) {
-        OC_DBG("Send CoapCloudConfRsrc Callback To ES");
 
-        if(gCoapCloudConfRsrcEvtCb != NULL) {
-            gCoapCloudConfRsrcEvtCb(ES_OK, &cloud_data);
-        } else {
-            OC_ERR("gCoapCloudConfRsrcEvtCb is NULL");
-        }
+    OC_DBG("Send CoapCloudConfRsrc Callback To ES");
+
+    if(gCoapCloudConfRsrcEvtCb != NULL) {
+        gCoapCloudConfRsrcEvtCb(ES_OK, &cloud_data);
+    } else {
+        OC_ERR("gCoapCloudConfRsrcEvtCb is NULL");
     }
 
     if (0 == oc_notify_observers(g_ESCoapCloudConfResource.handle)) {
@@ -492,6 +491,7 @@ static void get_devconf(oc_request_t *request, oc_interface_mask_t interface, vo
     construct_response_of_devconf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("get_devconf out");
@@ -506,8 +506,10 @@ static void post_devconf(oc_request_t *request, oc_interface_mask_t interface, v
   if (interface == OC_IF_BASELINE) {
     update_devconf_resource(request, interface);
     construct_response_of_devconf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("post_devconf out");
@@ -523,6 +525,7 @@ static void get_cloud(oc_request_t *request, oc_interface_mask_t interface, void
     construct_response_of_coapcloudconf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("get_cloud out");
@@ -537,8 +540,10 @@ static void post_cloud(oc_request_t *request, oc_interface_mask_t interface, voi
   if (interface == OC_IF_BASELINE) {
     update_coap_cloud_conf_resource(request, interface);
     construct_response_of_coapcloudconf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("post_cloud out");
@@ -554,6 +559,7 @@ static void get_wifi(oc_request_t *request, oc_interface_mask_t interface, void 
     construct_response_of_wificonf();
     oc_send_response(request, OC_STATUS_OK);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("get_wifi out");
@@ -568,8 +574,10 @@ static void post_wifi(oc_request_t *request, oc_interface_mask_t interface, void
   if (interface == OC_IF_BASELINE) {
     update_wifi_conf_resource(request, interface);
     construct_response_of_wificonf();
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
+    OC_ERR("Error");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("post_wifi out");
@@ -592,9 +600,11 @@ static void post_easysetup(oc_request_t *request, oc_interface_mask_t interface,
 
   if ((interface == OC_IF_B) || (interface == OC_IF_BASELINE)) {
     update_easysetup_resource(request, interface);
+    OC_DBG("success");
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    //OC_ERR("Error");
+    //oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
   OC_DBG("post_easysetup out");
 }
@@ -615,57 +625,55 @@ es_result_e init_easysetup_resource(bool is_secured)
     g_ESEasySetupResource.num_request = 0;
     oc_resource_t *col = oc_new_collection("easysetup", OC_RSRVD_ES_URI_EASYSETUP, 2, 0);
 
-    if (NULL != col) {
-        oc_resource_bind_resource_type(col, OC_RSRVD_ES_RES_TYPE_EASYSETUP);
-        oc_resource_bind_resource_type(col, "oic.wk.col");
-        oc_resource_bind_resource_interface(col,OC_IF_LL);
-        oc_resource_bind_resource_interface(col,OC_IF_B);
-        oc_resource_set_discoverable(col, true);
-        oc_resource_set_observable(col, true);
-        oc_resource_set_request_handler(col, OC_GET, get_easysetup, NULL);
-        oc_resource_set_request_handler(col, OC_POST, post_easysetup, NULL);
-
-#ifdef OC_SECURITY
-        if(!is_secured) {
-            oc_resource_make_public(col);
-        }
-#endif
-        /** Add Self Link for Easy Setup Resource */
-        oc_link_t *l_es = oc_new_link(col);
-        oc_collection_add_link(col, l_es);
-
-        if (g_ESWiFiConfResource.handle != NULL) {
-            oc_link_t *l1 = oc_new_link(g_ESWiFiConfResource.handle);
-            oc_collection_add_link(col, l1);
-        } else {
-            OC_ERR("wifi resource is not added to collection resource");
-        }
-
-        if (g_ESCoapCloudConfResource.handle != NULL) {
-            oc_link_t *l2 = oc_new_link(g_ESCoapCloudConfResource.handle);
-            oc_collection_add_link(col, l2);
-        } else {
-            OC_ERR("cloud config is not added to collection resource");
-        }
-
-        if (g_ESDevConfResource.handle != NULL) {
-            oc_link_t *l3 = oc_new_link(g_ESDevConfResource.handle);
-            oc_collection_add_link(col, l3);
-        } else {
-            OC_ERR("dev config is not added to collection resource");
-        }
-
-        oc_add_collection(col);
-
-        g_ESEasySetupResource.handle = col;
-        OC_DBG("Created Easysetup resource with result: success");
-        return ES_OK;
-    }
-    else {
-        OC_ERR("Created Easysetup resource with result: failure");
+    if (NULL == col) {
+        OC_ERR("Error in creating WiFiConf Resource!");
         return ES_ERROR;
     }
-    OC_DBG("init_easysetup_resource out");
+
+    oc_resource_bind_resource_type(col, OC_RSRVD_ES_RES_TYPE_EASYSETUP);
+    oc_resource_bind_resource_type(col, "oic.wk.col");
+    oc_resource_bind_resource_interface(col,OC_IF_LL);
+    oc_resource_bind_resource_interface(col,OC_IF_B);
+    oc_resource_set_discoverable(col, true);
+    oc_resource_set_observable(col, true);
+    oc_resource_set_request_handler(col, OC_GET, get_easysetup, NULL);
+    oc_resource_set_request_handler(col, OC_POST, post_easysetup, NULL);
+
+#ifdef OC_SECURITY
+    if(!is_secured) {
+        oc_resource_make_public(col);
+    }
+#endif
+    /** Add Self Link for Easy Setup Resource */
+    oc_link_t *l_es = oc_new_link(col);
+    oc_collection_add_link(col, l_es);
+
+    if (g_ESWiFiConfResource.handle != NULL) {
+        oc_link_t *l1 = oc_new_link(g_ESWiFiConfResource.handle);
+        oc_collection_add_link(col, l1);
+    } else {
+        OC_ERR("wifi resource is not added to collection resource");
+    }
+
+    if (g_ESCoapCloudConfResource.handle != NULL) {
+        oc_link_t *l2 = oc_new_link(g_ESCoapCloudConfResource.handle);
+        oc_collection_add_link(col, l2);
+    } else {
+        OC_ERR("cloud config is not added to collection resource");
+    }
+
+    if (g_ESDevConfResource.handle != NULL) {
+        oc_link_t *l3 = oc_new_link(g_ESDevConfResource.handle);
+        oc_collection_add_link(col, l3);
+    } else {
+        OC_ERR("dev config is not added to collection resource");
+    }
+
+    oc_add_collection(col);
+
+    g_ESEasySetupResource.handle = col;
+    OC_DBG("Created EasySetup Resource with success");
+    return ES_OK;
 }
 
 es_result_e init_wifi_conf_resource(bool is_secured)
@@ -709,7 +717,7 @@ es_result_e init_wifi_conf_resource(bool is_secured)
     oc_add_resource(wifi);
 
     g_ESWiFiConfResource.handle = wifi;
-    OC_DBG("Created WiFiConf resource with result: success");
+    OC_DBG("Created WiFiConf Resource with success");
     return ES_OK;
 }
 
@@ -744,7 +752,7 @@ es_result_e init_coap_cloudconf_resource(bool is_secured)
     oc_add_resource(cloud);
     g_ESCoapCloudConfResource.handle = cloud;
 
-    OC_DBG("Created CoapCloudConf Resource with result: success");
+    OC_DBG("Created CoapCloudConf Resource success");
     return ES_OK;
 
 }
@@ -775,7 +783,7 @@ es_result_e init_devconf_resource(bool is_secured)
     oc_resource_set_request_handler(devconf, OC_POST, post_devconf, NULL);
     oc_add_resource(devconf);
     g_ESDevConfResource.handle = devconf;
-    OC_DBG("Created DefConf resource with result: success");
+    OC_DBG("Created DevConf Resource with success");
     return ES_OK;
 }
 
@@ -808,7 +816,7 @@ es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resou
         res = init_devconf_resource(is_secured);
         if(res != ES_OK) {
             OC_ERR("initDevConf result: failed");
-            return ES_ERROR;
+            return res;
         }
     }
 

@@ -23,7 +23,7 @@
 #include <signal.h>
 #include <stdio.h>
 
-#include <easysetup.h>
+#include "easysetup.h"
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -40,20 +40,25 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = true;
 
-//static SCProperties g_SCProperties;
+#define USERPROPERTY_KEY_INT "x.user.property.int"
+#define USERPROPERTY_KEY_STR "x.user.property.str"
 
-//UserProperties g_userProperties;
+#define MAXLEN_STRING 100
 
-#if 0
-void SetUserProperties(const UserProperties *prop)
+typedef struct UserProperties_t
 {
-    if(prop != NULL)
-    {
-        strncpy(g_userProperties.userValue_str, prop->userValue_str, MAXLEN_STRING);
-        g_userProperties.userValue_int = prop->userValue_int;
-    }
+    int user_value_int;                 /**< User-specific property in WiFi resource **/
+    char user_value_str[MAXLEN_STRING]; /**< User-specific property in DevConf resource **/
+} UserProperties;
+
+UserProperties g_userProperties;
+
+void SetUserProperties()
+{
+    g_userProperties.user_value_int = 0;
+    strncpy(g_userProperties.user_value_str, "User String", MAXLEN_STRING);
+    printf("[ES App] SetUserProperties done\n");
 }
-#endif
 
 void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
 {
@@ -61,9 +66,35 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
     (void)payload;
     (void)userdata;
 
-    printf("[ES App] ReadUserdataCb IN");
+    printf("[ES App] ReadUserdataCb IN\n");
 
-    printf("[ES App] ReadUserdataCb OUT");
+    int user_prop_value = 0;
+
+    oc_rep_t *rep = payload;
+    while(rep != NULL) {
+        OC_DBG("key %s, value ", oc_string(rep->name));
+        switch (rep->type) {
+            case OC_REP_INT:
+            {
+                if(strcmp(oc_string(rep->name), USERPROPERTY_KEY_INT) == 0) {
+                    user_prop_value = rep->value.integer;
+                    OC_DBG("user_prop_value %u", user_prop_value);
+
+                     if(*userdata != NULL) {
+                        *userdata = (void*)malloc(sizeof(UserProperties));
+                        ((UserProperties*)(*userdata))->user_value_int = user_prop_value;
+                    }
+
+                    g_userProperties.user_value_int = user_prop_value;
+                }
+            }
+
+            default:
+                break;
+        }
+        rep = rep->next;
+    }
+    printf("[ES App] ReadUserdataCb OUT\n");
 }
 
 void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
@@ -71,9 +102,14 @@ void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
     (void)resourceType;
     (void)payload;
 
-    printf("[ES App] WriteUserdataCb IN");
+    printf("[ES App] WriteUserdataCb IN\n");
 
-    printf("[ES App] WriteUserdataCb OUT");
+#if 0
+    oc_rep_set_int(root, USERPROPERTY_KEY_INT, g_userProperties.user_value_int);
+    oc_rep_set_text_string(root, USERPROPERTY_KEY_STR, g_userProperties.user_value_str);
+#endif
+
+    printf("[ES App] WriteUserdataCb OUT\n");
 }
 
 static int
@@ -81,11 +117,8 @@ app_init(void)
 {
   int err = oc_init_platform("Samsung", NULL, NULL);
 
-  // err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung", "ocf.1.0.0",
-  //                      "ocf.res.1.0.0", NULL, NULL);
-
-  err |= oc_add_device("/oic/d", "oic.d.washer", "[washer] Samsung", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+  err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung", "ocf.1.0.0",
+                        "ocf.res.1.0.0", NULL, NULL);
   return err;
 }
 
@@ -269,9 +302,25 @@ void CloudDataProvCbInApp(es_coap_cloud_conf_data* eventData)
         return ;
     }
 
-    printf("AuthCode : %s\n", eventData->auth_code);
-    printf("AuthProvider : %s\n", eventData->auth_provider);
-    printf("CI Server : %s\n", eventData->ci_server);
+    if (eventData->auth_code)
+    {
+        printf("AuthCode : %s\n", eventData->auth_code);
+    }
+
+    if (eventData->access_token)
+    {
+        printf("Access Token : %s\n", eventData->access_token);
+    }
+
+    if (eventData->auth_provider)
+    {
+        printf("AuthProvider : %s\n", eventData->auth_provider);
+    }
+
+    if (eventData->ci_server)
+    {
+        printf("CI Server : %s\n", eventData->ci_server);
+    }
 
     if(eventData->userdata != NULL)
     {
@@ -375,6 +424,7 @@ register_resources(void)
 
     StartEasySetup();
     SetDeviceInfo();
+    SetUserProperties();
 
     printf("[ES App] register_resources OUT\n");
 }
