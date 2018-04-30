@@ -114,9 +114,10 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-test: $(GTEST) $(UNIT_TESTS)
-
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+
+test: $(UNIT_TESTS)
+	for test in $^ ; do ./$${test} ; done
 
 .PHONY: test clean
 
