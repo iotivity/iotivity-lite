@@ -579,6 +579,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   bool method_impl = true, bad_request = false, success = false,
        forbidden = false, entity_too_large = false;
 
+#ifdef OC_SPEC_VER_OIC
+  endpoint->version = OIC_VER_1_1_0;
+#else
   endpoint->version = OCF_VER_1_0_0;
   unsigned int accept = 0;
   if (coap_get_header_accept(request, &accept) == 1) {
@@ -586,6 +589,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       endpoint->version = OIC_VER_1_1_0;
     }
   }
+#endif /* OC_SPEC_VER_OIC */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
