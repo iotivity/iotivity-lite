@@ -19,7 +19,7 @@ def helpmsg(script):
 Usage:
     build:
         python %s <targetbuild>
-        Allowed values for <target_build>: all, linux, linux_test
+        Allowed values for <target_build>: all, linux, linux_test, tizenrt
     clean:
         python %s -c
     '''
@@ -62,6 +62,10 @@ def build_linux_test(flag, extra_option_str):
     print ("*********** Build for linux ************")
     build_linux("true", "test" + extra_option_str)
 
+def build_tizenrt(flag, extra_option_str):
+    print ("*********** Build for tizenrt : not ready yet ************")
+
+
 # Main module starts here
 if os.getenv("MAKEFLAGS", "") == "":
     os.environ["MAKEFLAGS"] = "-Q -j " + str(multiprocessing.cpu_count())
@@ -92,6 +96,8 @@ elif arg_num == 2:
     elif str(sys.argv[1]) == "linux_test":
         build_linux_test("true", "")
 
+    elif str(sys.argv[1]) == "linux_test":
+        print ("** Not Ready **")
     else:
         helpmsg(script_name)
 else:
