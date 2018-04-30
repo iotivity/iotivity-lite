@@ -23,8 +23,9 @@
  */
 
 #include "easysetup.h"
-#include "oc_log.h"
 #include "resourcehandler.h"
+#include "oc_log.h"
+
 #include "es_utils.h"
 
 static es_provisioning_callbacks_s gESProvisioningCb;
