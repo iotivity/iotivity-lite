@@ -33,10 +33,8 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/security/oc_cred.c \
 			   iotivity-constrained/security/oc_doxm.c \
 			   iotivity-constrained/security/oc_pstat.c \
-			   iotivity-constrained/security/oc_dtls.c \
 			   iotivity-constrained/security/oc_svr.c \
 			   iotivity-constrained/security/oc_store.c\
-			   iotivity-constrained/security/oc_certs.c\
 			   iotivity-constrained/security/oc_obt.c
 
 OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
@@ -50,10 +48,8 @@ OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   iotivity-constrained/security/oc_cred.o \
 			   iotivity-constrained/security/oc_doxm.o \
 			   iotivity-constrained/security/oc_pstat.o \
-			   iotivity-constrained/security/oc_dtls.o \
 			   iotivity-constrained/security/oc_svr.o \
 			   iotivity-constrained/security/oc_store.o\
-			   iotivity-constrained/security/oc_certs.o\
 			   iotivity-constrained/security/oc_obt.o
 
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
