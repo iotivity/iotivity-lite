@@ -296,7 +296,7 @@ typedef unsigned char oc_process_num_events_t;
  *
  * \hideinitializer
  */
-#if OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
+#ifdef OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
 #define OC_PROCESS(name, strname)                                              \
   OC_PROCESS_THREAD(name, ev, data);                                           \
   struct oc_process name = { NULL, process_thread_##name, { 0 }, 0, 0 }
@@ -311,7 +311,7 @@ typedef unsigned char oc_process_num_events_t;
 struct oc_process
 {
   struct oc_process *next;
-#if OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
+#ifdef OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
 #define OC_PROCESS_NAME_STRING(process) ""
 #else
   const char *name;
