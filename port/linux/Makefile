@@ -116,7 +116,7 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
-ifeq ($(OIC),1)
+ifneq ($(OIC),0)
         CFLAGS += -DOC_SPEC_VER_OIC
 endif
 
