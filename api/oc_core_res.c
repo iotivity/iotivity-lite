@@ -33,8 +33,8 @@
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_endpoint.h"
 #include <stdlib.h>
-static oc_resource_t *core_resources;
-static oc_device_info_t *oc_device_info;
+static oc_resource_t *core_resources = NULL;
+static oc_device_info_t *oc_device_info = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static oc_resource_t core_resources[1 + OCF_D * OC_MAX_NUM_DEVICES];
 static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
@@ -42,7 +42,7 @@ static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 static oc_platform_info_t oc_platform_info;
 
 static bool announce_con_res = true;
-static int device_count;
+static int device_count = 0;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
@@ -52,22 +52,86 @@ static int device_count;
 /* Number of characters of OC_NAME_CON_RES */
 #define OC_NAMELEN_CON_RES 6
 
-#ifdef OC_DYNAMIC_ALLOCATION
 void
 oc_core_init(void)
 {
-  core_resources = (oc_resource_t *)calloc(OC_NUM_CORE_RESOURCES_PER_DEVICE,
-                                           sizeof(oc_resource_t));
+  oc_core_shutdown();
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  core_resources = (oc_resource_t *)calloc(1, sizeof(oc_resource_t));
   if (!core_resources) {
     oc_abort("Insufficient memory");
   }
-  oc_device_info = (oc_device_info_t *)calloc(OC_NUM_CORE_RESOURCES_PER_DEVICE,
-                                              sizeof(oc_device_info_t));
-  if (!oc_device_info) {
-    oc_abort("Insufficient memory");
+
+  oc_device_info = NULL;
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+static void
+oc_core_free_resource_properties(oc_resource_t *core_resources_item)
+{
+  if (core_resources_item) {
+    if (oc_string_len(core_resources_item->name))
+      oc_free_string(&(core_resources_item->name));
+    if (oc_string_len(core_resources_item->uri))
+      oc_free_string(&(core_resources_item->uri));
+    if (oc_string_array_get_allocated_size(core_resources_item->types))
+      oc_free_string_array(&(core_resources_item->types));
   }
 }
+
+static void
+oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
+{
+
+  if (oc_device_info_item) {
+    if (oc_string_len(oc_device_info_item->name))
+      oc_free_string(&(oc_device_info_item->name));
+    if (oc_string_len(oc_device_info_item->icv))
+      oc_free_string(&(oc_device_info_item->icv));
+    if (oc_string_len(oc_device_info_item->dmv))
+      oc_free_string(&(oc_device_info_item->dmv));
+#ifdef OC_DYNAMIC_ALLOCATION
+    if (oc_device_info_item->data)
+      free(oc_device_info_item->data);
 #endif /* OC_DYNAMIC_ALLOCATION */
+  }
+}
+
+void
+oc_core_shutdown(void)
+{
+  int i;
+  if (oc_string_len(oc_platform_info.mfg_name))
+    oc_free_string(&(oc_platform_info.mfg_name));
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (oc_device_info) {
+#endif /* OC_DYNAMIC_ALLOCATION */
+    for (i = 0; i < device_count; ++i) {
+      oc_device_info_t *oc_device_info_item = &oc_device_info[i];
+      oc_core_free_device_info_properties(oc_device_info_item);
+    }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(oc_device_info);
+    oc_device_info = NULL;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (core_resources) {
+#endif /* OC_DYNAMIC_ALLOCATION */
+    for (i = 0; i < 1 + (OCF_D * device_count); ++i) {
+      oc_resource_t *core_resources_item = &core_resources[i];
+      oc_core_free_resource_properties(core_resources_item);
+    }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(core_resources);
+    core_resources = NULL;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  device_count = 0;
+}
 
 void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
@@ -251,22 +315,23 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   int new_num = 1 + OCF_D * (device_count + 1);
-  if (new_num > OC_NUM_CORE_RESOURCES_PER_DEVICE) {
-    core_resources =
-      (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
-    if (!core_resources) {
-      oc_abort("Insufficient memory");
-    }
-    oc_resource_t *device = &core_resources[new_num - OCF_D];
-    memset(device, 0, OCF_D * sizeof(oc_resource_t));
+  core_resources =
+    (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
 
-    oc_device_info = (oc_device_info_t *)realloc(
-      oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
-    if (!oc_device_info) {
-      oc_abort("Insufficient memory");
-    }
-    memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
+  if (!core_resources) {
+    oc_abort("Insufficient memory");
   }
+  oc_resource_t *device = &core_resources[new_num - OCF_D];
+  memset(device, 0, OCF_D * sizeof(oc_resource_t));
+
+  oc_device_info = (oc_device_info_t *)realloc(
+    oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
+
+  if (!oc_device_info) {
+    oc_abort("Insufficient memory");
+  }
+  memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
+
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifndef OC_SECURITY
@@ -315,7 +380,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   device_count++;
 
-  return &oc_device_info[device_count];
+  return &oc_device_info[device_count - 1];
 }
 
 void

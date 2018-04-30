@@ -267,6 +267,17 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
 
   return res;
 }
+
+static void
+oc_ri_delete_all_resource(void)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+  while (res) {
+    oc_ri_delete_resource(res);
+    res = oc_ri_get_app_resources();
+  }
+}
+
 #endif
 
 void
@@ -287,10 +298,7 @@ oc_ri_init(void)
 
   oc_list_init(timed_callbacks);
 
-#ifdef OC_DYNAMIC_ALLOCATION
   oc_core_init();
-#endif /* OC_DYNAMIC_ALLOCATION */
-
   oc_process_init();
   start_processes();
 }
@@ -300,6 +308,12 @@ oc_ri_shutdown(void)
 {
   oc_random_destroy();
   stop_processes();
+
+#ifdef OC_SERVER
+  oc_ri_delete_all_resource();
+#endif
+
+  oc_core_shutdown();
 }
 
 #ifdef OC_SERVER
