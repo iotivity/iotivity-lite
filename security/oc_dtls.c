@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+//#define OC_SECURITY
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -65,13 +66,16 @@ static mbedtls_ssl_config client_conf;
 #endif /* OC_CLIENT */
 static mbedtls_ecp_group_id curves[1] = { MBEDTLS_ECP_DP_SECP256R1 };
 #define PERSONALIZATION_STR "IoTivity-Constrained"
-static const int ciphers[3] = { MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+static const int ciphers[4] = { MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
                                 MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
+                                MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
                                 0 };
 #ifdef OC_CLIENT
-static const int anon_ciphers[3] = {
+static const int anon_ciphers[4] = {
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+  0
 };
 #endif /* OC_CLIENT */
 
@@ -400,6 +404,7 @@ oc_sec_dtls_init_context(void)
     mbedtls_ssl_conf_ciphersuites(&server_conf[i], ciphers);
     mbedtls_ssl_conf_authmode(&server_conf[i], MBEDTLS_SSL_VERIFY_REQUIRED);
     mbedtls_ssl_conf_psk_cb(&server_conf[i], get_psk_cb, NULL);
+
     oc_uuid_t *device_id = oc_core_get_device_id(i);
     if (mbedtls_ssl_conf_psk(&server_conf[i], device_id->id, 0, device_id->id,
                              16) != 0) {
@@ -443,6 +448,59 @@ dtls_init_err:
   free(server_conf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   return -1;
+}
+
+bool
+oc_sec_load_certs(int device)
+{
+  int i = 0, j = 0, ret = 0;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    mbedtls_x509_crt *cacert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_x509_crt *owncert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_pk_context *pkey = (mbedtls_pk_context*)malloc(sizeof(mbedtls_pk_context));
+    mbedtls_x509_crt_init( cacert );
+    mbedtls_x509_crt_init( owncert );
+    mbedtls_pk_init( pkey );
+    oc_sec_creds_t *creds = oc_sec_get_creds(device);
+    oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
+    while (c != NULL) {
+      if (c->mfgtrustcalen != 0) {
+        ret = mbedtls_x509_crt_parse( cacert, (const unsigned char *) c->mfgtrustca, c->mfgtrustcalen );
+        if( ret < 0 )
+        {
+            printf( " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n", -ret );
+            //goto dtls_init_err;
+        }
+        mbedtls_ssl_conf_ca_chain(&server_conf[i], cacert, NULL);
+      }
+      if (c->mfgkeylen != 0) {
+        ret =  mbedtls_pk_parse_key(pkey, (const unsigned char *) c->mfgkey,
+                                                                  c->mfgkeylen, NULL, 0 );
+        if( ret < 0 )
+        {
+           printf( " failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret );
+           //goto dtls_init_err;
+        }
+      }
+      for (j = 0; j < c->ownchainlen; j++) {
+        if (c->mfgowncertlen != 0) {
+          ret = mbedtls_x509_crt_parse(owncert, (const unsigned char *) c->mfgowncert[j], c->mfgowncertlen[j] );
+          if( ret < 0 )
+          {
+              printf( " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n", -ret );
+              //goto dtls_init_err;
+          }
+          ret = mbedtls_ssl_conf_own_cert(&server_conf[i], owncert, pkey);
+          if( ret < 0 )
+          {
+              printf( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
+              //goto dtls_init_err;
+          }
+        }
+      }
+      c = c->next;
+    }
+  }
 }
 
 int

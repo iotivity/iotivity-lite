@@ -78,6 +78,32 @@ oc_sec_encode_doxm(int device)
   oc_rep_end_root_object();
 }
 
+void
+oc_sec_doxm_mfg(int device)
+{
+  doxm[device].oxmsel = 2;
+  doxm[device].sct = 1;
+  doxm[device].owned = false;
+  memset(doxm[device].devowneruuid.id, 0, 16);
+  memset(doxm[device].rowneruuid.id, 0, 16);
+  int oxms[1] = { 2 };
+  char uuid[37];
+  oc_rep_start_root_object();
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+  oc_rep_set_int_array(root, oxms, oxms, 1);
+  oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);
+  oc_rep_set_int(root, sct, doxm[device].sct);
+  oc_rep_set_boolean(root, owned, doxm[device].owned);
+  oc_uuid_to_str(&doxm[device].devowneruuid, uuid, 37);
+  oc_rep_set_text_string(root, devowneruuid, uuid);
+  oc_uuid_to_str(&doxm[device].deviceuuid, uuid, 37);
+  oc_rep_set_text_string(root, deviceuuid, uuid);
+  oc_uuid_to_str(&doxm[device].rowneruuid, uuid, 37);
+  oc_rep_set_text_string(root, rowneruuid, uuid);
+  oc_rep_end_root_object();
+}
+
 oc_sec_doxm_t *
 oc_sec_get_doxm(int device)
 {

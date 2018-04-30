@@ -249,25 +249,42 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
       while (creds_array != NULL) {
         oc_rep_t *cred = creds_array->value.object;
         int credid = -1, credtype = 0;
-        oc_string_t *role = 0, *authority = 0, *subjectuuid = 0;
+        oc_string_t *role = 0, *authority = 0, *subjectuuid = 0, *credusage = 0;
+        uint8_t *cert = 0, *mfgowncert = 0, *mfgkey = 0, *mfgtrustca = 0;
+        int certlen = 0, mfgowncertlen = 0, mfgkeylen = 0, mfgtrustcalen = 0;
         uint8_t key[24];
         bool non_empty = false;
         bool got_key = false, base64_key = false;
+        bool mfgcert_flag = false, mfgtrustca_flag = false, mfgkey_flag = false;
         while (cred != NULL) {
           len = oc_string_len(cred->name);
           non_empty = true;
           switch (cred->type) {
           case OC_REP_INT:
-            if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0)
+            if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0) {
               credid = cred->value.integer;
+            }
             else if (len == 8 &&
-                     memcmp(oc_string(cred->name), "credtype", 8) == 0)
+                     memcmp(oc_string(cred->name), "credtype", 8) == 0) {
               credtype = cred->value.integer;
+            }
             break;
           case OC_REP_STRING:
             if (len == 11 &&
                 memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
               subjectuuid = &cred->value.string;
+            } else if (len == 9 &&
+              memcmp(oc_string(cred->name), "credusage", 9) == 0) {
+              credusage = &cred->value.string;
+              if (oc_string_len(cred->value.string) == 20 &&
+                  memcmp("oic.sec.cred.mfgcert",
+                         oc_string(*credusage), 20) == 0) {
+                mfgcert_flag = true;
+              } else if (oc_string_len(cred->value.string) == 23 &&
+                         memcmp("oic.sec.cred.mfgtrustca",
+                                oc_string(*credusage), 23) == 0) {
+                mfgtrustca_flag = true;
+              }
             }
             break;
           case OC_REP_OBJECT: {
@@ -284,14 +301,15 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                                oc_string(data->value.string), 23) == 0) {
                       base64_key = true;
                     }
-                  } else if (oc_string_len(data->name) == 4 &&
+                  }
+                  else if (oc_string_len(data->name) == 4 &&
                              memcmp(oc_string(data->name), "data", 4) == 0) {
                     uint8_t *p = oc_cast(data->value.string, uint8_t);
                     int size = oc_string_len(data->value.string);
                     if (size == 0)
                       goto next_item;
                     if (size != 24) {
-                      OC_ERR("oc_cred: Invalid key");
+                      OC_ERR("oc_cred: Invalid key 1");
                       return false;
                     }
                     got_key = true;
@@ -303,12 +321,12 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
-                  if (size != 16) {
-                    OC_ERR("oc_cred: Invalid key");
-                    return false;
-                  }
+                  mfgkey = (uint8_t *) malloc (size * sizeof(uint8_t));
+                  memcpy(mfgkey, p, size);
+                  mfgkeylen = size;
+                  mfgkey_flag = true;
                   got_key = true;
-                  memcpy(key, p, 16);
+
                 } break;
                 default:
                   break;
@@ -331,8 +349,64 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 }
                 data = data->next;
               }
+            } else if (len == 10 &&
+                       memcmp(oc_string(cred->name), "publicdata", 10) == 0) {
+              while (data != NULL) {
+                len = oc_string_len(data->name);
+                if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
+                  uint8_t *p = oc_cast(data->value.string, uint8_t);
+                  int size = oc_string_len(data->value.string);
+                  if (size == 0)
+                    goto next_item;
+                  cert = (uint8_t *) malloc (size * sizeof(uint8_t));
+                  memcpy(cert, p, size);
+                  certlen = size;
+                }
+                data = data->next;
+              }
+            } else if (len == 11 &&
+                       memcmp(oc_string(cred->name), "privatedata", 11) == 0) {
+              while (data != NULL) {
+                len = oc_string_len(data->name);
+                if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
+                  uint8_t *p = oc_cast(data->value.string, uint8_t);
+                  int size = oc_string_len(data->value.string);
+                  if (size == 0)
+                    goto next_item;
+                }
+                data = data->next;
+              }
             }
           } break;
+          case OC_REP_OBJECT_ARRAY: {
+            oc_rep_t *creds_array1 = creds_array->value.object_array;
+            while (creds_array1 != NULL) {
+              oc_rep_t *cred = creds_array1->value.object;
+              oc_string_t *mfgcert = 0, *mfgtrustca = 0;
+              while (cred != NULL) {
+                len = oc_string_len(cred->name);
+                non_empty = true;
+                switch (cred->type) {
+                  case OC_REP_OBJECT: {
+                    oc_rep_t *data = cred->value.object;
+                    if (len == 10 &&
+                        memcmp(oc_string(cred->name), "publicdata", 10) == 0) {
+                      while (data != NULL) {
+                        len = oc_string_len(data->name);
+                        if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
+                          mfgcert = &data->value.string;
+                        }
+                        data = data->next;
+                      }
+                    }
+                  }
+                }
+                cred = cred->next;
+              }
+              creds_array1 = creds_array1->next;
+            }
+          }
+          break;
           default:
             break;
           }
@@ -370,6 +444,21 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             if (owner) {
               *owner = credobj;
             }
+          }
+          if (mfgcert_flag)
+          {
+            credobj->mfgowncert = (uint8_t*)realloc(credobj->mfgowncert, sizeof(uint8_t*)*(credobj->ownchainlen+1));
+            credobj->mfgowncert[credobj->ownchainlen] = cert;
+            credobj->mfgowncertlen = (int*)realloc(credobj->mfgowncertlen, sizeof(int)*(credobj->ownchainlen+1));
+            credobj->mfgowncertlen[credobj->ownchainlen] = certlen;
+            credobj->ownchainlen += 1;
+          } else if (mfgtrustca_flag) {
+            credobj->mfgtrustca = cert;
+            credobj->mfgtrustcalen = certlen;
+          }
+          if (mfgkey_flag) {
+            credobj->mfgkey = mfgkey;
+            credobj->mfgkeylen = mfgkeylen;
           }
         }
         creds_array = creds_array->next;

@@ -36,6 +36,7 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const uint8_t *obt_uuid, const size_t obt_uuid_len,
                              uint8_t *key, const size_t key_len);
 int oc_sec_dtls_init_context(void);
+bool oc_sec_load_certs(int device);
 int oc_sec_dtls_send_message(oc_message_t *message);
 oc_uuid_t *oc_sec_dtls_get_peer_uuid(oc_endpoint_t *endpoint);
 bool oc_sec_dtls_connected(oc_endpoint_t *endpoint);
