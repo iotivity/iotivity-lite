@@ -378,7 +378,7 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
               link->resource->get_handler.user_data);
           else
             method_not_found = true;
-            break;
+          break;
         case OC_PUT:
           if (link->resource->put_handler.cb)
             link->resource->put_handler.cb(
