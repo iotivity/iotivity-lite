@@ -26,7 +26,6 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_session_state.h"
 #include "oc_signal_event_loop.h"
 
 #ifdef OC_SECURITY
@@ -214,13 +213,5 @@ _oc_signal_event_loop(void)
 {
   if (app_callbacks) {
     app_callbacks->signal_event_loop();
-  }
-}
-
-void
-_oc_session_state(oc_endpoint_t *endpoint, oc_session_state_t state)
-{
-  if (app_callbacks && app_callbacks->session_state) {
-    app_callbacks->session_state(endpoint, state);
   }
 }

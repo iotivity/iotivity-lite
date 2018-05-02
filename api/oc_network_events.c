@@ -16,6 +16,7 @@
 
 #include "oc_network_events.h"
 #include "oc_buffer.h"
+#include "oc_events.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_connectivity.h"
 #include "util/oc_list.h"
@@ -42,6 +43,13 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
   OC_PROCESS_BEGIN();
   while (oc_process_is_running(&(oc_network_events))) {
     OC_PROCESS_YIELD();
+    oc_network_event_handler_mutex_lock();
+    if (ev == oc_events[INTERFACE_DOWN]) {
+      handle_network_interface_event_callback(NETWORK_INTERFACE_DOWN);
+    } else if (ev == oc_events[INTERFACE_UP]) {
+      handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
+    }
+    oc_network_event_handler_mutex_unlock();
   }
   OC_PROCESS_END();
 }
@@ -54,5 +62,27 @@ oc_network_event(oc_message_t *message)
   oc_network_event_handler_mutex_unlock();
 
   oc_process_poll(&(oc_network_events));
+  _oc_signal_event_loop();
+}
+
+void
+oc_network_interface_event(oc_interface_event_t event)
+{
+  oc_process_event_t ev;
+  if (event == NETWORK_INTERFACE_DOWN) {
+    ev = oc_events[INTERFACE_DOWN];
+  } else if (event == NETWORK_INTERFACE_UP) {
+    ev = oc_events[INTERFACE_UP];
+  } else {
+    return;
+  }
+
+  oc_network_event_handler_mutex_lock();
+  if (oc_process_post(&oc_network_events, ev, NULL) == OC_PROCESS_ERR_FULL) {
+    oc_network_event_handler_mutex_unlock();
+    return;
+  }
+  oc_network_event_handler_mutex_unlock();
+
   _oc_signal_event_loop();
 }
