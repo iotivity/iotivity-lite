@@ -1,11 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="abort.c" />
-    <ClCompile Include="clock.c" />
-    <ClCompile Include="ipadapter.c" />
-    <ClCompile Include="random.c" />
-    <ClCompile Include="storage.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\aes.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
@@ -154,9 +149,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\security\oc_doxm.c">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\security\oc_dtls.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\api\oc_endpoint.c">
@@ -309,9 +301,32 @@
     <ClCompile Include="..\..\messaging\coap\transactions.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\security\oc_tls.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="abort.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="clock.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="ipadapter.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="random.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="storage.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\api\oc_session_events.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\deps\mbedtls\library\rsa_internal.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="config.h" />
     <ClInclude Include="..\..\deps\tinycbor\src\cbor.h">
       <Filter>tinyCBOR</Filter>
     </ClInclude>
@@ -388,9 +403,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\security\oc_doxm.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\security\oc_dtls.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\util\oc_etimer.h">
@@ -470,6 +482,18 @@
     </ClInclude>
     <ClInclude Include="..\oc_storage.h">
       <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\security\oc_tls.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_session_events.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\oc_session_state.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

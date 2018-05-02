@@ -48,11 +48,11 @@
 #include "oc_buffer_settings.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
+#include "oc_session_state.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 
-typedef struct
-{
+typedef struct {
   int (*init)(void);
   void (*signal_event_loop)(void);
 
@@ -63,6 +63,8 @@ typedef struct
 #ifdef OC_CLIENT
   void (*requests_entry)(void);
 #endif /* OC_CLIENT */
+
+  void (*session_state)(oc_endpoint_t *, oc_session_state_t);
 } oc_handler_t;
 
 typedef void (*oc_init_platform_cb_t)(void *data);
@@ -645,7 +647,7 @@ bool oc_do_ip_discovery_at_endpoint(const char *rt,
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
-bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
+bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
                   oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
 bool oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
@@ -665,6 +667,8 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
+
+void oc_close_session(oc_endpoint_t *endpoint);
 
 /** Common operations */
 

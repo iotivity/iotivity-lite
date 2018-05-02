@@ -10,6 +10,10 @@ SED ?= sed
 RM ?= rm
 MKDIR ?= mkdir
 INSTALL ?= install
+OS = linux
+ROOT_DIR = ../..
+OUT_DIR = $(ROOT_DIR)/port/$(OS)
+CHECK_SCRIPT = ../../tools/check.py
 
 DESTDIR ?= /usr/local
 OBJDIR ?= ./obj$(IOT_NAME_SUFFIX)
@@ -20,6 +24,19 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+
+GTEST_DIR = $(ROOT_DIR)/deps/gtest
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
+GTEST = gtest_build
+GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT
+HEADER_DIR = $(ROOT_DIR)/include
+API_TEST_DIR = $(ROOT_DIR)/api/unittest
+API_TEST_OBJ_DIR = $(API_TEST_DIR)/$(OBJDIR)
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+UNIT_TESTS = apitest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -32,7 +49,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -79,14 +96,14 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
-	SRC_COMMON += ${DTLS}
-	SRC += oc_obt.c
+	SRC += ../../security/oc_obt.c
 	SAMPLES += ${OBT}
 else
-	SRC_COMMON += ${DTLS} memory_buffer_alloc.c
+	SRC_COMMON += $(MBEDTLS_DIR)/memory_buffer_alloc.c
 endif
 	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
@@ -118,9 +135,22 @@ PC := iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-.PHONY: clean
+test: $(UNIT_TESTS)
+	for test in $^ ; do ./$${test} ; done
 
-${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
+.PHONY: test clean
+
+$(GTEST):
+	$(MAKE) --directory=$(GTEST_DIR)/make
+
+$(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 ${OBJDIR}/%.o: %.c
 	@mkdir -p ${@D}
@@ -240,26 +270,31 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@includedir@,$(includedir),'
 
 ifeq ($(SECURE),1)
-$(MBEDTLS_PATCH_FILE):
-	git submodule update --init && \
-	cd $(MBEDTLS_DIR) && \
+MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
+${MBEDTLS_DIR}/.git:
+	git submodule update --init ${@D}
+
+$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
+	if [ -d ${MBEDTLS_DIR} ]; then \
+	cd ${MBEDTLS_DIR} && \
 	git clean -fdx . && \
 	git reset --hard && \
-	patch -r - -s -N -p1 < ../../patches/mbedtls_ocf_patch_1 && \
-	patch -r - -s -N -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2 && \
-	echo patches applied > $(MBEDTLS_PATCH_FILE)
+	cd -; \
+	fi && \
+	git submodule update --init && \
+	cd ${MBEDTLS_DIR} && \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > ${@F}
 endif
 
 clean:
-	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS)
+	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
-
-test:
-	echo "TODO"
 
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
