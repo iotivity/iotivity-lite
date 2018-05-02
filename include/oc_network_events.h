@@ -20,10 +20,33 @@
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
 
+typedef enum {
+  NETWORK_INTERFACE_DOWN,
+  NETWORK_INTERFACE_UP
+} oc_interface_event_t;
+
+/**
+  @brief Callback function to pass the network interface up/down infomation to
+  App.
+  @param event  enum values in oc_interface_event_t.
+*/
+typedef void (*interface_event_handler_t)(oc_interface_event_t event);
+
+/**
+ * Structure to manage network interface handler list.
+ */
+typedef struct oc_network_interface_cb
+{
+  struct oc_network_interface_cb *next;
+  interface_event_handler_t handler;
+} oc_network_interface_cb_t;
+
 OC_PROCESS_NAME(oc_network_events);
 
 typedef struct oc_message_s oc_message_t;
 
 void oc_network_event(oc_message_t *message);
+
+void oc_network_interface_event(oc_interface_event_t event);
 
 #endif /* OC_NETWORK_EVENTS_H */
