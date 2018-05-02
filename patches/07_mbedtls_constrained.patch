@@ -1,18 +1,19 @@
-From fa7baf7ea39eed45092c4c0e0cfefeb6af2330df Mon Sep 17 00:00:00 2001
-From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Fri, 20 Apr 2018 14:43:45 +0300
+From fcd4c719c4f118a0b1aeb18d51bbd3b80060eb75 Mon Sep 17 00:00:00 2001
+From: "ol.beketov" <ol.beketov@samsung.com>
+Date: Wed, 2 May 2018 18:10:55 +0300
 Subject: [PATCH] ocf constrained
 
+Signed-off-by: ol.beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 2839 ++--------------------------------------------
+ include/mbedtls/config.h | 2842 ++--------------------------------------------
  library/entropy_poll.c   |   24 +-
- 2 files changed, 87 insertions(+), 2776 deletions(-)
+ 2 files changed, 91 insertions(+), 2775 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedff..86784b6 100644
+index 79eedff..473eccf 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2817 +1,108 @@
+@@ -1,2817 +1,113 @@
 -/**
 - * \file config.h
 - *
@@ -571,10 +572,7 @@ index 79eedff..86784b6 100644
 - *            security risk. We recommend considering stronger ciphers instead.
 - */
 -//#define MBEDTLS_ENABLE_WEAK_CIPHERSUITES
-+#include <config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
- 
+-
 -/**
 - * \def MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 - *
@@ -587,9 +585,9 @@ index 79eedff..86784b6 100644
 - * Uncomment this macro to remove RC4 ciphersuites by default.
 - */
 -#define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
-+/* System support */
-+#define MBEDTLS_PLATFORM_C
-+#define MBEDTLS_PLATFORM_MEMORY
++#include <config.h>
++#include "port/oc_connectivity.h"
++#include "port/oc_assert.h"
  
 -/**
 - * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
@@ -611,13 +609,9 @@ index 79eedff..86784b6 100644
 -#define MBEDTLS_ECP_DP_BP384R1_ENABLED
 -#define MBEDTLS_ECP_DP_BP512R1_ENABLED
 -#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-+#ifdef OC_DYNAMIC_ALLOCATION
-+#include <stdlib.h>
-+#define MBEDTLS_PLATFORM_STD_CALLOC calloc
-+#define MBEDTLS_PLATFORM_STD_FREE free
-+#else /* OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
-+#endif /* !OC_DYNAMIC_ALLOCATION */
++/* System support */
++#define MBEDTLS_PLATFORM_C
++#define MBEDTLS_PLATFORM_MEMORY
  
 -/**
 - * \def MBEDTLS_ECP_NIST_OPTIM
@@ -629,9 +623,13 @@ index 79eedff..86784b6 100644
 - * Comment this macro to disable NIST curves optimisation.
 - */
 -#define MBEDTLS_ECP_NIST_OPTIM
-+#define MBEDTLS_PLATFORM_EXIT_ALT
-+#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
-+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
++#ifdef OC_DYNAMIC_ALLOCATION
++#include <stdlib.h>
++#define MBEDTLS_PLATFORM_STD_CALLOC calloc
++#define MBEDTLS_PLATFORM_STD_FREE free
++#else /* OC_DYNAMIC_ALLOCATION */
++#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
++#endif /* !OC_DYNAMIC_ALLOCATION */
  
 -/**
 - * \def MBEDTLS_ECDSA_DETERMINISTIC
@@ -646,7 +644,10 @@ index 79eedff..86784b6 100644
 - * Comment this macro to disable deterministic ECDSA.
 - */
 -#define MBEDTLS_ECDSA_DETERMINISTIC
--
++#define MBEDTLS_PLATFORM_EXIT_ALT
++#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
++#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+ 
 -/**
 - * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 - *
@@ -1540,7 +1541,7 @@ index 79eedff..86784b6 100644
 - * Comment to skip extendedKeyUsage checking for certificates.
 - */
 -#define MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
--
+ 
 -/**
 - * \def MBEDTLS_X509_RSASSA_PSS_SUPPORT
 - *
@@ -1580,7 +1581,7 @@ index 79eedff..86784b6 100644
 - * This section enables or disables entire modules in mbed TLS
 - * \{
 - */
- 
+-
 -/**
 - * \def MBEDTLS_AESNI_C
 - *
@@ -2824,7 +2825,11 @@ index 79eedff..86784b6 100644
 -/* X509 options */
 -//#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */
 -//#define MBEDTLS_X509_MAX_FILE_PATH_LEN     512 /**< Maximum length of a path/filename string in bytes including the null terminator character ('\0'). */
--
++#define MBEDTLS_ASN1_WRITE_C
++#define MBEDTLS_ECDSA_C
++#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
++#define MBEDTLS_CCM_C
+ 
 -/**
 - * Allow SHA-1 in the default TLS configuration for certificate signing.
 - * Without this build-time option, SHA-1 support must be activated explicitly
