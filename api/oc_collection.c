@@ -194,6 +194,28 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
   case OC_IF_BASELINE: {
     oc_rep_start_root_object();
     oc_process_baseline_interface(request->resource);
+
+    /* TODO: Apps collection handler should not create new object
+       to add its own properties in encoder when request is received
+       on baseline interface */
+    switch(method) {
+    case OC_GET:
+      if(request->resource->get_handler.cb) {
+        request->resource->get_handler.cb(request, interface,
+          request->resource->get_handler.user_data);
+      }
+    break;
+    case OC_POST:
+      if(request->resource->post_handler.cb) {
+        request->resource->post_handler.cb(request, interface,
+          request->resource->post_handler.user_data);
+      }
+    break;
+    //TODO: what about PUT and DELETE ?
+    default:
+    break;
+    }
+
     oc_rep_set_array(root, links);
     while (link != NULL) {
       //TODO: Does links has to be filtered against query paramter?
@@ -370,11 +392,16 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
         response_buffer.response_length = 0;
         method_not_found = false;
 
+        oc_interface_mask_t if_mask = link->resource->default_interface;
+        if (oc_check_if_collection(link->resource)) {
+          if_mask = interface;
+        }
+
         switch (method) {
         case OC_GET:
           if (link->resource->get_handler.cb)
             link->resource->get_handler.cb(
-              &rest_request, link->resource->default_interface,
+              &rest_request, if_mask,
               link->resource->get_handler.user_data);
           else
             method_not_found = true;
@@ -382,7 +409,7 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
         case OC_PUT:
           if (link->resource->put_handler.cb)
             link->resource->put_handler.cb(
-              &rest_request, link->resource->default_interface,
+              &rest_request, if_mask,
               link->resource->put_handler.user_data);
           else
             method_not_found = true;
@@ -390,7 +417,7 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
         case OC_POST:
           if (link->resource->post_handler.cb)
             link->resource->post_handler.cb(
-              &rest_request, link->resource->default_interface,
+              &rest_request, if_mask,
               link->resource->post_handler.user_data);
           else
             method_not_found = true;
@@ -398,7 +425,7 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
         case OC_DELETE:
           if (link->resource->delete_handler.cb)
             link->resource->delete_handler.cb(
-              &rest_request, link->resource->default_interface,
+              &rest_request, if_mask,
               link->resource->delete_handler.user_data);
           else
             method_not_found = true;
