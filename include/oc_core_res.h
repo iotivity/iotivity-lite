@@ -42,6 +42,7 @@ typedef struct
 } oc_device_info_t;
 
 void oc_core_init(void);
+void oc_core_shutdown(void);
 
 oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
                                           oc_core_init_platform_cb_t init_cb,
