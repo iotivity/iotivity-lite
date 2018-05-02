@@ -62,11 +62,8 @@ struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
 bool ifchange_initialized;
 
-#ifdef OC_DYNAMIC_ALLOCATION
 OC_LIST(ip_contexts);
-#else /* OC_DYNAMIC_ALLOCATION */
-static ip_context_t devices[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
 void
 oc_network_event_handler_mutex_init(void)
@@ -93,8 +90,9 @@ void oc_network_event_handler_mutex_destroy(void) {
   pthread_mutex_destroy(&mutex);
 }
 
-static ip_context_t *get_ip_context_for_device(int device) {
-#ifdef OC_DYNAMIC_ALLOCATION
+static ip_context_t *
+get_ip_context_for_device(int device)
+{
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
@@ -102,9 +100,6 @@ static ip_context_t *get_ip_context_for_device(int device) {
   if (!dev) {
     return NULL;
   }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   return dev;
 }
 
@@ -885,15 +880,12 @@ connectivity_ipv4_init(ip_context_t *dev)
 
 int oc_connectivity_init(int device) {
   OC_DBG("Initializing connectivity for device %d", device);
-#ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
+
+  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
     oc_abort("Insufficient memory");
   }
   oc_list_add(ip_contexts, dev);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   dev->device = device;
 
   if (pipe(dev->shutdown_pipe) < 0) {
@@ -1090,10 +1082,8 @@ oc_connectivity_shutdown(int device)
   close(dev->shutdown_pipe[1]);
   close(dev->shutdown_pipe[0]);
 
-#ifdef OC_DYNAMIC_ALLOCATION
   oc_list_remove(ip_contexts, dev);
-  free(dev);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_memb_free(&ip_context_s, dev);
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);
 }
