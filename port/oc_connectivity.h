@@ -19,7 +19,9 @@
 
 #include "config.h"
 #include "messaging/coap/conf.h"
+#include "oc_endpoint.h"
 #include "oc_network_events.h"
+#include "oc_session_events.h"
 #include "port/oc_log.h"
 #include "util/oc_process.h"
 #include <stdint.h>
@@ -76,59 +78,6 @@ enum
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-typedef struct
-{
-  uint16_t port;
-  uint8_t address[16];
-  uint8_t scope;
-} oc_ipv6_addr_t;
-
-typedef struct
-{
-  uint16_t port;
-  uint8_t address[4];
-} oc_ipv4_addr_t;
-
-typedef struct
-{
-  uint8_t type;
-  uint8_t address[6];
-} oc_le_addr_t;
-
-typedef struct oc_endpoint_t
-{
-  struct oc_endpoint_t *next;
-  int device;
-  enum transport_flags
-  {
-    DISCOVERY = 1 << 0,
-    SECURED = 1 << 1,
-    IPV4 = 1 << 2,
-    IPV6 = 1 << 3,
-    TCP = 1 << 4,
-    GATT = 1 << 5,
-    MULTICAST = 1 << 6
-  } flags;
-
-  union dev_addr
-  {
-    oc_ipv6_addr_t ipv6;
-    oc_ipv4_addr_t ipv4;
-    oc_le_addr_t bt;
-  } addr;
-  uint8_t priority;
-  ocf_version_t version;
-} oc_endpoint_t;
-
-#define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
-  oc_endpoint_t __name__ = {.flags = __flags__,                                \
-                            .addr.ipv4 = {.port = __port__,                    \
-                                          .address = { __VA_ARGS__ } } }
-#define oc_make_ipv6_endpoint(__name__, __flags__, __port__, ...)              \
-  oc_endpoint_t __name__ = {.flags = __flags__,                                \
-                            .addr.ipv6 = {.port = __port__,                    \
-                                          .address = { __VA_ARGS__ } } }
-
 struct oc_message_s
 {
   struct oc_message_s *next;
@@ -156,5 +105,10 @@ void oc_send_discovery_request(oc_message_t *message);
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
+
+void handle_network_interface_event_callback(oc_interface_event_t event);
+
+void handle_session_event_callback(const oc_endpoint_t *endpoint,
+                                   oc_session_state_t state);
 
 #endif /* OC_CONNECTIVITY_H */
