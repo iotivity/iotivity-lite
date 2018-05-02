@@ -84,7 +84,7 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
-ifeq ($(SECURE),1)
+ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
@@ -255,7 +255,7 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
-ifeq ($(SECURE),1)
+ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
