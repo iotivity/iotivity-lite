@@ -19,14 +19,13 @@
 #include "oc_acl.h"
 #include "config.h"
 #include "oc_api.h"
-#include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
-#include "oc_dtls.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"
 #include "oc_store.h"
+#include "oc_tls.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -317,7 +316,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
 #endif /* OC_DEBUG */
-  oc_uuid_t *uuid = oc_sec_dtls_get_peer_uuid(endpoint);
+  oc_uuid_t *uuid = oc_tls_get_peer_uuid(endpoint);
 
   if (uuid) {
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);

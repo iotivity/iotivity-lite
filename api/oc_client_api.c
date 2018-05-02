@@ -17,7 +17,9 @@
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
-
+#ifdef OC_SECURITY
+#include "security/oc_tls.h"
+#endif /* OC_SECURITY */
 #ifdef OC_CLIENT
 
 static coap_transaction_t *transaction;
@@ -67,7 +69,11 @@ dispatch_coap_request(void)
   }
 
   if (payload_size > 0) {
-    coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+    if (client_cb->endpoint->version == OIC_VER_1_1_0) {
+      coap_set_header_content_format(request, APPLICATION_CBOR);
+    } else {
+      coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+    }
   }
 
   transaction->message->length =
@@ -136,7 +142,11 @@ prepare_coap_request(oc_client_cb_t *cb)
     coap_udp_init_message(request, type, cb->method, cb->mid);
   }
 
-  coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+  if (cb->endpoint->version == OIC_VER_1_1_0) {
+    coap_set_header_accept(request, APPLICATION_CBOR);
+  } else {
+    coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+  }
 
   coap_set_token(request, cb->token, cb->token_len);
 
@@ -166,13 +176,13 @@ oc_free_server_endpoints(oc_endpoint_t *endpoint)
 }
 
 bool
-oc_do_delete(const char *uri, oc_endpoint_t *endpoint,
+oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE, NULL,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_DELETE, query,
                                              client_handler, qos, user_data);
 
   if (!cb)
@@ -402,4 +412,19 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 {
   return dispatch_ip_discovery(rt, handler, endpoint, user_data) ? true : false;
 }
+
+void
+oc_close_session(oc_endpoint_t *endpoint)
+{
+  if (endpoint->flags & SECURED) {
+#ifdef OC_SECURITY
+    oc_tls_close_connection(endpoint);
+#endif /* OC_SECURITY */
+  } else if (endpoint->flags & TCP) {
+#ifdef OC_TCP
+    oc_connectivity_end_session(endpoint);
+#endif /* OC_TCP */
+  }
+}
+
 #endif /* OC_CLIENT */

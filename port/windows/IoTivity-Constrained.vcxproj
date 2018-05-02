@@ -132,6 +132,8 @@
     <ClInclude Include="..\..\include\oc_obt.h" />
     <ClInclude Include="..\..\include\oc_rep.h" />
     <ClInclude Include="..\..\include\oc_ri.h" />
+    <ClInclude Include="..\..\include\oc_session_events.h" />
+    <ClInclude Include="..\..\include\oc_session_state.h" />
     <ClInclude Include="..\..\include\oc_signal_event_loop.h" />
     <ClInclude Include="..\..\include\oc_uuid.h" />
     <ClInclude Include="..\..\messaging\coap\coap.h" />
@@ -145,10 +147,10 @@
     <ClInclude Include="..\..\security\oc_acl.h" />
     <ClInclude Include="..\..\security\oc_cred.h" />
     <ClInclude Include="..\..\security\oc_doxm.h" />
-    <ClInclude Include="..\..\security\oc_dtls.h" />
     <ClInclude Include="..\..\security\oc_pstat.h" />
     <ClInclude Include="..\..\security\oc_store.h" />
     <ClInclude Include="..\..\security\oc_svr.h" />
+    <ClInclude Include="..\..\security\oc_tls.h" />
     <ClInclude Include="..\..\util\oc_etimer.h" />
     <ClInclude Include="..\..\util\oc_list.h" />
     <ClInclude Include="..\..\util\oc_memb.h" />
@@ -185,6 +187,7 @@
     <ClCompile Include="..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\api\oc_ri.c" />
     <ClCompile Include="..\..\api\oc_server_api.c" />
+    <ClCompile Include="..\..\api\oc_session_events.c" />
     <ClCompile Include="..\..\api\oc_uuid.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\aes.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\aesni.c" />
@@ -233,6 +236,7 @@
     <ClCompile Include="..\..\deps\mbedtls\library\platform.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\ripemd160.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\rsa.c" />
+    <ClCompile Include="..\..\deps\mbedtls\library\rsa_internal.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\sha1.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\sha256.c" />
     <ClCompile Include="..\..\deps\mbedtls\library\sha512.c" />
@@ -263,10 +267,10 @@
     </ClCompile>
     <ClCompile Include="..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\security\oc_doxm.c" />
-    <ClCompile Include="..\..\security\oc_dtls.c" />
     <ClCompile Include="..\..\security\oc_pstat.c" />
     <ClCompile Include="..\..\security\oc_store.c" />
     <ClCompile Include="..\..\security\oc_svr.c" />
+    <ClCompile Include="..\..\security\oc_tls.c" />
     <ClCompile Include="..\..\util\oc_etimer.c" />
     <ClCompile Include="..\..\util\oc_list.c" />
     <ClCompile Include="..\..\util\oc_memb.c" />
