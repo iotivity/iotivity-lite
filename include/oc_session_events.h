@@ -18,9 +18,30 @@
 #define OC_SESSION_EVENTS_H
 
 #include "oc_endpoint.h"
-#include "oc_session_state.h"
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
+
+typedef enum {
+  OC_SESSION_CONNECTED,
+  OC_SESSION_DISCONNECTED
+} oc_session_state_t;
+
+/**
+  @brief Callback function to pass the session event infomation to App.
+  @param endpoint  endpoint info which the session event is happened.
+  @param state  enum values in oc_session_state_t.
+*/
+typedef void (*session_event_handler_t)(const oc_endpoint_t *endpoint,
+                                        oc_session_state_t state);
+
+/**
+ * Structure to manage session event handler list.
+ */
+typedef struct oc_session_event_cb
+{
+  struct oc_session_event_cb *next;
+  session_event_handler_t handler;
+} oc_session_event_cb_t;
 
 OC_PROCESS_NAME(oc_session_events);
 
