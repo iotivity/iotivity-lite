@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_647e6ee6",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 12373
+      },
+      "writtenOn": "2018-05-02T11:41:07Z",
+      "side": 1,
+      "message": "I still think this should be moved to oc_storage.c.\nWhen I look at the ports of Contiki or Zephyr, then they are using different approaches to access their filesystem. FILE will not work in those environments.",
+      "revId": "7b33de1d9b7d8737342b7b77e8605a92ed5548b4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
