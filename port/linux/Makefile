@@ -41,7 +41,8 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c
-DTLS += ../../deps/mbedtls/library/rsa_internal.c
+# Extra sources from patches:
+DTLS += rsa_internal.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -311,10 +312,8 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 	cd ${<D} && \
 	git clean -fdx . && \
 	git reset --hard && \
-	git fetch && \
-	git reset --hard ${DTLS_TAG} && \
 	for patch in ${MBEDTLS_PATCHES}; do patch -r - -s -N -p1 < $${patch} ; done
-	echo "Patches applied: ${MBEDTLS_PATCHES}" > $@
+	echo "Patches applied in $^" > $@
 endif
 
 clean:
