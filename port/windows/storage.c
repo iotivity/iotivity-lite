@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define STORE_PATH_SIZE 64
+#define STORE_PATH_SIZE 128
 
 static char store_path[STORE_PATH_SIZE];
 static int store_path_len;
