@@ -42,7 +42,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c
 # Extra sources from patches:
-DTLS += rsa_internal.c
+DTLS += ../../deps/mbedtls/library/rsa_internal.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -74,7 +74,7 @@ OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux \
+SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux mfgserver\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 ifeq ($(EASYSETUP),1)
@@ -244,6 +244,11 @@ simpleclient: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+mfgserver: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	@cp ../../apps/mfgserver_cred $@_creds/cred_0
+	${CC} -o $@ ../../apps/mfgserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
@@ -312,6 +317,8 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 	cd ${<D} && \
 	git clean -fdx . && \
 	git reset --hard && \
+	git fetch && \
+	git reset --hard ${DTLS_TAG} && \
 	for patch in ${MBEDTLS_PATCHES}; do patch -r - -s -N -p1 < $${patch} ; done
 	echo "Patches applied in $^" > $@
 endif
