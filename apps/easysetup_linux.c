@@ -22,8 +22,12 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "easysetup.h"
+
+#define WITH_SOFTAP 1
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -61,6 +65,94 @@ typedef struct UserProperties_t
 } UserProperties;
 
 UserProperties g_userProperties;
+
+typedef struct
+{
+    char ssid[128];
+    char password[128] ;
+}SoftAPData;
+
+bool executeCommand(const char* cmd, char* result, int result_len) {
+    char buffer[128];
+    FILE* fp = popen(cmd, "r");
+
+    if (!fp) {
+        return false;
+    }
+
+    int add_len = 0;
+    while (!feof(fp)) {
+        if (fgets(buffer, 128, fp) != NULL) {
+            add_len += strlen(buffer);
+
+            if (add_len < result_len) {
+                strcat(result, buffer);
+            }
+        }
+    }
+
+    fclose(fp);
+    return true;
+}
+
+void* ESWorkerThreadRoutine(void* thread_data)
+{
+    printf("ESWorkerThreadRoutine IN\n");
+
+    SoftAPData* wifiData = (SoftAPData*)thread_data;
+    char* ssid = wifiData->ssid;
+    char* pwd = wifiData->password;
+
+    /** Sleep to allow response sending from post_callback thread before turning Off Soft AP. */
+    sleep(1);
+    printf("ESWorkerThreadRoutine Woke up from sleep\n");
+
+    printf("ssid: %s\n", ssid);
+    printf("password: %s\n", pwd);
+
+#ifdef WITH_SOFTAP
+    printf("Stopping Soft AP\n");
+
+    char result[256];
+
+    /** Stop Soft AP */
+    executeCommand("sudo service hostapd stop", result, 256);
+    printf("outputString 1: %s\n", result);
+
+    /** Turn On Wi-Fi */
+    executeCommand("sudo nmcli nm wifi on", result, 256);
+
+    /**
+     * Note: On some linux distributions, nmcli nm may not work. In that case
+     * need to enable below command:
+     */
+    // executeCommand("sudo nmcli n wifi on", result, 256);
+
+    printf("outputString 2: %s\n", result);
+
+    /** On some systems it may take time for Wi-Fi to turn ON. */
+    sleep(1);
+
+    /** Connect to Target Wi-Fi AP */
+    char nmcli_command[256];
+    sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
+
+    printf("executing commnad: %s\n", nmcli_command);
+
+    executeCommand(nmcli_command, result, 256);
+    printf("outputString 3: %s\n", result);
+    if (strlen(result) == 0)
+    {
+        es_set_error_code(ES_ERRCODE_NO_ERROR);
+    }
+
+    free(wifiData);
+    wifiData = NULL;
+#endif
+
+    printf("ESWorkerThreadRoutine OUT\n");
+    return NULL;
+}
 
 void SetUserProperties()
 {
@@ -258,6 +350,15 @@ void WiFiProvCbInApp(es_wifi_conf_data* eventData)
     printf("Password : %s\n", eventData->pwd);
     printf("AuthType : %d\n", eventData->authtype);
     printf("EncType : %d\n", eventData->enctype);
+
+#ifdef WITH_SOFTAP
+    pthread_t thread1;
+
+    SoftAPData* softAPData = (SoftAPData*) malloc(sizeof(SoftAPData));
+    strcpy(softAPData->ssid, eventData->ssid);
+    strcpy(softAPData->password, eventData->pwd);
+    pthread_create( &thread1, NULL, ESWorkerThreadRoutine, (void*) softAPData);
+#endif
 
     if(eventData->userdata != NULL)
     {
