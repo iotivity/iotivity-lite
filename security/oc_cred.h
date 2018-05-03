@@ -27,6 +27,13 @@ typedef struct oc_sec_cred_s
   int credid;
   int credtype;
   oc_uuid_t subjectuuid;
+  uint8_t **mfgowncert;      //chain
+  uint8_t *mfgkey;
+  int mfgkeylen;
+  int *mfgowncertlen;
+  int ownchainlen;
+  uint8_t *mfgtrustca;
+  int mfgtrustcalen;
   struct
   {
     oc_string_t role;
