@@ -30,7 +30,11 @@ API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
-UNIT_TESTS = apitest
+PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
+PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
+PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
+PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
+UNIT_TESTS = apitest platformtest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -136,6 +140,13 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
@@ -274,10 +285,10 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
