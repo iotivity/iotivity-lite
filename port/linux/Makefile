@@ -67,7 +67,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux mfgserver\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 OBT = onboarding_tool
@@ -188,6 +188,11 @@ simpleserver: libiotivity-constrained-server.a
 simpleclient: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+mfgserver: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	@cp ../../apps/mfgserver_cred $@_creds/cred_0
+	${CC} -o $@ ../../apps/mfgserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
