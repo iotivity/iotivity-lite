@@ -161,6 +161,9 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_cred(device);
     oc_sec_load_acl(device);
     oc_sec_load_unique_ids(device);
+#if defined(OC_SPEC_VER_OIC)
+    oc_core_regen_unique_ids(device);
+#endif //OC_SPEC_VER_OIC
   }
 #endif
 

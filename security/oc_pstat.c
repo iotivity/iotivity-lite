@@ -125,7 +125,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     pstat->om = 3;
     ps->sm = 4;
     memset(ps->rowneruuid.id, 0, 16);
+#if !defined(OC_SPEC_VER_OIC)
     oc_core_regen_unique_ids(device);
+#endif //!OC_SPEC_VER_OIC
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
@@ -497,12 +499,22 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)interface;
   (void)data;
   int device = request->resource->device;
-  if (oc_sec_decode_pstat(request->request_payload, false, device)) {
-    oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_pstat(device);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  oc_status_t response_code = OC_STATUS_BAD_REQUEST;
+#if defined(OC_SPEC_VER_OIC)
+  bool flag = false;
+  if (request->origin && request->origin->version == OIC_VER_1_1_0)
+  {
+    flag = true;
   }
+  if (oc_sec_decode_pstat(request->request_payload, flag, device)) {
+#else
+  if (oc_sec_decode_pstat(request->request_payload, false, device)) {
+#endif //OC_SPEC_VER_OIC
+    response_code = OC_STATUS_CHANGED;
+    oc_sec_dump_pstat(device);
+  }
+  oc_send_response(request, response_code);
+  OC_DBG("response code: %d", response_code);
 }
 
 #endif /* OC_SECURITY */
