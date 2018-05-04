@@ -70,22 +70,22 @@ OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 ifeq ($(EASYSETUP),1)
-SAMPLES += easysetup_linux
+SAMPLES += easysetup_linux sc_easysetup_linux
 endif
 
 
 OBT = onboarding_tool
 
 ifeq ($(EASYSETUP),1)
-	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c)
-	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port
+	SRC_ES=$(wildcard ../../service/easy-setup/enrollee/*.c ../../service/easy-setup/enrollee/samsung/*.c)
+	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port -I../../service/easy-setup/enrollee/include/samsung/
 	CFLAGS_ES+= -DEASYSETUP
 	OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
 endif
@@ -272,6 +272,10 @@ multi_device_client: libiotivity-constrained-client.a
 easysetup_linux: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/easysetup_linux.c libiotivity-constrained-server.a libiotivity-constrained-easysetup.a -DOC_SERVER ${CFLAGS} ${CFLAGS_ES} ${LIBS}	
+
+sc_easysetup_linux: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/sc_easysetup_linux.c libiotivity-constrained-server.a libiotivity-constrained-easysetup.a -DOC_SERVER ${CFLAGS} ${CFLAGS_ES} ${LIBS}	
 
 ${OBT}: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
