@@ -37,6 +37,13 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/security/oc_store.c\
 			   iotivity-constrained/security/oc_obt.c
 
+ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
+CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c)
+OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o)
+CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include\
+		   -Iiotivity-constrained/service/easy-setup/enrollee
+endif
+
 OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   iotivity-constrained/deps/tinycbor/src/cborencoder_close_container_checked.o \
 			   iotivity-constrained/deps/tinycbor/src/cborparser.o \
