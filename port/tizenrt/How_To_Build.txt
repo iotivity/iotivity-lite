@@ -71,6 +71,9 @@ ifconfig wl1 dhcp
 
 iotlite
 
+###### run easysetup sample app ##########################
+
+easysetup
 
 
 

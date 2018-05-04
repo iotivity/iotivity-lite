@@ -98,6 +98,7 @@ configure: ${configure_file}
 rule/configure: ${tizenrt_dir}/os/tools
 	cd "$<" && ./configure.sh ${os_machine}/${os_image_type}
 	echo "CONFIG_ENABLE_IOTIVITY_CONSTRAINED=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_EASYSETUP=y" >> ${configure_file}
 
 prep: ${prep_files}
 	ls $^
