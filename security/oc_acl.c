@@ -322,9 +322,11 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+
     if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/acl2", 12) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
+        memcmp(oc_string(resource->uri), "/oic/sec/acl2",
+            endpoint->version == OIC_VER_1_1_0 ? 12 : 13) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches acl's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, doxm->rowneruuid.id, 16) == 0 &&
@@ -653,8 +655,7 @@ oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
   while (res != NULL) {
     next = res->next;
     if (href == NULL ||
-        (oc_string_len(res->href) == strlen(href) &&
-         memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
+        (memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
       if (oc_string_array_get_allocated_size(res->types) > 0) {
         oc_free_string_array(&res->types);
       }
@@ -766,7 +767,7 @@ oc_sec_set_post_otm_acl(int device)
     __anon_clear = oc_sec_acl_find_subject(__anon_clear, OC_SUBJECT_CONN,
                                            &_anon_clear, -1, 14, device);
     if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl2");
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl");
     }
     if (__anon_clear) {
       oc_ace_free_resources(device, &__anon_clear, "/oic/sec/cred");
@@ -1005,6 +1006,7 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_acl(request->resource->device);
   } else {
+    OC_ERR("bad request");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
