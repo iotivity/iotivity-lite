@@ -19,64 +19,61 @@
 #ifndef ES_RESOURCE_HANDLER_H
 #define ES_RESOURCE_HANDLER_H
 
-#include "escommon.h"
-#include "ESEnrolleeCommon.h"
+#include "es_enrollee_common.h"
+#include "es_common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*es_connect_request_cb) (es_result_e, es_connect_request *);
-typedef void (*es_wifi_conf_cb) (es_result_e, es_wifi_conf_data *);
-typedef void (*es_coap_cloud_conf_cb) (es_result_e, es_coap_cloud_conf_data *);
-typedef void (*es_dev_conf_cb) (es_result_e, es_dev_conf_data *);
+typedef void (*es_connect_request_cb)(es_result_e, es_connect_request *);
+typedef void (*es_wifi_conf_cb)(es_result_e, es_wifi_conf_data *);
+typedef void (*es_coap_cloud_conf_cb)(es_result_e, es_coap_cloud_conf_data *);
+typedef void (*es_dev_conf_cb)(es_result_e, es_dev_conf_data *);
 
 typedef struct
 {
-    oc_resource_t* handle;
-    prov_status status;
-    es_error_code last_err_code;
-    es_connect_type connect_request[NUM_CONNECT_TYPE];
-    int num_request;
+  oc_resource_t *handle;
+  prov_status status;
+  es_error_code last_err_code;
+  es_connect_type connect_request[NUM_CONNECT_TYPE];
+  int num_request;
 } easy_setup_resource;
 
 typedef struct
 {
-    oc_resource_t* handle;
-    wifi_mode supported_mode[NUM_WIFIMODE];
-    uint8_t num_mode;
-    wifi_freq supported_freq;
-    wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
-    uint8_t num_supported_authtype;
-    wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
-    uint8_t num_supported_enctype;
-    char ssid[OC_STRING_MAX_VALUE];
-    char cred[OC_STRING_MAX_VALUE];
-    wifi_authtype auth_type;
-    wifi_enctype enc_type;
+  oc_resource_t *handle;
+  wifi_mode supported_mode[NUM_WIFIMODE];
+  uint8_t num_mode;
+  wifi_freq supported_freq;
+  wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
+  uint8_t num_supported_authtype;
+  wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
+  uint8_t num_supported_enctype;
+  char ssid[OC_STRING_MAX_VALUE];
+  char cred[OC_STRING_MAX_VALUE];
+  wifi_authtype auth_type;
+  wifi_enctype enc_type;
 } wifi_conf_resource;
 
 typedef struct
 {
-    oc_resource_t* handle;
-    char auth_code[OC_STRING_MAX_VALUE];
-    char access_token[OC_STRING_MAX_VALUE];
-    oauth_tokentype access_token_type;
-    char auth_provider[OC_STRING_MAX_VALUE];
-    char ci_server[OC_URI_STRING_MAX_VALUE];
+  oc_resource_t *handle;
+  char auth_code[OC_STRING_MAX_VALUE];
+  char access_token[OC_STRING_MAX_VALUE];
+  oauth_tokentype access_token_type;
+  char auth_provider[OC_STRING_MAX_VALUE];
+  char ci_server[OC_URI_STRING_MAX_VALUE];
 } coap_cloud_conf_resource;
 
 typedef struct
 {
-    oc_resource_t* handle;
-    char dev_name[OC_STRING_MAX_VALUE];
-    char model_number[OC_STRING_MAX_VALUE];
-    char location[OC_STRING_MAX_VALUE];
-    char language[OC_STRING_MAX_VALUE];
-    char country[OC_STRING_MAX_VALUE];
+  oc_resource_t *handle;
+  char dev_name[OC_STRING_MAX_VALUE];
 } dev_conf_resource;
 
-es_result_e create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask);
+es_result_e create_easysetup_resources(bool is_secured,
+                                       es_resource_mask_e resource_mask);
 es_result_e delete_easysetup_resources(void);
 
 es_result_e set_device_property(es_device_property *device_property);
@@ -88,11 +85,11 @@ void register_cloud_rsrc_event_callback(es_coap_cloud_conf_cb);
 void register_devconf_rsrc_event_callback(es_dev_conf_cb);
 void register_connect_request_event_callback(es_connect_request_cb cb);
 void unregister_resource_event_callback(void);
-es_result_e set_callback_for_userdata(es_read_userdata_cb readCb, es_write_userdata_cb writeCb);
+es_result_e set_callback_for_userdata(es_read_userdata_cb readcb,
+                                      es_write_userdata_cb writecb);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif // ES_RESOURCE_HANDLER_H

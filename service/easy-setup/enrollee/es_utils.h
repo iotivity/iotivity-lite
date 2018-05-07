@@ -23,4 +23,4 @@
 
 #define oc_strncpy(dst, src, n) strncpy(dst, src, n)
 
-#endif //ES_UTILS_H
+#endif // ES_UTILS_H

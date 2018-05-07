@@ -8,7 +8,7 @@ to test Easy Setup functionality. Steps for both of them are given below:
 Build :
 
 	cd port/linux
-	make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPv4=1 SECURE=0
+	make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPV4=1 SECURE=0
 
 Build Options:
 	DEBUG = 0 / 1 based on requirement.
