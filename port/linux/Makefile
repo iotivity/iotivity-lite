@@ -74,13 +74,16 @@ OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux mfgserver\
+SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux
 endif
 
+ifeq ($(SECURE),1)
+SAMPLES += mfgserver
+endif
 
 OBT = onboarding_tool
 
