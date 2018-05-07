@@ -422,6 +422,38 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
   return peer;
 }
 
+void
+oc_tls_shutdown(void)
+{
+  oc_tls_peer_t *p = oc_list_pop(tls_peers);
+  while (p != NULL) {
+    oc_tls_free_peer(p, false);
+    p = oc_list_pop(tls_peers);
+  }
+#ifdef OC_CLIENT
+  mbedtls_ssl_config_free(client_conf);
+#ifdef OC_TCP
+  mbedtls_ssl_config_free(client_conf_tls);
+#endif /* OC_TCP */
+#endif /* OC_CLIENT */
+  int device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    mbedtls_ssl_config_free(&server_conf[device]);
+#ifdef OC_TCP
+    mbedtls_ssl_config_free(&server_conf_tls[device]);
+#endif /* OC_TCP */
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(server_conf);
+#ifdef OC_TCP
+  free(server_conf_tls);
+#endif /* OC_TCP */
+#endif /* OC_DYNAMIC_ALLOCATION */
+  mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
+  mbedtls_ssl_cookie_free(&cookie_ctx);
+  mbedtls_entropy_free(&entropy_ctx);
+}
+
 int
 oc_tls_init_context(void)
 {

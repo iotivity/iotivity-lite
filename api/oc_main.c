@@ -29,10 +29,18 @@
 #include "oc_signal_event_loop.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_acl.h"
+#include "security/oc_cred.h"
+#include "security/oc_doxm.h"
+#include "security/oc_pstat.h"
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
+
+#ifdef OC_MEMORY_TRACE
+#include "util/oc_mem_trace.h"
+#endif /* OC_MEMORY_TRACE */
 
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
@@ -46,6 +54,7 @@ static long _OC_BLOCK_SIZE = 1024;
 int
 oc_set_mtu_size(long mtu_size)
 {
+  (void)mtu_size;
 #ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
     return -1;
@@ -134,8 +143,12 @@ oc_main_init(const oc_handler_t *handler)
 
   app_callbacks = handler;
 
-  oc_ri_init();
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_init();
+#endif /* OC_MEMORY_TRACE */
 
+  oc_ri_init();
+  oc_core_init();
   oc_network_event_handler_mutex_init();
 
   ret = app_callbacks->init();
@@ -195,17 +208,30 @@ oc_main_shutdown(void)
     return;
   }
 
+  oc_ri_shutdown();
+
+#ifdef OC_SECURITY
+  oc_sec_acl_free();
+  oc_sec_cred_free();
+  oc_sec_doxm_free();
+  oc_sec_pstat_free();
+  oc_tls_shutdown();
+#endif /* OC_SECURITY */
+
   int device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
   }
 
   oc_network_event_handler_mutex_destroy();
-
-  oc_ri_shutdown();
+  oc_core_shutdown();
 
   app_callbacks = NULL;
   initialized = false;
+
+#ifdef OC_MEMORY_TRACE
+  oc_mem_trace_shutdown();
+#endif /* OC_MEMORY_TRACE */
 }
 
 void

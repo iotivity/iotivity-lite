@@ -36,6 +36,14 @@ static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 void
+oc_sec_doxm_free(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(doxm);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
 oc_sec_doxm_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION

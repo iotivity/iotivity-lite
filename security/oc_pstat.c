@@ -34,6 +34,14 @@ static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 static bool set_post_otm_acl = true;
 
 void
+oc_sec_pstat_free(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(pstat);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
 oc_sec_pstat_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
