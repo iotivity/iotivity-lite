@@ -29,6 +29,7 @@
 OC_PROCESS_NAME(oc_tls_handler);
 
 int oc_tls_init_context(void);
+void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);
 
 int oc_tls_update_psk_identity(int device);

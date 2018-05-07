@@ -83,6 +83,7 @@ int coap_remove_observer_by_client(oc_endpoint_t *endpoint);
 int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
                                   size_t token_len);
 int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
+void coap_free_all_observers(void);
 
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
