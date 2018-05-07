@@ -48,6 +48,7 @@ typedef struct tcp_context_t {
 
 #endif /* OC_IPV4 */
   int connect_pipe[2];
+  pthread_mutex_t mutex;
 } tcp_context_t;
 #endif
 
@@ -84,6 +85,7 @@ typedef struct ip_context_t {
   int terminate;
   int device;
   fd_set rfds;
+  int shutdown_pipe[2];
 } ip_context_t;
 
 #endif /* IPCONTEXT_H */
