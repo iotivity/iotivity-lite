@@ -45,18 +45,6 @@ oc_sec_pstat_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-static bool
-nil_uuid(oc_uuid_t *uuid)
-{
-  int i;
-  for (i = 0; i < 16; i++) {
-    if (uuid->id[i] != 0) {
-      return false;
-    }
-  }
-  return true;
-}
-
 #ifdef OC_DEBUG
 static void
 dump_pstat_dos(oc_sec_pstat_t *ps)

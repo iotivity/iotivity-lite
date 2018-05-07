@@ -18,6 +18,7 @@
 #define OC_UUID_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct
 {
@@ -27,5 +28,6 @@ typedef struct
 void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
 void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
 void oc_gen_uuid(oc_uuid_t *uuid);
+bool nil_uuid(oc_uuid_t *uuid);
 
 #endif /* OC_UUID_H */

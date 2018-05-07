@@ -122,3 +122,15 @@ oc_gen_uuid(oc_uuid_t *uuid)
   uuid->id[6] &= 0x0f;
   uuid->id[6] |= 0x40;
 }
+
+bool
+nil_uuid(oc_uuid_t *uuid)
+{
+  int i;
+  for (i = 0; i < 16; i++) {
+    if (uuid->id[i] != 0) {
+      return false;
+    }
+  }
+  return true;
+}

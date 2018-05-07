@@ -208,16 +208,9 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
                  memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
                        &doxm[device].devowneruuid);
-        if (!from_storage) {
-          int i;
-          for (i = 0; i < 16; i++) {
-            if (doxm[device].devowneruuid.id[i] != 0) {
-              break;
-            }
-          }
-          if (i != 16) {
-            oc_core_regen_unique_ids(device);
-          }
+        if (!from_storage && !nil_uuid(&doxm[device].devowneruuid))
+        {
+          oc_core_regen_unique_ids(device);
         }
       } else if (len == 10 &&
                  memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
