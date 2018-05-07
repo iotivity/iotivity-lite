@@ -44,7 +44,7 @@ struct oc_mmem
   void *ptr;
 };
 
-typedef enum { BYTE_POOL, INT_POOL, DOUBLE_POOL, END_POOL } pool;
+typedef enum { BYTE_POOL, INT_POOL, DOUBLE_POOL } pool;
 
 void oc_mmem_init(void);
 
