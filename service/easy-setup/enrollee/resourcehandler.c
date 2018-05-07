@@ -775,7 +775,7 @@ es_result_e init_devconf_resource(bool is_secured)
     oc_resource_set_discoverable(devconf, true);
     oc_resource_set_observable(devconf, true);
 #ifdef OC_SECURITY
-    if(!isSecured) {
+    if(!is_secured) {
         oc_resource_make_public(devconf);
     }
 #endif
