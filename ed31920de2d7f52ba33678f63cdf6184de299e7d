@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f89fc201",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-07T02:55:16Z",
+      "side": 1,
+      "message": "This won\u0027t work. \nThe oic/res response handler directly uses the string resulting from this function to encode \"eps\". That of course shouldn\u0027t include the local interface name on the sending machine.",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 5
+      },
+      "revId": "ed31920de2d7f52ba33678f63cdf6184de299e7d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d8a47e59",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-07T02:55:16Z",
+      "side": 1,
+      "message": "This is not going to work. \nThis function is used to parse a peer machine\u0027s \"ep\" from the discovery response to subsequently contact it. It is called from the discovery request handler. For link-local addresses, the scope_id is currently set inside that handler.",
+      "range": {
+        "startLine": 407,
+        "startChar": 0,
+        "endLine": 432,
+        "endChar": 7
+      },
+      "revId": "ed31920de2d7f52ba33678f63cdf6184de299e7d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
