@@ -22,8 +22,8 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "easysetup.h"
 
@@ -39,176 +39,182 @@ static double temp_C = 5.0, min_C = 0.0, max_C = 100.0, min_K = 273.15,
 typedef enum { C = 100, F, K } units_t;
 
 /**
- * @var gIsSecured
+ * @var g_is_secured
  * @brief Variable to check if secure mode is enabled or not.
  */
-static bool gIsSecured = true;
-
+static bool g_is_secured = true;
 
 #define STR_USERPROPERTY_KEY_INT "x.user.property.int"
 
 #define USERPROPERTY_KEY_INT x.user.property.int
 #define USERPROPERTY_KEY_STR x.user.property.str
 
-#define stringify(s) #s
-
-#define set_custom_property_str(object, key, value) oc_rep_set_text_string(object, key, value)
-#define set_custom_property_int(object, key, value) oc_rep_set_int(object, key, value)
-
+#define set_custom_property_str(object, key, value)                            \
+  oc_rep_set_text_string(object, key, value)
+#define set_custom_property_int(object, key, value)                            \
+  oc_rep_set_int(object, key, value)
 
 #define MAXLEN_STRING 100
 
-typedef struct UserProperties_t
+typedef struct
 {
-    int user_value_int;                 /**< User-specific property in WiFi resource **/
-    char user_value_str[MAXLEN_STRING]; /**< User-specific property in DevConf resource **/
-} UserProperties;
+  int user_value_int; /**< User-specific property in WiFi resource **/
+  char user_value_str[MAXLEN_STRING]; /**< User-specific property in DevConf
+                                         resource **/
+} user_properties_t;
 
-UserProperties g_userProperties;
+user_properties_t g_user_properties;
 
 typedef struct
 {
-    char ssid[128];
-    char password[128] ;
-}SoftAPData;
+  char ssid[128];
+  char password[128];
+} soft_ap_data_t;
 
-bool executeCommand(const char* cmd, char* result, int result_len) {
-    char buffer[128];
-    FILE* fp = popen(cmd, "r");
+bool
+execute_command(const char *cmd, char *result, int result_len)
+{
+  char buffer[128];
+  FILE *fp = popen(cmd, "r");
 
-    if (!fp) {
-        return false;
+  if (!fp) {
+    return false;
+  }
+
+  int add_len = 0;
+  while (!feof(fp)) {
+    if (fgets(buffer, 128, fp) != NULL) {
+      add_len += strlen(buffer);
+
+      if (add_len < result_len) {
+        strcat(result, buffer);
+      }
     }
+  }
 
-    int add_len = 0;
-    while (!feof(fp)) {
-        if (fgets(buffer, 128, fp) != NULL) {
-            add_len += strlen(buffer);
-
-            if (add_len < result_len) {
-                strcat(result, buffer);
-            }
-        }
-    }
-
-    fclose(fp);
-    return true;
+  fclose(fp);
+  return true;
 }
 
-void* ESWorkerThreadRoutine(void* thread_data)
+void *
+es_worker_thread_routine(void *thread_data)
 {
-    printf("ESWorkerThreadRoutine IN\n");
+  printf("es_worker_thread_routine in\n");
 
-    SoftAPData* wifiData = (SoftAPData*)thread_data;
-    char* ssid = wifiData->ssid;
-    char* pwd = wifiData->password;
+  soft_ap_data_t *wifi_data = (soft_ap_data_t *)thread_data;
+  char *ssid = wifi_data->ssid;
+  char *pwd = wifi_data->password;
 
-    /** Sleep to allow response sending from post_callback thread before turning Off Soft AP. */
-    sleep(1);
-    printf("ESWorkerThreadRoutine Woke up from sleep\n");
+  /** Sleep to allow response sending from post_callback thread before turning
+   * Off Soft AP. */
+  sleep(1);
+  printf("es_worker_thread_routine Woke up from sleep\n");
 
-    printf("ssid: %s\n", ssid);
-    printf("password: %s\n", pwd);
+  printf("ssid: %s\n", ssid);
+  printf("password: %s\n", pwd);
 
 #ifdef WITH_SOFTAP
-    printf("Stopping Soft AP\n");
+  printf("Stopping Soft AP\n");
 
-    char result[256];
+  char result[256];
 
-    /** Stop Soft AP */
-    executeCommand("sudo service hostapd stop", result, 256);
-    printf("outputString 1: %s\n", result);
+  /** Stop Soft AP */
+  execute_command("sudo service hostapd stop", result, 256);
+  printf("outputString 1: %s\n", result);
 
-    /** Turn On Wi-Fi */
-    executeCommand("sudo nmcli nm wifi on", result, 256);
+  /** Turn On Wi-Fi */
+  execute_command("sudo nmcli nm wifi on", result, 256);
 
-    /**
-     * Note: On some linux distributions, nmcli nm may not work. In that case
-     * need to enable below command:
-     */
-    // executeCommand("sudo nmcli n wifi on", result, 256);
+  /**
+   * Note: On some linux distributions, nmcli nm may not work. In that case
+   * need to enable below command:
+   */
+  // execute_command("sudo nmcli n wifi on", result, 256);
 
-    printf("outputString 2: %s\n", result);
+  printf("outputString 2: %s\n", result);
 
-    /** On some systems it may take time for Wi-Fi to turn ON. */
-    sleep(1);
+  /** On some systems it may take time for Wi-Fi to turn ON. */
+  sleep(1);
 
-    /** Connect to Target Wi-Fi AP */
-    char nmcli_command[256];
-    sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
+  /** Connect to Target Wi-Fi AP */
+  char nmcli_command[256];
+  sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
 
-    printf("executing commnad: %s\n", nmcli_command);
+  printf("executing commnad: %s\n", nmcli_command);
 
-    executeCommand(nmcli_command, result, 256);
-    printf("outputString 3: %s\n", result);
-    if (strlen(result) == 0)
-    {
-        es_set_error_code(ES_ERRCODE_NO_ERROR);
-    }
+  execute_command(nmcli_command, result, 256);
+  printf("outputString 3: %s\n", result);
+  if (strlen(result) == 0) {
+    es_set_error_code(ES_ERRCODE_NO_ERROR);
+  }
 
-    free(wifiData);
-    wifiData = NULL;
+  free(wifi_data);
+  wifi_data = NULL;
 #endif
 
-    printf("ESWorkerThreadRoutine OUT\n");
-    return NULL;
+  printf("es_worker_thread_routine out\n");
+  return NULL;
 }
 
-void SetUserProperties()
+void
+set_user_properties()
 {
-    g_userProperties.user_value_int = 0;
-    strncpy(g_userProperties.user_value_str, "User String", MAXLEN_STRING);
-    printf("[ES App] SetUserProperties done\n");
+  g_user_properties.user_value_int = 0;
+  strncpy(g_user_properties.user_value_str, "User String", MAXLEN_STRING);
+  printf("[ES App] set_user_properties done\n");
 }
 
-void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
+void
+read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata)
 {
-    (void)resourceType;
-    (void)payload;
-    (void)userdata;
+  (void)resourceType;
+  (void)payload;
+  (void)userdata;
 
-    printf("[ES App] ReadUserdataCb IN\n");
+  printf("[ES App] read_user_data_cb in\n");
 
-    int user_prop_value = 0;
+  int user_prop_value = 0;
 
-    oc_rep_t *rep = payload;
-    while(rep != NULL) {
-        OC_DBG("key %s", oc_string(rep->name));
-        switch (rep->type) {
-            case OC_REP_INT:
-            {
-                if(strcmp(oc_string(rep->name), STR_USERPROPERTY_KEY_INT) == 0) {
-                    user_prop_value = rep->value.integer;
-                    OC_DBG("user_prop_value %u", user_prop_value);
+  oc_rep_t *rep = payload;
+  while (rep != NULL) {
+    OC_DBG("key %s", oc_string(rep->name));
+    switch (rep->type) {
+    case OC_REP_INT: {
+      if (strcmp(oc_string(rep->name), STR_USERPROPERTY_KEY_INT) == 0) {
+        user_prop_value = rep->value.integer;
+        OC_DBG("user_prop_value %u", user_prop_value);
 
-                     if(*userdata != NULL) {
-                        *userdata = (void*)malloc(sizeof(UserProperties));
-                        ((UserProperties*)(*userdata))->user_value_int = user_prop_value;
-                    }
-
-                    g_userProperties.user_value_int = user_prop_value;
-                }
-            }
-
-            default:
-                break;
+        if (*userdata != NULL) {
+          *userdata = (void *)malloc(sizeof(user_properties_t));
+          ((user_properties_t *)(*userdata))->user_value_int = user_prop_value;
         }
-        rep = rep->next;
+
+        g_user_properties.user_value_int = user_prop_value;
+      }
     }
-    printf("[ES App] ReadUserdataCb OUT\n");
+
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  printf("[ES App] read_user_data_cb out\n");
 }
 
-void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
+void
+write_user_data_cb(oc_rep_t *payload, char *resourceType)
 {
-    (void)resourceType;
-    (void)payload;
+  (void)resourceType;
+  (void)payload;
 
-    printf("[ES App] WriteUserdataCb IN\n");
+  printf("[ES App] write_user_data_cb in\n");
 
-    set_custom_property_int(root, USERPROPERTY_KEY_INT, g_userProperties.user_value_int);
-    set_custom_property_str(root, USERPROPERTY_KEY_STR, g_userProperties.user_value_str);
+  set_custom_property_int(root, USERPROPERTY_KEY_INT,
+                          g_user_properties.user_value_int);
+  set_custom_property_str(root, USERPROPERTY_KEY_STR,
+                          g_user_properties.user_value_str);
 
-    printf("[ES App] WriteUserdataCb OUT\n");
+  printf("[ES App] write_user_data_cb out\n");
 }
 
 static int
@@ -216,8 +222,8 @@ app_init(void)
 {
   int err = oc_init_platform("Samsung", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung", "ocf.1.0.0",
-                        "ocf.res.1.0.0", NULL, NULL);
+  err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung",
+                       "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
   return err;
 }
 
@@ -336,205 +342,158 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-void WiFiProvCbInApp(es_wifi_conf_data* eventData)
+void
+wifi_prov_cb_in_app(es_wifi_conf_data *event_data)
 {
-    printf("[ES App] WiFiProvCbInApp IN\n");
+  printf("[ES App] wifi_prov_cb_in_app in\n");
 
-    if(eventData == NULL)
-    {
-        printf("ESWiFiProvData is NULL\n");
-        return ;
-    }
+  if (event_data == NULL) {
+    printf("[ES App] es_wifi_conf_data is NULL\n");
+    return;
+  }
 
-    printf("SSID : %s\n", eventData->ssid);
-    printf("Password : %s\n", eventData->pwd);
-    printf("AuthType : %d\n", eventData->authtype);
-    printf("EncType : %d\n", eventData->enctype);
+  printf("SSID : %s\n", event_data->ssid);
+  printf("Password : %s\n", event_data->pwd);
+  printf("AuthType : %d\n", event_data->authtype);
+  printf("EncType : %d\n", event_data->enctype);
 
 #ifdef WITH_SOFTAP
-    pthread_t thread1;
+  pthread_t thread1;
 
-    SoftAPData* softAPData = (SoftAPData*) malloc(sizeof(SoftAPData));
-    strcpy(softAPData->ssid, eventData->ssid);
-    strcpy(softAPData->password, eventData->pwd);
-    pthread_create( &thread1, NULL, ESWorkerThreadRoutine, (void*) softAPData);
+  soft_ap_data_t *soft_ap_data =
+    (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
+  strcpy(soft_ap_data->ssid, event_data->ssid);
+  strcpy(soft_ap_data->password, event_data->pwd);
+  pthread_create(&thread1, NULL, es_worker_thread_routine,
+                 (void *)soft_ap_data);
 #endif
 
-    if(eventData->userdata != NULL)
-    {
-        //SCWiFiConfProperties *data = eventData->userdata;
-        //printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
-    }
-
-    printf("[ES App] WiFiProvCbInApp OUT\n");
+  printf("[ES App] wifi_prov_cb_in_app out\n");
 }
 
-void DevConfProvCbInApp(es_dev_conf_data* eventData)
+void
+dev_conf_prov_cb_in_app(es_dev_conf_data *event_data)
 {
-    printf("[ES App] DevConfProvCbInApp IN\n");
+  printf("[ES App] dev_conf_prov_cb_in_app in\n");
 
-    if(eventData == NULL)
-    {
-        printf("[ES App] ESDevConfProvData is NULL\n");
-        return ;
-    }
+  if (event_data == NULL) {
+    printf("[ES App] es_dev_conf_data is NULL\n");
+    return;
+  }
 
-    if(eventData->userdata != NULL)
-    {
-
-#if 0
-        SCDevConfProperties *data = eventData->userdata;
-        for(int i = 0 ; i < data->numLocation ; ++i)
-        {
-            printf("[SC] Location : %s\n", data->location[i]);
-        }
-        printf("[SC] Register Mobile Device : %s\n", data->regMobileDev);
-        printf("[SC] Country : %s\n", data->country);
-        printf("[SC] Language : %s\n", data->language);
-        printf("[SC] GPS Location : %s\n", data->gpsLocation);
-        printf("[SC] UTC Date time : %s\n", data->utcDateTime);
-        printf("[SC] Regional time : %s\n", data->regionalDateTime);
-#endif
-    }
-
-    printf("[ES App] DevConfProvCbInApp OUT\n");
+  printf("[ES App] dev_conf_prov_cb_in_app out\n");
 }
 
-void CloudDataProvCbInApp(es_coap_cloud_conf_data* eventData)
+void
+cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data)
 {
-    printf("[ES App] CloudDataProvCbInApp IN\n");
+  printf("[ES App] cloud_conf_prov_cb_in_app in\n");
 
-    if(eventData == NULL)
-    {
-        printf("ESCloudProvData is NULL\n");
-        return ;
-    }
+  if (event_data == NULL) {
+    printf("es_coap_cloud_conf_data is NULL\n");
+    return;
+  }
 
-    if (eventData->auth_code)
-    {
-        printf("AuthCode : %s\n", eventData->auth_code);
-    }
+  if (event_data->auth_code) {
+    printf("AuthCode : %s\n", event_data->auth_code);
+  }
 
-    if (eventData->access_token)
-    {
-        printf("Access Token : %s\n", eventData->access_token);
-    }
+  if (event_data->access_token) {
+    printf("Access Token : %s\n", event_data->access_token);
+  }
 
-    if (eventData->auth_provider)
-    {
-        printf("AuthProvider : %s\n", eventData->auth_provider);
-    }
+  if (event_data->auth_provider) {
+    printf("AuthProvider : %s\n", event_data->auth_provider);
+  }
 
-    if (eventData->ci_server)
-    {
-        printf("CI Server : %s\n", eventData->ci_server);
-    }
+  if (event_data->ci_server) {
+    printf("CI Server : %s\n", event_data->ci_server);
+  }
 
-    if(eventData->userdata != NULL)
-    {
-        //SCCoapCloudServerConfProperties *data = eventData->userdata;
-        //printf("[SC] ClientID : %s\n", data->clientID);
-    }
-
-    printf("[ES App] CloudDataProvCbInApp OUT\n");
+  printf("[ES App] cloud_conf_prov_cb_in_app out\n");
 }
 
-es_provisioning_callbacks_s gCallbacks = {
-    .wifi_prov_cb = &WiFiProvCbInApp,
-    .dev_conf_prov_cb = &DevConfProvCbInApp,
-    .cloud_data_prov_cb = &CloudDataProvCbInApp
-};
+es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = &wifi_prov_cb_in_app,
+                                           .dev_conf_prov_cb =
+                                             &dev_conf_prov_cb_in_app,
+                                           .cloud_data_prov_cb =
+                                             &cloud_conf_prov_cb_in_app };
 
-void StartEasySetup()
+void
+start_easy_setup()
 {
-    printf("[ES App] StartEasySetup IN\n");
+  printf("[ES App] start_easy_setup in\n");
 
-    es_connect_type resourcemMask = ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
-    if(es_init_enrollee(gIsSecured, resourcemMask, gCallbacks) != ES_OK)
-    {
-        printf("[ES App] Easy Setup Enrollee init error!!\n");
-        return;
-    }
+  es_connect_type resourcemMask =
+    ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
+  if (es_init_enrollee(g_is_secured, resourcemMask, g_callbacks) != ES_OK) {
+    printf("[ES App] es_init_enrollee error!\n");
+    return;
+  }
 
-    printf("[ES App] ESInitEnrollee Success\n");
+  printf("[ES App] es_init_enrollee Success\n");
 
-    // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
-    printf("[ES App] StartEasySetup OUT\n");
+  // Set callbacks for Vendor Specific Properties
+  es_set_callback_for_userdata(&read_user_data_cb, &write_user_data_cb);
+  printf("[ES App] start_easy_setup out\n");
 }
 
-void SetDeviceInfo()
+void
+set_device_info()
 {
-    printf("[ES App] SetDeviceInfo IN\n");
+  printf("[ES App] set_device_info in\n");
 
-    es_device_property deviceProperty = {
-        {{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF}, WIFI_5G},
-            {"Test Device"}
-    };
+  es_device_property device_property = {
+    { { WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF }, WIFI_5G },
+    { "Test Device" }
+  };
 
-    if(es_set_device_property(&deviceProperty) == ES_ERROR)
-        printf("[ES App] ESSetDeviceProperty Error\n");
+  if (es_set_device_property(&device_property) == ES_ERROR)
+    printf("[ES App] es_set_device_property error!\n");
 
-    // Set user properties if needed
-#if 0
-
-    memset(&g_SCProperties, 0, sizeof(SCProperties));
-    strncpy(g_SCProperties.deviceType, "deviceType", MAXLEN_STRING);
-    strncpy(g_SCProperties.deviceSubType, "deviceSubType", MAXLEN_STRING);
-    g_SCProperties.netConnectionState = NET_STATE_INIT;
-    g_SCProperties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-    strncpy(g_SCProperties.regSetDev, "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\",\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\",\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\",\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}", MAXLEN_STRING);
-    strncpy(g_SCProperties.nwProvInfo, "{\"IMEI\":\"123456789012345 / 01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\",\"SN\":\"XY0123456XYZ\"}", MAXLEN_STRING);
-    strncpy(g_SCProperties.pnpPin, "pinNumber", MAXLEN_STRING);
-    strncpy(g_SCProperties.modelNumber, "Model Number", MAXLEN_STRING);
-    strncpy(g_SCProperties.esProtocolVersion, "2.0", MAXLEN_STRING);
-
-    if(SetSCProperties(&g_SCProperties) == ES_ERROR)
-        printf("SetSCProperties Error\n");
-#endif
-    printf("[ES App] SetDeviceInfo OUT\n");
+  printf("[ES App] set_device_info out\n");
 }
 
-void StopEasySetup()
+void
+stop_easy_setup()
 {
-    printf("[ES App] StopEasySetup IN\n");
+  printf("[ES App] stop_easy_setup in\n");
 
-    if (es_terminate_enrollee() == ES_ERROR)
-    {
-        printf("ESTerminateEnrollee Failed!!\n");
-        return;
-    }
+  if (es_terminate_enrollee() == ES_ERROR) {
+    printf("es_terminate_enrollee failed!\n");
+    return;
+  }
 
-    printf("[ES App] StopEasySetup OUT\n");
+  printf("[ES App] stop_easy_setup out\n");
 }
 
 static void
 register_resources(void)
 {
-    printf("[ES App] register_resources IN\n");
+  printf("[ES App] register_resources in\n");
 
-    oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
-    oc_resource_bind_resource_type(temp, "oic.r.temperature");
-    oc_resource_bind_resource_interface(temp, OC_IF_A);
-    oc_resource_bind_resource_interface(temp, OC_IF_S);
-    oc_resource_set_default_interface(temp, OC_IF_A);
-    oc_resource_set_discoverable(temp, true);
-    oc_resource_set_periodic_observable(temp, 1);
-    oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
-    oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
-    oc_add_resource(temp);
+  oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
+  oc_resource_bind_resource_type(temp, "oic.r.temperature");
+  oc_resource_bind_resource_interface(temp, OC_IF_A);
+  oc_resource_bind_resource_interface(temp, OC_IF_S);
+  oc_resource_set_default_interface(temp, OC_IF_A);
+  oc_resource_set_discoverable(temp, true);
+  oc_resource_set_periodic_observable(temp, 1);
+  oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
+  oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
+  oc_add_resource(temp);
 
 #ifdef OC_SECURITY
-    gIsSecured = true;
+  g_is_secured = true;
 #else
-    gIsSecured = false;
+  g_is_secured = false;
 #endif
 
-    StartEasySetup();
-    SetDeviceInfo();
-    SetUserProperties();
+  start_easy_setup();
+  set_device_info();
+  set_user_properties();
 
-    printf("[ES App] register_resources OUT\n");
+  printf("[ES App] register_resources out\n");
 }
 
 static void
@@ -577,7 +536,7 @@ main(void)
   oc_set_max_app_data_size(8192);
 
 #ifdef OC_SECURITY
-  oc_storage_config("./smart_home_server_linux_creds");
+  oc_storage_config("./easy_setup_linux_creds");
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
@@ -599,7 +558,7 @@ main(void)
 
   oc_main_shutdown();
 
-  StopEasySetup();
+  stop_easy_setup();
 
   printf("[ES App] Exit..\n");
   return 0;
