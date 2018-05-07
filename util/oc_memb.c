@@ -60,7 +60,7 @@ _oc_memb_alloc(
   struct oc_memb *m)
 {
   if (!m) {
-    OC_ERR("oc_mmem is NULL");
+    OC_ERR("oc_memb is NULL");
     return NULL;
   }
 
@@ -104,24 +104,19 @@ _oc_memb_free(
 #endif
   struct oc_memb *m, void *ptr)
 {
-
   if (!m) {
-    OC_ERR("oc_mmem is NULL");
+    OC_ERR("oc_memb is NULL");
     return -1;
   }
 
-  char ret = -1;
-
 #ifdef OC_MEMORY_TRACE
-  unsigned int size = m->size;
-  void *address = ptr;
+  oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
 #endif
 
 #ifdef OC_DYNAMIC_ALLOCATION
   (void)m;
   free(ptr);
-  ret = 0;
-  goto exit;
+  return 0;
 
 #else  /* OC_DYNAMIC_ALLOCATION */
   int i;
@@ -139,20 +134,12 @@ _oc_memb_free(
         /* Make sure that we don't deallocate free memory. */
         --(m->count[i]);
       }
-      ret = m->count[i];
-      goto exit;
+      return m->count[i];
     }
     ptr2 += m->size;
   }
   return -1;
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
-exit:
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, size, MEM_TRACE_FREE, address);
-#endif
-
-  return ret;
 }
 /*---------------------------------------------------------------------------*/
 #ifndef OC_DYNAMIC_ALLOCATION

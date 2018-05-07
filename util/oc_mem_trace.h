@@ -16,8 +16,6 @@
  *
  ****************************************************************************/
 
-// TODO ::  consider when it isn't OC_DYNAMIC_ALLOCATION
-// currently it is only avaliable under OC_DYNAMIC_ALLOCATION
 #ifndef OC_MEM_TRACE_H
 #define OC_MEM_TRACE_H
 
@@ -28,4 +26,4 @@ void oc_mem_trace_init(void);
 void oc_mem_trace_add_pace(const char *func, int size, int type, void *address);
 void oc_mem_trace_shutdown(void);
 
-#endif
+#endif /* OC_MEM_TRACE_H */

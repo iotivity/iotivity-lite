@@ -16,8 +16,6 @@
  *
  ****************************************************************************/
 
-// TODO ::  consider when it isn't OC_DYNAMIC_ALLOCATION
-// currently it is only avaliable under OC_DYNAMIC_ALLOCATION
 #ifdef OC_MEMORY_TRACE
 
 #include <stdio.h>
@@ -56,8 +54,7 @@ static mem_info_s mInfo = {
 #define LOGGER_ITEM_LEN 1000
 mem_logger_s logger_item_list[LOGGER_ITEM_LEN];
 int list_index = 0;
-
-#endif
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 static void oc_mem_trace_free(void);
 
