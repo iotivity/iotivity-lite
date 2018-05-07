@@ -71,11 +71,9 @@ int ifchange_sock;
 bool ifchange_initialized;
 #endif
 
-#ifdef OC_DYNAMIC_ALLOCATION
+
 OC_LIST(ip_contexts);
-#else /* OC_DYNAMIC_ALLOCATION */
-static ip_context_t devices[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
 void
 oc_network_event_handler_mutex_init(void)
@@ -105,7 +103,6 @@ void oc_network_event_handler_mutex_destroy(void) {
 }
 
 static ip_context_t *get_ip_context_for_device(int device) {
-#ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
@@ -113,9 +110,6 @@ static ip_context_t *get_ip_context_for_device(int device) {
   if (!dev) {
     return NULL;
   }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   return dev;
 }
 
@@ -339,6 +333,7 @@ static void *network_event_thread(void *data) {
 #endif
 
 #ifdef OC_IPV6
+  FD_SET(dev->shutdown_pipe[0], &dev->rfds);
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -364,6 +359,18 @@ static void *network_event_thread(void *data) {
     len = sizeof(client);
     setfds = dev->rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+
+    if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
+      char buf;
+      // write to pipe shall not block - so read the byte we wrote
+      if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
+          // intentionally left blank
+      }
+    }
+
+    if (dev->terminate) {
+      break;
+    }
 
     for (i = 0; i < n; i++) {
 #ifdef OC_NETLINK
@@ -1027,17 +1034,18 @@ connectivity_ipv4_init(ip_context_t *dev)
 
 int oc_connectivity_init(int device) {
   OC_DBG("Initializing connectivity for device %d", device);
-#ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
+
+  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
     oc_abort("Insufficient memory");
   }
   oc_list_add(ip_contexts, dev);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   dev->device = device;
 
+  if (pipe(dev->shutdown_pipe) < 0) {
+    OC_ERR("shutdown pipe: %d", errno);
+    return -1;
+  }
 #ifdef OC_IPV6
   memset(&dev->mcast, 0, sizeof(struct sockaddr_storage));
   memset(&dev->server, 0, sizeof(struct sockaddr_storage));
@@ -1205,6 +1213,9 @@ oc_connectivity_shutdown(int device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;
+  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+      OC_WRN("cannot wakeup network thread");
+  }
 
 #ifdef OC_IPV6
   close(dev->server_sock);
@@ -1232,10 +1243,24 @@ oc_connectivity_shutdown(int device)
   pthread_cancel(dev->event_thread);
   pthread_join(dev->event_thread, NULL);
 
-#ifdef OC_DYNAMIC_ALLOCATION
+  close(dev->shutdown_pipe[1]);
+  close(dev->shutdown_pipe[0]);
+
   oc_list_remove(ip_contexts, dev);
-  free(dev);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_memb_free(&ip_context_s, dev);
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);
 }
+
+#ifdef OC_TCP
+void
+oc_connectivity_end_session(oc_endpoint_t *endpoint)
+{
+  if (endpoint->flags & TCP) {
+    ip_context_t *dev = get_ip_context_for_device(endpoint->device);
+    if (dev) {
+      oc_tcp_end_session(dev, endpoint);
+    }
+  }
+}
+#endif /* OC_TCP */
