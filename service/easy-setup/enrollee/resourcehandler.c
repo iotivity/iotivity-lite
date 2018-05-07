@@ -624,20 +624,14 @@ post_easysetup(oc_request_t *request, oc_interface_mask_t interface,
 
   OC_DBG("interface = %d", interface);
 
-  /// TODO: Check below comment:
-  // RI stack is sending default interface i.e. oic.if.ll for collection in
-  // request.
-  // For time being ignoring the error response sending due to wrong interface.
-  // It should be fixed in RI stack by sending interface received in request.
-
-  // if ((interface == OC_IF_B) || (interface == OC_IF_BASELINE)) {
-  update_easysetup_resource(request, interface);
-  OC_DBG("success");
-  oc_send_response(request, OC_STATUS_CHANGED);
-  //} else {
-  // OC_ERR("Error");
-  // oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  //}
+  if ((interface == OC_IF_B) || (interface == OC_IF_BASELINE)) {
+    update_easysetup_resource(request, interface);
+    OC_DBG("success");
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    OC_ERR("Error");
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
   OC_DBG("out");
 }
 
