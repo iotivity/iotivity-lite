@@ -43,6 +43,7 @@ typedef struct
 
 void oc_sec_cred_default(int device);
 void oc_sec_cred_init(void);
+void oc_sec_cred_free(void);
 void oc_sec_encode_cred(bool persist, int device);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                         int device);
