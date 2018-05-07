@@ -57,6 +57,10 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
 void
 oc_network_event(oc_message_t *message)
 {
+  if (!oc_process_is_running(&(oc_network_events))) {
+    oc_message_unref(message);
+    return;
+  }
   oc_network_event_handler_mutex_lock();
   oc_list_add(network_events, message);
   oc_network_event_handler_mutex_unlock();
@@ -68,6 +72,9 @@ oc_network_event(oc_message_t *message)
 void
 oc_network_interface_event(oc_interface_event_t event)
 {
+  if (!oc_process_is_running(&(oc_network_events))) {
+    return;
+  }
   oc_process_event_t ev;
   if (event == NETWORK_INTERFACE_DOWN) {
     ev = oc_events[INTERFACE_DOWN];

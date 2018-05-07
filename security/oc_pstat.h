@@ -40,6 +40,7 @@ typedef struct
 } oc_sec_pstat_t;
 
 void oc_sec_pstat_init(void);
+void oc_sec_pstat_free(void);
 bool oc_sec_is_operational(int device);
 bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device);
 void oc_sec_encode_pstat(int device);

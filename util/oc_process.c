@@ -191,6 +191,14 @@ oc_process_exit(struct oc_process *p)
 }
 /*---------------------------------------------------------------------------*/
 void
+oc_process_shutdown(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(events);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
 oc_process_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
