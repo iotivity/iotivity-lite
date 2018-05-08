@@ -150,3 +150,60 @@ oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 
   return oc_do_post();
 }
+
+bool
+oc_find_ping_resource(oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                      void *user_data)
+{
+  if (!endpoint || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  return oc_do_get(OC_RSRVD_PING_URI, endpoint, NULL, handler, LOW_QOS,
+                   user_data);
+}
+
+bool
+oc_send_ping_request(oc_endpoint_t *endpoint, int interval,
+                     oc_response_handler_t handler, void *user_data)
+{
+  if (!endpoint || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  if (oc_init_post(OC_RSRVD_PING_URI, endpoint, NULL, handler, LOW_QOS,
+                   user_data)) {
+    oc_rep_start_root_object();
+    oc_rep_set_int(root, in, interval);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for send ping");
+    return false;
+  }
+
+  return oc_do_post();
+}
+
+bool
+oc_send_ping_update(oc_endpoint_t *endpoint, const int *interval, int length,
+                    oc_response_handler_t handler, void *user_data)
+{
+  if (!endpoint || !interval || !length || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  if (oc_init_post(OC_RSRVD_PING_URI, endpoint, NULL, handler, LOW_QOS,
+                   user_data)) {
+    oc_rep_start_root_object();
+    oc_rep_set_int_array(root, inarray, interval, length);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for update ping");
+    return false;
+  }
+
+  return oc_do_post();
+}

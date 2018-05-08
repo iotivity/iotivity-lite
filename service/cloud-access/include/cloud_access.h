@@ -35,6 +35,9 @@
 /** Account token refresh URI.*/
 #define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/account/tokenrefresh"
 
+/** Ping URI.*/
+#define OC_RSRVD_PING_URI "/oic/ping"
+
 /** To represent grant type with refresh token. */
 #define OC_RSRVD_GRANT_TYPE_REFRESH_TOKEN "refresh_token"
 
@@ -111,5 +114,39 @@ bool oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
 bool oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
                              const char *refresh_token, int device_index,
                              oc_response_handler_t handler, void *user_data);
+
+/**
+  @brief Function for discovers on a ping resource.
+  @param endpoint The endpoint of the Cloud.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool oc_find_ping_resource(oc_endpoint_t *endpoint,
+                           oc_response_handler_t handler, void *user_data);
+
+/**
+  @brief Function for discovers on a ping resource.
+  @param endpoint The endpoint of the Cloud.
+  @param interval The interval value for keep-alive.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool oc_send_ping_request(oc_endpoint_t *endpoint, int interval,
+                          oc_response_handler_t handler, void *user_data);
+
+/**
+  @brief Function for discovers on a ping resource.
+  @param endpoint The endpoint of the Cloud.
+  @param interval Integer array for update the interval.
+  @param length The length of the interval array.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool oc_send_ping_update(oc_endpoint_t *endpoint, const int *interval,
+                         int length, oc_response_handler_t handler,
+                         void *user_data);
 
 #endif /* CLOUD_ACCESS_H */
