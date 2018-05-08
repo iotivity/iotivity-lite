@@ -351,3 +351,115 @@ oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
   }
   return err;
 }
+
+static bool
+_is_match_type(oc_rep_value_type_t rep_type, oc_rep_value_type_t type)
+{
+  if (rep_type == type)
+    return true;
+
+  if (OC_REP_STRING == type && rep_type == OC_REP_BYTE_STRING)
+    return true;
+
+  if (OC_REP_ARRAY == type &&
+      (OC_REP_OBJECT < rep_type && OC_REP_OBJECT_ARRAY > rep_type))
+    return true;
+
+  if (OC_REP_OBJECT == type && rep_type == OC_REP_OBJECT_ARRAY)
+    return true;
+
+  OC_WRN("Type is %d", rep_type);
+  return false;
+}
+
+static bool
+oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
+                 void *value)
+{
+  if (!rep || !key || !value) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  oc_rep_t *rep_value = rep;
+  while (rep_value != NULL) {
+    if (oc_string_len(rep_value->name) == strlen(key) &&
+        strncmp(key, oc_string(rep_value->name),
+                oc_string_len(rep_value->name)) == 0 &&
+        _is_match_type(rep_value->type, type)) {
+      OC_DBG("Found the value with %s", key);
+      switch (rep_value->type) {
+      case OC_REP_INT:
+        *(int *)value = rep_value->value.integer;
+        break;
+      case OC_REP_BOOL:
+        *(bool *)value = rep_value->value.boolean;
+        break;
+      case OC_REP_DOUBLE:
+        *(double *)value = rep_value->value.double_p;
+        break;
+      case OC_REP_BYTE_STRING:
+      case OC_REP_STRING:
+        *(oc_string_t *)value = rep_value->value.string;
+        break;
+      case OC_REP_ARRAY:
+      case OC_REP_INT_ARRAY:
+      case OC_REP_DOUBLE_ARRAY:
+      case OC_REP_BOOL_ARRAY:
+      case OC_REP_BYTE_STRING_ARRAY:
+      case OC_REP_STRING_ARRAY:
+        *(oc_array_t *)value = rep_value->value.array;
+        break;
+      case OC_REP_OBJECT:
+        value = rep_value->value.object;
+        break;
+      case OC_REP_OBJECT_ARRAY:
+        value = rep_value->value.object_array;
+        break;
+      default:
+        return false;
+      }
+
+      return true;
+    }
+    rep_value = rep_value->next;
+  }
+
+  return false;
+}
+
+bool
+oc_rep_get_int(oc_rep_t *rep, const char *key, int *value)
+{
+  return oc_rep_get_value(rep, OC_REP_INT, key, value);
+}
+
+bool
+oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
+{
+  return oc_rep_get_value(rep, OC_REP_BOOL, key, value);
+}
+
+bool
+oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
+{
+  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, value);
+}
+
+bool
+oc_rep_get_string(oc_rep_t *rep, const char *key, oc_string_t *value)
+{
+  return oc_rep_get_value(rep, OC_REP_STRING, key, value);
+}
+
+bool
+oc_rep_get_array(oc_rep_t *rep, const char *key, oc_array_t *value)
+{
+  return oc_rep_get_value(rep, OC_REP_ARRAY, key, value);
+}
+
+bool
+oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t *value)
+{
+  return oc_rep_get_value(rep, OC_REP_OBJECT, key, value);
+}

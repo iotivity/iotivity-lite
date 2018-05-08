@@ -238,4 +238,11 @@ int oc_parse_rep(const uint8_t *payload, int payload_size,
 
 void oc_free_rep(oc_rep_t *rep);
 
+bool oc_rep_get_int(oc_rep_t *rep, const char *key, int *value);
+bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
+bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
+bool oc_rep_get_string(oc_rep_t *rep, const char *key, oc_string_t *value);
+bool oc_rep_get_array(oc_rep_t *rep, const char *key, oc_array_t *value);
+bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t *value);
+
 #endif /* OC_REP_H */
