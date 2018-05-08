@@ -195,4 +195,6 @@ int oc_ri_get_query_value(const char *query, int query_len, const char *key,
 
 oc_interface_mask_t oc_ri_get_interface_mask(char *iface, int if_len);
 
+void remove_periodic_observe_callback(oc_resource_t *resource);
+
 #endif /* OC_RI_H */

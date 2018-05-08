@@ -67,7 +67,11 @@ OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 #include "oc_client_state.h"
 OC_LIST(client_cbs);
 OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
+
+static void oc_ri_remove_all_client_cbs(void);
 #endif /* OC_CLIENT */
+
+static void oc_ri_remove_all_timed_event_callbacks(void);
 
 OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
@@ -319,9 +323,14 @@ oc_ri_shutdown(void)
   stop_processes();
 
 #ifdef OC_SERVER
+  coap_remove_all_observers();
   oc_ri_delete_all_resource();
 #endif
 
+#ifdef OC_CLIENT
+  oc_ri_remove_all_client_cbs();
+#endif
+  oc_ri_remove_all_timed_event_callbacks();
   oc_core_shutdown();
 
 #ifdef OC_MEMORY_TRACE
@@ -396,6 +405,23 @@ oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
       break;
     }
     event_cb = event_cb->next;
+  }
+}
+
+static void
+oc_ri_remove_all_timed_event_callbacks(void)
+{
+  oc_event_callback_t *event_cb =
+                        (oc_event_callback_t *)oc_list_head(timed_callbacks),
+                      *next = NULL;
+  while (event_cb) {
+    next = event_cb->next;
+    OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+    oc_etimer_stop(&event_cb->timer);
+    OC_PROCESS_CONTEXT_END(&timed_callback_events);
+    oc_list_remove(timed_callbacks, event_cb);
+    oc_memb_free(&event_callbacks_s, event_cb);
+    event_cb = next;
   }
 }
 
@@ -498,7 +524,7 @@ get_periodic_observe_callback(oc_resource_t *resource)
   return NULL;
 }
 
-static void
+void
 remove_periodic_observe_callback(oc_resource_t *resource)
 {
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
@@ -1259,6 +1285,18 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   oc_list_add(client_cbs, cb);
   return cb;
 }
+
+static void
+oc_ri_remove_all_client_cbs(void)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+  while (cb) {
+    oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+    free_client_cb(cb);
+    cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+  }
+}
+
 #endif /* OC_CLIENT */
 
 OC_PROCESS_THREAD(timed_callback_events, ev, data)

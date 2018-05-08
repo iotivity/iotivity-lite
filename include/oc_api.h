@@ -354,6 +354,8 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
 void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 
+void oc_remove_all_delayed_callbacks(void);
+
 /** API for setting handlers for interrupts */
 
 #define oc_signal_interrupt_handler(name)                                      \

@@ -40,6 +40,8 @@ static oc_sec_creds_t *devices;
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+static void oc_sec_remove_cred(oc_sec_cred_t *cred, int device);
+
 void
 oc_sec_cred_default(int device)
 {
@@ -71,6 +73,27 @@ oc_sec_cred_init(void)
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     OC_LIST_STRUCT_INIT(&devices[i], creds);
   }
+}
+
+void
+oc_sec_cred_shutdown(void)
+{
+  int i = 0, core_num_devices = 0;
+  oc_sec_cred_t *cred = NULL, *next = NULL;
+  core_num_devices = oc_core_get_num_devices();
+
+  for (i = 0; i < core_num_devices; ++i) {
+    cred = oc_list_head(devices[i].creds);
+    while (cred != NULL) {
+      next = cred->next;
+      oc_sec_remove_cred(cred, i);
+      cred = next;
+    }
+  }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(devices);
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static bool

@@ -474,4 +474,17 @@ coap_observe_handler(void *request, void *response, oc_resource_t *resource,
 }
 /*---------------------------------------------------------------------------*/
 
+void
+coap_remove_all_observers(void)
+{
+  OC_DBG("Unregistering all observers");
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
+
+  while (obs) {
+    remove_periodic_observe_callback(obs->resource);
+    coap_remove_observer(obs);
+    obs = (coap_observer_t *)oc_list_head(observers_list);
+  }
+}
+
 #endif /* OC_SERVER */

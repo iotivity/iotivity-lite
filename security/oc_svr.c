@@ -27,7 +27,7 @@
 #include "port/oc_log.h"
 
 void
-oc_sec_create_svr(void)
+oc_sec_svr_init(void)
 {
   oc_sec_doxm_init();
   oc_sec_pstat_init();
@@ -53,4 +53,12 @@ oc_sec_create_svr(void)
   }
 }
 
+void
+oc_sec_svr_shutdown(void)
+{
+  oc_sec_acl_shutdown();
+  oc_sec_cred_shutdown();
+  oc_sec_pstat_shutdown();
+  oc_sec_doxm_shutdown();
+}
 #endif /* OC_SECURITY */

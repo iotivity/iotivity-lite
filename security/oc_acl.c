@@ -45,6 +45,9 @@ static const char *wc_all = "*";
 static const char *wc_discoverable = "+";
 static const char *wc_non_discoverable = "-";
 
+static void oc_ace_free_resources(int device, oc_sec_ace_t **ace,
+                                  const char *href);
+
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
    (OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES))
@@ -65,6 +68,31 @@ oc_sec_acl_init(void)
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     OC_LIST_STRUCT_INIT(&aclist[i], subjects);
   }
+}
+
+void
+oc_sec_acl_shutdown(void)
+{
+  int i = 0, core_num_devices = 0;
+  oc_sec_ace_t *ace = NULL, *next = NULL;
+  core_num_devices = oc_core_get_num_devices();
+
+  for (i = 0; i < core_num_devices; ++i) {
+    ace = oc_list_head(aclist[i].subjects);
+    next = NULL;
+
+    while (ace != NULL) {
+      next = ace->next;
+      oc_ace_free_resources(i, &ace, NULL);
+      oc_list_remove(aclist[i].subjects, ace);
+      oc_memb_free(&ace_l, ace);
+      ace = next;
+    }
+  }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(aclist);
+#endif
 }
 
 oc_sec_acl_t *

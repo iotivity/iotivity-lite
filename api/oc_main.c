@@ -143,7 +143,7 @@ oc_main_init(const oc_handler_t *handler)
     goto err;
 
 #ifdef OC_SECURITY
-  oc_sec_create_svr();
+  oc_sec_svr_init();
 #endif
 
 #ifdef OC_SERVER
@@ -202,6 +202,9 @@ oc_main_shutdown(void)
 
   oc_network_event_handler_mutex_destroy();
 
+#ifdef OC_SECURITY
+  oc_sec_svr_shutdown();
+#endif
   oc_ri_shutdown();
 
   app_callbacks = NULL;

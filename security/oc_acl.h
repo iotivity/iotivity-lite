@@ -89,11 +89,12 @@ typedef struct
 } oc_sec_acl_t;
 
 void oc_sec_acl_init(void);
+void oc_sec_acl_shutdown(void);
 oc_sec_acl_t *oc_sec_get_acl(int device);
 void oc_sec_acl_default(int device);
 bool oc_sec_encode_acl(int device);
 bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device);
-void oc_sec_acl_init(void);
+
 void post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
