@@ -517,4 +517,11 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   OC_DBG("response code: %d", response_code);
 }
 
+void
+oc_sec_reset()
+{
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET};
+  for (int device = 0; device < oc_core_get_num_devices(); device++)
+    oc_pstat_handle_state(&ps, device);
+}
 #endif /* OC_SECURITY */
