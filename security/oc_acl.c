@@ -319,6 +319,14 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   oc_uuid_t *uuid = oc_tls_get_peer_uuid(endpoint);
 
   if (uuid) {
+
+#if defined(OC_SPEC_VER_OIC)
+    if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0) {
+        OC_DBG("**** [Workaround] oc_acl: allow all access to owner ****");
+        return true;
+    }
+#endif
+
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
