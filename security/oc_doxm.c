@@ -48,6 +48,14 @@ oc_sec_doxm_init(void)
 }
 
 void
+oc_sec_doxm_shutdown(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(doxm);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
 oc_sec_doxm_default(int device)
 {
   doxm[device].oxmsel = 0;

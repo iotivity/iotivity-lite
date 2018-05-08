@@ -45,6 +45,14 @@ oc_sec_pstat_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+void
+oc_sec_pstat_shutdown(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(pstat);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
 static bool
 nil_uuid(oc_uuid_t *uuid)
 {

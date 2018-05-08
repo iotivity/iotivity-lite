@@ -36,6 +36,7 @@ typedef struct
 } oc_sec_doxm_t;
 
 void oc_sec_doxm_init(void);
+void oc_sec_doxm_shutdown(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device);
 void oc_sec_encode_doxm(int device);
 oc_sec_doxm_t *oc_sec_get_doxm(int device);

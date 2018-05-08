@@ -95,4 +95,6 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
+
+void coap_remove_all_observers(void);
 #endif /* OBSERVE_H */
