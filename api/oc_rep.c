@@ -351,3 +351,155 @@ oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
   }
   return err;
 }
+
+static bool
+oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
+                 void **value, int *size)
+{
+  if (!rep || !key || !value) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  oc_rep_t *rep_value = rep;
+  while (rep_value != NULL) {
+    if ((oc_string_len(rep_value->name) == strlen(key)) &&
+        (strncmp(key, oc_string(rep_value->name),
+                oc_string_len(rep_value->name)) == 0) &&
+        (rep_value->type == type)) {
+      OC_DBG("Found the value with %s", key);
+      switch (rep_value->type) {
+      case OC_REP_INT:
+        **(int **)value = rep_value->value.integer;
+        break;
+      case OC_REP_BOOL:
+        **(bool **)value = rep_value->value.boolean;
+        break;
+      case OC_REP_DOUBLE:
+        **(double **)value = rep_value->value.double_p;
+        break;
+      case OC_REP_BYTE_STRING:
+      case OC_REP_STRING:
+        *value = oc_string(rep_value->value.string);
+        *size = oc_string_len(rep_value->value.string);
+        break;
+      case OC_REP_INT_ARRAY:
+        *value = oc_int_array(rep_value->value.array);
+        *size = (int)oc_int_array_size(rep_value->value.array);
+        break;
+      case OC_REP_BOOL_ARRAY:
+        *value = oc_bool_array(rep_value->value.array);
+        *size = (int)oc_bool_array_size(rep_value->value.array);
+        break;
+      case OC_REP_DOUBLE_ARRAY:
+        *value = oc_double_array(rep_value->value.array);
+        *size = (int)oc_double_array_size(rep_value->value.array);
+        break;
+      case OC_REP_BYTE_STRING_ARRAY:
+      case OC_REP_STRING_ARRAY:
+        **(oc_string_array_t **)value = rep_value->value.array;
+        *size = (int)oc_string_array_get_allocated_size(rep_value->value.array);
+        break;
+      case OC_REP_OBJECT:
+        *value = rep_value->value.object;
+        break;
+      case OC_REP_OBJECT_ARRAY:
+        *value = rep_value->value.object_array;
+        break;
+      default:
+        return false;
+      }
+
+      return true;
+    }
+    rep_value = rep_value->next;
+  }
+
+  return false;
+}
+
+bool
+oc_rep_get_int(oc_rep_t *rep, const char *key, int *value)
+{
+  return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value, NULL);
+}
+
+bool
+oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
+{
+  return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value, NULL);
+}
+
+bool
+oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
+{
+  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value, NULL);
+}
+
+bool
+oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_BYTE_STRING, key, (void **)value, size);
+}
+
+bool
+oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_STRING, key, (void **)value, size);
+}
+
+bool
+oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_INT_ARRAY, key, (void **)value, size);
+}
+
+bool
+oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_BOOL_ARRAY, key, (void **)value, size);
+}
+
+bool
+oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_DOUBLE_ARRAY, key, (void **)value, size);
+}
+
+bool
+oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_BYTE_STRING_ARRAY, key, (void **)&value, size);
+}
+
+bool
+oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size)
+{
+  if (!size)
+    return false;
+  return oc_rep_get_value(rep, OC_REP_STRING_ARRAY, key, (void **)&value, size);
+}
+
+bool
+oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value)
+{
+  return oc_rep_get_value(rep, OC_REP_OBJECT, key, (void **)value, NULL);
+}
+
+bool
+oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value)
+{
+  return oc_rep_get_value(rep, OC_REP_OBJECT_ARRAY, key, (void **)value, NULL);
+}
