@@ -5,6 +5,9 @@ OS = linux
 ROOT_DIR = ../..
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
+VERSION_MAJOR = 1
+VERSION_MINOR = 0
+VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
@@ -14,6 +17,7 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+EXTRA_CFLAGS =
 
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -40,9 +44,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c
-# Extra sources from patches:
-DTLS += ../../deps/mbedtls/library/rsa_internal.c
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -101,29 +103,36 @@ else
 endif
 
 ifeq ($(DYNAMIC),1)
-	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(SECURE),1)
-	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
-	SRC_COMMON += ${DTLS}
-	SRC += oc_obt.c
+	SRC += ../../security/oc_obt.c
 	SAMPLES += ${OBT}
 else
-	SRC_COMMON += ${DTLS} memory_buffer_alloc.c
+	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 endif
-	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
+	CFLAGS += ${DTLSFLAGS}
+	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
 endif
 
 ifeq ($(IPV4),1)
-	CFLAGS += -DOC_IPV4
+	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
 ifeq ($(TCP),1)
-	CFLAGS += -DOC_TCP
+	EXTRA_CFLAGS += -DOC_TCP
+endif
+
+CFLAGS += $(EXTRA_CFLAGS)
+
+ifeq ($(MEMTRACE),1)
+	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
 ifneq ($(OIC),0)
@@ -295,21 +304,27 @@ iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),'
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 ifeq ($(SECURE),1)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
@@ -317,13 +332,18 @@ ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 
 $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
-	cd ${<D} && \
+	if [ -d ${MBEDTLS_DIR} ]; then \
+	cd ${MBEDTLS_DIR} && \
 	git clean -fdx . && \
 	git reset --hard && \
 	git fetch && \
 	git reset --hard ${DTLS_TAG} && \
-	for patch in ${MBEDTLS_PATCHES}; do patch -r - -s -N -p1 < $${patch} ; done
-	echo "Patches applied in $^" > $@
+	cd -; \
+	fi && \
+	git submodule update --init && \
+	cd ${MBEDTLS_DIR} && \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > ${@F}
 endif
 
 clean:

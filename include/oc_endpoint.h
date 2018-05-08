@@ -17,8 +17,61 @@
 #ifndef OC_ENDPOINT_H
 #define OC_ENDPOINT_H
 
+#include "messaging/coap/conf.h"
 #include "oc_helpers.h"
-#include "port/oc_connectivity.h"
+
+typedef struct
+{
+  uint16_t port;
+  uint8_t address[16];
+  uint8_t scope;
+} oc_ipv6_addr_t;
+
+typedef struct
+{
+  uint16_t port;
+  uint8_t address[4];
+} oc_ipv4_addr_t;
+
+typedef struct
+{
+  uint8_t type;
+  uint8_t address[6];
+} oc_le_addr_t;
+
+typedef struct oc_endpoint_t
+{
+  struct oc_endpoint_t *next;
+  int device;
+  enum transport_flags
+  {
+    DISCOVERY = 1 << 0,
+    SECURED = 1 << 1,
+    IPV4 = 1 << 2,
+    IPV6 = 1 << 3,
+    TCP = 1 << 4,
+    GATT = 1 << 5,
+    MULTICAST = 1 << 6
+  } flags;
+
+  union dev_addr
+  {
+    oc_ipv6_addr_t ipv6;
+    oc_ipv4_addr_t ipv4;
+    oc_le_addr_t bt;
+  } addr;
+  uint8_t priority;
+  ocf_version_t version;
+} oc_endpoint_t;
+
+#define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
+  oc_endpoint_t __name__ = {.flags = __flags__,                                \
+                            .addr.ipv4 = {.port = __port__,                    \
+                                          .address = { __VA_ARGS__ } } }
+#define oc_make_ipv6_endpoint(__name__, __flags__, __port__, ...)              \
+  oc_endpoint_t __name__ = {.flags = __flags__,                                \
+                            .addr.ipv6 = {.port = __port__,                    \
+                                          .address = { __VA_ARGS__ } } }
 
 void oc_init_endpoint_list(void);
 int oc_add_endpoint_to_list(oc_endpoint_t *endpoint);
