@@ -40,7 +40,9 @@ static const oc_handler_t *app_callbacks;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
 static long _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
-static long _OC_MAX_APP_DATA_SIZE = 8192;
+/* only for Samsung Requirement
+ */
+static long _OC_MAX_APP_DATA_SIZE = 3072;
 static long _OC_BLOCK_SIZE = 1024;
 
 int
