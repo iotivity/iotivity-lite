@@ -174,7 +174,7 @@ oc_main_init(const oc_handler_t *handler)
   return 0;
 
 err:
-  oc_abort("oc_main: error in stack initialization");
+  OC_ERR("oc_main: error in stack initialization");
   return ret;
 }
 
