@@ -1164,6 +1164,17 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   oc_rep_set_pool(&rep_objects);
 
   if (payload_len) {
+#ifdef OC_SPEC_VER_OIC
+    endpoint->version = OIC_VER_1_1_0;
+#else
+    endpoint->version = OCF_VER_1_0_0;
+    unsigned int content_format = 0;
+    if (coap_get_header_content_format(response, &content_format) == 1) {
+      if (content_format == APPLICATION_CBOR) {
+        endpoint->version = OIC_VER_1_1_0;
+      }
+    }
+#endif /* OC_SPEC_VER_OIC */
     if (cb->discovery) {
       if (oc_ri_process_discovery_payload(payload, payload_len,
                                           cb->handler.discovery, endpoint,

@@ -459,6 +459,56 @@ oc_create_discovery_resource(int resource_idx, int device)
 }
 
 #ifdef OC_CLIENT
+static oc_endpoint_t*
+create_endpoints_1_1(oc_rep_t *policy, oc_endpoint_t *endpoint) {
+  oc_endpoint_t *eps_list = NULL;
+  oc_endpoint_t *eps_tail = NULL;
+  eps_list = eps_tail = oc_new_endpoint();
+  memcpy(eps_list, endpoint, sizeof(oc_endpoint_t));
+  eps_tail->next = NULL;
+
+  bool secured = false;
+  while (policy != NULL) {
+    if (memcmp(oc_string(policy->name), "sec", 3) == 0
+        && policy->value.boolean == true) {
+      secured = true;
+      policy = policy->next;
+      continue;
+    }
+
+    if (secured && memcmp(oc_string(policy->name), "port", 4) == 0) {
+      eps_tail->next = oc_new_endpoint();
+      memcpy(eps_tail->next, endpoint, sizeof(oc_endpoint_t));
+      eps_tail->next->flags |= SECURED;
+      eps_tail->next->addr.ipv6.port = policy->value.integer;
+      eps_tail = eps_tail->next;
+    }
+#ifdef OC_TCP
+    else if (memcmp(oc_string(policy->name), "x.org.iotivity.tcp", 18) == 0
+             && policy->value.integer != 0) {
+      eps_tail->next = oc_new_endpoint();
+      memcpy(eps_tail->next, endpoint, sizeof(oc_endpoint_t));
+      eps_tail->next->flags |= TCP;
+      eps_tail->next->addr.ipv6.port = policy->value.integer;
+      eps_tail = eps_tail->next;
+    }
+    else if (memcmp(oc_string(policy->name), "x.org.iotivity.tls", 18) == 0
+             && policy->value.integer != 0) {
+      eps_tail->next = oc_new_endpoint();
+      memcpy(eps_tail->next, endpoint, sizeof(oc_endpoint_t));
+      eps_tail->next->flags |= TCP;
+      eps_tail->next->flags |= SECURED;
+      eps_tail->next->addr.ipv6.port = policy->value.integer;
+      eps_tail = eps_tail->next;
+    }
+#endif /* OC_TCP */
+    eps_tail->next = NULL;
+    policy = policy->next;
+  }
+
+  return eps_list;
+}
+
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
                                 oc_discovery_handler_t handler,
@@ -599,10 +649,15 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       case OC_REP_OBJECT: {
         oc_rep_t *policy = link->value.object;
         if (policy != NULL && oc_string_len(link->name) == 1 &&
-            *(oc_string(link->name)) == 'p' && policy->type == OC_REP_INT &&
-            oc_string_len(policy->name) == 2 &&
-            memcmp(oc_string(policy->name), "bm", 2) == 0) {
-          bm = policy->value.integer;
+            *(oc_string(link->name)) == 'p') {
+          if (policy->type == OC_REP_INT && oc_string_len(policy->name) == 2 &&
+              memcmp(oc_string(policy->name), "bm", 2) == 0) {
+            bm = policy->value.integer;
+          }
+
+          if (endpoint && endpoint->version == OIC_VER_1_1_0) {
+            eps_list = create_endpoints_1_1(policy->next, endpoint);
+          }
         }
       } break;
       default:
@@ -611,11 +666,13 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
 
-    if (eps_list &&
-        handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
-                eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
-      ret = OC_STOP_DISCOVERY;
-      goto done;
+    if (eps_list) {
+      const char *anchor_str = (anchor != NULL)?oc_string(*anchor):NULL;
+      if (handler(anchor_str, oc_string(*uri), *types, interfaces,
+          eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
+        ret = OC_STOP_DISCOVERY;
+        goto done;
+      }
     }
     links = links->next;
   }
