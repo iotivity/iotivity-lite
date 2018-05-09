@@ -358,9 +358,6 @@ oc_send_separate_response(oc_separate_response_t *handle,
         } else {
           coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
         }
-        if (cur->observe == 1) {
-          coap_set_header_observe(response, 1);
-        }
 
 #ifdef OC_BLOCK_WISE
         oc_blockwise_state_t *response_state = 0;
