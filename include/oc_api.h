@@ -66,6 +66,11 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
 int oc_init_platform(const char *mfg_name,
                      oc_init_platform_cb_t init_platform_cb, void *data);
 
+void oc_set_platform_property(const char *mfg_name, const char *model_num,
+                              const char *ver_p, const char *ver_os,
+                              const char *ver_hw, const char *ver_fw,
+                              const char *vender_id);
+
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 

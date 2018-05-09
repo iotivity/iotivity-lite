@@ -51,6 +51,16 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
   return 0;
 }
 
+void
+oc_set_platform_property(const char *mfg_name, const char *model_num,
+                         const char *ver_p, const char *ver_os,
+                         const char *ver_hw, const char *ver_fw,
+                         const char *vender_id)
+{
+  oc_core_set_platform_property(mfg_name, model_num, ver_p, ver_os, ver_hw,
+                                ver_fw, vender_id);
+}
+
 int
 oc_get_query_value(oc_request_t *request, const char *key, char **value)
 {

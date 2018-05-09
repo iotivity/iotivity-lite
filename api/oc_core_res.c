@@ -87,6 +87,18 @@ oc_core_shutdown(void)
   int i;
   if (oc_string_len(oc_platform_info.mfg_name))
     oc_free_string(&(oc_platform_info.mfg_name));
+  if (oc_string_len(oc_platform_info.model_num))
+    oc_free_string(&(oc_platform_info.model_num));
+  if (oc_string_len(oc_platform_info.ver_p))
+    oc_free_string(&(oc_platform_info.ver_p));
+  if (oc_string_len(oc_platform_info.ver_os))
+    oc_free_string(&(oc_platform_info.ver_os));
+  if (oc_string_len(oc_platform_info.ver_hw))
+    oc_free_string(&(oc_platform_info.ver_hw));
+  if (oc_string_len(oc_platform_info.ver_fw))
+    oc_free_string(&(oc_platform_info.ver_fw));
+  if (oc_string_len(oc_platform_info.vender_id))
+    oc_free_string(&(oc_platform_info.vender_id));
 
 #ifdef OC_DYNAMIC_ALLOCATION
   if (oc_device_info) {
@@ -417,6 +429,55 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
   oc_platform_info.data = data;
 
   return &oc_platform_info;
+}
+
+void
+oc_core_set_platform_property(const char *mfg_name, const char *model_num,
+                              const char *ver_p, const char *ver_os,
+                              const char *ver_hw, const char *ver_fw,
+                              const char *vender_id)
+{
+  if (mfg_name) {
+    if (oc_string_len(oc_platform_info.mfg_name))
+      oc_free_string(&(oc_platform_info.mfg_name));
+    oc_new_string(&oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
+  }
+
+  if (model_num) {
+    if (oc_string_len(oc_platform_info.model_num))
+      oc_free_string(&(oc_platform_info.model_num));
+    oc_new_string(&oc_platform_info.model_num, model_num, strlen(model_num));
+  }
+
+  if (ver_p) {
+    if (oc_string_len(oc_platform_info.ver_p))
+      oc_free_string(&(oc_platform_info.ver_p));
+    oc_new_string(&oc_platform_info.ver_p, ver_p, strlen(ver_p));
+  }
+
+  if (ver_os) {
+    if (oc_string_len(oc_platform_info.ver_os))
+      oc_free_string(&(oc_platform_info.ver_os));
+    oc_new_string(&oc_platform_info.ver_os, ver_os, strlen(ver_os));
+  }
+
+  if (ver_hw) {
+    if (oc_string_len(oc_platform_info.ver_hw))
+      oc_free_string(&(oc_platform_info.ver_hw));
+    oc_new_string(&oc_platform_info.ver_hw, ver_hw, strlen(ver_hw));
+  }
+
+  if (ver_fw) {
+    if (oc_string_len(oc_platform_info.ver_fw))
+      oc_free_string(&(oc_platform_info.ver_fw));
+    oc_new_string(&oc_platform_info.ver_fw, ver_fw, strlen(ver_fw));
+  }
+
+  if (vender_id) {
+    if (oc_string_len(oc_platform_info.vender_id))
+      oc_free_string(&(oc_platform_info.vender_id));
+    oc_new_string(&oc_platform_info.vender_id, vender_id, strlen(vender_id));
+  }
 }
 
 void

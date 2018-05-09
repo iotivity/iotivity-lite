@@ -26,6 +26,12 @@ typedef struct
 {
   oc_uuid_t pi;
   oc_string_t mfg_name;
+  oc_string_t model_num;
+  oc_string_t ver_p;
+  oc_string_t ver_os;
+  oc_string_t ver_hw;
+  oc_string_t ver_fw;
+  oc_string_t vender_id;
   oc_core_init_platform_cb_t init_platform_cb;
   void *data;
 } oc_platform_info_t;
@@ -47,6 +53,11 @@ void oc_core_shutdown(void);
 oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
                                           oc_core_init_platform_cb_t init_cb,
                                           void *data);
+
+void oc_core_set_platform_property(const char *mfg_name, const char *model_num,
+                                   const char *ver_p, const char *ver_os,
+                                   const char *ver_hw, const char *ver_fw,
+                                   const char *vender_id);
 
 oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
                                          const char *name,
