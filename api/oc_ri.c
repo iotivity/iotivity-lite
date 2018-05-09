@@ -1157,8 +1157,15 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       if (oc_ri_process_discovery_payload(payload, payload_len,
                                           cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
-        oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-        free_client_cb(cb);
+        oc_client_cb_t *r = cb;
+        uint8_t token[COAP_TOKEN_LEN];
+        memcpy(token, cb->token, cb->token_len);
+        uint8_t token_len = cb->token_len;
+        do {
+          oc_ri_remove_timed_event_callback(r, &oc_ri_remove_client_cb);
+          free_client_cb(r);
+          r = oc_ri_find_client_cb_by_token(token, token_len);
+        } while (r);
 #ifdef OC_BLOCK_WISE
         *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
