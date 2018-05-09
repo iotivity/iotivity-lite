@@ -66,7 +66,6 @@ typedef struct
 
 user_properties_t g_user_properties;
 
-
 #ifdef WITH_SOFTAP
 
 typedef struct
@@ -141,7 +140,9 @@ es_worker_thread_routine(void *thread_data)
 
   /** Connect to Target Wi-Fi AP */
   char nmcli_command[256];
-  sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
+  //sprintf(nmcli_command, "nmcli dev wifi connect %s password %s", ssid, pwd);
+   //sprintf(nmcli_command, "sudo iwconfig wlan0 essid %s key s:%s", ssid, pwd);
+      //sprintf(nmcli_command, "sudo iwconfig wlan0 essid %s key s:%s", ssid, pwd);
 
   printf("executing commnad: %s\n", nmcli_command);
 
