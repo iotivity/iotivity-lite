@@ -124,7 +124,8 @@ coap_receive(oc_message_t *msg)
   static coap_packet_t
     message[1]; /* this way the packet can be treated as pointer as usual */
   static coap_packet_t response[1];
-  static coap_transaction_t *transaction = NULL;
+  static coap_transaction_t *transaction;
+  transaction = NULL;
 
   /* block options */
   uint32_t block1_num = 0, block1_offset = 0, block2_num = 0, block2_offset = 0;
