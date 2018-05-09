@@ -371,13 +371,13 @@ oc_send_separate_response(oc_separate_response_t *handle,
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
-            goto clear_separate_store;
+            goto next_separate_request;
           }
           response_state = oc_blockwise_alloc_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, OC_BLOCKWISE_SERVER);
           if (!response_state) {
-            goto clear_separate_store;
+            goto next_separate_request;
           }
 
           memcpy(response_state->buffer, response_buffer.buffer,
@@ -405,27 +405,23 @@ oc_send_separate_response(oc_separate_response_t *handle,
         t->message->length = coap_serialize_message(response, t->message->data);
         coap_send_transaction(t);
       }
-#ifdef OC_BLOCK_WISE
-    clear_separate_store:
-#endif /* OC_BLOCK_WISE */
-      coap_separate_clear(handle, cur);
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
         oc_string(cur->uri), oc_string_len(cur->uri), cur->endpoint.device);
-      if (resource &&
-          coap_notify_observers(resource, &response_buffer, &cur->endpoint) ==
-            0) {
-        coap_separate_clear(handle, cur);
+      if (resource) {
+        coap_notify_observers(resource, &response_buffer, &cur->endpoint);
       }
     }
+#ifdef OC_BLOCK_WISE
+  next_separate_request:
+#endif /* OC_BLOCK_WISE */
+    coap_separate_clear(handle, cur);
     cur = next;
   }
-  if (oc_list_length(handle->requests) == 0) {
-    handle->active = 0;
+  handle->active = 0;
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(handle->buffer);
+  free(handle->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  }
 }
 
 int
