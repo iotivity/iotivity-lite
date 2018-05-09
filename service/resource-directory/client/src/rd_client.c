@@ -91,6 +91,58 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 }
 
 bool
+rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                       oc_qos_t qos, void *user_data)
+{
+  if (!endpoint || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  if (oc_init_post("/oic/account/profile/device", endpoint, NULL, handler, qos,
+                   user_data)) {
+    oc_platform_info_t *platfrom_into = oc_core_get_platform_info();
+
+    oc_rep_start_root_object();
+    oc_rep_set_array(root, devices);
+    int device = 0;
+    for (; device < oc_core_get_num_devices(); device++) {
+      oc_device_info_t *device_info = oc_core_get_device_info(device);
+      char uuid[MAX_UUID_LENGTH] = { 0 };
+      oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
+
+      oc_rep_object_array_start_item(devices);
+      oc_rep_set_text_string(devices, di, uuid);
+      oc_rep_set_text_string(devices, n, oc_string(device_info->name));
+      oc_rep_set_text_string(devices, icv, oc_string(device_info->icv));
+      oc_rep_set_text_string(devices, dmv, oc_string(device_info->dmv));
+      oc_rep_set_string_array(
+        devices, rt, oc_core_get_resource_by_index(OCF_D, device)->types);
+      oc_rep_set_text_string(devices, mnmn, oc_string(platfrom_into->mfg_name));
+      // oc_rep_set_text_string(devices, mnmo,
+      // oc_string(platfrom_into->model_num));
+      // oc_rep_set_text_string(devices, mnpv, oc_string(platfrom_into->ver_p));
+      // oc_rep_set_text_string(devices, mnos,
+      // oc_string(platfrom_into->ver_os));
+      // oc_rep_set_text_string(devices, mnhw,
+      // oc_string(platfrom_into->ver_hw));
+      // oc_rep_set_text_string(devices, mnfv,
+      // oc_string(platfrom_into->ver_fw));
+      // oc_rep_set_text_string(devices, vid,
+      // oc_string(platfrom_into->vender_id));
+      oc_rep_object_array_end_item(devices);
+    }
+    oc_rep_close_array(root, devices);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for dev profile publish");
+    return false;
+  }
+
+  return oc_do_post();
+}
+
+bool
 rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
