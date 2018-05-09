@@ -59,6 +59,18 @@ bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                                oc_qos_t qos, void *user_data);
 
 /**
+  @brief Publish device profile to Resource Directory.
+  @param endpoint The endpoint of the RD.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param qos Quality of service.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool rd_publish_dev_profile(oc_endpoint_t *endpoint,
+                            oc_response_handler_t handler, oc_qos_t qos,
+                            void *user_data);
+
+/**
   @brief Delete RD resource from Resource Directory.
   @param endpoint The endpoint of the RD.
   @param links This is the resource which we need to delete to RD.
