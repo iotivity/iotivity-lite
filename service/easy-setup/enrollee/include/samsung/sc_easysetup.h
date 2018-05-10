@@ -55,8 +55,11 @@
 #define STR_SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME   "x.com.samsung.regionaldatetime"
 #define STR_SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION  "x.com.samsung.espv"
 
-#define WIFI_DISCOVERY_CHANNEL_INIT             -1
+#define SC_RSRVD_ES_RES_TYPE_PROVISIONING_INFO                   "x.com.samsung.provisioninginfo"
+#define SC_RSRVD_ES_URI_PROVISIONING_INFO                            "/sec/provisioninginfo"
 
+#define WIFI_DISCOVERY_CHANNEL_INIT             -1
+#define MAXIMUM_TARGETS                                     20
 /**
  * @brief  Supported WIFI frequency like 2.4G and 5G
  */
@@ -136,6 +139,29 @@ typedef struct sc_properties
     char esProtocolVersion[MAXLEN_STRING];          /**< Samsung Easy Setup Protocol Version **/
 } sc_properties;
 
+typedef struct
+{
+  oc_resource_t *handle;
+  char targets[MAXLEN_STRING];
+  bool owned;
+  char easysetupdi[MAXLEN_STRING];
+} provisioning_info_resource;
+
+typedef struct
+{
+  char targetDi[MAXLEN_STRING];
+  char targetRt[MAXLEN_STRING];
+  bool published;
+}provisioning_info_targets;
+
+typedef struct
+{
+ int targets_size;
+  provisioning_info_targets targets[MAXIMUM_TARGETS];
+  bool owned;
+  char easysetupdi[MAXLEN_STRING];
+} provisioning_info_properties;
+
 void  ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata);
 void WriteUserdataCb(oc_rep_t* payload, char* resourceType);
 
@@ -149,5 +175,7 @@ es_result_e set_sc_net_connection_state(NETCONNECTION_STATE netConnectionState);
 es_result_e set_sc_pnp_pin(const char *pnp);
 
 es_result_e set_es_version_info(const char *esVersionInfo);
+es_result_e register_provisioning_info_resource();
+es_result_e set_properties_for_prov_info(const provisioning_info_properties *prop);
 
 #endif /* EASYSETUPX_ENROLLEE_H__ */
