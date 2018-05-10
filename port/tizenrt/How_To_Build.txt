@@ -2,21 +2,17 @@
 
 git clone https://github.com/Samsung/TizenRT
 
+Create folder "iotivity-constrained" in this path (TizenRT/external/) (EX:mkdir iotivity-constrained)
+
+Clone iotivity-constrained code in this path TizenRT/external/iotivity-constrained/
+
+switch to samsung branch (EX: git checkout samsung)
+
 Copy ~/port/tizenrt/iotlite_apps folder to TizenRT/apps/
 
 Copy ~/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
 
-Create folder "iotivity-constrained" in this path (TizenRT/external/) (EX:mkdir iotivity-constrained)
-
-Clone iotivity-constrained code in this path TizenRT/external/iotivity-constrained/ 
-
-Copy ~/port/tizenrt to TizenRT/external/iotivity-constrained/iotivity-constrained/port/
-
 Copy tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
-
-Copy tinycbor folder from TizenRT/external/iotivity/iotivity_1.2-rel/extlibs/ to 
- TizenRT/external/iotivity-constrained/iotivity-constrained/deps/
-
 
 #### How to Build the TizenRT with constrained IOT  ####################
 
