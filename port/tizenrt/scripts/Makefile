@@ -19,8 +19,37 @@
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 
+IOTCONS_ROOT_DIR = $(TOPDIR)/../external/iotivity-constrained/iotivity-constrained
+
+MBEDTLS_DIR := $(IOTCONS_ROOT_DIR)/deps/mbedtls
+
 ASRCS		=
 CSRCS		=
+
+DTLS_TAG ?= mbedtls-2.7.0
+DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    \
+	bignum.c    blowfish.c  camellia.c  ccm.c       cipher.c    cipher_wrap.c   \
+	cmac.c      ctr_drbg.c  des.c       dhm.c       ecdh.c      ecdsa.c     \
+	ecjpake.c   ecp.c       ecp_curves.c    entropy.c   entropy_poll.c  error.c     \
+	gcm.c       havege.c    hmac_drbg.c md.c        md2.c       md4.c       \
+	md5.c       md_wrap.c   oid.c       padlock.c   \
+	pem.c       pk.c        pk_wrap.c   pkcs12.c    pkcs5.c     pkparse.c   \
+	pkwrite.c   platform.c  ripemd160.c rsa.c       sha1.c      sha256.c    \
+	sha512.c    threading.c timing.c    version.c   version_features.c      \
+	xtea.c      pkcs11.c    x509.c      x509_crt.c  debug.c     net_sockets.c   \
+	ssl_cache.c ssl_ciphersuites.c      ssl_cli.c   ssl_cookie.c            \
+	ssl_srv.c   ssl_ticket.c    ssl_tls.c   rsa_internal.c
+
+DTLSFLAGS=-I$(MBEDTLS_DIR)/include -D__OC_RANDOM
+
+ifeq ($(CONFIG_SECURE),y)
+	CSRCS += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
+	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
+	CFLAGS += ${DTLSFLAGS}
+	OSRCS_C += $(wildcard $(MBEDTLS_DIR)/library/*.o)
+	EXTRA_CFLAGS += -DOC_SECURITY
+	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
+endif
 
 CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/deps/tinycbor/src/cborencoder_close_container_checked.c \
@@ -35,8 +64,8 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/security/oc_pstat.c \
 			   iotivity-constrained/security/oc_svr.c \
 			   iotivity-constrained/security/oc_store.c\
-			   iotivity-constrained/security/oc_obt.c
-
+			   iotivity-constrained/security/oc_obt.c \
+			   iotivity-constrained/security/oc_tls.c
 ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
 CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c)
 OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o)
@@ -57,12 +86,12 @@ OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   iotivity-constrained/security/oc_pstat.o \
 			   iotivity-constrained/security/oc_svr.o \
 			   iotivity-constrained/security/oc_store.o\
-			   iotivity-constrained/security/oc_obt.o
+			   iotivity-constrained/security/oc_obt.o \
+			   iotivity-constrained/security/oc_tls.o
 
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
 CFLAGS:=$(filter-out -Wundef,$(CFLAGS))
-#-DOC_COLLECTIONS
-CFLAGS 		+= -D__TIZENRT__ -DOC_TCP -DOC_CLIENT -DOCF_12 -DOC_IPV4 -DOC_DEBUG -DOC_SERVER -DOC_DYNAMIC_ALLOCATION -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
+CFLAGS 		+= -D__TIZENRT__ -DOC_TCP -DOC_SECURITY -DOC_CLIENT -DOCF_12 -DOC_IPV4 -DOC_DEBUG -DOC_SERVER -DOC_DYNAMIC_ALLOCATION -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
 CFLAGS		+= -Itinycbor/src/ \
 			   -Iiotivity-constrained/ \
 			   -Iiotivity-constrained/include \
@@ -90,7 +119,27 @@ DEPPATH	= --dep-path .
 
 # Common build
 
-VPATH		=
+VPATH		= $(MBEDTLS_DIR)/library:
+
+ifeq ($(CONFIG_SECURE),y)
+MBEDTLS_PATCHES ?= $(sort $(wildcard $(IOTCONS_ROOT_DIR)/patches/*.patch))
+${MBEDTLS_DIR}/.git:
+	git submodule update --init ${@D}
+
+$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
+	if [ -d ${MBEDTLS_DIR}  ]; then \
+	cd ${MBEDTLS_DIR} && \
+	git clean -fdx . && \
+	git reset --hard && \
+	git fetch && \
+	git reset --hard ${DTLS_TAG} && \
+	cd -; \
+	fi && \
+	git submodule update --init && \
+	cd ${MBEDTLS_DIR} && \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > ${@F}
+endif
 
 all: .built
 .PHONY: depend clean distclean

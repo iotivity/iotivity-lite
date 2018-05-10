@@ -930,6 +930,17 @@ done:
   //freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
+void
+handle_network_interface_event_callback(oc_interface_event_t event)
+{
+    //TODO::::yet to implement
+}
+void
+handle_session_event_callback(const oc_endpoint_t *endpoint,
+                               oc_session_state_t state)
+{
+    //TODO::::yet to implement
+}
 
 #ifdef OC_IPV4
 static int
