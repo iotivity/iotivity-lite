@@ -16,9 +16,8 @@
  *
  ****************************************************************************/
 
-
 #include "easysetup.h"
-#include "escommon.h"
+#include "es_common.h"
 
 #ifndef EASYSETUPX_ENROLLEE_H__
 #define EASYSETUPX_ENROLLEE_H__
