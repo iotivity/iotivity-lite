@@ -85,6 +85,7 @@ SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
+SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
@@ -321,6 +322,12 @@ server_multithread_linux: libiotivity-constrained-server.a
 client_multithread_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/st_app/linux/*.c  \
+			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
+		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
