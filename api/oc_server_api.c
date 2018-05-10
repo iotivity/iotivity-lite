@@ -42,6 +42,12 @@ oc_add_device(const char *uri, const char *rt, const char *name,
   return 0;
 }
 
+void 
+oc_get_device_id(int device, char *buffer, int buflen)
+{
+  oc_uuid_to_str(oc_core_get_device_id(device), buffer, buflen);
+}
+
 int
 oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
                  void *data)
