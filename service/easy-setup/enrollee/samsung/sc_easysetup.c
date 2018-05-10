@@ -61,10 +61,19 @@
 #define SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME   x.com.samsung.regionaldatetime
 #define SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION  x.com.samsung.espv
 
+#define SC_RSRVD_ES_PROVISIONING_INFO_TARGETS                     x.com.samsung.provisioning.targets
+#define SC_RSRVD_ES_PROVISIONING_INFO_OWNED                       x.com.samsung.provisioning.owned
+#define SC_RSRVD_ES_PROVISIONING_INFO_EASY_SETUP_DI               x.com.samsung.provisioning.easysetupdi
+#define SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI                    x.com.samsung.targetDi
+#define SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT                    x.com.samsung.targetRt
+#define SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED                   x.com.samsung.published
+#define STR_SC_RSRVD_ES_PROVISIONING_INFO_TARGETS                 "x.com.samsung.provisioning.targets"
+
 easy_setup_resource g_ESEasySetupResource;
 wifi_conf_resource g_ESWiFiConfResource;
 coap_cloud_conf_resource g_ESCoapCloudConfResource;
 dev_conf_resource g_ESDevConfResource;
+provisioning_info_resource g_provisioninginfo_resource;
 
 sc_properties g_SCProperties;
 
@@ -77,6 +86,97 @@ static void write_wifi_data(oc_rep_t* payload, char* resourceType);
 
 #define set_custom_property_str(object, key, value) oc_rep_set_text_string(object, key, value)
 #define set_custom_property_int(object, key, value) oc_rep_set_int(object, key, value)
+#define set_custom_property_bool(object, key, value) oc_rep_set_boolean(object, key, value)
+
+static void update_provisioning_info_resource(oc_request_t *request)
+{
+   (void)request;
+  //TODO - Add update when more write properties are added
+
+}
+static void construct_response_of_provisioning_info(void)
+{
+  oc_rep_start_root_object();
+  oc_rep_set_key(root_map,STR_SC_RSRVD_ES_PROVISIONING_INFO_TARGETS);
+  oc_rep_start_array(root_map, provisioning_targets);
+  for (int i=0;i<g_provisioninginfo_resource.targets_size;i++) {
+    oc_rep_object_array_start_item(provisioning_targets);
+    set_custom_property_str(provisioning_targets, SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI,  oc_string(g_provisioninginfo_resource.targets[i].targetDi));
+    set_custom_property_str(provisioning_targets, SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT, oc_string(g_provisioninginfo_resource.targets[i].targetRt));
+    set_custom_property_bool(provisioning_targets, SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED, g_provisioninginfo_resource.targets[i].published);
+    oc_rep_object_array_end_item(provisioning_targets);
+  }
+  oc_rep_close_array(root, provisioning_targets);
+  set_custom_property_bool(root, SC_RSRVD_ES_PROVISIONING_INFO_OWNED, g_provisioninginfo_resource.owned);
+  set_custom_property_str(root, SC_RSRVD_ES_PROVISIONING_INFO_EASY_SETUP_DI, oc_string(g_provisioninginfo_resource.easysetupdi));
+
+  oc_rep_end_root_object();
+}
+
+static void post_provisioning_info(oc_request_t *request, oc_interface_mask_t interface,void *user_data)
+{
+  (void)user_data;
+
+  if (interface == OC_IF_A) {
+    update_provisioning_info_resource(request);
+    construct_response_of_provisioning_info();
+    OC_DBG("success");
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    OC_ERR("Error");
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+static void get_provisioning_info(oc_request_t *request, oc_interface_mask_t interface,void *user_data)
+{
+  (void)user_data;
+
+  if (interface == OC_IF_A) {
+    construct_response_of_provisioning_info();
+    oc_send_response(request, OC_STATUS_OK);
+  } else {
+    OC_ERR("Error");
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *prop)
+{
+    if(prop != NULL)
+    {
+        memcpy(&g_provisioninginfo_resource, prop, sizeof(provisioning_info_resource));
+        OC_DBG("SetSCProperties OUT");
+        return ES_OK;
+    }
+    return ES_ERROR;
+}
+es_result_e register_sc_provisioning_info_resource()
+{
+  oc_resource_t *provisioninginfo =
+    oc_new_resource("provisioninginfo", SC_RSRVD_ES_URI_PROVISIONING_INFO, 1, 0);
+
+  if (NULL == provisioninginfo) {
+    OC_ERR("Error in creating provisioninginfo Resource!");
+    return ES_ERROR;
+  }
+
+  oc_resource_bind_resource_type(provisioninginfo, SC_RSRVD_ES_RES_TYPE_PROVISIONING_INFO);
+  oc_resource_bind_resource_interface(provisioninginfo, OC_IF_A);
+  oc_resource_set_default_interface(provisioninginfo, OC_IF_A);
+  oc_resource_set_discoverable(provisioninginfo, true);
+  oc_resource_set_observable(provisioninginfo, false);
+#ifdef OC_SECURITY
+  oc_resource_make_public(provisioninginfo);
+#endif
+  oc_resource_set_request_handler(provisioninginfo, OC_GET, get_provisioning_info, NULL);
+  oc_resource_set_request_handler(provisioninginfo, OC_POST, post_provisioning_info, NULL);
+  oc_add_resource(provisioninginfo);
+  g_provisioninginfo_resource.handle = provisioninginfo;
+  OC_DBG("Created provisioninginfo Resource with success");
+
+  return ES_OK;
+}
 
 es_result_e set_sc_properties(const sc_properties *prop)
 {
