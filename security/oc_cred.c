@@ -133,6 +133,20 @@ oc_sec_clear_creds(int device)
   }
 }
 
+void
+oc_sec_cred_free(void)
+{
+  int device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_sec_clear_creds(device);
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (devices) {
+    free(devices);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
 oc_sec_cred_t *
 oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 {

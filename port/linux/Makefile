@@ -30,7 +30,11 @@ API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
-UNIT_TESTS = apitest
+PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
+PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
+PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
+PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
+UNIT_TESTS = apitest platformtest
 
 DTLS_TAG ?= mbedtls-2.7.0
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
@@ -77,7 +81,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
@@ -106,7 +110,7 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
-ifeq ($(SECURE),1)
+ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
@@ -166,6 +170,13 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
@@ -303,6 +314,14 @@ cloud_linux: libiotivity-constrained-client-server.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${LIBS}
 
+server_multithread_linux: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	
+client_multithread_linux: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
@@ -330,7 +349,7 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
-ifeq ($(SECURE),1)
+ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
@@ -351,10 +370,10 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall

@@ -124,7 +124,8 @@ coap_receive(oc_message_t *msg)
   static coap_packet_t
     message[1]; /* this way the packet can be treated as pointer as usual */
   static coap_packet_t response[1];
-  static coap_transaction_t *transaction = NULL;
+  static coap_transaction_t *transaction;
+  transaction = NULL;
 
   /* block options */
   uint32_t block1_num = 0, block1_offset = 0, block2_num = 0, block2_offset = 0;
@@ -461,25 +462,27 @@ coap_receive(oc_message_t *msg)
             if (payload && response_buffer->payload_size > 0) {
               coap_set_payload(response, payload, payload_size);
             }
+            response_buffer->ref_count = 0;
           } else {
 #endif /* OC_TCP */
-          const void *payload = oc_blockwise_dispatch_block(
-            response_buffer, 0, block2_size, &payload_size);
-          if (payload) {
-            coap_set_payload(response, payload, payload_size);
-          }
-          if (block2 || response_buffer->payload_size > block2_size) {
-            coap_set_header_block2(
-              response, 0,
-              (response_buffer->payload_size > block2_size) ? 1 : 0,
-              block2_size);
-            coap_set_header_size2(response, response_buffer->payload_size);
-            oc_blockwise_response_state_t *response_state =
-              (oc_blockwise_response_state_t *)response_buffer;
-            coap_set_header_etag(response, response_state->etag, COAP_ETAG_LEN);
-          } else {
-            response_buffer->ref_count = 0;
-          }
+            const void *payload = oc_blockwise_dispatch_block(
+              response_buffer, 0, block2_size, &payload_size);
+            if (payload) {
+              coap_set_payload(response, payload, payload_size);
+            }
+            if (block2 || response_buffer->payload_size > block2_size) {
+              coap_set_header_block2(
+                response, 0,
+                (response_buffer->payload_size > block2_size) ? 1 : 0,
+                block2_size);
+              coap_set_header_size2(response, response_buffer->payload_size);
+              oc_blockwise_response_state_t *response_state =
+                (oc_blockwise_response_state_t *)response_buffer;
+              coap_set_header_etag(response, response_state->etag,
+                                   COAP_ETAG_LEN);
+            } else {
+              response_buffer->ref_count = 0;
+            }
 #ifdef OC_TCP
           }
 #endif /* OC_TCP */

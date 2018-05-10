@@ -729,6 +729,20 @@ oc_sec_clear_acl(int device)
 }
 
 void
+oc_sec_acl_free(void)
+{
+  int device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_sec_clear_acl(device);
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (aclist) {
+    free(aclist);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
 oc_sec_acl_default(int device)
 {
   oc_sec_clear_acl(device);

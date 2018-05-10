@@ -208,7 +208,10 @@ oc_network_event_handler_mutex_unlock(void)
   pthread_mutex_unlock(&mutex);
 }
 
-void oc_network_event_handler_mutex_destroy(void) {
+void
+oc_network_event_handler_mutex_destroy(void)
+{
+  ifchange_initialized = false;
   close(ifchange_sock);
   remove_all_ip_interface();
   remove_all_network_interface_cbs();
