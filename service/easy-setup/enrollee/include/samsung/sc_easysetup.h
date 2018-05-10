@@ -16,9 +16,8 @@
  *
  ****************************************************************************/
 
-
 #include "easysetup.h"
-#include "escommon.h"
+#include "es_common.h"
 
 #ifndef EASYSETUPX_ENROLLEE_H__
 #define EASYSETUPX_ENROLLEE_H__
@@ -26,7 +25,6 @@
 #define MAXLEN_STRING 1000
 #define MAXNUM_LOCATION 20
 #define MAXLEN_DATE_TIME 33
-
 
 #define STR_SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE  "x.com.samsung.ncs"
 #define STR_SC_RSRVD_ES_VENDOR_DISCOVERY_CHANNEL    "x.com.samsung.chn"

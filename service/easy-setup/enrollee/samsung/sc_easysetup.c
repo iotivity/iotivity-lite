@@ -168,52 +168,43 @@ static void read_tnc_data(oc_rep_t* payload,void** userdata)
   }
 }
 
-void write_tnc_data(oc_rep_t* payload, char* resourceType)
+static void
+write_tnc_data(oc_rep_t *payload, char *resourceType)
 {
-    (void)resourceType;
-    (void)payload;
-
-    if(resourceType == NULL)
-    {
-        OC_ERR("resourceType is NULL");
-        OC_ERR("WriteTnCdata OUT");
-        return;
-    }
-    if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP))
-    {
-        set_custom_property_int(root, SC_RSRVD_ES_VENDOR_TNC_STATUS, g_SCProperties.tncStatus);
-    }
-    else if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF))
-    {
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_HEADER,
-                g_SCProperties.tncInfo.header);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_VERSION,
-                g_SCProperties.tncInfo.version);
-    }
-    else if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF))
-    {
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_RESULT,
-                g_SCProperties.tncResult);
-    }
+  (void)payload;
+  if (resourceType == NULL) {
+    OC_ERR("resourceType is NULL");
+    OC_ERR("WriteTnCdata OUT");
+    return;
+  }
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP)) {
+    set_custom_property_int(root, SC_RSRVD_ES_VENDOR_TNC_STATUS,
+                            g_SCProperties.tncStatus);
+  } else if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_HEADER,
+                            g_SCProperties.tncInfo.header);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_VERSION,
+                            g_SCProperties.tncInfo.version);
+  } else if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)) {
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_RESULT,
+                            g_SCProperties.tncResult);
+  }
 }
 
-void write_wifi_data(oc_rep_t* payload, char* resourceType)
+static void
+write_wifi_data(oc_rep_t *payload, char *resourceType)
 {
-    (void)resourceType;
-    (void)payload;
+  (void)payload;
+  if (resourceType == NULL) {
+    OC_DBG("Invalid Params resourceType is NULL");
+    OC_DBG("WriteWifiData OUT");
+    return;
+  }
 
-    if(resourceType == NULL)
-    {
-        OC_DBG("Invalid Params resourceType is NULL");
-        OC_DBG("WriteWifiData OUT");
-        return;
-    }
-
-    if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF))
-    {
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_BSSID,
-                g_SCProperties.bssid);
-    }
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF)) {
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_BSSID,
+                            g_SCProperties.bssid);
+  }
 }
 
 es_result_e set_register_set_device(const char *regSetDevice)
@@ -258,12 +249,7 @@ es_result_e set_es_version_info(const char *esProtocolVersion)
 
 void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
 {
-  (void)resourceType;
-  (void)payload;
-  (void)userdata;
-
-  if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF))
-  {
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF)) {
     oc_rep_t *rep = payload;
     while(rep != NULL) {
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_DISCOVERY_CHANNEL) == 0 && rep->type == OC_REP_INT)
@@ -550,33 +536,42 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
 
 void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
 {
-    (void)resourceType;
-    (void)payload;
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP)) {
+    set_custom_property_int(root, SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE,
+                            (int)g_SCProperties.netConnectionState);
+  }
 
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_TYPE,
+                            g_SCProperties.deviceType);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_SUBTYPE,
+                            g_SCProperties.deviceSubType);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_SET_DEV,
+                            g_SCProperties.regSetDev);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_MOBILE_DEV,
+                            g_SCProperties.regMobileDev);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_NETWORK_PROV_INFO,
+                            g_SCProperties.nwProvInfo);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_SSO_LIST,
+                            g_SCProperties.ssoList);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_PNP_PIN,
+                            g_SCProperties.pnpPin);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_MODEL_NUMBER,
+                            g_SCProperties.modelNumber);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_COUNTRY,
+                            g_SCProperties.country);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_LANGUAGE,
+                            g_SCProperties.language);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_GPSLOCATION,
+                            g_SCProperties.gpsLocation);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_UTC_DATE_TIME,
+                            g_SCProperties.utcDateTime);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME,
+                            g_SCProperties.regionalDateTime);
+    set_custom_property_str(root, SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION,
+                            g_SCProperties.esProtocolVersion);
+  }
 
-    if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP))
-    {
-        set_custom_property_int(root, SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE, (int) g_SCProperties.netConnectionState);
-    }
-
-    if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF))
-    {
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_TYPE, g_SCProperties.deviceType);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_SUBTYPE, g_SCProperties.deviceSubType);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_SET_DEV, g_SCProperties.regSetDev);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_MOBILE_DEV, g_SCProperties.regMobileDev);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_NETWORK_PROV_INFO, g_SCProperties.nwProvInfo);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_SSO_LIST, g_SCProperties.ssoList);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_PNP_PIN, g_SCProperties.pnpPin);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_MODEL_NUMBER, g_SCProperties.modelNumber);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_COUNTRY, g_SCProperties.country);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_LANGUAGE, g_SCProperties.language);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_GPSLOCATION, g_SCProperties.gpsLocation);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_UTC_DATE_TIME, g_SCProperties.utcDateTime);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME, g_SCProperties.regionalDateTime);
-        set_custom_property_str(root, SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION, g_SCProperties.esProtocolVersion);
-    }
-
-    write_tnc_data(payload, resourceType);
-    write_wifi_data(payload, resourceType);
+  write_tnc_data(payload, resourceType);
+  write_wifi_data(payload, resourceType);
 }
