@@ -69,6 +69,8 @@ int oc_init_platform(const char *mfg_name,
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
+void oc_get_device_id(int device, char *buffer, int buflen);
+
 /**
   @brief Returns whether the oic.wk.con res is announed.
   @return true if announced (default) or false if not

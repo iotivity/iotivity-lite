@@ -44,6 +44,32 @@ static bool gIsSecured = false;
 
 static sc_properties g_SCProperties ;
 
+static provisioning_info_resource g_provisioninginfo_resource;
+
+void SetProvInfo()
+{
+  // Set prov info properties
+  int target_size =1;
+  char uuid[37];
+  memset(&g_provisioninginfo_resource, 0, sizeof(g_provisioninginfo_resource));
+  oc_get_device_id(0,uuid, 37 );
+  g_provisioninginfo_resource.targets = (provisioning_info_targets*)malloc(target_size * sizeof(provisioning_info_targets));
+  for (int i=0;i<target_size;i++){
+    oc_new_string(&g_provisioninginfo_resource.targets[i].targetDi, uuid, strlen(uuid));
+    oc_new_string(&g_provisioninginfo_resource.targets[i].targetRt,  "oic.d.tv", 9);
+    g_provisioninginfo_resource.targets[i].published = false;
+  }
+  g_provisioninginfo_resource.targets_size=target_size;
+  g_provisioninginfo_resource.owned = false;
+  oc_new_string(&g_provisioninginfo_resource.easysetupdi,  uuid, 38);
+
+  if(set_properties_for_sc_prov_info(&g_provisioninginfo_resource) == ES_ERROR)
+    PRINT("SetProvInfo Error\n");
+
+  PRINT("[ES App] SetProvInfo OUT\n");
+}
+
+
 static int
 app_init(void)
 {
@@ -350,10 +376,10 @@ register_resources(void)
 #else
     gIsSecured = false;
 #endif
-
+    register_sc_provisioning_info_resource();
     StartEasySetup();
     SetDeviceInfo();
-
+    SetProvInfo();
     printf("[ES App] register_resources OUT\n");
 }
 
