@@ -44,6 +44,31 @@ static bool gIsSecured = false;
 
 static sc_properties g_SCProperties ;
 
+static provisioning_info_properties g_ProvResource;
+
+void SetProvInfo()
+{
+
+    // Set prov info properties
+    int target_size =1;
+    memset(&g_ProvResource, 0, sizeof(provisioning_info_properties));
+
+    for (int i=0;i<target_size;i++){
+               strncpy(g_ProvResource.targets[i].targetDi, "xxxx-xxxx-xxxx-xxxx-xxxx", MAXLEN_STRING);
+		  strncpy(g_ProvResource.targets[i].targetRt, "oic.d.tv", MAXLEN_STRING);
+		  g_ProvResource.targets[i].published = true;
+	}
+    g_ProvResource.targets_size=target_size;
+    g_ProvResource.owned = false;
+    strncpy(g_ProvResource.easysetupdi, "xxxx-xxxx-xxxx-xxxx-xxxx", MAXLEN_STRING);
+
+	if(set_properties_for_prov_info(&g_ProvResource) == ES_ERROR)
+        printf("SetProvInfo Error\n");
+
+    PRINT("[ES App] SetProvInfo OUT\n");
+}
+
+
 static int
 app_init(void)
 {
@@ -350,10 +375,10 @@ register_resources(void)
 #else
     gIsSecured = false;
 #endif
-
+    register_provisioning_info_resource();
     StartEasySetup();
     SetDeviceInfo();
-
+    SetProvInfo();
     printf("[ES App] register_resources OUT\n");
 }
 
