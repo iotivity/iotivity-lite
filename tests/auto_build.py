@@ -9,7 +9,8 @@ import multiprocessing
 build_option_param = {
     "DYNAMIC": 1,
     "IPV4": 1,
-    "TCP": 1
+    "TCP": 1,
+    "EASYSETUP": 1
 }
 
 # help message
