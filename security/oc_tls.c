@@ -160,9 +160,9 @@ oc_tls_get_peer(oc_endpoint_t *endpoint)
     while (peer != NULL) {
       if (oc_discovery_get_device(&peer->endpoint) == device) {
 #ifdef OC_DEBUG
-        PRINT("Replacing for device %u IP %d/%d ", device, (endpoint->flags & SECURE), (endpoint->flags & MULTICAST));
+        PRINT("Replacing for device %u IP %d/%d ", device, (endpoint->flags & SECURED), (endpoint->flags & MULTICAST));
         PRINTipaddr(*endpoint);
-        PRINT(" with %d/%d ", (peer->endpoint.flags & SECURE), (peer->endpoint.flags & MULTICAST));
+        PRINT(" with %d/%d ", (peer->endpoint.flags & SECURED), (peer->endpoint.flags & MULTICAST));
         PRINTipaddr(peer->endpoint);
         PRINT("\n");
 #endif

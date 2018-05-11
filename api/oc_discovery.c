@@ -80,7 +80,7 @@ add_cache_entry(oc_endpoint_t *endpoint, uint8_t device)
     PRINT("eps cache: added ");
     PRINTipaddr(*endpoint);
     PRINT(" %d/%d as device %u at index %d\n",
-          (endpoint->flags & SECURE), (endpoint->flags & MULTICAST),
+          (endpoint->flags & SECURED), (endpoint->flags & MULTICAST),
           device, next_free_item);
 #endif
     ++next_free_item;
