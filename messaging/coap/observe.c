@@ -172,6 +172,17 @@ coap_remove_observer(coap_observer_t *o)
   oc_list_remove(observers_list, o);
   oc_memb_free(&observers_memb, o);
 }
+void
+coap_free_all_observers(void)
+{
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
+
+  while (obs) {
+    next = obs->next;
+    coap_remove_observer(obs);
+    obs = next;
+  }
+}
 /*---------------------------------------------------------------------------*/
 int
 coap_remove_observer_by_client(oc_endpoint_t *endpoint)

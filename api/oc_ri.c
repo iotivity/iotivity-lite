@@ -37,6 +37,7 @@
 #ifdef OC_TCP
 #include "oc_session_events.h"
 #endif /* OC_TCP */
+#include "oc_api.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 
@@ -277,7 +278,7 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
 }
 
 static void
-oc_ri_delete_all_resource(void)
+oc_ri_delete_all_app_resources(void)
 {
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res) {
@@ -285,8 +286,7 @@ oc_ri_delete_all_resource(void)
     res = oc_ri_get_app_resources();
   }
 }
-
-#endif
+#endif /* OC_SERVER */
 
 void
 oc_ri_init(void)
@@ -306,23 +306,8 @@ oc_ri_init(void)
 
   oc_list_init(timed_callbacks);
 
-  oc_core_init();
-
   oc_process_init();
   start_processes();
-}
-
-void
-oc_ri_shutdown(void)
-{
-  oc_random_destroy();
-  stop_processes();
-
-#ifdef OC_SERVER
-  oc_ri_delete_all_resource();
-#endif
-
-  oc_core_shutdown();
 }
 
 #ifdef OC_SERVER
@@ -330,21 +315,6 @@ oc_resource_t *
 oc_ri_alloc_resource(void)
 {
   return oc_memb_alloc(&app_resources_s);
-}
-
-void oc_ri_free_resource_properties(oc_resource_t *resource)
-{
-  if (resource) {
-    if (oc_string_len(resource->name) > 0) {
-      oc_free_string(&(resource->name));
-    }
-    if (oc_string_len(resource->uri) > 0) {
-      oc_free_string(&(resource->uri));
-    }
-    if (oc_string_array_get_allocated_size(resource->types) > 0) {
-      oc_free_string_array(&(resource->types));
-    }
-  }
 }
 
 void
@@ -375,6 +345,22 @@ oc_ri_add_resource(oc_resource_t *resource)
   return valid;
 }
 #endif /* OC_SERVER */
+
+void
+oc_ri_free_resource_properties(oc_resource_t *resource)
+{
+  if (resource) {
+    if (oc_string_len(resource->name) > 0) {
+      oc_free_string(&(resource->name));
+    }
+    if (oc_string_len(resource->uri) > 0) {
+      oc_free_string(&(resource->uri));
+    }
+    if (oc_string_array_get_allocated_size(resource->types) > 0) {
+      oc_free_string_array(&(resource->types));
+    }
+  }
+}
 
 void
 oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
@@ -532,6 +518,29 @@ add_periodic_observe_callback(oc_resource_t *resource)
 }
 #endif
 
+static void
+free_all_event_timers(void)
+{
+#ifdef OC_SERVER
+  oc_event_callback_t *obs_cb =
+    (oc_event_callback_t *)oc_list_pop(observe_callbacks);
+  while (obs_cb != NULL) {
+    oc_etimer_stop(&obs_cb->timer);
+    oc_list_remove(observe_callbacks, obs_cb);
+    oc_memb_free(&event_callbacks_s, obs_cb);
+    obs_cb = oc_list_pop(observe_callbacks);
+  }
+#endif /* OC_SERVER */
+  oc_event_callback_t *event_cb =
+    (oc_event_callback_t *)oc_list_pop(timed_callbacks);
+  while (event_cb != NULL) {
+    oc_etimer_stop(&event_cb->timer);
+    oc_list_remove(timed_callbacks, event_cb);
+    oc_memb_free(&event_callbacks_s, event_cb);
+    event_cb = oc_list_pop(timed_callbacks);
+  }
+}
+
 oc_interface_mask_t
 oc_ri_get_interface_mask(char *iface, int if_len)
 {
@@ -647,14 +656,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   response_buffer.code = 0;
   response_buffer.response_length = 0;
 
-  response_obj.separate_response = 0;
+  response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
 
   request_obj.response = &response_obj;
-  request_obj.request_payload = 0;
-  request_obj.query = 0;
+  request_obj.request_payload = NULL;
+  request_obj.query = NULL;
   request_obj.query_len = 0;
-  request_obj.resource = 0;
+  request_obj.resource = NULL;
   request_obj.origin = endpoint;
 
   /* Initialize OCF interface selector. */
@@ -1171,8 +1180,15 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       if (oc_ri_process_discovery_payload(payload, payload_len,
                                           cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
-        oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-        free_client_cb(cb);
+        oc_client_cb_t *r = cb;
+        uint8_t token[COAP_TOKEN_LEN];
+        memcpy(token, cb->token, cb->token_len);
+        uint8_t token_len = cb->token_len;
+        do {
+          oc_ri_remove_timed_event_callback(r, &oc_ri_remove_client_cb);
+          free_client_cb(r);
+          r = oc_ri_find_client_cb_by_token(token, token_len);
+        } while (r);
 #ifdef OC_BLOCK_WISE
         *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
@@ -1234,6 +1250,16 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
   return cb;
 }
 
+static void
+free_all_client_cbs(void)
+{
+  oc_client_cb_t *cb = oc_list_pop(client_cbs);
+  while (cb != NULL) {
+    free_client_cb(cb);
+    cb = oc_list_pop(client_cbs);
+  }
+}
+
 oc_client_cb_t *
 oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
                       oc_method_t method, const char *query,
@@ -1271,6 +1297,44 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   return cb;
 }
 #endif /* OC_CLIENT */
+
+void
+oc_ri_shutdown(void)
+{
+#ifdef OC_SERVER
+  coap_free_all_observers();
+#endif /* OC_SERVER */
+  coap_free_all_transactions();
+  free_all_event_timers();
+#ifdef OC_CLIENT
+  free_all_client_cbs();
+#endif /* OC_CLIENT */
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_scrub_buffers();
+#endif /* OC_BLOCK_WISE */
+
+  while (oc_main_poll() != 0)
+    ;
+
+  stop_processes();
+
+  oc_process_shutdown();
+
+#ifdef OC_SERVER
+  oc_ri_delete_all_app_resources();
+
+#ifdef OC_COLLECTIONS
+  oc_collection_t *collection = oc_collection_get_all(), *next;
+  while (collection != NULL) {
+    next = collection->next;
+    oc_collection_free(collection);
+    collection = next;
+  }
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+
+  oc_random_destroy();
+}
 
 OC_PROCESS_THREAD(timed_callback_events, ev, data)
 {
