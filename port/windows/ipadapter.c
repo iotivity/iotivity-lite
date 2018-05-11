@@ -23,9 +23,14 @@
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#include "ipcontext.h"
+#ifdef OC_TCP
+#include "tcpadapter.h"
+#endif
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
+#include "oc_network_monitor.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 
@@ -46,43 +51,114 @@ SOCKET ifchange_sock;
 BOOL ifchange_initialized;
 OVERLAPPED ifchange_event;
 
-typedef struct ip_context_t
-{
-  struct ip_context_t *next;
-  struct sockaddr_storage mcast;
-  struct sockaddr_storage server;
-  SOCKET mcast_sock;
-  SOCKET server_sock;
-  uint16_t port;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure;
-  SOCKET secure_sock;
-  uint16_t dtls_port;
-#endif /* OC_SECURITY */
-#ifdef OC_IPV4
-  struct sockaddr_storage mcast4;
-  struct sockaddr_storage server4;
-  SOCKET mcast4_sock;
-  SOCKET server4_sock;
-  uint16_t port4;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure4;
-  SOCKET secure4_sock;
-  uint16_t dtls4_port;
-#endif /* OC_SECURITY */
-#endif /* OC_IPV4 */
-  HANDLE event_thread_handle;
-  HANDLE event_server_handle;
-  DWORD event_thread;
-  BOOL terminate;
-  int device;
-} ip_context_t;
-
-#ifdef OC_DYNAMIC_ALLOCATION
 OC_LIST(ip_contexts);
-#else /* OC_DYNAMIC_ALLOCATION */
-static ip_context_t devices[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
+
+/**
+ * Structure to manage interface list.
+ */
+typedef struct ip_interface
+{
+  struct ip_interface *next;
+  int if_index;
+} ip_interface_t;
+
+OC_LIST(ip_interface_list);
+OC_MEMB(ip_interface_s, ip_interface_t, OC_MAX_IP_INTERFACES);
+
+OC_LIST(oc_network_interface_cb_list);
+OC_MEMB(oc_network_interface_cb_s, oc_network_interface_cb_t,
+        OC_MAX_NETWORK_INTERFACE_CBS);
+
+OC_LIST(oc_session_event_cb_list);
+OC_MEMB(oc_session_event_cb_s, oc_session_event_cb_t, OC_MAX_SESSION_EVENT_CBS);
+
+static ip_interface_t *
+get_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list);
+  while (if_item != NULL && if_item->if_index != target_index) {
+    if_item = if_item->next;
+  }
+  return if_item;
+}
+
+static bool
+add_ip_interface(int target_index)
+{
+  if (get_ip_interface(target_index))
+    return false;
+
+  ip_interface_t *new_if = oc_memb_alloc(&ip_interface_s);
+  if (!new_if) {
+    OC_ERR("interface item alloc failed");
+    return false;
+  }
+  new_if->if_index = target_index;
+  oc_list_add(ip_interface_list, new_if);
+  OC_DBG("New interface added: %d", new_if->if_index);
+  return true;
+}
+
+static bool
+check_new_ip_interfaces(void)
+{
+  // TBD
+  return true;
+}
+
+static bool
+remove_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = get_ip_interface(target_index);
+  if (!if_item) {
+    return false;
+  }
+
+  oc_list_remove(ip_interface_list, if_item);
+  oc_memb_free(&ip_interface_s, if_item);
+  OC_DBG("Removed from ip interface list: %d", target_index);
+  return true;
+}
+
+static void
+remove_all_ip_interface(void)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list), *next;
+  while (if_item != NULL) {
+    next = if_item->next;
+    oc_list_remove(ip_interface_list, if_item);
+    oc_memb_free(&ip_interface_s, if_item);
+    if_item = next;
+  }
+}
+
+static void
+remove_all_network_interface_cbs(void)
+{
+  oc_network_interface_cb_t *cb_item =
+                              oc_list_head(oc_network_interface_cb_list),
+                            *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(oc_network_interface_cb_list, cb_item);
+    oc_memb_free(&oc_network_interface_cb_s, cb_item);
+    cb_item = next;
+  }
+}
+
+static void
+remove_all_session_event_cbs(void)
+{
+  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list),
+                        *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(oc_session_event_cb_list, cb_item);
+    oc_memb_free(&oc_session_event_cb_s, cb_item);
+    cb_item = next;
+  }
+}
 
 void
 oc_network_event_handler_mutex_init(void)
@@ -108,15 +184,18 @@ oc_network_event_handler_mutex_unlock(void)
 void
 oc_network_event_handler_mutex_destroy(void)
 {
-  CloseHandle(mutex);
+  ifchange_initialized = false;
   closesocket(ifchange_sock);
+  remove_all_ip_interface();
+  remove_all_network_interface_cbs();
+  remove_all_session_event_cbs();
+  CloseHandle(mutex);
   WSACleanup();
 }
 
 static ip_context_t *
 get_ip_context_for_device(int device)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
@@ -124,9 +203,6 @@ get_ip_context_for_device(int device)
   if (!dev) {
     return NULL;
   }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   return dev;
 }
 
@@ -566,9 +642,22 @@ network_event_thread(void *data)
           message->length = count;
           message->endpoint.flags = IPV4 | SECURED;
           message->endpoint.device = dev->device;
+          goto common;
         }
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
+
+#ifdef OC_TCP
+      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
+                                                              &setfds,
+                                                              message);
+      if (tcp_status == TCP_STATUS_RECEIVE) {
+        goto common_tcp;
+      } else {
+        oc_message_unref(message);
+        continue;
+      }
+#endif /* OC_TCP */
       common:
 #ifdef OC_IPV4
         if (message->endpoint.flags & IPV4) {
@@ -584,7 +673,9 @@ network_event_thread(void *data)
           message->endpoint.addr.ipv6.scope = (uint8_t)c->sin6_scope_id;
           message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
         }
-
+#ifdef OC_TCP
+    common_tcp:
+#endif /* OC_TCP */
 #ifdef OC_DEBUG
         PRINT("Incoming message of size %d bytes from ", message->length);
         PRINTipaddr(message->endpoint);
@@ -663,6 +754,20 @@ oc_connectivity_get_endpoints(int device)
   get_interface_addresses(AF_INET, dev->dtls4_port, true);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
+
+#ifdef OC_TCP
+  get_interface_addresses(AF_INET6, dev->tcp.port, false, true);
+#ifdef OC_SECURITY
+  get_interface_addresses(AF_INET6, dev->tcp.tls_port, true, true);
+#endif /* OC_SECURITY */
+#ifdef OC_IPV4
+  get_interface_addresses(AF_INET, dev->tcp.port4, false, true);
+#ifdef OC_SECURITY
+  get_interface_addresses(AF_INET, dev->tcp.tls4_port, true, true);
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+#endif
+
   return oc_get_endpoint_list();
 }
 
@@ -698,6 +803,12 @@ oc_send_buffer(oc_message_t *message)
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
+#ifdef OC_TCP
+  if (message->endpoint.flags & TCP) {
+    oc_tcp_send_buffer(dev, message, &receiver);
+    return;
+  }
+#endif /* OC_TCP */
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
 #ifdef OC_IPV4
@@ -778,6 +889,106 @@ done:
   free_network_addresses(ifaddr_list);
 }
 #endif /* OC_CLIENT */
+
+int
+oc_add_network_interface_event_callback(interface_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_network_interface_cb_t *cb_item =
+    oc_memb_alloc(&oc_network_interface_cb_s);
+  if (!cb_item) {
+    OC_ERR("network interface callback item alloc failed");
+    return -1;
+  }
+
+  cb_item->handler = cb;
+  oc_list_add(oc_network_interface_cb_list, cb_item);
+  return 0;
+}
+
+int
+oc_remove_network_interface_event_callback(interface_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_network_interface_cb_t *cb_item =
+    oc_list_head(oc_network_interface_cb_list);
+  while (cb_item != NULL && cb_item->handler != cb) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    return -1;
+  }
+  oc_list_remove(oc_network_interface_cb_list, cb_item);
+
+  oc_memb_free(&oc_network_interface_cb_s, cb_item);
+  return 0;
+}
+
+void
+handle_network_interface_event_callback(oc_interface_event_t event)
+{
+  if (oc_list_length(oc_network_interface_cb_list) > 0) {
+    oc_network_interface_cb_t *cb_item =
+      oc_list_head(oc_network_interface_cb_list);
+    while (cb_item) {
+      cb_item->handler(event);
+      cb_item = cb_item->next;
+    }
+  }
+}
+
+int
+oc_add_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_session_event_cb_t *cb_item = oc_memb_alloc(&oc_session_event_cb_s);
+  if (!cb_item) {
+    OC_ERR("session event callback item alloc failed");
+    return -1;
+  }
+
+  cb_item->handler = cb;
+  oc_list_add(oc_session_event_cb_list, cb_item);
+  return 0;
+}
+
+int
+oc_remove_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
+  while (cb_item != NULL && cb_item->handler != cb) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    return -1;
+  }
+  oc_list_remove(oc_session_event_cb_list, cb_item);
+
+  oc_memb_free(&oc_session_event_cb_s, cb_item);
+  return 0;
+}
+
+void
+handle_session_event_callback(const oc_endpoint_t *endpoint,
+                              oc_session_state_t state)
+{
+  if (oc_list_length(oc_session_event_cb_list) > 0) {
+    oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
+    while (cb_item) {
+      cb_item->handler(endpoint, state);
+      cb_item = cb_item->next;
+    }
+  }
+}
 
 #ifdef OC_IPV4
 static int
@@ -890,15 +1101,11 @@ oc_connectivity_init(int device)
   }
 
   OC_DBG("Initializing connectivity for device %d", device);
-#ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
+  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
     oc_abort("Insufficient memory");
   }
   oc_list_add(ip_contexts, dev);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
   dev->device = device;
 
   memset(&dev->mcast, 0, sizeof(dev->mcast));
@@ -1005,6 +1212,24 @@ oc_connectivity_init(int device)
   }
 #endif /* OC_IPV4 */
 
+  OC_DBG("=======ip port info.========");
+  OC_DBG("  ipv6 port   : %u", dev->port);
+#ifdef OC_SECURITY
+  OC_DBG("  ipv6 secure : %u", dev->dtls_port);
+#endif
+#ifdef OC_IPV4
+  OC_DBG("  ipv4 port   : %u", dev->port4);
+#ifdef OC_SECURITY
+  OC_DBG("  ipv4 secure : %u", dev->dtls4_port);
+#endif
+#endif
+
+#ifdef OC_TCP
+  if (oc_tcp_connectivity_init(dev) != 0) {
+    OC_ERR("Could not initialize TCP adapter");
+  }
+#endif /* OC_TCP */
+
   if (!ifchange_initialized) {
     ifchange_sock =
       WSASocketW(AF_INET6, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -1038,7 +1263,7 @@ oc_connectivity_init(int device)
         return -1;
       }
     }
-    ifchange_initialized = TRUE;
+    ifchange_initialized = true;
   }
 
   dev->event_thread_handle =
@@ -1058,7 +1283,7 @@ void
 oc_connectivity_shutdown(int device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
-  dev->terminate = TRUE;
+  dev->terminate = true;
   /* signal WSASelectEvent() in the thread to leave */
   WSASetEvent(dev->event_server_handle);
 
@@ -1080,10 +1305,21 @@ oc_connectivity_shutdown(int device)
   WaitForSingleObject(dev->event_thread_handle, INFINITE);
   TerminateThread(dev->event_thread_handle, 0);
 
-#ifdef OC_DYNAMIC_ALLOCATION
   oc_list_remove(ip_contexts, dev);
-  free(dev);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_memb_free(&ip_context_s, dev);
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);
 }
+
+#ifdef OC_TCP
+void
+oc_connectivity_end_session(oc_endpoint_t *endpoint)
+{
+  if (endpoint->flags & TCP) {
+    ip_context_t *dev = get_ip_context_for_device(endpoint->device);
+    if (dev) {
+      oc_tcp_end_session(dev, endpoint);
+    }
+  }
+}
+#endif /* OC_TCP */
