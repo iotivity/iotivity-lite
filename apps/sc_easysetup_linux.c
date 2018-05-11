@@ -203,20 +203,20 @@ void DevConfProvCbInApp(es_dev_conf_data*eventData)
         return ;
     }
 
-    if(eventData->userdata != NULL)
-    {
-        sc_dev_conf_properties*data = eventData->userdata;
-        for(int i = 0 ; i < data->numLocation ; ++i)
-        {
-            printf("[SC] Location : %s\n", data->location[i]);
-        }
-        printf("[SC] Register Mobile Device : %s\n", data->regMobileDev);
-        printf("[SC] Country : %s\n", data->country);
-        printf("[SC] Language : %s\n", data->language);
-        printf("[SC] GPS Location : %s\n", data->gpsLocation);
-        printf("[SC] UTC Date time : %s\n", data->utcDateTime);
-        printf("[SC] Regional time : %s\n", data->regionalDateTime);
-        printf("[SC] SSO List : %s\n", data->ssoList);
+    if (eventData->userdata != NULL) {
+      sc_dev_conf_properties *data = eventData->userdata;
+      for (uint8_t i = 0; i < data->location.size; ++i) {
+        printf("[SC] Location : %s\n",
+               oc_string_array_get_item(data->location, i));
+      }
+      printf("[SC] Register Mobile Device : %s\n",
+             oc_string(data->regMobileDev));
+      printf("[SC] Country : %s\n", oc_string(data->country));
+      printf("[SC] Language : %s\n", oc_string(data->language));
+      printf("[SC] GPS Location : %s\n", oc_string(data->gpsLocation));
+      printf("[SC] UTC Date time : %s\n", oc_string(data->utcDateTime));
+      printf("[SC] Regional time : %s\n", oc_string(data->regionalDateTime));
+      printf("[SC] SSO List : %s\n", oc_string(data->ssoList));
     }
 
     printf("[ES App] DevConfProvCbInApp OUT\n");
@@ -254,8 +254,8 @@ void CloudDataProvCbInApp(es_coap_cloud_conf_data *eventData)
 
     if(eventData->userdata != NULL)
     {
-        sc_coap_cloud_server_conf_properties *data = eventData->userdata;
-        printf("[SC] ClientID : %s\n", data->clientID);
+      sc_coap_cloud_server_conf_properties *data = eventData->userdata;
+      printf("[SC] ClientID : %s\n", oc_string(data->clientID));
     }
 
     printf("[ES App] CloudDataProvCbInApp OUT\n");
@@ -300,18 +300,29 @@ void SetDeviceInfo()
     // Set user properties if needed
 
     memset(&g_SCProperties, 0, sizeof(sc_properties));
-    strncpy(g_SCProperties.deviceType, "deviceType", MAXLEN_STRING);
-    strncpy(g_SCProperties.deviceSubType, "deviceSubType", MAXLEN_STRING);
+
+    oc_new_string(&g_SCProperties.deviceType, "deviceType", MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.deviceSubType, "deviceSubType",
+                  MAXLEN_STRING);
     g_SCProperties.netConnectionState = NET_STATE_INIT;
     g_SCProperties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-    strncpy(g_SCProperties.regSetDev, "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\",\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\",\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\",\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}", MAXLEN_STRING);
-    strncpy(g_SCProperties.nwProvInfo, "{\"IMEI\":\"123456789012345 / 01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\",\"SN\":\"XY0123456XYZ\"}", MAXLEN_STRING);
-    strncpy(g_SCProperties.pnpPin, "pinNumber", MAXLEN_STRING);
-    strncpy(g_SCProperties.modelNumber, "Model Number", MAXLEN_STRING);
-    strncpy(g_SCProperties.esProtocolVersion, "2.0", MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.regSetDev,
+                  "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\","
+                  "\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\","
+                  "\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\","
+                  "\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}",
+                  MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.nwProvInfo,
+                  "{\"IMEI\":\"123456789012345 / "
+                  "01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\","
+                  "\"SN\":\"XY0123456XYZ\"}",
+                  MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.pnpPin, "pinNumber", MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.modelNumber, "Model Number", MAXLEN_STRING);
+    oc_new_string(&g_SCProperties.esProtocolVersion, "2.0", MAXLEN_STRING);
 
-    if(set_sc_properties(&g_SCProperties) == ES_ERROR)
-        printf("SetSCProperties Error\n");
+    if (set_sc_properties(&g_SCProperties) == ES_ERROR)
+      printf("SetSCProperties Error\n");
 
     printf("[ES App] SetDeviceInfo OUT\n");
 }
