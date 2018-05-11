@@ -73,70 +73,125 @@ typedef enum
 
 typedef struct sc_wifi_conf_properties
 {
-    int discoveryChannel;                   /**< Wi-Fi AP Channel used for fast discovery **/
-    char bssid[MAXLEN_STRING];              /**< Wi-Fi bssid information. **/
+  /**< Wi-Fi AP Channel used for fast discovery **/
+  int discoveryChannel;
+  /**< Wi-Fi bssid information. **/
+  oc_string_t bssid;
 } sc_wifi_conf_properties;
 
 typedef struct sc_tnc_info
 {
-    char header[MAXLEN_STRING];     /**< Terms & Conditions header **/
-    char version[MAXLEN_STRING];    /**< Terms & Conditions version **/
-}sc_tnc_info;
+  /**< Terms & Conditions header **/
+  oc_string_t header;
+  /**< Terms & Conditions version **/
+  oc_string_t version;
+} sc_tnc_info;
 
 typedef struct sc_dev_conf_properties
 {
-    int numLocation;
-    char location[MAXNUM_LOCATION][MAXLEN_STRING];  /**< Samsung-specific location-related information **/
-    char regMobileDev[MAXLEN_STRING];               /**< Samsung-specific mobile device information for 'register TV' **/
-    char account[MAXLEN_STRING];                    /**< Samsung-specific account-related information **/
-    char ssoList[MAXLEN_STRING];                    /**< Samsung-specific SSO list information which is registered in device **/
-    sc_tnc_info scTnCInfo;                          /**< Samsung-specific Terms & Conditions information **/
-    char modelNumber[MAXLEN_STRING];                /**< Samsung-specific model number **/
-    char language[MAXLEN_STRING];                   /**< IETF language tag using ISO 639X **/
-    char country[MAXLEN_STRING];                    /**< ISO Country Code (ISO 3166-1 Alpha-2) **/
-    char gpsLocation[MAXLEN_STRING];                /**< GPS information of device. Longitude and latitude in json format **/
-    char utcDateTime[MAXLEN_DATE_TIME];             /**< UTC date time **/
-    char regionalDateTime[MAXLEN_DATE_TIME];        /**< Regional date time **/
+  /**< Samsung-specific location-related information **/
+  oc_string_array_t location;
+  /**< Samsung-specific mobile device information for 'register TV' **/
+  oc_string_t regMobileDev;
+  /**< Samsung-specific account-related information **/
+  oc_string_t account;
+  /**< Samsung-specific SSO list information which is registered in device **/
+  oc_string_t ssoList;
+  /**< Samsung-specific Terms & Conditions information **/
+  sc_tnc_info scTnCInfo;
+  /**< Samsung-specific model number **/
+  oc_string_t modelNumber;
+  /**< IETF language tag using ISO 639X **/
+  oc_string_t language;
+  /**< ISO Country Code (ISO 3166-1 Alpha-2) **/
+  oc_string_t country;
+  /**< GPS information of device. Longitude and latitude in json format **/
+  oc_string_t gpsLocation;
+  /**< UTC date time **/
+  oc_string_t utcDateTime;
+  /**< Regional date time **/
+  oc_string_t regionalDateTime;
 } sc_dev_conf_properties;
 
 typedef struct sc_coap_cloud_server_conf_properties
 {
-    char clientID[MAXLEN_STRING];                   /**< Samsung-specific clientId for sign-up to IoT Cloud **/
-    char aac[MAXLEN_STRING];                        /**< Samsung-specific aac information **/
-    char tncResult[MAXLEN_STRING];                  /**< Samsung-specific Terms & Conditions result **/
-    char refreshToken[MAXLEN_STRING];               /**< Samsung-specific refreshToken information. Indicate refresh token to be used if the access token is expired**/
-    char uid[MAXLEN_STRING];                        /**< Samsung-specific aac information. Indicate user ID corresponding to user account **/
+  /**< Samsung-specific clientId for sign-up to IoT Cloud **/
+  oc_string_t clientID;
+  /**< Samsung-specific aac information **/
+  oc_string_t aac;
+  /**< Samsung-specific Terms & Conditions result **/
+  oc_string_t tncResult;
+  /**
+   * < Samsung-specific refreshToken information.
+   * Indicate refresh token to be used if the access token is expired
+   */
+  oc_string_t refreshToken;
+  /**
+   * < Samsung-specific aac information.
+   * Indicate user ID corresponding to user account
+   */
+  oc_string_t uid;
 } sc_coap_cloud_server_conf_properties;
 
 typedef struct sc_properties
 {
-    NETCONNECTION_STATE netConnectionState;         /**< A state of network connection **/
-    int discoveryChannel;                           /**< Wi-Fi AP Channel used for fast discovery **/
-    char deviceType[MAXLEN_STRING];                 /**< Generated with Device Type + Icon Type **/
-    char deviceSubType[MAXLEN_STRING];              /**< Device Sub Category **/
-    int numLocation;
-    char location[MAXNUM_LOCATION][MAXLEN_STRING];  /**< Samsung-specific location-related information **/
-    char clientID[MAXLEN_STRING];                   /**< Samsung-specific clientId for sign-up to IoT Cloud **/
-    char regMobileDev[MAXLEN_STRING];               /**< Samsung-specific mobile device information for 'register TV' **/
-    char regSetDev[MAXLEN_STRING];                  /**< Samsung-specific set device information for 'register TV' **/
-    char nwProvInfo[MAXLEN_STRING];                 /**< Samsung-specific network provisioning information for cellular network vendor **/
-    char account[MAXLEN_STRING];                    /**< Samsung-specific account-related information **/
-    char ssoList[MAXLEN_STRING];                    /**< Samsung-specific SSO list information which is registered in device **/
-    char aac[MAXLEN_STRING];                        /**< Samsung-specific aac information **/
-    sc_tnc_info tncInfo;                            /**< Samsung-specific Terms & Conditions information **/
-    char tncResult[MAXLEN_STRING];                  /**< Samsung-specific Terms & Conditions result **/
-    int tncStatus;                                  /**< Samsung-specific Terms & Conditions status **/
-    char refreshToken[MAXLEN_STRING];               /**< Samsung-specific refreshToken information. Indicate refresh token to be used if the access token is expired**/
-    char uid[MAXLEN_STRING];                        /**< Samsung-specific aac information. Indicate user ID corresponding to user account **/
-    char bssid[MAXLEN_STRING];                      /**< Samsung-specific Wi-Fi bssid information. **/
-    char pnpPin[MAXLEN_STRING];                     /**< Samsung-specific PnP Pin **/
-    char modelNumber[MAXLEN_STRING];                /**< Samsung-specific model number **/
-    char language[MAXLEN_STRING];                   /**< IETF language tag using ISO 639X **/
-    char country[MAXLEN_STRING];                    /**< ISO Country Code (ISO 3166-1 Alpha-2) **/
-    char gpsLocation[MAXLEN_STRING];                /**< GPS information of device. Longitude and latitude in json format **/
-    char utcDateTime[MAXLEN_DATE_TIME];             /**< UTC date time **/
-    char regionalDateTime[MAXLEN_DATE_TIME];        /**< Regional date time **/
-    char esProtocolVersion[MAXLEN_STRING];          /**< Samsung Easy Setup Protocol Version **/
+  /**< A state of network connection **/
+  NETCONNECTION_STATE netConnectionState;
+  /**< Wi-Fi AP Channel used for fast discovery **/
+  int discoveryChannel;
+  /**< Generated with Device Type + Icon Type **/
+  oc_string_t deviceType;
+  /**< Device Sub Category **/
+  oc_string_t deviceSubType;
+  /**< Samsung-specific location-related information **/
+  oc_string_array_t location;
+  /**< Samsung-specific clientId for sign-up to IoT Cloud **/
+  oc_string_t clientID;
+  /**< Samsung-specific mobile device information for 'register TV' **/
+  oc_string_t regMobileDev;
+  /**< Samsung-specific set device information for 'register TV' **/
+  oc_string_t regSetDev;
+  /**< Samsung-specific network provisioning information for cellular network
+   * vendor **/
+  oc_string_t nwProvInfo;
+  /**< Samsung-specific account-related information **/
+  oc_string_t account;
+  /**< Samsung-specific SSO list information which is registered in device **/
+  oc_string_t ssoList;
+  /**< Samsung-specific aac information **/
+  oc_string_t aac;
+  /**< Samsung-specific Terms & Conditions information **/
+  sc_tnc_info tncInfo;
+  /**< Samsung-specific Terms & Conditions result **/
+  oc_string_t tncResult;
+  /**< Samsung-specific Terms & Conditions status **/
+  int tncStatus;
+  /**
+   * < Samsung-specific refreshToken information.
+   * Indicate refresh token to be used if the access token is expired
+   */
+  oc_string_t refreshToken;
+  /**< Samsung-specific aac information. Indicate user ID corresponding to user
+   * account **/
+  oc_string_t uid;
+  /**< Samsung-specific Wi-Fi bssid information. **/
+  oc_string_t bssid;
+  /**< Samsung-specific PnP Pin **/
+  oc_string_t pnpPin;
+  /**< Samsung-specific model number **/
+  oc_string_t modelNumber;
+  /**< IETF language tag using ISO 639X **/
+  oc_string_t language;
+  /**< ISO Country Code (ISO 3166-1 Alpha-2) **/
+  oc_string_t country;
+  /**< GPS information of device. Longitude and latitude in json format **/
+  oc_string_t gpsLocation;
+  /**< UTC date time **/
+  oc_string_t utcDateTime;
+  /**< Regional date time **/
+  oc_string_t regionalDateTime;
+  /**< Samsung Easy Setup Protocol Version **/
+  oc_string_t esProtocolVersion;
 } sc_properties;
 
 typedef struct
