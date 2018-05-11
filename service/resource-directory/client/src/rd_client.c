@@ -116,8 +116,9 @@ rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
       oc_rep_set_text_string(devices, n, oc_string(device_info->name));
       oc_rep_set_text_string(devices, icv, oc_string(device_info->icv));
       oc_rep_set_text_string(devices, dmv, oc_string(device_info->dmv));
-      oc_rep_set_string_array(
-        devices, rt, oc_core_get_resource_by_index(OCF_D, device)->types);
+      oc_rep_set_text_string(
+        devices, rt, oc_string_array_get_item(
+                       oc_core_get_resource_by_index(OCF_D, device)->types, 0));
       oc_rep_set_text_string(devices, mnmn, oc_string(platfrom_into->mfg_name));
       // oc_rep_set_text_string(devices, mnmo,
       // oc_string(platfrom_into->model_num));
