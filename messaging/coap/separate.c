@@ -83,6 +83,8 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
                      oc_endpoint_t *endpoint, int observe)
 #endif /* !OC_BLOCK_WISE */
 {
+  coap_status_code = CLEAR_TRANSACTION;
+
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -91,35 +93,52 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   }
 
   coap_packet_t *const coap_req = (coap_packet_t *)request;
-
-  for (coap_separate_t *item = oc_list_head(separate_response->requests);
-       item != NULL; item = item->next) {
-    if (item->token_len == coap_req->token_len &&
-        memcmp(item->token, coap_req->token, item->token_len) == 0) {
-      return 0;
+  coap_separate_t *separate_store = NULL;
+  for (separate_store = oc_list_head(separate_response->requests);
+       separate_store != NULL; separate_store = separate_store->next) {
+    if (separate_store->token_len == coap_req->token_len &&
+        memcmp(separate_store->token, coap_req->token,
+               separate_store->token_len) == 0) {
+      break;
     }
   }
 
-  coap_separate_t *separate_store = oc_memb_alloc(&separate_requests);
-
   if (!separate_store) {
-    OC_WRN("insufficient memory to store new request for separate response");
-    return 0;
+    separate_store = oc_memb_alloc(&separate_requests);
+
+    if (!separate_store) {
+      OC_WRN("insufficient memory to store new request for separate response");
+      return 0;
+    }
+
+    oc_list_add(separate_response->requests, separate_store);
+
+    memcpy(&separate_store->endpoint, endpoint, sizeof(oc_endpoint_t));
+
+    /* store correct response type */
+    separate_store->type = COAP_TYPE_NON;
+
+    memcpy(separate_store->token, coap_req->token, coap_req->token_len);
+    separate_store->token_len = coap_req->token_len;
+
+    oc_new_string(&separate_store->uri, coap_req->uri_path,
+                  coap_req->uri_path_len);
+
+    separate_store->method = coap_req->code;
+
+#ifdef OC_BLOCK_WISE
+    separate_store->block2_size = block2_size;
+#endif /* OC_BLOCK_WISE */
   }
 
-  oc_list_add(separate_response->requests, separate_store);
+  separate_store->observe = observe;
 
-  coap_status_code = CLEAR_TRANSACTION;
   /* send separate ACK for CON */
   if (coap_req->type == COAP_TYPE_CON) {
     OC_DBG("Sending ACK for separate response");
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_udp_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
-    if (observe < 2) {
-      coap_set_header_observe(ack, observe);
-    }
-    coap_set_token(ack, coap_req->token, coap_req->token_len);
     oc_message_t *message = oc_allocate_message();
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -132,24 +151,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
       return 0;
     }
   }
-  memcpy(&separate_store->endpoint, endpoint, sizeof(oc_endpoint_t));
 
-  /* store correct response type */
-  separate_store->type = COAP_TYPE_NON;
-
-  memcpy(separate_store->token, coap_req->token, coap_req->token_len);
-  separate_store->token_len = coap_req->token_len;
-
-  oc_new_string(&separate_store->uri, coap_req->uri_path,
-                coap_req->uri_path_len);
-
-  separate_store->method = coap_req->code;
-
-#ifdef OC_BLOCK_WISE
-  separate_store->block2_size = block2_size;
-#endif /* OC_BLOCK_WISE */
-
-  separate_store->observe = observe;
   return 1;
 }
 /*----------------------------------------------------------------------------*/

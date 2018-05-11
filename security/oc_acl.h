@@ -89,6 +89,7 @@ typedef struct
 } oc_sec_acl_t;
 
 void oc_sec_acl_init(void);
+void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(int device);
 void oc_sec_acl_default(int device);
 bool oc_sec_encode_acl(int device);

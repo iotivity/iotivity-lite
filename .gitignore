@@ -11,6 +11,8 @@ port/linux/smart_home_server_linux
 port/linux/multi_device_client
 port/linux/multi_device_server
 port/linux/onboarding_tool
+port/linux/server_multithread_linux
+port/linux/client_multithread_linux
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*
 port/linux/libiotivity-constrained-client-server.*
@@ -36,4 +38,21 @@ port/openthread/output
 *.tmp
 .clang-format
 _clang-format
+port/linux/platformtest
 
+#creds files
+port/linux/client_creds
+port/linux/server_creds
+port/linux/temp_sensor_creds
+port/linux/simpleclient_creds
+port/linux/simpleserver_creds
+port/linux/server_collections_linux_creds
+port/linux/client_collections_linux_creds
+port/linux/smart_home_server_linux_creds
+port/linux/multi_device_client_creds
+port/linux/multi_device_server_creds
+port/linux/server_multithread_linux_creds
+port/linux/client_multithread_linux_creds
+
+#vscode setting files
+.vscode

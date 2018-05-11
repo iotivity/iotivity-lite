@@ -27,6 +27,7 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
+EXTRA_CFLAGS =
 
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -39,7 +40,11 @@ API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/$(OBJDIR)
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
-UNIT_TESTS = apitest
+PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
+PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
+PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
+PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
+UNIT_TESTS = apitest platformtest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -80,7 +85,7 @@ LIBS?= -lm -pthread -lrt
 
 SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
-	  client_scenes_linux server_scenes_linux smart_lock
+	  client_scenes_linux server_scenes_linux smart_lock server_multithread_linux client_multithread_linux
 
 ifneq ($(IOT_NAME_SUFFIX),)
 SAMPLES := $(addsuffix $(IOT_NAME_SUFFIX),$(SAMPLES))
@@ -95,7 +100,7 @@ else
 endif
 
 ifeq ($(DYNAMIC),1)
-	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(SECURE),1)
@@ -108,12 +113,13 @@ ifeq ($(DYNAMIC),1)
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 endif
-	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
+	CFLAGS += ${DTLSFLAGS}
+	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
 endif
 
 ifeq ($(IPV4),1)
-	CFLAGS += -DOC_IPV4
+	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
 ifneq ($(findstring cygwin,$(shell $(CC) -dumpmachine)),)
@@ -124,7 +130,13 @@ ifneq ($(findstring cygwin,$(shell $(CC) -dumpmachine)),)
 endif
 
 ifeq ($(TCP),1)
-	CFLAGS += -DOC_TCP
+	EXTRA_CFLAGS += -DOC_TCP
+endif
+
+CFLAGS += $(EXTRA_CFLAGS)
+
+ifeq ($(MEMTRACE),1)
+	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
@@ -151,6 +163,13 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
@@ -251,13 +270,22 @@ ${OBT}: libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+server_multithread_linux: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_multithread_linux: libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 	$(SED) > $@ < $< \
@@ -265,7 +293,8 @@ iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 	$(SED) > $@ < $< \
@@ -273,7 +302,8 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@exec_prefix@,$(exec_prefix),' \
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),'
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
 ifeq ($(SECURE),1)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
@@ -294,10 +324,10 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES)
+	$(RM) -rf ${OBJDIR} $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(UNIT_TESTS)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall

@@ -484,6 +484,8 @@ void oc_process_poll(struct oc_process *p);
  */
 void oc_process_init(void);
 
+void oc_process_shutdown(void);
+
 /**
  * Run the system once - call poll handlers and process one event.
  *

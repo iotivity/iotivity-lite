@@ -70,19 +70,6 @@ oc_core_init(void)
 }
 
 static void
-oc_core_free_resource_properties(oc_resource_t *core_resources_item)
-{
-  if (core_resources_item) {
-    if (oc_string_len(core_resources_item->name))
-      oc_free_string(&(core_resources_item->name));
-    if (oc_string_len(core_resources_item->uri))
-      oc_free_string(&(core_resources_item->uri));
-    if (oc_string_array_get_allocated_size(core_resources_item->types))
-      oc_free_string_array(&(core_resources_item->types));
-  }
-}
-
-static void
 oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
 
@@ -120,8 +107,8 @@ oc_core_shutdown(void)
   if (core_resources) {
 #endif /* OC_DYNAMIC_ALLOCATION */
     for (i = 0; i < 1 + (OCF_D * device_count); ++i) {
-      oc_resource_t *core_resources_item = &core_resources[i];
-      oc_core_free_resource_properties(core_resources_item);
+      oc_resource_t *core_resource = &core_resources[i];
+      oc_ri_free_resource_properties(core_resource);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
     free(core_resources);
@@ -570,8 +557,8 @@ oc_core_get_resource_by_uri(const char *uri, int device)
   } else if ((strlen(uri) - skip) == 12 &&
              memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
     type = OCF_SEC_PSTAT;
-  } else if ((strlen(uri) - skip) == 11 &&
-             memcmp(uri + skip, "oic/sec/acl", 11) == 0) {
+  } else if ((strlen(uri) - skip) == 12 &&
+             memcmp(uri + skip, "oic/sec/acl2", 12) == 0) {
     type = OCF_SEC_ACL;
   } else if ((strlen(uri) - skip) == 11 &&
              strncmp(uri + skip, "oic/sec/cred", 11) == 0) {

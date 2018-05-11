@@ -284,7 +284,8 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
-
+  oc_free_server_endpoints(light_server);
+  oc_free_string(&name);
   oc_main_shutdown();
   pthread_cond_destroy(&cv);
   pthread_mutex_destroy(&mutex);
