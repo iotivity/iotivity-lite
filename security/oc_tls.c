@@ -39,6 +39,7 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
+#include "oc_discovery.h"
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
 #include "oc_session_events.h"
@@ -152,6 +153,25 @@ oc_tls_get_peer(oc_endpoint_t *endpoint)
     }
     peer = peer->next;
   }
+
+  uint8_t device = oc_discovery_get_device(endpoint);
+  if (device > 0) {
+    peer = oc_list_head(tls_peers);
+    while (peer != NULL) {
+      if (oc_discovery_get_device(&peer->endpoint) == device) {
+#ifdef OC_DEBUG
+        PRINT("Replacing for device %u IP %d/%d ", device, (endpoint->flags & SECURE), (endpoint->flags & MULTICAST));
+        PRINTipaddr(*endpoint);
+        PRINT(" with %d/%d ", (peer->endpoint.flags & SECURE), (peer->endpoint.flags & MULTICAST));
+        PRINTipaddr(peer->endpoint);
+        PRINT("\n");
+#endif
+        return peer;
+      }
+      peer = peer->next;
+    }
+  }
+
   return NULL;
 }
 
@@ -844,8 +864,8 @@ oc_tls_connected(oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
-    return (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER);
-  }
+        return (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER);
+      }
   return false;
 }
 

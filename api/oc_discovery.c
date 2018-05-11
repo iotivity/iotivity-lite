@@ -31,6 +31,122 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 
+/* TBD: Make this configurable and add dynamic support */
+#define OC_ENDPOINT_CACHE_MAX_ITEMS 200
+typedef struct {
+  oc_endpoint_t ep;
+  uint8_t device;
+} endpoint_cache_item_t;
+static uint8_t last_device; // zero means none
+static int next_free_item;
+static endpoint_cache_item_t endpoint_cache[OC_ENDPOINT_CACHE_MAX_ITEMS];
+
+static int
+get_cache_entry_for_endpoint(oc_endpoint_t *endpoint)
+{
+  if (endpoint) {
+    int loop;
+    for (loop = 0; loop < next_free_item; ++loop) {
+      if (oc_endpoint_compare(endpoint, &endpoint_cache[loop].ep) == 0) {
+        return loop;
+      }
+    }
+  }
+  return -1;
+}
+
+static int
+get_cache_entry_for_address(oc_endpoint_t *endpoint)
+{
+  if (endpoint) {
+    int loop;
+    for (loop = 0; loop < next_free_item; ++loop) {
+      if (oc_endpoint_compare_address(endpoint, &endpoint_cache[loop].ep) == 0) {
+        return loop;
+      }
+    }
+  }
+  return -1;
+}
+
+static bool
+add_cache_entry(oc_endpoint_t *endpoint, uint8_t device)
+{
+  if (endpoint && device > 0 && next_free_item < OC_ENDPOINT_CACHE_MAX_ITEMS) {
+    endpoint_cache[next_free_item].device = device;
+    memcpy(&endpoint_cache[next_free_item].ep, endpoint, sizeof(oc_endpoint_t));
+    endpoint_cache[next_free_item].ep.next = NULL;
+#ifdef OC_DEBUG
+    PRINT("eps cache: added ");
+    PRINTipaddr(*endpoint);
+    PRINT(" %d/%d as device %u at index %d\n",
+          (endpoint->flags & SECURE), (endpoint->flags & MULTICAST),
+          device, next_free_item);
+#endif
+    ++next_free_item;
+    return true;
+  }
+  return false;
+}
+
+void
+oc_discovery_add_eps_to_cache(oc_endpoint_t *source, oc_endpoint_t *eps)
+{
+  uint8_t device = 0;
+  int source_entry = get_cache_entry_for_endpoint(source);
+  oc_endpoint_t *loop;
+  for (loop = eps; loop != NULL && device == 0; loop = loop->next) {
+    int entry = get_cache_entry_for_endpoint(loop);
+    if (entry >= 0) {
+      device = endpoint_cache[entry].device;
+    }
+  }
+
+  if (device == 0) {
+    if (source_entry >= 0) {
+      device = endpoint_cache[source_entry].device;
+    }
+    else {
+      device = ++last_device;
+    }
+  }
+
+  bool added = true;
+  if (source_entry < 0) {
+    added = add_cache_entry(source, device);
+  }
+  else {
+    // align all endpoints
+    endpoint_cache[source_entry].device = device;
+  }
+
+  for (loop = eps; loop != NULL && added; loop = loop->next) {
+    int entry = get_cache_entry_for_endpoint(loop);
+    if (entry < 0) {
+      added = add_cache_entry(loop, device);
+    }
+    else {
+      // align all endpoints
+      endpoint_cache[entry].device = device;
+    }
+  }
+}
+
+uint8_t
+oc_discovery_get_device(oc_endpoint_t *endpoint)
+{
+  int entry = get_cache_entry_for_address(endpoint);
+  if (entry >= 0) {
+#ifdef OC_DEBUG
+    PRINT("Found match ");
+    PRINTipaddr(endpoint_cache[entry].ep);
+    PRINT(" with device %u\n", endpoint_cache[entry].device);
+#endif
+    return endpoint_cache[entry].device;
+  }
+  return 0;
+}
+
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
                 const char *anchor, CborEncoder *links)
@@ -611,9 +727,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                    *       in its eps.
                    */
                   if (oc_endpoint_compare_address(&temp_ep, endpoint) != 0) {
-                    if (eps_list) {
-                      goto next_ep;
-                    }
                     work_ep = &unmatched_cur;
                     work_list_ep = &unmatched_eps_list;
                   }
@@ -638,7 +751,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             default:
               break;
             }
-          next_ep:
             ep = ep->next;
           }
           eps = eps->next;
@@ -659,7 +771,11 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
 
+    if (eps_list) {
+      oc_discovery_add_eps_to_cache(endpoint, eps_list);
+    }
     if (unmatched_eps_list) {
+      oc_discovery_add_eps_to_cache(endpoint, unmatched_eps_list);
       if (!eps_list) {
         eps_list = unmatched_eps_list;
       }
