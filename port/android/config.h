@@ -14,7 +14,7 @@ typedef uint64_t oc_clock_time_t;
 
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
-#define OC_DTLS_INACTIVITY_TIMEOUT (300)
+#define OC_DTLS_INACTIVITY_TIMEOUT (600)
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -41,7 +41,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE_SET_MTU (700)
 
 /* Maximum size of request/response payloads */
-#define OC_MAX_APP_DATA_SIZE (1500)
+#define OC_MAX_APP_DATA_SIZE (2048)
 
 /* Maximum number of concurrent requests */
 #define OC_MAX_NUM_CONCURRENT_REQUESTS (3)
@@ -59,8 +59,21 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of authorized clients */
 #define OC_MAX_NUM_SUBJECTS (2)
 
-/* Maximum number of concurrent DTLS sessions */
-#define OC_MAX_DTLS_PEERS (1)
+/* Maximum number of concurrent (D)TLS sessions */
+#define OC_MAX_TLS_PEERS (1)
+
+/* Maximum number of peer for TCP channel */
+#define OC_MAX_TCP_PEERS (2)
+
+/* Maximum number of interfaces for IP adapter */
+/* Warning: Android has often over 10 interfaces. */
+#define OC_MAX_IP_INTERFACES (20)
+
+/* Maximum number of callbacks for Network interface event monitoring */
+#define OC_MAX_NETWORK_INTERFACE_CBS (2)
+
+/* Maximum number of callbacks for connection of session */
+#define OC_MAX_SESSION_EVENT_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 

@@ -11,9 +11,6 @@ typedef uint64_t oc_clock_time_t;
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
 
-/* Maximum wait time for select function */
-#define SELECT_TIMEOUT_SEC (1)
-
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
