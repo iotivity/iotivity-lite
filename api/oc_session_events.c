@@ -16,7 +16,6 @@
 
 #include "oc_session_events.h"
 #include "oc_buffer.h"
-#include "oc_session_state.h"
 #include "oc_signal_event_loop.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
@@ -63,6 +62,9 @@ OC_PROCESS_THREAD(oc_session_events, ev, data) {
 void
 oc_session_start_event(oc_endpoint_t *endpoint)
 {
+  if (!oc_process_is_running(&(oc_session_events))) {
+    return;
+  }
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -77,6 +79,9 @@ oc_session_start_event(oc_endpoint_t *endpoint)
 void
 oc_session_end_event(oc_endpoint_t *endpoint)
 {
+  if (!oc_process_is_running(&(oc_session_events))) {
+    return;
+  }
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -104,5 +109,5 @@ oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
     }
 #endif /* OC_SECURITY */
   }
-  _oc_session_state(endpoint, state);
+  handle_session_event_callback(endpoint, state);
 }

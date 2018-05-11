@@ -24,42 +24,84 @@
 static bool mmem_initialized = false;
 
 static void
-oc_malloc(oc_handle_t *block, int num_items, pool pool_type)
+oc_malloc(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_handle_t *block, int num_items, pool pool_type)
 {
   if (!mmem_initialized) {
     oc_mmem_init();
     mmem_initialized = true;
   }
-  oc_assert(oc_mmem_alloc(block, num_items, pool_type) > 0);
+  int alloc_ret = _oc_mmem_alloc(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    block, num_items, pool_type);
+  oc_assert(alloc_ret > 0);
 }
 
 static void
-oc_free(oc_handle_t *block, pool pool_type)
+oc_free(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_handle_t *block, pool pool_type)
 {
-  oc_mmem_free(block, pool_type);
+  _oc_mmem_free(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    block, pool_type);
+
   block->next = 0;
   block->ptr = 0;
   block->size = 0;
 }
 
 void
-oc_new_string(oc_string_t *ocstring, const char *str, int str_len)
+_oc_new_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, const char *str, int str_len)
 {
-  oc_malloc(ocstring, str_len + 1, BYTE_POOL);
+  oc_malloc(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocstring, str_len + 1, BYTE_POOL);
   memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
   memcpy(oc_string(*ocstring) + str_len, (const uint8_t *)"", 1);
 }
 
 void
-oc_alloc_string(oc_string_t *ocstring, int size)
+_oc_alloc_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, int size)
 {
-  oc_malloc(ocstring, size, BYTE_POOL);
+  oc_malloc(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocstring, size, BYTE_POOL);
 }
 
 void
-oc_free_string(oc_string_t *ocstring)
+_oc_free_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring)
 {
-  oc_free(ocstring, BYTE_POOL);
+  oc_free(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocstring, BYTE_POOL);
 }
 
 void
@@ -73,17 +115,21 @@ oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 }
 
 void
-_oc_new_array(oc_array_t *ocarray, int size, pool type)
+_oc_new_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_array_t *ocarray, int size, pool type)
 {
   switch (type) {
   case INT_POOL:
-    oc_malloc(ocarray, size, INT_POOL);
-    break;
   case BYTE_POOL:
-    oc_malloc(ocarray, size, BYTE_POOL);
-    break;
   case DOUBLE_POOL:
-    oc_malloc(ocarray, size, DOUBLE_POOL);
+    oc_malloc(
+#ifdef OC_MEMORY_TRACE
+      func,
+#endif
+      ocarray, size, type);
     break;
   default:
     break;
@@ -91,15 +137,32 @@ _oc_new_array(oc_array_t *ocarray, int size, pool type)
 }
 
 void
-_oc_free_array(oc_array_t *ocarray, pool type)
+_oc_free_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_array_t *ocarray, pool type)
 {
-  oc_free(ocarray, type);
+  oc_free(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocarray, type);
 }
 
 void
-_oc_alloc_string_array(oc_string_array_t *ocstringarray, int size)
+_oc_alloc_string_array(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_array_t *ocstringarray, int size)
 {
-  oc_alloc_string(ocstringarray, size * STRING_ARRAY_ITEM_MAX_LEN);
+  _oc_alloc_string(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocstringarray, size * STRING_ARRAY_ITEM_MAX_LEN);
+
   int i, pos;
   for (i = 0; i < size; i++) {
     pos = i * STRING_ARRAY_ITEM_MAX_LEN;

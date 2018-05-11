@@ -229,3 +229,14 @@ coap_check_transactions(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+void
+coap_free_all_transactions(void)
+{
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
+                     *next;
+  while (t != NULL) {
+    next = t->next;
+    coap_clear_transaction(t);
+    t = next;
+  }
+}
