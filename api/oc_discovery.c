@@ -214,7 +214,12 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
 #ifdef OC_SECURITY
   /** Tag all resources with sec=true for OIC 1.1 to pass the CTT script. */
-  oc_rep_set_boolean(p, sec, true);
+  if (resource->properties & OC_SECURE) {
+    oc_rep_set_boolean(p, sec, true);
+  }
+  else {
+    oc_rep_set_boolean(p, sec, false);
+  }
 #endif /* OC_SECURITY */
 
   // port, x.org.iotivity.tcp and x.org.iotivity.tls
@@ -226,7 +231,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
 #ifdef OC_TCP
     if (eps->flags & TCP) {
-      if (eps->flags & SECURED) {
+      if (eps->flags & SECURED && resource->properties & OC_SECURE) {
         if (request->origin->flags & IPV6 && eps->flags & IPV6) {
           oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv6.port);
         }
@@ -236,7 +241,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
         }
 #endif /* OC_IPV4 */
       }
-      else {
+      else if (!(eps->flags & SECURED)) {
         if (request->origin->flags & IPV6 && eps->flags & IPV6) {
           oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv6.port);
         }
@@ -249,7 +254,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     }
     else
 #endif /* OC_TCP */
-    if (eps->flags & SECURED) {
+    if (eps->flags & SECURED && resource->properties & OC_SECURE) {
       if (request->origin->flags & IPV6 && eps->flags & IPV6) {
         oc_rep_set_uint(p, port, eps->addr.ipv6.port);
       }
