@@ -828,6 +828,95 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
                        &aclist[device].rowneruuid);
       }
       break;
+#if defined(OC_SPEC_VER_OIC)
+    case OC_REP_OBJECT: {
+      oc_rep_t *aces = rep->value.object;
+      while (aces) {
+        switch (aces->type) {
+          case OC_REP_OBJECT_ARRAY: {
+            oc_rep_t *ace = aces->value.object_array;
+            while(ace) {
+              oc_ace_subject_t subject;
+              oc_ace_subject_type_t subject_type = 0;
+              uint16_t permission = 0;
+              memset(&subject, 0, sizeof(oc_ace_subject_t));
+              oc_ace_wildcard_t wc = OC_ACE_NO_WC;
+              const char *href = 0;
+              oc_string_array_t *rt = 0;
+              oc_interface_mask_t interfaces = 0;
+              case OC_REP_OBJECT: {
+                oc_rep_t *resources = ace->value.object;
+                while(resources) {
+                  switch(resources->type) {
+                    case OC_REP_STRING: {
+                      if (resources->name.size == 12 && memcmp(resources->name.ptr, "subjectuuid", 11) == 0) {
+                        oc_str_to_uuid(resources->value.string.ptr, &subject.uuid);
+                        subject_type = OC_SUBJECT_UUID;
+                      }
+                    }
+                    break;
+                    case OC_REP_OBJECT_ARRAY: {
+                      oc_rep_t *resource = resources->value.object_array;
+                      while(resource) {
+                        switch(resource->type) {
+                          case OC_REP_OBJECT: {
+                            oc_rep_t *r = resource->value.object;
+                            while(r) {
+                              switch(r->type) {
+                                case OC_REP_STRING:
+                                 if (r->name.size == 5 && memcmp(r->name.ptr, "href", 4) == 0)
+                                    href = oc_string(r->value.string);
+                                break;
+                                case OC_REP_STRING_ARRAY: {
+                                  if (r->name.size == 3) {
+                                    if (memcmp(r->name.ptr, "if", 2) == 0) {
+                                      for (int i = 0; i < (int)oc_string_array_get_allocated_size(r->value.array); i++) {
+                                        const char *f = oc_string_array_get_item(r->value.array, i);
+                                        if (strlen(f) == 1 && f[0] == '*') {
+                                          interfaces |= 0xFE;
+                                          break;
+                                        }
+                                        interfaces |= oc_ri_get_interface_mask((char *)f, strlen(f));
+                                      }
+                                    } else if (strncasecmp(r->name.ptr, "rt", 2) == 0)
+                                        rt = &r->value.array;
+                                  }
+                                }
+                                break;
+                                default: break;
+                              }
+                              r = r->next;
+                            }
+                          }
+                          default: break;
+                        }
+                        resource = resource->next;
+                      }
+                    }
+                    break;
+                    case OC_REP_INT:
+                      if (resources->name.size == 11 &&
+                        memcmp(resources->name.ptr, "permission", 10) == 0)
+                          permission = (uint16_t)resources->value.integer;
+                    break;
+                    default: break;
+                  }
+                  resources = resources->next;
+                }
+              }
+              oc_sec_ace_update_res(subject_type, &subject, get_new_aceid(device), permission, href,
+                                wc, rt, interfaces, device);
+              ace = ace->next;
+            }
+          } break;
+          default:
+          break;
+        }
+        aces = aces->next;
+        }
+      }
+      break;
+#endif //OC_SPEC_VER_OIC
     case OC_REP_OBJECT_ARRAY: {
       oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
