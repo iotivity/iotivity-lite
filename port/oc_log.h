@@ -66,8 +66,9 @@
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
     PRINT("DEBUG: %s <%s:%d>: ", __FILE__, __func__, __LINE__);                \
-    uint8_t i;                                                                 \
-    for(i=0;i<length;i++) PRINT(" %02X", bytes[i]);                            \
+    uint16_t i;                                                                \
+    for (i = 0; i < length; i++)                                               \
+      PRINT(" %02X", bytes[i]);                                                \
     PRINT("\n");                                                               \
   } while (0)
 #else
