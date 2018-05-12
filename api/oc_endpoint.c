@@ -18,10 +18,6 @@
 #include "oc_core_res.h"
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_memb.h"
-#ifdef OC_IPV4
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -382,7 +378,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (p) {
     p += 1;
     uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
-    if (u && (u - oc_string(*endpoint_str)) < len) {
+    if (uri && u && (u - oc_string(*endpoint_str)) < len) {
       oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
     }
 
@@ -397,18 +393,21 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #ifdef OC_IPV4
     else {
       if ('A' <= address[address_len - 1] && 'z' >= address[address_len - 1]) {
-        oc_string_t domain;
-        oc_new_string(&domain, address, address_len);
-        struct hostent *shost = gethostbyname(oc_string(domain));
-        oc_free_string(&domain);
-        if (shost == NULL)
+        char domain[address_len + 1];
+        strncpy(domain, address, address_len);
+        domain[address_len] = '\0';
+
+        oc_string_t ip;
+        if (!oc_domain_to_ip(domain, &ip)) {
           return -1;
-        address = inet_ntoa(*(struct in_addr *)(shost->h_addr_list[0]));
-        address_len = strlen(address);
+        }
+        oc_parse_ipv4_address(oc_string(ip), oc_string_len(ip), endpoint);
+        oc_free_string(&ip);
+      } else {
+        oc_parse_ipv4_address(address, address_len, endpoint);
       }
       endpoint->flags |= IPV4;
       endpoint->addr.ipv4.port = port;
-      oc_parse_ipv4_address(address, address_len, endpoint);
     }
 #else  /* OC_IPV4 */
     else {
