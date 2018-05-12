@@ -378,7 +378,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (p) {
     p += 1;
     uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
-    if (u && (u - oc_string(*endpoint_str)) < len) {
+    if (uri && u && (u - oc_string(*endpoint_str)) < len) {
       oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
     }
 
@@ -392,9 +392,22 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     }
 #ifdef OC_IPV4
     else {
+      if ('A' <= address[address_len - 1] && 'z' >= address[address_len - 1]) {
+        char domain[address_len + 1];
+        strncpy(domain, address, address_len);
+        domain[address_len] = '\0';
+
+        oc_string_t ip;
+        if (!oc_domain_to_ip(domain, &ip)) {
+          return -1;
+        }
+        oc_parse_ipv4_address(oc_string(ip), oc_string_len(ip), endpoint);
+        oc_free_string(&ip);
+      } else {
+        oc_parse_ipv4_address(address, address_len, endpoint);
+      }
       endpoint->flags |= IPV4;
       endpoint->addr.ipv4.port = port;
-      oc_parse_ipv4_address(address, address_len, endpoint);
     }
 #else  /* OC_IPV4 */
     else {
