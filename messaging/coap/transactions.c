@@ -112,7 +112,9 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  OC_DBG("Sending transaction %u: %p", t->mid, (void *)t);
+  OC_DBG("Sending transaction(len: %d) %u: %p", t->message->length, t->mid,
+         (void *)t);
+  OC_LOGbytes(t->message->data, t->message->length);
   bool confirmable = false;
 
   confirmable =
