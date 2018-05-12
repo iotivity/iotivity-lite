@@ -36,9 +36,17 @@ oc_sec_create_svr(void)
 
   int i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
+
+#if defined(OC_SPEC_VER_OIC)
+    oc_core_populate_resource(OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
+                              get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
+#else
     oc_core_populate_resource(OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_BASELINE,
                               OC_IF_BASELINE, OC_DISCOVERABLE, get_doxm, 0,
                               post_doxm, 0, 1, "oic.r.doxm");
+#endif
+
     oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
                               OC_IF_BASELINE, OC_IF_BASELINE, OC_DISCOVERABLE,
                               get_pstat, 0, post_pstat, 0, 1, "oic.r.pstat");
