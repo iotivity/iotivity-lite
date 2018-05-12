@@ -104,6 +104,8 @@ void oc_send_discovery_request(oc_message_t *message);
 
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
+bool oc_domain_to_ip(const char *domain, oc_string_t *ip);
+
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
 void handle_network_interface_event_callback(oc_interface_event_t event);
