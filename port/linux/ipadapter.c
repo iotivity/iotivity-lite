@@ -32,6 +32,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
+#include <netdb.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1343,3 +1344,29 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
   }
 }
 #endif /* OC_TCP */
+
+bool
+oc_domain_to_ip(const char *domain, oc_string_t *ip)
+{
+  if (!domain || !ip) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  struct hostent *shost = gethostbyname(domain);
+  if (shost == NULL)
+    return false;
+
+  char address = NULL;
+  int i = 0;
+  while (shost->h_addr_list[i] != NULL) {
+    address = inet_ntoa(*(struct in_addr *)(shost->h_addr_list[i++]));
+    if (address) {
+      OC_DBG("%s's ip is %s", domain, address);
+      oc_new_string(ip, address, strlen(address));
+      return true;
+    }
+  }
+
+  return false;
+}
