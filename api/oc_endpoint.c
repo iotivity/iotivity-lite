@@ -16,6 +16,7 @@
 
 #include "oc_endpoint.h"
 #include "oc_core_res.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
@@ -340,23 +341,56 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (p) {
     p += 1;
     uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
-    if (u && (u - oc_string(*endpoint_str)) < len) {
+    if (uri && u && (u - oc_string(*endpoint_str)) < len) {
       oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
     }
 
     const char *address = memchr(oc_string(*endpoint_str), '/', len);
     address += 2;
     int address_len = (p - address - 1);
+
+#ifdef OC_DNS_LOOKUP
+    oc_string_t ipaddress;
+#endif /* OC_DNS_LOOKUP */
+    if ('A' <= address[address_len - 1] && 'z' >= address[address_len - 1]) {
+#ifdef OC_DNS_LOOKUP
+      char domain[address_len + 1];
+      strncpy(domain, address, address_len);
+      domain[address_len] = '\0';
+#ifdef OC_DNS_LOOKUP_IPV6
+      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
+#endif /* OC_DNS_LOOKUP_IPV6 */
+        if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
+          return -1;
+        }
+#ifdef OC_DNS_LOOKUP_IPV6
+      }
+#endif /* OC_DNS_LOOKUP_IPV6 */
+      address = oc_string(ipaddress);
+      address_len = oc_string_len(ipaddress);
+#else /* OC_DNS_LOOKUP */
+      return -1;
+#endif /* !OC_DNS_LOOKUP */
+    }
+
     if (address[0] == '[' && address[address_len - 1] == ']') {
       endpoint->flags |= IPV6;
       endpoint->addr.ipv6.port = port;
       oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
+#ifdef OC_DNS_LOOKUP
+      if (oc_string_len(ipaddress) > 0)
+        oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
     }
 #ifdef OC_IPV4
     else {
       endpoint->flags |= IPV4;
       endpoint->addr.ipv4.port = port;
       oc_parse_ipv4_address(address, address_len, endpoint);
+#ifdef OC_DNS_LOOKUP
+      if (oc_string_len(ipaddress) > 0)
+        oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
     }
 #else  /* OC_IPV4 */
     else {
