@@ -32,6 +32,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
+#include <netdb.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1608,3 +1609,35 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
   }
 }
 #endif /* OC_TCP */
+
+#ifdef OC_DNS_LOOKUP
+int
+oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+{
+  if (!domain || !addr) {
+    OC_ERR("Error of input parameters");
+    return -1;
+  }
+
+  struct addrinfo hints, *result = NULL;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = (flags & IPV6) ? AF_INET6 : AF_INET;
+  hints.ai_socktype = (flags & TCP) ? SOCK_STREAM : SOCK_DGRAM;
+  int ret = getaddrinfo(domain, NULL, &hints, &result);
+
+  if (ret == 0) {
+    char address[NI_MAXHOST];
+    ret = getnameinfo(result->ai_addr, result->ai_addrlen, address,
+                      sizeof(address), NULL, 0, 0);
+    if (ret == 0) {
+      OC_DBG("%s address is %s", domain, address);
+      oc_new_string(addr, address, strlen(address));
+    }
+  }
+
+  freeaddrinfo(result);
+
+  return ret;
+}
+#endif /* OC_DNS_LOOKUP */
