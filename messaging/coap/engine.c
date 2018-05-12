@@ -215,6 +215,7 @@ coap_receive(oc_message_t *msg)
         break;
       }
       OC_DBG("  URL: %.*s", (int)message->uri_path_len, message->uri_path);
+      OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
       OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
 #endif
 
