@@ -105,6 +105,10 @@ void oc_send_discovery_request(oc_message_t *message);
 
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
+#ifdef OC_DNS_LOOKUP
+int oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags);
+#endif /* OC_DNS_LOOKUP */
+
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
 void handle_network_interface_event_callback(oc_interface_event_t event);
