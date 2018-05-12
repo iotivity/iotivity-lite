@@ -45,6 +45,8 @@ oc_sec_cred_default(int device)
 {
   oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
   while (cred != NULL) {
+    if (cred->mfgkeylen || cred->mfgowncertlen || cred->mfgtrustcalen)
+      continue;
     oc_memb_free(&creds, cred);
     cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
   }
