@@ -1,0 +1,2 @@
+config CONFIG_EXAMPLES_IOTLITE
+	bool "IoTivity-lite Demo Example"
