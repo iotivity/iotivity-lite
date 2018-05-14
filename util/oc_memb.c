@@ -40,6 +40,10 @@
 #include "oc_mem_trace.h"
 #endif
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "oc_mem.h"
+#endif
+
 /*---------------------------------------------------------------------------*/
 void
 oc_memb_init(struct oc_memb *m)
@@ -67,7 +71,11 @@ _oc_memb_alloc(
   void *ptr = NULL;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  ptr = calloc(1, m->size);
+#ifdef OC_MEMORY_TRACE
+  ptr = _oc_mem_calloc(func, 1, m->size);
+#else
+  ptr = _oc_mem_calloc(1, m->size);
+#endif
 
 #else  /* OC_DYNAMIC_ALLOCATION */
   int i;
@@ -90,10 +98,6 @@ _oc_memb_alloc(
     return NULL;
   }
 
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, m->size, MEM_TRACE_ALLOC, ptr);
-#endif
-
   return ptr;
 }
 /*---------------------------------------------------------------------------*/
@@ -109,13 +113,14 @@ _oc_memb_free(
     return -1;
   }
 
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
-#endif
-
 #ifdef OC_DYNAMIC_ALLOCATION
   (void)m;
-  free(ptr);
+#ifdef OC_MEMORY_TRACE
+  _oc_mem_free(func, ptr);
+#else
+  _oc_mem_free(ptr);
+#endif
+
   return 0;
 
 #else  /* OC_DYNAMIC_ALLOCATION */
