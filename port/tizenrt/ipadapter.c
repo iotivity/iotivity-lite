@@ -509,10 +509,12 @@ static void *network_event_thread(void *data) {
 #endif      
 #else  /* OC_IPV4 */      
       if (message->endpoint.flags & IPV6) {
+#ifdef OC_IPV6
         memcpy(message->endpoint.addr.ipv6.address, c->sin6_addr.s6_addr,
                sizeof(c->sin6_addr.s6_addr));
         message->endpoint.addr.ipv6.scope = c->sin6_scope_id;
         message->endpoint.addr.ipv6.port = ntohs(c->sin6_port);
+#endif
       }
 #endif /* !OC_IPV4 */
 
