@@ -108,7 +108,7 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
   }
 
   if (g_read_user_data_cb) {
-    g_read_user_data_cb(rep, OC_RSRVD_ES_RES_TYPE_WIFICONF,
+    g_read_user_data_cb(request->request_payload, OC_RSRVD_ES_RES_TYPE_WIFICONF,
                         &wifi_data.userdata);
   }
 
@@ -216,7 +216,7 @@ update_coap_cloud_conf_resource(oc_request_t *request,
   }
 
   if (g_read_user_data_cb) {
-    g_read_user_data_cb(rep, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF,
+    g_read_user_data_cb(request->request_payload, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF,
                         &cloud_data.userdata);
   }
 
