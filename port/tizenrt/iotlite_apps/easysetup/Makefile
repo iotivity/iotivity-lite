@@ -42,7 +42,7 @@ CFLAGS += -D__TIZENRT__ -DOC_TCP -DOC_CLIENT -DOCF_12 -DOC_IPV4  -DOC_DEBUG -DOC
 
 ASRCS =
 CSRCS =
-MAINSRC = easysetup_enrollee.c
+MAINSRC = easysetup_enrollee.c easysetup_wifi_softap.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
