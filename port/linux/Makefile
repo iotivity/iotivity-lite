@@ -125,11 +125,11 @@ endif
 	VPATH += ../../security/:../../deps/mbedtls/library:
 endif
 
-ifeq ($(IPV4),1)
+ifneq ($(IPV4),0)
 	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
-ifeq ($(TCP),1)
+ifneq ($(TCP),0)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
