@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include <easysetup.h>
+#include <easysetup_wifi_softap.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -399,6 +400,13 @@ int
 easysetup_main(void)
 {
   int init;
+
+  if(es_create_softap() == -1){
+    printf("Softap mode failed \n");
+    return 0;
+  }
+
+  dhcpserver_start();
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cv, NULL);
