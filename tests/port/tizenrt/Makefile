@@ -29,8 +29,11 @@ app_dir?=${top_dir}/port/tizenrt
 tizenrt_dir?=${top_dir}/deps/TizenRT
 os_dir?=${tizenrt_dir}/os
 os_url?=https://github.com/Samsung/TizenRT
+os_branch?=master
 os_branch?=1.1_Public_Release
-os_machine?=artik053
+os_machine?=artik055s
+os_image_type?=iotlite
+os_image_type?=${os_machine}
 os_image_type?=${base_config_name}
 os_image_type?=minimal
 configure_file?=${os_dir}/.config
@@ -55,8 +58,10 @@ prep_files+=${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.mk.tmp
 prep_files+=${top_dir}/deps/tinycbor/LICENSE
 prep_files+=${os_dir}/../apps/iotlite_apps
-base_config_name?=iotliteconfig
+base_config_name?=iotlite
+base_config_name?=${os_machine}
 prep_files+=${os_dir}/../build/configs/${os_machine}/${base_config_name}
+prep_files+=${os_dir}/external/iotivity-constrained/iotivity-constrained
 
 all?=prep configure build
 
@@ -138,6 +143,10 @@ menuconfig: ${os_dir}
 ${os_dir}/../apps/iotlite_apps:  ${top_dir}/port/tizenrt/iotlite_apps
 	cp -rfva $< $@
 
-${os_dir}/../build/configs/${os_machine}/iotliteconfig: ${top_dir}/port/tizenrt/${base_config_name}
-	cp -rfav $< $@
+${os_dir}/../build/configs/${os_machine}/${os_image_type}: ${top_dir}/tests/port/tizenrt/configs/${os_machine}/${os_image_type}
+	ln -fs $< $@
+
+${os_dir}/external/iotivity-constrained/iotivity-constrained: ${top_dir}
+	mkdir -p ${@D}
+	ln -fs $< $@
 
