@@ -504,10 +504,8 @@ static void *network_event_thread(void *data) {
                sizeof(c4->sin_addr.s_addr));
         message->endpoint.addr.ipv4.port = ntohs(c4->sin_port);
       }
-#ifdef OC_IPV6       
+#elif defined(OC_IPV6)
       else
-#endif      
-#else  /* OC_IPV4 */      
       if (message->endpoint.flags & IPV6) {
         memcpy(message->endpoint.addr.ipv6.address, c->sin6_addr.s6_addr,
                sizeof(c->sin6_addr.s6_addr));
