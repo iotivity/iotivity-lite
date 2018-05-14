@@ -30,10 +30,13 @@ help: ${topdir}/README.rst
 	@echo "# Usage: "
 	@echo "# make all : to build port=${port}"
 
-${prep_files}:
-	git submodule init ${@D}
-	git submodule sync ${@D}
-	git submodule update ${@D}
+${prep_files}: .git-submodule.done.tmp
+
+.git-submodule.done.tmp: ${topdir}/.gitmodules ${topdir}/.git/modules
+	git submodule init
+	git submodule sync
+	git submodule update
+	touch $@
 
 prep: ${prep_files}
 	ls $<
