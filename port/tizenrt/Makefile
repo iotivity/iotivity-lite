@@ -115,8 +115,17 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES}
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 libiotivity-constrained-client-server.a
 
+all?= $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES)
+all+= .built
+BIN ?= ${os_dir}/../external/libexternal$(LIBEXT)
+OBJS+= $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
-all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES)
+
+all: ${all}
+	ls $<
+
+build: $(CONSTRAINED_LIBS) 
+	ls $<
 
 .PHONY: clean
 
@@ -167,3 +176,7 @@ distclean: cleanall
 
 test:
 	@echo "TODO: https://jira.iotivity.org/browse/LITE-4"
+
+.built: $(OBJS)
+	$(call ARCHIVE, $(BIN), $(OBJS))
+	$(Q) touch .built

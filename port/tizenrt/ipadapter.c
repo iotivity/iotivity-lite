@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+#include <tinyara/config.h>
+#include <uio.h>
+#include <mqueue.h>
+#undef USE_IP_MREQN
 
 #define __USE_GNU
 
@@ -21,6 +25,13 @@
 #include "oc_endpoint.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+
+   #include <sys/socket.h>
+
+   #include <netinet/in.h>
+
+   #include <netinet/ip.h> /* superset of previous */
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -44,6 +55,8 @@
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif
+
+#include <netinet/in.h>
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -117,12 +130,12 @@ static ip_context_t *get_ip_context_for_device(int device) {
 static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
                                               const struct in_addr *local,
                                               int interface_index) {
-  struct ip_mreqn mreq;
+  struct ip_mreq mreq;
 
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  mreq.imr_ifindex = interface_index;
-  memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
+  //  mreq.imr_ifindex = interface_index;
+  // memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
 
   (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
