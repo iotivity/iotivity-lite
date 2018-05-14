@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+#include <tinyara/config.h>
+#include <uio.h>
+#include <mqueue.h>
+#undef USE_IP_MREQN
 
 #define __USE_GNU
 
@@ -37,6 +41,8 @@
 #include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -117,12 +123,19 @@ static ip_context_t *get_ip_context_for_device(int device) {
 static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
                                               const struct in_addr *local,
                                               int interface_index) {
+#if defined(USE_IP_MREQN)
   struct ip_mreqn mreq;
-
+#else
+  struct ip_mreq mreq;
+#endif
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
+#if defined(USE_IP_MREQN)
   mreq.imr_ifindex = interface_index;
   memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
+#else
+  memcpy(&mreq.imr_interface, local, sizeof(struct in_addr));
+#endif
 
   (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
