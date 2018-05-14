@@ -63,6 +63,10 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 
   if (oc_init_post(OC_RSRVD_RD_URI, endpoint, "rt=oic.wk.rdpub", handler, qos,
                    user_data)) {
+    oc_string_array_t type;
+    oc_new_string_array(&type, 1);
+    oc_string_array_add_item(type, "application/json");
+
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, di, id);
     oc_rep_set_int(root, lt, RD_PUBLISH_TTL);
@@ -77,11 +81,14 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                                      link->resource->interfaces);
       oc_rep_set_int(links, ins, 0);
       oc_rep_set_string_array(links, rel, link->rel);
+      oc_rep_set_string_array(links, type, type);
       oc_rep_object_array_end_item(links);
       link = link->next;
     }
     oc_rep_close_array(root, links);
     oc_rep_end_root_object();
+
+    oc_free_string_array(&type);
   } else {
     OC_ERR("Could not init POST request for rd publish");
     return false;
