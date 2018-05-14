@@ -29,7 +29,8 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
            oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   char uuid[MAX_UUID_LENGTH] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+  oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+  oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
 
   bool status = false;
   if (!links) {
@@ -39,13 +40,15 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
       oc_new_link(oc_core_get_resource_by_index(OCF_D, device_index));
     oc_list_add((oc_list_t)link_p, link_d);
 
-    status = rd_publish_with_device_id(endpoint, link_p, uuid, handler, qos,
-                                       user_data);
+    status = rd_publish_with_device_id(endpoint, link_p, uuid,
+                                       oc_string(device_info->name), handler,
+                                       qos, user_data);
     oc_delete_link(link_p);
     oc_delete_link(link_d);
   } else {
-    status =
-      rd_publish_with_device_id(endpoint, links, uuid, handler, qos, user_data);
+    status = rd_publish_with_device_id(endpoint, links, uuid,
+                                       oc_string(device_info->name), handler,
+                                       qos, user_data);
   }
 
   return status;
@@ -53,8 +56,9 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
 
 bool
 rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                          const char *id, oc_response_handler_t handler,
-                          oc_qos_t qos, void *user_data)
+                          const char *id, const char *name,
+                          oc_response_handler_t handler, oc_qos_t qos,
+                          void *user_data)
 {
   if (!endpoint || !id || !links || !handler) {
     OC_ERR("Error of input parameters");
@@ -63,16 +67,15 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 
   if (oc_init_post(OC_RSRVD_RD_URI, endpoint, "rt=oic.wk.rdpub", handler, qos,
                    user_data)) {
+#ifdef OC_SPEC_VER_OIC
     oc_string_array_t type;
     oc_new_string_array(&type, 1);
-#ifdef OC_SPEC_VER_OIC
     oc_string_array_add_item(type, "application/json");
-#else
-    oc_string_array_add_item(type, "application/vnd.ocf+cbor");
 #endif
 
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, di, id);
+    oc_rep_set_text_string(root, n, name);
     oc_rep_set_int(root, lt, RD_PUBLISH_TTL);
 
     oc_rep_set_array(root, links);
@@ -83,16 +86,22 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
       oc_rep_set_string_array(links, rt, link->resource->types);
       oc_core_encode_interfaces_mask(oc_rep_object(links),
                                      link->resource->interfaces);
+      oc_rep_set_text_string(links, rel,
+                             oc_string_array_get_item(link->rel, 0));
       oc_rep_set_int(links, ins, 0);
-      oc_rep_set_string_array(links, rel, link->rel);
+      oc_rep_set_object(links, p);
+      oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
+                                       ~(OC_PERIODIC | OC_SECURE)));
+      oc_rep_close_object(links, p);
       oc_rep_set_string_array(links, type, type);
       oc_rep_object_array_end_item(links);
       link = link->next;
     }
     oc_rep_close_array(root, links);
     oc_rep_end_root_object();
-
+#ifdef OC_SPEC_VER_OIC
     oc_free_string_array(&type);
+#endif
   } else {
     OC_ERR("Could not init POST request for rd publish");
     return false;
@@ -112,7 +121,7 @@ rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
 
   if (oc_init_post("/oic/account/profile/device", endpoint, NULL, handler, qos,
                    user_data)) {
-    oc_platform_info_t *platfrom_into = oc_core_get_platform_info();
+    oc_platform_info_t *platform_info = oc_core_get_platform_info();
 
     oc_rep_start_root_object();
     oc_rep_set_array(root, devices);
@@ -130,18 +139,22 @@ rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
       oc_rep_set_text_string(
         devices, rt, oc_string_array_get_item(
                        oc_core_get_resource_by_index(OCF_D, device)->types, 0));
-      oc_rep_set_text_string(devices, mnmn, oc_string(platfrom_into->mfg_name));
+      oc_rep_set_text_string(devices, mnmn, oc_string(platform_info->mfg_name));
+      if (platform_info->init_platform_cb) {
+        platform_info->init_platform_cb(platform_info->data);
+      }
+
       // oc_rep_set_text_string(devices, mnmo,
-      // oc_string(platfrom_into->model_num));
-      // oc_rep_set_text_string(devices, mnpv, oc_string(platfrom_into->ver_p));
+      // oc_string(platform_info->model_num));
+      // oc_rep_set_text_string(devices, mnpv, oc_string(platform_info->ver_p));
       // oc_rep_set_text_string(devices, mnos,
-      // oc_string(platfrom_into->ver_os));
+      // oc_string(platform_info->ver_os));
       // oc_rep_set_text_string(devices, mnhw,
-      // oc_string(platfrom_into->ver_hw));
+      // oc_string(platform_info->ver_hw));
       // oc_rep_set_text_string(devices, mnfv,
-      // oc_string(platfrom_into->ver_fw));
+      // oc_string(platform_info->ver_fw));
       // oc_rep_set_text_string(devices, vid,
-      // oc_string(platfrom_into->vender_id));
+      // oc_string(platform_info->vender_id));
       oc_rep_object_array_end_item(devices);
     }
     oc_rep_close_array(root, devices);
