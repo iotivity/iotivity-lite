@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include <easysetup.h>
+#include <easysetup_wifi_softap.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -225,6 +226,25 @@ void WiFiProvCbInApp(es_wifi_conf_data* eventData)
         //printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
     }
 
+    stop_dhcp(SLSI_WIFI_SOFT_AP_IF);
+
+    if (wifi_start_station() < 0) {
+      printf("start station error \n");
+      return;
+    }
+
+    while (wifi_join((uint8_t *)eventData->ssid, "open", eventData->pwd) != 0) {
+      printf("Retry to Join\n");
+      sleep(1);
+    }
+
+    printf("AP join :\n");
+    while (dhcpc_start() != 0) {
+        printf("Get IP address Fail\n");
+    }
+
+    printf("DHCP Client Start :\n");
+
     printf("[ES App] WiFiProvCbInApp OUT\n");
 }
 
@@ -399,6 +419,13 @@ int
 easysetup_main(void)
 {
   int init;
+
+  if(es_create_softap() == -1){
+    printf("Softap mode failed \n");
+    return 0;
+  }
+
+  dhcpserver_start();
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cv, NULL);
