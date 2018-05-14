@@ -39,9 +39,9 @@ typedef struct _mem_logger
 {
   struct mem_logger_s *next; /* for LIST */
   char func[FUNC_NAME_LEN + 1];
-  int size;
-  int current;
-  int peak;
+  size_t size;
+  size_t current;
+  size_t peak;
   int type; // MEM_TRACE_ALLOC, MEM_TRACE_FREE
   void *address;
 } mem_logger_s;
@@ -70,7 +70,7 @@ void
 oc_mem_trace_add_pace(const char *func, int size, int type, void *address)
 {
 
-  if (type == MEM_TRACE_ALLOC) {
+  if (type == MEM_TRACE_ALLOC || type == MEM_TRACE_REALLOC) {
     mInfo.current += size;
     if (mInfo.current > mInfo.peak) {
       mInfo.peak = mInfo.current;
@@ -120,11 +120,20 @@ oc_mem_trace_print_paces(void)
   PRINT("-----------------\n");
 
   while (mem_log_item_link) {
-    PRINT(" %3d   %-26.25s  %10p   %5d   %5s    %5d    %5d\n", ++cnt,
-          mem_log_item_link->func, mem_log_item_link->address,
-          mem_log_item_link->size,
-          (mem_log_item_link->type == MEM_TRACE_FREE) ? "Free" : "Alloc",
-          mem_log_item_link->current, mem_log_item_link->peak);
+    PRINT(" %3d   %-26.25s  %10p   %5d", ++cnt, mem_log_item_link->func,
+          mem_log_item_link->address, mem_log_item_link->size);
+
+    if (mem_log_item_link->type == MEM_TRACE_FREE)
+      PRINT("   %7s", "Free");
+    else if (mem_log_item_link->type == MEM_TRACE_ALLOC)
+      PRINT("   %7s", "Alloc");
+    else if (mem_log_item_link->type == MEM_TRACE_REALLOC)
+      PRINT("   %7s", "Realloc");
+    else
+      PRINT("   %7s", "Unknown");
+
+    PRINT("    %5d    %5d\n", mem_log_item_link->current,
+          mem_log_item_link->peak);
 
     mem_log_item_link = oc_list_item_next(mem_log_item_link);
   }
@@ -163,7 +172,7 @@ oc_mem_trace_free(void)
 #else  /* OC_MEMORY_TRACE */
 // TODO : it would be removed if MEMTRACE=0 excludes compiling this file
 void
-dummy_null_func(void)
+dummy_null_mem_trace_func(void)
 {
 }
 #endif /* !OC_MEMORY_TRACE */
