@@ -19,7 +19,8 @@
 #ifndef OC_MEM_TRACE_H
 #define OC_MEM_TRACE_H
 
-#define MEM_TRACE_ALLOC (1) // it would be combination when BYTE, INT, DOUBLE
+#define MEM_TRACE_REALLOC (2)
+#define MEM_TRACE_ALLOC (1)
 #define MEM_TRACE_FREE (0)
 
 void oc_mem_trace_init(void);
