@@ -58,7 +58,7 @@ OC_LIST(bytes_list);
 OC_LIST(ints_list);
 OC_LIST(doubles_list);
 #else /* !OC_DYNAMIC_ALLOCATION */
-#include <stdlib.h>
+#include "oc_mem.h"
 #endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
 
@@ -80,7 +80,11 @@ _oc_mmem_alloc(
   case BYTE_POOL:
     bytes_allocated += size * sizeof(uint8_t);
 #ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size);
+#ifdef OC_MEMORY_TRACE
+    m->ptr = _oc_mem_malloc(func, size);
+#else
+    m->ptr = _oc_mem_malloc(size);
+#endif
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_bytes < size) {
@@ -96,7 +100,11 @@ _oc_mmem_alloc(
   case INT_POOL:
     bytes_allocated += size * sizeof(int);
 #ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(int));
+#ifdef OC_MEMORY_TRACE
+    m->ptr = _oc_mem_malloc(func, size * sizeof(int));
+#else
+    m->ptr = _oc_mem_malloc(size * sizeof(int));
+#endif
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_ints < size) {
@@ -112,7 +120,11 @@ _oc_mmem_alloc(
   case DOUBLE_POOL:
     bytes_allocated += size * sizeof(double);
 #ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(double));
+#ifdef OC_MEMORY_TRACE
+    m->ptr = _oc_mem_malloc(func, size * sizeof(double));
+#else
+    m->ptr = _oc_mem_malloc(size * sizeof(double));
+#endif
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_doubles < size) {
@@ -129,10 +141,6 @@ _oc_mmem_alloc(
     break;
   }
 
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, bytes_allocated, MEM_TRACE_ALLOC, m->ptr);
-#endif
-
   return bytes_allocated;
 }
 
@@ -147,21 +155,6 @@ _oc_mmem_free(
     OC_ERR("oc_mmem is NULL");
     return;
   }
-
-#ifdef OC_MEMORY_TRACE
-  unsigned int bytes_freed = m->size;
-  switch (pool_type) {
-  case INT_POOL:
-    bytes_freed *= sizeof(int);
-    break;
-  case DOUBLE_POOL:
-    bytes_freed *= sizeof(double);
-    break;
-  default:
-    break;
-  }
-  oc_mem_trace_add_pace(func, bytes_freed, MEM_TRACE_FREE, m->ptr);
-#endif /* OC_MEMORY_TRACE */
 
 #ifndef OC_DYNAMIC_ALLOCATION
   struct oc_mmem *n;
@@ -207,7 +200,12 @@ _oc_mmem_free(
   }
 #else /* !OC_DYNAMIC_ALLOCATION */
   (void)pool_type;
-  free(m->ptr);
+#ifdef OC_MEMORY_TRACE
+  _oc_mem_free(func, m->ptr);
+#else
+  _oc_mem_free(m->ptr);
+#endif
+
   m->size = 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

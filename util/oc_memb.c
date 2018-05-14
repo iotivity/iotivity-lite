@@ -40,6 +40,10 @@
 #include "oc_mem_trace.h"
 #endif
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "oc_mem.h"
+#endif
+
 /*---------------------------------------------------------------------------*/
 void
 oc_memb_init(struct oc_memb *m)
@@ -81,7 +85,12 @@ _oc_memb_alloc(
 
     if (i < m->num) {
 #ifdef OC_DYNAMIC_ALLOCATION
-      ptr = calloc(1, m->size);
+
+#ifdef OC_MEMORY_TRACE
+      ptr = _oc_mem_calloc(func, 1, m->size);
+#else
+      ptr = _oc_mem_calloc(1, m->size);
+#endif
       void *slot = (void *)((char *)m->mem + (i * sizeof(void *)));
       memcpy(slot, &ptr, sizeof(void *));
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -92,7 +101,11 @@ _oc_memb_alloc(
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   else {
-    ptr = calloc(1, m->size);
+#ifdef OC_MEMORY_TRACE
+    ptr = _oc_mem_calloc(func, 1, m->size);
+#else
+    ptr = _oc_mem_calloc(1, m->size);
+#endif
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -101,10 +114,6 @@ _oc_memb_alloc(
        allocate block. */
     return NULL;
   }
-
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, m->size, MEM_TRACE_ALLOC, ptr);
-#endif
 
   return ptr;
 }
@@ -120,10 +129,6 @@ _oc_memb_free(
     OC_ERR("oc_memb is NULL");
     return -1;
   }
-
-#ifdef OC_MEMORY_TRACE
-  oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
-#endif
 
   int i = m->num;
   char *ptr2 = NULL;
@@ -156,7 +161,13 @@ _oc_memb_free(
   if (i < m->num) {
     memset(&ptr2, 0, sizeof(void *));
   }
-  free(ptr);
+
+#ifdef OC_MEMORY_TRACE
+  _oc_mem_free(func, ptr);
+#else
+  _oc_mem_free(ptr);
+#endif
+
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (m->buffers_avail_cb) {
     m->buffers_avail_cb(oc_memb_numfree(m));
