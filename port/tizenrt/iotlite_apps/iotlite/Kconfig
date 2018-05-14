@@ -1,0 +1,11 @@
+#
+# For a description of the syntax of this configuration file,
+# see kconfig-language at https://www.kernel.org/doc/Documentation/kbuild/kconfig-language.txt
+#
+
+config EXAMPLES_IOTLITE
+	bool "Enable IoTivity-Lite Demo Example"
+	default n
+	depends on ENABLE_IOTIVITY_CONSTRAINED
+	---help---
+		Enable IoTivity-lite demo example

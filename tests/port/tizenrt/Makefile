@@ -30,8 +30,9 @@ tizenrt_dir?=${top_dir}/deps/TizenRT
 os_dir?=${tizenrt_dir}/os
 os_url?=https://github.com/Samsung/TizenRT
 os_branch?=1.1_Public_Release
+os_branch=master
 os_machine?=artik053
-os_image_type?=minimal
+os_image_type?=iotlite
 configure_file?=${os_dir}/.config
 os_external_makefile?=${tizenrt_dir}/external/Makefile
 
@@ -53,18 +54,26 @@ prep_files+=${CC}
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.mk.tmp
 prep_files+=${top_dir}/deps/tinycbor/LICENSE
-
+prep_files+=${tizenrt_dir}/apps/iotlite_apps
+prep_files+=${tizenrt_dir}/build/configs/${os_machine}/${os_image_type}
+prep_files+=${tizenrt_dir}/external/iotivity-constrained/iotivity-constrained
+prep_files+=${tizenrt_dir}/external/iotivity-constrained/Make.defs
+prep_files+=${tizenrt_dir}/external/iotivity-constrained/Makefile
+git?=git
 all?=prep configure build
 
 
 ${tizenrt_dir}:
-	git clone --depth 1 --recursive -b "${os_branch}" "${os_url}" "$@"
+	${git} clone --depth 1 --recursive -b "${os_branch}" "${os_url}" ${tizenrt_dir}
 
 ${tizenrt_dir}/external/iotivity-constrained.mk.tmp: iotivity-constrained.mk ${os_external_makefile}.orig
 	cp "$<" "$@.tmp"
 	cp "$@.tmp" "${os_external_makefile}"
 	mv "$@.tmp" "$@"
 	touch "$@"
+
+${os_dir}: ${tizenrt_dir}
+	ls $@
 
 ${os_external_makefile}.orig: ${os_external_makefile}
 	ls $@ || cp -av $< $@
@@ -130,3 +139,22 @@ all: ${all}
 
 menuconfig: ${os_dir}
 	${MAKE} -C "$<" "$@"
+
+${tizenrt_dir}/apps/iotlite_apps: ${top_dir}/port/tizenrt/iotlite_apps ${tizenrt_dir}
+	ls $@ || cp -rfva $< $@
+
+${tizenrt_dir}/build/configs/${os_machine}/${os_image_type}: ${top_dir}/tests/port/tizenrt/configs/${os_machine}/${os_image_type} ${tizenrt_dir}
+	ls $@ || ln -fs $< $@
+
+${tizenrt_dir}/external/iotivity-constrained: ${top_dir} ${tizenrt_dir}
+	ls $@ || ln -fs $< $@
+
+${tizenrt_dir}/external/iotivity-constrained/iotivity-constrained: ${tizenrt_dir}/external/iotivity-constrained
+	ls $@ || ln -fs . $@
+
+${tizenrt_dir}/external/iotivity-constrained/Make.defs: ${top_dir}/port/tizenrt/scripts/Make.defs ${tizenrt_dir}/external/iotivity-constrained
+	ls $@ || ln -fs $< $@
+
+${tizenrt_dir}/external/iotivity-constrained/Makefile: ${top_dir}/port/tizenrt/scripts/Makefile ${tizenrt_dir}/external/iotivity-constrained
+	ls $@ || ln -fs $< $@
+
