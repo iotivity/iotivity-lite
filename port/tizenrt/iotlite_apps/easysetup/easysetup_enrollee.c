@@ -24,11 +24,13 @@
 #include <stdio.h>
 
 #include <easysetup.h>
+#include <easysetup_wifi_softap.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
+char auth_type[20];
 
 static double temp_C = 5.0, min_C = 0.0, max_C = 100.0, min_K = 273.15,
               max_K = 373.15, min_F = 32, max_F = 212;
@@ -225,6 +227,45 @@ void WiFiProvCbInApp(es_wifi_conf_data* eventData)
         //printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
     }
 
+    if(eventData->authtype >= NONE_AUTH && eventData->authtype <= WPA2_PSK) {
+        switch(eventData->authtype) {
+            case WEP:
+                strncpy(auth_type, "wep", strlen("wep"));
+                break;
+            case WPA_PSK:
+                strncpy(auth_type, "wpa_psk", strlen("wpa_psk"));
+                break;
+            case WPA2_PSK:
+                strncpy(auth_type, "wpa2_psk", strlen("wpa2_psk"));
+                break;
+            case NONE_AUTH:
+            default:
+                strncpy(auth_type, "open", strlen("open"));
+                break;
+        }
+    } else {
+        strncpy(auth_type, "open", strlen("open"));
+    }
+
+    stop_dhcp(SLSI_WIFI_SOFT_AP_IF);
+
+    if (wifi_start_station() < 0) {
+      printf("start station error \n");
+      return;
+    }
+
+    while (wifi_join((uint8_t *)eventData->ssid, auth_type, eventData->pwd) != 0) {
+      printf("Retry to Join\n");
+      sleep(1);
+    }
+
+    printf("AP join :\n");
+    while (dhcpc_start() != 0) {
+        printf("Get IP address Fail\n");
+    }
+
+    printf("DHCP Client Start :\n");
+
     printf("[ES App] WiFiProvCbInApp OUT\n");
 }
 
@@ -399,6 +440,13 @@ int
 easysetup_main(void)
 {
   int init;
+
+  if(es_create_softap() == -1){
+    printf("Softap mode failed \n");
+    return 0;
+  }
+
+  dhcpserver_start();
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cv, NULL);
