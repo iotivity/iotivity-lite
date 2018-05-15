@@ -16,6 +16,23 @@
       "revId": "c3ce972bf1b511277df62ea4b6a462109e8c4b4a",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ccb5dcce",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_wifi_softap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-15T12:01:56Z",
+      "side": 1,
+      "message": "TODO: need to enable soft ap with security (password can be fixed to some default value like \"litesoftap1234\"",
+      "revId": "c3ce972bf1b511277df62ea4b6a462109e8c4b4a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
