@@ -49,7 +49,7 @@ typedef struct {
 #endif /* OC_CLIENT */
 } oc_handler_t;
 
-typedef void (*oc_init_platform_cb_t)(void *data);
+typedef void (*oc_init_platform_cb_t)(CborEncoder *object, void *data);
 typedef void (*oc_add_device_cb_t)(void *data);
 
 int oc_main_init(const oc_handler_t *handler);
@@ -66,8 +66,11 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
 int oc_init_platform(const char *mfg_name,
                      oc_init_platform_cb_t init_platform_cb, void *data);
 
-#define oc_set_custom_platform_property(prop, value)                           \
-  oc_rep_set_text_string(root, prop, value)
+#define oc_set_custom_platform_property(object, prop, value)                   \
+  do {                                                                         \
+    g_err |= cbor_encode_text_string(&object, #prop, strlen(#prop));           \
+    g_err |= cbor_encode_text_string(&object, value, strlen(value));           \
+  } while (0)
 
 /**
   @brief Returns whether the oic.wk.con res is announed.

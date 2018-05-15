@@ -30,10 +30,21 @@ static bool state = false;
 int power;
 oc_string_t name;
 
+static void
+init_platform_cb(CborEncoder *object, void *data)
+{
+  (void)data;
+  oc_set_custom_platform_property(*object, mnmo, "5021");
+  oc_set_custom_platform_property(*object, mnpv, "1.0");
+  oc_set_custom_platform_property(*object, mnos, "1.0");
+  oc_set_custom_platform_property(*object, mnhw, "1.0");
+  oc_set_custom_platform_property(*object, mnfv, "1.0");
+  oc_set_custom_platform_property(*object, vid, "IoT2020");
+}
 static int
 app_init(void)
 {
-  int ret = oc_init_platform("Intel", NULL, NULL);
+  int ret = oc_init_platform("Intel", init_platform_cb, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);

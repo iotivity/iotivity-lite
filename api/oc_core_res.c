@@ -384,7 +384,8 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_rep_set_text_string(root, pi, pi);
     oc_rep_set_text_string(root, mnmn, oc_string(oc_platform_info.mfg_name));
     if (oc_platform_info.init_platform_cb) {
-      oc_platform_info.init_platform_cb(oc_platform_info.data);
+      oc_platform_info.init_platform_cb(oc_rep_object(root),
+                                        oc_platform_info.data);
     }
   } break;
   default:
