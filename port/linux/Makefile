@@ -18,6 +18,7 @@ libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
+TEST_RUNNER?= $(ROOT_DIR)/tests/port/linux/test-runner.sh
 
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
@@ -139,7 +140,7 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 test: $(UNIT_TESTS)
-	for test in $^ ; do ./$${test} ; done
+	for test in $^ ; do ${TEST_RUNNER} $${test} || exit $${?} ; done
 
 .PHONY: test clean
 
