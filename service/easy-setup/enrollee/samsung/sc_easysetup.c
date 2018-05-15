@@ -84,9 +84,13 @@ static void write_wifi_data(oc_rep_t* payload, char* resourceType);
 
 #define stringify(s) #s
 
-#define set_custom_property_str(object, key, value) oc_rep_set_text_string(object, key, value)
-#define set_custom_property_int(object, key, value) oc_rep_set_int(object, key, value)
-#define set_custom_property_bool(object, key, value) oc_rep_set_boolean(object, key, value)
+#define set_custom_property_str(object, key, value)                            \
+  if (value)                                                                   \
+  oc_rep_set_text_string(object, key, value)
+#define set_custom_property_int(object, key, value)                            \
+  oc_rep_set_int(object, key, value)
+#define set_custom_property_bool(object, key, value)                           \
+  oc_rep_set_boolean(object, key, value)
 
 static void update_provisioning_info_resource(oc_request_t *request)
 {
