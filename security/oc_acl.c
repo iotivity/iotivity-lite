@@ -1027,13 +1027,13 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
                 if (oc_string(resource->value.string)[0] == '*') {
                   wc = OC_ACE_WC_ALL;
 #ifdef OC_SERVER
-                  wc_r = 0xFFFFFFFF;
+                  wc_r = ~0;
 #endif /* OC_SERVER */
                 }
                 if (oc_string(resource->value.string)[0] == '+') {
                   wc = OC_ACE_WC_ALL_DISCOVERABLE;
 #ifdef OC_SERVER
-                  wc_r = 0xFFFFFFFF;
+                  wc_r = ~0;
 #endif /* OC_SERVER */
                 }
                 if (oc_string(resource->value.string)[0] == '-') {
