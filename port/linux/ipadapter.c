@@ -319,7 +319,7 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
     }
     /* Ignore interfaces not belonging to the address family under consideration
      */
-    if (interface->ifa_addr->sa_family != sa_family) {
+    if (interface->ifa_addr && interface->ifa_addr->sa_family != sa_family) {
       continue;
     }
     /* Obtain interface index for this address */
@@ -327,14 +327,15 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6) {
       struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
-      if (IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
+      if (a && IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
         ret += add_mcast_sock_to_ipv6_mcast_group(mcast_sock, if_index);
       }
     }
 #ifdef OC_IPV4
     else if (sa_family == AF_INET) {
       struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
-      ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
+      if (a)
+        ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
                                                 if_index);
     }
 #endif /* OC_IPV4 */
