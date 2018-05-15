@@ -137,20 +137,20 @@ oc_sec_load_cred(int device)
   long ret = 0;
   oc_rep_t *rep;
 
-  if (oc_sec_is_operational(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
-    if (!buf)
-      return;
+  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  memset(buf, 0, OC_MAX_APP_DATA_SIZE);
+  if (!buf)
+    return;
 #else  /* OC_DYNAMIC_ALLOCATION */
-    uint8_t buf[OC_MAX_APP_DATA_SIZE];
+  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+  memset(buf, 0, OC_MAX_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
-    char svr_tag[SVR_TAG_MAX];
-    gen_svr_tag("cred", device, svr_tag);
-    ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
-
-    if (ret > 0) {
+  char svr_tag[SVR_TAG_MAX];
+  gen_svr_tag("cred", device, svr_tag);
+  ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
+  if (oc_sec_is_operational(device) || ret > 0)
+  {
 #ifndef OC_DYNAMIC_ALLOCATION
       char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
       oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -165,8 +165,9 @@ oc_sec_load_cred(int device)
       oc_rep_set_pool(&rep_objects);
       oc_parse_rep(buf, (uint16_t)ret, &rep);
       oc_sec_decode_cred(rep, NULL, true, device);
+      oc_sec_load_certs(device);
+
       oc_free_rep(rep);
-    }
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
