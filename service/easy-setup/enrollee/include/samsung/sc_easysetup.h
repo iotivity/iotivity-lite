@@ -89,6 +89,8 @@ typedef struct sc_tnc_info
 
 typedef struct sc_dev_conf_properties
 {
+  /**< Samsung-specific no of locations**/
+  int numLocation;
   /**< Samsung-specific location-related information **/
   oc_string_array_t location;
   /**< Samsung-specific mobile device information for 'register TV' **/
@@ -143,6 +145,8 @@ typedef struct sc_properties
   oc_string_t deviceType;
   /**< Device Sub Category **/
   oc_string_t deviceSubType;
+  /**< Samsung-specific no of locations**/
+  int numLocation;
   /**< Samsung-specific location-related information **/
   oc_string_array_t location;
   /**< Samsung-specific clientId for sign-up to IoT Cloud **/
@@ -225,5 +229,6 @@ es_result_e set_sc_pnp_pin(const char *pnp);
 es_result_e set_es_version_info(const char *esVersionInfo);
 es_result_e register_sc_provisioning_info_resource();
 es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *prop);
+es_result_e reset_sc_properties(const sc_properties *prop);
 
 #endif /* EASYSETUPX_ENROLLEE_H__ */

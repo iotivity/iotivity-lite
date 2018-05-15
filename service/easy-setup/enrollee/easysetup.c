@@ -172,7 +172,7 @@ es_set_device_property(es_device_property *device_property)
     OC_ERR("es_set_device_property Error");
     return ES_ERROR;
   }
-
+  //TODO:Check usage of g_es_device_property
   int modeIdx = 0;
   while ((device_property->WiFi).supported_mode[modeIdx] != WiFi_EOF) {
     (g_es_device_property.WiFi).supported_mode[modeIdx] =
@@ -185,10 +185,9 @@ es_set_device_property(es_device_property *device_property)
   (g_es_device_property.WiFi).supported_freq =
     (device_property->WiFi).supported_freq;
   OC_DBG("WiFi Freq : %d", (g_es_device_property.WiFi).supported_freq);
-
-  oc_strncpy((g_es_device_property.DevConf).device_name,
-             (device_property->DevConf).device_name, OC_STRING_MAX_VALUE);
-  OC_DBG("Device Name : %s", (g_es_device_property.DevConf).device_name);
+  oc_allocate_string(&((g_es_device_property.DevConf).device_name),
+                             oc_string((device_property->DevConf).device_name));
+  OC_DBG("Device Name : %s", oc_string((g_es_device_property.DevConf).device_name));
 
   OC_DBG("out");
   return ES_OK;
