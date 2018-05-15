@@ -801,13 +801,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
 
 #ifdef OC_SECURITY
-    /* If cur_resource is a coaps:// resource, then query ACL to check if
-     * the requestor (the subject) is authorized to issue this request to
-     * the resource.
-     */
-    if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
-      authorized = false;
-    } else
+/* If cur_resource is a coaps:// resource, then query ACL to check if
+ * the requestor (the subject) is authorized to issue this request to
+ * the resource.
+ */
+// if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
+//   authorized = false;
+// } else
 #endif /* OC_SECURITY */
     {
 /* If cur_resource is a collection resource, invoke the framework's
