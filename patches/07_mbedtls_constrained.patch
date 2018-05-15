@@ -1,8 +1,19 @@
+From be05da25ded4a4cb33dcb47167807a4fd175b131 Mon Sep 17 00:00:00 2001
+From: "ol.beketov" <ol.beketov@samsung.com>
+Date: Thu, 3 May 2018 13:03:13 +0300
+Subject: [PATCH] ocf constrained
+
+Signed-off-by: ol.beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h | 2846 ++--------------------------------------------
+ library/entropy_poll.c   |   24 +-
+ 2 files changed, 95 insertions(+), 2775 deletions(-)
+
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedffd..b218ab04 100644
+index 79eedff..45143a5 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2817 +1,112 @@
+@@ -1,2817 +1,117 @@
 -/**
 - * \file config.h
 - *
@@ -561,10 +572,7 @@ index 79eedffd..b218ab04 100644
 - *            security risk. We recommend considering stronger ciphers instead.
 - */
 -//#define MBEDTLS_ENABLE_WEAK_CIPHERSUITES
-+#include <config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
- 
+-
 -/**
 - * \def MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 - *
@@ -577,9 +585,9 @@ index 79eedffd..b218ab04 100644
 - * Uncomment this macro to remove RC4 ciphersuites by default.
 - */
 -#define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
-+/* System support */
-+#define MBEDTLS_PLATFORM_C
-+#define MBEDTLS_PLATFORM_MEMORY
++#include <config.h>
++#include "port/oc_connectivity.h"
++#include "port/oc_assert.h"
  
 -/**
 - * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
@@ -601,13 +609,9 @@ index 79eedffd..b218ab04 100644
 -#define MBEDTLS_ECP_DP_BP384R1_ENABLED
 -#define MBEDTLS_ECP_DP_BP512R1_ENABLED
 -#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-+#ifdef OC_DYNAMIC_ALLOCATION
-+#include <stdlib.h>
-+#define MBEDTLS_PLATFORM_STD_CALLOC calloc
-+#define MBEDTLS_PLATFORM_STD_FREE free
-+#else /* OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
-+#endif /* !OC_DYNAMIC_ALLOCATION */
++/* System support */
++#define MBEDTLS_PLATFORM_C
++#define MBEDTLS_PLATFORM_MEMORY
  
 -/**
 - * \def MBEDTLS_ECP_NIST_OPTIM
@@ -619,9 +623,13 @@ index 79eedffd..b218ab04 100644
 - * Comment this macro to disable NIST curves optimisation.
 - */
 -#define MBEDTLS_ECP_NIST_OPTIM
-+#define MBEDTLS_PLATFORM_EXIT_ALT
-+#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
-+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
++#ifdef OC_DYNAMIC_ALLOCATION
++#include <stdlib.h>
++#define MBEDTLS_PLATFORM_STD_CALLOC calloc
++#define MBEDTLS_PLATFORM_STD_FREE free
++#else /* OC_DYNAMIC_ALLOCATION */
++#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
++#endif /* !OC_DYNAMIC_ALLOCATION */
  
 -/**
 - * \def MBEDTLS_ECDSA_DETERMINISTIC
@@ -636,7 +644,10 @@ index 79eedffd..b218ab04 100644
 - * Comment this macro to disable deterministic ECDSA.
 - */
 -#define MBEDTLS_ECDSA_DETERMINISTIC
--
++#define MBEDTLS_PLATFORM_EXIT_ALT
++#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
++#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+ 
 -/**
 - * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 - *
@@ -1517,7 +1528,7 @@ index 79eedffd..b218ab04 100644
 - * Comment to skip keyUsage checking for both CA and leaf certificates.
 - */
 -#define MBEDTLS_X509_CHECK_KEY_USAGE
- 
+-
 -/**
 - * \def MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 - *
@@ -1584,7 +1595,7 @@ index 79eedffd..b218ab04 100644
 - * This modules adds support for the AES-NI instructions on x86-64
 - */
 -#define MBEDTLS_AESNI_C
--
+ 
 -/**
 - * \def MBEDTLS_AES_C
 - *
@@ -2546,9 +2557,7 @@ index 79eedffd..b218ab04 100644
 - * Enable this layer to allow use of mutexes within mbed TLS
 - */
 -//#define MBEDTLS_THREADING_C
-+/* Save RAM at the expense of ROM */
-+#define MBEDTLS_AES_ROM_TABLES
- 
+-
 -/**
 - * \def MBEDTLS_TIMING_C
 - *
@@ -2571,7 +2580,9 @@ index 79eedffd..b218ab04 100644
 - * This module is used by the HAVEGE random number generator.
 - */
 -#define MBEDTLS_TIMING_C
--
++/* Save RAM at the expense of ROM */
++#define MBEDTLS_AES_ROM_TABLES
+ 
 -/**
 - * \def MBEDTLS_VERSION_C
 - *
@@ -2629,9 +2640,7 @@ index 79eedffd..b218ab04 100644
 - * This module is required for X.509 CRL parsing.
 - */
 -#define MBEDTLS_X509_CRL_PARSE_C
-+/* Save some RAM by adjusting to your exact needs */
-+#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
- 
+-
 -/**
 - * \def MBEDTLS_X509_CSR_PARSE_C
 - *
@@ -2645,7 +2654,9 @@ index 79eedffd..b218ab04 100644
 - * This module is used for reading X.509 certificate request.
 - */
 -#define MBEDTLS_X509_CSR_PARSE_C
--
++/* Save some RAM by adjusting to your exact needs */
++#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
+ 
 -/**
 - * \def MBEDTLS_X509_CREATE_C
 - *
@@ -2720,29 +2731,29 @@ index 79eedffd..b218ab04 100644
 -/* MPI / BIGNUM options */
 -//#define MBEDTLS_MPI_WINDOW_SIZE            6 /**< Maximum windows size used. */
 -//#define MBEDTLS_MPI_MAX_SIZE            1024 /**< Maximum number of bytes for usable MPIs. */
-+#ifndef OC_DYNAMIC_ALLOCATION
-+#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
-+#endif /* !OC_DYNAMIC_ALLOCATION */
- 
+-
 -/* CTR_DRBG options */
 -//#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
 -//#define MBEDTLS_CTR_DRBG_RESEED_INTERVAL        10000 /**< Interval before reseed is performed by default */
 -//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-+#define MBEDTLS_SSL_BUFFER_MIN 512
- 
+-
 -/* HMAC_DRBG options */
 -//#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000 /**< Interval before reseed is performed by default */
 -//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
--
++#ifndef OC_DYNAMIC_ALLOCATION
++#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
++#endif /* !OC_DYNAMIC_ALLOCATION */
+ 
 -/* ECP options */
 -//#define MBEDTLS_ECP_MAX_BITS             521 /**< Maximum bit size of groups */
 -//#define MBEDTLS_ECP_WINDOW_SIZE            6 /**< Maximum window size used */
 -//#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
--
++#define MBEDTLS_SSL_BUFFER_MIN 512
+ 
 -/* Entropy options */
 -//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
 -//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
@@ -2804,10 +2815,6 @@ index 79eedffd..b218ab04 100644
 - * The value below is only an example, not the default.
 - */
 -//#define MBEDTLS_SSL_CIPHERSUITES MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
--
--/* X509 options */
--//#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */
--//#define MBEDTLS_X509_MAX_FILE_PATH_LEN     512 /**< Maximum length of a path/filename string in bytes including the null terminator character ('\0'). */
 +#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 +#define MBEDTLS_ECP_C
 +#define MBEDTLS_BIGNUM_C
@@ -2818,6 +2825,11 @@ index 79eedffd..b218ab04 100644
 +#define MBEDTLS_RSA_C
 +#define MBEDTLS_PKCS1_V15
 +#define MBEDTLS_X509_CRT_PARSE_C
+ 
+-/* X509 options */
+-//#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */
+-//#define MBEDTLS_X509_MAX_FILE_PATH_LEN     512 /**< Maximum length of a path/filename string in bytes including the null terminator character ('\0'). */
++#define MBEDTLS_X509_USE_C
  
 -/**
 - * Allow SHA-1 in the default TLS configuration for certificate signing.
@@ -2832,7 +2844,10 @@ index 79eedffd..b218ab04 100644
 - *
 - */
 -// #define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES
-+#define MBEDTLS_X509_USE_C
++#define MBEDTLS_ASN1_PARSE_C
++#define MBEDTLS_OID_C
++#define MBEDTLS_PK_PARSE_C
++#define MBEDTLS_PK_C
  
 -/**
 - * Allow SHA-1 in the default TLS configuration for TLS 1.2 handshake
@@ -2850,10 +2865,10 @@ index 79eedffd..b218ab04 100644
 - *
 - */
 -#define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_KEY_EXCHANGE
-+#define MBEDTLS_ASN1_PARSE_C
-+#define MBEDTLS_OID_C
-+#define MBEDTLS_PK_PARSE_C
-+#define MBEDTLS_PK_C
++#define MBEDTLS_ASN1_WRITE_C
++#define MBEDTLS_ECDSA_C
++#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
++#define MBEDTLS_CCM_C
  
 -/* \} name SECTION: Customisation configuration options */
 +#define MBEDTLS_CIPHER_MODE_CBC
@@ -2890,7 +2905,7 @@ index 79eedffd..b218ab04 100644
  
  #endif /* MBEDTLS_CONFIG_H */
 diff --git a/library/entropy_poll.c b/library/entropy_poll.c
-index c022caf2..4f3ecb91 100644
+index c022caf..4f3ecb9 100644
 --- a/library/entropy_poll.c
 +++ b/library/entropy_poll.c
 @@ -44,11 +44,31 @@
@@ -2927,3 +2942,6 @@ index c022caf2..4f3ecb91 100644
  
  #if !defined(_WIN32_WINNT)
  #define _WIN32_WINNT 0x0400
+-- 
+1.9.1
+

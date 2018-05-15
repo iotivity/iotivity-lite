@@ -58,9 +58,9 @@ oc_sec_doxm_init(void)
 }
 
 void
-oc_sec_doxm_default(int device)
+oc_sec_doxm(int device, int oxmsel)
 {
-  doxm[device].oxmsel = 0;
+  doxm[device].oxmsel = oxmsel;
   doxm[device].sct = 1;
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
@@ -70,7 +70,7 @@ oc_sec_doxm_default(int device)
 void
 oc_sec_encode_doxm(int device)
 {
-  int oxms[1] = { 0 };
+  int oxms[1] = { doxm[device].oxmsel };
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
