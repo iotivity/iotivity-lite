@@ -771,6 +771,7 @@ oc_sec_acl_default(int device)
   const char *sec_prov_info = "/sec/provisioninginfo";
   resource =
     oc_ri_get_app_resource_by_uri(sec_prov_info, strlen(sec_prov_info), device);
+  if (resource)
   success &= oc_sec_ace_update_res(
     OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
     &resource->types, resource->interfaces, device);
