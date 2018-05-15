@@ -252,7 +252,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 }
 
 static void
-check_retr_timers()
+check_retr_timers(void)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers), *next;
   while (peer != NULL) {
