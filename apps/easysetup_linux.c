@@ -66,7 +66,6 @@ typedef struct
 
 user_properties_t g_user_properties;
 
-
 #ifdef WITH_SOFTAP
 
 typedef struct
@@ -367,8 +366,8 @@ wifi_prov_cb_in_app(es_wifi_conf_data *event_data)
 
   soft_ap_data_t *soft_ap_data =
     (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
-  strcpy(soft_ap_data->ssid, event_data->ssid);
-  strcpy(soft_ap_data->password, event_data->pwd);
+  strcpy(soft_ap_data->ssid, (char *)oc_string(event_data->ssid));
+  strcpy(soft_ap_data->password, (char *)oc_string(event_data->pwd));
   pthread_create(&wifi_cn_thread, NULL, es_worker_thread_routine,
                  (void *)soft_ap_data);
 #endif // WITH_SOFTAP
@@ -399,19 +398,19 @@ cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data)
     return;
   }
 
-  if (event_data->auth_code) {
+  if (oc_string(event_data->auth_code)) {
     printf("AuthCode : %s\n", event_data->auth_code);
   }
 
-  if (event_data->access_token) {
+  if (oc_string(event_data->access_token)) {
     printf("Access Token : %s\n", event_data->access_token);
   }
 
-  if (event_data->auth_provider) {
+  if (oc_string(event_data->auth_provider)) {
     printf("AuthProvider : %s\n", event_data->auth_provider);
   }
 
-  if (event_data->ci_server) {
+  if (oc_string(event_data->ci_server)) {
     printf("CI Server : %s\n", event_data->ci_server);
   }
 
@@ -447,11 +446,11 @@ void
 set_device_info()
 {
   printf("[ES App] set_device_info in\n");
+  char *device_name = "TEST_DEVICE";
 
-  es_device_property device_property = {
-    { { WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF }, WIFI_5G },
-    { "Test Device" }
-  };
+  es_device_property device_property ={{{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF },WIFI_5G},{{0}}};
+
+  oc_new_string(&device_property.DevConf.device_name, device_name, strlen(device_name));
 
   if (es_set_device_property(&device_property) == ES_ERROR)
     printf("[ES App] es_set_device_property error!\n");

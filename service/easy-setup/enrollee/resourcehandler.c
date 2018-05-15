@@ -35,6 +35,18 @@ es_dev_conf_cb g_dev_conf_res_event_cb = NULL;
 es_read_userdata_cb g_read_user_data_cb = NULL;
 es_write_userdata_cb g_write_user_data_cb = NULL;
 
+void
+oc_allocate_string(oc_string_t *desString, char *srcString){
+  if(oc_string_len(*desString) == 0){
+    oc_new_string(desString, srcString, strlen(srcString));
+  }else if(oc_string_len(*desString)== strlen(srcString)){
+    oc_strncpy(oc_string(*desString), srcString, strlen(srcString));
+  }else{
+    oc_free_string(desString);
+    oc_new_string(desString, srcString,strlen(srcString));
+  }
+}
+
 bool
 oc_compare_property(oc_rep_t *rep, char *property_name)
 {
@@ -52,16 +64,15 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
   OC_DBG("in");
 
   (void)interface;
-  es_wifi_conf_data wifi_data;
-
-  memset(wifi_data.ssid, 0, OC_STRING_MAX_VALUE);
-  memset(wifi_data.pwd, 0, OC_STRING_MAX_VALUE);
-  wifi_data.authtype = NONE_AUTH;
-  wifi_data.enctype = NONE_AUTH;
-  wifi_data.userdata = NULL;
+  es_wifi_conf_data wifi_data={
+    .authtype = NONE_AUTH,
+    .enctype = NONE_AUTH,
+    .userdata = NULL,
+    .ssid.ptr="",
+    .pwd.ptr=""
+  };
 
   bool is_valid = false;
-
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     OC_DBG("key %s", oc_string(rep->name));
@@ -69,20 +80,16 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
     case OC_REP_STRING: {
       if (oc_compare_property(rep, OC_RSRVD_ES_SSID)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_wificonf_resource.ssid, oc_string(rep->value.string),
-                     sizeof(g_wificonf_resource.ssid));
-          oc_strncpy(wifi_data.ssid, oc_string(rep->value.string),
-                     sizeof(wifi_data.ssid));
-          OC_DBG("g_wificonf_resource.ssid : %s", g_wificonf_resource.ssid);
+          oc_allocate_string(&g_wificonf_resource.ssid, oc_string(rep->value.string));
+          oc_allocate_string(&wifi_data.ssid, oc_string(rep->value.string));
+          OC_DBG("g_wificonf_resource.ssid : %s", oc_string(g_wificonf_resource.ssid));
           is_valid = true;
         }
       } else if (oc_compare_property(rep, OC_RSRVD_ES_CRED)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_wificonf_resource.cred, oc_string(rep->value.string),
-                     sizeof(g_wificonf_resource.cred));
-          oc_strncpy(wifi_data.pwd, oc_string(rep->value.string),
-                     sizeof(wifi_data.pwd));
-          OC_DBG("g_wificonf_resource.cred : %s", g_wificonf_resource.cred);
+          oc_allocate_string(&g_wificonf_resource.cred, oc_string(rep->value.string));
+          oc_allocate_string(&wifi_data.pwd, oc_string(rep->value.string));
+          OC_DBG("g_wificonf_resource.cred : %s", oc_string( g_wificonf_resource.cred));
           is_valid = true;
         }
       }
@@ -117,6 +124,10 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
 
     if (g_wificonf_res_event_cb != NULL) {
       g_wificonf_res_event_cb(ES_OK, &wifi_data);
+      es_free_property(wifi_data.ssid);
+      es_free_property(wifi_data.pwd);
+      if(wifi_data.userdata != NULL){
+        free(wifi_data.userdata);}
     } else {
       OC_ERR("g_wificonf_res_event_cb is NULL");
     }
@@ -138,14 +149,14 @@ update_coap_cloud_conf_resource(oc_request_t *request,
   OC_DBG("in");
 
   (void)interface;
-  es_coap_cloud_conf_data cloud_data;
-
-  memset(cloud_data.auth_code, 0, OC_STRING_MAX_VALUE);
-  memset(cloud_data.access_token, 0, OC_STRING_MAX_VALUE);
-  g_cloudconf_resource.access_token_type = NONE_OAUTH_TOKENTYPE;
-  memset(cloud_data.auth_provider, 0, OC_STRING_MAX_VALUE);
-  memset(cloud_data.ci_server, 0, OC_STRING_MAX_VALUE);
-  cloud_data.userdata = NULL;
+  es_coap_cloud_conf_data cloud_data={
+    .auth_code.ptr="",
+    .access_token.ptr="",
+    .access_token_type=NONE_OAUTH_TOKENTYPE,
+    .auth_provider.ptr="",
+    .ci_server.ptr="",
+    .userdata = NULL
+  };
 
   bool is_valid = false;
 
@@ -156,44 +167,32 @@ update_coap_cloud_conf_resource(oc_request_t *request,
     case OC_REP_STRING: {
       if (oc_compare_property(rep, OC_RSRVD_ES_AUTHCODE)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_cloudconf_resource.auth_code,
-                     oc_string(rep->value.string),
-                     sizeof(g_cloudconf_resource.auth_code));
-          oc_strncpy(cloud_data.auth_code, oc_string(rep->value.string),
-                     sizeof(cloud_data.auth_code));
+          oc_allocate_string(&g_cloudconf_resource.auth_code, oc_string(rep->value.string));
+          oc_allocate_string(&cloud_data.auth_code, oc_string(rep->value.string));
           OC_DBG("g_cloudconf_resource.auth_code : %s",
                  g_cloudconf_resource.auth_code);
           is_valid = true;
         }
       } else if (oc_compare_property(rep, OC_RSRVD_ES_ACCESSTOKEN)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_cloudconf_resource.access_token,
-                     oc_string(rep->value.string),
-                     sizeof(g_cloudconf_resource.access_token));
-          oc_strncpy(cloud_data.access_token, oc_string(rep->value.string),
-                     sizeof(cloud_data.access_token));
+          oc_allocate_string(&g_cloudconf_resource.access_token, oc_string(rep->value.string));
+          oc_allocate_string(&cloud_data.access_token, oc_string(rep->value.string));
           OC_DBG("g_cloudconf_resource.access_token : %s",
                  g_cloudconf_resource.access_token);
           is_valid = true;
         }
       } else if (oc_compare_property(rep, OC_RSRVD_ES_AUTHPROVIDER)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_cloudconf_resource.auth_provider,
-                     oc_string(rep->value.string),
-                     sizeof(g_cloudconf_resource.auth_provider));
-          oc_strncpy(cloud_data.auth_provider, oc_string(rep->value.string),
-                     sizeof(cloud_data.auth_provider));
+          oc_allocate_string(&g_cloudconf_resource.auth_provider, oc_string(rep->value.string));
+          oc_allocate_string(&cloud_data.auth_provider, oc_string(rep->value.string));
           OC_DBG("g_cloudconf_resource.auth_provider : %s",
                  g_cloudconf_resource.auth_provider);
           is_valid = true;
         }
       } else if (oc_compare_property(rep, OC_RSRVD_ES_CISERVER)) {
         if (oc_string_len(rep->value.string) > 0) {
-          oc_strncpy(g_cloudconf_resource.ci_server,
-                     oc_string(rep->value.string),
-                     sizeof(g_cloudconf_resource.ci_server));
-          oc_strncpy(cloud_data.ci_server, oc_string(rep->value.string),
-                     sizeof(cloud_data.ci_server));
+          oc_allocate_string(&g_cloudconf_resource.ci_server, oc_string(rep->value.string));
+          oc_allocate_string(&cloud_data.ci_server, oc_string(rep->value.string));
           OC_DBG("g_cloudconf_resource.ci_server : %s",
                  g_cloudconf_resource.ci_server);
           is_valid = true;
@@ -222,9 +221,14 @@ update_coap_cloud_conf_resource(oc_request_t *request,
 
   if (is_valid) {
     OC_DBG("Send CoapCloudConfRsrc Callback To ES");
-
     if (g_cloud_conf_res_event_cb) {
       g_cloud_conf_res_event_cb(ES_OK, &cloud_data);
+      es_free_property(cloud_data.auth_code);
+      es_free_property(cloud_data.access_token);
+      es_free_property(cloud_data.auth_provider);
+      es_free_property(cloud_data.ci_server);
+      if(cloud_data.userdata != NULL){
+       free(cloud_data.userdata);}
     } else {
       OC_ERR("g_cloud_conf_res_event_cb is NULL");
     }
@@ -256,6 +260,8 @@ update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
 
     if (g_dev_conf_res_event_cb != NULL) {
       g_dev_conf_res_event_cb(ES_OK, &dev_conf_data);
+      if(dev_conf_data.userdata != NULL){
+       free(dev_conf_data.userdata);}
     } else {
       OC_ERR("g_dev_conf_res_event_cb is NULL");
     }
@@ -345,11 +351,11 @@ construct_response_of_coapcloudconf(void)
   /// TODO: Call this only when interface is baseline
   oc_process_baseline_interface(g_cloudconf_resource.handle);
 
-  oc_rep_set_text_string(root, ac, g_cloudconf_resource.auth_code);
-  oc_rep_set_text_string(root, at, g_cloudconf_resource.access_token);
+  oc_rep_set_text_string(root, ac, oc_string(g_cloudconf_resource.auth_code));
+  oc_rep_set_text_string(root, at, oc_string(g_cloudconf_resource.access_token));
   oc_rep_set_int(root, att, g_cloudconf_resource.access_token_type);
-  oc_rep_set_text_string(root, apn, g_cloudconf_resource.auth_provider);
-  oc_rep_set_text_string(root, cis, g_cloudconf_resource.ci_server);
+  oc_rep_set_text_string(root, apn, oc_string(g_cloudconf_resource.auth_provider));
+  oc_rep_set_text_string(root, cis, oc_string(g_cloudconf_resource.ci_server));
 
   if (g_write_user_data_cb) {
     g_write_user_data_cb(NULL, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF);
@@ -380,18 +386,17 @@ construct_response_of_wificonf(void)
 
   oc_rep_close_array(root, swmt);
   oc_rep_set_int(root, swf, (int)g_wificonf_resource.supported_freq);
-  oc_rep_set_text_string(root, tnn, g_wificonf_resource.ssid);
-  oc_rep_set_text_string(root, cd, g_wificonf_resource.cred);
+  oc_rep_set_text_string(root, tnn, oc_string(g_wificonf_resource.ssid));
+  oc_rep_set_text_string(root, cd, oc_string(g_wificonf_resource.cred));
   oc_rep_set_int(root, wat, (int)g_wificonf_resource.auth_type);
   oc_rep_set_int(root, wet, (int)g_wificonf_resource.enc_type);
 
   if (g_write_user_data_cb) {
     g_write_user_data_cb(NULL, OC_RSRVD_ES_RES_TYPE_WIFICONF);
   }
-
   oc_rep_end_root_object();
 
-  OC_DBG("construct_response_of_wificonf out");
+  OC_DBG("out");
   return ES_OK;
 }
 
@@ -407,7 +412,7 @@ construct_response_of_devconf(void)
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(g_devconf_resource.handle);
-  oc_rep_set_text_string(root, dn, g_devconf_resource.dev_name);
+  oc_rep_set_text_string(root, dn, oc_string(g_devconf_resource.dev_name));
 
   if (g_write_user_data_cb) {
     g_write_user_data_cb(NULL, OC_RSRVD_ES_RES_TYPE_DEVCONF);
@@ -721,9 +726,8 @@ init_wifi_conf_resource(bool is_secured)
   g_wificonf_resource.num_mode = 4;
   g_wificonf_resource.auth_type = NONE_AUTH;
   g_wificonf_resource.enc_type = NONE_ENC;
-
-  memset(g_wificonf_resource.ssid, 0, sizeof(g_wificonf_resource.ssid));
-  memset(g_wificonf_resource.cred, 0, sizeof(g_wificonf_resource.cred));
+  g_wificonf_resource.ssid.ptr="";
+  g_wificonf_resource.cred.ptr="";
 
   oc_resource_t *wifi = oc_new_resource("wifi", OC_RSRVD_ES_URI_WIFICONF, 1, 0);
 
@@ -757,15 +761,12 @@ init_coap_cloudconf_resource(bool is_secured)
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
-  memset(g_cloudconf_resource.auth_code, 0,
-         sizeof(g_cloudconf_resource.auth_code));
-  memset(g_cloudconf_resource.access_token, 0,
-         sizeof(g_cloudconf_resource.access_token));
+
+  g_cloudconf_resource.auth_code.ptr="";
+  g_cloudconf_resource.access_token.ptr="";
   g_cloudconf_resource.access_token_type = NONE_OAUTH_TOKENTYPE;
-  memset(g_cloudconf_resource.auth_provider, 0,
-         sizeof(g_cloudconf_resource.auth_provider));
-  memset(g_cloudconf_resource.ci_server, 0,
-         sizeof(g_cloudconf_resource.ci_server));
+  g_cloudconf_resource.auth_provider.ptr="";
+  g_cloudconf_resource.ci_server.ptr="";
 
   oc_resource_t *cloud =
     oc_new_resource("cloud", OC_RSRVD_ES_URI_COAPCLOUDCONF, 1, 0);
@@ -798,10 +799,9 @@ init_devconf_resource(bool is_secured)
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
-  memset(g_devconf_resource.dev_name, 0, sizeof(g_devconf_resource.dev_name));
-
   oc_resource_t *devconf =
     oc_new_resource("devconf", OC_RSRVD_ES_URI_DEVCONF, 1, 0);
+  g_devconf_resource.dev_name.ptr="";
 
   if (NULL == devconf) {
     OC_ERR("Error in creating WiFiConf Resource!");
@@ -875,29 +875,60 @@ create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask)
   return ES_OK;
 }
 
+void
+deinit_easysetup_resource()
+{
+  oc_delete_collection(g_easysetup_resource.handle);
+  g_easysetup_resource.handle = NULL;
+}
+
+void
+deinit_devconf_resource()
+{
+  oc_delete_resource(g_devconf_resource.handle);
+  g_devconf_resource.handle = NULL;
+  es_free_property(g_devconf_resource.dev_name);
+}
+
+void
+deinit_coap_cloudconf_resource()
+{
+  oc_delete_resource(g_cloudconf_resource.handle);
+  g_cloudconf_resource.handle = NULL;
+  es_free_property(g_cloudconf_resource.auth_code);
+  es_free_property(g_cloudconf_resource.auth_provider);
+  es_free_property(g_cloudconf_resource.access_token);
+  es_free_property(g_cloudconf_resource.ci_server);
+}
+
+void
+deinit_wifi_conf_resource()
+{
+  oc_delete_resource(g_wificonf_resource.handle);
+  g_wificonf_resource.handle = NULL;
+  es_free_property(g_wificonf_resource.ssid);
+  es_free_property(g_wificonf_resource.cred);
+}
+
 es_result_e
 delete_easysetup_resources()
 {
   OC_DBG("in");
 
   if (g_easysetup_resource.handle != NULL) {
-    oc_delete_collection(g_easysetup_resource.handle);
-    g_easysetup_resource.handle = NULL;
+    deinit_easysetup_resource();
   }
 
   if (g_wificonf_resource.handle != NULL) {
-    oc_delete_resource(g_wificonf_resource.handle);
-    g_wificonf_resource.handle = NULL;
+    deinit_wifi_conf_resource();
   }
 
   if (g_cloudconf_resource.handle != NULL) {
-    oc_delete_resource(g_cloudconf_resource.handle);
-    g_cloudconf_resource.handle = NULL;
+    deinit_coap_cloudconf_resource();
   }
 
   if (g_devconf_resource.handle != NULL) {
-    oc_delete_resource(g_devconf_resource.handle);
-    g_devconf_resource.handle = NULL;
+    deinit_devconf_resource();
   }
 
   OC_DBG("out");
@@ -921,10 +952,9 @@ set_device_property(es_device_property *device_property)
   }
 
   g_wificonf_resource.num_mode = modeIdx;
-
-  oc_strncpy(g_devconf_resource.dev_name,
-             (device_property->DevConf).device_name, OC_STRING_MAX_VALUE);
-  OC_DBG("Device Name : %s", g_devconf_resource.dev_name);
+  oc_allocate_string(&(g_devconf_resource.dev_name),
+                             oc_string((device_property->DevConf).device_name));
+  OC_DBG("Device Name : %s", oc_string(g_devconf_resource.dev_name));
 
   if (0 == oc_notify_observers(g_wificonf_resource.handle)) {
     OC_DBG("wifiResource doesn't have any observers.");
