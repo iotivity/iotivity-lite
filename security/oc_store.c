@@ -166,10 +166,10 @@ oc_sec_load_cred(int device)
       oc_sec_load_certs(device);
 
       oc_free_rep(rep);
-#ifdef OC_DYNAMIC_ALLOCATION
-      oc_mem_free(buf);
-#endif /* OC_DYNAMIC_ALLOCATION */
   }
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_mem_free(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
