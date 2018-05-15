@@ -19,7 +19,7 @@
 
 #include "oc_ri.h"
 
-typedef void (*oc_core_init_platform_cb_t)(void *data);
+typedef void (*oc_core_init_platform_cb_t)(CborEncoder *object, void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
 typedef struct
