@@ -22,15 +22,24 @@
 #include "util/oc_list.h"
 
 OC_LIST(network_events);
+static bool interface_up, interface_down;
 
 static void
 oc_process_network_event(void)
 {
   oc_network_event_handler_mutex_lock();
-  oc_message_t *head = (oc_message_t *)oc_list_pop(network_events);
-  while (head != NULL) {
-    oc_recv_message(head);
-    head = oc_list_pop(network_events);
+  oc_message_t *message = (oc_message_t *)oc_list_pop(network_events);
+  while (message != NULL) {
+    oc_recv_message(message);
+    message = oc_list_pop(network_events);
+  }
+  if (interface_up) {
+    oc_process_post(&oc_network_events, oc_events[INTERFACE_UP], NULL);
+    interface_up = false;
+  }
+  if (interface_down) {
+    oc_process_post(&oc_network_events, oc_events[INTERFACE_DOWN], NULL);
+    interface_down = false;
   }
   oc_network_event_handler_mutex_unlock();
 }
@@ -43,13 +52,11 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
   OC_PROCESS_BEGIN();
   while (oc_process_is_running(&(oc_network_events))) {
     OC_PROCESS_YIELD();
-    oc_network_event_handler_mutex_lock();
     if (ev == oc_events[INTERFACE_DOWN]) {
       handle_network_interface_event_callback(NETWORK_INTERFACE_DOWN);
     } else if (ev == oc_events[INTERFACE_UP]) {
       handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
     }
-    oc_network_event_handler_mutex_unlock();
   }
   OC_PROCESS_END();
 }
@@ -75,21 +82,18 @@ oc_network_interface_event(oc_interface_event_t event)
   if (!oc_process_is_running(&(oc_network_events))) {
     return;
   }
-  oc_process_event_t ev;
-  if (event == NETWORK_INTERFACE_DOWN) {
-    ev = oc_events[INTERFACE_DOWN];
-  } else if (event == NETWORK_INTERFACE_UP) {
-    ev = oc_events[INTERFACE_UP];
-  } else {
-    return;
-  }
 
   oc_network_event_handler_mutex_lock();
-  if (oc_process_post(&oc_network_events, ev, NULL) == OC_PROCESS_ERR_FULL) {
+  if (event == NETWORK_INTERFACE_DOWN) {
+    interface_down = true;
+  } else if (event == NETWORK_INTERFACE_UP) {
+    interface_up = true;
+  } else {
     oc_network_event_handler_mutex_unlock();
     return;
   }
   oc_network_event_handler_mutex_unlock();
 
+  oc_process_poll(&(oc_network_events));
   _oc_signal_event_loop();
 }
