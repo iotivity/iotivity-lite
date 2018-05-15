@@ -92,7 +92,7 @@ st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
   context->publish_resources = publish_resources;
 
   oc_string_t ep_str;
-  oc_new_string(&ep_str, cloud_info->ci_server, strlen(cloud_info->ci_server));
+  oc_new_string(&ep_str, oc_string(cloud_info->ci_server), oc_string_len(cloud_info->ci_server));
 
   if (oc_string_to_endpoint(&ep_str, &context->cloud_ep, NULL) != 0) {
     oc_free_string(&ep_str);
@@ -100,22 +100,22 @@ st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
   }
   oc_free_string(&ep_str);
 
-  oc_new_string(&context->auth_provider, cloud_info->auth_provider,
-                strlen(cloud_info->auth_provider));
-  if (cloud_info->auth_code) {
-    oc_new_string(&context->auth_code, cloud_info->auth_code,
-                  strlen(cloud_info->auth_code));
+  oc_new_string(&context->auth_provider, oc_string(cloud_info->auth_provider),
+                oc_string_len(cloud_info->auth_provider));
+  if (oc_string(cloud_info->auth_code)) {
+    oc_new_string(&context->auth_code, oc_string(cloud_info->auth_code),
+                  oc_string_len(cloud_info->auth_code));
   }
-  if (cloud_info->access_token) {
-    oc_new_string(&context->access_token, cloud_info->access_token,
-                  strlen(cloud_info->access_token));
+  if (oc_string(cloud_info->access_token)) {
+    oc_new_string(&context->access_token, oc_string(cloud_info->access_token),
+                  oc_string_len(cloud_info->access_token));
   }
   if (st_cloud_info && oc_string(st_cloud_info->uid)) {
     oc_new_string(&context->uid, oc_string(st_cloud_info->uid),
                   oc_string_len(st_cloud_info->uid));
   }
 
-  printf("[Cloud_Access] sign up to %s\n", cloud_info->ci_server);
+  printf("[Cloud_Access] sign up to %s\n", oc_string(cloud_info->ci_server));
   if (!sign_up_process(context)) {
     goto errors;
   }

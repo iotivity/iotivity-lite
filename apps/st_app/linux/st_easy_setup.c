@@ -284,19 +284,19 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data)
     return;
   }
 
-  if (event_data->auth_code) {
+  if (oc_string(event_data->auth_code)) {
     printf("[Easy_Setup] AuthCode : %s\n", event_data->auth_code);
   }
 
-  if (event_data->access_token) {
+  if (oc_string(event_data->access_token)) {
     printf("[Easy_Setup] Access Token : %s\n", event_data->access_token);
   }
 
-  if (event_data->auth_provider) {
+  if (oc_string(event_data->auth_provider)) {
     printf("[Easy_Setup] AuthProvider : %s\n", event_data->auth_provider);
   }
 
-  if (event_data->ci_server) {
+  if (oc_string(event_data->ci_server)) {
     printf("[Easy_Setup] CI Server : %s\n", event_data->ci_server);
   }
 
@@ -361,8 +361,8 @@ wifi_connection_handler(void *data)
 {
   printf("[Easy_Setup] wifi_connection_handler in\n");
   es_wifi_conf_data *wifi_data = (es_wifi_conf_data *)data;
-  char *ssid = wifi_data->ssid;
-  char *pwd = wifi_data->pwd;
+  char *ssid = oc_string(wifi_data->ssid);
+  char *pwd = oc_string(wifi_data->pwd);
 
   /** Sleep to allow response sending from post_callback thread before turning
    * Off Soft AP. */
