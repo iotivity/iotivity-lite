@@ -112,6 +112,74 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return oc_do_post();
 }
 
+static void
+_add_resource_payload(CborEncoder *parent, oc_resource_t *resource)
+{
+  if (!parent || !resource) {
+    OC_ERR("Error of input parameters");
+    return;
+  }
+  oc_rep_start_object(*parent, links);
+  oc_rep_set_text_string(links, href, oc_string(resource->uri));
+  oc_rep_set_string_array(links, rt, resource->types);
+  oc_core_encode_interfaces_mask(oc_rep_object(links), resource->interfaces);
+  oc_rep_set_int(links, ins, 0);
+  oc_rep_set_object(links, p);
+  oc_rep_set_uint(p, bm,
+                  (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
+  oc_rep_close_object(links, p);
+#ifdef OC_SPEC_VER_OIC
+  oc_string_array_t type;
+  oc_new_string_array(&type, 1);
+  oc_string_array_add_item(type, "application/json");
+  oc_rep_set_string_array(links, type, type);
+  oc_free_string_array(&type);
+#endif
+  oc_rep_end_object(*parent, links);
+}
+
+bool
+rd_publish_all(oc_endpoint_t *endpoint, int device_index,
+               oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+{
+  if (!endpoint || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  if (oc_init_post(OC_RSRVD_RD_URI, endpoint, "rt=oic.wk.rdpub", handler, qos,
+                   user_data)) {
+    char uuid[MAX_UUID_LENGTH] = { 0 };
+    oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+    oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
+
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, di, uuid);
+    oc_rep_set_text_string(root, n, oc_string(device_info->name));
+    oc_rep_set_int(root, lt, RD_PUBLISH_TTL);
+
+    oc_rep_set_array(root, links);
+    _add_resource_payload(oc_rep_array(links),
+                          oc_core_get_resource_by_index(OCF_P, device_index));
+    _add_resource_payload(oc_rep_array(links),
+                          oc_core_get_resource_by_index(OCF_D, device_index));
+    oc_resource_t *resource = oc_ri_get_app_resources();
+    for (; resource; resource = resource->next) {
+      if (resource->device != device_index ||
+          !(resource->properties & OC_DISCOVERABLE))
+        continue;
+      _add_resource_payload(oc_rep_array(links), resource);
+    }
+    oc_rep_close_array(root, links);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for rd publish all");
+    return false;
+  }
+
+  return oc_do_post();
+}
+
 bool
 rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
                        oc_qos_t qos, void *user_data)
