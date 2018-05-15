@@ -142,6 +142,10 @@ rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
         devices, rt, oc_string_array_get_item(
                        oc_core_get_resource_by_index(OCF_D, device)->types, 0));
       oc_rep_set_text_string(devices, mnmn, oc_string(platform_info->mfg_name));
+      if (platform_info->init_platform_cb) {
+        platform_info->init_platform_cb(oc_rep_object(devices),
+                                        platform_info->data);
+      }
       oc_rep_object_array_end_item(devices);
     }
     oc_rep_close_array(root, devices);
