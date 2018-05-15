@@ -37,7 +37,14 @@ OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #include "port/oc_assert.h"
 static oc_sec_creds_t *devices;
 #else /* OC_DYNAMIC_ALLOCATION */
+#define MAX_OWN_CERT_CHAIN_LEN 5
+#define MAX_CERT_LEN 1024
+#define MAX_KEY_LEN 256
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
+static uint8_t g_cert[(MAX_CERT_LEN+1/*ca cert*/)*MAX_OWN_CERT_CHAIN_LEN];
+static uint8_t g_mfgkey[MAX_KEY_LEN];
+static uint8_t* g_mfgowncert[MAX_OWN_CERT_CHAIN_LEN];
+static int g_mfgowncertlen[MAX_OWN_CERT_CHAIN_LEN];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 void
@@ -224,6 +231,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   int len = 0;
+#ifndef OC_DYNAMIC_ALLOCATION
+  int certscount = 0;
+#endif
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -263,25 +273,42 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
       while (creds_array != NULL) {
         oc_rep_t *cred = creds_array->value.object;
         int credid = -1, credtype = 0;
-        oc_string_t *role = 0, *authority = 0, *subjectuuid = 0;
+        oc_string_t *role = 0, *authority = 0, *subjectuuid = 0, *credusage = 0;
+        uint8_t *cert = 0, *mfgkey = 0;
+        int certlen = 0, mfgkeylen = 0;
         uint8_t key[24];
         bool non_empty = false;
         bool got_key = false, base64_key = false;
+        bool mfgcert_flag = false, mfgtrustca_flag = false, mfgkey_flag = false;
         while (cred != NULL) {
           len = oc_string_len(cred->name);
           non_empty = true;
           switch (cred->type) {
           case OC_REP_INT:
-            if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0)
+            if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0) {
               credid = cred->value.integer;
+            }
             else if (len == 8 &&
-                     memcmp(oc_string(cred->name), "credtype", 8) == 0)
+                     memcmp(oc_string(cred->name), "credtype", 8) == 0) {
               credtype = cred->value.integer;
+            }
             break;
           case OC_REP_STRING:
             if (len == 11 &&
                 memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
-              subjectuuid = &cred->value.string;
+                subjectuuid = &cred->value.string;
+            } else if (len == 9 &&
+                memcmp(oc_string(cred->name), "credusage", 9) == 0) {
+                credusage = &cred->value.string;
+                if (oc_string_len(cred->value.string) == 20 &&
+                    memcmp("oic.sec.cred.mfgcert",
+                           oc_string(*credusage), 20) == 0) {
+                  mfgcert_flag = true;
+                } else if (oc_string_len(cred->value.string) == 23 &&
+                           memcmp("oic.sec.cred.mfgtrustca",
+                                  oc_string(*credusage), 23) == 0) {
+                  mfgtrustca_flag = true;
+                }
             }
             break;
           case OC_REP_OBJECT: {
@@ -317,12 +344,28 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
-                  if (size != 16) {
-                    OC_ERR("oc_cred: Invalid key");
-                    return false;
+                  if (mfgcert_flag) {
+#ifdef OC_DYNAMIC_ALLOCATION
+                    mfgkey = (uint8_t *) malloc (size * sizeof(uint8_t));
+                    if(mfgkey == NULL)
+                    {
+                        OC_ERR("oc_cred: Invalid key");
+                        return false;
+                    }
+#else
+                    mfgkey = g_mfgkey;
+#endif
+                    memcpy(mfgkey, p, size);
+                    mfgkeylen = size;
+                    mfgkey_flag = true;
+                  } else {
+                    if (size != 16) {
+                      OC_ERR("oc_cred: Invalid key");
+                      return false;
+                    }
+                    memcpy(key, p, 16);
+                    got_key = true;
                   }
-                  got_key = true;
-                  memcpy(key, p, 16);
                 } break;
                 default:
                   break;
@@ -342,6 +385,33 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 } else if (len == 9 &&
                            memcmp(oc_string(data->name), "authority", 9) == 0) {
                   authority = &data->value.string;
+                }
+                data = data->next;
+              }
+            } else if (len == 10 &&
+                       memcmp(oc_string(cred->name), "publicdata", 10) == 0) {
+              while (data != NULL) {
+                len = oc_string_len(data->name);
+                if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
+                  uint8_t *p = oc_cast(data->value.string, uint8_t);
+                  int size = oc_string_len(data->value.string);
+                  if (size == 0)
+                    goto next_item;
+#ifdef OC_DYNAMIC_ALLOCATION
+                  cert = (uint8_t *) malloc (size * sizeof(uint8_t));
+                  if(cert == NULL)
+                  {
+                      OC_ERR("oc_cred: Invalid cert");
+                      return false;
+                  }
+#else
+                  int k = 0;
+                  cert = g_cert;
+                  for (k = 0; k < certscount; k++) cert += g_mfgowncertlen[k];
+                  certscount += 1;
+#endif
+                  memcpy(cert, p, size);
+                  certlen = size;
                 }
                 data = data->next;
               }
@@ -370,6 +440,10 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           }
           credobj->credid = credid;
           credobj->credtype = credtype;
+#ifndef OC_DYNAMIC_ALLOCATION
+          credobj->mfgowncert = g_mfgowncert;
+          credobj->mfgowncertlen = g_mfgowncertlen;
+#endif
           if (role) {
             oc_new_string(&credobj->role.role, oc_string(*role),
                           oc_string_len(*role));
@@ -384,6 +458,34 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             if (owner) {
               *owner = credobj;
             }
+          }
+          if (mfgcert_flag) {
+#ifdef OC_DYNAMIC_ALLOCATION
+            credobj->mfgowncert = (uint8_t**)realloc(credobj->mfgowncert, sizeof(uint8_t*)*(credobj->ownchainlen+1));
+            if(credobj->mfgowncert == NULL)
+            {
+                OC_ERR("oc_cred: Insufficient memory");
+                return false;
+            }
+#endif
+            credobj->mfgowncert[credobj->ownchainlen] = cert;
+#ifdef OC_DYNAMIC_ALLOCATION
+            credobj->mfgowncertlen = (int*)realloc(credobj->mfgowncertlen, sizeof(int)*(credobj->ownchainlen+1));
+            if(credobj->mfgowncertlen == NULL)
+            {
+                OC_ERR("oc_cred: Invalid mfgowncertlen");
+                return false;
+            }
+#endif
+            credobj->mfgowncertlen[credobj->ownchainlen] = certlen;
+            credobj->ownchainlen += 1;
+          } else if (mfgtrustca_flag) {
+            credobj->mfgtrustca = cert;
+            credobj->mfgtrustcalen = certlen;
+          }
+          if (mfgkey_flag) {
+            credobj->mfgkey = mfgkey;
+            credobj->mfgkeylen = mfgkeylen;
           }
         }
         creds_array = creds_array->next;

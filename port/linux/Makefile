@@ -73,8 +73,12 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+
+ifeq ($(MFG),1)
+SAMPLES += mfgserver
+endif
 
 OBT = onboarding_tool
 
@@ -115,6 +119,10 @@ CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(MEMTRACE),1)
 	CFLAGS += -DOC_MEMORY_TRACE
+endif
+
+ifeq ($(MFG),1)
+	CFLAGS += -DOC_MFG
 endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
@@ -203,11 +211,18 @@ temp_sensor: libiotivity-constrained-client.a
 
 simpleserver: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} -UOC_MFG ${LIBS}
 
 simpleclient: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+ifeq ($(MFG),1)
+mfgserver: libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	@cp ../../apps/mfgserver_cred $@_creds/cred_0
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+endif
 
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
