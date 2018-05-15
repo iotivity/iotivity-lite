@@ -93,7 +93,9 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
       oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                        ~(OC_PERIODIC | OC_SECURE)));
       oc_rep_close_object(links, p);
+#ifdef OC_SPEC_VER_OIC
       oc_rep_set_string_array(links, type, type);
+#endif
       oc_rep_object_array_end_item(links);
       link = link->next;
     }
@@ -140,21 +142,6 @@ rd_publish_dev_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
         devices, rt, oc_string_array_get_item(
                        oc_core_get_resource_by_index(OCF_D, device)->types, 0));
       oc_rep_set_text_string(devices, mnmn, oc_string(platform_info->mfg_name));
-      if (platform_info->init_platform_cb) {
-        platform_info->init_platform_cb(platform_info->data);
-      }
-
-      // oc_rep_set_text_string(devices, mnmo,
-      // oc_string(platform_info->model_num));
-      // oc_rep_set_text_string(devices, mnpv, oc_string(platform_info->ver_p));
-      // oc_rep_set_text_string(devices, mnos,
-      // oc_string(platform_info->ver_os));
-      // oc_rep_set_text_string(devices, mnhw,
-      // oc_string(platform_info->ver_hw));
-      // oc_rep_set_text_string(devices, mnfv,
-      // oc_string(platform_info->ver_fw));
-      // oc_rep_set_text_string(devices, vid,
-      // oc_string(platform_info->vender_id));
       oc_rep_object_array_end_item(devices);
     }
     oc_rep_close_array(root, devices);
