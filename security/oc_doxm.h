@@ -39,6 +39,7 @@ void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device);
 void oc_sec_encode_doxm(int device);
+void oc_sec_doxm_mfg(int device);
 oc_sec_doxm_t *oc_sec_get_doxm(int device);
 void oc_sec_doxm_default(int device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
