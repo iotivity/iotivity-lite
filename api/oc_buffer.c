@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
+#include "util/oc_mem.h"
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
@@ -43,7 +43,7 @@ oc_allocate_message(void)
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    message->data = malloc(OC_PDU_SIZE);
+    message->data = oc_mem_malloc(OC_PDU_SIZE);
     if (!message->data) {
       oc_memb_free(&oc_buffers_s, message);
       return NULL;
@@ -79,7 +79,7 @@ oc_message_unref(oc_message_t *message)
     message->ref_count--;
     if (message->ref_count <= 0) {
 #ifdef OC_DYNAMIC_ALLOCATION
-      free(message->data);
+      oc_mem_free(message->data);
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_memb_free(&oc_buffers_s, message);
 #ifndef OC_DYNAMIC_ALLOCATION

@@ -20,6 +20,7 @@
 #include <iphlpapi.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
+#include "util/oc_mem.h"
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -153,7 +154,7 @@ get_network_addresses()
 
   for (i = 0; i < max_retries; i++) {
     DWORD dwRetVal = 0;
-    interface_list = calloc(1, out_buf_len);
+    interface_list = oc_mem_calloc(1, out_buf_len);
     if (interface_list == NULL) {
       OC_ERR("not enough memory to run GetAdaptersAddresses");
       return NULL;
@@ -162,7 +163,7 @@ get_network_addresses()
                                     interface_list, &out_buf_len);
     if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
       OC_ERR("retry GetAdaptersAddresses with out_buf_len=%d", out_buf_len);
-      free(interface_list);
+      oc_mem_free(interface_list);
       interface_list = NULL;
       continue;
     }
@@ -195,7 +196,7 @@ get_network_addresses()
       if (address->Address.lpSockaddr->sa_family == AF_INET) {
         struct sockaddr_in *addr =
           (struct sockaddr_in *)address->Address.lpSockaddr;
-        ifaddr = calloc(1, sizeof(ifaddr_t));
+        ifaddr = oc_mem_calloc(1, sizeof(ifaddr_t));
         if (ifaddr == NULL) {
           OC_ERR("no memory for ifaddr");
           goto cleanup;
@@ -219,7 +220,7 @@ get_network_addresses()
 #endif /* OC_DEBUG */
           continue;
         }
-        ifaddr = calloc(1, sizeof(ifaddr_t));
+        ifaddr = oc_mem_calloc(1, sizeof(ifaddr_t));
         if (ifaddr == NULL) {
           OC_ERR("no memory for ifaddr");
           goto cleanup;
@@ -235,7 +236,7 @@ get_network_addresses()
   }
 
 cleanup:
-  free(interface_list);
+  oc_mem_free(interface_list);
 
   return ifaddr_list;
 }
@@ -246,7 +247,7 @@ free_network_addresses(ifaddr_t *ifaddr)
   while (ifaddr) {
     ifaddr_t *tmp = ifaddr;
     ifaddr = ifaddr->next;
-    free(tmp);
+    oc_mem_free(tmp);
   }
 }
 
@@ -891,7 +892,7 @@ oc_connectivity_init(int device)
 
   OC_DBG("Initializing connectivity for device %d", device);
 #ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
+  ip_context_t *dev = (ip_context_t *)oc_mem_calloc(1, sizeof(ip_context_t));
   if (!dev) {
     oc_abort("Insufficient memory");
   }
@@ -1082,7 +1083,7 @@ oc_connectivity_shutdown(int device)
 
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_list_remove(ip_contexts, dev);
-  free(dev);
+  oc_mem_free(dev);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   OC_DBG("oc_connectivity_shutdown for device %d", device);

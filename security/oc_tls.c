@@ -53,7 +53,8 @@ static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
+#include "util/oc_mem.h"
+
 static mbedtls_ssl_config *server_conf;
 #ifdef OC_TCP
 static mbedtls_ssl_config *server_conf_tls;
@@ -235,7 +236,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
-  message.data = malloc(OC_PDU_SIZE);
+  message.data = oc_mem_malloc(OC_PDU_SIZE);
   if (!message.data)
     return 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -245,7 +246,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   message.length = send_len;
   oc_send_buffer(&message);
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(message.data);
+  oc_mem_free(message.data);
 #endif /* OC_DYNAMIC_ALLOCATION */
   return send_len;
 }
@@ -449,11 +450,11 @@ oc_tls_shutdown(void)
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (server_conf) {
-    free(server_conf);
+    oc_mem_free(server_conf);
   }
 #ifdef OC_TCP
   if (server_conf_tls) {
-    free(server_conf_tls);
+    oc_mem_free(server_conf_tls);
   }
 #endif /* OC_TCP */
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -469,11 +470,11 @@ oc_tls_init_context(void)
     goto dtls_init_err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  server_conf = (mbedtls_ssl_config *)calloc(oc_core_get_num_devices(),
-                                             sizeof(mbedtls_ssl_config));
+  server_conf = (mbedtls_ssl_config *)oc_mem_calloc(oc_core_get_num_devices(),
+                                                    sizeof(mbedtls_ssl_config));
 #ifdef OC_TCP
-  server_conf_tls = (mbedtls_ssl_config *)calloc(oc_core_get_num_devices(),
-                                                 sizeof(mbedtls_ssl_config));
+  server_conf_tls = (mbedtls_ssl_config *)oc_mem_calloc(
+    oc_core_get_num_devices(), sizeof(mbedtls_ssl_config));
 #endif /* OC_TCP */
 #else  /* OC_DYNAMIC_ALLOCATION */
   mbedtls_memory_buffer_alloc_init(alloc_buf, sizeof(alloc_buf));
@@ -609,11 +610,14 @@ oc_sec_load_certs(int device)
 {
   int i = 0, j = 0, ret = 0;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
-    mbedtls_x509_crt *cacert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
-    mbedtls_x509_crt *owncert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
-    mbedtls_pk_context *pkey = (mbedtls_pk_context*)malloc(sizeof(mbedtls_pk_context));
-    mbedtls_x509_crt_init( cacert );
-    mbedtls_x509_crt_init( owncert );
+    mbedtls_x509_crt *cacert =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_x509_crt *owncert =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_pk_context *pkey =
+      (mbedtls_pk_context *)oc_mem_malloc(sizeof(mbedtls_pk_context));
+    mbedtls_x509_crt_init(cacert);
+    mbedtls_x509_crt_init(owncert);
     mbedtls_pk_init( pkey );
     oc_sec_creds_t *creds = oc_sec_get_creds(device);
     oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);

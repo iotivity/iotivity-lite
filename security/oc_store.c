@@ -26,7 +26,7 @@
 #include <config.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
+#include "util/oc_mem.h"
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #define SVR_TAG_MAX (32)
@@ -46,7 +46,7 @@ oc_sec_load_doxm(int device)
 
   if (oc_sec_is_operational(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf) {
       oc_sec_doxm_default(device);
       return;
@@ -75,7 +75,7 @@ oc_sec_load_doxm(int device)
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(buf);
+    oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
@@ -92,7 +92,7 @@ oc_sec_load_pstat(int device)
   oc_rep_t *rep = 0;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
     oc_sec_pstat_default(device);
     return;
@@ -123,7 +123,7 @@ oc_sec_load_pstat(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   if (ret <= 0) {
@@ -138,7 +138,7 @@ oc_sec_load_cred(int device)
   oc_rep_t *rep;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -167,7 +167,7 @@ oc_sec_load_cred(int device)
 
       oc_free_rep(rep);
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(buf);
+      oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
@@ -180,7 +180,7 @@ oc_sec_load_acl(int device)
 
   if (oc_sec_is_operational(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf) {
       oc_sec_acl_default(device);
       return;
@@ -210,7 +210,7 @@ oc_sec_load_acl(int device)
       oc_free_rep(rep);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(buf);
+    oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
@@ -219,7 +219,7 @@ void
 oc_sec_dump_pstat(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -237,7 +237,7 @@ oc_sec_dump_pstat(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -245,7 +245,7 @@ void
 oc_sec_dump_cred(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -263,7 +263,7 @@ oc_sec_dump_cred(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -271,7 +271,7 @@ void
 oc_sec_dump_doxm(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -290,7 +290,7 @@ oc_sec_dump_doxm(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -298,7 +298,7 @@ void
 oc_sec_dump_acl(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -316,7 +316,7 @@ oc_sec_dump_acl(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -330,7 +330,7 @@ oc_sec_load_unique_ids(int device)
 
   if (oc_sec_is_operational(device)) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+    uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
     if (!buf) {
       return;
     }
@@ -376,7 +376,7 @@ oc_sec_load_unique_ids(int device)
       oc_free_rep(p);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(buf);
+    oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
@@ -385,7 +385,7 @@ void
 oc_sec_dump_unique_ids(int device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -414,7 +414,7 @@ oc_sec_dump_unique_ids(int device)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
+  oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

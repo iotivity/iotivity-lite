@@ -24,7 +24,7 @@
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
+#include "util/oc_mem.h"
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #include "oc_core_res.h"
@@ -426,7 +426,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
   }
   handle->active = 0;
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(handle->buffer);
+  oc_mem_free(handle->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

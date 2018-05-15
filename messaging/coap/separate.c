@@ -55,6 +55,9 @@
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <string.h>
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "util/oc_mem.h"
+#endif
 
 OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
@@ -88,7 +91,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
 #ifdef OC_DYNAMIC_ALLOCATION
-    separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
+    separate_response->buffer = (uint8_t *)oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 

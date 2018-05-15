@@ -37,7 +37,8 @@
 #include <stdio.h>
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
-#include <stdlib.h>
+#include "util/oc_mem.h"
+//#include <stdlib.h>
 #include <string.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -194,7 +195,7 @@ void
 oc_process_shutdown(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(events);
+  oc_mem_free(events);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -202,8 +203,8 @@ void
 oc_process_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  events = (struct event_data *)calloc(OC_PROCESS_NUMEVENTS,
-                                       sizeof(struct event_data));
+  events = (struct event_data *)oc_mem_calloc(OC_PROCESS_NUMEVENTS,
+                                              sizeof(struct event_data));
   if (!events) {
     oc_abort("Insufficient memory");
   }
@@ -329,8 +330,8 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
   if (nevents == OC_PROCESS_NUMEVENTS) {
 #ifdef OC_DYNAMIC_ALLOCATION
     OC_PROCESS_NUMEVENTS <<= 1;
-    events = (struct event_data *)realloc(events, (OC_PROCESS_NUMEVENTS) *
-                                                    sizeof(struct event_data));
+    events = (struct event_data *)oc_mem_realloc(
+      events, (OC_PROCESS_NUMEVENTS) * sizeof(struct event_data));
     if (!events) {
       oc_abort("Insufficient memory");
     }

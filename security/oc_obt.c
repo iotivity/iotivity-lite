@@ -27,7 +27,7 @@
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
-#include <stdlib.h>
+#include "util/oc_mem.h"
 
 #define DISCOVERY_CB_DELAY (5)
 /* Worst case timeout for all onboarding/provisioning sequences */
@@ -206,7 +206,7 @@ free_device(void *data)
 static void
 oc_obt_dump_state(void)
 {
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
     return;
 
@@ -221,7 +221,7 @@ oc_obt_dump_state(void)
     oc_storage_write("obt_state", buf, size);
   }
 
-  free(buf);
+  oc_mem_free(buf);
 }
 
 static void
@@ -230,7 +230,7 @@ oc_obt_load_state(void)
   long ret = 0;
   oc_rep_t *rep, *head;
 
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
     return;
   }
@@ -260,7 +260,7 @@ oc_obt_load_state(void)
   } else {
     id = 1000;
   }
-  free(buf);
+  oc_mem_free(buf);
 }
 
 static int

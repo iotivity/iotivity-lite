@@ -26,7 +26,7 @@
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
-#include <stdlib.h>
+#include "util/oc_mem.h"
 static oc_sec_pstat_t *pstat;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
@@ -38,7 +38,7 @@ oc_sec_pstat_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   if (pstat) {
-    free(pstat);
+    oc_mem_free(pstat);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -47,8 +47,8 @@ void
 oc_sec_pstat_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  pstat =
-    (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
+  pstat = (oc_sec_pstat_t *)oc_mem_calloc(oc_core_get_num_devices(),
+                                          sizeof(oc_sec_pstat_t));
   if (!pstat) {
     oc_abort("Insufficient memory");
   }
