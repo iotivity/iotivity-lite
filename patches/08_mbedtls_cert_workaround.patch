@@ -1,0 +1,48 @@
+diff --git a/library/ssl_tls.c b/library/ssl_tls.c
+index 617dedb..04da3d2 100644
+--- a/library/ssl_tls.c
++++ b/library/ssl_tls.c
+@@ -4673,11 +4673,11 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
+             ret = 0;
+         }
+ 
+-        if( ca_chain == NULL && authmode == MBEDTLS_SSL_VERIFY_REQUIRED )
+-        {
+-            MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no CA chain" ) );
+-            ret = MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED;
+-        }
++//        if( ca_chain == NULL && authmode == MBEDTLS_SSL_VERIFY_REQUIRED )
++//        {
++//            MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no CA chain" ) );
++//            ret = MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED;
++//        }
+ 
+         if( ret != 0 )
+         {
+diff --git a/library/x509_crt.c b/library/x509_crt.c
+index c6209fb..5f3966d 100644
+--- a/library/x509_crt.c
++++ b/library/x509_crt.c
+@@ -2320,14 +2320,14 @@ exit:
+     if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED )
+         ret = MBEDTLS_ERR_X509_FATAL_ERROR;
+ 
+-    if( ret != 0 )
+-    {
+-        *flags = (uint32_t) -1;
+-        return( ret );
+-    }
+-
+-    if( *flags != 0 )
+-        return( MBEDTLS_ERR_X509_CERT_VERIFY_FAILED );
++//    if( ret != 0 )
++//   {
++//        *flags = (uint32_t) -1;
++//        return( ret );
++//    }
++
++//    if( *flags != 0 )
++//        return( MBEDTLS_ERR_X509_CERT_VERIFY_FAILED );
+ 
+     return( 0 );
+ }
