@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cc179c50",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-15T21:10:05Z",
+      "side": 1,
+      "message": "Dont merge \n\nAny clue ?",
+      "revId": "034f0a428a4483be270e558337a6456910487e4f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
