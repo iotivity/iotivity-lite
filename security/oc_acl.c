@@ -766,6 +766,16 @@ oc_sec_acl_default(int device)
         &resource->types, resource->interfaces, device);
     }
   }
+
+#if defined(OC_SERVER) && defined(OC_SPEC_VER_OIC)
+  const char *sec_prov_info = "/sec/provisioninginfo";
+  resource =
+    oc_ri_get_app_resource_by_uri(sec_prov_info, strlen(sec_prov_info), device);
+  success &= oc_sec_ace_update_res(
+    OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
+    &resource->types, resource->interfaces, device);
+#endif
+
   OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
 }
