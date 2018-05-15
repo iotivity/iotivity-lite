@@ -18,6 +18,7 @@ libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
+profiler = $(ROOT_DIR)/tests/port/linux/memory_profile.sh
 
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -127,8 +128,9 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-test: $(UNIT_TESTS)
-	for test in $^ ; do ./$${test} ; done
+test: test/run test/profile
+	
+
 
 .PHONY: test clean
 
@@ -349,3 +351,12 @@ tests/client_get_linux_test: libiotivity-constrained-client-server.a
 
 check: $(TESTS)
 	$(Q)$(PYTHON) $(CHECK_SCRIPT) --tests="$(TESTS)"
+
+test/run: $(UNIT_TESTS)
+	for test in $^ ; do ./$${test} ; done
+
+test/profile: $(UNIT_TESTS)
+	for test in $^ ; do ${profiler} -mt -mp $${test} ; done
+
+
+
