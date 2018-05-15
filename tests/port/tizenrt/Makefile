@@ -154,10 +154,10 @@ menuconfig: ${os_dir}
 ${tizenrt_dir}/apps/iotlite_apps: ${top_dir}/port/tizenrt/iotlite_apps ${tizenrt_dir}
 	ls $@ || cp -rfva $< $@
 
-${tizenrt_dir}/build/configs/${os_machine}/${os_image_type}: ${top_dir}/tests/port/tizenrt/configs/${os_machine}/${os_image_type}
+${tizenrt_dir}/build/configs/${os_machine}/${os_image_type}: ${top_dir}/tests/port/tizenrt/configs/${os_machine}/${os_image_type} ${tizenrt_dir}
 	ls $@ || ln -fs $< $@
 
-${tizenrt_dir}/external/iotivity-constrained: ${top_dir} ${os_dir}
+${tizenrt_dir}/external/iotivity-constrained: ${top_dir} ${tizenrt_dir}
 	ls $@ || ln -fs $< $@
 
 ${tizenrt_dir}/external/iotivity-constrained/iotivity-constrained: ${tizenrt_dir}/external/iotivity-constrained
