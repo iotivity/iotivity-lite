@@ -15,6 +15,9 @@
 */
 
 #include "oc_api.h"
+#ifdef OC_MFG
+#include "security/oc_doxm.h"
+#endif
 #include "port/oc_clock.h"
 #include <pthread.h>
 #include <signal.h>
@@ -155,13 +158,19 @@ main(void)
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_MFG
+  oc_storage_config("./mfgserver_creds");
+#else
   oc_storage_config("./simpleserver_creds");
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+
+#ifdef OC_MFG
+  oc_sec_doxm(0, 2);
+#endif
 
   while (quit != 1) {
     next_event = oc_main_poll();
