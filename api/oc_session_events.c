@@ -24,6 +24,7 @@
 #if defined(OC_SERVER)
 #include "messaging/coap/observe.h"
 #endif /* OC_SERVER */
+#include <unistd.h>
 
 #ifdef OC_TCP
 OC_LIST(session_start_events);
@@ -89,6 +90,7 @@ oc_session_end_event(oc_endpoint_t *endpoint)
   oc_list_add(session_end_events, ep);
   oc_network_event_handler_mutex_unlock();
 
+  sleep(1);
   oc_process_poll(&(oc_session_events));
   _oc_signal_event_loop();
 }
