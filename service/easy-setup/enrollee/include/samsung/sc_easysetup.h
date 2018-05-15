@@ -89,6 +89,8 @@ typedef struct sc_tnc_info
 
 typedef struct sc_dev_conf_properties
 {
+  /**< Samsung-specific no of locations**/
+  int numLocation;
   /**< Samsung-specific location-related information **/
   oc_string_array_t location;
   /**< Samsung-specific mobile device information for 'register TV' **/
@@ -143,6 +145,8 @@ typedef struct sc_properties
   oc_string_t deviceType;
   /**< Device Sub Category **/
   oc_string_t deviceSubType;
+  /**< Samsung-specific no of locations**/
+  int numLocation;
   /**< Samsung-specific location-related information **/
   oc_string_array_t location;
   /**< Samsung-specific clientId for sign-up to IoT Cloud **/

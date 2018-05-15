@@ -50,8 +50,8 @@ typedef struct
   uint8_t num_supported_authtype;
   wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
   uint8_t num_supported_enctype;
-  char ssid[OC_STRING_MAX_VALUE];
-  char cred[OC_STRING_MAX_VALUE];
+  oc_string_t ssid;
+  oc_string_t cred;
   wifi_authtype auth_type;
   wifi_enctype enc_type;
 } wifi_conf_resource;
@@ -59,17 +59,17 @@ typedef struct
 typedef struct
 {
   oc_resource_t *handle;
-  char auth_code[OC_STRING_MAX_VALUE];
-  char access_token[OC_STRING_MAX_VALUE];
+  oc_string_t auth_code;
+  oc_string_t access_token;
   oauth_tokentype access_token_type;
-  char auth_provider[OC_STRING_MAX_VALUE];
-  char ci_server[OC_URI_STRING_MAX_VALUE];
+  oc_string_t auth_provider;
+  oc_string_t ci_server;
 } coap_cloud_conf_resource;
 
 typedef struct
 {
   oc_resource_t *handle;
-  char dev_name[OC_STRING_MAX_VALUE];
+  oc_string_t dev_name;
 } dev_conf_resource;
 
 es_result_e create_easysetup_resources(bool is_secured,
