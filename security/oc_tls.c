@@ -59,7 +59,11 @@ static mbedtls_ssl_config *server_conf;
 static mbedtls_ssl_config *server_conf_tls;
 #endif /* OC_TCP */
 #else  /* OC_DYNAMIC_ALLOCATION */
+#ifdef OC_MFG
+#define MBEDTLS_ALLOC_BUF_SIZE (40000)
+#else
 #define MBEDTLS_ALLOC_BUF_SIZE (20000)
+#endif // OC_MFG
 #ifdef OC_TCP
 static mbedtls_ssl_config server_conf_tls[OC_MAX_NUM_DEVICES];
 #endif /* OC_TCP */
@@ -74,13 +78,15 @@ static mbedtls_ssl_config client_conf_tls[1];
 static mbedtls_ssl_config client_conf[1];
 #endif /* OC_CLIENT */
 #define PERSONALIZATION_STR "IoTivity-Constrained"
-static const int ciphers[3] = {MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+static const int ciphers[4] = {MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
                                MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
+                               MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
                                0};
 #ifdef OC_CLIENT
-static const int anon_ciphers[3] = {
+static const int anon_ciphers[4] = {
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-    MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0};
+    MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0};
 #endif /* OC_CLIENT */
 
 #ifdef OC_DEBUG
@@ -474,7 +480,7 @@ oc_tls_init_context(void)
                                                  sizeof(mbedtls_ssl_config));
 #endif /* OC_TCP */
 #else  /* OC_DYNAMIC_ALLOCATION */
-  mbedtls_memory_buffer_alloc_init(alloc_buf, sizeof(alloc_buf));
+  mbedtls_memory_buffer_alloc_init(alloc_buf, MBEDTLS_ALLOC_BUF_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_DEBUG
@@ -600,6 +606,81 @@ dtls_init_err:
   OC_ERR("oc_tls: TLS initialization error");
   oc_tls_shutdown();
   return -1;
+}
+
+bool
+oc_sec_load_certs(int device)
+{
+  int i = 0, j = 0, ret = 0;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    mbedtls_x509_crt *cacert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
+    if (cacert == NULL) {
+      goto tls_certs_load_err;
+    }
+    mbedtls_x509_crt *owncert = (mbedtls_x509_crt*)malloc(sizeof(mbedtls_x509_crt));
+    if (owncert == NULL) {
+      goto tls_certs_load_err;
+    }
+    mbedtls_pk_context *pkey = (mbedtls_pk_context*)malloc(sizeof(mbedtls_pk_context));
+    if (pkey == NULL) {
+      goto tls_certs_load_err;
+    }
+#else
+    mbedtls_x509_crt cacert[sizeof(mbedtls_x509_crt)];
+    mbedtls_x509_crt owncert[sizeof(mbedtls_x509_crt)];
+    mbedtls_pk_context pkey[sizeof(mbedtls_pk_context)];
+#endif
+
+    mbedtls_x509_crt_init( cacert );
+    mbedtls_x509_crt_init( owncert );
+    mbedtls_pk_init( pkey );
+    oc_sec_creds_t *creds = oc_sec_get_creds(device);
+    oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
+    while (c != NULL) {
+      if (c->mfgtrustcalen != 0) {
+        ret = mbedtls_x509_crt_parse( cacert, (const unsigned char *) c->mfgtrustca, c->mfgtrustcalen );
+        if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n", -ret );
+            goto tls_certs_load_err;
+        } else {
+          OC_DBG("oc_tls: mfgtrustca loaded ");
+        }
+        mbedtls_ssl_conf_ca_chain(&server_conf[i], cacert, NULL);
+      }
+      if (c->mfgkeylen != 0) {
+        ret =  mbedtls_pk_parse_key(pkey, (const unsigned char *) c->mfgkey,
+                                                                    c->mfgkeylen, NULL, 0 );
+        if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret );
+            goto tls_certs_load_err;
+        } else {
+          OC_DBG("oc_tls: mfgkey loaded ");
+        }
+      }
+      for (j = 0; j < c->ownchainlen; j++) {
+        if (c->mfgowncertlen != 0) {
+          ret = mbedtls_x509_crt_parse(owncert, (const unsigned char *) c->mfgowncert[j], c->mfgowncertlen[j] );
+          if( ret < 0 ) {
+              OC_ERR( " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n", -ret );
+              goto tls_certs_load_err;
+          } else {
+            OC_DBG("oc_tls: mfgowncert loaded ");
+          }
+          ret = mbedtls_ssl_conf_own_cert(&server_conf[i], owncert, pkey);
+          if( ret < 0 ) {
+              OC_ERR( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
+              goto tls_certs_load_err;
+          }
+        }
+      }
+      c = c->next;
+    }
+  }
+  return true;
+tls_certs_load_err:
+  OC_ERR("oc_tls: TLS initialization error");
+  return false;
 }
 
 int
