@@ -33,7 +33,10 @@
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 #ifdef OC_DYNAMIC_ALLOCATION
+
 #include "port/oc_assert.h"
+#include "util/oc_mem.h"
+
 static oc_sec_acl_t *aclist;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];
@@ -55,8 +58,8 @@ void
 oc_sec_acl_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  aclist =
-    (oc_sec_acl_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_acl_t));
+  aclist = (oc_sec_acl_t *)oc_mem_calloc(oc_core_get_num_devices(),
+                                         sizeof(oc_sec_acl_t));
   if (!aclist) {
     oc_abort("Insufficient memory");
   }
@@ -729,7 +732,7 @@ oc_sec_acl_free(void)
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (aclist) {
-    free(aclist);
+    oc_mem_free(aclist);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

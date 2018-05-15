@@ -28,13 +28,13 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
-#include <stdlib.h>
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
+#include "util/oc_mem.h"
 static oc_sec_creds_t *devices;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
@@ -63,8 +63,8 @@ void
 oc_sec_cred_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  devices =
-    (oc_sec_creds_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_creds_t));
+  devices = (oc_sec_creds_t *)oc_mem_calloc(oc_core_get_num_devices(),
+                                            sizeof(oc_sec_creds_t));
   if (!devices) {
     oc_abort("Insufficient memory");
   }
@@ -144,7 +144,7 @@ oc_sec_cred_free(void)
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (devices) {
-    free(devices);
+    oc_mem_free(devices);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -337,7 +337,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   if (size == 0)
                     goto next_item;
                   if (mfgcert_flag) {
-                    mfgkey = (uint8_t *) malloc (size * sizeof(uint8_t));
+                    mfgkey = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
                     memcpy(mfgkey, p, size);
                     mfgkeylen = size;
                     mfgkey_flag = true;
@@ -380,7 +380,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
-                  cert = (uint8_t *) malloc (size * sizeof(uint8_t));
+                  cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
                   memcpy(cert, p, size);
                   certlen = size;
                 }
@@ -427,9 +427,12 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             }
           }
           if (mfgcert_flag) {
-            credobj->mfgowncert = (uint8_t**)realloc(credobj->mfgowncert, sizeof(uint8_t*)*(credobj->ownchainlen+1));
+            credobj->mfgowncert = (uint8_t **)oc_mem_realloc(
+              credobj->mfgowncert,
+              sizeof(uint8_t *) * (credobj->ownchainlen + 1));
             credobj->mfgowncert[credobj->ownchainlen] = cert;
-            credobj->mfgowncertlen = (int*)realloc(credobj->mfgowncertlen, sizeof(int)*(credobj->ownchainlen+1));
+            credobj->mfgowncertlen = (int *)oc_mem_realloc(
+              credobj->mfgowncertlen, sizeof(int) * (credobj->ownchainlen + 1));
             credobj->mfgowncertlen[credobj->ownchainlen] = certlen;
             credobj->ownchainlen += 1;
           } else if (mfgtrustca_flag) {

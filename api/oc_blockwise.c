@@ -22,6 +22,9 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "util/oc_mem.h"
+#endif
 
 OC_MEMB(oc_blockwise_request_states_s, oc_blockwise_request_state_t,
         OC_MAX_NUM_CONCURRENT_REQUESTS);
@@ -41,7 +44,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_memb_alloc(pool);
   if (buffer) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    buffer->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
+    buffer->buffer = (uint8_t *)oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
     if (!buffer->buffer) {
       oc_memb_free(pool, buffer);
       return NULL;
@@ -74,7 +77,7 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(buffer->buffer);
+  oc_mem_free(buffer->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_memb_free(pool, buffer);
 }

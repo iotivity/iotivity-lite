@@ -51,6 +51,9 @@
 
 #include "observe.h"
 #include "util/oc_memb.h"
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "util/oc_mem.h"
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -274,7 +277,7 @@ coap_notify_observers(oc_resource_t *resource,
 #ifndef OC_DYNAMIC_ALLOCATION
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buffer = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buffer) {
     OC_WRN("coap_notify_observers: out of memory allocating buffer");
     goto leave_notify_observers;
@@ -445,7 +448,7 @@ coap_notify_observers(oc_resource_t *resource,
 leave_notify_observers:
 #ifdef OC_DYNAMIC_ALLOCATION
   if (buffer)
-    free(buffer);
+    oc_mem_free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
   return num_observers;
 }

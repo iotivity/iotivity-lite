@@ -32,7 +32,8 @@
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_endpoint.h"
-#include <stdlib.h>
+#include "util/oc_mem.h"
+
 static oc_resource_t *core_resources = NULL;
 static oc_device_info_t *oc_device_info = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -58,7 +59,7 @@ oc_core_init(void)
   oc_core_shutdown();
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  core_resources = (oc_resource_t *)calloc(1, sizeof(oc_resource_t));
+  core_resources = (oc_resource_t *)oc_mem_calloc(1, sizeof(oc_resource_t));
   if (!core_resources) {
     oc_abort("Insufficient memory");
   }
@@ -96,7 +97,7 @@ oc_core_shutdown(void)
       oc_core_free_device_info_properties(oc_device_info_item);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(oc_device_info);
+    oc_mem_free(oc_device_info);
     oc_device_info = NULL;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -109,7 +110,7 @@ oc_core_shutdown(void)
       oc_ri_free_resource_properties(core_resource);
     }
 #ifdef OC_DYNAMIC_ALLOCATION
-    free(core_resources);
+    oc_mem_free(core_resources);
     core_resources = NULL;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -298,8 +299,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
   int new_num = 1 + OCF_D * (device_count + 1);
-  core_resources =
-    (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
+  core_resources = (oc_resource_t *)oc_mem_realloc(
+    core_resources, new_num * sizeof(oc_resource_t));
 
   if (!core_resources) {
     oc_abort("Insufficient memory");
@@ -307,7 +308,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_resource_t *device = &core_resources[new_num - OCF_D];
   memset(device, 0, OCF_D * sizeof(oc_resource_t));
 
-  oc_device_info = (oc_device_info_t *)realloc(
+  oc_device_info = (oc_device_info_t *)oc_mem_realloc(
     oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
 
   if (!oc_device_info) {
