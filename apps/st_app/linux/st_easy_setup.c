@@ -209,8 +209,8 @@ wifi_prov_cb(es_wifi_conf_data *event_data)
     return;
   }
 
-  printf("[Easy_Setup] SSID : %s\n", event_data->ssid);
-  printf("[Easy_Setup] Password : %s\n", event_data->pwd);
+  printf("[Easy_Setup] SSID : %s\n", oc_string(event_data->ssid));
+  printf("[Easy_Setup] Password : %s\n", oc_string(event_data->pwd));
   printf("[Easy_Setup] AuthType : %d\n", event_data->authtype);
   printf("[Easy_Setup] EncType : %d\n", event_data->enctype);
 
@@ -247,7 +247,7 @@ dev_conf_prov_cb(es_dev_conf_data *event_data)
     if (!oc_string(data->country))
       return;
 
-    for (uint8_t i = 0; i < data->location.size; ++i) {
+    for (uint8_t i = 0; i < data->numLocation; ++i) {
       printf("[Easy_Setup] Location : %s\n",
              oc_string_array_get_item(data->location, i));
     }
@@ -284,19 +284,19 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data)
     return;
   }
 
-  if (event_data->auth_code) {
+  if (oc_string(event_data->auth_code)) {
     printf("[Easy_Setup] AuthCode : %s\n", event_data->auth_code);
   }
 
-  if (event_data->access_token) {
+  if (oc_string(event_data->access_token)) {
     printf("[Easy_Setup] Access Token : %s\n", event_data->access_token);
   }
 
-  if (event_data->auth_provider) {
+  if (oc_string(event_data->auth_provider)) {
     printf("[Easy_Setup] AuthProvider : %s\n", event_data->auth_provider);
   }
 
-  if (event_data->ci_server) {
+  if (oc_string(event_data->ci_server)) {
     printf("[Easy_Setup] CI Server : %s\n", event_data->ci_server);
   }
 
@@ -361,8 +361,8 @@ wifi_connection_handler(void *data)
 {
   printf("[Easy_Setup] wifi_connection_handler in\n");
   es_wifi_conf_data *wifi_data = (es_wifi_conf_data *)data;
-  char *ssid = wifi_data->ssid;
-  char *pwd = wifi_data->pwd;
+  char *ssid = oc_string(wifi_data->ssid);
+  char *pwd = oc_string(wifi_data->pwd);
 
   /** Sleep to allow response sending from post_callback thread before turning
    * Off Soft AP. */

@@ -42,8 +42,8 @@ typedef struct
  */
 typedef struct
 {
-  char ssid[OC_STRING_MAX_VALUE]; // ssid of the Enroller
-  char pwd[OC_STRING_MAX_VALUE];  // pwd of the Enroller
+  oc_string_t ssid;               // ssid of the Enroller
+  oc_string_t pwd;                // pwd of the Enroller
   wifi_authtype authtype;         // auth type of the Enroller
   wifi_enctype enctype;           // encryption type of the Enroller
   void *userdata;                 // vender-specific data
@@ -64,16 +64,16 @@ typedef struct
  */
 typedef struct
 {
-  char auth_code[OC_STRING_MAX_VALUE];     // auth code issued by
-                                           // OAuth2.0-compatible account server
-  char access_token[OC_STRING_MAX_VALUE];  // access token resolved with an auth
-                                           // code
-  oauth_tokentype access_token_type;       // access token type
-  char auth_provider[OC_STRING_MAX_VALUE]; // auth provider ID
-  char ci_server[OC_URI_STRING_MAX_VALUE]; // cloud interface server URL which
-                                           // an Enrollee is
-                                           // going to registered
-  void *userdata;                          // vender-specific data
+  oc_string_t auth_code;                             // auth code issued by
+                                                     // OAuth2.0-compatible account server
+  oc_string_t access_token;                          // access token resolved with an auth
+                                                     // code
+  oauth_tokentype access_token_type;                 // access token type
+  oc_string_t auth_provider;                         // auth provider ID
+  oc_string_t ci_server;                             // cloud interface server URL which
+                                                     // an Enrollee is
+                                                     // going to registered
+  void *userdata;                                    // vender-specific data
 } es_coap_cloud_conf_data;
 
 /**
@@ -96,7 +96,7 @@ typedef struct
    */
   struct
   {
-    char device_name[OC_STRING_MAX_VALUE];
+    oc_string_t device_name;
   } DevConf;
 } es_device_property;
 

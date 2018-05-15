@@ -501,7 +501,7 @@ st_main_initialize(void)
   sc_coap_cloud_server_conf_properties *st_cloud_info =
     get_st_cloud_informations();
 
-  while (!st_cloud_access_check_connection(cloud_info->ci_server)) {
+  while (!st_cloud_access_check_connection(oc_string(cloud_info->ci_server))) {
     printf("AP is not connected.\n");
     sleep(3);
   }
