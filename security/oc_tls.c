@@ -252,7 +252,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 }
 
 static void
-check_retr_timers()
+check_retr_timers(void)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers), *next;
   while (peer != NULL) {
@@ -523,7 +523,7 @@ oc_tls_init_context(void)
       goto dtls_init_err;
     }
     oc_uuid_t *device_id = oc_core_get_device_id(i);
-    if (mbedtls_ssl_conf_psk(&server_conf[i], device_id->id, 0, device_id->id,
+    if (mbedtls_ssl_conf_psk(&server_conf[i], device_id->id, 1, device_id->id,
                              16) != 0) {
       goto dtls_init_err;
     }
@@ -537,7 +537,7 @@ oc_tls_init_context(void)
                                     MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
       goto dtls_init_err;
     }
-    if (mbedtls_ssl_conf_psk(&server_conf_tls[i], device_id->id, 0,
+    if (mbedtls_ssl_conf_psk(&server_conf_tls[i], device_id->id, 1,
                              device_id->id, 16) != 0) {
       goto dtls_init_err;
     }
@@ -567,7 +567,7 @@ oc_tls_init_context(void)
     goto dtls_init_err;
   }
   oc_uuid_t *device_id = oc_core_get_device_id(0);
-  if (mbedtls_ssl_conf_psk(&client_conf[0], device_id->id, 0, device_id->id,
+  if (mbedtls_ssl_conf_psk(&client_conf[0], device_id->id, 1, device_id->id,
                            16) != 0) {
     goto dtls_init_err;
   }
@@ -581,7 +581,7 @@ oc_tls_init_context(void)
                                   MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
     goto dtls_init_err;
   }
-  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], device_id->id, 0, device_id->id,
+  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], device_id->id, 1, device_id->id,
                            16) != 0) {
     goto dtls_init_err;
   }
@@ -675,24 +675,24 @@ int
 oc_tls_update_psk_identity(int device)
 {
   oc_uuid_t *device_id = oc_core_get_device_id(device);
-  if (mbedtls_ssl_conf_psk(&server_conf[device], device_id->id, 0,
+  if (mbedtls_ssl_conf_psk(&server_conf[device], device_id->id, 1,
                            device_id->id, 16) != 0) {
     return -1;
   }
 #ifdef OC_TCP
-  if (mbedtls_ssl_conf_psk(&server_conf_tls[device], device_id->id, 0,
+  if (mbedtls_ssl_conf_psk(&server_conf_tls[device], device_id->id, 1,
                            device_id->id, 16) != 0) {
     return -1;
   }
 #endif /* OC_TCP */
 #ifdef OC_CLIENT
   oc_uuid_t *client_device_id = oc_core_get_device_id(0);
-  if (mbedtls_ssl_conf_psk(&client_conf[0], client_device_id->id, 0,
+  if (mbedtls_ssl_conf_psk(&client_conf[0], client_device_id->id, 1,
                            client_device_id->id, 16) != 0) {
     return -1;
   }
 #ifdef OC_TCP
-  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], client_device_id->id, 0,
+  if (mbedtls_ssl_conf_psk(&client_conf_tls[0], client_device_id->id, 1,
                            client_device_id->id, 16) != 0) {
     return -1;
   }
