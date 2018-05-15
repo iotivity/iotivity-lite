@@ -220,8 +220,8 @@ void WiFiProvCbInApp(es_wifi_conf_data*eventData)
         return ;
     }
 
-    printf("SSID : %s\n", eventData->ssid);
-    printf("Password : %s\n", eventData->pwd);
+    printf("SSID : %s\n", oc_string(eventData->ssid));
+    printf("Password : %s\n", oc_string(eventData->pwd));
     printf("AuthType : %d\n", eventData->authtype);
     printf("EncType : %d\n", eventData->enctype);
 
@@ -246,7 +246,7 @@ void DevConfProvCbInApp(es_dev_conf_data*eventData)
 
     if (eventData->userdata != NULL) {
       sc_dev_conf_properties *data = eventData->userdata;
-      for (uint8_t i = 0; i < data->location.size; ++i) {
+      for (uint8_t i = 0; i < data->numLocation; ++i) {
         printf("[SC] Location : %s\n",
                oc_string_array_get_item(data->location, i));
       }
@@ -265,38 +265,33 @@ void DevConfProvCbInApp(es_dev_conf_data*eventData)
 
 void CloudDataProvCbInApp(es_coap_cloud_conf_data *eventData)
 {
-    printf("[ES App] CloudDataProvCbInApp IN\n");
+   printf("[ES App] cloud_conf_prov_cb_in_app in\n");
+ 
+   if (eventData == NULL) {
+     printf("es_coap_cloud_conf_data is NULL\n");
+     return;
+   }
+ 
+   if ((char *)oc_string(eventData->auth_code)) {
+     printf("AuthCode : %s\n", oc_string(eventData->auth_code));
+   }
+ 
+   if ((char *)oc_string(eventData->access_token)) {
+     printf("Access Token : %s\n", oc_string(eventData->access_token));
+   }
+ 
+   if ((char *)oc_string(eventData->auth_provider)) {
+     printf("AuthProvider : %s\n", oc_string(eventData->auth_provider));
+   }
 
-    if(eventData == NULL)
-    {
-        printf("ESCloudProvData is NULL\n");
-        return ;
-    }
+   if ((char *)oc_string(eventData->ci_server)) {
+     printf("CI Server : %s\n", oc_string(eventData->ci_server));
+   }
 
-    if (eventData->auth_code)
-    {
-        printf("AuthCode : %s\n", eventData->auth_code);
-    }
-
-    if (eventData->access_token)
-    {
-        printf("Access Token : %s\n", eventData->access_token);
-    }
-
-    if (eventData->auth_provider)
-    {
-        printf("AuthProvider : %s\n", eventData->auth_provider);
-    }
-
-    if (eventData->ci_server)
-    {
-        printf("CI Server : %s\n", eventData->ci_server);
-    }
-
-    if(eventData->userdata != NULL)
-    {
-      sc_coap_cloud_server_conf_properties *data = eventData->userdata;
-      printf("[SC] ClientID : %s\n", oc_string(data->clientID));
+   if(eventData->userdata != NULL)
+   {
+      sc_coap_cloud_server_conf_properties *data = (sc_coap_cloud_server_conf_properties *)eventData->userdata;
+      printf("[SC] ClientID : %s\n", data->clientID);
     }
 
     printf("[ES App] CloudDataProvCbInApp OUT\n");
@@ -329,11 +324,14 @@ void StartEasySetup()
 void SetDeviceInfo()
 {
     printf("[ES App] SetDeviceInfo IN\n");
+    char *device_name = "TEST_DEVICE";
 
-    es_device_property deviceProperty = {
-        {{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF}, WIFI_5G},
-            {"Test Device"}
+    es_device_property deviceProperty ={
+		.WiFi={{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF },WIFI_5G},
+		.DevConf={{0}}
     };
+
+    oc_new_string(&deviceProperty.DevConf.device_name, device_name, strlen(device_name));;
 
     if(es_set_device_property(&deviceProperty) == ES_ERROR)
         printf("[ES App] ESSetDeviceProperty Error\n");
