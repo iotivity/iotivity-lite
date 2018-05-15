@@ -115,6 +115,10 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   }
   while (res != NULL) {
     bool match = true;
+#if defined(OC_SPEC_VER_OIC)
+    if (res->href.size == 2 && *oc_string(res->href) == '*')
+      return res;
+#endif //OC_SPEC_VER_OIC
     if (href && oc_string_len(res->href) > 0) {
       if ((strlen(href) + skip) != oc_string_len(res->href) ||
           memcmp(oc_string(res->href) + skip, href,
