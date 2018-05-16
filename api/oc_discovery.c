@@ -557,17 +557,25 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
   while (rep != NULL) {
     switch (rep->type) {
-    /*  Ignore other oic.wk.res properties over here as they're known
-     *  and fixed. Only process the "links" property.
-     */
-    case OC_REP_OBJECT_ARRAY: {
-      if (oc_string_len(rep->name) == 5 &&
-          memcmp(oc_string(rep->name), "links", 5) == 0) {
-        links = rep->value.object_array;
-      }
-    } break;
-    default:
-      break;
+#if defined(OC_SPEC_VER_OIC)
+      case OC_REP_STRING: {
+        if (rep->name.size == 3 &&
+            memcmp(rep->name.ptr, "di", 2) == 0) {
+          anchor = &rep->value.string;
+        }
+      } break;
+#endif //OC_SPEC_VER_OIC
+      /*  Ignore other oic.wk.res properties over here as they're known
+       *  and fixed. Only process the "links" property.
+       */
+      case OC_REP_OBJECT_ARRAY: {
+        if (oc_string_len(rep->name) == 5 &&
+            memcmp(oc_string(rep->name), "links", 5) == 0) {
+          links = rep->value.object_array;
+        }
+      } break;
+      default:
+        break;
     }
     rep = rep->next;
   }
