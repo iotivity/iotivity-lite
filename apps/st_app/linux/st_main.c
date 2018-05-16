@@ -23,10 +23,7 @@
 #include "security/oc_pstat.h"
 #include "st_cloud_access.h"
 #include "st_easy_setup.h"
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <unistd.h>
+#include "st_port.h"
 
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
@@ -73,11 +70,11 @@ static const char *manufacturer = "xxxx";
 static bool discoverable = true;
 static bool observable = true;
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
+st_mutex_t mutex = NULL;
+st_cond_t cv = NULL;
 struct timespec ts;
 
-pthread_mutex_t app_mutex;
+st_mutex_t app_mutex = NULL;
 oc_resource_t *switch_resource;
 oc_link_t *publish_res;
 
@@ -141,7 +138,7 @@ switch_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
 
-  printf("switch_get_handler:\n");
+  st_print_log("switch_get_handler:\n");
   switch_construct(request, interface);
   oc_send_response(request, OC_STATUS_OK);
 }
@@ -152,21 +149,21 @@ switch_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)interface;
   (void)user_data;
-  printf("switch_post_handler:\n");
-  printf("  Key : Value\n");
+  st_print_log("switch_post_handler:\n");
+  st_print_log("  Key : Value\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    printf("  %s :", oc_string(rep->name));
+    st_print_log("  %s :", oc_string(rep->name));
 
     switch (rep->type) {
     case OC_REP_STRING:
       if (strcmp(oc_string(rep->name), "power") == 0) {
         strcpy(power, oc_string(rep->value.string));
-        printf(" %s\n", power);
+        st_print_log(" %s\n", power);
       }
       break;
     default:
-      printf(" NULL\n");
+      st_print_log(" NULL\n");
       break;
     }
     rep = rep->next;
@@ -198,7 +195,7 @@ switchlevel_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
 
-  printf("switchlevel_get_handler:\n");
+  st_print_log("switchlevel_get_handler:\n");
   switchlevel_construct(request, interface);
   oc_send_response(request, OC_STATUS_OK);
 }
@@ -209,20 +206,20 @@ switchlevel_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)interface;
   (void)user_data;
-  printf("switchlevel_post_handler:\n");
-  printf("  Key : Value\n");
+  st_print_log("switchlevel_post_handler:\n");
+  st_print_log("  Key : Value\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    printf("  %s :", oc_string(rep->name));
+    st_print_log("  %s :", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
       if (strcmp(oc_string(rep->name), "dimmingSetting") == 0) {
         dimmingSetting = rep->value.integer;
-        printf(" %d\n", dimmingSetting);
+        st_print_log(" %d\n", dimmingSetting);
       }
       break;
     default:
-      printf(" NULL\n");
+      st_print_log(" NULL\n");
       break;
     }
     rep = rep->next;
@@ -255,7 +252,7 @@ color_temp_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
 
-  printf("color_temp_get_handler:\n");
+  st_print_log("color_temp_get_handler:\n");
   color_temp_construct(request, interface);
   oc_send_response(request, OC_STATUS_OK);
 }
@@ -266,20 +263,20 @@ color_temp_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)interface;
   (void)user_data;
-  printf("color_temp_post_handler:\n");
-  printf("  Key : Value\n");
+  st_print_log("color_temp_post_handler:\n");
+  st_print_log("  Key : Value\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    printf("  %s :", oc_string(rep->name));
+    st_print_log("  %s :", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
       if (strcmp(oc_string(rep->name), "ct") == 0) {
         ct = rep->value.integer;
-        printf(" %d\n", ct);
+        st_print_log(" %d\n", ct);
       }
       break;
     default:
-      printf(" NULL\n");
+      st_print_log(" NULL\n");
       break;
     }
     rep = rep->next;
@@ -338,9 +335,9 @@ register_resources(void)
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
-  pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
+  st_mutex_lock(mutex);
+  st_cond_signal(cv);
+  st_mutex_unlock(mutex);
 }
 
 void
@@ -358,32 +355,31 @@ process_func(void *data)
   oc_clock_time_t next_event;
 
   while (quit != 1) {
-    pthread_mutex_lock(&app_mutex);
+    st_mutex_lock(app_mutex);
     next_event = oc_main_poll();
-    pthread_mutex_unlock(&app_mutex);
-    pthread_mutex_lock(&mutex);
+    st_mutex_unlock(app_mutex);
+    st_mutex_lock(mutex);
     if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
+      st_cond_wait(cv, mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      st_cond_timedwait(cv, mutex, next_event);
     }
-    pthread_mutex_unlock(&mutex);
+    st_mutex_unlock(mutex);
   }
 
-  pthread_exit(0);
+  st_thread_exit(NULL);
+  return NULL;
 }
 
 void
 print_menu(void)
 {
-  pthread_mutex_lock(&app_mutex);
-  printf("=====================================\n");
-  printf("1. Reset device\n");
-  printf("0. Quit\n");
-  printf("=====================================\n");
-  pthread_mutex_unlock(&app_mutex);
+  st_mutex_lock(app_mutex);
+  st_print_log("=====================================\n");
+  st_print_log("1. Reset device\n");
+  st_print_log("0. Quit\n");
+  st_print_log("=====================================\n");
+  st_mutex_unlock(app_mutex);
 }
 
 static bool is_easy_setup_success = false;
@@ -395,7 +391,7 @@ easy_setup_handler(st_easy_setup_status_t status)
   } else if (status == EASY_SETUP_RESET) {
     // TODO
   } else if (status == EASY_SETUP_FAIL) {
-    printf("Easy setup failed!!!\n");
+    st_print_log("Easy setup failed!!!\n");
   }
 }
 
@@ -406,9 +402,9 @@ cloud_access_handler(st_cloud_access_status_t status)
   if (status == CLOUD_ACCESS_FINISH) {
     is_cloud_access_success = true;
   } else if (status == CLOUD_ACCESS_FAIL) {
-    printf("Cloud access failed!!!\n");
+    st_print_log("Cloud access failed!!!\n");
   } else if (status == CLOUD_ACCESS_DISCONNECTED) {
-    printf("Disconnected from cloud!\n");
+    st_print_log("Disconnected from cloud!\n");
     is_cloud_access_success = false;
   }
 }
@@ -439,9 +435,9 @@ set_sc_prov_info(void)
   oc_new_string(&g_prov_resource.easysetupdi, uuid, strlen(uuid));
 
   if (set_properties_for_sc_prov_info(&g_prov_resource) == ES_ERROR)
-    printf("SetProvInfo Error\n");
+    st_print_log("SetProvInfo Error\n");
 
-  printf("set_sc_prov_info OUT\n");
+  st_print_log("set_sc_prov_info OUT\n");
 }
 
 static void
@@ -497,69 +493,70 @@ st_vendor_props_shutdown(void)
 static bool
 st_main_initialize(void)
 {
-  if (!st_easy_setup_start(&st_vendor_props, easy_setup_handler)) {
-    printf("Failed to start easy setup!\n");
+  if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
+    st_print_log("Failed to start easy setup!\n");
     return false;
   }
 
-  printf("easy setup is started.\n");
+  st_print_log("easy setup is started.\n");
   while (!is_easy_setup_success && quit != 1) {
-    pthread_mutex_lock(&app_mutex);
+    st_mutex_lock(app_mutex);
     if (get_easy_setup_status() == EASY_SETUP_FINISH) {
-      pthread_mutex_unlock(&app_mutex);
+      st_mutex_unlock(app_mutex);
       break;
     }
-    pthread_mutex_unlock(&app_mutex);
-    sleep(1);
-    printf(".");
+    st_mutex_unlock(app_mutex);
+    st_sleep(1);
+    st_print_log(".");
     fflush(stdout);
   }
-  printf("\n");
+  st_print_log("\n");
 
   if (is_easy_setup_success) {
-    printf("easy setup is successfully finished!\n");
+    st_print_log("easy setup is successfully finished!\n");
   } else {
     return false;
   }
 
   es_coap_cloud_conf_data *cloud_info = get_cloud_informations();
   if (!cloud_info) {
-    printf("could not get cloud informations.\n");
+    st_print_log("could not get cloud informations.\n");
     return false;
   }
 
   sc_coap_cloud_server_conf_properties *st_cloud_info =
     get_st_cloud_informations();
 
-  while (!st_cloud_access_check_connection(cloud_info->ci_server)) {
-    printf("AP is not connected.\n");
-    sleep(3);
+  while (st_cloud_access_check_connection(cloud_info->ci_server) != 0) {
+    st_print_log("AP is not connected.\n");
+    st_sleep(3);
   }
 
   // cloud access
-  if (!st_cloud_access_start(cloud_info, st_cloud_info, publish_res,
-                             switch_resource->device, cloud_access_handler)) {
-    printf("Failed to access cloud!\n");
+  if (st_cloud_access_start(cloud_info, st_cloud_info, publish_res,
+                            switch_resource->device,
+                            cloud_access_handler) != 0) {
+    st_print_log("Failed to access cloud!\n");
     return false;
   }
 
-  printf("cloud access started.\n");
+  st_print_log("cloud access started.\n");
   while (!is_cloud_access_success && quit != 1) {
-    pthread_mutex_lock(&app_mutex);
+    st_mutex_lock(app_mutex);
     if (get_cloud_access_status(switch_resource->device) ==
         CLOUD_ACCESS_FINISH) {
-      pthread_mutex_unlock(&app_mutex);
+      st_mutex_unlock(app_mutex);
       break;
     }
-    pthread_mutex_unlock(&app_mutex);
-    sleep(1);
-    printf(".");
+    st_mutex_unlock(app_mutex);
+    st_sleep(1);
+    st_print_log(".");
     fflush(stdout);
   }
-  printf("\n");
+  st_print_log("\n");
 
   if (is_cloud_access_success) {
-    printf("cloud access successfully finished!\n");
+    st_print_log("cloud access successfully finished!\n");
   } else {
     return false;
   }
@@ -585,11 +582,7 @@ int
 main(void)
 {
   int init = 0;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
+  st_set_sigint_handler(handle_signal);
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
@@ -600,14 +593,21 @@ main(void)
   oc_storage_config("./st_things_creds");
 #endif /* OC_SECURITY */
 
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
-    printf("pthread_mutex_init failed!\n");
+  if (st_mutex_init(mutex) < 0) {
+    st_print_log("st_mutex_init failed!\n");
     return -1;
   }
 
-  if (pthread_mutex_init(&app_mutex, NULL) < 0) {
-    printf("pthread_mutex_init failed!\n");
-    pthread_mutex_destroy(&mutex);
+  if (st_mutex_init(app_mutex) < 0) {
+    st_print_log("st_mutex_init failed!\n");
+    st_mutex_destroy(mutex);
+    return -1;
+  }
+
+  if (st_cond_init(cv) < 0) {
+    st_print_log("st_cond_init failed!\n");
+    st_mutex_destroy(mutex);
+    st_mutex_destroy(app_mutex);
     return -1;
   }
 
@@ -615,7 +615,7 @@ main(void)
 
   init = oc_main_init(&handler);
   if (init < 0) {
-    printf("oc_main_init failed!(%d)\n", init);
+    st_print_log("oc_main_init failed!(%d)\n", init);
     goto exit;
   }
 
@@ -625,27 +625,27 @@ main(void)
   int i;
   for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    printf("=== device(%d) endpoint info. ===\n", i);
+    st_print_log("=== device(%d) endpoint info. ===\n", i);
     while (ep) {
       oc_string_t ep_str;
       if (oc_endpoint_to_string(ep, &ep_str) == 0) {
-        printf("-> %s\n", oc_string(ep_str));
+        st_print_log("-> %s\n", oc_string(ep_str));
         oc_free_string(&ep_str);
       }
       ep = ep->next;
     }
   }
 
-  pthread_t thread;
-  if (pthread_create(&thread, NULL, process_func, NULL) != 0) {
-    printf("Failed to create main thread\n");
+  st_thread_t thread = NULL;
+  if (st_thread_create(thread, process_func, NULL) != 0) {
+    st_print_log("Failed to create main thread\n");
     init = -1;
     goto exit;
   }
 
   while (quit != 1) {
     if (!st_main_initialize()) {
-      printf("Failed to start easy setup & cloud access!\n");
+      st_print_log("Failed to start easy setup & cloud access!\n");
       init = -1;
       goto exit;
     }
@@ -655,39 +655,40 @@ main(void)
       print_menu();
       fflush(stdin);
       if (!scanf("%s", &key)) {
-        printf("scanf failed!!!!\n");
+        st_print_log("scanf failed!!!!\n");
         quit = 1;
         handle_signal(0);
         break;
       }
 
       if (!is_easy_setup_success || !is_cloud_access_success) {
-        printf("Not initialized\n");
+        st_print_log("Not initialized\n");
         continue;
       }
 
-      pthread_mutex_lock(&app_mutex);
+      st_mutex_lock(app_mutex);
       switch (key[0]) {
       case '1':
         st_main_reset();
-        pthread_mutex_unlock(&app_mutex);
+        st_mutex_unlock(app_mutex);
         goto reset;
       case '0':
         quit = 1;
         handle_signal(0);
         break;
       default:
-        printf("unsupported command.\n");
+        st_print_log("unsupported command.\n");
         break;
       }
-      pthread_mutex_unlock(&app_mutex);
+      st_mutex_unlock(app_mutex);
     }
   reset:
-    printf("reset finished\n");
+    st_print_log("reset finished\n");
   }
 
-  pthread_join(thread, NULL);
-  printf("pthread_join finish!\n");
+  st_thread_destroy(thread);
+  thread = NULL;
+  st_print_log("st_thread_destroy finish!\n");
 
   oc_link_t *next;
 exit:
@@ -704,13 +705,14 @@ exit:
     publish_res = next;
   }
   st_easy_setup_stop();
-  printf("easy setup stop done\n");
+  st_print_log("easy setup stop done\n");
 
   oc_free_string(&name);
   st_vendor_props_shutdown();
   oc_main_shutdown();
 
-  pthread_mutex_destroy(&mutex);
-  pthread_mutex_destroy(&app_mutex);
+  st_cond_destroy(cv);
+  st_mutex_destroy(app_mutex);
+  st_mutex_destroy(mutex);
   return 0;
 }
