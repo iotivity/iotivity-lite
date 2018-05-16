@@ -16,6 +16,24 @@
       "revId": "c6e08f5099a88469ce20df51844f0a91701c09cd",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c7bbf770",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-16T12:26:58Z",
+      "side": 1,
+      "message": "It\u0027s last character. If it invalid value then it will return -1 at 402 line.",
+      "parentUuid": "da33351e_e70c3b97",
+      "revId": "c6e08f5099a88469ce20df51844f0a91701c09cd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
