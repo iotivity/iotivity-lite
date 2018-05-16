@@ -158,7 +158,14 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
-test: $(UNIT_TESTS)
+test: test/run test/profile
+
+profiler?=${ROOTDIR}/tests/linux/memprofile.sh
+
+test/profile: $(UNIT_TESTS)
+	for test in $^ ; do ${profiler} ./$${test} ; done
+
+test/run: $(UNIT_TESTS)
 	for test in $^ ; do ./$${test} ; done
 
 .PHONY: test clean
