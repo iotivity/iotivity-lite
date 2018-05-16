@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e70c3b97",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-16T11:03:00Z",
+      "side": 1,
+      "message": "Domain name would be combination of (A-Z, a-z , \u0027-\u0027, number)\nonly alphabet and number are supposed to be the first character\n\u0027-\u0027 should not used at the end of name.\n\nTherefore, checking availability of domain would be a little changed...",
+      "revId": "c6e08f5099a88469ce20df51844f0a91701c09cd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
