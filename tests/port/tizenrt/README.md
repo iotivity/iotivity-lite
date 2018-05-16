@@ -21,7 +21,7 @@ Copy <iotivity-constrained>/port/tizenrt/iotlite_apps folder to TizenRT/apps/
 
 Copy <iotivity-constrained>/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
 
-Copy tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
+Copy iotivity-constrained/tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
 
 #### How to Build the TizenRT with constrained IOT  ####################
 
