@@ -863,12 +863,15 @@ obt_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   (void)interfaces;
   (void)bm;
   int i;
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  oc_uuid_t uuid;
-  oc_str_to_uuid(anchor + 6, &uuid);
-  if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
-    oc_free_server_endpoints(endpoint);
-    return OC_CONTINUE_DISCOVERY;
+  oc_uuid_t uuid = {0};
+  if (anchor)
+  {
+    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    oc_str_to_uuid(anchor + 6, &uuid);
+    if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
+      oc_free_server_endpoints(endpoint);
+      return OC_CONTINUE_DISCOVERY;
+    }
   }
 
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
