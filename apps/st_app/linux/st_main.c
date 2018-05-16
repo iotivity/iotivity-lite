@@ -414,15 +414,17 @@ cloud_access_handler(st_cloud_access_status_t status)
 }
 
 static void
-set_sc_prov_info()
+set_sc_prov_info(void)
 {
   // Set prov info properties
   int target_size = 1;
   char uuid[MAX_UUID_LENGTH];
+  int i = 0;
 
   g_prov_resource.targets = (provisioning_info_targets *)calloc(
     target_size, sizeof(provisioning_info_targets));
-  for (int i = 0; i < target_size; i++) {
+
+  for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(switch_resource->device), uuid,
                    MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].targetDi, uuid, strlen(uuid));
@@ -440,6 +442,21 @@ set_sc_prov_info()
     printf("SetProvInfo Error\n");
 
   printf("set_sc_prov_info OUT\n");
+}
+
+static void
+unset_sc_prov_info(void)
+{
+  // Come from  target_size in set_sc_prov_info
+  int target_size = 1, i = 0;
+
+  oc_free_string(&g_prov_resource.easysetupdi);
+  for (i = 0; i < target_size; i++) {
+    oc_free_string(&g_prov_resource.targets[i].targetDi);
+    oc_free_string(&g_prov_resource.targets[i].targetRt);
+  }
+
+  free(g_prov_resource.targets);
 }
 
 static void
@@ -462,6 +479,19 @@ st_vendor_props_initialize(void)
   oc_new_string(&st_vendor_props.esProtocolVersion, st_protocol_version,
                 strlen(st_protocol_version));
   set_sc_prov_info();
+}
+
+static void
+st_vendor_props_shutdown(void)
+{
+  unset_sc_prov_info();
+  oc_free_string(&st_vendor_props.deviceType);
+  oc_free_string(&st_vendor_props.deviceSubType);
+  oc_free_string(&st_vendor_props.regSetDev);
+  oc_free_string(&st_vendor_props.nwProvInfo);
+  oc_free_string(&st_vendor_props.pnpPin);
+  oc_free_string(&st_vendor_props.modelNumber);
+  oc_free_string(&st_vendor_props.esProtocolVersion);
 }
 
 static bool
@@ -661,6 +691,13 @@ main(void)
 
   oc_link_t *next;
 exit:
+
+  device_num = oc_core_get_num_devices();
+  for (i = 0; i < device_num; i++) {
+    oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
+    oc_free_server_endpoints(ep);
+  }
+
   while (publish_res) {
     next = oc_list_item_next(publish_res);
     oc_delete_link(publish_res);
@@ -669,6 +706,8 @@ exit:
   st_easy_setup_stop();
   printf("easy setup stop done\n");
 
+  oc_free_string(&name);
+  st_vendor_props_shutdown();
   oc_main_shutdown();
 
   pthread_mutex_destroy(&mutex);
