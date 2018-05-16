@@ -23,9 +23,6 @@ IOTCONS_ROOT_DIR = $(TOPDIR)/../external/iotivity-constrained/iotivity-constrain
 
 MBEDTLS_DIR := $(IOTCONS_ROOT_DIR)/deps/mbedtls
 
-ASRCS		=
-CSRCS		=
-
 DTLS_TAG ?= mbedtls-2.7.0
 DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    \
 	bignum.c    blowfish.c  camellia.c  ccm.c       cipher.c    cipher_wrap.c   \
@@ -42,12 +39,33 @@ DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    
 
 DTLSFLAGS=-I$(MBEDTLS_DIR)/include -D__OC_RANDOM
 
-ifeq ($(CONFIG_SECURE),y)
-	CSRCS += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
+ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
+	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
+
+ifeq ($(CONFIG_IOTLITE_SECURE),y)
+	CSRCS   += $(addprefix $(IOTCONS_ROOT_DIR)/security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	OSRCS_C += $(IOTCONS_ROOT_DIR)/security/oc_acl.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_cred.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_doxm.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_pstat.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_tls.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_svr.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_store.o)
+
+	CSRCS	+= $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
+ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
+	CSRCS += $(IOTCONS_ROOT_DIR)/security/oc_obt.c
+	OSRCS_C += iotivity-constrained/security/oc_obt.o
+else
+	CSRCS += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
+	OSRCS_C += $(MBEDTLS_DIR)/library/memory_buffer_alloc.o
+endif
 	CFLAGS += ${DTLSFLAGS}
 	OSRCS_C += $(wildcard $(MBEDTLS_DIR)/library/*.o)
 	EXTRA_CFLAGS += -DOC_SECURITY
+
 	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
 endif
 
@@ -57,15 +75,8 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   $(wildcard iotivity-constrained/util/*.c) \
 			   $(wildcard iotivity-constrained/messaging/coap/*.c) \
 			   $(wildcard iotivity-constrained/api/*.c) \
-			   $(wildcard iotivity-constrained/port/tizenrt/*.c) \
-			   iotivity-constrained/security/oc_acl.c \
-			   iotivity-constrained/security/oc_cred.c \
-			   iotivity-constrained/security/oc_doxm.c \
-			   iotivity-constrained/security/oc_pstat.c \
-			   iotivity-constrained/security/oc_svr.c \
-			   iotivity-constrained/security/oc_store.c\
-			   iotivity-constrained/security/oc_obt.c \
-			   iotivity-constrained/security/oc_tls.c
+			   $(wildcard iotivity-constrained/port/tizenrt/*.c)
+
 ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
 CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c)
 OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o)
@@ -79,19 +90,20 @@ OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   $(wildcard iotivity-constrained/util/*.o) \
 			   $(wildcard iotivity-constrained/messaging/coap/*.o) \
 			   $(wildcard iotivity-constrained/api/*.o) \
-			   $(wildcard iotivity-constrained/port/tizenrt/*.o) \
-			   iotivity-constrained/security/oc_acl.o \
-			   iotivity-constrained/security/oc_cred.o \
-			   iotivity-constrained/security/oc_doxm.o \
-			   iotivity-constrained/security/oc_pstat.o \
-			   iotivity-constrained/security/oc_svr.o \
-			   iotivity-constrained/security/oc_store.o\
-			   iotivity-constrained/security/oc_obt.o \
-			   iotivity-constrained/security/oc_tls.o
+			   $(wildcard iotivity-constrained/port/tizenrt/*.o)
+
+ifeq ($(CONFIG_IOTLITE_IPV4),y)
+	EXTRA_CFLAGS += -DOC_IPV4
+endif
+
+ifeq ($(CONFIG_IOTLITE_TCP),y)
+	EXTRA_CFLAGS += -DOC_TCP
+endif
 
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
 CFLAGS:=$(filter-out -Wundef,$(CFLAGS))
-CFLAGS 		+= -D__TIZENRT__ -DOC_TCP -DOC_SECURITY -DOC_CLIENT -DOCF_12 -DOC_IPV4 -DOC_DEBUG -DOC_SERVER -DOC_DYNAMIC_ALLOCATION -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
+CFLAGS 		+= -D__TIZENRT__ -DOC_SPEC_VER_OIC -DOC_CLIENT -DOCF_12 -DOC_DEBUG -DOC_SERVER -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
+CFLAGS += $(EXTRA_CFLAGS)
 CFLAGS		+= -Itinycbor/src/ \
 			   -Iiotivity-constrained/ \
 			   -Iiotivity-constrained/include \
@@ -121,7 +133,7 @@ DEPPATH	= --dep-path .
 
 VPATH		= $(MBEDTLS_DIR)/library:
 
-ifeq ($(CONFIG_SECURE),y)
+ifeq ($(CONFIG_IOTLITE_SECURE),y)
 MBEDTLS_PATCHES ?= $(sort $(wildcard $(IOTCONS_ROOT_DIR)/patches/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
