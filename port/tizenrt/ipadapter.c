@@ -51,6 +51,8 @@
 #define IFA_FLAGS (IFA_MULTICAST+1)
 #endif
 
+#undef USE_IP_MREQN
+
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
   0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
@@ -117,12 +119,19 @@ static ip_context_t *get_ip_context_for_device(int device) {
 static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
                                               const struct in_addr *local,
                                               int interface_index) {
+#if defined(USE_IP_MREQN)
   struct ip_mreqn mreq;
-
+#else
+  struct ip_mreq mreq;
+#endif
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
+#if defined(USE_IP_MREQN)
   mreq.imr_ifindex = interface_index;
   memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
+#else
+  memcpy(&mreq.imr_interface, local, sizeof(struct in_addr));
+#endif
 
   (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
