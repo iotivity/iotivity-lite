@@ -29,7 +29,7 @@ app_dir?=${top_dir}/port/tizenrt
 tizenrt_dir?=${top_dir}/deps/TizenRT
 os_dir?=${tizenrt_dir}/os
 os_url?=https://github.com/Samsung/TizenRT
-os_branch?=1.1_Public_Release
+os_branch?=13aa00554e0b7a416ff3c453bf3192c40c71ae86
 os_machine?=artik053
 os_image_type?=minimal
 configure_file?=${os_dir}/.config
@@ -56,9 +56,11 @@ prep_files+=${top_dir}/deps/tinycbor/LICENSE
 
 all?=prep configure build
 
+git?=git
 
 ${tizenrt_dir}:
-	git clone --depth 1 --recursive -b "${os_branch}" "${os_url}" "$@"
+	${git} clone "${os_url}" ${tizenrt_dir}
+	cd $@ && ${git} reset --hard "${os_branch}"
 
 ${tizenrt_dir}/external/iotivity-constrained.mk.tmp: iotivity-constrained.mk ${os_external_makefile}.orig
 	cp "$<" "$@.tmp"
