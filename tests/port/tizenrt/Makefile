@@ -32,6 +32,7 @@ os_url?=https://github.com/Samsung/TizenRT
 os_branch?=1.1_Public_Release
 os_branch=master
 os_machine?=artik053
+os_machine=artik055s
 os_image_type?=iotlite
 configure_file?=${os_dir}/.config
 os_external_makefile?=${tizenrt_dir}/external/Makefile
