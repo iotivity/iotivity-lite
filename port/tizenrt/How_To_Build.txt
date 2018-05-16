@@ -2,6 +2,8 @@
 
 git clone https://github.com/Samsung/TizenRT
 
+git checkout 13aa00554e0b7a416ff3c453bf3192c40c71ae86
+
 Create folder "iotivity-constrained" in this path (TizenRT/external/) (EX:mkdir iotivity-constrained)
 
 Clone iotivity-constrained code in this path TizenRT/external/iotivity-constrained/
@@ -70,12 +72,4 @@ iotlite
 ###### run easysetup sample app ##########################
 
 easysetup
-
-
-
-
-
-
-
-
 
