@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "st_port.h"
+#include "../st_port.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "util/oc_memb.h"
