@@ -16,9 +16,11 @@
  *
  ****************************************************************************/
 
+#ifndef ST_CLOUD_ACCESS_H
+#define ST_CLOUD_ACCESS_H
+
 #include "easysetup.h"
 #include "samsung/sc_easysetup.h"
-#include <stdbool.h>
 
 typedef enum {
   CLOUD_ACCESS_INITIALIZE,
@@ -33,12 +35,14 @@ typedef enum {
 
 typedef void (*st_cloud_access_cb_t)(st_cloud_access_status_t status);
 
-bool st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
-                           sc_coap_cloud_server_conf_properties *st_cloud_info,
-                           oc_link_t *publish_resources, int device_index,
-                           st_cloud_access_cb_t cb);
+int st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
+                          sc_coap_cloud_server_conf_properties *st_cloud_info,
+                          oc_link_t *publish_resources, int device_index,
+                          st_cloud_access_cb_t cb);
 void st_cloud_access_stop(int device_index);
 
 st_cloud_access_status_t get_cloud_access_status(int device_index);
 
-bool st_cloud_access_check_connection(const char *ci_server);
+int st_cloud_access_check_connection(const char *ci_server);
+
+#endif /* ST_CLOUD_ACCESS_H */
