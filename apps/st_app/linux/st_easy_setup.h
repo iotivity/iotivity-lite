@@ -16,9 +16,11 @@
  *
  ****************************************************************************/
 
+#ifndef ST_EASY_SETUP_H
+#define ST_EASY_SETUP_H
+
 #include "easysetup.h"
 #include "samsung/sc_easysetup.h"
-#include <stdbool.h>
 
 typedef enum {
   EASY_SETUP_INITIALIZE,
@@ -30,9 +32,11 @@ typedef enum {
 
 typedef void (*st_easy_setup_cb_t)(st_easy_setup_status_t status);
 
-bool st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
+int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
 
 st_easy_setup_status_t get_easy_setup_status(void);
 es_coap_cloud_conf_data *get_cloud_informations(void);
 sc_coap_cloud_server_conf_properties *get_st_cloud_informations(void);
+
+#endif /* ST_EASY_SETUP_H */
