@@ -16,6 +16,24 @@
       "revId": "5c64ce03e4e544760081cfbd6adeae34b207ead3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7b43bf4",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-16T08:38:57Z",
+      "side": 1,
+      "message": "this was a work in progress \nmaybe they are not needed, I will try to make a nicer patch\nas soon as I am able to run sample app.\n\n\n\nwhat about code changes later ?",
+      "parentUuid": "da33351e_a70513c4",
+      "revId": "5c64ce03e4e544760081cfbd6adeae34b207ead3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
