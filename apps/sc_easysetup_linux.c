@@ -57,10 +57,34 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = false;
 
-static sc_properties g_SCProperties ;
+static sc_properties g_sc_properties ;
 
 static provisioning_info_resource g_provisioninginfo_resource;
 
+static void
+deinitialize_properties(void)
+{
+  int target_size;
+  // SC Properties
+  es_free_property(g_sc_properties.deviceSubType);
+  es_free_property(g_sc_properties.deviceType);
+  es_free_property(g_sc_properties.esProtocolVersion);
+  es_free_property(g_sc_properties.pnpPin);
+  es_free_property(g_sc_properties.modelNumber);
+  es_free_property(g_sc_properties.nwProvInfo);
+  es_free_property(g_sc_properties.regSetDev);
+
+  // Provision Info Properties
+  es_free_property(g_provisioninginfo_resource.easysetupdi);
+  target_size=g_provisioninginfo_resource.targets_size;
+  if(target_size > 0){
+    for (int i=0;i<target_size;i++){
+      es_free_property(g_provisioninginfo_resource.targets[i].targetDi);
+      es_free_property(g_provisioninginfo_resource.targets[i].targetRt);
+    }
+    free(g_provisioninginfo_resource.targets);
+  }
+}
 void SetProvInfo()
 {
   // Set prov info properties
@@ -318,6 +342,7 @@ void StartEasySetup()
 
     // Set callbacks for Vendor Specific Properties
     es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
+    es_set_callback_for_property_deinit(FreeUserdataCb);
     printf("[ES App] StartEasySetup OUT\n");
 }
 
@@ -338,23 +363,25 @@ void SetDeviceInfo()
 
     // Set user properties if needed
 
-    memset(&g_SCProperties, 0, sizeof(sc_properties));
+    memset(&g_sc_properties, 0, sizeof(sc_properties));
 
-    oc_new_string(&g_SCProperties.deviceType, deviceType, strlen(deviceType));
-    oc_new_string(&g_SCProperties.deviceSubType, deviceSubType,
+    oc_new_string(&g_sc_properties.deviceType, deviceType, strlen(deviceType));
+    oc_new_string(&g_sc_properties.deviceSubType, deviceSubType,
                   strlen(deviceSubType));
-    g_SCProperties.netConnectionState = NET_STATE_INIT;
-    g_SCProperties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-    oc_new_string(&g_SCProperties.regSetDev, regSetDev, strlen(regSetDev));
-    oc_new_string(&g_SCProperties.nwProvInfo, nwProvInfo, strlen(nwProvInfo));
-    oc_new_string(&g_SCProperties.pnpPin, pnpPin, strlen(pnpPin));
-    oc_new_string(&g_SCProperties.modelNumber, modelNumber,
+    g_sc_properties.netConnectionState = NET_STATE_INIT;
+    g_sc_properties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
+    oc_new_string(&g_sc_properties.regSetDev, regSetDev, strlen(regSetDev));
+    oc_new_string(&g_sc_properties.nwProvInfo, nwProvInfo, strlen(nwProvInfo));
+    oc_new_string(&g_sc_properties.pnpPin, pnpPin, strlen(pnpPin));
+    oc_new_string(&g_sc_properties.modelNumber, modelNumber,
                   strlen(modelNumber));
-    oc_new_string(&g_SCProperties.esProtocolVersion, esProtocolVersion,
+    oc_new_string(&g_sc_properties.esProtocolVersion, esProtocolVersion,
                   strlen(esProtocolVersion));
 
-    if (set_sc_properties(&g_SCProperties) == ES_ERROR)
+    if (set_sc_properties(&g_sc_properties) == ES_ERROR)
       printf("SetSCProperties Error\n");
+
+    oc_free_string(&deviceProperty.DevConf.device_name);
 
     printf("[ES App] SetDeviceInfo OUT\n");
 }
@@ -362,7 +389,7 @@ void SetDeviceInfo()
 void StopEasySetup()
 {
     printf("[ES App] StopEasySetup IN\n");
-    if(reset_sc_properties(&g_SCProperties) == ES_ERROR){
+    if(reset_sc_properties(&g_sc_properties) == ES_ERROR){
       printf("Reset Properties Failed!!\n");
       return;
     }
@@ -371,6 +398,8 @@ void StopEasySetup()
         printf("ESTerminateEnrollee Failed!!\n");
         return;
     }
+
+    deinitialize_properties();
 
     printf("[ES App] StopEasySetup OUT\n");
 }

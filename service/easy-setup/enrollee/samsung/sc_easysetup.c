@@ -69,13 +69,13 @@
 #define SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED                   x.com.samsung.published
 #define STR_SC_RSRVD_ES_PROVISIONING_INFO_TARGETS                 "x.com.samsung.provisioning.targets"
 
-easy_setup_resource g_ESEasySetupResource;
-wifi_conf_resource g_ESWiFiConfResource;
-coap_cloud_conf_resource g_ESCoapCloudConfResource;
-dev_conf_resource g_ESDevConfResource;
+easy_setup_resource g_es_easysetup_resource;
+wifi_conf_resource g_es_wificonf_resource;
+coap_cloud_conf_resource g_es_coap_cloudconf_resource;
+dev_conf_resource g_es_devconf_resource;
 provisioning_info_resource g_provisioninginfo_resource;
 
-sc_properties g_SCProperties;
+sc_properties g_sc_properties;
 
 static void read_account_data(oc_rep_t* payload,void** userdata);
 static void read_tnc_data(oc_rep_t* payload,void** userdata);
@@ -90,61 +90,106 @@ static void write_wifi_data(oc_rep_t* payload, char* resourceType);
   } while (0)
 
 static void
+initialize_prov_info_properties(const provisioning_info_resource *prov_info)
+{
+  int target_size=prov_info->targets_size;
+  if(target_size > 0){
+    g_provisioninginfo_resource.targets = (provisioning_info_targets *)malloc(target_size* sizeof(provisioning_info_targets));
+    for (int i=0;i<target_size;i++){
+      custom_oc_string_dup(g_provisioninginfo_resource.targets[i].targetDi, prov_info->targets[i].targetDi);
+      custom_oc_string_dup(g_provisioninginfo_resource.targets[i].targetRt, prov_info->targets[i].targetRt);
+      g_provisioninginfo_resource.targets[i].published = false;
+    }
+  }
+  g_provisioninginfo_resource.targets_size=prov_info->targets_size;
+  g_provisioninginfo_resource.owned = prov_info->owned;
+  custom_oc_string_dup(g_provisioninginfo_resource.easysetupdi, prov_info->easysetupdi);
+}
+
+static void
+deinitialize_prov_info_properties()
+{
+  int target_size=g_provisioninginfo_resource.targets_size;
+  if(target_size > 0){
+    for (int i=0;i<target_size;i++){
+      es_free_property(g_provisioninginfo_resource.targets[i].targetDi);
+      es_free_property(g_provisioninginfo_resource.targets[i].targetRt);
+    }
+    free(g_provisioninginfo_resource.targets);
+  }
+  es_free_property(g_provisioninginfo_resource.easysetupdi);
+}
+
+static void
 initialize_sc_properties(const sc_properties *prop)
 {
   // Initialize samsung specific properlties
-  custom_oc_string_dup(g_SCProperties.aac, prop->aac);
-  custom_oc_string_dup(g_SCProperties.account, prop->account);
-  custom_oc_string_dup(g_SCProperties.bssid, prop->bssid);
-  custom_oc_string_dup(g_SCProperties.clientID, prop->clientID);
-  custom_oc_string_dup(g_SCProperties.country, prop->country);
-  custom_oc_string_dup(g_SCProperties.deviceSubType, prop->deviceSubType);
-  custom_oc_string_dup(g_SCProperties.deviceType, prop->deviceType);
-  custom_oc_string_dup(g_SCProperties.esProtocolVersion, prop->esProtocolVersion);
-  custom_oc_string_dup(g_SCProperties.gpsLocation, prop->gpsLocation);
-  custom_oc_string_dup(g_SCProperties.language, prop->language);
-  custom_oc_string_dup(g_SCProperties.location, prop->location);
-  custom_oc_string_dup(g_SCProperties.modelNumber, prop->modelNumber);
-  custom_oc_string_dup(g_SCProperties.nwProvInfo, prop->nwProvInfo);
-  custom_oc_string_dup(g_SCProperties.pnpPin, prop->pnpPin);
-  custom_oc_string_dup(g_SCProperties.refreshToken, prop->refreshToken);
-  custom_oc_string_dup(g_SCProperties.regionalDateTime, prop->regionalDateTime);
-  custom_oc_string_dup(g_SCProperties.regMobileDev, prop->regMobileDev);
-  custom_oc_string_dup(g_SCProperties.regSetDev, prop->regSetDev);
-  custom_oc_string_dup(g_SCProperties.ssoList, prop->ssoList);
-  custom_oc_string_dup(g_SCProperties.tncResult, prop->tncResult);
-  custom_oc_string_dup(g_SCProperties.uid, prop->uid);
-  custom_oc_string_dup(g_SCProperties.utcDateTime, prop->utcDateTime);
-  custom_oc_string_dup(g_SCProperties.tncInfo.header, prop->tncInfo.header);
-  custom_oc_string_dup(g_SCProperties.tncInfo.version, prop->tncInfo.version);
+  custom_oc_string_dup(g_sc_properties.aac, prop->aac);
+  custom_oc_string_dup(g_sc_properties.account, prop->account);
+  custom_oc_string_dup(g_sc_properties.bssid, prop->bssid);
+  custom_oc_string_dup(g_sc_properties.clientID, prop->clientID);
+  custom_oc_string_dup(g_sc_properties.country, prop->country);
+  custom_oc_string_dup(g_sc_properties.deviceSubType, prop->deviceSubType);
+  custom_oc_string_dup(g_sc_properties.deviceType, prop->deviceType);
+  custom_oc_string_dup(g_sc_properties.esProtocolVersion, prop->esProtocolVersion);
+  custom_oc_string_dup(g_sc_properties.gpsLocation, prop->gpsLocation);
+  custom_oc_string_dup(g_sc_properties.language, prop->language);
+  custom_oc_string_dup(g_sc_properties.modelNumber, prop->modelNumber);
+  custom_oc_string_dup(g_sc_properties.nwProvInfo, prop->nwProvInfo);
+  custom_oc_string_dup(g_sc_properties.pnpPin, prop->pnpPin);
+  custom_oc_string_dup(g_sc_properties.refreshToken, prop->refreshToken);
+  custom_oc_string_dup(g_sc_properties.regionalDateTime, prop->regionalDateTime);
+  custom_oc_string_dup(g_sc_properties.regMobileDev, prop->regMobileDev);
+  custom_oc_string_dup(g_sc_properties.regSetDev, prop->regSetDev);
+  custom_oc_string_dup(g_sc_properties.ssoList, prop->ssoList);
+  custom_oc_string_dup(g_sc_properties.tncResult, prop->tncResult);
+  custom_oc_string_dup(g_sc_properties.uid, prop->uid);
+  custom_oc_string_dup(g_sc_properties.utcDateTime, prop->utcDateTime);
+  custom_oc_string_dup(g_sc_properties.tncInfo.header, prop->tncInfo.header);
+  custom_oc_string_dup(g_sc_properties.tncInfo.version, prop->tncInfo.version);
+
+  if(oc_string_array_get_allocated_size(prop->location) > 0)
+  {
+    int size=oc_string_array_get_allocated_size(prop->location);
+    oc_new_string_array(&g_sc_properties.location, size);
+    uint8_t i;
+    for (i = 0; i < size; i++) {
+      oc_string_array_add_item(
+      g_sc_properties.location,
+      oc_string_array_get_item(prop->location, i));
+    }
+  }
+
 }
 
 static void
 deinitialize_sc_properties(void)
 {
-  es_free_property(g_SCProperties.aac);
-  es_free_property(g_SCProperties.account);
-  es_free_property(g_SCProperties.bssid);
-  es_free_property(g_SCProperties.clientID);
-  es_free_property(g_SCProperties.country);
-  es_free_property(g_SCProperties.deviceSubType);
-  es_free_property(g_SCProperties.deviceType);
-  es_free_property(g_SCProperties.esProtocolVersion);
-  es_free_property(g_SCProperties.gpsLocation);
-  es_free_property(g_SCProperties.language);
-  es_free_property(g_SCProperties.location);
-  es_free_property(g_SCProperties.modelNumber);
-  es_free_property(g_SCProperties.nwProvInfo);
-  es_free_property(g_SCProperties.refreshToken);
-  es_free_property(g_SCProperties.regionalDateTime);
-  es_free_property(g_SCProperties.regMobileDev);
-  es_free_property(g_SCProperties.regSetDev);
-  es_free_property(g_SCProperties.ssoList);
-  es_free_property(g_SCProperties.tncResult);
-  es_free_property(g_SCProperties.uid);
-  es_free_property(g_SCProperties.utcDateTime);
-  es_free_property(g_SCProperties.tncInfo.header);
-  es_free_property(g_SCProperties.tncInfo.version);
+  es_free_property(g_sc_properties.aac);
+  es_free_property(g_sc_properties.account);
+  es_free_property(g_sc_properties.bssid);
+  es_free_property(g_sc_properties.clientID);
+  es_free_property(g_sc_properties.country);
+  es_free_property(g_sc_properties.deviceSubType);
+  es_free_property(g_sc_properties.deviceType);
+  es_free_property(g_sc_properties.esProtocolVersion);
+  es_free_property(g_sc_properties.gpsLocation);
+  es_free_property(g_sc_properties.language);
+  es_free_property(g_sc_properties.pnpPin);
+  if(oc_string_array_get_allocated_size(g_sc_properties.location) > 0)
+    oc_free_string_array(&g_sc_properties.location);
+  es_free_property(g_sc_properties.modelNumber);
+  es_free_property(g_sc_properties.nwProvInfo);
+  es_free_property(g_sc_properties.refreshToken);
+  es_free_property(g_sc_properties.regionalDateTime);
+  es_free_property(g_sc_properties.regMobileDev);
+  es_free_property(g_sc_properties.regSetDev);
+  es_free_property(g_sc_properties.ssoList);
+  es_free_property(g_sc_properties.tncResult);
+  es_free_property(g_sc_properties.uid);
+  es_free_property(g_sc_properties.utcDateTime);
+  es_free_property(g_sc_properties.tncInfo.header);
+  es_free_property(g_sc_properties.tncInfo.version);
 
 }
 static void update_provisioning_info_resource(oc_request_t *request)
@@ -204,7 +249,7 @@ es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *pr
 {
     if(prop != NULL)
     {
-        memcpy(&g_provisioninginfo_resource, prop, sizeof(provisioning_info_resource));
+        initialize_prov_info_properties(prop);
         OC_DBG("SetSCProperties OUT");
         return ES_OK;
     }
@@ -242,7 +287,7 @@ es_result_e set_sc_properties(const sc_properties *prop)
 {
   if(prop != NULL)
   {
-    memcpy(&g_SCProperties, prop, sizeof(sc_properties));
+    memcpy(&g_sc_properties, prop, sizeof(sc_properties));
     initialize_sc_properties(prop);
     OC_DBG("SetSCProperties OUT");
     return ES_OK;
@@ -255,6 +300,7 @@ es_result_e reset_sc_properties(const sc_properties *prop)
     if(prop != NULL)
     {
         deinitialize_sc_properties();
+        deinitialize_prov_info_properties();
         OC_DBG("ResetSCProperties OUT");
         return ES_OK;
     }
@@ -279,7 +325,7 @@ read_account_data(oc_rep_t *payload, void **userdata)
     sc_dev_conf_properties *pDevConfProp =
       (sc_dev_conf_properties *)(*userdata);
     oc_allocate_string(&pDevConfProp->account, oc_string(payload->value.string));
-    oc_allocate_string(&g_SCProperties.account, oc_string(payload->value.string));
+    oc_allocate_string(&g_sc_properties.account, oc_string(payload->value.string));
 
     OC_DBG("[User specific property] %s : %s", STR_SC_RSRVD_ES_VENDOR_ACCOUNT,
            oc_string(pDevConfProp->account));
@@ -292,22 +338,22 @@ es_result_e set_sc_tnc_info(sc_tnc_info *tncInfo)
     {
         return ES_ERROR;
     }
-    g_SCProperties.tncInfo = *tncInfo;
+    g_sc_properties.tncInfo = *tncInfo;
     return ES_OK;
 }
 
 es_result_e set_sc_tnc_status(int status)
 {
-    g_SCProperties.tncStatus = status;
+    g_sc_properties.tncStatus = status;
     return ES_OK;
 }
 
 es_result_e set_sc_net_connection_state(NETCONNECTION_STATE netConnectionState)
 {
     OC_DBG( "SetSCNetConnectionState: %d", netConnectionState);
-    g_SCProperties.netConnectionState = netConnectionState;
+    g_sc_properties.netConnectionState = netConnectionState;
 
-    if(0 == oc_notify_observers(g_ESEasySetupResource.handle))
+    if(0 == oc_notify_observers(g_es_easysetup_resource.handle))
     {
         OC_DBG("provResource doesn't have any observers.");
     }
@@ -331,7 +377,7 @@ static void read_tnc_data(oc_rep_t* payload,void** userdata)
     sc_coap_cloud_server_conf_properties *pProp =
       (sc_coap_cloud_server_conf_properties *)(*userdata);
     oc_allocate_string(&pProp->tncResult, oc_string(payload->value.string));
-    oc_allocate_string(&g_SCProperties.tncResult, oc_string(payload->value.string));
+    oc_allocate_string(&g_sc_properties.tncResult, oc_string(payload->value.string));
 
     OC_DBG("[User specific property] %s : %s",
            STR_SC_RSRVD_ES_VENDOR_TNC_RESULT, oc_string(pProp->tncResult));
@@ -349,15 +395,15 @@ write_tnc_data(oc_rep_t *payload, char *resourceType)
   }
   if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP)) {
     set_custom_property_int(root, SC_RSRVD_ES_VENDOR_TNC_STATUS,
-                            g_SCProperties.tncStatus);
+                            g_sc_properties.tncStatus);
   } else if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_HEADER,
-                            oc_string(g_SCProperties.tncInfo.header));
+                            oc_string(g_sc_properties.tncInfo.header));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_VERSION,
-                            oc_string(g_SCProperties.tncInfo.version));
+                            oc_string(g_sc_properties.tncInfo.version));
   } else if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)) {
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_TNC_RESULT,
-                            oc_string(g_SCProperties.tncResult));
+                            oc_string(g_sc_properties.tncResult));
   }
 }
 
@@ -373,14 +419,14 @@ write_wifi_data(oc_rep_t *payload, char *resourceType)
 
   if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF)) {
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_BSSID,
-                            oc_string(g_SCProperties.bssid));
+                            oc_string(g_sc_properties.bssid));
   }
 }
 
 es_result_e set_register_set_device(const char *regSetDevice)
 {
   if (regSetDevice != NULL) {
-    oc_allocate_string(&g_SCProperties.regSetDev, (char *)regSetDevice);
+    oc_allocate_string(&g_sc_properties.regSetDev, (char *)regSetDevice);
     return ES_OK;
   }
   return ES_ERROR;
@@ -389,7 +435,7 @@ es_result_e set_register_set_device(const char *regSetDevice)
 es_result_e set_network_prov_info(const char *nwProvInfo)
 {
   if (nwProvInfo != NULL) {
-    oc_allocate_string(&g_SCProperties.nwProvInfo,(char *) nwProvInfo);
+    oc_allocate_string(&g_sc_properties.nwProvInfo,(char *) nwProvInfo);
     return ES_OK;
   }
   return ES_ERROR;
@@ -398,7 +444,7 @@ es_result_e set_network_prov_info(const char *nwProvInfo)
 es_result_e set_sc_pnp_pin(const char *pnp)
 {
   if (pnp != NULL) {
-    oc_allocate_string(&g_SCProperties.pnpPin,(char *) pnp);
+    oc_allocate_string(&g_sc_properties.pnpPin,(char *) pnp);
     return ES_OK;
   }
   return ES_ERROR;
@@ -407,7 +453,7 @@ es_result_e set_sc_pnp_pin(const char *pnp)
 es_result_e set_es_version_info(const char *esProtocolVersion)
 {
   if (esProtocolVersion != NULL) {
-    oc_allocate_string(&g_SCProperties.esProtocolVersion, (char *)esProtocolVersion);
+    oc_allocate_string(&g_sc_properties.esProtocolVersion, (char *)esProtocolVersion);
     return ES_OK;
   }
   return ES_ERROR;
@@ -437,12 +483,12 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
         OC_DBG("[User specific property] %s : [%" PRId64 "]",
                STR_SC_RSRVD_ES_VENDOR_DISCOVERY_CHANNEL, channel);
         pWifiConfProp->discoveryChannel = (int)channel;
-        g_SCProperties.discoveryChannel = channel;
+        g_sc_properties.discoveryChannel = channel;
       }
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_BSSID) == 0 &&
           rep->type == OC_REP_STRING) {
           oc_allocate_string(&pWifiConfProp->bssid, oc_string(rep->value.string));
-          oc_allocate_string(&g_SCProperties.bssid, oc_string(rep->value.string));
+          oc_allocate_string(&g_sc_properties.bssid, oc_string(rep->value.string));
         OC_DBG("[User specific property] %s : %s", STR_SC_RSRVD_ES_VENDOR_BSSID,
                oc_string(pWifiConfProp->bssid));
       }
@@ -466,8 +512,10 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
           rep->type == OC_REP_STRING_ARRAY) {
         oc_array_t rep_array = rep->value.array;
         int dimensions = (int)oc_string_array_get_allocated_size(rep_array);
+        if(oc_string_array_get_allocated_size(g_sc_properties.location) > 0)
+          oc_free_string_array(&g_sc_properties.location);
         oc_new_string_array(&pDevConfProp->location, dimensions);
-        oc_new_string_array(&g_SCProperties.location, dimensions);
+        oc_new_string_array(&g_sc_properties.location, dimensions);
 
         uint8_t i;
         for (i = 0; i < dimensions; i++) {
@@ -475,7 +523,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
             pDevConfProp->location,
             oc_string_array_get_item(rep->value.array, i));
           oc_string_array_add_item(
-            g_SCProperties.location,
+            g_sc_properties.location,
             oc_string_array_get_item(rep->value.array, i));
           OC_DBG("[User specific property] %s : %s",
                  STR_SC_RSRVD_ES_VENDOR_LOCATION,
@@ -489,41 +537,41 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
                  STR_SC_RSRVD_ES_VENDOR_REGISTER_MOBILE_DEV) == 0 &&
           rep->type == OC_REP_STRING) {
           oc_allocate_string(&pDevConfProp->regMobileDev, oc_string(rep->value.string));
-          oc_allocate_string(&g_SCProperties.regMobileDev, oc_string(rep->value.string));
+          oc_allocate_string(&g_sc_properties.regMobileDev, oc_string(rep->value.string));
         OC_DBG("pDevConfProp.regMobileDev %s",
-               oc_string(g_SCProperties.regMobileDev));
+               oc_string(g_sc_properties.regMobileDev));
       }
 
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_COUNTRY) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->country, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.country, oc_string(rep->value.string));
-        OC_DBG("pDevConfProp.country %s", oc_string(g_SCProperties.country));
+        oc_allocate_string(&g_sc_properties.country, oc_string(rep->value.string));
+        OC_DBG("pDevConfProp.country %s", oc_string(g_sc_properties.country));
       }
 
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_LANGUAGE) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->language, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.language, oc_string(rep->value.string));
-        OC_DBG("pDevConfProp.language %s", oc_string(g_SCProperties.language));
+        oc_allocate_string(&g_sc_properties.language, oc_string(rep->value.string));
+        OC_DBG("pDevConfProp.language %s", oc_string(g_sc_properties.language));
       }
 
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_GPSLOCATION) ==
             0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->gpsLocation, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.gpsLocation, oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.gpsLocation, oc_string(rep->value.string));
         OC_DBG("pDevConfProp.gpsLocation %s",
-               oc_string(g_SCProperties.gpsLocation));
+               oc_string(g_sc_properties.gpsLocation));
       }
 
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_UTC_DATE_TIME) ==
             0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->utcDateTime, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.utcDateTime, oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.utcDateTime, oc_string(rep->value.string));
         OC_DBG("pDevConfProp.utcDateTime %s",
-               oc_string(g_SCProperties.utcDateTime));
+               oc_string(g_sc_properties.utcDateTime));
       }
 
       if (strcmp(oc_string(rep->name),
@@ -531,17 +579,17 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->regionalDateTime,
                       oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.regionalDateTime,
+        oc_allocate_string(&g_sc_properties.regionalDateTime,
                       oc_string(rep->value.string));
         OC_DBG("pDevConfProp.regionalDateTime %s",
-               oc_string(g_SCProperties.regionalDateTime));
+               oc_string(g_sc_properties.regionalDateTime));
       }
 
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_SSO_LIST) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pDevConfProp->ssoList, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.ssoList, oc_string(rep->value.string));
-        OC_DBG("pDevConfProp.ssoList %s", oc_string(g_SCProperties.ssoList));
+        oc_allocate_string(&g_sc_properties.ssoList, oc_string(rep->value.string));
+        OC_DBG("pDevConfProp.ssoList %s", oc_string(g_sc_properties.ssoList));
       }
       rep = rep->next;
     }
@@ -564,7 +612,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_CLIENTID) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pCloudProp->clientID, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.clientID, oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.clientID, oc_string(rep->value.string));
         OC_DBG("[User specific property] %s : %s",
                STR_SC_RSRVD_ES_VENDOR_CLIENTID,
                oc_string(pCloudProp->clientID));
@@ -574,7 +622,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_AAC) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pCloudProp->aac, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.aac, oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.aac, oc_string(rep->value.string));
         OC_DBG("[User specific property] %s : %s", STR_SC_RSRVD_ES_VENDOR_AAC,
                oc_string(pCloudProp->aac));
       }
@@ -583,7 +631,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
       if (strcmp(oc_string(rep->name), STR_SC_RSRVD_ES_VENDOR_UID) == 0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pCloudProp->uid, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.uid, oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.uid, oc_string(rep->value.string));
         OC_DBG("[User specific property] %s : %s", STR_SC_RSRVD_ES_VENDOR_UID,
                oc_string(pCloudProp->uid));
       }
@@ -593,7 +641,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
             0 &&
           rep->type == OC_REP_STRING) {
         oc_allocate_string(&pCloudProp->refreshToken, oc_string(rep->value.string));
-        oc_allocate_string(&g_SCProperties.refreshToken,oc_string(rep->value.string));
+        oc_allocate_string(&g_sc_properties.refreshToken,oc_string(rep->value.string));
         OC_DBG("[User specific property] %s : %s",
                STR_SC_RSRVD_ES_VENDOR_REFRESH_TOKEN,
                oc_string(pCloudProp->refreshToken));
@@ -609,40 +657,74 @@ void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
 {
   if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_EASYSETUP)) {
     set_custom_property_int(root, SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE,
-                            (int)g_SCProperties.netConnectionState);
+                            (int)g_sc_properties.netConnectionState);
   }
 
   if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_TYPE,
-                            oc_string(g_SCProperties.deviceType));
+                            oc_string(g_sc_properties.deviceType));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_DEVICE_SUBTYPE,
-                            oc_string(g_SCProperties.deviceSubType));
+                            oc_string(g_sc_properties.deviceSubType));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_SET_DEV,
-                            oc_string(g_SCProperties.regSetDev));
+                            oc_string(g_sc_properties.regSetDev));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGISTER_MOBILE_DEV,
-                            oc_string(g_SCProperties.regMobileDev));
+                            oc_string(g_sc_properties.regMobileDev));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_NETWORK_PROV_INFO,
-                            oc_string(g_SCProperties.nwProvInfo));
+                            oc_string(g_sc_properties.nwProvInfo));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_SSO_LIST,
-                            oc_string(g_SCProperties.ssoList));
+                            oc_string(g_sc_properties.ssoList));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_PNP_PIN,
-                            oc_string(g_SCProperties.pnpPin));
+                            oc_string(g_sc_properties.pnpPin));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_MODEL_NUMBER,
-                            oc_string(g_SCProperties.modelNumber));
+                            oc_string(g_sc_properties.modelNumber));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_COUNTRY,
-                            oc_string(g_SCProperties.country));
+                            oc_string(g_sc_properties.country));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_LANGUAGE,
-                            oc_string(g_SCProperties.language));
+                            oc_string(g_sc_properties.language));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_GPSLOCATION,
-                            oc_string(g_SCProperties.gpsLocation));
+                            oc_string(g_sc_properties.gpsLocation));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_UTC_DATE_TIME,
-                            oc_string(g_SCProperties.utcDateTime));
+                            oc_string(g_sc_properties.utcDateTime));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME,
-                            oc_string(g_SCProperties.regionalDateTime));
+                            oc_string(g_sc_properties.regionalDateTime));
     set_custom_property_str(root, SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION,
-                            oc_string(g_SCProperties.esProtocolVersion));
+                            oc_string(g_sc_properties.esProtocolVersion));
   }
 
   write_tnc_data(payload, resourceType);
   write_wifi_data(payload, resourceType);
+}
+
+void FreeUserdataCb(void *userdata, char* resourceType){
+
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
+    sc_dev_conf_properties *pDevProp = (sc_dev_conf_properties *)(userdata);
+    es_free_property(pDevProp->account);
+    es_free_property(pDevProp->country);
+    es_free_property(pDevProp->gpsLocation);
+    es_free_property(pDevProp->language);
+    if(oc_string_array_get_allocated_size(pDevProp->location) > 0)
+      oc_free_string_array(&pDevProp->location);
+    es_free_property(pDevProp->modelNumber);
+    es_free_property(pDevProp->regionalDateTime);
+    es_free_property(pDevProp->regMobileDev);
+    es_free_property(pDevProp->ssoList);
+    es_free_property(pDevProp->utcDateTime);
+    es_free_property(pDevProp->scTnCInfo.header);
+    es_free_property(pDevProp->scTnCInfo.version);
+  }
+
+  if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)){
+    sc_coap_cloud_server_conf_properties *pCloudProp = (sc_coap_cloud_server_conf_properties *)(userdata);
+    es_free_property(pCloudProp->aac);
+    es_free_property(pCloudProp->clientID);
+    es_free_property(pCloudProp->refreshToken);
+    es_free_property(pCloudProp->tncResult);
+    es_free_property(pCloudProp->uid);
+  }
+
+  if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF)){
+    sc_wifi_conf_properties *pWifiProp = (sc_wifi_conf_properties *)(userdata);
+    es_free_property(pWifiProp->bssid);
+  }
 }

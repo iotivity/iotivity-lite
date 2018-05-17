@@ -245,6 +245,9 @@ es_terminate_enrollee()
     return ES_ERROR;
   }
 
+  if(oc_string(g_es_device_property.DevConf.device_name))
+    oc_free_string(&g_es_device_property.DevConf.device_name);
+
   OC_DBG("success");
   return ES_OK;
 }
@@ -264,3 +267,19 @@ es_set_callback_for_userdata(es_read_userdata_cb readcb,
   OC_DBG("out");
   return ES_OK;
 }
+
+es_result_e
+es_set_callback_for_property_deinit( es_free_userdata_cb freecb)
+{
+  OC_DBG("in");
+
+  if (!freecb ) {
+    OC_ERR("callback is Null");
+    return ES_ERROR;
+  }
+
+  set_callback_for_property_deinit(freecb);
+  OC_DBG("out");
+  return ES_OK;
+}
+
