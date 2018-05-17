@@ -16,31 +16,42 @@
  *
  ****************************************************************************/
 
-#ifndef ST_CLOUD_ACCESS_H
-#define ST_CLOUD_ACCESS_H
+#ifndef ST_STORE_H
+#define ST_STORE_H
 
-#include "cloud_access.h"
-#include "st_store.h"
+#include "oc_endpoint.h"
+#include "oc_helpers.h"
 
-typedef enum {
-  CLOUD_ACCESS_INITIALIZE,
-  CLOUD_ACCESS_SIGNED_UP,
-  CLOUD_ACCESS_SIGNED_IN,
-  CLOUD_ACCESS_PUBLISHED,
-  CLOUD_ACCESS_FINISH,
-  CLOUD_ACCESS_FAIL,
-  CLOUD_ACCESS_DISCONNECTED,
-  CLOUD_ACCESS_RE_CONNECTING
-} st_cloud_access_status_t;
+// typedef struct {
+//   oc_string_t device_name;
+//   oc_string_t manufactuarer_name;
+//   oc_string_t model_number;
+//   oc_string_t vendor_id;
+// } st_device_store_t;
 
-typedef void (*st_cloud_access_cb_t)(st_cloud_access_status_t status);
+typedef struct
+{
+  oc_string_t ssid;
+  oc_string_t pwd;
+} st_ap_store_t;
 
-int st_cloud_access_start(st_store_t *cloud_info, oc_link_t *publish_resources,
-                          int device_index, st_cloud_access_cb_t cb);
-void st_cloud_access_stop(int device_index);
+typedef struct
+{
+  oc_string_t ci_server;
+  oc_string_t auth_provider;
+  oc_string_t uid;
+  oc_string_t access_token;
+} st_cloud_store_t;
 
-st_cloud_access_status_t get_cloud_access_status(int device_index);
+typedef struct
+{
+  bool status;
+  // st_device_store_t device;
+  st_ap_store_t accesspoint;
+  st_cloud_store_t cloudinfo;
+} st_store_t;
 
-int st_cloud_access_check_connection(const char *ci_server);
+int st_load(void);
+void st_dump(void);
 
-#endif /* ST_CLOUD_ACCESS_H */
+#endif /* ST_STORE_H */

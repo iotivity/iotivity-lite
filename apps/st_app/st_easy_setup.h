@@ -21,6 +21,7 @@
 
 #include "easysetup.h"
 #include "samsung/sc_easysetup.h"
+#include "st_store.h"
 
 typedef enum {
   EASY_SETUP_INITIALIZE,
@@ -36,7 +37,10 @@ int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
 
 st_easy_setup_status_t get_easy_setup_status(void);
-es_coap_cloud_conf_data *get_cloud_informations(void);
-sc_coap_cloud_server_conf_properties *get_st_cloud_informations(void);
+st_store_t *get_cloud_informations(void);
+
+int st_decode_store_info(oc_rep_t *rep);
+void st_encode_store_info(void);
+void st_set_default_store_info(void);
 
 #endif /* ST_EASY_SETUP_H */
