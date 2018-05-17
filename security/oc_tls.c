@@ -14,6 +14,10 @@
 // limitations under the License.
 */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -27,6 +31,7 @@
 #include "mbedtls/ssl_cookie.h"
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
+#include "mbedtls/oid.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
 #include "mbedtls/error.h"
@@ -957,6 +962,40 @@ oc_tls_connected(oc_endpoint_t *endpoint)
   return false;
 }
 
+#define UUID_PREFIX "uuid:"
+#define UUID_STRING_SIZE (37)
+#define UUID_SIZE (16)
+
+int
+oc_convert_string_to_uuid(const char uuidString[UUID_STRING_SIZE],
+                                          uint8_t uuid[UUID_SIZE]) {
+  if(NULL == uuidString || NULL == uuid) {
+    OC_DBG("oc_convert_string_to_uuid: invalid parameter");
+    return 1;
+  }
+
+  size_t urnIdx = 0;
+  size_t uuidIdx = 0;
+  size_t strUuidLen = 0;
+  char convertedUuid[UUID_SIZE * 2] = {0};
+
+  strUuidLen = strlen(uuidString);
+  if((UUID_STRING_SIZE - 1) == strUuidLen) {
+    for(uuidIdx=0, urnIdx=0; uuidIdx < UUID_SIZE ; uuidIdx++, urnIdx+=2) {
+      if(*(uuidString + urnIdx) == '-') {
+        urnIdx++;
+      }
+      sscanf(uuidString + urnIdx, "%2hhx", &convertedUuid[uuidIdx]);
+    }
+  }
+  else {
+    OC_DBG("oc_convert_string_to_uuid: unexpected string length");
+    return 1;
+  }
+  memcpy(uuid, convertedUuid, UUID_SIZE);
+  return 0;
+}
+
 static void
 read_application_data(oc_tls_peer_t *peer)
 {
@@ -1006,6 +1045,56 @@ read_application_data(oc_tls_peer_t *peer)
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
     if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
+      int selectedCipher = peer->ssl_ctx.session->ciphersuite;
+      OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]", selectedCipher);
+      if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 != selectedCipher &&
+          MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 != selectedCipher)
+      {
+        const mbedtls_x509_crt * peerCert = mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
+        const mbedtls_x509_name * name = NULL;
+        if (NULL == peerCert) {
+          OC_DBG("oc_tls: failed to retrieve cert");
+        }
+        else {
+          /* Find the CN component of the subject name. */
+          for (name = &peerCert->subject; NULL != name; name = name->next) {
+            if (name->oid.p &&
+               (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_CN)) &&
+               (0 == memcmp(MBEDTLS_OID_AT_CN, name->oid.p, name->oid.len))) {
+              break;
+            }
+          }
+        }
+        if (NULL == name) {
+          OC_DBG("oc_tls: no CN RDN found in subject name");
+        }
+        else {
+          const size_t uuidBufLen = UUID_STRING_SIZE - 1;
+          char uuid[UUID_STRING_SIZE] = { 0 };
+          const unsigned char * uuidPos = NULL;
+          uuidPos = (const unsigned char*)memmem(name->val.p, name->val.len,
+                 UUID_PREFIX, sizeof(UUID_PREFIX) - 1);
+          /* If UUID_PREFIX is present, ensure there's enough data for the prefix plus an entire
+           * UUID, to make sure we don't read past the end of the buffer.
+           */
+          if ((NULL != uuidPos) &&
+             (name->val.len >= ((uuidPos - name->val.p) + (sizeof(UUID_PREFIX) - 1) + uuidBufLen))) {
+            memcpy(uuid, uuidPos + sizeof(UUID_PREFIX) - 1, uuidBufLen);
+            OC_DBG("oc_tls: certificate uuid string: %s", uuid);
+            ret = oc_convert_string_to_uuid(uuid, /*peer->sep.identity.id*/peer->uuid.id);
+            if (ret != 0) {
+              OC_DBG("oc_tls: failed to convert subject");
+            }
+          }
+          else {
+            OC_DBG("oc_tls: uuid not found");
+          }
+        }
+      }
+      else
+      {
+        /* No public key information for non-certificate-using ciphersuites. */
+      }
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
     }
 #ifdef OC_CLIENT
