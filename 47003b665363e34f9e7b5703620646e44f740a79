@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_42eeb5ed",
+        "filename": "port/linux/memory_profile.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-17T05:29:17Z",
+      "side": 1,
+      "message": "I hope  both stack and heap are enable.\nTherefore I\u0027m suggesting \nvalgrind --tool\u003dmassif --time-unit\u003dB --stacks\u003dyes --heap\u003dyes ./$1",
+      "revId": "47003b665363e34f9e7b5703620646e44f740a79",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a2ba21df",
+        "filename": "port/linux/memory_profile.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-17T05:29:17Z",
+      "side": 1,
+      "message": "Can you run twice?\nthe first one is using valgrind\n  in this case,  MEMTRACE should be 0\n\nthe second one is using memtrace.\n after making app by   make MEMTRACE\u003d1 \nthen captured log when app is finished\nit shows unreachable memory with the address and function name",
+      "revId": "47003b665363e34f9e7b5703620646e44f740a79",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_82bf1dd0",
+        "filename": "port/linux/memory_profile.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-17T05:29:17Z",
+      "side": 1,
+      "message": "please remove whitespace",
+      "revId": "47003b665363e34f9e7b5703620646e44f740a79",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
