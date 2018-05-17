@@ -42,6 +42,7 @@ static const char *pnpPin = "pinNumber";
 static const char *modelNumber = "Model Number";
 static const char *esProtocolVersion = "2.0";
 
+#define  es_free_property(property) if(oc_string_len(property) > 0) oc_free_string(&property);
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
@@ -61,6 +62,30 @@ static sc_properties g_SCProperties ;
 
 static provisioning_info_resource g_provisioninginfo_resource;
 
+static void
+deinitialize_properties(void)
+{
+  int target_size;
+// SC Properties
+  es_free_property(g_SCProperties.deviceSubType);
+  es_free_property(g_SCProperties.deviceType);
+  es_free_property(g_SCProperties.esProtocolVersion);
+  es_free_property(g_SCProperties.pnpPin);
+  es_free_property(g_SCProperties.modelNumber);
+  es_free_property(g_SCProperties.nwProvInfo);
+  es_free_property(g_SCProperties.regSetDev);
+
+// Provision Info Properties
+  es_free_property(g_provisioninginfo_resource.easysetupdi);
+  target_size=g_provisioninginfo_resource.targets_size;
+  if(target_size > 0){
+    for (int i=0;i<target_size;i++){
+      es_free_property(g_provisioninginfo_resource.targets[i].targetDi);
+      es_free_property(g_provisioninginfo_resource.targets[i].targetRt);
+    }
+    free(g_provisioninginfo_resource.targets);
+  }
+}
 void SetProvInfo()
 {
   // Set prov info properties
@@ -317,7 +342,7 @@ void StartEasySetup()
     printf("[ES App] ESInitEnrollee Success\n");
 
     // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
+    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb,FreeUserdataCb);
     printf("[ES App] StartEasySetup OUT\n");
 }
 
@@ -356,6 +381,8 @@ void SetDeviceInfo()
     if (set_sc_properties(&g_SCProperties) == ES_ERROR)
       printf("SetSCProperties Error\n");
 
+    oc_free_string(&deviceProperty.DevConf.device_name);
+
     printf("[ES App] SetDeviceInfo OUT\n");
 }
 
@@ -371,6 +398,8 @@ void StopEasySetup()
         printf("ESTerminateEnrollee Failed!!\n");
         return;
     }
+
+    deinitialize_properties();
 
     printf("[ES App] StopEasySetup OUT\n");
 }

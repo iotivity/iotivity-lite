@@ -34,6 +34,7 @@ es_dev_conf_cb g_dev_conf_res_event_cb = NULL;
 
 es_read_userdata_cb g_read_user_data_cb = NULL;
 es_write_userdata_cb g_write_user_data_cb = NULL;
+es_free_userdata_cb g_free_user_data_cb = NULL;
 
 void
 oc_allocate_string(oc_string_t *desString, char *srcString){
@@ -138,6 +139,8 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
   es_free_property(wifi_data.ssid);
   es_free_property(wifi_data.pwd);
   if(wifi_data.userdata != NULL){
+     if(g_free_user_data_cb)
+      g_free_user_data_cb(wifi_data.userdata,OC_RSRVD_ES_RES_TYPE_WIFICONF);
     free(wifi_data.userdata);
   }
 
@@ -239,6 +242,8 @@ update_coap_cloud_conf_resource(oc_request_t *request,
   es_free_property(cloud_data.auth_provider);
   es_free_property(cloud_data.ci_server);
   if(cloud_data.userdata != NULL){
+    if(g_free_user_data_cb)
+      g_free_user_data_cb(cloud_data.userdata,OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF);
    free(cloud_data.userdata);
   }
 
@@ -274,6 +279,8 @@ update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
   }
 
   if(dev_conf_data.userdata != NULL){
+    if(g_free_user_data_cb)
+      g_free_user_data_cb(dev_conf_data.userdata,OC_RSRVD_ES_RES_TYPE_DEVCONF);
     free(dev_conf_data.userdata);
   }
 
@@ -432,7 +439,7 @@ construct_response_of_devconf(void)
 
 es_result_e
 set_callback_for_userdata(es_read_userdata_cb readcb,
-                          es_write_userdata_cb writecb)
+                          es_write_userdata_cb writecb , es_free_userdata_cb freecb)
 {
   OC_DBG("in");
   if (!readcb && !writecb) {
@@ -442,6 +449,7 @@ set_callback_for_userdata(es_read_userdata_cb readcb,
 
   g_read_user_data_cb = readcb;
   g_write_user_data_cb = writecb;
+  g_free_user_data_cb = freecb;
   OC_DBG("out");
   return ES_OK;
 }

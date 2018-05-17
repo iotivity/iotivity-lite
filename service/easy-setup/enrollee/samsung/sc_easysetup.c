@@ -90,6 +90,37 @@ static void write_wifi_data(oc_rep_t* payload, char* resourceType);
   } while (0)
 
 static void
+initialize_prov_info_properties(const provisioning_info_resource *prov_info)
+{
+  int target_size=prov_info->targets_size;
+  if(target_size > 0){
+    g_provisioninginfo_resource.targets = (provisioning_info_targets *)malloc(target_size* sizeof(provisioning_info_targets));
+    for (int i=0;i<target_size;i++){
+      custom_oc_string_dup(g_provisioninginfo_resource.targets[i].targetDi, prov_info->targets[i].targetDi);
+      custom_oc_string_dup(g_provisioninginfo_resource.targets[i].targetRt, prov_info->targets[i].targetRt);
+      g_provisioninginfo_resource.targets[i].published = false;
+    }
+  }
+  g_provisioninginfo_resource.targets_size=prov_info->targets_size;
+  g_provisioninginfo_resource.owned = prov_info->owned;
+  custom_oc_string_dup(g_provisioninginfo_resource.easysetupdi, prov_info->easysetupdi);
+}
+
+static void
+deinitialize_prov_info_properties()
+{
+  int target_size=g_provisioninginfo_resource.targets_size;
+  if(target_size > 0){
+    for (int i=0;i<target_size;i++){
+      es_free_property(g_provisioninginfo_resource.targets[i].targetDi);
+      es_free_property(g_provisioninginfo_resource.targets[i].targetRt);
+    }
+    free(g_provisioninginfo_resource.targets);
+  }
+  es_free_property(g_provisioninginfo_resource.easysetupdi);
+}
+
+static void
 initialize_sc_properties(const sc_properties *prop)
 {
   // Initialize samsung specific properlties
@@ -103,7 +134,6 @@ initialize_sc_properties(const sc_properties *prop)
   custom_oc_string_dup(g_SCProperties.esProtocolVersion, prop->esProtocolVersion);
   custom_oc_string_dup(g_SCProperties.gpsLocation, prop->gpsLocation);
   custom_oc_string_dup(g_SCProperties.language, prop->language);
-  custom_oc_string_dup(g_SCProperties.location, prop->location);
   custom_oc_string_dup(g_SCProperties.modelNumber, prop->modelNumber);
   custom_oc_string_dup(g_SCProperties.nwProvInfo, prop->nwProvInfo);
   custom_oc_string_dup(g_SCProperties.pnpPin, prop->pnpPin);
@@ -117,6 +147,19 @@ initialize_sc_properties(const sc_properties *prop)
   custom_oc_string_dup(g_SCProperties.utcDateTime, prop->utcDateTime);
   custom_oc_string_dup(g_SCProperties.tncInfo.header, prop->tncInfo.header);
   custom_oc_string_dup(g_SCProperties.tncInfo.version, prop->tncInfo.version);
+
+  if(oc_string_array_get_allocated_size(prop->location) > 0)
+  {
+    int size=oc_string_array_get_allocated_size(prop->location);
+    oc_new_string_array(&g_SCProperties.location, size);
+    uint8_t i;
+    for (i = 0; i < size; i++) {
+      oc_string_array_add_item(
+      g_SCProperties.location,
+      oc_string_array_get_item(prop->location, i));
+    }
+  }
+
 }
 
 static void
@@ -132,7 +175,10 @@ deinitialize_sc_properties(void)
   es_free_property(g_SCProperties.esProtocolVersion);
   es_free_property(g_SCProperties.gpsLocation);
   es_free_property(g_SCProperties.language);
-  es_free_property(g_SCProperties.location);
+  es_free_property(g_SCProperties.pnpPin);
+  if(oc_string_array_get_allocated_size(g_SCProperties.location) > 0){
+    OC_DBG("[MEM_TEST]FREEING ");
+    oc_free_string_array(&g_SCProperties.location);}
   es_free_property(g_SCProperties.modelNumber);
   es_free_property(g_SCProperties.nwProvInfo);
   es_free_property(g_SCProperties.refreshToken);
@@ -204,7 +250,7 @@ es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *pr
 {
     if(prop != NULL)
     {
-        memcpy(&g_provisioninginfo_resource, prop, sizeof(provisioning_info_resource));
+        initialize_prov_info_properties(prop);
         OC_DBG("SetSCProperties OUT");
         return ES_OK;
     }
@@ -255,6 +301,7 @@ es_result_e reset_sc_properties(const sc_properties *prop)
     if(prop != NULL)
     {
         deinitialize_sc_properties();
+        deinitialize_prov_info_properties();
         OC_DBG("ResetSCProperties OUT");
         return ES_OK;
     }
@@ -466,9 +513,11 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
           rep->type == OC_REP_STRING_ARRAY) {
         oc_array_t rep_array = rep->value.array;
         int dimensions = (int)oc_string_array_get_allocated_size(rep_array);
+        if(oc_string_array_get_allocated_size(g_SCProperties.location) > 0)
+          oc_free_string_array(&g_SCProperties.location);
         oc_new_string_array(&pDevConfProp->location, dimensions);
         oc_new_string_array(&g_SCProperties.location, dimensions);
-
+        OC_DBG("[MEM_TEST]ALLOCATING %d",dimensions);
         uint8_t i;
         for (i = 0; i < dimensions; i++) {
           oc_string_array_add_item(
@@ -645,4 +694,39 @@ void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
 
   write_tnc_data(payload, resourceType);
   write_wifi_data(payload, resourceType);
+}
+
+void FreeUserdataCb(void *userdata, char* resourceType){
+
+  if (strstr(resourceType, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
+    sc_dev_conf_properties *pDevProp = (sc_dev_conf_properties *)(userdata);
+    es_free_property(pDevProp->account);
+    es_free_property(pDevProp->country);
+    es_free_property(pDevProp->gpsLocation);
+    es_free_property(pDevProp->language);
+    if(oc_string_array_get_allocated_size(pDevProp->location) > 0){
+      OC_DBG("[MEM_TEST]FREEING ");
+      oc_free_string_array(&pDevProp->location);}
+    es_free_property(pDevProp->modelNumber);
+    es_free_property(pDevProp->regionalDateTime);
+    es_free_property(pDevProp->regMobileDev);
+    es_free_property(pDevProp->ssoList);
+    es_free_property(pDevProp->utcDateTime);
+    es_free_property(pDevProp->scTnCInfo.header);
+    es_free_property(pDevProp->scTnCInfo.version);
+  }
+
+  if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)){
+    sc_coap_cloud_server_conf_properties *pCloudProp = (sc_coap_cloud_server_conf_properties *)(userdata);
+    es_free_property(pCloudProp->aac);
+    es_free_property(pCloudProp->clientID);
+    es_free_property(pCloudProp->refreshToken);
+    es_free_property(pCloudProp->tncResult);
+    es_free_property(pCloudProp->uid);
+  }
+
+  if(strstr(resourceType, OC_RSRVD_ES_RES_TYPE_WIFICONF)){
+    sc_wifi_conf_properties *pWifiProp = (sc_wifi_conf_properties *)(userdata);
+    es_free_property(pWifiProp->bssid);
+  }
 }
