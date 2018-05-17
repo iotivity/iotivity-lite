@@ -15,8 +15,8 @@
 */
 
 #include "oc_session_events.h"
+#include "oc_api.h"
 #include "oc_buffer.h"
-#include "oc_events.h"
 #include "oc_signal_event_loop.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
@@ -26,31 +26,47 @@
 #include "messaging/coap/observe.h"
 #endif /* OC_SERVER */
 
+#define SESSION_STATE_FREE_DELAY_SECS (3)
+
 #ifdef OC_TCP
 OC_LIST(session_start_events);
 OC_LIST(session_end_events);
+
+static oc_event_callback_retval_t
+free_session_state_delayed(void *data)
+{
+  (void)data;
+  oc_network_event_handler_mutex_lock();
+  oc_endpoint_t *session_event =
+    (oc_endpoint_t *)oc_list_pop(session_end_events);
+  while (session_event != NULL) {
+    oc_handle_session(session_event, OC_SESSION_DISCONNECTED);
+    oc_free_endpoint(session_event);
+    session_event = oc_list_pop(session_end_events);
+  }
+  oc_network_event_handler_mutex_unlock();
+  return OC_EVENT_DONE;
+}
 
 static void
 oc_process_session_event(void)
 {
   oc_network_event_handler_mutex_lock();
+
   oc_endpoint_t *session_event =
     (oc_endpoint_t *)oc_list_pop(session_start_events);
+
   while (session_event != NULL) {
-    if (oc_process_post(&oc_session_events, oc_events[SESSION_CONNECTED],
-                        session_event) == OC_PROCESS_ERR_FULL) {
-      oc_free_endpoint(session_event);
-    }
+    oc_handle_session(session_event, OC_SESSION_CONNECTED);
+    oc_free_endpoint(session_event);
     session_event = oc_list_pop(session_start_events);
   }
-  session_event = (oc_endpoint_t *)oc_list_pop(session_end_events);
-  while (session_event != NULL) {
-    if (oc_process_post(&oc_session_events, oc_events[SESSION_DISCONNECTED],
-                        session_event) == OC_PROCESS_ERR_FULL) {
-      oc_free_endpoint(session_event);
-    }
-    session_event = oc_list_pop(session_end_events);
+
+  if (oc_list_length(session_end_events) > 0) {
+    oc_set_delayed_callback(NULL, &free_session_state_delayed,
+                            SESSION_STATE_FREE_DELAY_SECS);
   }
+
   oc_network_event_handler_mutex_unlock();
 }
 
@@ -61,14 +77,8 @@ OC_PROCESS_THREAD(oc_session_events, ev, data) {
   OC_PROCESS_BEGIN();
   while (oc_process_is_running(&(oc_session_events))) {
     OC_PROCESS_YIELD();
-    if (ev == oc_events[SESSION_CONNECTED]) {
-      oc_handle_session(data, OC_SESSION_CONNECTED);
-      oc_free_endpoint(data);
-    } else if (ev == oc_events[SESSION_DISCONNECTED]) {
-      oc_handle_session(data, OC_SESSION_DISCONNECTED);
-      oc_free_endpoint(data);
-    }
   }
+  free_session_state_delayed(NULL);
   OC_PROCESS_END();
 }
 
