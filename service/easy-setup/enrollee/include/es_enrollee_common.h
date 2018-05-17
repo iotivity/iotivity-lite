@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+#define  es_free_property(property) if(oc_string_len(property) > 0) oc_free_string(&property);
+
 /**
  * @brief Data structure for connect request from Mediator.
  */

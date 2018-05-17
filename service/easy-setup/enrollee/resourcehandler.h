@@ -31,7 +31,6 @@ typedef void (*es_wifi_conf_cb)(es_result_e, es_wifi_conf_data *);
 typedef void (*es_coap_cloud_conf_cb)(es_result_e, es_coap_cloud_conf_data *);
 typedef void (*es_dev_conf_cb)(es_result_e, es_dev_conf_data *);
 
-#define  es_free_property(property) if(oc_string_len(property) > 0) oc_free_string(&property);
 #define set_custom_property_str(object, key, value)                            \
   if (value)                                                                   \
   oc_rep_set_text_string(object, key, value)
@@ -94,6 +93,7 @@ void register_connect_request_event_callback(es_connect_request_cb cb);
 void unregister_resource_event_callback(void);
 es_result_e set_callback_for_userdata(es_read_userdata_cb readcb,
                                       es_write_userdata_cb writecb);
+es_result_e set_callback_for_property_deinit(es_free_userdata_cb freecb);
 void oc_allocate_string(oc_string_t *desString, char *srcString);
 
 #ifdef __cplusplus
