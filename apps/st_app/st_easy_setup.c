@@ -17,8 +17,10 @@
  ****************************************************************************/
 
 #include "st_easy_setup.h"
+#include "oc_helpers.h"
 #include "oc_network_monitor.h"
 #include "st_port.h"
+#include "st_store.h"
 
 typedef enum {
   ST_EASY_SETUP_DEV_PROV = 1 << 0,
@@ -40,23 +42,18 @@ static st_soft_ap_t g_soft_ap;
 
 static st_easy_setup_cb_t g_callback = NULL;
 
+static st_store_t g_store_info;
+
 static st_easy_setup_status_t g_easy_setup_status = EASY_SETUP_INITIALIZE;
 
-static es_coap_cloud_conf_data g_cloud_info;
-
-static sc_coap_cloud_server_conf_properties g_st_cloud_info;
-
-static bool is_have_st_cloud_info = false;
-
 static st_prov_step_t g_prov_step_check;
-
-static es_wifi_conf_data g_wifi_conf_data;
 
 // static void soft_ap_handler(void);
 static void wifi_prov_cb(es_wifi_conf_data *event_data);
 static void dev_conf_prov_cb(es_dev_conf_data *event_data);
 static void cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data);
 static bool is_easy_setup_step_done(void);
+static oc_event_callback_retval_t easy_setup_finish_handler(void *data);
 
 static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                   .dev_conf_prov_cb =
@@ -73,6 +70,24 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
     return -1;
   }
 
+  g_callback = cb;
+
+  if (st_load() < 0) {
+    st_print_log("[Easy_Setup] Could not load store informations.\n");
+    return -1;
+  }
+
+  if (g_store_info.status == true) {
+    st_print_log("[Easy_Setup] Easy Setup is already done.\n");
+    g_prov_step_check |= ST_EASY_SETUP_DEV_PROV | ST_EASY_SETUP_WIFI_PROV |
+                         ST_EASY_SETUP_CLOUD_PROV;
+    oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
+    _oc_signal_event_loop();
+    return 0;
+  }
+
+  g_store_info.status = false;
+
   es_connect_type resourcemMask =
     ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
   if (es_init_enrollee(g_is_secured, resourcemMask, g_callbacks) != ES_OK) {
@@ -80,11 +95,6 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
     return -1;
   }
 
-  g_callback = cb;
-  memset(&g_wifi_conf_data, 0, sizeof(es_wifi_conf_data));
-  memset(&g_cloud_info, 0, sizeof(es_coap_cloud_conf_data));
-  memset(&g_st_cloud_info, 0, sizeof(sc_coap_cloud_server_conf_properties));
-  is_have_st_cloud_info = false;
   g_easy_setup_status = EASY_SETUP_PROGRESSING;
   st_print_log("[Easy_Setup] es_init_enrollee Success\n");
 
@@ -118,6 +128,7 @@ st_easy_setup_stop(void)
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
   g_prov_step_check = 0;
   es_set_state(ES_STATE_INIT);
+  st_set_default_store_info();
 
   st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
 }
@@ -128,23 +139,168 @@ get_easy_setup_status(void)
   return g_easy_setup_status;
 }
 
-es_coap_cloud_conf_data *
+st_store_t *
 get_cloud_informations(void)
 {
   if (g_easy_setup_status != EASY_SETUP_FINISH)
     return NULL;
 
-  return &g_cloud_info;
+  return &g_store_info;
 }
 
-sc_coap_cloud_server_conf_properties *
-get_st_cloud_informations(void)
+static int
+st_decode_ap_info(oc_rep_t *rep)
 {
-  if (g_easy_setup_status != EASY_SETUP_FINISH ||
-      is_have_st_cloud_info == false)
-    return NULL;
+  oc_rep_t *t = rep;
+  int len = 0;
 
-  return &g_st_cloud_info;
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_STRING:
+      if (len == 4 && memcmp(oc_string(t->name), "ssid", 4) == 0) {
+        oc_new_string(&g_store_info.accesspoint.ssid,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 3 && memcmp(oc_string(t->name), "pwd", 3) == 0) {
+        oc_new_string(&g_store_info.accesspoint.pwd, oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+static int
+st_decode_cloud_access_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_STRING:
+      if (len == 9 && memcmp(oc_string(t->name), "ci_server", 9) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.ci_server,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 13 &&
+                 memcmp(oc_string(t->name), "auth_provider", 13) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.auth_provider,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 3 && memcmp(oc_string(t->name), "uid", 3) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.uid, oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 12 &&
+                 memcmp(oc_string(t->name), "access_token", 12) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.access_token,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+int
+st_decode_store_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_BOOL:
+      if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
+        g_store_info.status = t->value.boolean;
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    case OC_REP_OBJECT:
+      if (len == 11 && memcmp(oc_string(t->name), "accesspoint", 11) == 0) {
+        if (st_decode_ap_info(t->value.object) != 0)
+          return -1;
+      } else if (len == 9 && memcmp(oc_string(t->name), "cloudinfo", 9) == 0) {
+        if (st_decode_cloud_access_info(t->value.object) != 0)
+          return -1;
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s, %d", oc_string(t->name), t->type);
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+void
+st_encode_store_info(void)
+{
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, status, g_store_info.status);
+  oc_rep_set_object(root, accesspoint);
+  oc_rep_set_text_string(accesspoint, ssid,
+                         oc_string(g_store_info.accesspoint.ssid));
+  oc_rep_set_text_string(accesspoint, pwd,
+                         oc_string(g_store_info.accesspoint.pwd));
+  oc_rep_close_object(root, accesspoint);
+  oc_rep_set_object(root, cloudinfo);
+  oc_rep_set_text_string(cloudinfo, ci_server,
+                         oc_string(g_store_info.cloudinfo.ci_server));
+  oc_rep_set_text_string(cloudinfo, auth_provider,
+                         oc_string(g_store_info.cloudinfo.auth_provider));
+  oc_rep_set_text_string(cloudinfo, uid, oc_string(g_store_info.cloudinfo.uid));
+  oc_rep_set_text_string(cloudinfo, access_token,
+                         oc_string(g_store_info.cloudinfo.access_token));
+  oc_rep_close_object(root, cloudinfo);
+  oc_rep_end_root_object();
+}
+
+void
+st_set_default_store_info(void)
+{
+  g_store_info.status = false;
+  if (oc_string(g_store_info.accesspoint.ssid)) {
+    oc_free_string(&g_store_info.accesspoint.ssid);
+  } else if (oc_string(g_store_info.accesspoint.pwd)) {
+    oc_free_string(&g_store_info.accesspoint.pwd);
+  } else if (oc_string(g_store_info.cloudinfo.ci_server)) {
+    oc_free_string(&g_store_info.cloudinfo.ci_server);
+  } else if (oc_string(g_store_info.cloudinfo.auth_provider)) {
+    oc_free_string(&g_store_info.cloudinfo.auth_provider);
+  } else if (oc_string(g_store_info.cloudinfo.uid)) {
+    oc_free_string(&g_store_info.cloudinfo.uid);
+  } else if (oc_string(g_store_info.cloudinfo.access_token)) {
+    oc_free_string(&g_store_info.cloudinfo.access_token);
+  }
 }
 
 static oc_event_callback_retval_t
@@ -163,18 +319,34 @@ easy_setup_finish_handler(void *data)
   if (is_easy_setup_step_done()) {
     st_print_log("[Easy_Setup] Terminate Soft AP thread.\n");
     st_turn_off_soft_AP(&g_soft_ap);
-    st_connect_wifi(oc_string(g_wifi_conf_data.ssid),
-                    oc_string(g_wifi_conf_data.pwd));
+    st_connect_wifi(oc_string(g_store_info.accesspoint.ssid),
+                    oc_string(g_store_info.accesspoint.pwd));
     es_set_state(ES_STATE_CONNECTED_TO_ENROLLER);
     es_set_error_code(ES_ERRCODE_NO_ERROR);
     g_easy_setup_status = EASY_SETUP_FINISH;
+    g_store_info.status = true;
+    st_dump();
     oc_set_delayed_callback(NULL, callback_handler, 0);
   }
   return OC_EVENT_DONE;
 }
 
 static void
-wifi_prov_cb(es_wifi_conf_data *event_data)
+st_string_copy(oc_string_t *dst, oc_string_t *src)
+{
+  if (oc_string(*dst)) {
+    if (oc_string_len(*dst) == oc_string_len(*src) &&
+        strncmp(oc_string(*dst), oc_string(*src), oc_string_len(*dst)) == 0) {
+      return;
+    } else {
+      oc_free_string(dst);
+    }
+  }
+  oc_new_string(dst, oc_string(*src), oc_string_len(*src));
+}
+
+static void
+wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
 {
   if (g_prov_step_check & ST_EASY_SETUP_WIFI_PROV)
     return;
@@ -183,27 +355,31 @@ wifi_prov_cb(es_wifi_conf_data *event_data)
 
   es_set_state(ES_STATE_CONNECTING_TO_ENROLLER);
 
-  if (event_data == NULL) {
+  if (wifi_prov_data == NULL) {
     st_print_log("[Easy_Setup] es_wifi_conf_data is NULL\n");
     g_easy_setup_status = EASY_SETUP_FAIL;
     oc_set_delayed_callback(NULL, callback_handler, 0);
     return;
   }
 
-  st_print_log("[Easy_Setup] SSID : %s\n", oc_string(event_data->ssid));
-  st_print_log("[Easy_Setup] Password : %s\n", oc_string(event_data->pwd));
-  st_print_log("[Easy_Setup] AuthType : %d\n", event_data->authtype);
-  st_print_log("[Easy_Setup] EncType : %d\n", event_data->enctype);
+  st_print_log("[Easy_Setup] SSID : %s\n", oc_string(wifi_prov_data->ssid));
+  st_print_log("[Easy_Setup] Password : %s\n", oc_string(wifi_prov_data->pwd));
+  st_print_log("[Easy_Setup] AuthType : %d\n", wifi_prov_data->authtype);
+  st_print_log("[Easy_Setup] EncType : %d\n", wifi_prov_data->enctype);
 
-  if (event_data->userdata) {
-    sc_wifi_conf_properties *data = event_data->userdata;
+  if (wifi_prov_data->userdata) {
+    sc_wifi_conf_properties *data = wifi_prov_data->userdata;
     st_print_log("[Easy_Setup] DiscoveryChannel : %d\n",
                  data->discoveryChannel);
   }
 
-  memcpy(&g_wifi_conf_data, event_data, sizeof(es_wifi_conf_data));
-  oc_new_string(&g_wifi_conf_data.ssid,oc_string(event_data->ssid),oc_string_len(event_data->ssid));
-  oc_new_string(&g_wifi_conf_data.pwd,oc_string(event_data->pwd),oc_string_len(event_data->pwd));
+  if (!oc_string(wifi_prov_data->ssid) || !oc_string(wifi_prov_data->pwd)) {
+    st_print_log("[Easy_Setup] wifi provision info is not enough!");
+    return;
+  }
+
+  st_string_copy(&g_store_info.accesspoint.ssid, &wifi_prov_data->ssid);
+  st_string_copy(&g_store_info.accesspoint.pwd, &wifi_prov_data->pwd);
 
   g_prov_step_check |= ST_EASY_SETUP_WIFI_PROV;
   if (is_easy_setup_step_done()) {
@@ -213,20 +389,20 @@ wifi_prov_cb(es_wifi_conf_data *event_data)
 }
 
 static void
-dev_conf_prov_cb(es_dev_conf_data *event_data)
+dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
 {
   if (g_prov_step_check & ST_EASY_SETUP_DEV_PROV)
     return;
 
   st_print_log("[Easy_Setup] dev_conf_prov_cb in\n");
 
-  if (event_data == NULL) {
+  if (dev_prov_data == NULL) {
     st_print_log("[Easy_Setup] es_dev_conf_data is NULL\n");
     return;
   }
 
-  if (event_data->userdata) {
-    sc_dev_conf_properties *data = event_data->userdata;
+  if (dev_prov_data->userdata) {
+    sc_dev_conf_properties *data = dev_prov_data->userdata;
 
     if (!oc_string(data->country))
       return;
@@ -257,52 +433,62 @@ dev_conf_prov_cb(es_dev_conf_data *event_data)
 }
 
 static void
-cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data)
+cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
 {
   if (g_prov_step_check & ST_EASY_SETUP_CLOUD_PROV)
     return;
 
   st_print_log("[Easy_Setup] cloud_conf_prov_cb in\n");
 
-  if (event_data == NULL) {
+  if (cloud_prov_data == NULL) {
     st_print_log("es_coap_cloud_conf_data is NULL\n");
     g_easy_setup_status = EASY_SETUP_FAIL;
     oc_set_delayed_callback(NULL, callback_handler, 0);
     return;
   }
 
-  if (oc_string(event_data->auth_code)) {
+  if (oc_string(cloud_prov_data->auth_code)) {
     st_print_log("[Easy_Setup] AuthCode : %s\n",
-                 oc_string(event_data->auth_code));
+                 oc_string(cloud_prov_data->auth_code));
   }
 
-  if (oc_string(event_data->access_token)) {
+  if (oc_string(cloud_prov_data->access_token)) {
     st_print_log("[Easy_Setup] Access Token : %s\n",
-                 oc_string(event_data->access_token));
+                 oc_string(cloud_prov_data->access_token));
   }
 
-  if (oc_string(event_data->auth_provider)) {
+  if (oc_string(cloud_prov_data->auth_provider)) {
     st_print_log("[Easy_Setup] AuthProvider : %s\n",
-                 oc_string(event_data->auth_provider));
+                 oc_string(cloud_prov_data->auth_provider));
   }
 
-  if (oc_string(event_data->ci_server)) {
+  if (oc_string(cloud_prov_data->ci_server)) {
     st_print_log("[Easy_Setup] CI Server : %s\n",
-                 oc_string(event_data->ci_server));
+                 oc_string(cloud_prov_data->ci_server));
   }
 
-  if (event_data->userdata) {
-    sc_coap_cloud_server_conf_properties *data = event_data->userdata;
+  sc_coap_cloud_server_conf_properties *data = cloud_prov_data->userdata;
+  if (data) {
     st_print_log("[Easy_Setup] ClientID : %s\n", oc_string(data->clientID));
     st_print_log("[Easy_Setup] uid : %s\n", oc_string(data->uid));
     st_print_log("[Easy_Setup] Refresh token : %s\n",
                  oc_string(data->refreshToken));
-    memcpy(&g_st_cloud_info, data,
-           sizeof(sc_coap_cloud_server_conf_properties));
-    is_have_st_cloud_info = true;
   }
 
-  memcpy(&g_cloud_info, event_data, sizeof(es_coap_cloud_conf_data));
+  if (!oc_string(cloud_prov_data->access_token) ||
+      !oc_string(cloud_prov_data->auth_provider) ||
+      !oc_string(cloud_prov_data->ci_server) || !oc_string(data->uid)) {
+    st_print_log("[Easy_Setup] cloud provision info is not enough!");
+    return;
+  }
+
+  st_string_copy(&g_store_info.cloudinfo.access_token,
+                 &cloud_prov_data->access_token);
+  st_string_copy(&g_store_info.cloudinfo.auth_provider,
+                 &cloud_prov_data->auth_provider);
+  st_string_copy(&g_store_info.cloudinfo.ci_server,
+                 &cloud_prov_data->ci_server);
+  st_string_copy(&g_store_info.cloudinfo.uid, &data->uid);
 
   g_prov_step_check |= ST_EASY_SETUP_CLOUD_PROV;
   if (is_easy_setup_step_done()) {

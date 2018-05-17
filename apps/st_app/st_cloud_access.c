@@ -17,7 +17,7 @@
  ****************************************************************************/
 
 #include "st_cloud_access.h"
-#include "cloud_access.h"
+#include "easysetup.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
@@ -55,7 +55,6 @@ typedef struct st_cloud_context
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
-  oc_string_t auth_code;
   oc_link_t *publish_resources;
   uint8_t publish_state;
   int device_index;
@@ -73,10 +72,8 @@ static void session_event_handler(const oc_endpoint_t *endpoint,
 static oc_event_callback_retval_t find_ping(void *data);
 
 int
-st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
-                      sc_coap_cloud_server_conf_properties *st_cloud_info,
-                      oc_link_t *publish_resources, int device_index,
-                      st_cloud_access_cb_t cb)
+st_cloud_access_start(st_store_t *cloud_info, oc_link_t *publish_resources,
+                      int device_index, st_cloud_access_cb_t cb)
 {
   st_print_log("[Cloud_Access] st_cloud_access_start in\n");
   if (!cloud_info || !publish_resources || !cb)
@@ -93,7 +90,8 @@ st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
   context->publish_resources = publish_resources;
 
   oc_string_t ep_str;
-  oc_new_string(&ep_str, oc_string(cloud_info->ci_server), oc_string_len(cloud_info->ci_server));
+  oc_new_string(&ep_str, oc_string(cloud_info->cloudinfo.ci_server),
+                oc_string_len(cloud_info->cloudinfo.ci_server));
 
   if (oc_string_to_endpoint(&ep_str, &context->cloud_ep, NULL) != 0) {
     oc_free_string(&ep_str);
@@ -101,23 +99,21 @@ st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
   }
   oc_free_string(&ep_str);
 
-  oc_new_string(&context->auth_provider, oc_string(cloud_info->auth_provider),
-                oc_string_len(cloud_info->auth_provider));
-  if (oc_string(cloud_info->auth_code)) {
-    oc_new_string(&context->auth_code, oc_string(cloud_info->auth_code),
-                  oc_string_len(cloud_info->auth_code));
+  oc_new_string(&context->auth_provider,
+                oc_string(cloud_info->cloudinfo.auth_provider),
+                oc_string_len(cloud_info->cloudinfo.auth_provider));
+  if (oc_string(cloud_info->cloudinfo.access_token)) {
+    oc_new_string(&context->access_token,
+                  oc_string(cloud_info->cloudinfo.access_token),
+                  oc_string_len(cloud_info->cloudinfo.access_token));
   }
-  if (oc_string(cloud_info->access_token)) {
-    oc_new_string(&context->access_token, oc_string(cloud_info->access_token),
-                  oc_string_len(cloud_info->access_token));
-  }
-  if (st_cloud_info && oc_string(st_cloud_info->uid)) {
-    oc_new_string(&context->uid, oc_string(st_cloud_info->uid),
-                  oc_string_len(st_cloud_info->uid));
+  if (oc_string(cloud_info->cloudinfo.uid)) {
+    oc_new_string(&context->uid, oc_string(cloud_info->cloudinfo.uid),
+                  oc_string_len(cloud_info->cloudinfo.uid));
   }
 
   st_print_log("[Cloud_Access] sign up to %s\n",
-               oc_string(cloud_info->ci_server));
+               oc_string(cloud_info->cloudinfo.ci_server));
   if (!sign_up_process(context)) {
     goto errors;
   }
@@ -159,9 +155,6 @@ st_cloud_access_stop(int device_index)
   }
   if (oc_string_len(context->access_token) > 0) {
     oc_free_string(&context->access_token);
-  }
-  if (oc_string_len(context->auth_code) > 0) {
-    oc_free_string(&context->auth_code);
   }
   oc_memb_free(&st_cloud_context_s, context);
 
@@ -248,17 +241,8 @@ error:
 static bool
 sign_up_process(st_cloud_context_t *context)
 {
-  if (strncmp(oc_string(context->auth_provider), AUTH_PROVIDER_GITHUB,
-              strlen(AUTH_PROVIDER_GITHUB)) == 0) {
-    es_set_state(ES_STATE_REGISTERING_TO_CLOUD);
-
-    if (!oc_sign_up_with_auth(
-          &context->cloud_ep, oc_string(context->auth_provider),
-          oc_string(context->auth_code), 0, sign_up_handler, context)) {
-      goto retry;
-    }
-  } else if (strncmp(oc_string(context->auth_provider), AUTH_PROVIDER_STCLOUD,
-                     strlen(AUTH_PROVIDER_STCLOUD)) == 0) {
+  if (strncmp(oc_string(context->auth_provider), AUTH_PROVIDER_STCLOUD,
+              strlen(AUTH_PROVIDER_STCLOUD)) == 0) {
     es_set_state(ES_STATE_REGISTERING_TO_CLOUD);
     st_print_log("[Cloud_Access] auth_provider : %s\n",
                  oc_string(context->auth_provider));

@@ -24,6 +24,7 @@
 #include "st_cloud_access.h"
 #include "st_easy_setup.h"
 #include "st_port.h"
+#include "st_store.h"
 
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
@@ -518,24 +519,21 @@ st_main_initialize(void)
     return false;
   }
 
-  es_coap_cloud_conf_data *cloud_info = get_cloud_informations();
+  st_store_t *cloud_info = get_cloud_informations();
   if (!cloud_info) {
     st_print_log("could not get cloud informations.\n");
     return false;
   }
 
-  sc_coap_cloud_server_conf_properties *st_cloud_info =
-    get_st_cloud_informations();
-
-  while (st_cloud_access_check_connection(oc_string(cloud_info->ci_server)) !=
-         0) {
+  while (st_cloud_access_check_connection(
+           oc_string(cloud_info->cloudinfo.ci_server)) != 0 &&
+         quit != 1) {
     st_print_log("AP is not connected.\n");
     st_sleep(3);
   }
 
   // cloud access
-  if (st_cloud_access_start(cloud_info, st_cloud_info, publish_res,
-                            switch_resource->device,
+  if (st_cloud_access_start(cloud_info, publish_res, switch_resource->device,
                             cloud_access_handler) != 0) {
     st_print_log("Failed to access cloud!\n");
     return false;
@@ -710,6 +708,9 @@ exit:
   }
   st_easy_setup_stop();
   st_print_log("easy setup stop done\n");
+
+  st_cloud_access_stop(switch_resource->device);
+  st_print_log("cloud access stop done\n");
 
   oc_free_string(&name);
   st_vendor_props_shutdown();
