@@ -114,7 +114,7 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   }
 
   // Set callbacks for Vendor Specific Properties
-  es_set_callback_for_userdata(ReadUserdataCb, WriteUserdataCb);
+  es_set_callback_for_userdata(ReadUserdataCb, WriteUserdataCb, FreeUserdataCb);
   printf("[Easy_Setup] st_easy_setup_start out\n");
 
   return true;

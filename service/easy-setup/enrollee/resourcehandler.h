@@ -93,7 +93,7 @@ void register_devconf_rsrc_event_callback(es_dev_conf_cb);
 void register_connect_request_event_callback(es_connect_request_cb cb);
 void unregister_resource_event_callback(void);
 es_result_e set_callback_for_userdata(es_read_userdata_cb readcb,
-                                      es_write_userdata_cb writecb);
+                                      es_write_userdata_cb writecb, es_free_userdata_cb freecb);
 void oc_allocate_string(oc_string_t *desString, char *srcString);
 
 #ifdef __cplusplus

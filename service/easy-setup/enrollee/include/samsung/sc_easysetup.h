@@ -212,6 +212,7 @@ typedef struct
 
 void  ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata);
 void WriteUserdataCb(oc_rep_t* payload, char* resourceType);
+void FreeUserdataCb(void* userdata, char* resourceType);
 
 es_result_e set_sc_properties(const sc_properties *prop);
 

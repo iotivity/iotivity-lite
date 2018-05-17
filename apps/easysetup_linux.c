@@ -168,6 +168,12 @@ set_user_properties()
 }
 
 void
+free_user_data_cb(void *userdata, char *resourceType)
+{
+  (void)userdata;
+  (void)resourceType;
+}
+void
 read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata)
 {
   (void)resourceType;
@@ -438,7 +444,7 @@ start_easy_setup()
   printf("[ES App] es_init_enrollee Success\n");
 
   // Set callbacks for Vendor Specific Properties
-  es_set_callback_for_userdata(&read_user_data_cb, &write_user_data_cb);
+  es_set_callback_for_userdata(&read_user_data_cb, &write_user_data_cb,free_user_data_cb);
   printf("[ES App] start_easy_setup out\n");
 }
 

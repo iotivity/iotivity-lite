@@ -62,6 +62,8 @@ typedef void (*es_write_userdata_cb)(oc_rep_t *payload, char *resource_type);
 typedef void (*es_read_userdata_cb)(oc_rep_t *payload, char *resource_type,
                                     void **userdata);
 
+typedef void (*es_free_userdata_cb)(void *userdata, char *resource_type);
+
 /**
  * This function initializes the EasySetup. This API must be called prior to
  * invoking any other API.
@@ -136,7 +138,7 @@ es_result_e es_terminate_enrollee(void);
  * @see es_write_userdata_cb
  */
 es_result_e es_set_callback_for_userdata(es_read_userdata_cb readcb,
-                                         es_write_userdata_cb writecb);
+                                         es_write_userdata_cb writecb,es_free_userdata_cb freesb);
 
 #ifdef __cplusplus
 }
