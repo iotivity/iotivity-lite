@@ -71,6 +71,8 @@ static void session_event_handler(const oc_endpoint_t *endpoint,
                                   oc_session_state_t state);
 static oc_event_callback_retval_t find_ping(void *data);
 
+static int ping_interval = 1;
+
 bool
 st_cloud_access_start(es_coap_cloud_conf_data *cloud_info,
                       sc_coap_cloud_server_conf_properties *st_cloud_info,
@@ -527,7 +529,9 @@ error:
 static void
 send_ping_handler(oc_client_response_t *data)
 {
-  if (data->code != OC_STATUS_NOT_MODIFIED) {
+  if (data->code == OC_STATUS_NOT_MODIFIED) {
+    oc_set_delayed_callback(context, send_ping, ping_interval * 58);
+  } else {
     st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
     context->cloud_access_status = CLOUD_ACCESS_FAIL;
   }
@@ -537,12 +541,11 @@ static oc_event_callback_retval_t
 send_ping(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  if (CLOUD_ACCESS_FAIL == context->cloud_access_status)
-    return OC_EVENT_DONE;
-
-  printf("[Cloud_Access] Send ping request.\n");
-  if (oc_send_ping_request(&context->cloud_ep, 8, send_ping_handler, context))
-    return OC_EVENT_CONTINUE;
+  if (CLOUD_ACCESS_FAIL != context->cloud_access_status) {
+    printf("[Cloud_Access] Send ping request.\n");
+    oc_send_ping_request(&context->cloud_ep, ping_interval, send_ping_handler,
+                         context);
+  }
 
   return OC_EVENT_DONE;
 }
@@ -550,11 +553,16 @@ send_ping(void *data)
 static void
 find_ping_handler(oc_client_response_t *data)
 {
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   if (data->code == OC_STATUS_OK) {
-    st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+    int *interval = oc_int_array(data->payload.array);
+    if (interval)
+      ping_interval = interval[oc_int_array_size(data->payload.array) - 1];
     context->cloud_access_status = CLOUD_ACCESS_FINISH;
     oc_set_delayed_callback(context, callback_handler, 0);
-    oc_set_delayed_callback(context, send_ping, 50);
+    oc_set_delayed_callback(context, send_ping, 1);
+  } else {
+    context->cloud_access_status = CLOUD_ACCESS_FAIL;
   }
 }
 
