@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_22a3b19f",
+        "filename": "apps/easysetup_linux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "need to insert blank line between functions",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_82943d38",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "it will be better to move common utility functions at one common file for code reuse ..",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e299c96f",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "formatting: align comments with code",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c29e4556",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "naming should be fixed.",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_42aa3571",
+        "filename": "service/easy-setup/enrollee/easysetup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "setting null in needed after free ?",
+      "range": {
+        "startLine": 249,
+        "startChar": 29,
+        "endLine": 249,
+        "endChar": 30
+      },
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_82bb9dc3",
+        "filename": "service/easy-setup/enrollee/include/easysetup.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "fixup formatting",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e2b0a9df",
+        "filename": "service/easy-setup/enrollee/include/easysetup.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "I am not sure why we need to register function to free data. Isn\u0027t it the app layer that allocated the user data ? It can free data after use ..",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_22ca914f",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-17T09:07:34Z",
+      "side": 1,
+      "message": "can\u0027t cloud_data.userdata be freed inside g_cloud_conf_res_event_cb ?",
+      "revId": "231fc358af09460cb2c0e8818e6d2103bdf8aa53",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
