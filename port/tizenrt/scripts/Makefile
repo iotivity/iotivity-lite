@@ -69,6 +69,17 @@ endif
 	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
 endif
 
+ifeq ($(CONFIG_IOTLITE_CLOUD_ACCESS),y)
+	CSRCS += iotivity-constrained/service/cloud-access/src/cloud_access.c
+	OSRCS_C += iotivity-constrained/service/cloud-access/src/cloud_access.o
+ifeq ($(CONFIG_IOTLITE_RD),y)
+	CSRCS += iotivity-constrained/service/resource-directory/client/src/rd_client.c
+	OSRCS_C += iotivity-constrained/service/resource-directory/client/src/rd_client.o
+endif
+	CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
+			   -Iiotivity-constrained/service/resource-directory/client/include
+endif
+
 CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/deps/tinycbor/src/cborencoder_close_container_checked.c \
 			   iotivity-constrained/deps/tinycbor/src/cborparser.c \
