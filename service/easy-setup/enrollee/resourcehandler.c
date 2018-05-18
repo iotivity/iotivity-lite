@@ -876,14 +876,14 @@ create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask)
 }
 
 void
-deinit_easysetup_resource()
+deinit_easysetup_resource(void)
 {
   oc_delete_collection(g_easysetup_resource.handle);
   g_easysetup_resource.handle = NULL;
 }
 
 void
-deinit_devconf_resource()
+deinit_devconf_resource(void)
 {
   oc_delete_resource(g_devconf_resource.handle);
   g_devconf_resource.handle = NULL;
@@ -891,7 +891,7 @@ deinit_devconf_resource()
 }
 
 void
-deinit_coap_cloudconf_resource()
+deinit_coap_cloudconf_resource(void)
 {
   oc_delete_resource(g_cloudconf_resource.handle);
   g_cloudconf_resource.handle = NULL;
@@ -902,7 +902,7 @@ deinit_coap_cloudconf_resource()
 }
 
 void
-deinit_wifi_conf_resource()
+deinit_wifi_conf_resource(void)
 {
   oc_delete_resource(g_wificonf_resource.handle);
   g_wificonf_resource.handle = NULL;
@@ -911,7 +911,7 @@ deinit_wifi_conf_resource()
 }
 
 es_result_e
-delete_easysetup_resources()
+delete_easysetup_resources(void)
 {
   OC_DBG("in");
 
