@@ -493,9 +493,11 @@ static void *network_event_thread(void *data) {
 
       len = sizeof(client);
       oc_message_t *message = oc_allocate_message();
-
-      if (!message) {
-        break;
+      while (!message) {
+        // TODO: Handle terminate case
+        OC_DBG("Message buffer is not available!");
+        oc_wait_for_buffer();
+        message = oc_allocate_message();
       }
 
       if (FD_ISSET(dev->server_sock, &setfds)) {

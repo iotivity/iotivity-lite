@@ -31,14 +31,37 @@
 #include "config.h"
 #include "oc_buffer.h"
 #include "oc_events.h"
+#include <pthread.h>
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
 OC_MEMB(oc_buffers_s, oc_message_t, (OC_MAX_NUM_CONCURRENT_REQUESTS * 2));
+
+#define OC_MAX_NUM_BUFFER_SIZE     6
+
+static int g_buffersize_count;
+static pthread_mutex_t buffercount_mutex;
+
+static pthread_mutex_t buffer_avail_mutex;
+static pthread_cond_t buffer_avail_cv;
+
+static void notify_buffer_availability(void);
 
 oc_message_t *
 oc_allocate_message(void)
 {
   oc_network_event_handler_mutex_lock();
+#ifdef OC_DYNAMIC_ALLOCATION
+  pthread_mutex_lock(&buffercount_mutex);
+  if(g_buffersize_count > OC_MAX_NUM_BUFFER_SIZE/2){
+    OC_DBG("[BUFFER_TEST]Buffer Full");
+    pthread_mutex_unlock(&buffercount_mutex);
+	oc_network_event_handler_mutex_unlock();
+    return NULL;
+    }
+    OC_DBG("[BUFFER_TEST]BufferSize %d",g_buffersize_count);
+  g_buffersize_count++;
+  pthread_mutex_unlock(&buffercount_mutex);
+#endif
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(&oc_buffers_s);
   oc_network_event_handler_mutex_unlock();
   if (message) {
@@ -79,6 +102,14 @@ oc_message_unref(oc_message_t *message)
     message->ref_count--;
     if (message->ref_count <= 0) {
 #ifdef OC_DYNAMIC_ALLOCATION
+      OC_DBG("[BUFFER_TEST] Size %d",g_buffersize_count);
+      pthread_mutex_lock(&buffercount_mutex);
+      if(g_buffersize_count > 0) {
+        g_buffersize_count--;
+        OC_DBG("[BUFFER_TEST] Decreasing Size %d",g_buffersize_count);
+      }
+      notify_buffer_availability();
+      pthread_mutex_unlock(&buffercount_mutex);
       oc_mem_free(message->data);
 #endif /* OC_DYNAMIC_ALLOCATION */
       oc_memb_free(&oc_buffers_s, message);
@@ -165,4 +196,19 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
     }
   }
   OC_PROCESS_END();
+}
+
+void
+notify_buffer_availability(void) {
+  pthread_mutex_lock(&buffer_avail_mutex);
+  OC_DBG("Notifying consumers - buffer availability");
+  pthread_cond_signal(&buffer_avail_cv);
+  pthread_mutex_unlock(&buffer_avail_mutex);
+}
+
+void
+oc_wait_for_buffer(void) {
+  pthread_mutex_lock(&buffer_avail_mutex);
+  //TODO: Timed wait is required
+  pthread_cond_wait(&buffer_avail_cv, &buffer_avail_mutex);
 }
