@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_fd64cce6",
+        "filename": "service/easy-setup/enrollee/include/easysetup.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-05-18T09:24:12Z",
+      "side": 1,
+      "message": "Used to distinguish which resource callback data the userdata belong to.",
+      "revId": "0cd9732b523540f3f86cc733b7df289fc38f1048",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5d6218d9",
+        "filename": "service/easy-setup/enrollee/include/samsung/sc_easysetup.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-05-18T09:24:12Z",
+      "side": 1,
+      "message": "mode changed again ?",
+      "revId": "0cd9732b523540f3f86cc733b7df289fc38f1048",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3d5f5410",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-05-18T09:24:12Z",
+      "side": 1,
+      "message": "not good idea to free here. let application free user data as it is giving deleter function for user data. Take care of this in other callbacks also.",
+      "revId": "0cd9732b523540f3f86cc733b7df289fc38f1048",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
