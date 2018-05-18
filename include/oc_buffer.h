@@ -29,4 +29,5 @@ void oc_message_unref(oc_message_t *message);
 void oc_recv_message(oc_message_t *message);
 void oc_send_message(oc_message_t *message);
 
+void oc_wait_for_buffer(void);
 #endif /* OC_BUFFER_H */
