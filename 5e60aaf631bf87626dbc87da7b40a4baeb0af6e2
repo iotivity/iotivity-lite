@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3d3114ed",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-18T08:52:57Z",
+      "side": 1,
+      "message": "cd \"$linux_dir\"\nis safer",
+      "revId": "5e60aaf631bf87626dbc87da7b40a4baeb0af6e2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7d527c14",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-18T08:52:57Z",
+      "side": 1,
+      "message": "maybe you can try use\n\nfile\u003d\"$(echo \"$1\" | tr \u0027/\u0027 \u0027,\u0027).massif.log.txt\" as output file\nthen we\u0027ll configure jenkins to report *.log.txt files as artefacts in PWD.",
+      "revId": "5e60aaf631bf87626dbc87da7b40a4baeb0af6e2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dd574801",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-18T08:52:57Z",
+      "side": 1,
+      "message": "maybe you can try use\n\nfile\u003d\"$(echo \"$1\" | tr \u0027/\u0027 \u0027,\u0027).mem.log.txt\" as output file\nthen we\u0027ll configure jenkins to report *.log.txt files as artefacts in PWD.",
+      "revId": "5e60aaf631bf87626dbc87da7b40a4baeb0af6e2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bd5c0427",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-18T08:52:57Z",
+      "side": 1,
+      "message": "Humm I dont think we should call make here\nOr maybe I missed something...\n\n\nMy thought was you could call mem_profile.sh in makefiles.\n\n*/Makefile: \n\nwould have this:\n\ntest: ... rule/profile\n\nrule/profile: $target\n    memprofile.sh $\u003c\n\n\nPlease also link related jira bug to this change.",
+      "revId": "5e60aaf631bf87626dbc87da7b40a4baeb0af6e2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
