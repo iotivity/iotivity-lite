@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -27,6 +28,7 @@
 #include "mbedtls/ssl_cookie.h"
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
+#include "mbedtls/oid.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
 #include "mbedtls/error.h"
@@ -957,6 +959,9 @@ oc_tls_connected(oc_endpoint_t *endpoint)
   return false;
 }
 
+#define UUID_PREFIX "uuid:"
+#define UUID_STRING_SIZE (37)
+
 static void
 read_application_data(oc_tls_peer_t *peer)
 {
@@ -1006,6 +1011,52 @@ read_application_data(oc_tls_peer_t *peer)
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
     if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
+      int cipher = peer->ssl_ctx.session->ciphersuite;
+      OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]", cipher);
+      if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 != cipher &&
+          MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 != cipher)
+      {
+        const mbedtls_x509_crt * cert = mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
+        const mbedtls_x509_name * name = NULL;
+        if (NULL == cert) {
+          OC_DBG("oc_tls: failed to retrieve cert");
+        }
+        else {
+          /* Find the CN component of the subject name. */
+          for (name = &cert->subject; NULL != name; name = name->next) {
+            if (name->oid.p &&
+               (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_CN)) &&
+               (0 == memcmp(MBEDTLS_OID_AT_CN, name->oid.p, name->oid.len))) {
+              break;
+            }
+          }
+        }
+        if (NULL == name) {
+          OC_DBG("oc_tls: no CN RDN found in subject name");
+        }
+        else {
+          const size_t uuid_len = UUID_STRING_SIZE - 1;
+          char uuid[UUID_STRING_SIZE] = { 0 };
+          const char * uuid_pos = NULL;
+          uuid_pos = strstr((const char *)name->val.p, UUID_PREFIX);
+          /* If UUID_PREFIX is present, ensure there's enough data for the prefix plus an entire
+           * UUID, to make sure we don't read past the end of the buffer.
+           */
+          if ((NULL != uuid_pos) &&
+             (name->val.len >= ((uuid_pos - (const char *)name->val.p) + (sizeof(UUID_PREFIX) - 1) + uuid_len))) {
+            memcpy(uuid, uuid_pos + sizeof(UUID_PREFIX) - 1, uuid_len);
+            OC_DBG("oc_tls: certificate uuid string: %s", uuid);
+            oc_str_to_uuid(uuid, &peer->uuid);
+          }
+          else {
+            OC_DBG("oc_tls: uuid not found");
+          }
+        }
+      }
+      else
+      {
+        /* No public key information for non-certificate-using ciphersuites. */
+      }
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
     }
 #ifdef OC_CLIENT
