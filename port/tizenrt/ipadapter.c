@@ -929,6 +929,7 @@ done:
   //freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
+
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
@@ -938,7 +939,27 @@ void
 handle_session_event_callback(const oc_endpoint_t *endpoint,
                                oc_session_state_t state)
 {
-    //TODO::::yet to implement
+  //TODO::::yet to implement
+}
+
+int
+oc_add_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
+}
+
+int
+oc_remove_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
 }
 
 #ifdef OC_IPV4
