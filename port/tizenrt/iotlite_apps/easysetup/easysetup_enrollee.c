@@ -55,7 +55,7 @@ void SetUserProperties(const UserProperties *prop)
 }
 #endif
 
-void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
+void es_sc_ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
 {
     (void)resourceType;
     (void)payload;
@@ -66,7 +66,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
     printf("[ES App] ReadUserdataCb OUT");
 }
 
-void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
+void es_sc_WriteUserdataCb(oc_rep_t* payload, char* resourceType)
 {
     (void)resourceType;
     (void)payload;
@@ -302,7 +302,7 @@ void StartEasySetup(void)
     printf("[ES App] ESInitEnrollee Success\n");
 
     // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
+    es_set_callback_for_userdata(&es_sc_ReadUserdataCb, &es_sc_WriteUserdataCb);
     printf("[ES App] StartEasySetup OUT\n");
 }
 
