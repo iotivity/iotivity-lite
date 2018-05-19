@@ -384,6 +384,7 @@ print_menu(void)
 }
 
 static bool is_easy_setup_success = false;
+
 void
 easy_setup_handler(st_easy_setup_status_t status)
 {
@@ -397,6 +398,7 @@ easy_setup_handler(st_easy_setup_status_t status)
 }
 
 static bool is_cloud_access_success = false;
+
 void
 cloud_access_handler(st_cloud_access_status_t status)
 {
@@ -578,10 +580,16 @@ st_main_reset(void)
 }
 
 int
+#ifdef __TIZENRT__
+stapp_main(void)
+#else
 main(void)
+#endif
 {
-  int init = 0;
+   int init = 0;
+#ifndef __TIZENRT__
   st_set_sigint_handler(handle_signal);
+#endif
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
@@ -589,7 +597,11 @@ main(void)
                                          register_resources };
 
 #ifdef OC_SECURITY
+#ifdef __TIZENRT__
+   oc_storage_config("/mnt/st_things_creds");
+#else
   oc_storage_config("./st_things_creds");
+#endif
 #endif /* OC_SECURITY */
 
   mutex = st_mutex_init();
@@ -645,6 +657,7 @@ main(void)
     goto exit;
   }
 
+#ifndef __TIZENRT__
   while (quit != 1) {
     if (!st_main_initialize()) {
       st_print_log("Failed to start easy setup & cloud access!\n");
@@ -691,7 +704,23 @@ main(void)
   st_thread_destroy(thread);
   thread = NULL;
   st_print_log("st_thread_destroy finish!\n");
+#else
+  if (!st_main_initialize()) {
+    st_print_log("Failed to start easy setup & cloud access!\n");
+    init = -1;
+    goto exit;
+  }
 
+  if (!is_easy_setup_success || !is_cloud_access_success) {
+     st_print_log("Not initialized\n");
+  }
+
+  st_print_log("start easy setup & cloud access done!\n");
+
+  while(quit != 1) {
+    st_sleep(1);
+  }
+#endif
   oc_link_t *next;
 exit:
 

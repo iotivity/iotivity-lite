@@ -210,7 +210,7 @@ es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *pr
     }
     return ES_ERROR;
 }
-es_result_e register_sc_provisioning_info_resource()
+es_result_e register_sc_provisioning_info_resource(void)
 {
   oc_resource_t *provisioninginfo =
     oc_new_resource("provisioninginfo", SC_RSRVD_ES_URI_PROVISIONING_INFO, 1, 0);
