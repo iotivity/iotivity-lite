@@ -10,9 +10,13 @@ Clone iotivity-constrained code in this path TizenRT/external/iotivity-constrain
 
 switch to samsung branch (EX: git checkout samsung)
 
-Copy ~/port/tizenrt/iotlite_apps folder to TizenRT/apps/
+Copy <iotivity-constrained>/port/tizenrt/iotlite_apps folder to TizenRT/apps/
 
-Copy ~/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
+** For Building st_app on Tizen RT
+Copy <iotivity-constrained>/apps/st_app to TizenRT/apps/iotlite_apps/
+Copy <iotivity-constrained>/apps/st_app/tizenrt/Make* to TizenRT/apps/iotlite_apps/st_app/
+
+Copy <iotivity-constrained>/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
 
 Copy tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
 
@@ -23,7 +27,7 @@ Copy tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/
 
 cd os/tools
 
- 
+
 #### To check the different board configurations combinations supported, type below:
 
 ./configure.sh --help
@@ -62,7 +66,7 @@ open the device.
 #### press restart button.
 
 wifi startsta
-wifi join <ssid_name> ------  for wifi open mode 
+wifi join <ssid_name> ------  for wifi open mode
 ifconfig wl1 dhcp
 
 ###### run sample app ##########################
