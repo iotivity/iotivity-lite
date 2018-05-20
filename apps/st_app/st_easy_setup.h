@@ -33,8 +33,11 @@ typedef enum {
 
 typedef void (*st_easy_setup_cb_t)(st_easy_setup_status_t status);
 
+int st_is_easy_setup_finish(void);
 int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
+void st_easy_setup_reset(void);
+void st_easy_setup_turn_on_soft_AP(void);
 
 st_easy_setup_status_t get_easy_setup_status(void);
 st_store_t *get_cloud_informations(void);

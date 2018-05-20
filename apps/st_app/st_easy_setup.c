@@ -22,6 +22,10 @@
 #include "st_port.h"
 #include "st_store.h"
 
+#define st_rep_set_string_with_chk(object, key, value)                         \
+  if (value)                                                                   \
+    oc_rep_set_text_string(object, key, value);
+
 typedef enum {
   ST_EASY_SETUP_DEV_PROV = 1 << 0,
   ST_EASY_SETUP_WIFI_PROV = 1 << 1,
@@ -62,6 +66,12 @@ static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                     cloud_conf_prov_cb };
 
 int
+st_is_easy_setup_finish(void)
+{
+  return g_store_info.status == true ? 0 : -1;
+}
+
+int
 st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 {
   st_print_log("[Easy_Setup] st_easy_setup_start in\n");
@@ -72,12 +82,7 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 
   g_callback = cb;
 
-  if (st_load() < 0) {
-    st_print_log("[Easy_Setup] Could not load store informations.\n");
-    return -1;
-  }
-
-  if (g_store_info.status == true) {
+  if (st_is_easy_setup_finish() == 0) {
     st_print_log("[Easy_Setup] Easy Setup is already done.\n");
     g_prov_step_check |= ST_EASY_SETUP_DEV_PROV | ST_EASY_SETUP_WIFI_PROV |
                          ST_EASY_SETUP_CLOUD_PROV;
@@ -97,8 +102,6 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 
   g_easy_setup_status = EASY_SETUP_PROGRESSING;
   st_print_log("[Easy_Setup] es_init_enrollee Success\n");
-
-  st_turn_on_soft_AP(&g_soft_ap);
 
   if (vendor_props) {
     if (set_sc_properties(vendor_props) == ES_ERROR) {
@@ -125,12 +128,29 @@ st_easy_setup_stop(void)
   }
 
   g_callback = NULL;
+
+  st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
+}
+
+void
+st_easy_setup_reset(void)
+{
+  st_print_log("[Easy_Setup] st_easy_setup_reset in\n");
+
+  st_easy_setup_stop();
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
   g_prov_step_check = 0;
   es_set_state(ES_STATE_INIT);
   st_set_default_store_info();
+  st_dump();
 
-  st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
+  st_print_log("[Easy_Setup] st_easy_setup_reset out\n");
+}
+
+void
+st_easy_setup_turn_on_soft_AP(void)
+{
+  st_turn_on_soft_AP(&g_soft_ap);
 }
 
 st_easy_setup_status_t
@@ -267,19 +287,20 @@ st_encode_store_info(void)
   oc_rep_start_root_object();
   oc_rep_set_boolean(root, status, g_store_info.status);
   oc_rep_set_object(root, accesspoint);
-  oc_rep_set_text_string(accesspoint, ssid,
-                         oc_string(g_store_info.accesspoint.ssid));
-  oc_rep_set_text_string(accesspoint, pwd,
-                         oc_string(g_store_info.accesspoint.pwd));
+  st_rep_set_string_with_chk(accesspoint, ssid,
+                             oc_string(g_store_info.accesspoint.ssid));
+  st_rep_set_string_with_chk(accesspoint, pwd,
+                             oc_string(g_store_info.accesspoint.pwd));
   oc_rep_close_object(root, accesspoint);
   oc_rep_set_object(root, cloudinfo);
-  oc_rep_set_text_string(cloudinfo, ci_server,
-                         oc_string(g_store_info.cloudinfo.ci_server));
-  oc_rep_set_text_string(cloudinfo, auth_provider,
-                         oc_string(g_store_info.cloudinfo.auth_provider));
-  oc_rep_set_text_string(cloudinfo, uid, oc_string(g_store_info.cloudinfo.uid));
-  oc_rep_set_text_string(cloudinfo, access_token,
-                         oc_string(g_store_info.cloudinfo.access_token));
+  st_rep_set_string_with_chk(cloudinfo, ci_server,
+                             oc_string(g_store_info.cloudinfo.ci_server));
+  st_rep_set_string_with_chk(cloudinfo, auth_provider,
+                             oc_string(g_store_info.cloudinfo.auth_provider));
+  st_rep_set_string_with_chk(cloudinfo, uid,
+                             oc_string(g_store_info.cloudinfo.uid));
+  st_rep_set_string_with_chk(cloudinfo, access_token,
+                             oc_string(g_store_info.cloudinfo.access_token));
   oc_rep_close_object(root, cloudinfo);
   oc_rep_end_root_object();
 }
