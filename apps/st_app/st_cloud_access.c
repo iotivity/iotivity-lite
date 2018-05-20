@@ -463,8 +463,14 @@ sign_up_handler(oc_client_response_t *data)
           }
         } else if (strncmp(ACCESS_TOKEN_KEY, oc_string(rep->name),
                            oc_string_len(rep->name)) == 0) {
-          oc_new_string(&context->access_token, oc_string(rep->value.string),
-                        oc_string_len(rep->value.string));
+          if (!oc_string(context->access_token)) {
+            oc_new_string(&context->access_token, oc_string(rep->value.string),
+                          oc_string_len(rep->value.string));
+          } else {
+            oc_free_string(&context->access_token);
+            oc_new_string(&context->access_token, oc_string(rep->value.string),
+                          oc_string_len(rep->value.string));
+          }
         } else if (strncmp(REDIRECTURI_KEY, oc_string(rep->name),
                            oc_string_len(rep->name)) == 0) {
           if (oc_string_to_endpoint(&rep->value.string, &context->cloud_ep,
