@@ -310,31 +310,15 @@ void SetDeviceInfo(void)
 {
     printf("[ES App] SetDeviceInfo IN\n");
 
-    es_device_property deviceProperty = {
-        {{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF}, WIFI_5G},
-            {"Test Device"}
-    };
+    char *device_name = "TEST_DEVICE";
 
-    if(es_set_device_property(&deviceProperty) == ES_ERROR)
-        printf("[ES App] ESSetDeviceProperty Error\n");
+    es_device_property device_property ={{{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF },WIFI_5G},{{0}}};
 
-    // Set user properties if needed
-#if 0
+    oc_new_string(&device_property.DevConf.device_name, device_name, strlen(device_name));
 
-    memset(&g_SCProperties, 0, sizeof(SCProperties));
-    strncpy(g_SCProperties.deviceType, "deviceType", MAXLEN_STRING);
-    strncpy(g_SCProperties.deviceSubType, "deviceSubType", MAXLEN_STRING);
-    g_SCProperties.netConnectionState = NET_STATE_INIT;
-    g_SCProperties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-    strncpy(g_SCProperties.regSetDev, "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\",\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\",\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\",\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}", MAXLEN_STRING);
-    strncpy(g_SCProperties.nwProvInfo, "{\"IMEI\":\"123456789012345 / 01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\",\"SN\":\"XY0123456XYZ\"}", MAXLEN_STRING);
-    strncpy(g_SCProperties.pnpPin, "pinNumber", MAXLEN_STRING);
-    strncpy(g_SCProperties.modelNumber, "Model Number", MAXLEN_STRING);
-    strncpy(g_SCProperties.esProtocolVersion, "2.0", MAXLEN_STRING);
+    if (es_set_device_property(&device_property) == ES_ERROR)
+        printf("[ES App] es_set_device_property error!\n");
 
-    if(SetSCProperties(&g_SCProperties) == ES_ERROR)
-        printf("SetSCProperties Error\n");
-#endif
     printf("[ES App] SetDeviceInfo OUT\n");
 }
 
