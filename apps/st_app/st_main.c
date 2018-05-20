@@ -570,7 +570,7 @@ st_main_reset(void)
   oc_sec_reset();
 #endif /* OC_SECURITY */
 
-  st_easy_setup_stop();
+  st_easy_setup_reset();
   is_easy_setup_success = false;
 
   st_cloud_access_stop(switch_resource->device);
@@ -581,6 +581,8 @@ int
 main(void)
 {
   int init = 0;
+  int device_num = 0;
+  int i = 0;
   st_set_sigint_handler(handle_signal);
 
   static const oc_handler_t handler = {.init = app_init,
@@ -615,29 +617,6 @@ main(void)
 
   oc_set_max_app_data_size(3072);
 
-  init = oc_main_init(&handler);
-  if (init < 0) {
-    st_print_log("oc_main_init failed!(%d)\n", init);
-    goto exit;
-  }
-
-  st_vendor_props_initialize();
-
-  int device_num = oc_core_get_num_devices();
-  int i;
-  for (i = 0; i < device_num; i++) {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    st_print_log("=== device(%d) endpoint info. ===\n", i);
-    while (ep) {
-      oc_string_t ep_str;
-      if (oc_endpoint_to_string(ep, &ep_str) == 0) {
-        st_print_log("-> %s\n", oc_string(ep_str));
-        oc_free_string(&ep_str);
-      }
-      ep = ep->next;
-    }
-  }
-
   st_thread_t thread = st_thread_create(process_func, NULL);
   if (!thread) {
     st_print_log("Failed to create main thread\n");
@@ -646,6 +625,42 @@ main(void)
   }
 
   while (quit != 1) {
+    if (st_load() < 0) {
+      st_print_log("[ST_App] Could not load store informations.\n");
+      return -1;
+    }
+
+    if (st_is_easy_setup_finish() != 0) {
+      st_print_log("[St_App] Soft AP turn on.\n");
+      st_easy_setup_turn_on_soft_AP();
+    }
+
+    init = oc_main_init(&handler);
+    if (init < 0) {
+      st_print_log("oc_main_init failed!(%d)\n", init);
+      goto exit;
+    }
+
+    char uuid[MAX_UUID_LENGTH] = { 0 };
+    oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
+    st_print_log("uuid : %s\n", uuid);
+
+    st_vendor_props_initialize();
+
+    device_num = oc_core_get_num_devices();
+    for (i = 0; i < device_num; i++) {
+      oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
+      st_print_log("=== device(%d) endpoint info. ===\n", i);
+      while (ep) {
+        oc_string_t ep_str;
+        if (oc_endpoint_to_string(ep, &ep_str) == 0) {
+          st_print_log("-> %s\n", oc_string(ep_str));
+          oc_free_string(&ep_str);
+        }
+        ep = ep->next;
+      }
+    }
+
     if (!st_main_initialize()) {
       st_print_log("Failed to start easy setup & cloud access!\n");
       init = -1;
@@ -692,7 +707,6 @@ main(void)
   thread = NULL;
   st_print_log("st_thread_destroy finish!\n");
 
-  oc_link_t *next;
 exit:
 
   device_num = oc_core_get_num_devices();
@@ -701,6 +715,7 @@ exit:
     oc_free_server_endpoints(ep);
   }
 
+  oc_link_t *next;
   while (publish_res) {
     next = oc_list_item_next(publish_res);
     oc_delete_link(publish_res);
