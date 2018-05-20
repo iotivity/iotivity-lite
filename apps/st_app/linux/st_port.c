@@ -220,10 +220,12 @@ st_turn_on_soft_AP(st_soft_ap_t *data)
   st_print_log("st_turn_on_soft_AP\n");
 
   data->mutex = st_mutex_init();
+  data->cv = st_cond_init();
+  data->is_soft_ap_on = 1;
   data->thread = st_thread_create(soft_ap_process_routine, data);
 
   st_mutex_lock(data->mutex);
-  data->is_soft_ap_on = 1;
+  st_cond_wait(data->cv, data->mutex);
   st_mutex_unlock(data->mutex);
 }
 
@@ -256,9 +258,11 @@ exit:
   st_thread_destroy(data->thread);
   st_mutex_unlock(data->mutex);
 
+  st_cond_destroy(data->cv);
   st_mutex_destroy(data->mutex);
   data->thread = NULL;
   data->mutex = NULL;
+  data->cv = NULL;
 }
 
 void
@@ -326,6 +330,10 @@ soft_ap_process_routine(void *data)
 
   st_print_log("[Easy_Setup] $ sudo service hostapd start\n");
   SYSTEM_RET_CHECK(system("sudo service hostapd start"));
+
+  st_mutex_lock(soft_ap->mutex);
+  st_cond_signal(soft_ap->cv);
+  st_mutex_unlock(soft_ap->mutex);
 
   st_print_log("[Easy_Setup] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
   SYSTEM_RET_CHECK(system("sudo hostapd /etc/hostapd/hostapd.conf"));

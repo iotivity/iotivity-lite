@@ -31,6 +31,7 @@ typedef struct
 {
   st_thread_t thread;
   st_mutex_t mutex;
+  st_cond_t cv;
   int is_soft_ap_on;
 } st_soft_ap_t;
 
