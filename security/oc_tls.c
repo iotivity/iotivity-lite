@@ -1027,12 +1027,21 @@ read_application_data(oc_tls_peer_t *peer)
             if (name->oid.p &&
                (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_CN)) &&
                (0 == memcmp(MBEDTLS_OID_AT_CN, name->oid.p, name->oid.len))) {
-              break;
+              if (strstr((const char *)name->val.p, UUID_PREFIX)) {
+                break;
+              }
+            }
+            else if (name->oid.p &&
+               (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_ORG_UNIT)) &&
+               (0 == memcmp(MBEDTLS_OID_AT_ORG_UNIT, name->oid.p, name->oid.len))) {
+              if (strstr((const char *)name->val.p, UUID_PREFIX)) {
+                break;
+              }
             }
           }
         }
         if (NULL == name) {
-          OC_DBG("oc_tls: no CN RDN found in subject name");
+          OC_DBG("oc_tls: no CN or OU RDN with uuid found in subject name");
         }
         else {
           const size_t uuid_len = UUID_STRING_SIZE - 1;
