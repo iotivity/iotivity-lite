@@ -37,9 +37,6 @@ static int dimmingSetting = 50;
 static int ct = 50;
 static int range[2] = { 0, 100 };
 
-static oc_link_t *publish_res;
-
-
 static void
 switch_construct(oc_request_t *request, oc_interface_mask_t interface)
 {
@@ -248,30 +245,5 @@ st_register_resources(int device)
                                   NULL);
   oc_add_resource(temperature);
 
-  publish_res = oc_new_link(switch_resource);
-  oc_link_t *publish_res1 = oc_new_link(level);
-  oc_link_t *publish_res2 = oc_new_link(temperature);
-  oc_list_add((oc_list_t)publish_res, publish_res1);
-  oc_list_add((oc_list_t)publish_res, publish_res2);
-
   register_sc_provisioning_info_resource();
-}
-
-//TODO: remove after publich function change.
-oc_link_t *
-st_get_publish_resources(void)
-{
-  return publish_res;
-}
-
-void
-st_delete_publish_resources(void)
-{
-  oc_link_t *next = NULL;
-
-  while (publish_res) {
-    next = oc_list_item_next(publish_res);
-    oc_delete_link(publish_res);
-    publish_res = next;
-  }
 }
