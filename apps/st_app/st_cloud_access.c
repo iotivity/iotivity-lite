@@ -41,8 +41,7 @@
 #define LIMIT_RETRY_SIGNING (5)
 
 typedef enum {
-  PUBLISH_CORE = 1 << 0,
-  PUBLISH_USER_RESOURCES = 1 << 1,
+  PUBLISH_RESOURCE = 1 << 0,
   PUBLISH_DEV_PROFILE = 1 << 2
 } publish_state_t;
 
@@ -55,7 +54,6 @@ typedef struct st_cloud_context
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
-  oc_link_t *publish_resources;
   uint8_t publish_state;
   int device_index;
   uint8_t retry_count;
@@ -72,11 +70,11 @@ static void session_event_handler(const oc_endpoint_t *endpoint,
 static oc_event_callback_retval_t find_ping(void *data);
 
 int
-st_cloud_access_start(st_store_t *cloud_info, oc_link_t *publish_resources,
-                      int device_index, st_cloud_access_cb_t cb)
+st_cloud_access_start(st_store_t *cloud_info, int device_index,
+                      st_cloud_access_cb_t cb)
 {
   st_print_log("[Cloud_Access] st_cloud_access_start in\n");
-  if (!cloud_info || !publish_resources || !cb)
+  if (!cloud_info || !cb)
     return -1;
 
   st_cloud_context_t *context =
@@ -87,7 +85,6 @@ st_cloud_access_start(st_store_t *cloud_info, oc_link_t *publish_resources,
   context->callback = cb;
   context->cloud_access_status = CLOUD_ACCESS_INITIALIZE;
   context->device_index = device_index;
-  context->publish_resources = publish_resources;
 
   oc_string_t ep_str;
   oc_new_string(&ep_str, oc_string(cloud_info->cloudinfo.ci_server),
@@ -330,8 +327,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 static bool
 is_resource_publish_finish(st_cloud_context_t *context)
 {
-  if (context->publish_state & PUBLISH_CORE &&
-      context->publish_state & PUBLISH_USER_RESOURCES &&
+  if (context->publish_state & PUBLISH_RESOURCE &&
       context->publish_state & PUBLISH_DEV_PROFILE) {
     return true;
   }
@@ -344,10 +340,8 @@ common_publish_handler(oc_client_response_t *data, publish_state_t state)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
 
   if (data->code == OC_STATUS_CHANGED) {
-    st_print_log("[Cloud_Access] %s resources publish success.\n",
-                 state == PUBLISH_CORE
-                   ? "core"
-                   : state == PUBLISH_USER_RESOURCES ? "user" : "dev profile");
+    st_print_log("[Cloud_Access] %s publish success.\n",
+                 state == PUBLISH_RESOURCE ? "resource" : "dev profile");
     context->publish_state |= state;
     if (is_resource_publish_finish(context)) {
       context->cloud_access_status = CLOUD_ACCESS_PUBLISHED;
@@ -355,10 +349,8 @@ common_publish_handler(oc_client_response_t *data, publish_state_t state)
       oc_set_delayed_callback(context, find_ping, 0);
     }
   } else {
-    st_print_log("[Cloud_Access] %s resource publish failed(%d)!!\n",
-                 state == PUBLISH_CORE
-                   ? "core"
-                   : state == PUBLISH_USER_RESOURCES ? "user" : "dev profile",
+    st_print_log("[Cloud_Access] %s publish failed(%d)!!\n",
+                 state == PUBLISH_RESOURCE ? "resouce" : "dev profile",
                  data->code);
     if (context->cloud_access_status != CLOUD_ACCESS_FAIL) {
       // TODO : re-publish?
@@ -370,15 +362,9 @@ common_publish_handler(oc_client_response_t *data, publish_state_t state)
 }
 
 static void
-core_publish_handler(oc_client_response_t *data)
+resource_publish_handler(oc_client_response_t *data)
 {
-  common_publish_handler(data, PUBLISH_CORE);
-}
-
-static void
-user_resources_publish_handler(oc_client_response_t *data)
-{
-  common_publish_handler(data, PUBLISH_USER_RESOURCES);
+  common_publish_handler(data, PUBLISH_RESOURCE);
 }
 
 static void
@@ -406,14 +392,9 @@ sign_in_handler(oc_client_response_t *data)
       es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
       context->publish_state = 0;
 
-      st_print_log("[Cloud_Access] Core resource publish start.\n");
-      rd_publish(&context->cloud_ep, NULL, context->device_index,
-                 core_publish_handler, LOW_QOS, context);
-
-      st_print_log("[Cloud_Access] User resources publish start.\n");
-      rd_publish(&context->cloud_ep, context->publish_resources,
-                 context->device_index, user_resources_publish_handler, LOW_QOS,
-                 context);
+      st_print_log("[Cloud_Access] Resource publish start.\n");
+      rd_publish_all(&context->cloud_ep, context->device_index,
+                          resource_publish_handler, LOW_QOS, context);
 
       st_print_log("[Cloud_Access] Dev profile publish start.\n");
       rd_publish_dev_profile(&context->cloud_ep, dev_profile_publish_handler,
