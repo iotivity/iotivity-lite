@@ -289,12 +289,6 @@ coap_receive(oc_message_t *msg)
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
                 request_buffer->ref_count = 0;
-
-                response_buffer = oc_blockwise_find_response_buffer(
-                  href, href_len, &msg->endpoint, message->code,
-                  message->uri_query, message->uri_query_len,
-                  OC_BLOCKWISE_SERVER);
-
                 goto request_handler;
               }
             }
@@ -362,7 +356,6 @@ coap_receive(oc_message_t *msg)
                 }
               }
               goto request_handler;
-
             } else {
               OC_ERR("initiating block-wise transfer with request for "
                      "block_num > 0");

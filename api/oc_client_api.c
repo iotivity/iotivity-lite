@@ -82,6 +82,9 @@ dispatch_coap_request(void)
   coap_send_transaction(transaction);
 
 #ifdef OC_BLOCK_WISE
+  if (request_buffer && request_buffer->ref_count == 0) {
+    oc_blockwise_free_request_buffer(request_buffer);
+  }
   request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
