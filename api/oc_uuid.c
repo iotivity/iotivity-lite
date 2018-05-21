@@ -14,6 +14,10 @@
 // limitations under the License.
 */
 
+#include <ifaddrs.h>
+#include <linux/if_packet.h>
+#include <linux/if_arp.h>
+#include <mbedtls/sha256.h>
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 #include <ctype.h>
@@ -97,28 +101,24 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
 void
 oc_gen_uuid(oc_uuid_t *uuid)
 {
-  int i;
-  uint32_t r;
-
-  for (i = 0; i < 4; i++) {
-    r = oc_random_value();
-    memcpy((uint8_t *)&uuid->id[i * 4], (uint8_t *)&r, sizeof(r));
-  }
-
-  /*  From RFC 4122
-      Set the two most significant bits of the
-      clock_seq_hi_and_reserved (8th octect) to
-      zero and one, respectively.
-  */
-  uuid->id[8] &= 0x3f;
-  uuid->id[8] |= 0x40;
-
-  /*  From RFC 4122
-      Set the four most significant bits of the
-      time_hi_and_version field (6th octect) to the
-      4-bit version number from (0 1 0 0 => type 4)
-      Section 4.1.3.
-  */
-  uuid->id[6] &= 0x0f;
-  uuid->id[6] |= 0x40;
+  struct ifaddrs *ifaddr = NULL;
+  struct ifaddrs *ifa = NULL;
+  unsigned char mac[6] = {0};
+  unsigned char hash[32];
+  if (!uuid || getifaddrs(&ifaddr) == -1)
+   return;
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+   if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
+     struct sockaddr_ll *addr = (struct sockaddr_ll *)(ifa->ifa_addr);
+     if (addr->sll_hatype != ARPHRD_ETHER)
+       continue;
+     memcpy(mac, addr->sll_addr, sizeof(mac));
+     break;
+   }
+  freeifaddrs(ifaddr);
+  mbedtls_sha256_context sha256_ctx;
+  mbedtls_sha256_init(&sha256_ctx);
+  mbedtls_sha256_update_ret(&sha256_ctx, mac, sizeof(mac));
+  mbedtls_sha256_finish_ret(&sha256_ctx, hash);
+  memcpy(uuid->id, hash, sizeof(oc_uuid_t));
 }
