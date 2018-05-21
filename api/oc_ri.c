@@ -636,7 +636,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifndef OC_SERVER
   (void)block2_size;
 #endif /* !OC_SERVER */
-#endif
+#endif /* OC_BLOCK_WISE */
 
   /* Postpone allocating response_state right after calling
    * oc_parse_rep()
@@ -796,30 +796,24 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 /* Alloc response_state. It also affects request_obj.response.
  */
 #ifdef OC_BLOCK_WISE
-
-  if (!(*response_state)) {
-    const char *href;
-    int href_len = coap_get_header_uri_path((coap_packet_t *)request, &href);
-
-    OC_DBG("creating new block-wise response state");
-    *response_state = oc_blockwise_alloc_response_buffer(
-      href, href_len, endpoint, ((coap_packet_t *)request)->code,
-      OC_BLOCKWISE_SERVER);
-
+  if (cur_resource && !bad_request) {
     if (!(*response_state)) {
-      OC_ERR("failure to alloc response state");
-      return success;
-    } else {
-      if (((coap_packet_t *)request)->uri_query_len > 0) {
-        oc_new_string(&((*response_state)->uri_query),
-                      ((coap_packet_t *)request)->uri_query,
-                      ((coap_packet_t *)request)->uri_query_len);
+      OC_DBG("creating new block-wise response state");
+      *response_state = oc_blockwise_alloc_response_buffer(
+        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER);
+      if (!(*response_state)) {
+        OC_ERR("failure to alloc response state");
+        bad_request = true;
+      } else {
+        if (uri_query_len > 0) {
+          oc_new_string(&(*response_state)->uri_query, uri_query,
+                        uri_query_len);
+        }
+        response_buffer.buffer = (*response_state)->buffer;
+        response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
       }
     }
   }
-
-  response_buffer.buffer = (*response_state)->buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
 #else  /* OC_BLOCK_WISE */
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
