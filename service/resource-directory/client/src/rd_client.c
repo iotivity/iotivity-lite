@@ -133,8 +133,9 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 }
 
 bool
-rd_publish_all(oc_endpoint_t *endpoint, int device_index,
-               oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+rd_publish_resource(oc_endpoint_t *endpoint, int device_index,
+                    oc_response_handler_t handler, oc_qos_t qos,
+                    void *user_data)
 {
   if (!endpoint || !handler) {
     OC_ERR("Error of input parameters");
