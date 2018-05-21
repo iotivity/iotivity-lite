@@ -1,0 +1,17 @@
+--style=linux
+--indent=spaces=2
+--min-conditional-indent=0
+--align-pointer=name
+--align-reference=name
+--indent-classes
+--indent-switches
+--indent-namespaces
+--pad-oper
+--pad-header
+--keep-one-line-blocks
+--keep-one-line-statements
+--convert-tabs
+--mode=c 
+--max-code-length=100
+--verbose
+--lineend=linux
