@@ -423,7 +423,33 @@ static int process_interface_change_event(void) {
   return ret;
 }
 
-static void *network_event_thread(void *data) {
+typedef struct
+{
+  oc_endpoint_t endpoint;
+  unsigned long time;
+  size_t length;
+} oc_prev_message_t;
+static oc_prev_message_t prev_message;
+
+static bool
+is_prev_message(oc_endpoint_t endpoint, size_t length)
+{
+  unsigned long t = oc_clock_seconds();
+  if (prev_message.length == length && (t - prev_message.time < 3) &&
+      0 == oc_endpoint_compare(&prev_message.endpoint, &endpoint)) {
+    OC_DBG("dropping frequent duplicate message\n");
+    return true;
+  }
+  prev_message.endpoint = endpoint;
+  prev_message.time = t;
+  prev_message.length = length;
+
+  return false;
+}
+
+static void *
+network_event_thread(void *data)
+{
   struct sockaddr_storage client;
   memset(&client, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *c = (struct sockaddr_in6 *)&client;
@@ -623,6 +649,10 @@ static void *network_event_thread(void *data) {
       PRINT("\n\n");
 #endif /* OC_DEBUG */
 
+      if (is_prev_message(message->endpoint, message->length)) {
+        oc_message_unref(message);
+        continue;
+      }
       oc_network_event(message);
     }
   }
