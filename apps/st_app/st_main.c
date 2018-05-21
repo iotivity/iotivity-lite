@@ -297,11 +297,9 @@ st_main_initialize(void)
     st_sleep(3);
   }
 
-  oc_link_t *publish_res = st_get_publish_resources();
-
   // cloud access
-  if (st_cloud_access_start(cloud_info, publish_res, device_index,
-                            cloud_access_handler) != 0) {
+  if (st_cloud_access_start(cloud_info, device_index, cloud_access_handler) !=
+      0) {
     st_print_log("Failed to access cloud!\n");
     return false;
   }
@@ -466,8 +464,6 @@ exit:
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
     oc_free_server_endpoints(ep);
   }
-
-  st_delete_publish_resources();
 
   st_easy_setup_stop();
   st_print_log("easy setup stop done\n");

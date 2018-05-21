@@ -19,12 +19,6 @@
 #ifndef ST_RECOURCE_MGR_H
 #define ST_RECOURCE_MGR_H
 
-#include "oc_api.h" //TODO : remove after change publish function.
-
 void st_register_resources(int device);
-
- //TODO : remove after change publish function.
-oc_link_t *st_get_publish_resources(void);
-void st_delete_publish_resources(void);
 
 #endif /* ST_RECOURCE_MGR_H */
