@@ -77,7 +77,6 @@ struct timespec ts;
 
 st_mutex_t app_mutex = NULL;
 oc_resource_t *switch_resource;
-oc_link_t *publish_res;
 
 int quit = 0;
 
@@ -324,12 +323,6 @@ register_resources(void)
                                   NULL);
   oc_add_resource(temperature);
 
-  publish_res = oc_new_link(switch_resource);
-  oc_link_t *publish_res1 = oc_new_link(level);
-  oc_link_t *publish_res2 = oc_new_link(temperature);
-  oc_list_add((oc_list_t)publish_res, publish_res1);
-  oc_list_add((oc_list_t)publish_res, publish_res2);
-
   register_sc_provisioning_info_resource();
 }
 
@@ -533,7 +526,7 @@ st_main_initialize(void)
   }
 
   // cloud access
-  if (st_cloud_access_start(cloud_info, publish_res, switch_resource->device,
+  if (st_cloud_access_start(cloud_info, switch_resource->device,
                             cloud_access_handler) != 0) {
     st_print_log("Failed to access cloud!\n");
     return false;
@@ -701,11 +694,6 @@ exit:
     oc_free_server_endpoints(ep);
   }
 
-  while (publish_res) {
-    next = oc_list_item_next(publish_res);
-    oc_delete_link(publish_res);
-    publish_res = next;
-  }
   st_easy_setup_stop();
   st_print_log("easy setup stop done\n");
 
