@@ -39,7 +39,6 @@ int
 st_load(void)
 {
   int ret = 0;
-  oc_rep_t *rep;
 
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
@@ -50,7 +49,9 @@ st_load(void)
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[ST_MAX_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+#ifdef OC_SECURITY
   long size = 0;
+  oc_rep_t *rep;
   size = oc_storage_read(ST_STORE_NAME, buf, ST_MAX_DATA_SIZE);
   if (size > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -74,7 +75,7 @@ st_load(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
-
+#endif
   return ret;
 }
 
@@ -95,7 +96,9 @@ st_dump(void)
   int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("[ST_Store] encoded info size %d", size);
+#ifdef OC_SECURITY
     oc_storage_write(ST_STORE_NAME, buf, size);
+#endif
   }
   OC_LOGbytes(buf, size);
 #ifdef OC_DYNAMIC_ALLOCATION
