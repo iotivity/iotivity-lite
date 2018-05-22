@@ -54,6 +54,7 @@ int st_thread_destroy(st_thread_t thread);
 int st_thread_join(st_thread_t thread);
 int st_thread_cancel(st_thread_t thread);
 void st_thread_exit(void *retval);
+void *st_process_func(void *data);
 
 void st_sleep(int seconds);
 void st_turn_on_soft_AP(st_soft_ap_t *data);
