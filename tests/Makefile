@@ -19,10 +19,10 @@ prep_files+=${topdir}/deps/tinycbor/LICENSE
 prep_files+=${topdir}/deps/mbedtls/LICENSE
 prep_files+=${topdir}/deps/gtest/LICENSE
 
-${port}/%: ${CURDIR}/port/${port} ${prep_files}
+linux/%: ${CURDIR}/../port/${port} ${prep_files}
 	${MAKE} -C $< ${@F}
 
-linux/%: ${CURDIR}/../port/${port} ${prep_files}
+${port}/%: ${CURDIR}/port/${port} ${prep_files}
 	${MAKE} -C $< ${@F}
 
 help: ${topdir}/README.rst
