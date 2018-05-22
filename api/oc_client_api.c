@@ -27,7 +27,7 @@ coap_packet_t request[1];
 oc_client_cb_t *client_cb;
 
 #ifdef OC_BLOCK_WISE
-static oc_blockwise_state_t *request_buffer;
+static oc_blockwise_state_t *request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
 oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
@@ -86,7 +86,10 @@ dispatch_coap_request(void)
   coap_send_transaction(transaction);
 
 #ifdef OC_BLOCK_WISE
-  request_buffer = 0;
+  if (request_buffer && request_buffer->ref_count == 0) {
+    oc_blockwise_free_request_buffer(request_buffer);
+  }
+  request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
   if (client_cb->observe_seq == -1) {
@@ -127,9 +130,9 @@ prepare_coap_request(oc_client_cb_t *cb)
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
+      OC_ERR("request_buffer is NULL");
       return false;
     }
-
     oc_rep_new(request_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 
     request_buffer->mid = cb->mid;

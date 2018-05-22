@@ -44,12 +44,14 @@
 void
 oc_memb_init(struct oc_memb *m)
 {
+  if (m->num > 0) {
+    memset(m->count, 0, m->num);
 #ifndef OC_DYNAMIC_ALLOCATION
-  memset(m->count, 0, m->num);
-  memset(m->mem, 0, (unsigned)m->size * (unsigned)m->num);
+    memset(m->mem, 0, (unsigned)m->size * (unsigned)m->num);
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  (void)m;
+    memset(m->mem, 0, (unsigned)m->num * sizeof(char *));
 #endif /* OC_DYNAMIC_ALLOCATION */
+  }
 }
 /*---------------------------------------------------------------------------*/
 void *
@@ -64,25 +66,35 @@ _oc_memb_alloc(
     return NULL;
   }
 
+  int i = m->num;
   void *ptr = NULL;
+  if (m->num > 0) {
+    for (i = 0; i < m->num; i++) {
+      if (m->count[i] == 0) {
+        /* If this block was unused, we increase the reference count to
+     indicate that it now is used and return a pointer to the
+     memory block. */
+        ++(m->count[i]);
+        break;
+      }
+    }
 
+    if (i < m->num) {
 #ifdef OC_DYNAMIC_ALLOCATION
-  ptr = calloc(1, m->size);
-
+      ptr = calloc(1, m->size);
+      void *slot = (void *)((char *)m->mem + (i * sizeof(void *)));
+      memcpy(slot, &ptr, sizeof(void *));
 #else  /* OC_DYNAMIC_ALLOCATION */
-  int i;
-
-  for (i = 0; i < m->num && !ptr; ++i) {
-    if (m->count[i] == 0) {
-      /* If this block was unused, we increase the reference count to
-   indicate that it now is used and return a pointer to the
-   memory block. */
-      ++(m->count[i]);
       ptr = (void *)((char *)m->mem + (i * m->size));
       memset(ptr, 0, m->size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
     }
   }
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#ifdef OC_DYNAMIC_ALLOCATION
+  else {
+    ptr = calloc(1, m->size);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
   if (!ptr) {
     /* No free block was found, so we return NULL to indicate failure to
@@ -113,38 +125,46 @@ _oc_memb_free(
   oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
 #endif
 
+  int i = m->num;
+  char *ptr2 = NULL;
+  if (m->num > 0) {
+    /* Walk through the list of blocks and try to find the block to
+       which the pointer "ptr" points to. */
+    ptr2 = (char *)m->mem;
+    for (i = 0; i < m->num; ++i) {
 #ifdef OC_DYNAMIC_ALLOCATION
-  (void)m;
-  free(ptr);
-  return 0;
-
+      if (memcmp(ptr2, &ptr, sizeof(void *)) == 0) {
 #else  /* OC_DYNAMIC_ALLOCATION */
-  int i;
-  char *ptr2;
-
-  /* Walk through the list of blocks and try to find the block to
-     which the pointer "ptr" points to. */
-  ptr2 = (char *)m->mem;
-  for (i = 0; i < m->num; ++i) {
-
-    if (ptr2 == (char *)ptr) {
-      /* We've found to block to which "ptr" points so we decrease the
-   reference count and return the new value of it. */
-      if (m->count[i] > 0) {
-        /* Make sure that we don't deallocate free memory. */
-        --(m->count[i]);
-      }
-      return m->count[i];
-    }
-    ptr2 += m->size;
-  }
-  return -1;
+      if (ptr2 == (char *)ptr) {
 #endif /* !OC_DYNAMIC_ALLOCATION */
+        /* We've found to block to which "ptr" points so we decrease the
+           reference count and return the new value of it. */
+        if (m->count[i] > 0) {
+          /* Make sure that we don't deallocate free memory. */
+          --(m->count[i]);
+        }
+        break;
+      }
+#ifdef OC_DYNAMIC_ALLOCATION
+      ptr2 += sizeof(void *);
+#else  /* OC_DYNAMIC_ALLOCATION */
+      ptr2 += m->size;
+#endif /* !OC_DYNAMIC_ALLOCATION */
+    }
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (i < m->num) {
+    memset(&ptr2, 0, sizeof(void *));
+  }
+  free(ptr);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  if (m->buffers_avail_cb) {
+    m->buffers_avail_cb(oc_memb_numfree(m));
+  }
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
-#ifndef OC_DYNAMIC_ALLOCATION
-int
-oc_memb_inmemb(struct oc_memb *m, void *ptr)
+int oc_memb_inmemb(struct oc_memb * m, void *ptr)
 {
   return (char *)ptr >= (char *)m->mem &&
          (char *)ptr < (char *)m->mem + (m->num * m->size);
@@ -164,4 +184,10 @@ oc_memb_numfree(struct oc_memb *m)
 
   return num_free;
 }
-#endif /* !OC_DYNAMIC_ALLOCATION */
+/*---------------------------------------------------------------------------*/
+void oc_memb_set_buffers_avail_cb(struct oc_memb * m,
+                                  oc_memb_buffers_avail_callback_t cb)
+{
+  m->buffers_avail_cb = cb;
+}
+/*---------------------------------------------------------------------------*/
