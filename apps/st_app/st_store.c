@@ -51,7 +51,9 @@ st_load(void)
   uint8_t buf[ST_MAX_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
   long size = 0;
+#ifdef OC_SECURITY
   size = oc_storage_read(ST_STORE_NAME, buf, ST_MAX_DATA_SIZE);
+#endif
   if (size > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
     char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -81,6 +83,7 @@ st_load(void)
 void
 st_dump(void)
 {
+#ifdef OC_SECURITY
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf)
@@ -101,4 +104,5 @@ st_dump(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_SECURITY */
 }
