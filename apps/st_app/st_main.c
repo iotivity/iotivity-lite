@@ -25,6 +25,7 @@
 #include "st_easy_setup.h"
 #include "st_port.h"
 #include "st_store.h"
+#include "st_resource_manager.h"
 
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
@@ -55,43 +56,20 @@ static sc_properties st_vendor_props;
 
 static provisioning_info_resource g_prov_resource;
 
-static const char *switch_rsc_uri = "/capability/switch/main/0";
-static const char *switch_rsc_rt = "x.com.st.powerswitch";
-static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
-static const char *switchlevel_rsc_rt = "oic.r.light.dimming";
-static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
-static const char *color_temp_rsc_rt = "x.com.st.color.temperature";
-static const char *resource_name = "Samsung's Light";
+static int device_index = 0;
 
 static const char *device_rt = "oic.d.light";
 static const char *device_name = "Samsung";
 
 static const char *manufacturer = "xxxx";
 
-static bool discoverable = true;
-static bool observable = true;
-
 st_mutex_t mutex = NULL;
 st_cond_t cv = NULL;
 struct timespec ts;
 
 st_mutex_t app_mutex = NULL;
-oc_resource_t *switch_resource;
-oc_link_t *publish_res;
 
 int quit = 0;
-
-static char power[10] = "on";
-static int dimmingSetting = 50;
-
-static int ct = 50;
-static int range[2] = { 0, 100 };
-oc_string_t name;
-
-oc_define_interrupt_handler(observe)
-{
-  oc_notify_observers(switch_resource);
-}
 
 static void
 init_platform_cb(CborEncoder *object, void *data)
@@ -108,229 +86,16 @@ init_platform_cb(CborEncoder *object, void *data)
 static int
 app_init(void)
 {
-  oc_activate_interrupt_handler(observe);
   int ret = oc_init_platform(manufacturer, init_platform_cb, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
-  oc_new_string(&name, resource_name, strlen(resource_name));
   return ret;
-}
-
-static void
-switch_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
-  oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_text_string(root, power, power);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-}
-
-static void
-switch_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-                   void *user_data)
-{
-  (void)user_data;
-
-  st_print_log("switch_get_handler:\n");
-  switch_construct(request, interface);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-switch_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-                    void *user_data)
-{
-  (void)interface;
-  (void)user_data;
-  st_print_log("switch_post_handler:\n");
-  st_print_log("  Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "power") == 0) {
-        strcpy(power, oc_string(rep->value.string));
-        st_print_log(" %s\n", power);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  switch_construct(request, interface);
-  oc_send_response(request, OC_STATUS_CHANGED);
-}
-
-static void
-switchlevel_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
-  oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_int(root, dimmingSetting, dimmingSetting);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-}
-
-static void
-switchlevel_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-                        void *user_data)
-{
-  (void)user_data;
-
-  st_print_log("switchlevel_get_handler:\n");
-  switchlevel_construct(request, interface);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-switchlevel_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-                         void *user_data)
-{
-  (void)interface;
-  (void)user_data;
-  st_print_log("switchlevel_post_handler:\n");
-  st_print_log("  Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (strcmp(oc_string(rep->name), "dimmingSetting") == 0) {
-        dimmingSetting = rep->value.integer;
-        st_print_log(" %d\n", dimmingSetting);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  switchlevel_construct(request, interface);
-  oc_send_response(request, OC_STATUS_CHANGED);
-}
-
-static void
-color_temp_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
-  oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_int(root, ct, ct);
-    oc_rep_set_int_array(root, range, range, 2);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-}
-
-static void
-color_temp_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data)
-{
-  (void)user_data;
-
-  st_print_log("color_temp_get_handler:\n");
-  color_temp_construct(request, interface);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-color_temp_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-                        void *user_data)
-{
-  (void)interface;
-  (void)user_data;
-  st_print_log("color_temp_post_handler:\n");
-  st_print_log("  Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (strcmp(oc_string(rep->name), "ct") == 0) {
-        ct = rep->value.integer;
-        st_print_log(" %d\n", ct);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  color_temp_construct(request, interface);
-  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
 register_resources(void)
 {
-  switch_resource = oc_new_resource(NULL, switch_rsc_uri, 1, 0);
-  oc_resource_bind_resource_type(switch_resource, switch_rsc_rt);
-  oc_resource_bind_resource_interface(switch_resource, OC_IF_A);
-  oc_resource_set_default_interface(switch_resource, OC_IF_BASELINE);
-  oc_resource_set_discoverable(switch_resource, discoverable);
-  oc_resource_set_observable(switch_resource, observable);
-  oc_resource_set_request_handler(switch_resource, OC_GET, switch_get_handler,
-                                  NULL);
-  oc_resource_set_request_handler(switch_resource, OC_POST, switch_post_handler,
-                                  NULL);
-  oc_add_resource(switch_resource);
-
-  oc_resource_t *level = oc_new_resource(NULL, switchlevel_rsc_uri, 1, 0);
-  oc_resource_bind_resource_type(level, switchlevel_rsc_rt);
-  oc_resource_bind_resource_interface(level, OC_IF_A);
-  oc_resource_set_discoverable(level, discoverable);
-  oc_resource_set_observable(level, observable);
-  oc_resource_set_request_handler(level, OC_GET, switchlevel_get_handler, NULL);
-  oc_resource_set_request_handler(level, OC_POST, switchlevel_post_handler,
-                                  NULL);
-  oc_add_resource(level);
-
-  oc_resource_t *temperature = oc_new_resource(NULL, color_temp_rsc_uri, 1, 0);
-  oc_resource_bind_resource_type(temperature, color_temp_rsc_rt);
-  oc_resource_bind_resource_interface(temperature, OC_IF_A);
-  oc_resource_bind_resource_interface(temperature, OC_IF_S);
-  oc_resource_set_default_interface(temperature, OC_IF_BASELINE);
-  oc_resource_set_discoverable(temperature, discoverable);
-  oc_resource_set_observable(temperature, observable);
-  oc_resource_set_request_handler(temperature, OC_GET, color_temp_get_handler,
-                                  NULL);
-  oc_resource_set_request_handler(temperature, OC_POST, color_temp_post_handler,
-                                  NULL);
-  oc_add_resource(temperature);
-
-  publish_res = oc_new_link(switch_resource);
-  oc_link_t *publish_res1 = oc_new_link(level);
-  oc_link_t *publish_res2 = oc_new_link(temperature);
-  oc_list_add((oc_list_t)publish_res, publish_res1);
-  oc_list_add((oc_list_t)publish_res, publish_res2);
-
-  register_sc_provisioning_info_resource();
+  st_register_resources(device_index);
 }
 
 static void
@@ -422,7 +187,7 @@ set_sc_prov_info(void)
     target_size, sizeof(provisioning_info_targets));
 
   for (i = 0; i < target_size; i++) {
-    oc_uuid_to_str(oc_core_get_device_id(switch_resource->device), uuid,
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid,
                    MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].targetDi, uuid, strlen(uuid));
     oc_new_string(&g_prov_resource.targets[i].targetRt, device_rt,
@@ -431,7 +196,7 @@ set_sc_prov_info(void)
   }
   g_prov_resource.targets_size = target_size;
   g_prov_resource.owned = false;
-  oc_uuid_to_str(oc_core_get_device_id(switch_resource->device), uuid,
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid,
                  MAX_UUID_LENGTH);
   oc_new_string(&g_prov_resource.easysetupdi, uuid, strlen(uuid));
 
@@ -532,8 +297,10 @@ st_main_initialize(void)
     st_sleep(3);
   }
 
+  oc_link_t *publish_res = st_get_publish_resources();
+
   // cloud access
-  if (st_cloud_access_start(cloud_info, publish_res, switch_resource->device,
+  if (st_cloud_access_start(cloud_info, publish_res, device_index,
                             cloud_access_handler) != 0) {
     st_print_log("Failed to access cloud!\n");
     return false;
@@ -542,7 +309,7 @@ st_main_initialize(void)
   st_print_log("cloud access started.\n");
   while (!is_cloud_access_success && quit != 1) {
     st_mutex_lock(app_mutex);
-    if (get_cloud_access_status(switch_resource->device) ==
+    if (get_cloud_access_status(device_index) ==
         CLOUD_ACCESS_FINISH) {
       st_mutex_unlock(app_mutex);
       break;
@@ -573,7 +340,7 @@ st_main_reset(void)
   st_easy_setup_stop();
   is_easy_setup_success = false;
 
-  st_cloud_access_stop(switch_resource->device);
+  st_cloud_access_stop(device_index);
   is_cloud_access_success = false;
 }
 
@@ -692,7 +459,6 @@ main(void)
   thread = NULL;
   st_print_log("st_thread_destroy finish!\n");
 
-  oc_link_t *next;
 exit:
 
   device_num = oc_core_get_num_devices();
@@ -701,18 +467,14 @@ exit:
     oc_free_server_endpoints(ep);
   }
 
-  while (publish_res) {
-    next = oc_list_item_next(publish_res);
-    oc_delete_link(publish_res);
-    publish_res = next;
-  }
+  st_delete_publish_resources();
+
   st_easy_setup_stop();
   st_print_log("easy setup stop done\n");
 
-  st_cloud_access_stop(switch_resource->device);
+  st_cloud_access_stop(device_index);
   st_print_log("cloud access stop done\n");
 
-  oc_free_string(&name);
   st_vendor_props_shutdown();
   oc_main_shutdown();
 
