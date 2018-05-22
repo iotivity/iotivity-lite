@@ -19,7 +19,9 @@ def helpmsg(script):
 Usage:
     build:
         python %s <targetbuild>
-        Allowed values for <target_build>: all, linux, linux_test, tizenrt
+        Allowed values for <target_build>: all,
+            linux, linux_test, linux_unsecured, linux_unecured_test,
+            tizenrt
     clean:
         python %s -c
     '''
@@ -52,6 +54,8 @@ def build_all(flag, extra_option_str):
     if platform.system() == "Linux":
         build_linux(flag, extra_option_str)
         build_linux_test(flag, extra_option_str)
+        build_linux_unsecured(flag, extra_option_str)
+        build_linux_unsecured_test(flag, extra_option_str)
         build_tizenrt(flag, extra_option_str)
 
 def build_linux(flag, extra_option_str):
@@ -64,6 +68,17 @@ def build_linux_test(flag, extra_option_str):
     print ("*********** Build for linux ************")
     extra_option_str += ' SECURE=1';
     build_linux("true", "test" + extra_option_str)
+
+
+def build_linux_unsecured(flag, extra_option_str):
+    print ("*********** Build for linux ************")
+    build_options = build_option_param
+    extra_option_str += ' SECURE=0';
+    call_make(build_options, extra_option_str)
+
+def build_linux_unsecured_test(flag, extra_option_str):
+    print ("*********** Build for linux ************")
+    build_linux_unsecured("true", "test" + extra_option_str)
 
 def build_tizenrt(flag, extra_option_str):
     print ("*********** Build for tizenrt ************")
@@ -100,6 +115,12 @@ elif arg_num == 2:
 
     elif str(sys.argv[1]) == "linux_test":
         build_linux_test("true", "")
+
+    elif str(sys.argv[1]) == "linux_unsecured":
+        build_linux_unsecured("true", "")
+
+    elif str(sys.argv[1]) == "linux_unsecured_test":
+        build_linux_unsecured_test("true", "")
 
     elif str(sys.argv[1]) == "tizenrt":
         build_tizenrt("true", "")
