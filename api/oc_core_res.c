@@ -151,7 +151,11 @@ oc_core_regen_unique_ids(int device)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   oc_device_info_t *d = &oc_device_info[device];
+#if defined(OC_SPEC_VER_OIC)
+  oc_gen_uuid_from_mac(&doxm->deviceuuid);
+#else
   oc_gen_uuid(&doxm->deviceuuid);
+#endif //OC_SPEC_VER_OIC
   memcpy(d->di.id, doxm->deviceuuid.id, 16);
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
