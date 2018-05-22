@@ -227,6 +227,11 @@ st_decode_cloud_access_info(oc_rep_t *rep)
         oc_new_string(&g_store_info.cloudinfo.access_token,
                       oc_string(t->value.string),
                       oc_string_len(t->value.string));
+      } else if (len == 13 &&
+                 memcmp(oc_string(t->name), "refresh_token", 13) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.refresh_token,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
       } else {
         OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
         return -1;
@@ -301,6 +306,8 @@ st_encode_store_info(void)
                              oc_string(g_store_info.cloudinfo.uid));
   st_rep_set_string_with_chk(cloudinfo, access_token,
                              oc_string(g_store_info.cloudinfo.access_token));
+  st_rep_set_string_with_chk(cloudinfo, refresh_token,
+                             oc_string(g_store_info.cloudinfo.refresh_token));
   oc_rep_close_object(root, cloudinfo);
   oc_rep_end_root_object();
 }
@@ -321,6 +328,8 @@ st_set_default_store_info(void)
     oc_free_string(&g_store_info.cloudinfo.uid);
   } else if (oc_string(g_store_info.cloudinfo.access_token)) {
     oc_free_string(&g_store_info.cloudinfo.access_token);
+  } else if (oc_string(g_store_info.cloudinfo.refresh_token)) {
+    oc_free_string(&g_store_info.cloudinfo.refresh_token);
   }
 }
 
@@ -478,6 +487,11 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
                  oc_string(cloud_prov_data->access_token));
   }
 
+  if (oc_string(cloud_prov_data->refresh_token)) {
+    st_print_log("[Easy_Setup] Refresh Token : %s\n",
+                 oc_string(cloud_prov_data->refresh_token));
+  }
+
   if (oc_string(cloud_prov_data->auth_provider)) {
     st_print_log("[Easy_Setup] AuthProvider : %s\n",
                  oc_string(cloud_prov_data->auth_provider));
@@ -497,6 +511,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
   }
 
   if (!oc_string(cloud_prov_data->access_token) ||
+      !oc_string(cloud_prov_data->refresh_token) ||
       !oc_string(cloud_prov_data->auth_provider) ||
       !oc_string(cloud_prov_data->ci_server) || !oc_string(data->uid)) {
     st_print_log("[Easy_Setup] cloud provision info is not enough!");
@@ -505,6 +520,8 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
 
   st_string_copy(&g_store_info.cloudinfo.access_token,
                  &cloud_prov_data->access_token);
+  st_string_copy(&g_store_info.cloudinfo.refresh_token,
+                 &cloud_prov_data->refresh_token);
   st_string_copy(&g_store_info.cloudinfo.auth_provider,
                  &cloud_prov_data->auth_provider);
   st_string_copy(&g_store_info.cloudinfo.ci_server,

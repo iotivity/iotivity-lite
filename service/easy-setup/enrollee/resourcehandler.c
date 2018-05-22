@@ -151,14 +151,14 @@ update_coap_cloud_conf_resource(oc_request_t *request,
   OC_DBG("in");
 
   (void)interface;
-  es_coap_cloud_conf_data cloud_data={
-    .auth_code.ptr="",
-    .access_token.ptr="",
-    .access_token_type=NONE_OAUTH_TOKENTYPE,
-    .auth_provider.ptr="",
-    .ci_server.ptr="",
-    .userdata = NULL
-  };
+  es_coap_cloud_conf_data cloud_data = {.auth_code.ptr = "",
+                                        .access_token.ptr = "",
+                                        .refresh_token.ptr = "",
+                                        .access_token_type =
+                                          NONE_OAUTH_TOKENTYPE,
+                                        .auth_provider.ptr = "",
+                                        .ci_server.ptr = "",
+                                        .userdata = NULL };
 
   bool is_valid = false;
 
@@ -181,6 +181,16 @@ update_coap_cloud_conf_resource(oc_request_t *request,
           oc_allocate_string(&cloud_data.access_token, oc_string(rep->value.string));
           OC_DBG("g_cloudconf_resource.access_token : %s",
                  g_cloudconf_resource.access_token);
+          is_valid = true;
+        }
+      } else if (oc_compare_property(rep, OC_RSRVD_ES_REFRESHTOKEN)) {
+        if (oc_string_len(rep->value.string) > 0) {
+          oc_allocate_string(&g_cloudconf_resource.refresh_token,
+                             oc_string(rep->value.string));
+          oc_allocate_string(&cloud_data.refresh_token,
+                             oc_string(rep->value.string));
+          OC_DBG("g_cloudconf_resource.refresh_token : %s",
+                 g_cloudconf_resource.refresh_token);
           is_valid = true;
         }
       } else if (oc_compare_property(rep, OC_RSRVD_ES_AUTHPROVIDER)) {
