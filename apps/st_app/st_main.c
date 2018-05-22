@@ -24,8 +24,9 @@
 #include "st_cloud_access.h"
 #include "st_easy_setup.h"
 #include "st_port.h"
-#include "st_store.h"
+#include "st_process.h"
 #include "st_resource_manager.h"
+#include "st_store.h"
 
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
@@ -63,12 +64,6 @@ static const char *device_name = "Samsung";
 
 static const char *manufacturer = "xxxx";
 
-st_mutex_t mutex = NULL;
-st_cond_t cv = NULL;
-struct timespec ts;
-
-st_mutex_t app_mutex = NULL;
-
 int quit = 0;
 
 static void
@@ -98,54 +93,23 @@ register_resources(void)
   st_register_resources(device_index);
 }
 
-static void
-signal_event_loop(void)
-{
-  st_mutex_lock(mutex);
-  st_cond_signal(cv);
-  st_mutex_unlock(mutex);
-}
-
 void
 handle_signal(int signal)
 {
   (void)signal;
-  signal_event_loop();
+  st_process_signal();
   quit = 1;
-}
-
-static void *
-process_func(void *data)
-{
-  (void)data;
-  oc_clock_time_t next_event;
-
-  while (quit != 1) {
-    st_mutex_lock(app_mutex);
-    next_event = oc_main_poll();
-    st_mutex_unlock(app_mutex);
-    st_mutex_lock(mutex);
-    if (next_event == 0) {
-      st_cond_wait(cv, mutex);
-    } else {
-      st_cond_timedwait(cv, mutex, next_event);
-    }
-    st_mutex_unlock(mutex);
-  }
-
-  st_thread_exit(NULL);
-  return NULL;
 }
 
 void
 print_menu(void)
 {
-  st_mutex_lock(app_mutex);
+  st_process_app_sync_lock();
   st_print_log("=====================================\n");
   st_print_log("1. Reset device\n");
   st_print_log("0. Quit\n");
   st_print_log("=====================================\n");
-  st_mutex_unlock(app_mutex);
+  st_process_app_sync_unlock();
 }
 
 static bool is_easy_setup_success = false;
@@ -266,12 +230,12 @@ st_main_initialize(void)
 
   st_print_log("easy setup is started.\n");
   while (!is_easy_setup_success && quit != 1) {
-    st_mutex_lock(app_mutex);
+    st_process_app_sync_lock();
     if (get_easy_setup_status() == EASY_SETUP_FINISH) {
-      st_mutex_unlock(app_mutex);
+      st_process_app_sync_unlock();
       break;
     }
-    st_mutex_unlock(app_mutex);
+    st_process_app_sync_unlock();
     st_sleep(1);
     st_print_log(".");
     fflush(stdout);
@@ -308,13 +272,12 @@ st_main_initialize(void)
 
   st_print_log("cloud access started.\n");
   while (!is_cloud_access_success && quit != 1) {
-    st_mutex_lock(app_mutex);
-    if (get_cloud_access_status(device_index) ==
-        CLOUD_ACCESS_FINISH) {
-      st_mutex_unlock(app_mutex);
+    st_process_app_sync_lock();
+    if (get_cloud_access_status(device_index) == CLOUD_ACCESS_FINISH) {
+      st_process_app_sync_unlock();
       break;
     }
-    st_mutex_unlock(app_mutex);
+    st_process_app_sync_unlock();
     st_sleep(1);
     st_print_log(".");
     fflush(stdout);
@@ -351,7 +314,7 @@ main(void)
   st_set_sigint_handler(handle_signal);
 
   static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
+                                       .signal_event_loop = st_process_signal,
                                        .register_resources =
                                          register_resources };
 
@@ -359,24 +322,8 @@ main(void)
   oc_storage_config("./st_things_creds");
 #endif /* OC_SECURITY */
 
-  mutex = st_mutex_init();
-  if (!mutex) {
-    st_print_log("st_mutex_init failed!\n");
-    return -1;
-  }
-
-  app_mutex = st_mutex_init();
-  if (!app_mutex) {
-    st_print_log("st_mutex_init failed!\n");
-    st_mutex_destroy(mutex);
-    return -1;
-  }
-
-  cv = st_cond_init();
-  if (!cv) {
-    st_print_log("st_cond_init failed!\n");
-    st_mutex_destroy(mutex);
-    st_mutex_destroy(app_mutex);
+  if (st_process_init() != 0) {
+    st_print_log("st_process_init failed.\n");
     return -1;
   }
 
@@ -405,9 +352,8 @@ main(void)
     }
   }
 
-  st_thread_t thread = st_thread_create(process_func, NULL);
-  if (!thread) {
-    st_print_log("Failed to create main thread\n");
+  if (st_process_start() != 0) {
+    st_print_log("st_process_start failed.\n");
     init = -1;
     goto exit;
   }
@@ -435,11 +381,11 @@ main(void)
         continue;
       }
 
-      st_mutex_lock(app_mutex);
+      st_process_app_sync_lock();
       switch (key[0]) {
       case '1':
         st_main_reset();
-        st_mutex_unlock(app_mutex);
+        st_process_app_sync_unlock();
         goto reset;
       case '0':
         quit = 1;
@@ -449,15 +395,13 @@ main(void)
         st_print_log("unsupported command.\n");
         break;
       }
-      st_mutex_unlock(app_mutex);
+      st_process_app_sync_unlock();
     }
   reset:
     st_print_log("reset finished\n");
   }
 
-  st_thread_destroy(thread);
-  thread = NULL;
-  st_print_log("st_thread_destroy finish!\n");
+  st_process_stop();
 
 exit:
 
@@ -478,8 +422,6 @@ exit:
   st_vendor_props_shutdown();
   oc_main_shutdown();
 
-  st_cond_destroy(cv);
-  st_mutex_destroy(app_mutex);
-  st_mutex_destroy(mutex);
+  st_process_destroy();
   return 0;
 }
