@@ -33,28 +33,30 @@
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
-OC_MEMB(oc_buffers_s, oc_message_t, (OC_MAX_NUM_CONCURRENT_REQUESTS * 2));
+OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
-oc_message_t *
-oc_allocate_message(void)
+static oc_message_t *
+allocate_message(struct oc_memb *pool)
 {
   oc_network_event_handler_mutex_lock();
-  oc_message_t *message = (oc_message_t *)oc_memb_alloc(&oc_buffers_s);
+  oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
     message->data = malloc(OC_PDU_SIZE);
     if (!message->data) {
-      oc_memb_free(&oc_buffers_s, message);
+      oc_memb_free(pool, message);
       return NULL;
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
+    message->pool = pool;
     message->length = 0;
     message->next = 0;
     message->ref_count = 1;
 #ifndef OC_DYNAMIC_ALLOCATION
     OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
-           oc_memb_numfree(&oc_buffers_s));
+           oc_memb_numfree(pool));
 #endif /* !OC_DYNAMIC_ALLOCATION */
   }
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -63,6 +65,33 @@ oc_allocate_message(void)
   }
 #endif /* !OC_DYNAMIC_ALLOCATION */
   return message;
+}
+
+oc_message_t *
+oc_allocate_message_from_pool(struct oc_memb *pool)
+{
+  if (pool) {
+    return allocate_message(pool);
+  }
+  return NULL;
+}
+
+void
+oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
+{
+  oc_memb_set_buffers_avail_cb(&oc_incoming_buffers, cb);
+}
+
+oc_message_t *
+oc_allocate_message(void)
+{
+  return allocate_message(&oc_incoming_buffers);
+}
+
+oc_message_t *
+oc_internal_allocate_outgoing_message(void)
+{
+  return allocate_message(&oc_outgoing_buffers);
 }
 
 void
@@ -81,10 +110,11 @@ oc_message_unref(oc_message_t *message)
 #ifdef OC_DYNAMIC_ALLOCATION
       free(message->data);
 #endif /* OC_DYNAMIC_ALLOCATION */
-      oc_memb_free(&oc_buffers_s, message);
+      struct oc_memb *pool = message->pool;
+      oc_memb_free(pool, message);
 #ifndef OC_DYNAMIC_ALLOCATION
       OC_DBG("buffer: freed TX/RX buffer; num free: %d",
-             oc_memb_numfree(&oc_buffers_s));
+             oc_memb_numfree(message->pool));
 #endif /* !OC_DYNAMIC_ALLOCATION */
     }
   }
