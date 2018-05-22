@@ -13,13 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
-
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#if defined(OC_SPEC_VER_OIC)
+#include <mbedtls/sha256.h>
+#endif //OC_SPEC_VER_OIC
+
 
 /* This module implements the generation of type-4 UUIDs
  * based on its specification in RFC 4122, along with routines
@@ -122,3 +126,20 @@ oc_gen_uuid(oc_uuid_t *uuid)
   uuid->id[6] &= 0x0f;
   uuid->id[6] |= 0x40;
 }
+
+#if defined(OC_SPEC_VER_OIC)
+void
+oc_gen_uuid_from_mac(oc_uuid_t *uuid)
+{
+  unsigned char mac[6] = {0};
+  unsigned char hash[32];
+  if (!uuid || oc_get_mac_addr(mac) == -1)
+   return;
+  mbedtls_sha256_context sha256_ctx;
+  mbedtls_sha256_init(&sha256_ctx);
+  mbedtls_sha256_update_ret(&sha256_ctx, mac, sizeof(mac));
+  mbedtls_sha256_finish_ret(&sha256_ctx, hash);
+  memcpy(uuid->id, hash, sizeof(oc_uuid_t));
+}
+#endif //OC_SPEC_VER_OIC
+
