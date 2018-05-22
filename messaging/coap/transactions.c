@@ -84,7 +84,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
-    t->message = oc_allocate_message();
+    t->message = oc_internal_allocate_outgoing_message();
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;

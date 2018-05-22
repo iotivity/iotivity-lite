@@ -81,6 +81,7 @@ enum
 struct oc_message_s
 {
   struct oc_message_s *next;
+  struct oc_memb *pool;
   oc_endpoint_t endpoint;
   size_t length;
   uint8_t ref_count;

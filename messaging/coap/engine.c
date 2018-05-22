@@ -98,7 +98,7 @@ coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
   coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_allocate_message();
+  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
   if (ack_message) {
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
     ack_message->length = coap_serialize_message(ack, ack_message->data);
