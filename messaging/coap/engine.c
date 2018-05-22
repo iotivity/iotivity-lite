@@ -239,10 +239,12 @@ coap_receive(oc_message_t *msg)
         }
       }
 
+#ifndef OC_BLOCK_WISE
       /* create transaction for response */
       transaction = coap_new_transaction(message->mid, &msg->endpoint);
-
-      if (transaction) {
+      if (transaction)
+#endif /* !OC_BLOCK_WISE */
+      {
 #ifdef OC_BLOCK_WISE
         const char *href;
         int href_len = coap_get_header_uri_path(message, &href);
@@ -281,7 +283,7 @@ coap_receive(oc_message_t *msg)
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
                 request_buffer->ref_count = 1;
-                goto send_message;
+                goto send_message_with_transaction;
               } else {
                 OC_DBG("received all blocks for payload");
                 coap_set_header_block1(response, block1_num, block1_more,
@@ -294,7 +296,7 @@ coap_receive(oc_message_t *msg)
             }
           }
           OC_ERR("could not create block-wise request buffer");
-          goto init_reset_message;
+          goto init_reset_message_with_transaction;
         } else if (block2) {
           OC_DBG("processing block2 option");
           unsigned int accept = 0;
@@ -324,7 +326,9 @@ coap_receive(oc_message_t *msg)
               coap_set_header_etag(response, response_state->etag,
                                    COAP_ETAG_LEN);
               response_buffer->ref_count = more;
-              goto send_message;
+
+              goto send_message_with_transaction;
+
             } else {
               OC_ERR("could not dispatch block");
             }
@@ -346,7 +350,7 @@ coap_receive(oc_message_t *msg)
                                             request_buffer, 0, incoming_block,
                                             (uint16_t)incoming_block_len))) {
                     OC_ERR("could not create buffer to hold request payload");
-                    goto init_reset_message;
+                    goto init_reset_message_with_transaction;
                   }
                   if (message->uri_query_len > 0) {
                     oc_new_string(&request_buffer->uri_query,
@@ -361,7 +365,7 @@ coap_receive(oc_message_t *msg)
                      "block_num > 0");
             }
           }
-          goto init_reset_message;
+          goto init_reset_message_with_transaction;
         } else {
           OC_DBG("no block options; processing regular request");
 #ifdef OC_TCP
@@ -382,7 +386,7 @@ coap_receive(oc_message_t *msg)
                     oc_blockwise_handle_block(request_buffer, 0, incoming_block,
                                               (uint16_t)incoming_block_len))) {
                 OC_ERR("could not create buffer to hold request payload");
-                goto init_reset_message;
+                goto init_reset_message_with_transaction;
               }
               if (message->uri_query_len > 0) {
                 oc_new_string(&request_buffer->uri_query, message->uri_query,
@@ -395,9 +399,9 @@ coap_receive(oc_message_t *msg)
           } else {
             OC_ERR("incoming payload size exceeds block size");
           }
-          goto init_reset_message;
+          goto init_reset_message_with_transaction;
         }
-#else  /* OC_BLOCK_WISE */
+#else /* OC_BLOCK_WISE */
         if (block1 || block2) {
           goto init_reset_message;
         }
@@ -457,7 +461,12 @@ coap_receive(oc_message_t *msg)
         }
 #endif /* OC_BLOCK_WISE */
         if (response->code != 0) {
+
+#ifdef OC_BLOCK_WISE
+          goto send_message_with_transaction;
+#else  /* OC_BLOCK_WISE */
           goto send_message;
+#endif /* !OC_BLOCK_WISE */
         }
       }
     } else {
@@ -612,6 +621,7 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_BLOCK_WISE
         oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
                                &msg->endpoint);
+
         goto free_blockwise_buffers;
 #else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
@@ -620,6 +630,12 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_CLIENT */
     }
   }
+#ifdef OC_BLOCK_WISE
+  goto init_reset_message;
+init_reset_message_with_transaction:
+  /* create transaction */
+  transaction = coap_new_transaction(message->mid, &msg->endpoint);
+#endif
 
 init_reset_message:
 #ifdef OC_TCP
@@ -640,6 +656,13 @@ free_blockwise_buffers:
   if (response_buffer) {
     response_buffer->ref_count = 0;
   }
+#endif /* OC_BLOCK_WISE */
+
+#ifdef OC_BLOCK_WISE
+  goto send_message;
+send_message_with_transaction:
+  /* create transaction */
+  transaction = coap_new_transaction(message->mid, &msg->endpoint);
 #endif /* OC_BLOCK_WISE */
 
 send_message:
