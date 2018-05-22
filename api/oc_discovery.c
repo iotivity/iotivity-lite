@@ -476,9 +476,10 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
   memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                 rep_objects_alloc, (void *)rep_objects_pool };
+                                 rep_objects_alloc, (void *)rep_objects_pool,
+                                 0 };
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
 
