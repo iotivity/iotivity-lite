@@ -18,6 +18,8 @@
 
 #define _GNU_SOURCE
 #include "../st_port.h"
+#include "../st_process.h"
+#include "oc_api.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
@@ -220,6 +222,29 @@ void
 st_thread_exit(void *retval)
 {
   pthread_exit(retval);
+}
+
+void *
+st_process_func(void *data)
+{
+  st_process_data_t *process_data = (st_process_data_t *)data;
+  oc_clock_time_t next_event;
+
+  while (process_data->quit != 1) {
+    st_mutex_lock(process_data->app_mutex);
+    next_event = oc_main_poll();
+    st_mutex_unlock(process_data->app_mutex);
+    st_mutex_lock(process_data->mutex);
+    if (next_event == 0) {
+      st_cond_wait(process_data->cv, process_data->mutex);
+    } else {
+      st_cond_timedwait(process_data->cv, process_data->mutex, next_event);
+    }
+    st_mutex_unlock(process_data->mutex);
+  }
+
+  st_thread_exit(NULL);
+  return NULL;
 }
 
 void
