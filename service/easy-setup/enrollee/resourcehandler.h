@@ -68,6 +68,7 @@ typedef struct
   oc_resource_t *handle;
   oc_string_t auth_code;
   oc_string_t access_token;
+  oc_string_t refresh_token;
   oauth_tokentype access_token_type;
   oc_string_t auth_provider;
   oc_string_t ci_server;

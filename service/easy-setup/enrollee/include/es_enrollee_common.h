@@ -64,16 +64,15 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t auth_code;                             // auth code issued by
-                                                     // OAuth2.0-compatible account server
-  oc_string_t access_token;                          // access token resolved with an auth
-                                                     // code
-  oauth_tokentype access_token_type;                 // access token type
-  oc_string_t auth_provider;                         // auth provider ID
-  oc_string_t ci_server;                             // cloud interface server URL which
-                                                     // an Enrollee is
-                                                     // going to registered
-  void *userdata;                                    // vender-specific data
+  oc_string_t auth_code;             // auth code issued by
+                                     // OAuth2.0-compatible account server
+  oc_string_t access_token;          // access token resolved with an auth code
+  oc_string_t refresh_token;         // refresh token resolved with an auth code
+  oauth_tokentype access_token_type; // access token type
+  oc_string_t auth_provider;         // auth provider ID
+  oc_string_t ci_server;             // cloud interface server URL which
+                                     // an Enrollee is going to registered
+  void *userdata;                    // vender-specific data
 } es_coap_cloud_conf_data;
 
 /**

@@ -57,6 +57,7 @@ extern "C" {
 #define OC_RSRVD_ES_ENCTYPE "wet"
 #define OC_RSRVD_ES_AUTHCODE "ac"
 #define OC_RSRVD_ES_ACCESSTOKEN "at"
+#define OC_RSRVD_ES_REFRESHTOKEN "rt"
 #define OC_RSRVD_ES_ACCESSTOKEN_TYPE "att"
 #define OC_RSRVD_ES_AUTHPROVIDER "apn"
 #define OC_RSRVD_ES_CISERVER "cis"
