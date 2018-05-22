@@ -237,7 +237,7 @@ oc_obt_load_state(void)
 
   ret = oc_storage_read("obt_state", buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 };
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
     oc_rep_set_pool(&rep_objects);
     uint16_t err = oc_parse_rep(buf, ret, &rep);
     head = rep;
