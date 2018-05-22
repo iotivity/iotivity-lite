@@ -139,8 +139,8 @@ es_worker_thread_routine(void *thread_data)
   sleep(1);
 
   /** Connect to Target Wi-Fi AP */
-  char nmcli_command[256];
-  sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
+  char nmcli_command[64+strlen(ssid)+strlen(pwd)];
+  snprintf(nmcli_command, sizeof(nmcli_command), "nmcli d wifi connect %s password %s", ssid, pwd);
 
   printf("executing commnad: %s\n", nmcli_command);
 
