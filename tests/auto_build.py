@@ -21,7 +21,8 @@ Usage:
         python %s <targetbuild>
         Allowed values for <target_build>: all,
             linux, linux_test, linux_unsecured, linux_unecured_test,
-            tizenrt
+            tizenrt,
+            freertos
     clean:
         python %s -c
     '''
@@ -57,6 +58,7 @@ def build_all(flag, extra_option_str):
         build_linux_unsecured(flag, extra_option_str)
         build_linux_unsecured_test(flag, extra_option_str)
         build_tizenrt(flag, extra_option_str)
+        build_freertos(flag, extra_option_str)
 
 def build_linux(flag, extra_option_str):
     print ("*********** Build for linux ************")
@@ -84,6 +86,12 @@ def build_tizenrt(flag, extra_option_str):
     print ("*********** Build for tizenrt ************")
     build_options = build_option_param
     extra_option_str += "port=tizenrt"
+    call_make(build_options, extra_option_str)
+
+def build_freertos(flag, extra_option_str):
+    print ("*********** Build for freertos ************")
+    build_options = build_option_param
+    extra_option_str += "port=freertos"
     call_make(build_options, extra_option_str)
 
 # Main module starts here
@@ -124,6 +132,9 @@ elif arg_num == 2:
 
     elif str(sys.argv[1]) == "tizenrt":
         build_tizenrt("true", "")
+
+    elif str(sys.argv[1]) == "freertos":
+        build_freertos("true", "")
 
     else:
         helpmsg(script_name)
