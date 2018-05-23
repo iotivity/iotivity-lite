@@ -37,18 +37,18 @@ PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST
 UNIT_TESTS = apitest platformtest
 
 DTLS_TAG ?= mbedtls-2.7.0
-DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
-	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
-	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
+DTLS= 	aes.c		aesni.c 	asn1parse.c	base64.c	\
+	bignum.c	cipher.c	cipher_wrap.c	\
+	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		\
 	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
 	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
 	md5.c		md_wrap.c	oid.c		padlock.c	\
 	pem.c		pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	\
-	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
+	pkwrite.c	platform.c	ripemd160.c	sha1.c		sha256.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
-	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cookie.c			\
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -68,7 +68,7 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
-CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../ -I../../ -I../../include/ -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
+CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../ -I../../ -I../../include/ -std=gnu99 -Wall -Wextra #-Wl,-Map,client.map
 CFLAGS_CA=-I../../service/cloud-access/include
 CFLAGS_RD_CLIENT=-I../../service/resource-directory/client/include
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
@@ -80,8 +80,8 @@ OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+#SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
+#	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
@@ -89,7 +89,7 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
-SAMPLES += mfgserver
+#SAMPLES += mfgserver
 endif
 
 OBT = onboarding_tool
