@@ -85,6 +85,13 @@ oc_ignore_request(oc_request_t *request)
 }
 
 void
+oc_set_timeout_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
+{
+  if (OC_EVENT_CONTINUE == callback(cb_data))
+    oc_ri_add_timed_event_callback_seconds(cb_data, callback, seconds);
+}
+
+void
 oc_set_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
 {
   oc_ri_add_timed_event_callback_seconds(cb_data, callback, seconds);
