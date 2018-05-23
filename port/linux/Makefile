@@ -39,7 +39,7 @@ UNIT_TESTS = apitest platformtest
 DTLS_TAG ?= mbedtls-2.7.0
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
-	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
+	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		\
 	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
 	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
 	md5.c		md_wrap.c	oid.c		padlock.c	\
@@ -80,8 +80,8 @@ OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+#SAMPLES = server client simpleserver simpleclient temp_sensor cloud_linux client_collections_linux\
+#	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
@@ -89,7 +89,7 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
-SAMPLES += mfgserver
+#SAMPLES += mfgserver
 endif
 
 OBT = onboarding_tool
