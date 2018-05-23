@@ -37,7 +37,7 @@
 #define REDIRECTURI_KEY "redirecturi"
 
 #define MAX_CONTEXT_SIZE (2)
-#define RETRY_INTERVAL (5)
+#define RETRY_INTERVAL (50)
 #define LIMIT_RETRY_SIGNING (5)
 
 typedef enum {
@@ -277,14 +277,15 @@ re_sign_in(void *data)
     oc_sign_in(&context->cloud_ep, oc_string(context->uid),
                oc_string(context->access_token), 0, sign_in_handler, context);
     context->retry_count++;
-    return OC_EVENT_CONTINUE;
-  }
-  st_print_log("[Cloud_Access] retry sign-in count over\n");
+    oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
+  } else {
+    st_print_log("[Cloud_Access] retry sign-in count over\n");
 
-  // TODO : right error handling.
-  context->cloud_access_status = CLOUD_ACCESS_FAIL;
-  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-  oc_set_delayed_callback(context, callback_handler, 0);
+    // TODO : right error handling.
+    context->cloud_access_status = CLOUD_ACCESS_FAIL;
+    es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
+    oc_set_delayed_callback(context, callback_handler, 0);
+  }
   return OC_EVENT_DONE;
 }
 
@@ -317,7 +318,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
           context->cloud_access_status = CLOUD_ACCESS_DISCONNECTED;
         }
         if (context->retry_count == 0) {
-          oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
+          oc_set_delayed_callback(context, re_sign_in, 3);
         }
       }
     }
@@ -403,9 +404,6 @@ sign_in_handler(oc_client_response_t *data)
   } else {
     st_print_log("[Cloud_Access] Sign in failed!!\n");
     es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-    if (context->retry_count == 0) {
-      oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
-    }
   }
 }
 
