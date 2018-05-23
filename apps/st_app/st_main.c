@@ -280,6 +280,7 @@ st_main_initialize(void)
 
   if (is_easy_setup_success) {
     st_print_log("easy setup is successfully finished!\n");
+    st_easy_setup_stop();
   } else {
     return false;
   }
