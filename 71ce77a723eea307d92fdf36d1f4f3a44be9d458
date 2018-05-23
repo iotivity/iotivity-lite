@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_bd3c0395",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-23T06:04:15Z",
+      "side": 1,
+      "message": "Bug: https://jira.iotivity.org/browse/LITE-14\n\nPlease add this line ^",
+      "revId": "71ce77a723eea307d92fdf36d1f4f3a44be9d458",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
