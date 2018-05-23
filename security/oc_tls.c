@@ -673,6 +673,36 @@ tls_certs_load_err:
   return false;
 }
 
+bool
+oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
+{
+  int i = 0, ret = 0;
+  if (ca_cet_buf_len == 0 || ca_cert_buf == NULL) {
+    OC_ERR("oc_tls: empty ca cert buffer");
+    goto tls_load_ca_cert_err;
+  }
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    if (server_conf[i].ca_chain != NULL) {
+      mbedtls_x509_crt_free(server_conf[i].ca_chain);
+    }
+    mbedtls_x509_crt *ca_crt =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_x509_crt_init(ca_crt);
+    ret = mbedtls_x509_crt_parse( ca_crt, ca_cert_buf, ca_cet_buf_len );
+    if( ret < 0 ) {
+        OC_ERR( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
+        goto tls_load_ca_cert_err;
+    } else {
+      OC_DBG("oc_tls: trust ca cert loaded ");
+    }
+    mbedtls_ssl_conf_ca_chain(&server_conf[i], ca_crt, NULL);
+  }
+  return true;
+tls_load_ca_cert_err:
+  OC_ERR("oc_tls: TLS initialization error");
+  return false;
+}
+
 int
 oc_tls_update_psk_identity(int device)
 {
