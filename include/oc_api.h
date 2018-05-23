@@ -350,6 +350,9 @@ void oc_close_session(oc_endpoint_t *endpoint);
 
 /** Common operations */
 
+void oc_set_timeout_callback(void *cb_data, oc_trigger_t callback,
+                             uint16_t seconds);
+
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
 void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
