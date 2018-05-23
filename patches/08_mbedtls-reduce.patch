@@ -1,0 +1,277 @@
+From c6c14bdfd9d97643eb3ee329e988e395fe4e69fc Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Wed, 23 May 2018 21:35:24 +0300
+Subject: [PATCH] mbedtls reduce
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h | 10 +++++-----
+ library/bignum.c         | 48 +++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 50 insertions(+), 8 deletions(-)
+
+diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
+index 45143a5..24b6d92 100644
+--- a/include/mbedtls/config.h
++++ b/include/mbedtls/config.h
+@@ -54,7 +54,7 @@
+ #define MBEDTLS_MD_C
+ #define MBEDTLS_SHA256_C
+ #define MBEDTLS_SSL_COOKIE_C
+-#define MBEDTLS_SSL_CLI_C
++//#define MBEDTLS_SSL_CLI_C
+ #define MBEDTLS_SSL_SRV_C
+ #define MBEDTLS_SSL_TLS_C
+ 
+@@ -95,10 +95,10 @@
+ #define MBEDTLS_PK_PARSE_C
+ #define MBEDTLS_PK_C
+ 
+-#define MBEDTLS_ASN1_WRITE_C
+-#define MBEDTLS_ECDSA_C
+-#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+-#define MBEDTLS_CCM_C
++//#define MBEDTLS_ASN1_WRITE_C
++//#define MBEDTLS_ECDSA_C
++//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
++//#define MBEDTLS_CCM_C
+ 
+ #define MBEDTLS_CIPHER_MODE_CBC
+ 
+diff --git a/library/bignum.c b/library/bignum.c
+index 6fdf317..8ab25b2 100644
+--- a/library/bignum.c
++++ b/library/bignum.c
+@@ -260,6 +260,7 @@ cleanup:
+  */
+ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char swap )
+ {
++#if 0
+     int ret, s;
+     size_t i;
+     mbedtls_mpi_uint tmp;
+@@ -286,7 +287,11 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
+     }
+ 
+ cleanup:
++
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -323,6 +328,7 @@ int mbedtls_mpi_get_bit( const mbedtls_mpi *X, size_t pos )
+  */
+ int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
+ {
++#if 0
+     int ret = 0;
+     size_t off = pos / biL;
+     size_t idx = pos % biL;
+@@ -344,6 +350,9 @@ int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
+ cleanup:
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -411,6 +420,7 @@ size_t mbedtls_mpi_size( const mbedtls_mpi *X )
+  */
+ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+ {
++#if 0
+     *d = 255;
+ 
+     if( c >= 0x30 && c <= 0x39 ) *d = c - 0x30;
+@@ -419,7 +429,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+ 
+     if( *d >= (mbedtls_mpi_uint) radix )
+         return( MBEDTLS_ERR_MPI_INVALID_CHARACTER );
+-
++#endif
+     return( 0 );
+ }
+ 
+@@ -428,6 +438,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+  */
+ int mbedtls_mpi_read_string( mbedtls_mpi *X, int radix, const char *s )
+ {
++#if 0
+     int ret;
+     size_t i, j, slen, n;
+     mbedtls_mpi_uint d;
+@@ -493,6 +504,9 @@ cleanup:
+     mbedtls_mpi_free( &T );
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -500,6 +514,7 @@ cleanup:
+  */
+ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
+ {
++#if 0
+     int ret;
+     mbedtls_mpi_uint r;
+ 
+@@ -520,6 +535,9 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
+ cleanup:
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -528,6 +546,7 @@ cleanup:
+ int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
+                               char *buf, size_t buflen, size_t *olen )
+ {
++#if 0
+     int ret = 0;
+     size_t n;
+     char *p;
+@@ -596,6 +615,9 @@ cleanup:
+     mbedtls_mpi_free( &T );
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ #if defined(MBEDTLS_FS_IO)
+@@ -1077,6 +1099,7 @@ cleanup:
+  */
+ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b )
+ {
++#if 0
+     mbedtls_mpi _B;
+     mbedtls_mpi_uint p[1];
+ 
+@@ -1086,6 +1109,9 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
+     _B.p = p;
+ 
+     return( mbedtls_mpi_add_mpi( X, A, &_B ) );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -1445,6 +1471,7 @@ cleanup:
+  */
+ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, mbedtls_mpi_sint b )
+ {
++#if 0
+     mbedtls_mpi _B;
+     mbedtls_mpi_uint p[1];
+ 
+@@ -1454,6 +1481,9 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
+     _B.p = p;
+ 
+     return( mbedtls_mpi_div_mpi( Q, R, A, &_B ) );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -1484,6 +1514,7 @@ cleanup:
+  */
+ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_sint b )
+ {
++#if 0
+     size_t i;
+     mbedtls_mpi_uint x, y, z;
+ 
+@@ -1532,7 +1563,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+         y = b - y;
+ 
+     *r = y;
+-
++#endif
+     return( 0 );
+ }
+ 
+@@ -1541,6 +1572,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+  */
+ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+ {
++#if 0
+     mbedtls_mpi_uint x, m0 = N->p[0];
+     unsigned int i;
+ 
+@@ -1551,6 +1583,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+         x *= ( 2 - ( m0 * x ) );
+ 
+     *mm = ~x + 1;
++#endif
+ }
+ 
+ /*
+@@ -1559,6 +1592,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
+                          const mbedtls_mpi *T )
+ {
++#if 0
+     size_t i, n, m;
+     mbedtls_mpi_uint u0, u1, *d;
+ 
+@@ -1592,7 +1626,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+     else
+         /* prevent timing attacks */
+         mpi_sub_hlp( n, A->p, T->p );
+-
++#endif
+     return( 0 );
+ }
+ 
+@@ -1601,6 +1635,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+  */
+ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
+ {
++#if 0
+     mbedtls_mpi_uint z = 1;
+     mbedtls_mpi U;
+ 
+@@ -1608,6 +1643,9 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+     U.p = &z;
+ 
+     return( mpi_montmul( A, &U, N, mm, T ) );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -1615,6 +1653,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+  */
+ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR )
+ {
++#if 0
+     int ret;
+     size_t wbits, wsize, one = 1;
+     size_t i, j, nblimbs;
+@@ -1816,6 +1855,9 @@ cleanup:
+         mbedtls_mpi_free( &RR );
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+-- 
+1.9.1
+
