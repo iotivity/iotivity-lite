@@ -1,0 +1,32 @@
+From 6397660c97c4304c2267d895fcf11e014f0fe673 Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Wed, 23 May 2018 20:54:30 +0300
+Subject: [PATCH] mbedtls reduce
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
+index 45143a5..4a17ff8 100644
+--- a/include/mbedtls/config.h
++++ b/include/mbedtls/config.h
+@@ -95,10 +95,10 @@
+ #define MBEDTLS_PK_PARSE_C
+ #define MBEDTLS_PK_C
+ 
+-#define MBEDTLS_ASN1_WRITE_C
+-#define MBEDTLS_ECDSA_C
+-#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+-#define MBEDTLS_CCM_C
++//#define MBEDTLS_ASN1_WRITE_C
++//#define MBEDTLS_ECDSA_C
++//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
++//#define MBEDTLS_CCM_C
+ 
+ #define MBEDTLS_CIPHER_MODE_CBC
+ 
+-- 
+1.9.1
+
