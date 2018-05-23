@@ -20,10 +20,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(OC_SPEC_VER_OIC)
+#if defined(OC_SPEC_VER_OIC) && defined(OC_SECURITY)
 #include <mbedtls/sha256.h>
-#endif //OC_SPEC_VER_OIC
-
+#endif // OC_SPEC_VER_OIC
 
 /* This module implements the generation of type-4 UUIDs
  * based on its specification in RFC 4122, along with routines
@@ -127,7 +126,7 @@ oc_gen_uuid(oc_uuid_t *uuid)
   uuid->id[6] |= 0x40;
 }
 
-#if defined(OC_SPEC_VER_OIC)
+#if defined(OC_SPEC_VER_OIC) && defined(OC_SECURITY)
 void
 oc_gen_uuid_from_mac(oc_uuid_t *uuid)
 {
