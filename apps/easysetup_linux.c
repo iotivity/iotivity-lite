@@ -537,7 +537,7 @@ main(void)
   oc_clock_time_t next_event;
 
   oc_set_mtu_size(2048);
-  oc_set_max_app_data_size(8192);
+  oc_set_max_app_data_size(OC_MAX_APP_DATA_SIZE);
 
 #ifdef OC_SECURITY
   oc_storage_config("./easy_setup_linux_creds");
