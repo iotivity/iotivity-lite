@@ -37,7 +37,7 @@
 #define REDIRECTURI_KEY "redirecturi"
 
 #define MAX_CONTEXT_SIZE (2)
-#define RETRY_INTERVAL (5)
+#define RETRY_INTERVAL (50)
 #define LIMIT_RETRY_SIGNING (5)
 
 typedef enum {
@@ -320,6 +320,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
           context->cloud_access_status = CLOUD_ACCESS_DISCONNECTED;
         }
         if (context->retry_count == 0) {
+          re_sign_in(context);
           oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
         }
       }
@@ -422,9 +423,6 @@ sign_in_handler(oc_client_response_t *data)
   } else {
     st_print_log("[Cloud_Access] Sign in failed!!\n");
     es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-    if (context->retry_count == 0) {
-      oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
-    }
   }
 }
 
