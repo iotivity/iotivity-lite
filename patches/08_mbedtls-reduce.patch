@@ -1,0 +1,41 @@
+From f45fdd06fc34b2e81582ae004ff7487d4ca81dc3 Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Wed, 23 May 2018 21:02:54 +0300
+Subject: [PATCH] mbedtls reduce
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
+index 45143a5..24b6d92 100644
+--- a/include/mbedtls/config.h
++++ b/include/mbedtls/config.h
+@@ -54,7 +54,7 @@
+ #define MBEDTLS_MD_C
+ #define MBEDTLS_SHA256_C
+ #define MBEDTLS_SSL_COOKIE_C
+-#define MBEDTLS_SSL_CLI_C
++//#define MBEDTLS_SSL_CLI_C
+ #define MBEDTLS_SSL_SRV_C
+ #define MBEDTLS_SSL_TLS_C
+ 
+@@ -95,10 +95,10 @@
+ #define MBEDTLS_PK_PARSE_C
+ #define MBEDTLS_PK_C
+ 
+-#define MBEDTLS_ASN1_WRITE_C
+-#define MBEDTLS_ECDSA_C
+-#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+-#define MBEDTLS_CCM_C
++//#define MBEDTLS_ASN1_WRITE_C
++//#define MBEDTLS_ECDSA_C
++//#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
++//#define MBEDTLS_CCM_C
+ 
+ #define MBEDTLS_CIPHER_MODE_CBC
+ 
+-- 
+1.9.1
+
