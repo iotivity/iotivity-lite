@@ -1375,7 +1375,7 @@ oc_get_mac_addr(unsigned char* mac)
   struct ifaddrs *ifaddr = NULL;
   struct ifaddrs *ifa = NULL;
 
-  if ( getifaddrs(&ifaddr) == -1)
+  if (getifaddrs(&ifaddr) == -1)
     return false;
 
   for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
