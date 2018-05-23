@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e0e9c01b",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-23T10:52:10Z",
+      "side": 1,
+      "message": "... ?\u003d ... \nis preferred here",
+      "revId": "8eb37176405b807b1edc106452df32f4ae86116c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c0ee3c22",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-23T10:52:10Z",
+      "side": 1,
+      "message": "align to style of other scripts ie (/prep.sh)",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 2
+      },
+      "revId": "8eb37176405b807b1edc106452df32f4ae86116c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
