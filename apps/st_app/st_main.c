@@ -343,12 +343,18 @@ st_main_reset(void)
 }
 
 int
+#ifdef __TIZENRT__
+stapp_main(void)
+#else
 main(void)
+#endif
 {
   int init = 0;
   int device_num = 0;
   int i = 0;
+#ifndef __TIZENRT__
   st_set_sigint_handler(handle_signal);
+#endif
 
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
@@ -356,7 +362,11 @@ main(void)
                                          register_resources };
 
 #ifdef OC_SECURITY
+#ifdef __TIZENRT__
+   oc_storage_config("/mnt/st_things_creds");
+#else
   oc_storage_config("./st_things_creds");
+#endif
 #endif /* OC_SECURITY */
 
   mutex = st_mutex_init();
@@ -432,6 +442,7 @@ main(void)
       goto exit;
     }
 
+#ifndef __TIZENRT__
     char key[10];
     while (quit != 1) {
       print_menu();
@@ -466,6 +477,11 @@ main(void)
     }
   reset:
     st_print_log("reset finished\n");
+#else
+  while(quit != 1) {
+    st_sleep(1);
+  }
+#endif
 
     st_thread_destroy(thread);
     thread = NULL;

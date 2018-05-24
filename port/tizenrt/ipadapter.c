@@ -929,6 +929,7 @@ done:
   //freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
+
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
@@ -938,7 +939,27 @@ void
 handle_session_event_callback(const oc_endpoint_t *endpoint,
                                oc_session_state_t state)
 {
-    //TODO::::yet to implement
+  //TODO::::yet to implement
+}
+
+int
+oc_add_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
+}
+
+int
+oc_remove_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
 }
 
 #ifdef OC_IPV4
@@ -1292,7 +1313,32 @@ oc_domain_to_ip(const char *domain, oc_string_t *ip)
     return false;
 
   OC_DBG("%s's ip is %s", domain, address);
+  printf("%s's ip is %s\n", domain, address);
   oc_new_string(ip, address, strlen(address));
 
   return true;
 }
+
+bool
+oc_get_mac_addr(unsigned char* mac)
+{
+  struct ifaddrs *ifaddr = NULL;
+  struct ifaddrs *ifa = NULL;
+
+#if 0
+  if ( getifaddrs(&ifaddr) == -1)
+    return false;
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+    if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
+      struct sockaddr_ll *addr = (struct sockaddr_ll *)(ifa->ifa_addr);
+      memcpy(mac, addr->sll_addr, sizeof(mac));
+      break;
+    }
+    freeifaddrs(ifaddr);
+#endif
+
+    ///TODO: check sockaddr_ll availability in tizen rt
+    printf("oc_get_mac_addr NOT IMPLEMENTED\n");
+    return true;
+}
+

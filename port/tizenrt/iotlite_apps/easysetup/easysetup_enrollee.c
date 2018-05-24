@@ -40,22 +40,7 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = true;
 
-//static SCProperties g_SCProperties;
-
-//UserProperties g_userProperties;
-
-#if 0
-void SetUserProperties(const UserProperties *prop)
-{
-    if(prop != NULL)
-    {
-        strncpy(g_userProperties.userValue_str, prop->userValue_str, MAXLEN_STRING);
-        g_userProperties.userValue_int = prop->userValue_int;
-    }
-}
-#endif
-
-void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
+static void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
 {
     (void)resourceType;
     (void)payload;
@@ -66,7 +51,7 @@ void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
     printf("[ES App] ReadUserdataCb OUT");
 }
 
-void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
+static void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
 {
     (void)resourceType;
     (void)payload;
@@ -219,12 +204,6 @@ void WiFiProvCbInApp(es_wifi_conf_data* eventData)
     printf("AuthType : %d\n", eventData->authtype);
     printf("EncType : %d\n", eventData->enctype);
 
-    if(eventData->userdata != NULL)
-    {
-        //SCWiFiConfProperties *data = eventData->userdata;
-        //printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
-    }
-
     printf("[ES App] WiFiProvCbInApp OUT\n");
 }
 
@@ -236,24 +215,6 @@ void DevConfProvCbInApp(es_dev_conf_data* eventData)
     {
         printf("[ES App] ESDevConfProvData is NULL\n");
         return ;
-    }
-
-    if(eventData->userdata != NULL)
-    {
-
-#if 0
-        SCDevConfProperties *data = eventData->userdata;
-        for(int i = 0 ; i < data->numLocation ; ++i)
-        {
-            printf("[SC] Location : %s\n", data->location[i]);
-        }
-        printf("[SC] Register Mobile Device : %s\n", data->regMobileDev);
-        printf("[SC] Country : %s\n", data->country);
-        printf("[SC] Language : %s\n", data->language);
-        printf("[SC] GPS Location : %s\n", data->gpsLocation);
-        printf("[SC] UTC Date time : %s\n", data->utcDateTime);
-        printf("[SC] Regional time : %s\n", data->regionalDateTime);
-#endif
     }
 
     printf("[ES App] DevConfProvCbInApp OUT\n");
@@ -272,12 +233,6 @@ void CloudDataProvCbInApp(es_coap_cloud_conf_data* eventData)
     printf("AuthCode : %s\n", eventData->auth_code);
     printf("AuthProvider : %s\n", eventData->auth_provider);
     printf("CI Server : %s\n", eventData->ci_server);
-
-    if(eventData->userdata != NULL)
-    {
-        //SCCoapCloudServerConfProperties *data = eventData->userdata;
-        //printf("[SC] ClientID : %s\n", data->clientID);
-    }
 
     printf("[ES App] CloudDataProvCbInApp OUT\n");
 }
@@ -398,7 +353,7 @@ easysetup_main(void)
   oc_set_max_app_data_size(8192);
 
 #ifdef OC_SECURITY
-  oc_storage_config("./smart_home_server_linux_creds");
+  oc_storage_config("/mnt/smart_home_server_linux_creds");
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
