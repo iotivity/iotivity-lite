@@ -19,6 +19,7 @@
 #include "../st_port.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
 #include "util/oc_memb.h"
 #include <pthread.h>
 #include <signal.h>
@@ -256,6 +257,13 @@ st_turn_off_soft_AP(st_soft_ap_t *data)
 
 exit:
   st_thread_destroy(data->thread);
+
+  if (oc_string(data->ssid)) {
+    oc_free_string(&data->ssid);
+  }
+  if (oc_string(data->pwd)) {
+    oc_free_string(&data->pwd);
+  }
   st_mutex_unlock(data->mutex);
 
   st_cond_destroy(data->cv);
@@ -310,7 +318,6 @@ soft_ap_process_routine(void *data)
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
   st_print_log("[Easy_Setup] soft_ap_handler in\n");
-  // char result[256];
 
   /** Stop AP */
   st_print_log("[Easy_Setup] Stopping AP\n");
