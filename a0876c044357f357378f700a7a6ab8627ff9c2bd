@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_633adace",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-24T08:53:11Z",
+      "side": 1,
+      "message": "can be reverted",
+      "revId": "a0876c044357f357378f700a7a6ab8627ff9c2bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2321f29f",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-24T08:53:11Z",
+      "side": 1,
+      "message": "this entry could be removed",
+      "revId": "a0876c044357f357378f700a7a6ab8627ff9c2bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_03266eb7",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-24T08:53:11Z",
+      "side": 1,
+      "message": "if the script run the test twice",
+      "revId": "a0876c044357f357378f700a7a6ab8627ff9c2bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4337d6e3",
+        "filename": "tests/port/linux/test-runner.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-24T08:53:11Z",
+      "side": 1,
+      "message": "you can try to run testApp alone \nbefore profiling it",
+      "revId": "a0876c044357f357378f700a7a6ab8627ff9c2bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
