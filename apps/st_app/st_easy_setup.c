@@ -148,8 +148,19 @@ st_easy_setup_reset(void)
 }
 
 void
-st_easy_setup_turn_on_soft_AP(void)
+st_easy_setup_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 {
+  if (oc_string(g_soft_ap.ssid)) {
+    oc_free_string(&g_soft_ap.ssid);
+  }
+  if (oc_string(g_soft_ap.pwd)) {
+    oc_free_string(&g_soft_ap.pwd);
+  }
+
+  oc_new_string(&g_soft_ap.ssid, ssid, strlen(ssid));
+  oc_new_string(&g_soft_ap.pwd, pwd, strlen(pwd));
+  g_soft_ap.channel = channel;
+
   st_turn_on_soft_AP(&g_soft_ap);
 }
 
