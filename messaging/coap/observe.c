@@ -298,10 +298,16 @@ coap_notify_observers(oc_resource_t *resource,
     request.response = &response;
     request.request_payload = NULL;
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+
 #ifdef OC_COLLECTIONS
     if (oc_check_if_collection(resource))
+#ifdef OC_SPEC_VER_OIC
+      oc_handle_oic_1_1_collection_request(OC_GET, &request,
+                                   resource->default_interface);
+#else
       oc_handle_collection_request(OC_GET, &request,
                                    resource->default_interface);
+#endif
     else
 #endif /* OC_COLLECTIONS */
       resource->get_handler.cb(&request, resource->default_interface,

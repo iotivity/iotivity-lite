@@ -28,6 +28,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 
+#ifndef OC_SPEC_VER_OIC
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
                 const char *anchor, CborEncoder *links)
@@ -174,6 +175,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
 
   return matches;
 }
+#endif
 
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
@@ -417,7 +419,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_core_1_1_discovery_handler(request, interface, data);
     return;
   }
-
+#ifndef OC_SPEC_VER_OIC
   int matches = 0, device = request->resource->device;
 
   switch (interface) {
@@ -453,6 +455,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
+#endif
 }
 
 void

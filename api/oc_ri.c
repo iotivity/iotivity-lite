@@ -852,7 +852,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         if (endpoint->version == OIC_VER_1_1_0) {
           oc_handle_oic_1_1_collection_request(method, &request_obj, interface);
         } else {
+#ifndef OC_SPEC_VER_OIC
           oc_handle_collection_request(method, &request_obj, interface);
+#endif
         }
       } else
 #endif  /* OC_COLLECTIONS && OC_SERVER */
