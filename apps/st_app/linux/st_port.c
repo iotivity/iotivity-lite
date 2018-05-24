@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#define _GNU_SOURCE
 #include "../st_port.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
@@ -178,7 +179,7 @@ st_set_sigint_handler(st_sig_handler_t handler)
 }
 
 st_thread_t
-st_thread_create(st_thread_process_t handler, void *user_data)
+st_thread_create(st_thread_process_t handler, const char *name, void *user_data)
 {
   if (!handler)
     return NULL;
@@ -188,6 +189,7 @@ st_thread_create(st_thread_process_t handler, void *user_data)
     oc_abort("alloc failed");
 
   pthread_create((pthread_t *)thread, NULL, handler, user_data);
+  pthread_setname_np(*(pthread_t *)thread, name);
 
   return thread;
 }
@@ -237,7 +239,7 @@ st_turn_on_soft_AP(st_soft_ap_t *data)
   data->mutex = st_mutex_init();
   data->cv = st_cond_init();
   data->is_soft_ap_on = 1;
-  data->thread = st_thread_create(soft_ap_process_routine, data);
+  data->thread = st_thread_create(soft_ap_process_routine, "SOFT_AP", data);
 
   st_mutex_lock(data->mutex);
   st_cond_wait(data->cv, data->mutex);
