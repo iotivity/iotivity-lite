@@ -405,9 +405,9 @@ sign_in_handler(oc_client_response_t *data)
       rd_publish_all(&context->cloud_ep, context->device_index,
                      resource_publish_handler, LOW_QOS, context);
 
-      st_print_log("[Cloud_Access] Dev profile publish start.\n");
-      rd_publish_dev_profile(&context->cloud_ep, dev_profile_publish_handler,
-                             LOW_QOS, context);
+      st_print_log("[Cloud_Access] Set device profile start.\n");
+      oc_set_device_profile(&context->cloud_ep, dev_profile_publish_handler,
+                            context);
     }
   } else {
     st_print_log("[Cloud_Access] Sign in failed!!\n");
