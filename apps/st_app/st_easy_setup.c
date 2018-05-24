@@ -52,7 +52,6 @@ static st_easy_setup_status_t g_easy_setup_status = EASY_SETUP_INITIALIZE;
 
 static st_prov_step_t g_prov_step_check;
 
-// static void soft_ap_handler(void);
 static void wifi_prov_cb(es_wifi_conf_data *event_data);
 static void dev_conf_prov_cb(es_dev_conf_data *event_data);
 static void cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data);
@@ -442,17 +441,29 @@ dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
       st_print_log("[Easy_Setup] Location : %s\n",
                    oc_string_array_get_item(data->location, i));
     }
-    st_print_log("[Easy_Setup] Register Mobile Device : %s\n",
-                 oc_string(data->regMobileDev));
-    st_print_log("[Easy_Setup] Country : %s\n", oc_string(data->country));
-    st_print_log("[Easy_Setup] Language : %s\n", oc_string(data->language));
-    st_print_log("[Easy_Setup] GPS Location : %s\n",
-                 oc_string(data->gpsLocation));
-    st_print_log("[Easy_Setup] UTC Date time : %s\n",
-                 oc_string(data->utcDateTime));
-    st_print_log("[Easy_Setup] Regional time : %s\n",
-                 oc_string(data->regionalDateTime));
-    st_print_log("[Easy_Setup] SSO List : %s\n", oc_string(data->ssoList));
+
+    if (oc_string(data->regMobileDev))
+      st_print_log("[Easy_Setup] Register Mobile Device : %s\n",
+                   oc_string(data->regMobileDev));
+    if (oc_string(data->country))
+      st_print_log("[Easy_Setup] Country : %s\n", oc_string(data->country));
+    if (oc_string(data->language))
+      st_print_log("[Easy_Setup] Language : %s\n", oc_string(data->language));
+
+    if (oc_string(data->gpsLocation))
+      st_print_log("[Easy_Setup] GPS Location : %s\n",
+                   oc_string(data->gpsLocation));
+
+    if (oc_string(data->utcDateTime))
+      st_print_log("[Easy_Setup] UTC Date time : %s\n",
+                   oc_string(data->utcDateTime));
+
+    if (oc_string(data->regionalDateTime))
+      st_print_log("[Easy_Setup] Regional time : %s\n",
+                   oc_string(data->regionalDateTime));
+
+    if (oc_string(data->ssoList))
+      printf("[Easy_Setup] SSO List : %s\n", oc_string(data->ssoList));
   }
 
   g_prov_step_check |= ST_EASY_SETUP_DEV_PROV;
