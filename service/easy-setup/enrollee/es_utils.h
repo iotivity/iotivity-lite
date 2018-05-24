@@ -21,6 +21,39 @@
 
 #include <string.h>
 
-#define oc_strncpy(dst, src, n) strncpy(dst, src, n)
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#define es_rep_set_boolean(object, key, value) oc_rep_set_boolean(object, key, value)
+
+#define es_rep_set_int(object, key, value) oc_rep_set_int(object, key, value)
+
+#define es_rep_set_text_string(object, key, value)           \
+  do {                                                    \
+    if (value) oc_rep_set_text_string(object, key, value); \
+  } while(0);
+
+#define es_free_string(str) if(oc_string_len(str) > 0) oc_free_string(&str);
+
+static void
+es_new_string(oc_string_t *desString, char *srcString){
+  if (!desString || (!srcString || strlen(srcString))) {
+    return;
+  }
+
+  if(oc_string_len(*desString) == 0){
+    oc_new_string(desString, srcString, strlen(srcString));
+  }else if(oc_string_len(*desString)== strlen(srcString)){
+    strncpy(oc_string(*desString), srcString, strlen(srcString));
+  }else{
+    oc_free_string(desString);
+    oc_new_string(desString, srcString,strlen(srcString));
+  }
+}
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif // ES_UTILS_H
