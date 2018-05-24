@@ -59,7 +59,7 @@ static const char *data_model_version = "ocf.res.1.0.0";
 
 static sc_properties st_vendor_props;
 
-static provisioning_info_resource g_prov_resource;
+static sec_provisioning_info g_prov_resource;
 
 static int device_index = 0;
 
@@ -132,22 +132,22 @@ set_sc_prov_info(void)
   char uuid[MAX_UUID_LENGTH];
   int i = 0;
 
-  g_prov_resource.targets = (provisioning_info_targets *)calloc(
-    target_size, sizeof(provisioning_info_targets));
+  g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
+    target_size, sizeof(sec_provisioning_info_targets));
 
   for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
-    oc_new_string(&g_prov_resource.targets[i].targetDi, uuid, strlen(uuid));
-    oc_new_string(&g_prov_resource.targets[i].targetRt, device_rt,
+    oc_new_string(&g_prov_resource.targets[i].target_di, uuid, strlen(uuid));
+    oc_new_string(&g_prov_resource.targets[i].target_rt, device_rt,
                   strlen(device_rt));
     g_prov_resource.targets[i].published = false;
   }
   g_prov_resource.targets_size = target_size;
   g_prov_resource.owned = false;
   oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
-  oc_new_string(&g_prov_resource.easysetupdi, uuid, strlen(uuid));
+  oc_new_string(&g_prov_resource.easysetup_di, uuid, strlen(uuid));
 
-  if (set_properties_for_sc_prov_info(&g_prov_resource) == ES_ERROR)
+  if (set_sec_prov_info(&g_prov_resource) == ES_ERROR)
     st_print_log("SetProvInfo Error\n");
 
   st_print_log("set_sc_prov_info OUT\n");
@@ -159,10 +159,10 @@ unset_sc_prov_info(void)
   // Come from  target_size in set_sc_prov_info
   int target_size = 1, i = 0;
 
-  oc_free_string(&g_prov_resource.easysetupdi);
+  oc_free_string(&g_prov_resource.easysetup_di);
   for (i = 0; i < target_size; i++) {
-    oc_free_string(&g_prov_resource.targets[i].targetDi);
-    oc_free_string(&g_prov_resource.targets[i].targetRt);
+    oc_free_string(&g_prov_resource.targets[i].target_di);
+    oc_free_string(&g_prov_resource.targets[i].target_rt);
   }
 
   free(g_prov_resource.targets);
@@ -172,33 +172,33 @@ static void
 st_vendor_props_initialize(void)
 {
   memset(&st_vendor_props, 0, sizeof(sc_properties));
-  oc_new_string(&st_vendor_props.deviceType, st_device_type,
+  oc_new_string(&st_vendor_props.device_type, st_device_type,
                 strlen(st_device_type));
-  oc_new_string(&st_vendor_props.deviceSubType, st_device_sub_type,
+  oc_new_string(&st_vendor_props.device_sub_type, st_device_sub_type,
                 strlen(st_device_sub_type));
-  st_vendor_props.netConnectionState = NET_STATE_INIT;
-  st_vendor_props.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-  oc_new_string(&st_vendor_props.regSetDev, st_reg_set_device,
+  st_vendor_props.net_conn_state = NET_STATE_INIT;
+  st_vendor_props.disc_channel = WIFI_DISCOVERY_CHANNEL_INIT;
+  oc_new_string(&st_vendor_props.reg_set_dev, st_reg_set_device,
                 strlen(st_reg_set_device));
-  oc_new_string(&st_vendor_props.nwProvInfo, st_network_prov_info,
+  oc_new_string(&st_vendor_props.net_prov_info, st_network_prov_info,
                 strlen(st_network_prov_info));
-  oc_new_string(&st_vendor_props.pnpPin, st_pin_number, strlen(st_pin_number));
-  oc_new_string(&st_vendor_props.modelNumber, st_model_number,
+  oc_new_string(&st_vendor_props.pnp_pin, st_pin_number, strlen(st_pin_number));
+  oc_new_string(&st_vendor_props.model, st_model_number,
                 strlen(st_model_number));
-  oc_new_string(&st_vendor_props.esProtocolVersion, st_protocol_version,
+  oc_new_string(&st_vendor_props.es_protocol_ver, st_protocol_version,
                 strlen(st_protocol_version));
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
-  oc_free_string(&st_vendor_props.deviceType);
-  oc_free_string(&st_vendor_props.deviceSubType);
-  oc_free_string(&st_vendor_props.regSetDev);
-  oc_free_string(&st_vendor_props.nwProvInfo);
-  oc_free_string(&st_vendor_props.pnpPin);
-  oc_free_string(&st_vendor_props.modelNumber);
-  oc_free_string(&st_vendor_props.esProtocolVersion);
+  oc_free_string(&st_vendor_props.device_type);
+  oc_free_string(&st_vendor_props.device_sub_type);
+  oc_free_string(&st_vendor_props.reg_set_dev);
+  oc_free_string(&st_vendor_props.net_prov_info);
+  oc_free_string(&st_vendor_props.pnp_pin);
+  oc_free_string(&st_vendor_props.model);
+  oc_free_string(&st_vendor_props.es_protocol_ver);
 }
 
 static bool
