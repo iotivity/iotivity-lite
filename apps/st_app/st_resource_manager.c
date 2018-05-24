@@ -245,5 +245,5 @@ st_register_resources(int device)
                                   NULL);
   oc_add_resource(temperature);
 
-  register_sc_provisioning_info_resource();
+  init_provisioning_info_resource(NULL);
 }
