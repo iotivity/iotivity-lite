@@ -179,6 +179,7 @@ get_cloud_access_status(int device_index)
 int
 st_cloud_access_check_connection(const char *ci_server)
 {
+  st_print_log("[st_cloud_access_check_connection] ci_server %s\n", ci_server);
   oc_string_t dns_str;
   oc_new_string(&dns_str, CONNECTION_CHECK_SERVER,
                 strlen(CONNECTION_CHECK_SERVER));
@@ -186,20 +187,27 @@ st_cloud_access_check_connection(const char *ci_server)
   oc_endpoint_t ep;
   if (oc_string_to_endpoint(&dns_str, &ep, NULL) != 0) {
     oc_free_string(&dns_str);
+    st_print_log("error in getting conn server endpoint!\n");
     return -1;
   }
   oc_free_string(&dns_str);
+
+  st_print_log("oc_string_to_endpoint for conn check server completed\n");
 
   if (ci_server) {
     oc_new_string(&dns_str, ci_server, strlen(ci_server));
 
     if (oc_string_to_endpoint(&dns_str, &ep, NULL) != 0) {
       oc_free_string(&dns_str);
+      st_print_log("error in getting ci server endpoint!\n");
       return -1;
     }
     oc_free_string(&dns_str);
+
+    st_print_log("oc_string_to_endpoint for ci server completed\n");
   }
 
+  st_print_log("[st_cloud_access_check_connection] out\n");
   return 0;
 }
 
@@ -252,8 +260,10 @@ sign_up_process(st_cloud_context_t *context)
       goto retry;
     }
   } else {
+    st_print_log("sign_up_process: oc_sign_up failed!\n");
     return false;
   }
+  st_print_log("sign_up_process: success\n");
   return true;
 
 retry:
@@ -261,6 +271,7 @@ retry:
     oc_set_delayed_callback(context, re_sign_up, RETRY_INTERVAL);
     _oc_signal_event_loop();
   }
+  st_print_log("sign_up_process: attempting retry\n");
   return true;
 }
 
