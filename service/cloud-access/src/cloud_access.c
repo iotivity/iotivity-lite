@@ -123,6 +123,72 @@ oc_sign_out(oc_endpoint_t *endpoint, const char *access_token, int device_index,
 }
 
 bool
+oc_set_device_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                      void *user_data)
+{
+  if (!endpoint || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  if (oc_init_post(OC_RSRVD_DEVICE_PROFILE_URI, endpoint, NULL, handler,
+                   LOW_QOS, user_data)) {
+    oc_platform_info_t *platform_info = oc_core_get_platform_info();
+
+    oc_rep_start_root_object();
+    oc_rep_set_array(root, devices);
+    int device = 0;
+    for (; device < oc_core_get_num_devices(); device++) {
+      oc_device_info_t *device_info = oc_core_get_device_info(device);
+      char uuid[MAX_UUID_LENGTH] = { 0 };
+      oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
+
+      oc_rep_object_array_start_item(devices);
+      oc_rep_set_text_string(devices, di, uuid);
+      oc_rep_set_text_string(devices, n, oc_string(device_info->name));
+      oc_rep_set_text_string(devices, icv, oc_string(device_info->icv));
+      oc_rep_set_text_string(devices, dmv, oc_string(device_info->dmv));
+      oc_rep_set_text_string(
+        devices, rt, oc_string_array_get_item(
+                       oc_core_get_resource_by_index(OCF_D, device)->types, 0));
+      oc_rep_set_text_string(devices, mnmn, oc_string(platform_info->mfg_name));
+      if (platform_info->init_platform_cb) {
+        platform_info->init_platform_cb(oc_rep_object(devices),
+                                        platform_info->data);
+      }
+      oc_rep_object_array_end_item(devices);
+    }
+    oc_rep_close_array(root, devices);
+    oc_rep_end_root_object();
+  } else {
+    OC_ERR("Could not init POST request for set device profile");
+    return false;
+  }
+
+  return oc_do_post();
+}
+
+bool
+oc_delete_device(oc_endpoint_t *endpoint, const char *uid, int device_index,
+                 oc_response_handler_t handler, void *user_data)
+{
+  if (!endpoint || !uid || !handler) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+
+  char uuid[MAX_UUID_LENGTH] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+
+  size_t len = strlen(uuid) + strlen(uid) + 9;
+  char query[len];
+  snprintf(query, len, "di=%s&uid=%s", uuid, uid);
+
+  return oc_do_delete(OC_RSRVD_DEVICE_URI, endpoint, query, handler, LOW_QOS,
+                      user_data);
+}
+
+bool
 oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
                         const char *refresh_token, int device_index,
                         oc_response_handler_t handler, void *user_data)
