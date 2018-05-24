@@ -35,6 +35,12 @@
 /** Account token refresh URI.*/
 #define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/account/tokenrefresh"
 
+/** Device URI.*/
+#define OC_RSRVD_DEVICE_URI "/oic/device"
+
+/** Device profile URI.*/
+#define OC_RSRVD_DEVICE_PROFILE_URI "/oic/account/profile/device"
+
 /** Ping URI.*/
 #define OC_RSRVD_PING_URI "/oic/ping"
 
@@ -114,6 +120,29 @@ bool oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
 bool oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
                              const char *refresh_token, int device_index,
                              oc_response_handler_t handler, void *user_data);
+
+/**
+  @brief Function to register device profile into account server.
+  @param endpoint The endpoint of the Cloud.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool oc_set_device_profile(oc_endpoint_t *endpoint,
+                           oc_response_handler_t handler, void *user_data);
+
+/**
+  @brief Function to delete the device registered on the account signed-in.
+  @param endpoint The endpoint of the Cloud.
+  @param uid Identifier of the user obtained by account registration.
+  @param device_index Index of the device for an unique identifier.
+  @param handler To refer to the request sent out on behalf of calling this API.
+  @param user_data The user data passed from the registration function.
+  @return Returns true if success.
+*/
+bool oc_delete_device(oc_endpoint_t *endpoint, const char *uid,
+                      int device_index, oc_response_handler_t handler,
+                      void *user_data);
 
 /**
   @brief Function for discovers on a ping resource.
