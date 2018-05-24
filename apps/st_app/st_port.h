@@ -20,6 +20,9 @@
 #define ST_PORT_H
 
 #include "config.h"
+#include "oc_helpers.h"
+
+#define MAX_SSID_LEN (32)
 
 typedef void *st_mutex_t;
 typedef void *st_cond_t;
@@ -33,6 +36,9 @@ typedef struct
   st_mutex_t mutex;
   st_cond_t cv;
   int is_soft_ap_on;
+  oc_string_t ssid;
+  oc_string_t pwd;
+  int channel;
 } st_soft_ap_t;
 
 void st_print_log(const char *log, ...);
@@ -59,5 +65,7 @@ void st_sleep(int seconds);
 void st_turn_on_soft_AP(st_soft_ap_t *data);
 void st_turn_off_soft_AP(st_soft_ap_t *data);
 void st_connect_wifi(const char *ssid, const char *pwd);
+int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
+                const char *sid);
 
 #endif /* ST_PORT_H */
