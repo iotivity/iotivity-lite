@@ -311,7 +311,7 @@ ${OBT}: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_linux: libiotivity-constrained-client-server.a
+cloud_linux: libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${LIBS}
 
