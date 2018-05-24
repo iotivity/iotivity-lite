@@ -20,6 +20,7 @@
 #define ST_PORT_H
 
 #include "config.h"
+#include "oc_helpers.h"
 
 typedef void *st_mutex_t;
 typedef void *st_cond_t;
@@ -33,6 +34,9 @@ typedef struct
   st_mutex_t mutex;
   st_cond_t cv;
   int is_soft_ap_on;
+  oc_string_t ssid;
+  oc_string_t pwd;
+  int channel;
 } st_soft_ap_t;
 
 void st_print_log(const char *log, ...);
