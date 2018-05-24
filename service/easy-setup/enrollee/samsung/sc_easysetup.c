@@ -23,7 +23,7 @@
 #include "oc_helpers.h"
 #include "inttypes.h"
 
-#include "resourcehandler.h"
+#include "es_utils.h"
 
 /**
  * @var SC_ENROLLEE_TAG
@@ -69,10 +69,6 @@
 #define SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED                   x.com.samsung.published
 #define STR_SC_RSRVD_ES_PROVISIONING_INFO_TARGETS                 "x.com.samsung.provisioning.targets"
 
-easy_setup_resource g_ESEasySetupResource;
-wifi_conf_resource g_ESWiFiConfResource;
-coap_cloud_conf_resource g_ESCoapCloudConfResource;
-dev_conf_resource g_ESDevConfResource;
 provisioning_info_resource g_provisioninginfo_resource;
 
 sc_properties g_SCProperties;
@@ -306,11 +302,7 @@ es_result_e set_sc_net_connection_state(NETCONNECTION_STATE netConnectionState)
 {
     OC_DBG( "SetSCNetConnectionState: %d", netConnectionState);
     g_SCProperties.netConnectionState = netConnectionState;
-
-    if(0 == oc_notify_observers(g_ESEasySetupResource.handle))
-    {
-        OC_DBG("provResource doesn't have any observers.");
-    }
+    es_notify_connection_change();
     return ES_OK;
 }
 

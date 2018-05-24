@@ -21,6 +21,32 @@
 
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define oc_strncpy(dst, src, n) strncpy(dst, src, n)
+#define  es_free_property(property) if(oc_string_len(property) > 0) oc_free_string(&property);
+#define set_custom_property_str(object, key, value)                            \
+  if (value)                                                                   \
+  oc_rep_set_text_string(object, key, value)
+#define set_custom_property_int(object, key, value) oc_rep_set_int(object, key, value)
+#define set_custom_property_bool(object, key, value) oc_rep_set_boolean(object, key, value)
+
+static void
+oc_allocate_string(oc_string_t *desString, char *srcString){
+  if(oc_string_len(*desString) == 0){
+    oc_new_string(desString, srcString, strlen(srcString));
+  }else if(oc_string_len(*desString)== strlen(srcString)){
+    oc_strncpy(oc_string(*desString), srcString, strlen(srcString));
+  }else{
+    oc_free_string(desString);
+    oc_new_string(desString, srcString,strlen(srcString));
+  }
+}
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif // ES_UTILS_H
