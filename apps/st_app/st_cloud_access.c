@@ -54,6 +54,7 @@ typedef struct st_cloud_context
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
+  oc_string_t refresh_token;
   uint8_t publish_state;
   int device_index;
   uint8_t retry_count;
@@ -104,6 +105,11 @@ st_cloud_access_start(st_store_t *cloud_info, int device_index,
                   oc_string(cloud_info->cloudinfo.access_token),
                   oc_string_len(cloud_info->cloudinfo.access_token));
   }
+  if (oc_string(cloud_info->cloudinfo.refresh_token)) {
+    oc_new_string(&context->refresh_token,
+                  oc_string(cloud_info->cloudinfo.refresh_token),
+                  oc_string_len(cloud_info->cloudinfo.refresh_token));
+  }
   if (oc_string(cloud_info->cloudinfo.uid)) {
     oc_new_string(&context->uid, oc_string(cloud_info->cloudinfo.uid),
                   oc_string_len(cloud_info->cloudinfo.uid));
@@ -152,6 +158,9 @@ st_cloud_access_stop(int device_index)
   }
   if (oc_string_len(context->access_token) > 0) {
     oc_free_string(&context->access_token);
+  }
+  if (oc_string_len(context->refresh_token) > 0) {
+    oc_free_string(&context->refresh_token);
   }
   oc_memb_free(&st_cloud_context_s, context);
 

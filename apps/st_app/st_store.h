@@ -41,6 +41,7 @@ typedef struct
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
+  oc_string_t refresh_token;
 } st_cloud_store_t;
 
 typedef struct
