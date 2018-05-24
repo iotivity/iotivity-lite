@@ -112,7 +112,7 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   }
 
   // Set callbacks for Vendor Specific Properties
-  es_set_callback_for_userdata(ReadUserdataCb, WriteUserdataCb);
+  es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb, sc_free_userdata);
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
 
   // Set timeout for easy setup procedure.
@@ -430,7 +430,7 @@ wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
   if (wifi_prov_data->userdata) {
     sc_wifi_conf_properties *data = wifi_prov_data->userdata;
     st_print_log("[Easy_Setup] DiscoveryChannel : %d\n",
-                 data->discoveryChannel);
+                 data->disc_channel);
   }
 
   if (!oc_string(wifi_prov_data->ssid) || !oc_string(wifi_prov_data->pwd)) {
@@ -473,28 +473,28 @@ dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
                    oc_string_array_get_item(data->location, i));
     }
 
-    if (oc_string(data->regMobileDev))
+    if (oc_string(data->reg_mobile_dev))
       st_print_log("[Easy_Setup] Register Mobile Device : %s\n",
-                   oc_string(data->regMobileDev));
+                   oc_string(data->reg_mobile_dev));
     if (oc_string(data->country))
       st_print_log("[Easy_Setup] Country : %s\n", oc_string(data->country));
     if (oc_string(data->language))
       st_print_log("[Easy_Setup] Language : %s\n", oc_string(data->language));
 
-    if (oc_string(data->gpsLocation))
+    if (oc_string(data->gps_location))
       st_print_log("[Easy_Setup] GPS Location : %s\n",
-                   oc_string(data->gpsLocation));
+                   oc_string(data->gps_location));
 
-    if (oc_string(data->utcDateTime))
+    if (oc_string(data->utc_date_time))
       st_print_log("[Easy_Setup] UTC Date time : %s\n",
-                   oc_string(data->utcDateTime));
+                   oc_string(data->utc_date_time));
 
-    if (oc_string(data->regionalDateTime))
+    if (oc_string(data->regional_date_time))
       st_print_log("[Easy_Setup] Regional time : %s\n",
-                   oc_string(data->regionalDateTime));
+                   oc_string(data->regional_date_time));
 
-    if (oc_string(data->ssoList))
-      printf("[Easy_Setup] SSO List : %s\n", oc_string(data->ssoList));
+    if (oc_string(data->sso_list))
+      printf("[Easy_Setup] SSO List : %s\n", oc_string(data->sso_list));
   }
 
   g_prov_step_check |= ST_EASY_SETUP_DEV_PROV;
@@ -539,18 +539,18 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
                  oc_string(cloud_prov_data->ci_server));
   }
 
-  sc_coap_cloud_server_conf_properties *data = cloud_prov_data->userdata;
+  sc_cloud_server_conf_properties *data = cloud_prov_data->userdata;
   if (data) {
-    st_print_log("[Easy_Setup] ClientID : %s\n", oc_string(data->clientID));
+    st_print_log("[Easy_Setup] ClientID : %s\n", oc_string(data->client_id));
     st_print_log("[Easy_Setup] uid : %s\n", oc_string(data->uid));
     st_print_log("[Easy_Setup] Refresh Token : %s\n",
-                 oc_string(data->refreshToken));
+                 oc_string(data->refresh_token));
   }
 
   if (!oc_string(cloud_prov_data->access_token) ||
       !oc_string(cloud_prov_data->auth_provider) ||
       !oc_string(cloud_prov_data->ci_server) ||
-      !oc_string(data->refreshToken) || !oc_string(data->uid)) {
+      !oc_string(data->refresh_token) || !oc_string(data->uid)) {
     st_print_log("[Easy_Setup] cloud provision info is not enough!");
     return;
   }
@@ -558,7 +558,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
   st_string_copy(&g_store_info.cloudinfo.access_token,
                  &cloud_prov_data->access_token);
   st_string_copy(&g_store_info.cloudinfo.refresh_token,
-                 &data->refreshToken);
+                 &data->refresh_token);
   st_string_copy(&g_store_info.cloudinfo.auth_provider,
                  &cloud_prov_data->auth_provider);
   st_string_copy(&g_store_info.cloudinfo.ci_server,
