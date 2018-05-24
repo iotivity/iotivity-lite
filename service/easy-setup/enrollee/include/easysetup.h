@@ -138,6 +138,7 @@ es_result_e es_terminate_enrollee(void);
 es_result_e es_set_callback_for_userdata(es_read_userdata_cb readcb,
                                          es_write_userdata_cb writecb);
 
+void es_notify_connection_change(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus

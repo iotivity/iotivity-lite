@@ -22,15 +22,60 @@
 #include "oc_collection.h"
 #include "oc_log.h"
 
+typedef void (*es_connect_request_cb)(es_connect_request *);
+typedef void (*es_wifi_conf_cb)(es_wifi_conf_data *);
+typedef void (*es_coap_cloud_conf_cb)(es_coap_cloud_conf_data *);
+typedef void (*es_dev_conf_cb)(es_dev_conf_data *);
+
+typedef struct
+{
+  oc_resource_t *handle;
+  prov_status status;
+  es_error_code last_err_code;
+  es_connect_type connect_request[NUM_CONNECT_TYPE];
+  int num_request;
+  es_connect_request_cb connect_request_cb;
+} easy_setup_resource;
+
+typedef struct
+{
+  oc_resource_t *handle;
+  wifi_mode supported_mode[NUM_WIFIMODE];
+  uint8_t num_mode;
+  wifi_freq supported_freq;
+  wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
+  uint8_t num_supported_authtype;
+  wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
+  uint8_t num_supported_enctype;
+  oc_string_t ssid;
+  oc_string_t cred;
+  wifi_authtype auth_type;
+  wifi_enctype enc_type;
+  es_wifi_conf_cb wifi_prov_cb;
+} wifi_conf_resource;
+
+typedef struct
+{
+  oc_resource_t *handle;
+  oc_string_t auth_code;
+  oc_string_t access_token;
+  oauth_tokentype access_token_type;
+  oc_string_t auth_provider;
+  oc_string_t ci_server;
+  es_coap_cloud_conf_cb cloud_prov_cb; 
+} coap_cloud_conf_resource;
+
+typedef struct
+{
+  oc_resource_t *handle;
+  oc_string_t dev_name;
+  es_dev_conf_cb dev_prov_cb;
+} dev_conf_resource;
+
 easy_setup_resource g_easysetup_resource;
 wifi_conf_resource g_wificonf_resource;
 coap_cloud_conf_resource g_cloudconf_resource;
 dev_conf_resource g_devconf_resource;
-
-es_connect_request_cb g_connect_req_event_cb = NULL;
-es_wifi_conf_cb g_wificonf_res_event_cb = NULL;
-es_coap_cloud_conf_cb g_cloud_conf_res_event_cb = NULL;
-es_dev_conf_cb g_dev_conf_res_event_cb = NULL;
 
 es_read_userdata_cb g_read_user_data_cb = NULL;
 es_write_userdata_cb g_write_user_data_cb = NULL;
@@ -58,7 +103,7 @@ oc_compare_property(oc_rep_t *rep, char *property_name)
   return false;
 }
 
-void
+static void
 update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
   OC_DBG("in");
@@ -122,8 +167,8 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
   if (is_valid) {
     OC_DBG("Send WiFiConfRsrc Callback To ES");
 
-    if (g_wificonf_res_event_cb != NULL) {
-      g_wificonf_res_event_cb(ES_OK, &wifi_data);
+    if (g_wificonf_resource.wifi_prov_cb != NULL) {
+      g_wificonf_resource.wifi_prov_cb(&wifi_data);
     } else {
       OC_ERR("g_wificonf_res_event_cb is NULL");
     }
@@ -144,7 +189,7 @@ update_wifi_conf_resource(oc_request_t *request, oc_interface_mask_t interface)
   OC_DBG("out");
 }
 
-void
+static void
 update_coap_cloud_conf_resource(oc_request_t *request,
                                 oc_interface_mask_t interface)
 {
@@ -223,8 +268,8 @@ update_coap_cloud_conf_resource(oc_request_t *request,
 
   if (is_valid) {
     OC_DBG("Send CoapCloudConfRsrc Callback To ES");
-    if (g_cloud_conf_res_event_cb) {
-      g_cloud_conf_res_event_cb(ES_OK, &cloud_data);
+    if (g_cloudconf_resource.cloud_prov_cb) {
+      g_cloudconf_resource.cloud_prov_cb(&cloud_data);
     } else {
       OC_ERR("g_cloud_conf_res_event_cb is NULL");
     }
@@ -245,7 +290,7 @@ update_coap_cloud_conf_resource(oc_request_t *request,
   OC_DBG("out");
 }
 
-void
+static void
 update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
   OC_DBG("in");
@@ -262,8 +307,8 @@ update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
   if (dev_conf_data.userdata != NULL) {
     OC_DBG("Send DevConfRsrc Callback To ES");
 
-    if (g_dev_conf_res_event_cb != NULL) {
-      g_dev_conf_res_event_cb(ES_OK, &dev_conf_data);
+    if (g_devconf_resource.dev_prov_cb) {
+      g_devconf_resource.dev_prov_cb(&dev_conf_data);
     } else {
       OC_ERR("g_dev_conf_res_event_cb is NULL");
     }
@@ -280,7 +325,7 @@ update_devconf_resource(oc_request_t *request, oc_interface_mask_t interface)
   OC_DBG("out");
 }
 
-void
+static void
 update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interface)
 {
   OC_DBG("in");
@@ -326,8 +371,8 @@ update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interface)
         if (g_easysetup_resource.connect_request[0] != ES_CONNECT_NONE) {
           OC_DBG("Send ConnectRequest Callback To ES");
 
-          if (g_connect_req_event_cb != NULL) {
-            g_connect_req_event_cb(ES_OK, &connect_request);
+          if (g_easysetup_resource.connect_request_cb) {
+            g_easysetup_resource.connect_request_cb(&connect_request);
           } else {
             OC_ERR("g_connect_req_event_cb is NULL");
           }
@@ -343,7 +388,7 @@ update_easysetup_resource(oc_request_t *request, oc_interface_mask_t interface)
   OC_DBG("out");
 }
 
-es_result_e
+static es_result_e
 construct_response_of_coapcloudconf(void)
 {
   OC_DBG("in");
@@ -373,7 +418,7 @@ construct_response_of_coapcloudconf(void)
   return ES_OK;
 }
 
-es_result_e
+static es_result_e
 construct_response_of_wificonf(void)
 {
   OC_DBG("in");
@@ -407,7 +452,7 @@ construct_response_of_wificonf(void)
   return ES_OK;
 }
 
-es_result_e
+static es_result_e
 construct_response_of_devconf(void)
 {
   OC_DBG("construct_response_of_devconf in");
@@ -444,57 +489,6 @@ set_callback_for_userdata(es_read_userdata_cb readcb,
   g_write_user_data_cb = writecb;
   OC_DBG("out");
   return ES_OK;
-}
-
-void
-resgister_wifi_rsrc_event_callback(es_wifi_conf_cb cb)
-{
-  OC_DBG("in");
-  g_wificonf_res_event_cb = cb;
-  OC_DBG("out");
-}
-
-void
-register_cloud_rsrc_event_callback(es_coap_cloud_conf_cb cb)
-{
-  OC_DBG("in");
-  g_cloud_conf_res_event_cb = cb;
-  OC_DBG("out");
-}
-
-void
-register_devconf_rsrc_event_callback(es_dev_conf_cb cb)
-{
-  OC_DBG("in");
-  g_dev_conf_res_event_cb = cb;
-  OC_DBG("out");
-}
-
-void
-register_connect_request_event_callback(es_connect_request_cb cb)
-{
-  OC_DBG("in");
-  g_connect_req_event_cb = cb;
-  OC_DBG("out");
-}
-
-void
-unregister_resource_event_callback(void)
-{
-  OC_DBG("in");
-  if (g_wificonf_res_event_cb) {
-    g_wificonf_res_event_cb = NULL;
-  }
-  if (g_cloud_conf_res_event_cb) {
-    g_cloud_conf_res_event_cb = NULL;
-  }
-  if (g_dev_conf_res_event_cb) {
-    g_dev_conf_res_event_cb = NULL;
-  }
-  if (g_connect_req_event_cb) {
-    g_connect_req_event_cb = NULL;
-  }
-  OC_DBG("out");
 }
 
 static void
@@ -647,11 +641,56 @@ post_easysetup(oc_request_t *request, oc_interface_mask_t interface,
   OC_DBG("out");
 }
 
-es_result_e
-init_easysetup_resource(bool is_secured)
+static void
+deinit_easysetup_resource(void)
 {
-  OC_DBG("in");
+  g_easysetup_resource.connect_request_cb = NULL;
+  if (g_easysetup_resource.handle) {
+    oc_delete_collection(g_easysetup_resource.handle);
+    g_easysetup_resource.handle = NULL;
+  }
+}
 
+static void
+deinit_wifi_conf_resource(void)
+{
+  g_wificonf_resource.wifi_prov_cb = NULL;
+  if (g_wificonf_resource.handle) {
+    oc_delete_resource(g_wificonf_resource.handle);
+    g_wificonf_resource.handle = NULL;
+  }
+  es_free_property(g_wificonf_resource.ssid);
+  es_free_property(g_wificonf_resource.cred);
+}
+
+static void
+deinit_devconf_resource(void)
+{
+  g_devconf_resource.dev_prov_cb = NULL;
+  if (g_devconf_resource.handle) {
+    oc_delete_resource(g_devconf_resource.handle);
+    g_devconf_resource.handle = NULL;
+  }
+  es_free_property(g_devconf_resource.dev_name);
+}
+
+static void
+deinit_coap_cloudconf_resource(void)
+{
+  g_cloudconf_resource.cloud_prov_cb = NULL;
+  if (g_cloudconf_resource.handle) {
+    oc_delete_resource(g_cloudconf_resource.handle);
+    g_cloudconf_resource.handle = NULL;
+  }
+  es_free_property(g_cloudconf_resource.auth_code);
+  es_free_property(g_cloudconf_resource.auth_provider);
+  es_free_property(g_cloudconf_resource.access_token);
+  es_free_property(g_cloudconf_resource.ci_server);
+}
+
+static es_result_e
+init_easysetup_resource(bool is_secured, es_connect_request_cb cb)
+{
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
@@ -663,11 +702,12 @@ init_easysetup_resource(bool is_secured)
   }
 
   g_easysetup_resource.num_request = 0;
+  g_easysetup_resource.connect_request_cb = cb;
+
   oc_resource_t *col =
     oc_new_collection("easysetup", OC_RSRVD_ES_URI_EASYSETUP, 2, 0);
-
   if (NULL == col) {
-    OC_ERR("Error in creating WiFiConf Resource!");
+    OC_ERR("Error in creating EasySetup Resource!");
     return ES_ERROR;
   }
 
@@ -685,46 +725,32 @@ init_easysetup_resource(bool is_secured)
     oc_resource_make_public(col);
   }
 #endif
-  /** Add Self Link for Easy Setup Resource */
-  oc_link_t *l_es = oc_new_link(col);
-  oc_collection_add_link(col, l_es);
 
-  if (g_wificonf_resource.handle != NULL) {
-    oc_link_t *l1 = oc_new_link(g_wificonf_resource.handle);
-    oc_collection_add_link(col, l1);
-  } else {
-    OC_ERR("wifi resource is not added to collection resource");
+  // Add Self Link for Easy Setup Resource
+  oc_link_t *link = oc_new_link(col);
+  if (link == NULL) {
+    OC_ERR("Failed to create link to EasySetup resource!");
+    deinit_easysetup_resource();
+    return ES_ERROR;
   }
 
-  if (g_cloudconf_resource.handle != NULL) {
-    oc_link_t *l2 = oc_new_link(g_cloudconf_resource.handle);
-    oc_collection_add_link(col, l2);
-  } else {
-    OC_ERR("cloud config is not added to collection resource");
-  }
-
-  if (g_devconf_resource.handle != NULL) {
-    oc_link_t *l3 = oc_new_link(g_devconf_resource.handle);
-    oc_collection_add_link(col, l3);
-  } else {
-    OC_ERR("dev config is not added to collection resource");
-  }
-
+  oc_collection_add_link(col, link);
   oc_add_collection(col);
-
   g_easysetup_resource.handle = col;
-  OC_DBG("Created EasySetup Resource with success");
   return ES_OK;
 }
 
-es_result_e
-init_wifi_conf_resource(bool is_secured)
+static es_result_e
+init_wifi_conf_resource(bool is_secured, es_wifi_conf_cb cb)
 {
-  OC_DBG("in");
-
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
+  if (cb == NULL) {
+    OC_ERR("wificonf callback is NULL!");
+    return ES_ERROR;
+  }
+
   g_wificonf_resource.supported_freq = WIFI_BOTH;
   g_wificonf_resource.supported_mode[0] = WIFI_11A;
   g_wificonf_resource.supported_mode[1] = WIFI_11B;
@@ -733,11 +759,11 @@ init_wifi_conf_resource(bool is_secured)
   g_wificonf_resource.num_mode = 4;
   g_wificonf_resource.auth_type = NONE_AUTH;
   g_wificonf_resource.enc_type = NONE_ENC;
+  g_wificonf_resource.wifi_prov_cb = cb;
 
   oc_resource_t *wifi = oc_new_resource("wifi", OC_RSRVD_ES_URI_WIFICONF, 1, 0);
-
   if (NULL == wifi) {
-    OC_ERR("Error in creating WiFiConf Resource!");
+    OC_ERR("Failed to create wificonf resource!");
     return ES_ERROR;
   }
 
@@ -754,26 +780,39 @@ init_wifi_conf_resource(bool is_secured)
   oc_resource_set_request_handler(wifi, OC_GET, get_wifi, NULL);
   oc_resource_set_request_handler(wifi, OC_POST, post_wifi, NULL);
   oc_add_resource(wifi);
-
   g_wificonf_resource.handle = wifi;
-  OC_DBG("Created WiFiConf Resource with success");
+
+  // Add to easysetup collection resource
+  oc_link_t *link = oc_new_link(g_wificonf_resource.handle);
+  if (link == NULL) {
+    OC_ERR("Failed to create link to wificonf resource!");
+    deinit_wifi_conf_resource();
+    return ES_ERROR;
+  }
+
+  oc_collection_add_link(g_easysetup_resource.handle, link);
   return ES_OK;
 }
 
-es_result_e
-init_coap_cloudconf_resource(bool is_secured)
+static es_result_e
+init_coap_cloudconf_resource(bool is_secured, es_coap_cloud_conf_cb cb)
 {
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
 
+  if (cb == NULL) {
+    OC_ERR("cloudconf callback is NULL!");
+    return ES_ERROR;
+  }
+
   g_cloudconf_resource.access_token_type = NONE_OAUTH_TOKENTYPE;
+  g_cloudconf_resource.cloud_prov_cb = cb;
 
   oc_resource_t *cloud =
     oc_new_resource("cloud", OC_RSRVD_ES_URI_COAPCLOUDCONF, 1, 0);
-
   if (NULL == cloud) {
-    OC_ERR("Error in creating WiFiConf Resource!");
+    OC_ERR("Failed to create cloudconf resource!");
     return ES_ERROR;
   }
 
@@ -790,21 +829,36 @@ init_coap_cloudconf_resource(bool is_secured)
   oc_add_resource(cloud);
   g_cloudconf_resource.handle = cloud;
 
-  OC_DBG("Created CoapCloudConf Resource success");
+  // Add to easysetup collection resource
+  oc_link_t *link = oc_new_link(g_cloudconf_resource.handle);
+  if (link == NULL) {
+    OC_ERR("Failed to create link to cloudconf resource!");
+    deinit_coap_cloudconf_resource();
+    return ES_ERROR;
+  }
+
+  oc_collection_add_link(g_easysetup_resource.handle, link);
   return ES_OK;
 }
 
-es_result_e
-init_devconf_resource(bool is_secured)
+static es_result_e
+init_devconf_resource(bool is_secured, es_dev_conf_cb cb)
 {
 #ifndef OC_SECURITY
   (void)is_secured;
 #endif
+
+  if (cb == NULL) {
+    OC_ERR("devconf callback is NULL!");
+    return ES_ERROR;
+  }
+
+  g_devconf_resource.dev_prov_cb = cb;
+
   oc_resource_t *devconf =
     oc_new_resource("devconf", OC_RSRVD_ES_URI_DEVCONF, 1, 0);
-
   if (NULL == devconf) {
-    OC_ERR("Error in creating WiFiConf Resource!");
+    OC_ERR("Failed to create devconf resource!");
     return ES_ERROR;
   }
 
@@ -820,182 +874,131 @@ init_devconf_resource(bool is_secured)
   oc_resource_set_request_handler(devconf, OC_POST, post_devconf, NULL);
   oc_add_resource(devconf);
   g_devconf_resource.handle = devconf;
-  OC_DBG("Created DevConf Resource with success");
+
+  // Add to easysetup collection resource
+  oc_link_t *link = oc_new_link(g_devconf_resource.handle);
+  if (link == NULL) {
+    OC_ERR("Failed to create link to devconf resource!");
+    deinit_devconf_resource();
+    return ES_ERROR;
+  }
+
+  oc_collection_add_link(g_easysetup_resource.handle, link);
   return ES_OK;
 }
 
 es_result_e
-create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask)
+create_easysetup_resources(bool is_secured, es_resource_mask_e resource_mask,
+                           es_provisioning_callbacks_s callbacks)
 {
-  OC_DBG("in");
   es_result_e res = ES_ERROR;
-  bool mask_flag = false;
+  
+  if (resource_mask == 0 ||
+      resource_mask > (ES_WIFICONF_RESOURCE|ES_COAPCLOUDCONF_RESOURCE|ES_DEVCONF_RESOURCE)) {
+    OC_ERR("Invalid resource mask supplied for enrollee initialization!");
+    return res;
+  }
 
+  // Create easysetup collection resource
+  res = init_easysetup_resource(is_secured, callbacks.connect_request_cb);
+  if (res != ES_OK) {
+    OC_ERR("Failed to initialize easysetup resource!");
+    delete_easysetup_resources();
+    return res;
+  }
+
+  // Create wificonf resource
   if ((resource_mask & ES_WIFICONF_RESOURCE) == ES_WIFICONF_RESOURCE) {
-    mask_flag = true;
-    res = init_wifi_conf_resource(is_secured);
+    res = init_wifi_conf_resource(is_secured, callbacks.wifi_prov_cb);
     if (res != ES_OK) {
-      OC_DBG("initWiFiConfResource result: failed");
+      OC_DBG("Failed to initialize wificonf resource!");
+      delete_easysetup_resources();
       return res;
     }
   }
 
+  // Create cloudconf resource
   if ((resource_mask & ES_COAPCLOUDCONF_RESOURCE) ==
       ES_COAPCLOUDCONF_RESOURCE) {
-    mask_flag = true;
-    res = init_coap_cloudconf_resource(is_secured);
+    res = init_coap_cloudconf_resource(is_secured, callbacks.cloud_data_prov_cb);
     if (res != ES_OK) {
-      OC_ERR("initCoapCloudConfResource result: failed");
+      OC_ERR("Failed to initialize cloudconf resource!");
+      delete_easysetup_resources();
       return res;
     }
   }
 
+  // Create devconf resource
   if ((resource_mask & ES_DEVCONF_RESOURCE) == ES_DEVCONF_RESOURCE) {
-    mask_flag = true;
-    res = init_devconf_resource(is_secured);
+    res = init_devconf_resource(is_secured, callbacks.dev_conf_prov_cb);
     if (res != ES_OK) {
-      OC_ERR("initDevConf result: failed");
+      OC_ERR("Failed to initialize deviceconf resource!");
+      delete_easysetup_resources();
       return res;
     }
   }
 
-  if (mask_flag == false) {
-    OC_ERR("Invalid ResourceMask");
-    return ES_ERROR;
-  } else {
-    res = init_easysetup_resource(is_secured);
-    if (res != ES_OK) {
-      OC_ERR("initEasySetupResource result: failed");
-      return res;
-    }
-  }
-
-  OC_DBG("Created all resources with result: success");
-  OC_DBG("out");
   return ES_OK;
 }
 
 void
-deinit_easysetup_resource(void)
-{
-  oc_delete_collection(g_easysetup_resource.handle);
-  g_easysetup_resource.handle = NULL;
-}
-
-void
-deinit_devconf_resource(void)
-{
-  oc_delete_resource(g_devconf_resource.handle);
-  g_devconf_resource.handle = NULL;
-  es_free_property(g_devconf_resource.dev_name);
-}
-
-void
-deinit_coap_cloudconf_resource(void)
-{
-  oc_delete_resource(g_cloudconf_resource.handle);
-  g_cloudconf_resource.handle = NULL;
-  es_free_property(g_cloudconf_resource.auth_code);
-  es_free_property(g_cloudconf_resource.auth_provider);
-  es_free_property(g_cloudconf_resource.access_token);
-  es_free_property(g_cloudconf_resource.ci_server);
-}
-
-void
-deinit_wifi_conf_resource(void)
-{
-  oc_delete_resource(g_wificonf_resource.handle);
-  g_wificonf_resource.handle = NULL;
-  es_free_property(g_wificonf_resource.ssid);
-  es_free_property(g_wificonf_resource.cred);
-}
-
-es_result_e
 delete_easysetup_resources(void)
 {
-  OC_DBG("in");
-
-  if (g_easysetup_resource.handle != NULL) {
-    deinit_easysetup_resource();
-  }
-
-  if (g_wificonf_resource.handle != NULL) {
-    deinit_wifi_conf_resource();
-  }
-
-  if (g_cloudconf_resource.handle != NULL) {
-    deinit_coap_cloudconf_resource();
-  }
-
-  if (g_devconf_resource.handle != NULL) {
-    deinit_devconf_resource();
-  }
-
-  OC_DBG("out");
-  return ES_OK;
+  deinit_wifi_conf_resource();
+  deinit_coap_cloudconf_resource();
+  deinit_devconf_resource();
+  deinit_easysetup_resource();
 }
 
 es_result_e
 set_device_property(es_device_property *device_property)
 {
-  OC_DBG("in");
-
   g_wificonf_resource.supported_freq = (device_property->WiFi).supported_freq;
-  OC_DBG("WiFi Freq : %d", g_wificonf_resource.supported_freq);
 
   int modeIdx = 0;
   while ((device_property->WiFi).supported_mode[modeIdx] != WiFi_EOF) {
     g_wificonf_resource.supported_mode[modeIdx] =
       (device_property->WiFi).supported_mode[modeIdx];
-    OC_DBG("WiFi Mode : %d", g_wificonf_resource.supported_mode[modeIdx]);
     modeIdx++;
   }
 
   g_wificonf_resource.num_mode = modeIdx;
   oc_allocate_string(&(g_devconf_resource.dev_name),
                              oc_string((device_property->DevConf).device_name));
-  OC_DBG("Device Name : %s", oc_string(g_devconf_resource.dev_name));
 
-  if (0 == oc_notify_observers(g_wificonf_resource.handle)) {
-    OC_DBG("wifiResource doesn't have any observers.");
-  }
-
-  if (0 == oc_notify_observers(g_devconf_resource.handle)) {
-    OC_DBG("devConfResource doesn't have any observers.");
-  }
-
-  OC_DBG("out");
+  oc_notify_observers(g_wificonf_resource.handle);
+  oc_notify_observers(g_devconf_resource.handle);
   return ES_OK;
 }
 
 es_result_e
 set_enrollee_state(es_enrollee_state es_state)
 {
-  OC_DBG("set_enrollee_state in");
-
-  g_easysetup_resource.status = es_state;
-  OC_DBG("Enrollee Status : %d", g_easysetup_resource.status);
-
-  if (0 == oc_notify_observers(g_easysetup_resource.handle)) {
-    OC_DBG("provResource doesn't have any observers.");
+  if (es_state < ES_STATE_INIT || es_state >= ES_STATE_EOF) {
+    OC_ERR("Invalid es_set_state to set: %d", es_state);
+    return ES_ERROR;
   }
 
-  OC_DBG("set_enrollee_state out");
+  g_easysetup_resource.status = es_state;
+  oc_notify_observers(g_easysetup_resource.handle);
   return ES_OK;
 }
 
 es_result_e
 set_enrollee_err_code(es_error_code es_err_code)
 {
-  OC_DBG("set_enrollee_err_code in");
-
-  g_easysetup_resource.last_err_code = es_err_code;
-  OC_DBG("Enrollee ErrorCode : %d", g_easysetup_resource.last_err_code);
-
-  if (0 == oc_notify_observers(g_easysetup_resource.handle)) {
-    OC_DBG("provResource doesn't have any observers.");
+  if (es_err_code < ES_ERRCODE_NO_ERROR || es_err_code > ES_ERRCODE_UNKNOWN) {
+    OC_ERR("Invalid lec to set: %d", es_err_code);
+    return ES_ERROR;
   }
 
-  OC_DBG("set_enrollee_err_code out");
+  g_easysetup_resource.last_err_code = es_err_code;
+  oc_notify_observers(g_easysetup_resource.handle);
   return ES_OK;
+}
+
+void
+notify_connection_change(void)
+{
+  oc_notify_observers(g_easysetup_resource.handle);
 }
