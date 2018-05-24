@@ -27,6 +27,9 @@
 #include "st_store.h"
 #include "st_resource_manager.h"
 
+#define SOFT_AP_PWD "1111122222"
+#define SOFT_AP_CHANNEL (6)
+
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
 static const char *st_device_sub_type = "deviceSubType";
@@ -62,6 +65,8 @@ static const char *device_rt = "oic.d.light";
 static const char *device_name = "Samsung";
 
 static const char *manufacturer = "xxxx";
+static const char *sid = "000";
+static const char *vid = "IoT2020";
 
 st_mutex_t mutex = NULL;
 st_cond_t cv = NULL;
@@ -75,12 +80,12 @@ static void
 init_platform_cb(CborEncoder *object, void *data)
 {
   (void)data;
-  oc_set_custom_platform_property(*object, mnmo, "5021");
+  oc_set_custom_platform_property(*object, mnmo, sid);
   oc_set_custom_platform_property(*object, mnpv, "1.0");
   oc_set_custom_platform_property(*object, mnos, "1.0");
   oc_set_custom_platform_property(*object, mnhw, "1.0");
   oc_set_custom_platform_property(*object, mnfv, "1.0");
-  oc_set_custom_platform_property(*object, vid, "IoT2020");
+  oc_set_custom_platform_property(*object, vid, vid);
 }
 
 static int
@@ -386,12 +391,16 @@ main(void)
   while (quit != 1) {
     if (st_load() < 0) {
       st_print_log("[ST_App] Could not load store informations.\n");
-      return -1;
+      goto exit;
     }
 
     if (st_is_easy_setup_finish() != 0) {
       st_print_log("[St_App] Soft AP turn on.\n");
-      st_easy_setup_turn_on_soft_AP();
+      char ssid[MAX_SSID_LEN + 1];
+      if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
+        goto exit;
+      }
+      st_easy_setup_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
     }
 
     init = oc_main_init(&handler);

@@ -22,6 +22,8 @@
 #include "st_port.h"
 #include "st_store.h"
 
+#define EASYSETUP_TAG "E1"
+
 #define st_rep_set_string_with_chk(object, key, value)                         \
   if (value)                                                                   \
     oc_rep_set_text_string(object, key, value);
@@ -146,9 +148,39 @@ st_easy_setup_reset(void)
   st_print_log("[Easy_Setup] st_easy_setup_reset out\n");
 }
 
-void
-st_easy_setup_turn_on_soft_AP(void)
+int
+st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
+            const char *sid)
 {
+  unsigned char mac[6] = { 0 };
+
+  if (!oc_get_mac_addr(mac)) {
+    st_print_log("[St_app] oc_get_mac_addr failed!\n");
+    return -1;
+  }
+
+  snprintf(ssid, MAX_SSID_LEN, "%s_%s%s%s%d%02X%02X", device_name,
+           EASYSETUP_TAG, mnid, sid, 0, mac[4], mac[5]);
+  ssid[strlen(ssid)] = '\0';
+
+  st_print_log("[St_app] ssid : %s\n", ssid);
+  return 0;
+}
+
+void
+st_easy_setup_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
+{
+  if (oc_string(g_soft_ap.ssid)) {
+    oc_free_string(&g_soft_ap.ssid);
+  }
+  if (oc_string(g_soft_ap.pwd)) {
+    oc_free_string(&g_soft_ap.pwd);
+  }
+
+  oc_new_string(&g_soft_ap.ssid, ssid, strlen(ssid));
+  oc_new_string(&g_soft_ap.pwd, pwd, strlen(pwd));
+  g_soft_ap.channel = channel;
+
   st_turn_on_soft_AP(&g_soft_ap);
 }
 

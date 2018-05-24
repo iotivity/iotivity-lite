@@ -23,6 +23,8 @@
 #include "samsung/sc_easysetup.h"
 #include "st_store.h"
 
+#define MAX_SSID_LEN (32)
+
 typedef enum {
   EASY_SETUP_INITIALIZE,
   EASY_SETUP_PROGRESSING,
@@ -37,7 +39,10 @@ int st_is_easy_setup_finish(void);
 int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
 void st_easy_setup_reset(void);
-void st_easy_setup_turn_on_soft_AP(void);
+int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
+                const char *sid);
+void st_easy_setup_turn_on_soft_AP(const char *ssid, const char *pwd,
+                                   int channel);
 
 st_easy_setup_status_t get_easy_setup_status(void);
 st_store_t *get_cloud_informations(void);
