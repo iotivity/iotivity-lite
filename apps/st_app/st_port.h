@@ -49,7 +49,8 @@ int st_cond_timedwait(st_cond_t cv, st_mutex_t mutex, oc_clock_time_t time);
 int st_cond_signal(st_cond_t cv);
 int st_set_sigint_handler(st_sig_handler_t handler);
 
-st_thread_t st_thread_create(st_thread_process_t handler, void *user_data);
+st_thread_t st_thread_create(st_thread_process_t handler, const char *name,
+                             void *user_data);
 int st_thread_destroy(st_thread_t thread);
 int st_thread_join(st_thread_t thread);
 int st_thread_cancel(st_thread_t thread);

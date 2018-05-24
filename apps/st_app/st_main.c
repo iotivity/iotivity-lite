@@ -420,7 +420,7 @@ main(void)
       }
     }
 
-    st_thread_t thread = st_thread_create(process_func, NULL);
+    st_thread_t thread = st_thread_create(process_func, "MAIN", NULL);
     if (!thread) {
       st_print_log("Failed to create main thread\n");
       init = -1;
