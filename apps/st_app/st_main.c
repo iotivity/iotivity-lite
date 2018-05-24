@@ -404,6 +404,12 @@ main(void)
     oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
     st_print_log("uuid : %s\n", uuid);
 
+    init = st_port_specific_init();
+    if (init < 0) {
+      st_print_log("oc_main_init failed!(%d)\n", init);
+      goto exit;
+    }
+
     st_vendor_props_initialize();
 
     device_num = oc_core_get_num_devices();
@@ -471,6 +477,8 @@ main(void)
     st_thread_destroy(thread);
     thread = NULL;
     st_print_log("st_thread_destroy finish!\n");
+
+    st_port_specific_destroy();
   }
 
 exit:
