@@ -39,6 +39,9 @@ typedef struct
   int channel;
 } st_soft_ap_t;
 
+int st_port_specific_init(void);
+void st_port_specific_destroy(void);
+
 void st_print_log(const char *log, ...);
 
 st_mutex_t st_mutex_init(void);

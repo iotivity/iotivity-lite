@@ -40,6 +40,20 @@ OC_MEMB(st_thread_s, pthread_t, 10);
 
 static void *soft_ap_process_routine(void *data);
 
+int
+st_port_specific_init(void)
+{
+  /* set port specific logics. in here */
+  return 0;
+}
+
+void
+st_port_specific_destroy(void)
+{
+  /* set initialized port specific logics destroyer. in here */
+  return;
+}
+
 void
 st_print_log(const char *fmt, ...)
 {
