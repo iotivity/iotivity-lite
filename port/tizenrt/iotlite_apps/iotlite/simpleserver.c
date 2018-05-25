@@ -24,7 +24,7 @@ pthread_mutex_t mutex;
 pthread_cond_t cv;
 struct timespec ts;
 
-int quit = 0;
+static int quit = 0;
 
 static bool state = false;
 int power;
@@ -130,7 +130,7 @@ signal_event_loop(void)
   pthread_mutex_unlock(&mutex);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
