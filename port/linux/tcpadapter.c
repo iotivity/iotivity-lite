@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <stdlib.h>
@@ -41,6 +42,10 @@
 
 #define DEFAULT_RECEIVE_SIZE                                                   \
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
+#define LIMIT_RETRY_CONNECT 5
+
+#define TCP_CONNECT_TIMEOUT 5
 
 typedef struct tcp_session
 {
@@ -389,28 +394,93 @@ get_session_socket(oc_endpoint_t *endpoint)
 }
 
 static int
+connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
+{
+  int flags, n, error;
+  socklen_t len;
+  fd_set rset, wset;
+  struct timeval tval;
+
+  flags = fcntl(sockfd, F_GETFL, 0);
+  fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+
+  error = 0;
+  if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
+    if (errno != EINPROGRESS)
+      return -1;
+  }
+
+  /* Do whatever we want while the connect is taking place. */
+  if (n == 0) {
+    goto done; /* connect completed immediately */
+  }
+
+  FD_ZERO(&rset);
+  FD_SET(sockfd, &rset);
+  wset = rset;
+  tval.tv_sec = nsec;
+  tval.tv_usec = 0;
+
+  if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+    /* timeout */
+    errno = ETIMEDOUT;
+    return -1;
+  }
+
+  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset)) {
+    len = sizeof(error);
+    if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+      return -1; /* Solaris pending error */
+  } else {
+    OC_DBG("select error: sockfd not set");
+    return -1;
+  }
+
+done:
+  fcntl(sockfd, F_SETFL, flags); /* restore file status flags */
+  if (error) {
+    close(sockfd); /* just in case */
+    errno = error;
+    return -1;
+  }
+  return 0;
+}
+
+static int
 initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
                      const struct sockaddr_storage *receiver)
 {
   int sock = -1;
+  uint8_t retry_cnt = 0;
 
-  if (endpoint->flags & IPV6) {
-    sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+  while (retry_cnt < LIMIT_RETRY_CONNECT) {
+    if (endpoint->flags & IPV6) {
+      sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 #ifdef OC_IPV4
-  } else if (endpoint->flags & IPV4) {
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    } else if (endpoint->flags & IPV4) {
+      sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 #endif
-  }
+    }
 
-  if (sock < 0) {
-    OC_ERR("could not create socket for new TCP session");
-    return -1;
-  }
+    if (sock < 0) {
+      OC_ERR("could not create socket for new TCP session");
+      return -1;
+    }
 
-  socklen_t receiver_size = sizeof(*receiver);
-  if (connect(sock, (struct sockaddr *)receiver, receiver_size) < 0) {
-    OC_ERR("could not initiate TCP connection");
+    socklen_t receiver_size = sizeof(*receiver);
+    int ret = 0;
+    if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
+                            TCP_CONNECT_TIMEOUT)) == 0) {
+      break;
+    }
+
     close(sock);
+    retry_cnt++;
+    OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+  }
+
+  if (retry_cnt >= LIMIT_RETRY_CONNECT) {
+    OC_ERR("could not initiate TCP connection");
     return -1;
   }
 
