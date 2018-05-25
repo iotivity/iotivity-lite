@@ -223,7 +223,7 @@ es_result_e set_sc_net_connection_state(NETCONNECTION_STATE netConnectionState);
 es_result_e set_sc_pnp_pin(const char *pnp);
 
 es_result_e set_es_version_info(const char *esVersionInfo);
-es_result_e register_sc_provisioning_info_resource();
+es_result_e register_sc_provisioning_info_resource(void);
 es_result_e set_properties_for_sc_prov_info(const provisioning_info_resource *prop);
 es_result_e reset_sc_properties(const sc_properties *prop);
 
