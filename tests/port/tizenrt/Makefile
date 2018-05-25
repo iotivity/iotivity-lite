@@ -99,6 +99,17 @@ rule/configure: ${tizenrt_dir}/os/tools
 	cd "$<" && ./configure.sh ${os_machine}/${os_image_type}
 	echo "CONFIG_ENABLE_IOTIVITY_CONSTRAINED=y" >> ${configure_file}
 	echo "CONFIG_IOTLITE_EASYSETUP=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_DYNAMIC=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_SECURE=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_IPV4=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_TCP=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_CLOUD_ACCESS=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_RD=y" >> ${configure_file}
+	echo "CONFIG_WIFI_MANAGER=y" >> ${configure_file}
+	echo "CONFIG_NETUTILS_WIFI=y" >> ${configure_file}
+	echo "CONFIG_SLSI_WIFI_DEFAULT_WLAN_COUNTRY_CODE=\"00\"" >> ${configure_file}
+	echo "CONFIG_SLSI_WIFI_DEFAULT_WLAN_TX_POWER=30" >> ${configure_file}
+	echo "CONFIG_EXAMPLES_WIFIMANAGER_TEST=y" >> ${configure_file}
 
 prep: ${prep_files}
 	ls $^
