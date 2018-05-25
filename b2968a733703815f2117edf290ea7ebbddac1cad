@@ -16,6 +16,24 @@
       "revId": "b2968a733703815f2117edf290ea7ebbddac1cad",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a34982d2",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_wifi_softap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-05-25T09:33:08Z",
+      "side": 1,
+      "message": "@Rami, Do you mean use oc_malloc and make the port API for each OS?",
+      "parentUuid": "da33351e_02a02d8f",
+      "revId": "b2968a733703815f2117edf290ea7ebbddac1cad",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
