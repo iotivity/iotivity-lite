@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_83739e4c",
+        "filename": "apps/st_app/st_cloud_access.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-05-25T01:10:02Z",
+      "side": 1,
+      "message": "set define macro as semantically understandable.",
+      "parentUuid": "da33351e_e388aa24",
+      "range": {
+        "startLine": 515,
+        "startChar": 64,
+        "endLine": 515,
+        "endChar": 66
+      },
+      "revId": "41a118d1e4c8084ed3b9b5e330a6d5a4ba4cf8af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a39fc25e",
         "filename": "apps/st_app/st_cloud_access.c",
         "patchSetId": 2
