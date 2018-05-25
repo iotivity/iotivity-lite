@@ -99,6 +99,34 @@ rule/configure: ${tizenrt_dir}/os/tools
 	cd "$<" && ./configure.sh ${os_machine}/${os_image_type}
 	echo "CONFIG_ENABLE_IOTIVITY_CONSTRAINED=y" >> ${configure_file}
 	echo "CONFIG_IOTLITE_EASYSETUP=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_DYNAMIC=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_SECURE=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_IPV4=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_TCP=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_CLOUD_ACCESS=y" >> ${configure_file}
+	echo "CONFIG_IOTLITE_RD=y" >> ${configure_file}
+#	echo "CONFIG_WIFI_MANAGER=y" >> ${configure_file}
+#	echo "CONFIG_NETUTILS_WIFI=y" >> ${configure_file}
+#	echo "CONFIG_SLSI_WIFI_DEFAULT_WLAN_COUNTRY_CODE=\"00\"" >> ${configure_file}
+#	echo "CONFIG_SLSI_WIFI_DEFAULT_WLAN_TX_POWER=30" >> ${configure_file}
+#	echo "CONFIG_EXAMPLES_WIFIMANAGER_TEST=y" >> ${configure_file}
+#	echo "CONFIG_WPA_SUPPLICANT=y" >> ${configure_file}
+#	echo "CONFIG_WPA_SUPPLICANT_PRIORITY=100" >> ${configure_file}
+#	echo "CONFIG_WPA_SUPPLICANT_STACKSIZE=16384" >> ${configure_file}
+#	echo "CONFIG_WPA_SUPPLICANT_ENTRYPOINT=\"wpa_supplicant_main\"" >> ${configure_file}
+#	echo "CONFIG_CTRL_IFACE=y" >> ${configure_file}
+#	echo "CONFIG_CTRL_IFACE_FIFO=y" >> ${configure_file}
+#	echo "CONFIG_WPA_CTRL_FIFO_DEV_CFM=\"/dev/wpa_ctrl_cfm\"" >> ${configure_file}
+#	echo "CONFIG_WPA_CTRL_FIFO_DEV_REQ=\"/dev/wpa_ctrl_req\"" >> ${configure_file}
+#	echo "CONFIG_WPA_CTRL_FIFO_DEV_GLOBAL_CFM=\"/dev/wpa_ctrl_global_cfm\"" >> ${configure_file}
+#	echo "CONFIG_WPA_CTRL_FIFO_DEV_GLOBAL_REQ=\"/dev/wpa_ctrl_global_req\"" >> ${configure_file}
+#	echo "CONFIG_WPA_MONITOR_FIFO_DEV=\"/dev/wpa_monitor\"" >> ${configure_file}
+#	echo "CONFIG_WPA_CTRL_FIFO_MK_MODE=666" >> ${configure_file}
+#	echo "CONFIG_ELOOP_POLL=y" >> ${configure_file}
+#	echo "CONFIG_NETUTILS_NETLIB=y" >> ${configure_file}
+#	echo "CONFIG_FS_READABLE=y" >> ${configure_file}
+#	echo "CONFIG_FS_MQUEUE_MPATH=\"/var/mqueue\"" >> ${configure_file}
+#	echo "CONFIG_FS_SMARTFS=y" >> ${configure_file}
 
 prep: ${prep_files}
 	ls $^

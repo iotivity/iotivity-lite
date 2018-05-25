@@ -123,10 +123,15 @@ st_easy_setup_stop(void)
 {
   st_print_log("[Easy_Setup] st_easy_setup_stop in\n");
 
+///TODO: debug es_terminate_enrollee crash on tizen rt.
+#ifndef __TIZENRT__
   if (es_terminate_enrollee() == ES_ERROR) {
     st_print_log("es_terminate_enrollee failed!\n");
     return;
   }
+#else
+  st_print_log("[Easy_Setup] es_terminate_enrollee skipped for tizen rt\n");
+#endif
 
   g_callback = NULL;
 
