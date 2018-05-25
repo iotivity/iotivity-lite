@@ -119,13 +119,14 @@ handle_signal(int signal)
   quit = 1;
 }
 
+static int thread_quit = 0;
 static void *
 process_func(void *data)
 {
   (void)data;
   oc_clock_time_t next_event;
 
-  while (quit != 1) {
+  while (thread_quit != 1) {
     st_mutex_lock(app_mutex);
     next_event = oc_main_poll();
     st_mutex_unlock(app_mutex);
@@ -159,8 +160,6 @@ easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
     is_easy_setup_success = true;
-  } else if (status == EASY_SETUP_RESET) {
-    // TODO
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("Easy setup failed!!!\n");
   }
@@ -275,6 +274,10 @@ st_main_initialize(void)
     if (get_easy_setup_status() == EASY_SETUP_FINISH) {
       st_mutex_unlock(app_mutex);
       break;
+    } else if (get_easy_setup_status() == EASY_SETUP_RESET) {
+      st_mutex_unlock(app_mutex);
+      st_print_log("easy setup timeout!\n");
+      goto exit;
     }
     st_mutex_unlock(app_mutex);
     st_sleep(1);
@@ -287,13 +290,13 @@ st_main_initialize(void)
     st_print_log("easy setup is successfully finished!\n");
     st_easy_setup_stop();
   } else {
-    return false;
+    goto exit;
   }
 
   st_store_t *cloud_info = get_cloud_informations();
   if (!cloud_info) {
     st_print_log("could not get cloud informations.\n");
-    return false;
+    goto exit;
   }
 
   while (st_cloud_access_check_connection(
@@ -307,7 +310,7 @@ st_main_initialize(void)
   if (st_cloud_access_start(cloud_info, device_index, cloud_access_handler) !=
       0) {
     st_print_log("Failed to access cloud!\n");
-    return false;
+    goto exit;
   }
 
   st_print_log("cloud access started.\n");
@@ -328,10 +331,25 @@ st_main_initialize(void)
   if (is_cloud_access_success) {
     st_print_log("cloud access successfully finished!\n");
   } else {
-    return false;
+    goto exit;
   }
-
   return true;
+
+exit:
+  return false;
+}
+
+static void
+st_main_deinitialize(void)
+{
+  if (is_easy_setup_success) {
+    st_easy_setup_stop();
+    st_print_log("easy setup stop done\n");
+  }
+  if (is_cloud_access_success) {
+    st_cloud_access_stop(device_index);
+    st_print_log("cloud access stop done\n");
+  }
 }
 
 static void
@@ -428,6 +446,10 @@ main(void)
         ep = ep->next;
       }
     }
+    for (i = 0; i < device_num; i++) {
+      oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
+      oc_free_server_endpoints(ep);
+    }
 
     st_thread_t thread = st_thread_create(process_func, NULL);
     if (!thread) {
@@ -437,6 +459,10 @@ main(void)
     }
 
     if (!st_main_initialize()) {
+      if (get_easy_setup_status() == EASY_SETUP_RESET) {
+        st_main_reset();
+        goto reset;
+      }
       st_print_log("Failed to start easy setup & cloud access!\n");
       init = -1;
       goto exit;
@@ -474,31 +500,26 @@ main(void)
       }
       st_mutex_unlock(app_mutex);
     }
+    goto quit;
+
   reset:
     st_print_log("reset finished\n");
 
+  quit:
+    st_vendor_props_shutdown();
+    thread_quit =
+      1; // TODO : this need to be changed after process module merged.
+    _oc_signal_event_loop(); // TODO : this need to be changed after process
+                             // module merged.
     st_thread_destroy(thread);
     thread = NULL;
     st_print_log("st_thread_destroy finish!\n");
+
+    st_main_deinitialize();
+    oc_main_shutdown();
   }
 
 exit:
-
-  device_num = oc_core_get_num_devices();
-  for (i = 0; i < device_num; i++) {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    oc_free_server_endpoints(ep);
-  }
-
-  st_easy_setup_stop();
-  st_print_log("easy setup stop done\n");
-
-  st_cloud_access_stop(device_index);
-  st_print_log("cloud access stop done\n");
-
-  st_vendor_props_shutdown();
-  oc_main_shutdown();
-
   st_cond_destroy(cv);
   st_mutex_destroy(app_mutex);
   st_mutex_destroy(mutex);

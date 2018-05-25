@@ -23,6 +23,7 @@
 #include "st_store.h"
 
 #define EASYSETUP_TAG "E1"
+#define EASYSETUP_TIMEOUT (60)
 
 #define st_rep_set_string_with_chk(object, key, value)                         \
   if (value)                                                                   \
@@ -59,6 +60,7 @@ static void dev_conf_prov_cb(es_dev_conf_data *event_data);
 static void cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data);
 static bool is_easy_setup_step_done(void);
 static oc_event_callback_retval_t easy_setup_finish_handler(void *data);
+static oc_event_callback_retval_t easy_setup_timeout_handler(void *data);
 
 static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                   .dev_conf_prov_cb =
@@ -114,6 +116,10 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   // Set callbacks for Vendor Specific Properties
   es_set_callback_for_userdata(ReadUserdataCb, WriteUserdataCb);
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
+
+  // Set timeout for easy setup procedure.
+  oc_set_delayed_callback(NULL, easy_setup_timeout_handler, EASYSETUP_TIMEOUT);
+  _oc_signal_event_loop();
 
   return 0;
 }
@@ -389,6 +395,15 @@ easy_setup_finish_handler(void *data)
     st_dump();
     oc_set_delayed_callback(NULL, callback_handler, 0);
   }
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+easy_setup_timeout_handler(void *data)
+{
+  (void)data;
+  st_print_log("[Easy_Setup] Timeout easy-setup procedure.\n");
+  g_easy_setup_status = EASY_SETUP_RESET;
   return OC_EVENT_DONE;
 }
 
