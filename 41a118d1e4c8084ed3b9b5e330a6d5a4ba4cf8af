@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e388aa24",
+        "filename": "apps/st_app/st_cloud_access.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-25T00:56:53Z",
+      "side": 1,
+      "message": "How about this value make defined value?",
+      "range": {
+        "startLine": 515,
+        "startChar": 64,
+        "endLine": 515,
+        "endChar": 66
+      },
+      "revId": "41a118d1e4c8084ed3b9b5e330a6d5a4ba4cf8af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a39fc25e",
+        "filename": "apps/st_app/st_cloud_access.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-25T00:56:53Z",
+      "side": 1,
+      "message": "I think we need to set delayed callback here, because if ping doesn\u0027t get any response, then it is nothing to handle it.",
+      "revId": "41a118d1e4c8084ed3b9b5e330a6d5a4ba4cf8af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
