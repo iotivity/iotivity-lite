@@ -69,6 +69,17 @@ endif
 	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
 endif
 
+ifeq ($(CONFIG_IOTLITE_CLOUD_ACCESS),y)
+	CSRCS += iotivity-constrained/service/cloud-access/src/cloud_access.c
+	OSRCS_C += iotivity-constrained/service/cloud-access/src/cloud_access.o
+ifeq ($(CONFIG_IOTLITE_RD),y)
+	CSRCS += iotivity-constrained/service/resource-directory/client/src/rd_client.c
+	OSRCS_C += iotivity-constrained/service/resource-directory/client/src/rd_client.o
+endif
+	CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
+			   -Iiotivity-constrained/service/resource-directory/client/include
+endif
+
 CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   iotivity-constrained/deps/tinycbor/src/cborencoder_close_container_checked.c \
 			   iotivity-constrained/deps/tinycbor/src/cborparser.c \
@@ -78,10 +89,13 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   $(wildcard iotivity-constrained/port/tizenrt/*.c)
 
 ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
-CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c)
-OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o)
-CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include\
-		   -Iiotivity-constrained/service/easy-setup/enrollee
+CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c) \
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c)
+OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o) \
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o)
+CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
+		    -Iiotivity-constrained/service/easy-setup/enrollee \
+		    -Iiotivity-constrained/service/easy-setup/enrollee/include
 endif
 
 OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
@@ -96,13 +110,21 @@ ifeq ($(CONFIG_IOTLITE_IPV4),y)
 	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
+ifeq ($(CONFIG_IOTLITE_DEBUG),y)
+	EXTRA_CFLAGS += -DOC_DEBUG
+endif
+
 ifeq ($(CONFIG_IOTLITE_TCP),y)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(CONFIG_WIFI_MANAGER),y)
+	EXTRA_CFLAGS += -DTIZEN_RT_WIFI_MANAGER
+endif
+
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
 CFLAGS:=$(filter-out -Wundef,$(CFLAGS))
-CFLAGS 		+= -D__TIZENRT__ -DOC_SPEC_VER_OIC -DOC_CLIENT -DOCF_12 -DOC_DEBUG -DOC_SERVER -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
+CFLAGS += -D__TIZENRT__ -DOC_SPEC_VER_OIC -DOC_CLIENT -DOC_SERVER -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
 CFLAGS += $(EXTRA_CFLAGS)
 CFLAGS		+= -Itinycbor/src/ \
 			   -Iiotivity-constrained/ \

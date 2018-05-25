@@ -310,7 +310,11 @@ int
 st_manager_initialize(void)
 {
 #ifdef OC_SECURITY
+#ifdef __TIZENRT__
+  oc_storage_config("/mnt/st_things_creds");
+#else
   oc_storage_config("./st_things_creds");
+#endif
 #endif /* OC_SECURITY */
 
   if (st_process_init() != 0) {
