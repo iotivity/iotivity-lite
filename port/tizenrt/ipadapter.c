@@ -46,6 +46,9 @@
 #include "tcpadapter.h"
 #endif
 
+#include <wifi_manager/wifi_manager.h>
+//#include <slsi_wifi/slsi_wifi_api.h>
+
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
 #ifndef IFA_FLAGS
@@ -929,6 +932,7 @@ done:
   //freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
+
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
@@ -938,7 +942,27 @@ void
 handle_session_event_callback(const oc_endpoint_t *endpoint,
                                oc_session_state_t state)
 {
-    //TODO::::yet to implement
+  //TODO::::yet to implement
+}
+
+int
+oc_add_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
+}
+
+int
+oc_remove_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  //TODO::::yet to implement
+  return 0;
 }
 
 #ifdef OC_IPV4
@@ -1278,21 +1302,50 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 bool
 oc_domain_to_ip(const char *domain, oc_string_t *ip)
 {
+  printf("[oc_domain_to_ip ] in, domain [%s]", domain);
   if (!domain || !ip) {
     OC_ERR("Error of input parameters");
     return false;
   }
 
-  struct hostent *shost = gethostbyname(domain);
-  if (!shost)
-    return false;
+  char ipaddress[20];
+  memset(ipaddress, 0, 20);
 
-  char *address = inet_ntoa(*(struct in_addr *)(shost->h_addr_list[0]));
-  if (!address)
-    return false;
+  char bytes[4];
+  int ip4_address = 0;
+  wifi_manager_result_e res = wifi_net_hostname_to_ip4(domain, &ip4_address);
+  if (res == 0) {
+    bytes[0] = ip4_address & 0XFF;
+    bytes[1] = (ip4_address >> 8) & 0XFF;
+    bytes[2] = (ip4_address >> 16) & 0XFF;
+    bytes[3] = (ip4_address >> 24) & 0XFF;
 
-  OC_DBG("%s's ip is %s", domain, address);
-  oc_new_string(ip, address, strlen(address));
+    snprintf(ipaddress, sizeof(ipaddress), "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+
+    printf("DNS resolved IP for[%s] is =%s\n", domain, ipaddress);
+  }  else {
+    printf("DNS Failed to get the IP, hard coding the ip\n");
+    snprintf(ipaddress, sizeof(ipaddress), "%s", "52.202.177.174");
+  }
+
+  OC_DBG("%s's ip is %s", domain, ipaddress);
+  oc_new_string(ip, ipaddress, strlen(ipaddress));
 
   return true;
 }
+
+bool
+oc_get_mac_addr(unsigned char* mac)
+{
+    //WiFiGetMac(mac);
+    mac[0] = 0x28;
+    mac[1] = 0x6d;
+    mac[2] = 0x97;
+    mac[3] = 0x40;
+    mac[4] = 0x22;
+    mac[5] = 0x14;
+
+    printf("oc_get_mac_addr MAC: %02X%02X%02X%02X%02X%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return true;
+}
+
