@@ -138,7 +138,7 @@ udp_sent(struct net_context *context, int status, void *token, void *user_data)
   }
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
@@ -166,13 +166,13 @@ oc_send_buffer(oc_message_t *message)
   }
   if (!send_pkt) {
     OC_WRN("oc_send_buffer: cannot acquire send_pkt");
-    return;
+    return -1;
   }
 
   bool status = net_pkt_append_all(send_pkt, message->length, message->data, K_NO_WAIT);
   if (!status) {
     OC_WRN("oc_send_buffer: cannot populate send_pkt");
-    return;
+    return -1;
   }
 
   int ret = net_context_sendto(
@@ -181,7 +181,9 @@ oc_send_buffer(oc_message_t *message)
   if (ret < 0) {
     OC_WRN("oc_send_buffer: cannot send data to peer (%d)", ret);
     net_pkt_unref(send_pkt);
+    return ret;
   }
+  return message->length;
 }
 
 oc_endpoint_t *
