@@ -46,6 +46,11 @@
 #include "tcpadapter.h"
 #endif
 
+#ifdef TIZEN_RT_WIFI_MANAGER
+#include <wifi_manager/wifi_manager.h>
+//#include <slsi_wifi/slsi_wifi_api.h>
+#endif
+
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
 #ifndef IFA_FLAGS
@@ -76,6 +81,22 @@ bool ifchange_initialized;
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
+OC_LIST(oc_session_event_cb_list);
+OC_MEMB(oc_session_event_cb_s, oc_session_event_cb_t, OC_MAX_SESSION_EVENT_CBS);
+
+static void
+remove_all_session_event_cbs(void)
+{
+  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list),
+                        *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(oc_session_event_cb_list, cb_item);
+    oc_memb_free(&oc_session_event_cb_s, cb_item);
+    cb_item = next;
+  }
+}
+
 void
 oc_network_event_handler_mutex_init(void)
 {
@@ -100,6 +121,8 @@ void oc_network_event_handler_mutex_destroy(void) {
 #ifdef OC_NETLINK
   close(ifchange_sock);
 #endif
+
+  remove_all_session_event_cbs();
   pthread_mutex_destroy(&mutex);
 }
 
@@ -929,17 +952,62 @@ done:
   //freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
+
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
     //TODO::::yet to implement
 }
+
+int
+oc_add_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_session_event_cb_t *cb_item = oc_memb_alloc(&oc_session_event_cb_s);
+  if (!cb_item) {
+    OC_ERR("session event callback item alloc failed");
+    return -1;
+  }
+
+  cb_item->handler = cb;
+  oc_list_add(oc_session_event_cb_list, cb_item);
+  return 0;
+}
+
+int
+oc_remove_session_event_callback(session_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
+  while (cb_item != NULL && cb_item->handler != cb) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    return -1;
+  }
+  oc_list_remove(oc_session_event_cb_list, cb_item);
+
+  oc_memb_free(&oc_session_event_cb_s, cb_item);
+  return 0;
+}
+
 void
 handle_session_event_callback(const oc_endpoint_t *endpoint,
                                oc_session_state_t state)
 {
-    //TODO::::yet to implement
+    if (oc_list_length(oc_session_event_cb_list) > 0) {
+    oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
+    while (cb_item) {
+      cb_item->handler(endpoint, state);
+      cb_item = cb_item->next;
+    }
+  }
 }
+
 
 #ifdef OC_IPV4
 static int
@@ -1283,16 +1351,49 @@ oc_domain_to_ip(const char *domain, oc_string_t *ip)
     return false;
   }
 
-  struct hostent *shost = gethostbyname(domain);
-  if (!shost)
-    return false;
+  OC_DBG("domain [%s]", domain);
 
-  char *address = inet_ntoa(*(struct in_addr *)(shost->h_addr_list[0]));
-  if (!address)
-    return false;
+  char ipaddress[20];
+  memset(ipaddress, 0, 20);
 
-  OC_DBG("%s's ip is %s", domain, address);
-  oc_new_string(ip, address, strlen(address));
+#ifdef TIZEN_RT_WIFI_MANAGER
+  char bytes[4];
+  int ip4_address = 0;
+  wifi_manager_result_e res = wifi_net_hostname_to_ip4(domain, &ip4_address);
+  if (res == 0) {
+    bytes[0] = ip4_address & 0XFF;
+    bytes[1] = (ip4_address >> 8) & 0XFF;
+    bytes[2] = (ip4_address >> 16) & 0XFF;
+    bytes[3] = (ip4_address >> 24) & 0XFF;
+
+    snprintf(ipaddress, sizeof(ipaddress), "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+  }  else {
+    OC_DBG("DNS Failed to get the IP, hard coding the ip\n");
+    snprintf(ipaddress, sizeof(ipaddress), "%s", "52.202.177.174");
+  }
+#else
+  OC_DBG("Wi-Fi Manager Not Enabled: hard coding the ip");
+  snprintf(ipaddress, sizeof(ipaddress), "%s", "52.202.177.174");
+#endif
+  OC_DBG("%s's ip is %s", domain, ipaddress);
+  oc_new_string(ip, ipaddress, strlen(ipaddress));
 
   return true;
 }
+
+bool
+oc_get_mac_addr(unsigned char* mac)
+{
+    //WiFiGetMac(mac);
+    mac[0] = 0x28;
+    mac[1] = 0x6d;
+    mac[2] = 0x97;
+    mac[3] = 0x40;
+    mac[4] = 0x22;
+    mac[5] = 0x14;
+
+    OC_DBG("oc_get_mac_addr MAC: %02X%02X%02X%02X%02X%02X\n", mac[0], mac[1], mac[2], mac[3], 
+           mac[4], mac[5]);
+    return true;
+}
+

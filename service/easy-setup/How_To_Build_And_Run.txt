@@ -31,9 +31,7 @@ Run:
 
 How To Test Start Easy Setup Mediator (Linux Console App) :
 
-1. Clone IoTivity Code from Samsung CODE Repo.
-	https://github.sec.samsung.net/RS7-IOTIVITY/IoTivity
-
+1. Clone IoTivity Code.
 	Branch to use: 1.2-rel
 
 2. Build Easy Setup
