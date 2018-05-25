@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2383b205",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-25T01:03:48Z",
+      "side": 1,
+      "message": "Why we make transaction here?\nafter client get response and handle it in oc_ri_invoke_client_cb(), client do nothing regarding response.",
+      "revId": "c37c4889f040fcc4e5a247577f01c726c7a8b604",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
