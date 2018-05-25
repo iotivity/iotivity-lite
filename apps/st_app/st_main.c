@@ -123,8 +123,6 @@ easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
     is_easy_setup_success = true;
-  } else if (status == EASY_SETUP_RESET) {
-    // TODO
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("Easy setup failed!!!\n");
   }
@@ -239,6 +237,10 @@ st_main_initialize(void)
     if (get_easy_setup_status() == EASY_SETUP_FINISH) {
       st_process_app_sync_unlock();
       break;
+    } else if (get_easy_setup_status() == EASY_SETUP_RESET) {
+      st_process_app_sync_unlock();
+      st_print_log("easy setup timeout!\n");
+      goto exit;
     }
     st_process_app_sync_unlock();
     st_sleep(1);
@@ -251,13 +253,13 @@ st_main_initialize(void)
     st_print_log("easy setup is successfully finished!\n");
     st_easy_setup_stop();
   } else {
-    return false;
+    goto exit;
   }
 
   st_store_t *cloud_info = get_cloud_informations();
   if (!cloud_info) {
     st_print_log("could not get cloud informations.\n");
-    return false;
+    goto exit;
   }
 
   while (st_cloud_access_check_connection(
@@ -271,7 +273,7 @@ st_main_initialize(void)
   if (st_cloud_access_start(cloud_info, device_index, cloud_access_handler) !=
       0) {
     st_print_log("Failed to access cloud!\n");
-    return false;
+    goto exit;
   }
 
   st_print_log("cloud access started.\n");
@@ -291,10 +293,25 @@ st_main_initialize(void)
   if (is_cloud_access_success) {
     st_print_log("cloud access successfully finished!\n");
   } else {
-    return false;
+    goto exit;
   }
-
   return true;
+
+exit:
+  return false;
+}
+
+static void
+st_main_deinitialize(void)
+{
+  if (is_easy_setup_success) {
+    st_easy_setup_stop();
+    st_print_log("easy setup stop done\n");
+  }
+  if (is_cloud_access_success) {
+    st_cloud_access_stop(device_index);
+    st_print_log("cloud access stop done\n");
+  }
 }
 
 static void
@@ -381,6 +398,10 @@ main(void)
         ep = ep->next;
       }
     }
+    for (i = 0; i < device_num; i++) {
+      oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
+      oc_free_server_endpoints(ep);
+    }
 
     if (st_process_start() != 0) {
       st_print_log("st_process_start failed.\n");
@@ -389,6 +410,10 @@ main(void)
     }
 
     if (!st_main_initialize()) {
+      if (get_easy_setup_status() == EASY_SETUP_RESET) {
+        st_main_reset();
+        goto reset;
+      }
       st_print_log("Failed to start easy setup & cloud access!\n");
       init = -1;
       goto exit;
@@ -426,30 +451,22 @@ main(void)
       }
       st_process_app_sync_unlock();
     }
+    goto quit;
+
   reset:
     st_print_log("reset finished\n");
+
+  quit:
+    st_vendor_props_shutdown();
+
+    st_main_deinitialize();
+    oc_main_shutdown();
 
     st_process_stop();
     st_port_specific_destroy();
   }
 
 exit:
-
-  device_num = oc_core_get_num_devices();
-  for (i = 0; i < device_num; i++) {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    oc_free_server_endpoints(ep);
-  }
-
-  st_easy_setup_stop();
-  st_print_log("easy setup stop done\n");
-
-  st_cloud_access_stop(device_index);
-  st_print_log("cloud access stop done\n");
-
-  st_vendor_props_shutdown();
-  oc_main_shutdown();
-
   st_process_destroy();
   return 0;
 }
