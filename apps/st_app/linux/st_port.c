@@ -389,10 +389,6 @@ soft_ap_process_routine(void *data)
   st_print_log("[Easy_Setup] $ Soft ap is off\n");
 
 exit:
-  st_mutex_lock(soft_ap->mutex);
-  soft_ap->is_soft_ap_on = 0;
-  st_mutex_unlock(soft_ap->mutex);
-
   st_thread_exit(NULL);
   return NULL;
 }
