@@ -115,9 +115,12 @@ oc_connectivity_get_endpoints(int device)
   return NULL;
 }
 
-void oc_send_buffer(oc_message_t *message) {
-  (void) message;
+int
+oc_send_buffer(oc_message_t *message)
+{
+  (void)message;
   oc_abort(__func__);
+  return -1;
 }
 
 #ifdef OC_CLIENT

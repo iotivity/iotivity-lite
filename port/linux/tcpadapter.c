@@ -435,10 +435,11 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   return sock;
 }
 
-void
+int
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const struct sockaddr_storage *receiver)
 {
+  int ret = 0;
   pthread_mutex_lock(&dev->tcp.mutex);
   int send_sock = get_session_socket(&message->endpoint);
 
@@ -446,6 +447,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
       OC_ERR("could not initiate new TCP session");
+      ret = -1;
       goto oc_tcp_send_buffer_done;
     }
   }
@@ -456,14 +458,17 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                             message->length - bytes_sent, 0);
     if (send_len < 0) {
       OC_WRN("send() returned errno %d", errno);
+      ret = -1;
       goto oc_tcp_send_buffer_done;
     }
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
   OC_DBG("Sent %d bytes", bytes_sent);
+  ret = bytes_sent;
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
+  return ret;
 }
 
 #ifdef OC_IPV4

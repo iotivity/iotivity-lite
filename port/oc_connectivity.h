@@ -95,7 +95,7 @@ struct oc_message_s
 #endif /* OC_TCP */
 };
 
-void oc_send_buffer(oc_message_t *message);
+int oc_send_buffer(oc_message_t *message);
 
 int oc_connectivity_init(int device);
 

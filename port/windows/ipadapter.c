@@ -666,7 +666,7 @@ oc_connectivity_get_endpoints(int device)
   return oc_get_endpoint_list();
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
@@ -730,11 +730,12 @@ oc_send_buffer(oc_message_t *message)
                sizeof(receiver));
     if (x == SOCKET_ERROR) {
       OC_WRN("sendto() returned errno %d", errno);
-      return;
+      return x;
     }
     bytes_sent += x;
   }
   OC_DBG("Sent %d bytes", bytes_sent);
+  return bytes_sent;
 }
 
 #ifdef OC_CLIENT
