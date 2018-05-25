@@ -790,7 +790,9 @@ oc_connectivity_get_endpoints(int device)
   return oc_get_endpoint_list();
 }
 
-void oc_send_buffer(oc_message_t *message) {
+int
+oc_send_buffer(oc_message_t *message)
+{
 #ifdef OC_DEBUG
   PRINT("Outgoing message of size %d bytes to ", message->length);
   PRINTipaddr(message->endpoint);
@@ -823,8 +825,7 @@ void oc_send_buffer(oc_message_t *message) {
 
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
-    oc_tcp_send_buffer(dev, message, &receiver);
-    return;
+    return oc_tcp_send_buffer(dev, message, &receiver);
   }
 #endif /* OC_TCP */
 
@@ -860,11 +861,17 @@ void oc_send_buffer(oc_message_t *message) {
         sizeof(receiver));
     if (x < 0) {
       OC_WRN("sendto() returned errno %d", errno);
-      return;
+      break;
     }
     bytes_sent += x;
   }
   OC_DBG("Sent %d bytes", bytes_sent);
+
+  if (bytes_sent == 0) {
+    return -1;
+  }
+
+  return bytes_sent;
 }
 
 #ifdef OC_CLIENT
