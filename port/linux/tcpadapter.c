@@ -446,6 +446,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
       OC_ERR("could not initiate new TCP session");
+      message->length = -1;
       goto oc_tcp_send_buffer_done;
     }
   }

@@ -250,7 +250,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(message.data);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return send_len;
+  return message.length;
 }
 
 static void
