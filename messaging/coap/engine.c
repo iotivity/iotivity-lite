@@ -670,6 +670,11 @@ send_message:
       }
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
+
+#ifdef OC_BLOCK_WISE
+      oc_blockwise_scrub_buffers();
+#endif /* OC_BLOCK_WISE */
+
       if (transaction->message->length) {
         coap_send_transaction(transaction);
       } else {
