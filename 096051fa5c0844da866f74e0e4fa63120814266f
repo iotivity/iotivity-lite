@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_469364a3",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-26T04:27:37Z",
+      "side": 1,
+      "message": "I think  \"if(prop\u003d\u003dNULL)\"",
+      "revId": "096051fa5c0844da866f74e0e4fa63120814266f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a6907096",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-26T04:27:37Z",
+      "side": 1,
+      "message": "I think if(prop!\u003d\u003dNULL)",
+      "revId": "096051fa5c0844da866f74e0e4fa63120814266f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
