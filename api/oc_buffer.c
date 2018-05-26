@@ -119,17 +119,43 @@ oc_message_unref(oc_message_t *message)
   }
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static void
+oc_resize_message(oc_message_t *message, float ratio)
+{
+  if (message) {
+    if (message->length > 0 &&
+        message->length < (unsigned)(OC_PDU_SIZE * ratio)) {
+      uint8_t *buf = NULL;
+      buf = oc_mem_malloc(message->length);
+      if (buf) {
+        memcpy(buf, message->data, message->length);
+        oc_mem_free(message->data);
+        message->data = buf;
+      }
+    }
+  }
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 void
 oc_recv_message(oc_message_t *message)
 {
   if (oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL)
     oc_message_unref(message);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_resize_message(message, 0.3);
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
 oc_send_message(oc_message_t *message)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_resize_message(message, 0.3);
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (oc_process_post(&message_buffer_handler,
                       oc_events[OUTBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL)
