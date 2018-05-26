@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "st_manager.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "port/oc_clock.h"
@@ -98,25 +99,6 @@ register_resources(void)
   st_register_resources(device_index);
 }
 
-void
-handle_signal(int signal)
-{
-  (void)signal;
-  st_process_signal();
-  quit = 1;
-}
-
-void
-print_menu(void)
-{
-  st_process_app_sync_lock();
-  st_print_log("=====================================\n");
-  st_print_log("1. Reset device\n");
-  st_print_log("0. Quit\n");
-  st_print_log("=====================================\n");
-  st_process_app_sync_unlock();
-}
-
 static bool is_easy_setup_success = false;
 void
 easy_setup_handler(st_easy_setup_status_t status)
@@ -154,8 +136,7 @@ set_sc_prov_info(void)
     target_size, sizeof(provisioning_info_targets));
 
   for (i = 0; i < target_size; i++) {
-    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid,
-                   MAX_UUID_LENGTH);
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].targetDi, uuid, strlen(uuid));
     oc_new_string(&g_prov_resource.targets[i].targetRt, device_rt,
                   strlen(device_rt));
@@ -163,8 +144,7 @@ set_sc_prov_info(void)
   }
   g_prov_resource.targets_size = target_size;
   g_prov_resource.owned = false;
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid,
-                 MAX_UUID_LENGTH);
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
   oc_new_string(&g_prov_resource.easysetupdi, uuid, strlen(uuid));
 
   if (set_properties_for_sc_prov_info(&g_prov_resource) == ES_ERROR)
@@ -207,13 +187,11 @@ st_vendor_props_initialize(void)
                 strlen(st_model_number));
   oc_new_string(&st_vendor_props.esProtocolVersion, st_protocol_version,
                 strlen(st_protocol_version));
-  set_sc_prov_info();
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
-  unset_sc_prov_info();
   oc_free_string(&st_vendor_props.deviceType);
   oc_free_string(&st_vendor_props.deviceSubType);
   oc_free_string(&st_vendor_props.regSetDev);
@@ -329,18 +307,8 @@ st_main_reset(void)
 }
 
 int
-main(void)
+st_manager_initialize(void)
 {
-  int init = 0;
-  int device_num = 0;
-  int i = 0;
-  st_set_sigint_handler(handle_signal);
-
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = st_process_signal,
-                                       .register_resources =
-                                         register_resources };
-
 #ifdef OC_SECURITY
   oc_storage_config("./st_things_creds");
 #endif /* OC_SECURITY */
@@ -350,123 +318,109 @@ main(void)
     return -1;
   }
 
-  oc_set_max_app_data_size(3072);
-
-  while (quit != 1) {
-    if (st_load() < 0) {
-      st_print_log("[ST_App] Could not load store informations.\n");
-      goto exit;
-    }
-
-    if (st_is_easy_setup_finish() != 0) {
-      st_print_log("[St_App] Soft AP turn on.\n");
-      char ssid[MAX_SSID_LEN + 1];
-      if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
-        goto exit;
-      }
-      st_easy_setup_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
-    }
-
-    init = oc_main_init(&handler);
-    if (init < 0) {
-      st_print_log("oc_main_init failed!(%d)\n", init);
-      goto exit;
-    }
-
-    char uuid[MAX_UUID_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
-    st_print_log("uuid : %s\n", uuid);
-
-    init = st_port_specific_init();
-    if (init < 0) {
-      st_print_log("oc_main_init failed!(%d)\n", init);
-      goto exit;
-    }
-
-    st_vendor_props_initialize();
-
-    device_num = oc_core_get_num_devices();
-    for (i = 0; i < device_num; i++) {
-      oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-      st_print_log("=== device(%d) endpoint info. ===\n", i);
-      while (ep) {
-        oc_string_t ep_str;
-        if (oc_endpoint_to_string(ep, &ep_str) == 0) {
-          st_print_log("-> %s\n", oc_string(ep_str));
-          oc_free_string(&ep_str);
-        }
-        ep = ep->next;
-      }
-    }
-    for (i = 0; i < device_num; i++) {
-      oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-      oc_free_server_endpoints(ep);
-    }
-
-    if (st_process_start() != 0) {
-      st_print_log("st_process_start failed.\n");
-      init = -1;
-      goto exit;
-    }
-
-    if (!st_main_initialize()) {
-      if (get_easy_setup_status() == EASY_SETUP_RESET) {
-        st_main_reset();
-        goto reset;
-      }
-      st_print_log("Failed to start easy setup & cloud access!\n");
-      init = -1;
-      goto exit;
-    }
-
-    char key[10];
-    while (quit != 1) {
-      print_menu();
-      fflush(stdin);
-      if (!scanf("%s", &key)) {
-        st_print_log("scanf failed!!!!\n");
-        quit = 1;
-        handle_signal(0);
-        break;
-      }
-
-      if (!is_easy_setup_success || !is_cloud_access_success) {
-        st_print_log("Not initialized\n");
-        continue;
-      }
-
-      st_process_app_sync_lock();
-      switch (key[0]) {
-      case '1':
-        st_main_reset();
-        st_process_app_sync_unlock();
-        goto reset;
-      case '0':
-        quit = 1;
-        handle_signal(0);
-        break;
-      default:
-        st_print_log("unsupported command.\n");
-        break;
-      }
-      st_process_app_sync_unlock();
-    }
-    goto quit;
-
-  reset:
-    st_print_log("reset finished\n");
-
-  quit:
-    st_vendor_props_shutdown();
-
-    st_main_deinitialize();
-    oc_main_shutdown();
-
-    st_process_stop();
-    st_port_specific_destroy();
+  if (st_port_specific_init() != 0) {
+    st_print_log("st_port_specific_init failed!");
+    st_process_destroy();
+    return -1;
   }
 
-exit:
-  st_process_destroy();
+  oc_set_max_app_data_size(3072);
+  st_vendor_props_initialize();
+
   return 0;
+}
+
+int
+st_manager_start(void)
+{
+  int i = 0;
+  int device_num = 0;
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = st_process_signal,
+                                       .register_resources =
+                                         register_resources };
+
+restart:
+  if (st_load() < 0) {
+    st_print_log("[ST_App] Could not load store informations.\n");
+    return -1;
+  }
+
+  if (st_is_easy_setup_finish() != 0) {
+    st_print_log("[St_App] Soft AP turn on.\n");
+    char ssid[MAX_SSID_LEN + 1];
+    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
+      return -1;
+    }
+    st_easy_setup_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
+  }
+
+  if (oc_main_init(&handler) != 0) {
+    st_print_log("oc_main_init failed!\n");
+    return -1;
+  }
+
+  char uuid[MAX_UUID_LENGTH] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
+  st_print_log("uuid : %s\n", uuid);
+
+  set_sc_prov_info();
+
+  device_num = oc_core_get_num_devices();
+  for (i = 0; i < device_num; i++) {
+    oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
+    st_print_log("=== device(%d) endpoint info. ===\n", i);
+    while (ep) {
+      oc_string_t ep_str;
+      if (oc_endpoint_to_string(ep, &ep_str) == 0) {
+        st_print_log("-> %s\n", oc_string(ep_str));
+        oc_free_string(&ep_str);
+      }
+      ep = ep->next;
+    }
+  }
+  oc_free_endpoint_list();
+
+  if (st_process_start() != 0) {
+    st_print_log("st_process_start failed.\n");
+    return -1;
+  }
+
+  if (!st_main_initialize()) {
+    if (get_easy_setup_status() == EASY_SETUP_RESET) {
+      st_main_reset();
+      goto reset;
+    }
+    st_print_log("Failed to start easy setup & cloud access!\n");
+    return -1;
+  }
+
+  if (st_port_main_loop(&quit) == ST_LOOP_RESET) {
+    goto reset;
+  }
+  return 0;
+
+reset:
+  st_main_reset();
+  st_print_log("reset finished\n");
+  st_manager_stop();
+  goto restart;
+}
+
+void
+st_manager_stop(void)
+{
+  unset_sc_prov_info();
+  st_process_stop();
+
+  st_main_deinitialize();
+  oc_main_shutdown();
+}
+
+void
+st_manager_deinitialize(void)
+{
+  st_vendor_props_shutdown();
+  st_port_specific_destroy();
+  st_process_destroy();
 }

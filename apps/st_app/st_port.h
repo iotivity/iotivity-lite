@@ -39,8 +39,11 @@ typedef struct
   int channel;
 } st_soft_ap_t;
 
+typedef enum { ST_LOOP_QUIT, ST_LOOP_RESET } st_loop_status_t;
+
 int st_port_specific_init(void);
 void st_port_specific_destroy(void);
+st_loop_status_t st_port_main_loop(int *quit);
 
 void st_print_log(const char *log, ...);
 

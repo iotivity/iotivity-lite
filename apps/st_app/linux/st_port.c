@@ -41,12 +41,23 @@ OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
 
+extern int quit;
+
 static void *soft_ap_process_routine(void *data);
+
+static void
+handle_signal(int signal)
+{
+  (void)signal;
+  st_process_signal();
+  quit = 1;
+}
 
 int
 st_port_specific_init(void)
 {
   /* set port specific logics. in here */
+  st_set_sigint_handler(handle_signal);
   return 0;
 }
 
@@ -55,6 +66,54 @@ st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
   return;
+}
+
+static void
+print_menu(void)
+{
+  st_process_app_sync_lock();
+  st_print_log("=====================================\n");
+  st_print_log("1. Reset device\n");
+  st_print_log("0. Quit\n");
+  st_print_log("=====================================\n");
+  st_process_app_sync_unlock();
+}
+
+st_loop_status_t
+st_port_main_loop(int *quit_flag)
+{
+  st_loop_status_t status;
+  char key[10];
+
+  while (*quit_flag != 1) {
+    print_menu();
+    fflush(stdin);
+    if (!scanf("%s", &key)) {
+      st_print_log("scanf failed!!!!\n");
+      *quit_flag = 1;
+      _oc_signal_event_loop();
+      break;
+    }
+
+    st_process_app_sync_lock();
+    switch (key[0]) {
+    case '1':
+      status = ST_LOOP_RESET;
+      st_process_app_sync_unlock();
+      goto reset;
+    case '0':
+      *quit_flag = 1;
+      status = ST_LOOP_QUIT;
+      _oc_signal_event_loop();
+      break;
+    default:
+      st_print_log("unsupported command.\n");
+      break;
+    }
+    st_process_app_sync_unlock();
+  }
+reset:
+  return status;
 }
 
 void
