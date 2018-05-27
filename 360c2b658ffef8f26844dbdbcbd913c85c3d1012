@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_26274066",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-27T23:38:47Z",
+      "side": 1,
+      "message": "This can be memory leak in case we make new transaction for reset message in line 637.\nHow about make transaction NULL check logic like\nif (transaction)\n ...",
+      "range": {
+        "startLine": 665,
+        "startChar": 2,
+        "endLine": 665,
+        "endChar": 66
+      },
+      "revId": "360c2b658ffef8f26844dbdbcbd913c85c3d1012",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
