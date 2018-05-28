@@ -1,0 +1,350 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_a61d1069",
+        "filename": "port/contiki/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Use return message-\u003elength instead.\n\nIt seems like this API does not return an error or bytes sent.",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 38
+      },
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_861a8c6c",
+        "filename": "port/freertos/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e626f8b9",
+        "filename": "port/freertos/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c62bf480",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Replace with break; so that bytes_sent is returned.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_262100a0",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Remove.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_06267cb7",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Remove.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_663ae8ce",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Move this below the label.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4610844e",
+        "filename": "port/oc_connectivity.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "I am not against this idea. \n\nBut you haven\u0027t quite laid down a consistent convention here. That is, what should oc_send_buffer() return? It is an interface.\n\nIn the implementations, you return -1 for errors and message-\u003elength otherwise. \nThats inconsistent, and probably not a good idea, especially with TLS sockets as you could\u0027ve done a partial write, and as you point out, TLS buffers (owned by mbedTLS in our case) would retain the message content until its flushed out completely.\n\nSo, how about we use this convention instead?\n\n-oc_send_buffer() returns number of bytes sent which could range bwtween 0 ... message-\u003elength.\n\n-When there\u0027s an error return the number of bytes written so far (which could be 0).",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4637e4e3",
+        "filename": "port/openthread/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a634f0de",
+        "filename": "port/openthread/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8631ecee",
+        "filename": "port/openthread/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0l;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e64d5874",
+        "filename": "port/openthread/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return message-\u003elength;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c652d412",
+        "filename": "port/riot/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return message-\u003elength;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2658e031",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_065ddc21",
+        "filename": "port/tizenrt/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_66414839",
+        "filename": "port/windows/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "break;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_463ec4b9",
+        "filename": "port/zephyr/src/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a64b5058",
+        "filename": "port/zephyr/src/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "return 0;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8648cc5c",
+        "filename": "port/zephyr/src/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Add return 0; at the end of this block.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e674389e",
+        "filename": "port/zephyr/src/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-28T20:46:30Z",
+      "side": 1,
+      "message": "Change to return message-\u003elength;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
