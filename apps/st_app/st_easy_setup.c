@@ -134,6 +134,8 @@ st_easy_setup_stop(void)
     return;
   }
 
+  reset_sc_properties();
+
   g_callback = NULL;
 
   st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
