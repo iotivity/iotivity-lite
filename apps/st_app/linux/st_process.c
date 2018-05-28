@@ -16,9 +16,21 @@
  *
  ****************************************************************************/
 
-#include "st_process.h"
+#include "../st_process.h"
+#include "oc_api.h"
+
+typedef struct
+{
+  st_mutex_t mutex;
+  st_mutex_t app_mutex;
+  st_cond_t cv;
+  st_thread_t thread;
+  int quit;
+} st_process_data_t;
 
 static st_process_data_t g_process_data;
+
+static void *st_process_func(void *data);
 
 int
 st_process_init(void)
@@ -94,6 +106,29 @@ st_process_destroy(void)
     g_process_data.mutex = NULL;
   }
   return 0;
+}
+
+static void *
+st_process_func(void *data)
+{
+  st_process_data_t *process_data = (st_process_data_t *)data;
+  oc_clock_time_t next_event;
+
+  while (process_data->quit != 1) {
+    st_mutex_lock(process_data->app_mutex);
+    next_event = oc_main_poll();
+    st_mutex_unlock(process_data->app_mutex);
+    st_mutex_lock(process_data->mutex);
+    if (next_event == 0) {
+      st_cond_wait(process_data->cv, process_data->mutex);
+    } else {
+      st_cond_timedwait(process_data->cv, process_data->mutex, next_event);
+    }
+    st_mutex_unlock(process_data->mutex);
+  }
+
+  st_thread_exit(NULL);
+  return NULL;
 }
 
 void
