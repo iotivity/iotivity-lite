@@ -352,7 +352,7 @@ restart:
     if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
       return -1;
     }
-    st_easy_setup_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
+    st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
   }
 
   if (oc_main_init(&handler) != 0) {
@@ -420,7 +420,7 @@ st_manager_stop(void)
 void
 st_manager_deinitialize(void)
 {
-  st_easy_setup_turn_off_soft_AP();
+  st_turn_off_soft_AP();
   st_vendor_props_shutdown();
   st_port_specific_destroy();
   st_process_destroy();

@@ -45,8 +45,6 @@ static bool g_is_secured = true;
 static bool g_is_secured = false;
 #endif /* !OC_SECURITY */
 
-static st_soft_ap_t g_soft_ap;
-
 static st_easy_setup_cb_t g_callback = NULL;
 
 static st_store_t g_store_info;
@@ -171,36 +169,6 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
 
   st_print_log("[St_app] ssid : %s\n", ssid);
   return 0;
-}
-
-void
-st_easy_setup_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
-{
-  if (g_soft_ap.is_soft_ap_on) {
-    st_print_log("[Easy_Setup] Soft AP is already turned on\n");
-    return;
-  }
-
-  if (oc_string(g_soft_ap.ssid)) {
-    oc_free_string(&g_soft_ap.ssid);
-  }
-  if (oc_string(g_soft_ap.pwd)) {
-    oc_free_string(&g_soft_ap.pwd);
-  }
-
-  oc_new_string(&g_soft_ap.ssid, ssid, strlen(ssid));
-  oc_new_string(&g_soft_ap.pwd, pwd, strlen(pwd));
-  g_soft_ap.channel = channel;
-
-  st_turn_on_soft_AP(&g_soft_ap);
-}
-
-void
-st_easy_setup_turn_off_soft_AP(void)
-{
-  if (g_soft_ap.is_soft_ap_on) {
-    st_turn_off_soft_AP(&g_soft_ap);
-  }
 }
 
 st_easy_setup_status_t
@@ -399,7 +367,7 @@ easy_setup_finish_handler(void *data)
   if (is_easy_setup_step_done()) {
     st_print_log("[Easy_Setup] Terminate Soft AP thread.\n");
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
-    st_turn_off_soft_AP(&g_soft_ap);
+    st_turn_off_soft_AP();
     st_connect_wifi(oc_string(g_store_info.accesspoint.ssid),
                     oc_string(g_store_info.accesspoint.pwd));
     es_set_state(ES_STATE_CONNECTED_TO_ENROLLER);

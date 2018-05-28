@@ -41,9 +41,6 @@ void st_easy_setup_stop(void);
 void st_easy_setup_reset(void);
 int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
                 const char *sid);
-void st_easy_setup_turn_on_soft_AP(const char *ssid, const char *pwd,
-                                   int channel);
-void st_easy_setup_turn_off_soft_AP(void);
 
 st_easy_setup_status_t get_easy_setup_status(void);
 st_store_t *get_cloud_informations(void);
