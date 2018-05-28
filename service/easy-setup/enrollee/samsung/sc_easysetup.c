@@ -250,17 +250,13 @@ es_result_e set_sc_properties(const sc_properties *prop)
   return ES_ERROR;
 }
 
-es_result_e reset_sc_properties(const sc_properties *prop)
+es_result_e
+reset_sc_properties(void)
 {
-    if(prop != NULL)
-    {
-        deinitialize_sc_properties();
-        OC_DBG("ResetSCProperties OUT");
-        return ES_OK;
-    }
-    return ES_ERROR;
+  deinitialize_sc_properties();
+  OC_DBG("ResetSCProperties OUT");
+  return ES_OK;
 }
-
 
 static void
 read_account_data(oc_rep_t *payload, void **userdata)

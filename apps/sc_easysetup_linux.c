@@ -361,10 +361,10 @@ void SetDeviceInfo()
 
 void StopEasySetup()
 {
-    printf("[ES App] StopEasySetup IN\n");
-    if(reset_sc_properties(&g_SCProperties) == ES_ERROR){
-      printf("Reset Properties Failed!!\n");
-      return;
+  printf("[ES App] StopEasySetup IN\n");
+  if (reset_sc_properties() == ES_ERROR) {
+    printf("Reset Properties Failed!!\n");
+    return;
     }
     if (es_terminate_enrollee() == ES_ERROR)
     {
