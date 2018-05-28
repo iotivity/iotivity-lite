@@ -36,6 +36,19 @@
     }                                                                          \
   } while (0);
 
+typedef struct
+{
+  st_thread_t thread;
+  st_mutex_t mutex;
+  st_cond_t cv;
+  int is_soft_ap_on;
+  oc_string_t ssid;
+  oc_string_t pwd;
+  int channel;
+} st_soft_ap_t;
+
+static st_soft_ap_t g_soft_ap;
+
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
@@ -289,101 +302,118 @@ st_sleep(int seconds)
 }
 
 void
-st_turn_on_soft_AP(st_soft_ap_t *data)
+st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 {
-  if (!data)
+  if (g_soft_ap.is_soft_ap_on) {
+    st_print_log("[St_Port] Soft AP is already turned on\n");
     return;
+  }
 
-  st_print_log("st_turn_on_soft_AP\n");
+  st_print_log("[St_Port] st_turn_on_soft_AP\n");
 
-  data->mutex = st_mutex_init();
-  data->cv = st_cond_init();
-  data->is_soft_ap_on = 1;
-  data->thread = st_thread_create(soft_ap_process_routine, "SOFT_AP", data);
+  if (oc_string(g_soft_ap.ssid)) {
+    oc_free_string(&g_soft_ap.ssid);
+  }
+  if (oc_string(g_soft_ap.pwd)) {
+    oc_free_string(&g_soft_ap.pwd);
+  }
 
-  st_mutex_lock(data->mutex);
-  st_cond_wait(data->cv, data->mutex);
-  st_mutex_unlock(data->mutex);
+  oc_new_string(&g_soft_ap.ssid, ssid, strlen(ssid));
+  oc_new_string(&g_soft_ap.pwd, pwd, strlen(pwd));
+  g_soft_ap.channel = channel;
+
+  g_soft_ap.mutex = st_mutex_init();
+  g_soft_ap.cv = st_cond_init();
+  g_soft_ap.is_soft_ap_on = 1;
+  g_soft_ap.thread =
+    st_thread_create(soft_ap_process_routine, "SOFT_AP", &g_soft_ap);
+
+  st_mutex_lock(g_soft_ap.mutex);
+  st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);
+  st_mutex_unlock(g_soft_ap.mutex);
+
+  st_print_log("[St_Port] st_turn_on_soft_AP success\n");
 }
 
 static int
 system_ret_chcek(int ret)
 {
   if (ret == -1 || ret == 127) {
-    st_print_log("[Easy_Setup] system() invoke error(%d).", ret);
+    st_print_log("[St_Port] system() invoke error(%d).\n", ret);
     return -1;
   }
   return 0;
 }
 
 void
-st_turn_off_soft_AP(st_soft_ap_t *data)
+st_turn_off_soft_AP(void)
 {
-  if (!data)
-    return;
-
-  st_print_log("st_turn_off_soft_AP\n");
-  st_mutex_lock(data->mutex);
-  if (data->is_soft_ap_on) {
-    SYSTEM_RET_CHECK(system("sudo pkill hostapd"));
-    st_thread_cancel(data->thread);
-    data->is_soft_ap_on = 0;
+  if (!g_soft_ap.is_soft_ap_on) {
+    st_print_log("[St_Port] soft AP is already turned off\n");
   }
-  st_print_log("st_turn_off_soft_AP success.\n");
+
+  st_print_log("[St_Port] st_turn_off_soft_AP\n");
+  st_mutex_lock(g_soft_ap.mutex);
+  if (g_soft_ap.is_soft_ap_on) {
+    SYSTEM_RET_CHECK(system("sudo pkill hostapd"));
+    st_thread_cancel(g_soft_ap.thread);
+    g_soft_ap.is_soft_ap_on = 0;
+  }
+  st_print_log("[St_Port] st_turn_off_soft_AP success.\n");
 
 exit:
-  st_thread_destroy(data->thread);
+  st_thread_destroy(g_soft_ap.thread);
 
-  if (oc_string(data->ssid)) {
-    oc_free_string(&data->ssid);
+  if (oc_string(g_soft_ap.ssid)) {
+    oc_free_string(&g_soft_ap.ssid);
   }
-  if (oc_string(data->pwd)) {
-    oc_free_string(&data->pwd);
+  if (oc_string(g_soft_ap.pwd)) {
+    oc_free_string(&g_soft_ap.pwd);
   }
-  st_mutex_unlock(data->mutex);
+  st_mutex_unlock(g_soft_ap.mutex);
 
-  st_cond_destroy(data->cv);
-  st_mutex_destroy(data->mutex);
-  data->thread = NULL;
-  data->mutex = NULL;
-  data->cv = NULL;
+  st_cond_destroy(g_soft_ap.cv);
+  st_mutex_destroy(g_soft_ap.mutex);
+  g_soft_ap.thread = NULL;
+  g_soft_ap.mutex = NULL;
+  g_soft_ap.cv = NULL;
 }
 
 void
 st_connect_wifi(const char *ssid, const char *pwd)
 {
-  st_print_log("[Easy_Setup] st_connect_wifi in\n");
+  st_print_log("[St_Port] st_connect_wifi in\n");
 
   /** sleep to allow response sending from post_callback thread before turning
    * Off Soft AP. */
   st_sleep(1);
 
-  st_print_log("[Easy_Setup] target ap ssid: %s\n", ssid);
-  st_print_log("[Easy_Setup] password: %s\n", pwd);
+  st_print_log("[St_Port] target ap ssid: %s\n", ssid);
+  st_print_log("[St_Port] password: %s\n", pwd);
 
   /** Stop Soft AP */
-  st_print_log("[Easy_Setup] Stopping Soft AP\n");
+  st_print_log("[St_Port] Stopping Soft AP\n");
   SYSTEM_RET_CHECK(system("sudo service hostapd stop"));
 
   /** Turn On Wi-Fi */
-  st_print_log("[Easy_Setup] Turn on the AP\n");
+  st_print_log("[St_Port] Turn on the AP\n");
   SYSTEM_RET_CHECK(system("sudo nmcli radio wifi on"));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
   st_sleep(1);
 
   /** Connect to Target Wi-Fi AP */
-  st_print_log("[Easy_Setup] connect to %s AP.\n", ssid);
+  st_print_log("[St_Port] connect to %s AP.\n", ssid);
   char nmcli_command[200];
   sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
-  st_print_log("[Easy_Setup] $ %s\n", nmcli_command);
+  st_print_log("[St_Port] $ %s\n", nmcli_command);
   SYSTEM_RET_CHECK(system(nmcli_command));
 
-  st_print_log("[Easy_Setup] st_connect_wifi out\n");
+  st_print_log("[St_Port] st_connect_wifi out\n");
   return;
 
 exit:
-  st_print_log("[Easy_Setup] st_connect_wifi error occur\n");
+  st_print_log("[St_Port] st_connect_wifi error occur\n");
 }
 
 static void *
@@ -393,35 +423,35 @@ soft_ap_process_routine(void *data)
 
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
-  st_print_log("[Easy_Setup] soft_ap_handler in\n");
+  st_print_log("[St_Port] soft_ap_handler in\n");
 
   /** Stop AP */
-  st_print_log("[Easy_Setup] Stopping AP\n");
+  st_print_log("[St_Port] Stopping AP\n");
   SYSTEM_RET_CHECK(system("sudo nmcli radio wifi off"));
   SYSTEM_RET_CHECK(system("sudo rfkill unblock wlan"));
 
   /** Turn On Wi-Fi interface */
-  st_print_log("[Easy_Setup] Turn on the wifi interface\n");
+  st_print_log("[St_Port] Turn on the wifi interface\n");
   SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce05a49 10.0.0.2/24 up"));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
-  st_print_log("[Easy_Setup] $ sudo service dnsmasq restart\n");
+  st_print_log("[St_Port] $ sudo service dnsmasq restart\n");
   SYSTEM_RET_CHECK(system("sudo service dnsmasq restart"));
 
-  st_print_log("[Easy_Setup] $ sudo service radvd restart\n");
+  st_print_log("[St_Port] $ sudo service radvd restart\n");
   SYSTEM_RET_CHECK(system("sudo service radvd restart"));
 
-  st_print_log("[Easy_Setup] $ sudo service hostapd start\n");
+  st_print_log("[St_Port] $ sudo service hostapd start\n");
   SYSTEM_RET_CHECK(system("sudo service hostapd start"));
 
   st_mutex_lock(soft_ap->mutex);
   st_cond_signal(soft_ap->cv);
   st_mutex_unlock(soft_ap->mutex);
 
-  st_print_log("[Easy_Setup] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
+  st_print_log("[St_Port] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
   SYSTEM_RET_CHECK(system("sudo hostapd /etc/hostapd/hostapd.conf"));
 
-  st_print_log("[Easy_Setup] $ Soft ap is off\n");
+  st_print_log("[St_Port] $ Soft ap is off\n");
 
 exit:
   st_thread_exit(NULL);

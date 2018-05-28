@@ -28,17 +28,6 @@ typedef void *st_thread_t;
 typedef void *(*st_thread_process_t)(void *);
 typedef void (*st_sig_handler_t)(int);
 
-typedef struct
-{
-  st_thread_t thread;
-  st_mutex_t mutex;
-  st_cond_t cv;
-  int is_soft_ap_on;
-  oc_string_t ssid;
-  oc_string_t pwd;
-  int channel;
-} st_soft_ap_t;
-
 typedef enum { ST_LOOP_QUIT, ST_LOOP_RESET } st_loop_status_t;
 
 int st_port_specific_init(void);
@@ -67,8 +56,8 @@ int st_thread_cancel(st_thread_t thread);
 void st_thread_exit(void *retval);
 
 void st_sleep(int seconds);
-void st_turn_on_soft_AP(st_soft_ap_t *data);
-void st_turn_off_soft_AP(st_soft_ap_t *data);
+void st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel);
+void st_turn_off_soft_AP(void);
 void st_connect_wifi(const char *ssid, const char *pwd);
 
 #endif /* ST_PORT_H */
