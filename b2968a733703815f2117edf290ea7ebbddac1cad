@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_c6bbf4c2",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-28T08:08:35Z",
+      "side": 1,
+      "message": "where this 20 is coming from ? coulnt we set a constant in headers files ?",
+      "range": {
+        "startLine": 33,
+        "startChar": 15,
+        "endLine": 33,
+        "endChar": 17
+      },
+      "revId": "b2968a733703815f2117edf290ea7ebbddac1cad",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_26b100e2",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-28T08:08:35Z",
+      "side": 1,
+      "message": "strcpy can be used here , or better and safer snprintf to make sure you\u0027re not overloading buffer",
+      "range": {
+        "startLine": 233,
+        "startChar": 16,
+        "endLine": 233,
+        "endChar": 23
+      },
+      "revId": "b2968a733703815f2117edf290ea7ebbddac1cad",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_02a02d8f",
         "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_wifi_softap.c",
         "patchSetId": 5
