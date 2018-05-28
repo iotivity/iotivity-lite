@@ -39,6 +39,13 @@ oc_rep_new(uint8_t *out_payload, int size)
   cbor_encoder_init(&g_encoder, out_payload, size, 0);
 }
 
+void
+oc_rep_reset(void)
+{
+  g_err = CborNoError;
+  g_encoder.data.ptr = g_buf;
+}
+
 CborError
 oc_rep_get_cbor_errno(void)
 {
