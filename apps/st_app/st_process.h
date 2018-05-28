@@ -21,15 +21,6 @@
 
 #include "st_port.h"
 
-typedef struct
-{
-  st_mutex_t mutex;
-  st_mutex_t app_mutex;
-  st_cond_t cv;
-  st_thread_t thread;
-  int quit;
-} st_process_data_t;
-
 int st_process_init(void);
 int st_process_start(void);
 int st_process_stop(void);

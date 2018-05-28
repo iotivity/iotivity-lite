@@ -19,7 +19,6 @@
 #define _GNU_SOURCE
 #include "../st_port.h"
 #include "../st_process.h"
-#include "oc_api.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
@@ -91,7 +90,7 @@ st_port_main_loop(int *quit_flag)
     if (!scanf("%s", &key)) {
       st_print_log("scanf failed!!!!\n");
       *quit_flag = 1;
-      _oc_signal_event_loop();
+      st_process_signal();
       break;
     }
 
@@ -104,7 +103,7 @@ st_port_main_loop(int *quit_flag)
     case '0':
       *quit_flag = 1;
       status = ST_LOOP_QUIT;
-      _oc_signal_event_loop();
+      st_process_signal();
       break;
     default:
       st_print_log("unsupported command.\n");
@@ -281,29 +280,6 @@ void
 st_thread_exit(void *retval)
 {
   pthread_exit(retval);
-}
-
-void *
-st_process_func(void *data)
-{
-  st_process_data_t *process_data = (st_process_data_t *)data;
-  oc_clock_time_t next_event;
-
-  while (process_data->quit != 1) {
-    st_mutex_lock(process_data->app_mutex);
-    next_event = oc_main_poll();
-    st_mutex_unlock(process_data->app_mutex);
-    st_mutex_lock(process_data->mutex);
-    if (next_event == 0) {
-      st_cond_wait(process_data->cv, process_data->mutex);
-    } else {
-      st_cond_timedwait(process_data->cv, process_data->mutex, next_event);
-    }
-    st_mutex_unlock(process_data->mutex);
-  }
-
-  st_thread_exit(NULL);
-  return NULL;
 }
 
 void
