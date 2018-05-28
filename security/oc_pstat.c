@@ -142,6 +142,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     oc_tls_update_psk_identity(device);
     set_post_otm_acl = true;
     ps->p = false;
+    oc_sec_dump_pstat(device);
+    oc_sec_dump_doxm(device);
+    oc_sec_dump_cred(device);
+    oc_sec_dump_acl(device);
   }
   /* fall through */
   case OC_DOS_RFOTM: {
