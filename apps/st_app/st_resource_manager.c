@@ -21,229 +21,122 @@
 #include "oc_api.h"
 #include "sc_easysetup.h"
 
-static bool g_discoverable = true;
-static bool g_observable = true;
+static st_resource_handler g_resource_get_handler = NULL;
+static st_resource_handler g_resource_set_handler = NULL;
 
 static const char *switch_rsc_uri = "/capability/switch/main/0";
-static const char *switch_rsc_rt = "x.com.st.powerswitch";
+static const int switch_rt_num = 1;
+static const char *switch_rsc_rt[1] = { "x.com.st.powerswitch" };
 static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
-static const char *switchlevel_rsc_rt = "oic.r.light.dimming";
+static const int switchleve_rt_num = 1;
+static const char *switchlevel_rsc_rt[1] = { "oic.r.light.dimming" };
 static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
-static const char *color_temp_rsc_rt = "x.com.st.color.temperature";
-
-static char power[10] = "on";
-static int dimmingSetting = 50;
-
-static int ct = 50;
-static int range[2] = { 0, 100 };
+static const int color_temp_rt_num = 1;
+static const char *color_temp_rsc_rt[1] = { "x.com.st.color.temperature" };
 
 static void
-switch_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
-  oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_text_string(root, power, power);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-}
-
-static void
-switch_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-                   void *user_data)
-{
-  (void)user_data;
-
-  st_print_log("[St_rsc_mgr] switch_get_handler:\n");
-  switch_construct(request, interface);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-switch_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-                    void *user_data)
-{
-  (void)interface;
-  (void)user_data;
-  st_print_log("[St_rsc_mgr] switch_post_handler:\n");
-  st_print_log("[St_rsc_mgr]   Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "power") == 0) {
-        strcpy(power, oc_string(rep->value.string));
-        st_print_log(" %s\n", power);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  switch_construct(request, interface);
-  oc_send_response(request, OC_STATUS_CHANGED);
-}
-
-static void
-switchlevel_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
-  oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_int(root, dimmingSetting, dimmingSetting);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-}
-
-static void
-switchlevel_get_handler(oc_request_t *request, oc_interface_mask_t interface,
+st_resource_get_handler(oc_request_t *request, oc_interface_mask_t interface,
                         void *user_data)
 {
   (void)user_data;
+  st_print_log("[St_rsc_mgr] st_resource_get_handler: %s\n",
+               oc_string(request->resource->uri));
 
-  st_print_log("[St_rsc_mgr] switchlevel_get_handler:\n");
-  switchlevel_construct(request, interface);
+  if (!g_resource_get_handler) {
+    st_print_log("[St_rsc_mgr] please initialize valid handler first");
+    oc_send_response(request, OC_STATUS_NOT_IMPLEMENTED);
+    return;
+  }
+
+  oc_rep_start_root_object();
+  if (interface & OC_IF_BASELINE) {
+    oc_process_baseline_interface(request->resource);
+  }
+  if (!g_resource_get_handler(request)) {
+    oc_rep_reset();
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
-switchlevel_post_handler(oc_request_t *request, oc_interface_mask_t interface,
+st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
                          void *user_data)
 {
   (void)interface;
   (void)user_data;
-  st_print_log("[St_rsc_mgr] switchlevel_post_handler:\n");
-  st_print_log("[St_rsc_mgr]   Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (strcmp(oc_string(rep->name), "dimmingSetting") == 0) {
-        dimmingSetting = rep->value.integer;
-        st_print_log(" %d\n", dimmingSetting);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  switchlevel_construct(request, interface);
-  oc_send_response(request, OC_STATUS_CHANGED);
-}
+  st_print_log("[St_rsc_mgr] st_resource_post_handler: %s\n",
+               oc_string(request->resource->uri));
 
-static void
-color_temp_construct(oc_request_t *request, oc_interface_mask_t interface)
-{
+  if (!g_resource_set_handler) {
+    st_print_log("[St_rsc_mgr] please initialize valid handler first");
+    oc_send_response(request, OC_STATUS_NOT_IMPLEMENTED);
+    return;
+  }
+
   oc_rep_start_root_object();
-  switch (interface) {
-  case OC_IF_BASELINE:
+  if (interface & OC_IF_BASELINE) {
     oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_int(root, ct, ct);
-    oc_rep_set_int_array(root, range, range, 2);
-    break;
-  default:
-    break;
+  }
+  if (!g_resource_set_handler(request)) {
+    oc_rep_reset();
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
   oc_rep_end_root_object();
-}
-
-static void
-color_temp_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data)
-{
-  (void)user_data;
-
-  st_print_log("[St_rsc_mgr] color_temp_get_handler:\n");
-  color_temp_construct(request, interface);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-color_temp_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-                        void *user_data)
-{
-  (void)interface;
-  (void)user_data;
-  st_print_log("[St_rsc_mgr] color_temp_post_handler:\n");
-  st_print_log("[St_rsc_mgr]   Key : Value\n");
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    st_print_log("  %s :", oc_string(rep->name));
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (strcmp(oc_string(rep->name), "ct") == 0) {
-        ct = rep->value.integer;
-        st_print_log(" %d\n", ct);
-      }
-      break;
-    default:
-      st_print_log(" NULL\n");
-      break;
-    }
-    rep = rep->next;
-  }
-  color_temp_construct(request, interface);
   oc_send_response(request, OC_STATUS_CHANGED);
+}
+
+static void
+st_register_resource(const char *uri, const char **rt, int rt_num,
+                     uint8_t interface, uint8_t default_interface, int device)
+{
+  st_print_log("uri : %s\n", uri);
+  oc_resource_t *resource = oc_new_resource(NULL, uri, rt_num, device);
+  int i;
+  for (i = 0; i < rt_num; i++) {
+    oc_resource_bind_resource_type(resource, rt[i]);
+    st_print_log("rt : %s\n", rt[i]);
+  }
+  st_print_log("interface : %d\n", interface);
+  oc_resource_bind_resource_interface(resource, interface);
+  st_print_log("default_interface : %d\n", default_interface);
+  oc_resource_set_default_interface(resource, default_interface);
+  oc_resource_set_discoverable(resource, true);
+  oc_resource_set_observable(resource, true);
+  oc_resource_set_request_handler(resource, OC_GET, st_resource_get_handler,
+                                  NULL);
+  oc_resource_set_request_handler(resource, OC_POST, st_resource_post_handler,
+                                  NULL);
+  oc_add_resource(resource);
 }
 
 void
 st_register_resources(int device)
 {
-  oc_resource_t *switch_resource = oc_new_resource(NULL, switch_rsc_uri, 1, device);
-  oc_resource_bind_resource_type(switch_resource, switch_rsc_rt);
-  oc_resource_bind_resource_interface(switch_resource, OC_IF_A);
-  oc_resource_set_default_interface(switch_resource, OC_IF_BASELINE);
-  oc_resource_set_discoverable(switch_resource, g_discoverable);
-  oc_resource_set_observable(switch_resource, g_observable);
-  oc_resource_set_request_handler(switch_resource, OC_GET, switch_get_handler,
-                                  NULL);
-  oc_resource_set_request_handler(switch_resource, OC_POST, switch_post_handler,
-                                  NULL);
-  oc_add_resource(switch_resource);
+  st_register_resource(switch_rsc_uri, switch_rsc_rt, switch_rt_num,
+                       OC_IF_A | OC_IF_BASELINE, OC_IF_A, device);
 
-  oc_resource_t *level = oc_new_resource(NULL, switchlevel_rsc_uri, 1, device);
-  oc_resource_bind_resource_type(level, switchlevel_rsc_rt);
-  oc_resource_bind_resource_interface(level, OC_IF_A);
-  oc_resource_set_discoverable(level, g_discoverable);
-  oc_resource_set_observable(level, g_observable);
-  oc_resource_set_request_handler(level, OC_GET, switchlevel_get_handler, NULL);
-  oc_resource_set_request_handler(level, OC_POST, switchlevel_post_handler,
-                                  NULL);
-  oc_add_resource(level);
+  st_register_resource(switchlevel_rsc_uri, switchlevel_rsc_rt,
+                       switchleve_rt_num, OC_IF_A, OC_IF_A, device);
 
-  oc_resource_t *temperature = oc_new_resource(NULL, color_temp_rsc_uri, 1, device);
-  oc_resource_bind_resource_type(temperature, color_temp_rsc_rt);
-  oc_resource_bind_resource_interface(temperature, OC_IF_A);
-  oc_resource_bind_resource_interface(temperature, OC_IF_S);
-  oc_resource_set_default_interface(temperature, OC_IF_BASELINE);
-  oc_resource_set_discoverable(temperature, g_discoverable);
-  oc_resource_set_observable(temperature, g_observable);
-  oc_resource_set_request_handler(temperature, OC_GET, color_temp_get_handler,
-                                  NULL);
-  oc_resource_set_request_handler(temperature, OC_POST, color_temp_post_handler,
-                                  NULL);
-  oc_add_resource(temperature);
+  st_register_resource(color_temp_rsc_uri, color_temp_rsc_rt, color_temp_rt_num,
+                       OC_IF_A | OC_IF_S | OC_IF_BASELINE, OC_IF_A, device);
 
   register_sc_provisioning_info_resource();
+}
+
+void
+st_register_resource_handler(st_resource_handler get_handler,
+                             st_resource_handler set_handler)
+{
+  if (!get_handler || !set_handler) {
+    st_print_log("[St_rsc_mgr] invalid parameter.");
+    return;
+  }
+
+  g_resource_get_handler = get_handler;
+  g_resource_set_handler = set_handler;
 }
