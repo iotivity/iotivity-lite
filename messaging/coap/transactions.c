@@ -84,7 +84,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
-    t->message = oc_allocate_message();
+    t->message = oc_internal_allocate_outgoing_message();
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;
@@ -112,7 +112,9 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
-  OC_DBG("Sending transaction %u: %p", t->mid, (void *)t);
+  OC_DBG("Sending transaction(len: %d) %u: %p", t->message->length, t->mid,
+         (void *)t);
+  OC_LOGbytes(t->message->data, t->message->length);
   bool confirmable = false;
 
   confirmable =

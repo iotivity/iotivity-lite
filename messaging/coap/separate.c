@@ -139,7 +139,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_udp_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
-    oc_message_t *message = oc_allocate_message();
+    oc_message_t *message = oc_internal_allocate_outgoing_message();
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
       message->length = coap_serialize_message(ack, message->data);

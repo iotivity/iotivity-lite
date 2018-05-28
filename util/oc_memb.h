@@ -82,15 +82,23 @@
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #define OC_MEMB(name, structure, num)                                          \
-  static struct oc_memb name = { sizeof(structure), 0, 0, 0 }
+  static struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
+#define OC_MEMB_FIXED(name, structure, num)                                    \
+  static char CC_CONCAT(name, _memb_count)[num];                               \
+  static void *CC_CONCAT(name, _memb_mem)[num];                                \
+  static struct oc_memb name = { sizeof(structure), num,                       \
+                                 CC_CONCAT(name, _memb_count),                 \
+                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
 #else /* OC_DYNAMIC_ALLOCATION */
 #define OC_MEMB(name, structure, num)                                          \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
   static struct oc_memb name = { sizeof(structure), num,                       \
                                  CC_CONCAT(name, _memb_count),                 \
-                                 (void *)CC_CONCAT(name, _memb_mem) }
+                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+typedef void (*oc_memb_buffers_avail_callback_t)(int);
 
 struct oc_memb
 {
@@ -98,6 +106,7 @@ struct oc_memb
   unsigned short num;
   char *count;
   void *mem;
+  oc_memb_buffers_avail_callback_t buffers_avail_cb;
 };
 
 /**
@@ -143,6 +152,9 @@ char _oc_memb_free(
 #define oc_memb_alloc(m) (void *)_oc_memb_alloc(m)
 #define oc_memb_free(m, ptr) (char)_oc_memb_free(m, ptr)
 #endif
+
+void oc_memb_set_buffers_avail_cb(struct oc_memb *m,
+                                  oc_memb_buffers_avail_callback_t cb);
 
 int oc_memb_inmemb(struct oc_memb *m, void *ptr);
 

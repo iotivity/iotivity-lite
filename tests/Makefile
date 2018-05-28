@@ -19,10 +19,10 @@ prep_files+=${topdir}/deps/tinycbor/LICENSE
 prep_files+=${topdir}/deps/mbedtls/LICENSE
 prep_files+=${topdir}/deps/gtest/LICENSE
 
-${port}/%: ${CURDIR}/port/${port} ${prep_files}
+linux/%: ${CURDIR}/../port/${port} ${prep_files}
 	${MAKE} -C $< ${@F}
 
-linux/%: ${CURDIR}/../port/${port} ${prep_files}
+${port}/%: ${CURDIR}/port/${port} ${prep_files}
 	${MAKE} -C $< ${@F}
 
 help: ${topdir}/README.rst
@@ -30,10 +30,13 @@ help: ${topdir}/README.rst
 	@echo "# Usage: "
 	@echo "# make all : to build port=${port}"
 
-${prep_files}:
-	git submodule init ${@D}
-	git submodule sync ${@D}
-	git submodule update ${@D}
+${prep_files}: .git-submodule.done.tmp
+
+.git-submodule.done.tmp: ${topdir}/.gitmodules
+	git submodule init
+	git submodule sync
+	git submodule update
+	touch $@
 
 prep: ${prep_files}
 	ls $<

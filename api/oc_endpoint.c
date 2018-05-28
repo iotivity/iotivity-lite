@@ -448,7 +448,7 @@ oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 }
 
 int
-oc_endpoint_compare(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
+oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
   if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
       ep1->device != ep2->device) {

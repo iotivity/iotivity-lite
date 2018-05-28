@@ -54,10 +54,10 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
     buffer->role = role;
     memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
     oc_new_string(&buffer->href, href, href_len);
-    buffer->next = 0;
+    buffer->next = NULL;
 #ifdef OC_CLIENT
     buffer->mid = 0;
-    buffer->client_cb = 0;
+    buffer->client_cb = NULL;
 #endif /* OC_CLIENT */
     return buffer;
   }
@@ -69,13 +69,20 @@ static void
 oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
                          oc_blockwise_state_t *buffer)
 {
+
+  if (!buffer) {
+    OC_ERR("buffer is NULL");
+    return;
+  }
+
   if (oc_string_len(buffer->uri_query))
     oc_free_string(&buffer->uri_query);
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
 #ifdef OC_DYNAMIC_ALLOCATION
   free(buffer->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  buffer->buffer = NULL;
+#endif
   oc_memb_free(pool, buffer);
 }
 
