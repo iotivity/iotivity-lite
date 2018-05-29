@@ -118,7 +118,7 @@ cloud_access_handler(st_cloud_access_status_t status)
     is_cloud_access_success = true;
   } else if (status == CLOUD_ACCESS_FAIL) {
     st_print_log("Cloud access failed!!!\n");
-  } else if (status == CLOUD_ACCESS_DISCONNECTED) {
+  } else if (status == CLOUD_ACCESS_RE_CONNECTING) {
     st_print_log("Disconnected from cloud!\n");
     is_cloud_access_success = false;
   }
