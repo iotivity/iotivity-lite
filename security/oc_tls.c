@@ -990,6 +990,7 @@ oc_tls_connected(oc_endpoint_t *endpoint)
 }
 
 #define UUID_PREFIX "uuid:"
+#define UUID_DEV_PREFIX "sample ("
 #define UUID_STRING_SIZE (37)
 
 static void
@@ -1057,14 +1058,16 @@ read_application_data(oc_tls_peer_t *peer)
             if (name->oid.p &&
                (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_CN)) &&
                (0 == memcmp(MBEDTLS_OID_AT_CN, name->oid.p, name->oid.len))) {
-              if (strstr((const char *)name->val.p, UUID_PREFIX)) {
+              if (strstr((const char *)name->val.p, UUID_PREFIX) ||
+			  	strstr((const char *)name->val.p, UUID_DEV_PREFIX)) {
                 break;
               }
             }
             else if (name->oid.p &&
                (name->oid.len <= MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_ORG_UNIT)) &&
                (0 == memcmp(MBEDTLS_OID_AT_ORG_UNIT, name->oid.p, name->oid.len))) {
-              if (strstr((const char *)name->val.p, UUID_PREFIX)) {
+              if (strstr((const char *)name->val.p, UUID_PREFIX) ||
+			  	strstr((const char *)name->val.p, UUID_DEV_PREFIX)) {
                 break;
               }
             }
@@ -1087,9 +1090,18 @@ read_application_data(oc_tls_peer_t *peer)
             OC_DBG("oc_tls: certificate uuid string: %s", uuid);
             oc_str_to_uuid(uuid, &peer->uuid);
           }
-          else {
-            OC_DBG("oc_tls: uuid not found");
-          }
+		  else {
+		  	uuid_pos = strstr((const char *)name->val.p, UUID_DEV_PREFIX);
+			if ((NULL != uuid_pos) &&
+             (name->val.len >= ((uuid_pos - (const char *)name->val.p) + (sizeof(UUID_DEV_PREFIX) - 1) + uuid_len))) {
+            memcpy(uuid, uuid_pos + sizeof(UUID_DEV_PREFIX) - 1, uuid_len);
+            OC_DBG("oc_tls: certificate client uuid string: %s", uuid);
+            oc_str_to_uuid(uuid, &peer->uuid);
+            }
+            else {
+              OC_DBG("oc_tls: uuid not found");
+            }
+		  }
         }
       }
       else
