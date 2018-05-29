@@ -34,6 +34,10 @@
 #include "st_resource_manager.h"
 #include "st_store.h"
 
+#ifdef JSON_ENABLED
+#include "st_json_parser.h"
+#endif //JSON_ENABLED
+
 #define SOFT_AP_PWD "1111122222"
 #define SOFT_AP_CHANNEL (6)
 #define AP_CONNECT_RETRY_LIMIT (20)
@@ -57,6 +61,7 @@ static const char *st_pin_number = "pinNumber";
 static const char *st_model_number = "Model Number";
 static const char *st_protocol_version = "2.0";
 
+#ifndef JSON_ENABLED
 // define application specific values.
 #ifdef OC_SPEC_VER_OIC
 static const char *spec_version = "core.1.1.0";
@@ -65,6 +70,7 @@ static const char *data_model_version = "res.1.1.0";
 static const char *spec_version = "ocf.1.0.0";
 static const char *data_model_version = "ocf.res.1.0.0";
 #endif /* !OC_SPEC_VER_OIC */
+#endif //JSON_ENABLED
 
 static sc_properties st_vendor_props;
 
@@ -72,14 +78,28 @@ static sec_provisioning_info g_prov_resource;
 
 static int device_index = 0;
 
+#ifndef JSON_ENABLED
 static const char *device_rt = "oic.d.light";
 static const char *device_name = "Samsung";
 
 static const char *manufacturer = "xxxx";
 static const char *sid = "000";
 static const char *vid = "IoT2020";
+#endif //JSON_ENABLED
 
 int quit = 0;
+
+#ifdef JSON_ENABLED
+static st_device_s * device(void){
+    static st_device_s *mydevice = NULL;
+    if(mydevice != NULL) {
+        return  mydevice;
+    }
+    return mydevice = st_manager_json_get_device(device_index);
+}
+#else
+
+#endif //JSON_ENABLED
 
 static void set_st_manager_status(st_status_t status);
 
@@ -87,20 +107,36 @@ static void
 init_platform_cb(void *data)
 {
   (void)data;
+#ifdef JSON_ENABLED
+  oc_set_custom_platform_property(mnmo, st_manager_json_get_setup_id());
+  oc_set_custom_platform_property(mnpv, device()->ver_p);
+  oc_set_custom_platform_property(mnos, device()->ver_os);
+  oc_set_custom_platform_property(mnhw, device()->ver_hw);
+  oc_set_custom_platform_property(mnfv, device()->ver_fw);
+  oc_set_custom_platform_property(vid, device()->vender_id);
+#else
   oc_set_custom_platform_property(mnmo, sid);
   oc_set_custom_platform_property(mnpv, "1.0");
   oc_set_custom_platform_property(mnos, "1.0");
   oc_set_custom_platform_property(mnhw, "1.0");
   oc_set_custom_platform_property(mnfv, "1.0");
   oc_set_custom_platform_property(vid, vid);
+#endif //JSON_ENABLED
+
 }
 
 static int
 app_init(void)
 {
+#ifdef JSON_ENABLED
+  int ret = oc_init_platform(device()->manufacturer_name, init_platform_cb, NULL);
+  ret |= oc_add_device("/oic/d", device()->type, device()->name, device()->spec_version,
+                       device()->data_model_version, NULL, NULL);
+#else
   int ret = oc_init_platform(manufacturer, init_platform_cb, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
+#endif //JSON_ENABLED
   return ret;
 }
 
@@ -154,8 +190,13 @@ set_sc_prov_info(void)
   for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].target_di, uuid, strlen(uuid));
+#ifdef JSON_ENABLED
+    oc_new_string(&g_prov_resource.targets[i].target_rt, device()->type,
+                  strlen(device()->type));
+#else
     oc_new_string(&g_prov_resource.targets[i].target_rt, device_rt,
                   strlen(device_rt));
+#endif //JSON_ENABLED
     g_prov_resource.targets[i].published = false;
   }
   g_prov_resource.targets_size = target_size;
@@ -301,7 +342,12 @@ st_manager_init_step(void)
   if (st_is_easy_setup_finish() != 0) {
     st_print_log("[ST_MGR] Soft AP turn on.\n");
     char ssid[MAX_SSID_LEN + 1];
-    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
+#ifdef JSON_ENABLED
+    if (st_gen_ssid(ssid, device()->name, device()->manufacturer_name, st_manager_json_get_setup_id()) != 0)
+#else
+    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0)
+#endif //JSON_ENABLED
+    {
       return -1;
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
