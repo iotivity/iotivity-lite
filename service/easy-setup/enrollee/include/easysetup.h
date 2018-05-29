@@ -103,6 +103,16 @@ es_result_e es_set_device_property(es_device_property *device_property);
 es_result_e es_set_state(es_enrollee_state es_state);
 
 /**
+ * This function gets Enrollee's State.
+ *
+ * @param void
+ * @return ::es_enrollee_state
+ *
+ * @see es_enrollee_state
+ */
+es_enrollee_state es_get_state(void);
+
+/**
  * This function Sets Enrollee's Error Code.
  *
  * @param es_err_code Contains Enrollee's error code.

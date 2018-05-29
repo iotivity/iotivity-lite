@@ -30,6 +30,7 @@
 
 static es_provisioning_callbacks_s g_es_provisioning_cb;
 static es_device_property g_es_device_property;
+static es_enrollee_state current_es_state;
 
 void
 es_connect_request_callback(es_result_e es_result,
@@ -208,9 +209,16 @@ es_set_state(es_enrollee_state es_state)
     return ES_ERROR;
   }
 
+  current_es_state = es_state;
   OC_DBG("set es_state succesfully : %d", es_state);
   OC_DBG("out");
   return ES_OK;
+}
+
+es_enrollee_state
+es_get_state(void)
+{
+  return current_es_state;
 }
 
 es_result_e
