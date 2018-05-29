@@ -118,7 +118,7 @@ cloud_access_handler(st_cloud_access_status_t status)
     is_cloud_access_success = true;
   } else if (status == CLOUD_ACCESS_FAIL) {
     st_print_log("Cloud access failed!!!\n");
-  } else if (status == CLOUD_ACCESS_DISCONNECTED) {
+  } else if (status == CLOUD_ACCESS_RE_CONNECTING) {
     st_print_log("Disconnected from cloud!\n");
     is_cloud_access_success = false;
   }
@@ -240,8 +240,8 @@ st_main_initialize(void)
     goto exit;
   }
 
-  while (st_cloud_access_check_connection(
-           oc_string(cloud_info->cloudinfo.ci_server)) != 0 &&
+  while (st_cloud_access_check_connection(&cloud_info->cloudinfo.ci_server) !=
+           0 &&
          quit != 1) {
     st_print_log("AP is not connected.\n");
     st_sleep(3);

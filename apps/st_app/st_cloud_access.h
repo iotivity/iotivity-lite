@@ -23,14 +23,13 @@
 #include "st_store.h"
 
 typedef enum {
-  CLOUD_ACCESS_INITIALIZE,
-  CLOUD_ACCESS_SIGNED_UP,
-  CLOUD_ACCESS_SIGNED_IN,
-  CLOUD_ACCESS_PUBLISHED,
-  CLOUD_ACCESS_FINISH,
-  CLOUD_ACCESS_FAIL,
-  CLOUD_ACCESS_DISCONNECTED,
-  CLOUD_ACCESS_RE_CONNECTING
+  CLOUD_ACCESS_INITIALIZE = 0,
+  CLOUD_ACCESS_SIGNED_UP = 1 << 0,
+  CLOUD_ACCESS_SIGNED_IN = 1 << 1,
+  CLOUD_ACCESS_PUBLISHED = 1 << 2,
+  CLOUD_ACCESS_FINISH = 1 << 3,
+  CLOUD_ACCESS_FAIL = 1 << 4,
+  CLOUD_ACCESS_RE_CONNECTING = 1 << 5
 } st_cloud_access_status_t;
 
 typedef void (*st_cloud_access_cb_t)(st_cloud_access_status_t status);
@@ -41,6 +40,6 @@ void st_cloud_access_stop(int device_index);
 
 st_cloud_access_status_t get_cloud_access_status(int device_index);
 
-int st_cloud_access_check_connection(const char *ci_server);
+int st_cloud_access_check_connection(oc_string_t *ci_server);
 
 #endif /* ST_CLOUD_ACCESS_H */
