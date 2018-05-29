@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f174f49d",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-29T11:37:44Z",
+      "side": 1,
+      "message": "can remove this code .. line 258 to 292",
+      "revId": "7fbda75eb8cc7b6e5efdc8e06ebb5135d8ab7d96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9148085d",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-29T11:37:44Z",
+      "side": 1,
+      "message": "you can just add following code here:\n\n\n if (add_ip_interface(ifa-\u003eifa_index)) {\n      oc_network_interface_event(NETWORK_INTERFACE_UP);\n }\n\n\nthis will detect NETWORK_INTERFACE_UP event. No need to call create_interface function.\n\n\nNeed to add another new utility function for NETWORK_INTERFACE_DOWN event as we linux code uses NETLINK socket, but we don\u0027t have it in tizen rt. So manually by comparing network interface list DOWN EVENT need to be determined.",
+      "revId": "7fbda75eb8cc7b6e5efdc8e06ebb5135d8ab7d96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
