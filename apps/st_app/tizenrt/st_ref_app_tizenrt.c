@@ -16,13 +16,13 @@
  *
  ****************************************************************************/
 
-#include "st_manager.h"
-#include "st_port.h"
+#include "../st_manager.h"
+#include "../st_port.h"
 
 // TODO: resource handling callbacks.
 
 int
-main(void)
+stapp_main(void)
 {
   if (st_manager_initialize() != 0) {
     st_print_log("[ST_APP] st_manager_initialize failed.\n");
