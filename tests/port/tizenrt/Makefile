@@ -26,6 +26,7 @@ extra_dir?=${top_dir}/deps
 
 app_dir?=${top_dir}/port/tizenrt
 
+defconfig_path?=${app_dir}/iotliteconfig
 tizenrt_dir?=${top_dir}/deps/TizenRT
 os_dir?=${tizenrt_dir}/os
 os_url?=https://github.com/Samsung/TizenRT
@@ -42,6 +43,8 @@ toolchain_abi?=arm-none-eabi
 toolchain_dir?=${extra_dir}/${toolchain_package}
 toolchain_package?=gcc-${toolchain_abi}-4_9-2015q3
 toolchain_bin?=${toolchain_dir}/bin
+
+cp ${defconfig_path}/defconfig ${top_dir}/deps/TizenRT/build/configs/artik053/minimal/defconfig
 
 CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-
 CC=${CROSSCOMPIL}gcc
