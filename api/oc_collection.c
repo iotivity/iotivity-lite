@@ -471,6 +471,7 @@ oc_handle_oic_1_1_collection_request(oc_method_t method, oc_request_t *request,
   return true;
 }
 
+#ifndef OC_SPEC_VER_OIC
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t interface)
@@ -721,6 +722,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
   return true;
 }
+#endif
 
 oc_collection_t *
 oc_collection_get_all(void)
