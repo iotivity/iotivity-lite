@@ -89,7 +89,10 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
+ifeq ($(MFG),1)
 SAMPLES += mfgserver
+CFLAGS += -DOC_MFG
+endif
 endif
 
 OBT = onboarding_tool

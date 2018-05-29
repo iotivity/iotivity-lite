@@ -31,6 +31,7 @@
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
+#define OXM_MANUFACTURER_CERTIFICATE "oic.sec.doxm.mfgcert"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -522,8 +523,13 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   if (success && owner &&
       memcmp(owner->subjectuuid.id,
              devices[request->resource->device].rowneruuid.id, 16) == 0) {
+
     success = oc_sec_derive_owner_psk(
+#ifdef OC_MFG
+      request->origin, (const uint8_t *)OXM_MANUFACTURER_CERTIFICATE, strlen(OXM_MANUFACTURER_CERTIFICATE),
+#else
       request->origin, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
+#endif
       doxm->deviceuuid.id, 16, owner->subjectuuid.id, 16, owner->key, 16);
   }
   if (!success) {

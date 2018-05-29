@@ -845,21 +845,28 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   uint8_t key_block[96];
   uint8_t label[] = { 0x6b, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70,
                       0x61, 0x6e, 0x73, 0x69, 0x6f, 0x6e };
-  if (oc_tls_prf(peer->master_secret, 48, key_block, 96, 3, label,
+#ifdef OC_MFG
+  int key_block_len = 40;
+#else
+  int key_block_len = 96;
+#endif
+  if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
                  sizeof(label), peer->client_server_random + 32, 32,
-                 peer->client_server_random, 32) != 96) {
+                 peer->client_server_random, 32) != key_block_len) {
     return false;
   }
-  if (oc_tls_prf(key_block, 96, key, key_len, 3, oxm, oxm_len, obt_uuid,
+
+  if (oc_tls_prf(key_block, key_block_len, key, key_len, 3, oxm, oxm_len, obt_uuid,
                  obt_uuid_len, server_uuid, server_uuid_len) != (int)key_len) {
     return false;
   }
+
   OC_DBG("oc_tls: master secret:");
   OC_LOGbytes(peer->master_secret, 48);
   OC_DBG("oc_tls: client_server_random:");
   OC_LOGbytes(peer->client_server_random, 64);
   OC_DBG("oc_tls: key_block");
-  OC_LOGbytes(key_block, 96);
+  OC_LOGbytes(key_block, key_block_len);
   OC_DBG("oc_tls: PSK ");
   OC_LOGbytes(key, key_len);
 
