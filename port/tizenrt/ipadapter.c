@@ -81,8 +81,127 @@ bool ifchange_initialized;
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
+/**
+ * Structure to manage interface list.
+ */
+typedef struct ip_interface
+{
+  struct ip_interface *next;
+  int if_index;
+} ip_interface_t;
+
+
+/**
+ * Structure to manage interface list.
+ */
+typedef struct interface_list_t
+{
+  char *intf;
+  struct interface_list_t *next;
+} interface_list_t;
+
+
+static interface_list_t *g_netinterfacelist = NULL;
+
+OC_LIST(ip_interface_list);
+OC_MEMB(ip_interface_s, ip_interface_t, OC_MAX_IP_INTERFACES);
+
+OC_LIST(oc_network_interface_cb_list);
+OC_MEMB(oc_network_interface_cb_s, oc_network_interface_cb_t,
+        OC_MAX_NETWORK_INTERFACE_CBS);
+
 OC_LIST(oc_session_event_cb_list);
 OC_MEMB(oc_session_event_cb_s, oc_session_event_cb_t, OC_MAX_SESSION_EVENT_CBS);
+
+static ip_interface_t *
+get_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list);
+  while (if_item != NULL && if_item->if_index != target_index) {
+    if_item = if_item->next;
+  }
+  return if_item;
+}
+
+static bool
+add_ip_interface(int target_index)
+{
+  if (get_ip_interface(target_index))
+    return false;
+
+  ip_interface_t *new_if = oc_memb_alloc(&ip_interface_s);
+  if (!new_if) {
+    OC_ERR("interface item alloc failed");
+    return false;
+  }
+  new_if->if_index = target_index;
+  oc_list_add(ip_interface_list, new_if);
+  OC_DBG("New interface added: %d", new_if->if_index);
+  return true;
+}
+
+static bool
+check_new_ip_interfaces(void)
+{
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interface address");
+    return false;
+  }
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    /* Ignore interfaces that are down and the loopback interface */
+    if (!(interface->ifa_flags & IFF_UP) ||
+        interface->ifa_flags & IFF_LOOPBACK) {
+      continue;
+    }
+    /* Obtain interface index for this address */
+    int if_index = if_nametoindex(interface->ifa_name);
+
+    add_ip_interface(if_index);
+  }
+  freeifaddrs(ifs);
+  return true;
+}
+
+static bool
+remove_ip_interface(int target_index)
+{
+  ip_interface_t *if_item = get_ip_interface(target_index);
+  if (!if_item) {
+    return false;
+  }
+
+  oc_list_remove(ip_interface_list, if_item);
+  oc_memb_free(&ip_interface_s, if_item);
+  OC_DBG("Removed from ip interface list: %d", target_index);
+  return true;
+}
+
+static void
+remove_all_ip_interface(void)
+{
+  ip_interface_t *if_item = oc_list_head(ip_interface_list), *next;
+  while (if_item != NULL) {
+    next = if_item->next;
+    oc_list_remove(ip_interface_list, if_item);
+    oc_memb_free(&ip_interface_s, if_item);
+    if_item = next;
+  }
+}
+
+static void
+remove_all_network_interface_cbs(void)
+{
+  oc_network_interface_cb_t *cb_item =
+                              oc_list_head(oc_network_interface_cb_list),
+                            *next;
+  while (cb_item != NULL) {
+    next = cb_item->next;
+    oc_list_remove(oc_network_interface_cb_list, cb_item);
+    oc_memb_free(&oc_network_interface_cb_s, cb_item);
+    cb_item = next;
+  }
+}
 
 static void
 remove_all_session_event_cbs(void)
@@ -119,12 +238,81 @@ oc_network_event_handler_mutex_unlock(void)
 
 void oc_network_event_handler_mutex_destroy(void) {
 #ifdef OC_NETLINK
+  ifchange_initialized = false;
   close(ifchange_sock);
 #endif
-
+  remove_all_ip_interface();
+  remove_all_network_interface_cbs();
   remove_all_session_event_cbs();
   pthread_mutex_destroy(&mutex);
 }
+
+
+/**
+ * Used to storing network interface.
+ */
+
+
+ /* Given a reference (pointer to pointer) to the head of a list and
+  *    an int, inserts a new node on the front of the list. */
+void create_interface(struct interface_list_t** head_ref, char *new_intrf)
+{
+  /* allocate node */
+  struct interface_list_t* new_node = (struct interface_list_t*) malloc(sizeof(struct interface_list_t));
+
+  if (*head_ref) {
+    struct interface_list_t *tmp = *head_ref;
+	while (tmp != NULL) {
+      tmp = tmp->next;
+      if (0 == strcmp(tmp->intf, new_intrf)) {
+        goto exit;
+      }
+	}
+
+  }
+
+  /* put in the data  */
+  new_node->intf  = new_intrf;
+
+  /* Make next of new node as head */
+  new_node->next = (*head_ref);
+
+  /* move the head to point to the new node */
+  (*head_ref) = new_node;
+exit:return;
+}
+
+// This function prints contents of linked list starting from head
+void printList(struct interface_list_t *node)
+{
+  while (node != NULL) {
+    printf(" %s\n ", node->intf);
+	node = node->next;
+  }
+}
+
+void getinterfaceinformation(void)
+{
+  struct ifaddrs *ifaddr = NULL;
+  struct ifaddrs *ifa = NULL;
+
+  if ( getifaddrs(&ifaddr) == -1 )
+    return;
+
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+  /* Ignore interfaces that are down and the loopback interface */
+     if (!(ifa->ifa_flags & IFF_UP) || ifa->ifa_flags & IFF_LOOPBACK) {
+       continue;
+	 }
+	 if(ifa) {
+	 /* global interface list */
+	 create_interface(&g_netinterfacelist, ifa->ifa_name);
+    }
+  printf("\n Created Linked list is----- globale list: ");
+  printList(g_netinterfacelist);
+  }
+}
+
 
 static ip_context_t *get_ip_context_for_device(int device) {
   ip_context_t *dev = oc_list_head(ip_contexts);
@@ -293,6 +481,9 @@ static int process_interface_change_event(void) {
     if (response->nlmsg_type == RTM_NEWADDR) {
       struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {
+        if (add_ip_interface(ifa->ifa_index)) {
+          oc_network_interface_event(NETWORK_INTERFACE_UP);
+        }
         struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
@@ -323,6 +514,13 @@ static int process_interface_change_event(void) {
           attr = RTA_NEXT(attr, att_len);
         }
       }
+     else if (response->nlmsg_type == RTM_DELADDR) {
+      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
+      if (ifa) {
+        if (remove_ip_interface(ifa->ifa_index)) {
+          oc_network_interface_event(NETWORK_INTERFACE_DOWN);
+        }
+      }
     }
     response = NLMSG_NEXT(response, response_len);
   }
@@ -333,6 +531,7 @@ static int process_interface_change_event(void) {
 
 static void *network_event_thread(void *data) {
   struct sockaddr_storage client;
+  struct timeval timeout;
   memset(&client, 0, sizeof(struct sockaddr_storage));
 #ifdef OC_IPV6
   struct sockaddr_in6 *c = (struct sockaddr_in6 *)&client;
@@ -378,11 +577,13 @@ static void *network_event_thread(void *data) {
 #endif /* OC_TCP */
 
   int i, n;
+  timeout.tv_sec  = 1 * 30;
+  timeout.tv_usec = 0;
 
   while (dev->terminate != 1) {
     len = sizeof(client);
     setfds = dev->rfds;
-    n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+    n = select(FD_SETSIZE, &setfds, NULL, NULL, &timeout);
 
     if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
       char buf;
@@ -407,6 +608,8 @@ static void *network_event_thread(void *data) {
           continue;
         }
       }
+#else
+     getinterfaceinformation();
 #endif
 
       len = sizeof(client);
@@ -953,10 +1156,55 @@ done:
 }
 #endif /* OC_CLIENT */
 
+int
+oc_add_network_interface_event_callback(interface_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_network_interface_cb_t *cb_item =
+    oc_memb_alloc(&oc_network_interface_cb_s);
+  if (!cb_item) {
+    OC_ERR("network interface callback item alloc failed");
+    return -1;
+  }
+
+  cb_item->handler = cb;
+  oc_list_add(oc_network_interface_cb_list, cb_item);
+  return 0;
+}
+
+int
+oc_remove_network_interface_event_callback(interface_event_handler_t cb)
+{
+  if (!cb)
+    return -1;
+
+  oc_network_interface_cb_t *cb_item =
+    oc_list_head(oc_network_interface_cb_list);
+  while (cb_item != NULL && cb_item->handler != cb) {
+    cb_item = cb_item->next;
+  }
+  if (!cb_item) {
+    return -1;
+  }
+  oc_list_remove(oc_network_interface_cb_list, cb_item);
+
+  oc_memb_free(&oc_network_interface_cb_s, cb_item);
+  return 0;
+}
+
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
-    //TODO::::yet to implement
+  if (oc_list_length(oc_network_interface_cb_list) > 0) {
+    oc_network_interface_cb_t *cb_item =
+      oc_list_head(oc_network_interface_cb_list);
+    while (cb_item) {
+      cb_item->handler(event);
+      cb_item = cb_item->next;
+    }
+  }
 }
 
 int
@@ -997,9 +1245,9 @@ oc_remove_session_event_callback(session_event_handler_t cb)
 
 void
 handle_session_event_callback(const oc_endpoint_t *endpoint,
-                               oc_session_state_t state)
+                              oc_session_state_t state)
 {
-    if (oc_list_length(oc_session_event_cb_list) > 0) {
+  if (oc_list_length(oc_session_event_cb_list) > 0) {
     oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
     while (cb_item) {
       cb_item->handler(endpoint, state);
@@ -1007,7 +1255,6 @@ handle_session_event_callback(const oc_endpoint_t *endpoint,
     }
   }
 }
-
 
 #ifdef OC_IPV4
 static int
@@ -1271,6 +1518,10 @@ int oc_connectivity_init(int device) {
       OC_ERR("binding netlink socket %d", errno);
       return -1;
     }
+    if (!check_new_ip_interfaces()) {
+      OC_ERR("checking new IP interfaces failed.");
+      return -1;
+    }
     ifchange_initialized = true;
   }
 #endif
@@ -1384,16 +1635,28 @@ oc_domain_to_ip(const char *domain, oc_string_t *ip)
 bool
 oc_get_mac_addr(unsigned char* mac)
 {
-    //WiFiGetMac(mac);
-    mac[0] = 0x28;
-    mac[1] = 0x6d;
-    mac[2] = 0x97;
-    mac[3] = 0x40;
-    mac[4] = 0x22;
-    mac[5] = 0x14;
+  struct ifaddrs *ifaddr = NULL;
+  struct ifaddrs *ifa = NULL;
 
-    OC_DBG("oc_get_mac_addr MAC: %02X%02X%02X%02X%02X%02X\n", mac[0], mac[1], mac[2], mac[3], 
-           mac[4], mac[5]);
-    return true;
+  if ( getifaddrs(&ifaddr) == -1)
+    return false;
+
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    /* Ignore interfaces that are down and the loopback interface */
+    if (!(ifa->ifa_flags & IFF_UP) || ifa->ifa_flags & IFF_LOOPBACK) {
+      continue;
+    }
+
+    if (!strcmp(ifa->ifa_name, CONFIG_NET_CTRL_IFNAME_STA)) {
+      if (netlib_getmacaddr(CONFIG_NET_CTRL_IFNAME_STA, mac) != ZERO) {
+        printf("ERROR : failed to netlib_getmacaddr\n");
+      }
+	 printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", ((uint8_t *)mac)[0], ((uint8_t *)mac)[1], ((uint8_t *)mac)[2], ((uint8_t *)mac)[3],
+                 ((uint8_t *)mac)[4], ((uint8_t *)mac)[5]);
+	}
+
+  }
+
+  //freeifaddrs(ifaddr);
+  return true;
 }
-
