@@ -1,0 +1,243 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_b1c8ac75",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "5s seems rather excessive. It could hold up the main thread far too long, while it could\u0027ve been handling other events.",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_717c6421",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "Add error checking below..",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f1887424",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "After this line, you should have:\nif (flags \u003c 0) {\n  return -1;\n}",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3183fc05",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "This should be error \u003d fcntl(...)\nThen you should have:\nif (error \u003c 0) {\n  return -1;\n}",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5179602e",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be goto done?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d1a610c1",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be goto done?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_31ac9ca0",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be goto done?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7195843f",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be goto done?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_51920058",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "I\u0027m curious about this. \n\nIf this function returns -1 after waiting for 5s (line 436 branch), should it be allowed another retry from initiate_new_session? Would it be better to give up?\n\nIt boils down to the meaning of the above code path where connect() returned n \u003c 0 and errno was set to EINPROGRESS. \n\nThen you wait for a full 5s and nothing happens. If so, then can we be certain that the connection would successfully establish and immediately on the next try?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_919c886b",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "This should be:\nelse {\n  error \u003d fcntl(...)\n  if (error \u003c 0) {\n    return -1;\n  }\n}",
+      "range": {
+        "startLine": 440,
+        "startChar": 2,
+        "endLine": 440,
+        "endChar": 32
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b19f0c5f",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "You should probably move this line into an else { } block following the  if (error) block.",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b176ec3c",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "error \u003c 0",
+      "range": {
+        "startLine": 441,
+        "startChar": 6,
+        "endLine": 441,
+        "endChar": 11
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1188781e",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-29T23:43:37Z",
+      "side": 1,
+      "message": "I have added some comments to the function above, but I\u0027m still questioning the need for this complexity.\n\nWhat is the trouble with simply doing back-to-back retries right here in this function?\n\nIt does also concern me that we\u0027d be holding back the main thread with the select().",
+      "range": {
+        "startLine": 472,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 5
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
