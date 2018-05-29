@@ -27,48 +27,64 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 
-#define CONNECTION_CHECK_SERVER "coaps+tcp://samsung.com:5683" // TODO
-
-#define AUTH_PROVIDER_GITHUB "github"
-#define AUTH_PROVIDER_STCLOUD "https://us-auth2.samsungosp.com" // TODO
-
 #define UID_KEY "uid"
 #define ACCESS_TOKEN_KEY "accesstoken"
+#define REFRESH_TOKEN_KEY "refreshtoken"
 #define REDIRECTURI_KEY "redirecturi"
 
+#define ONE_MINUTE (56)
 #define MAX_CONTEXT_SIZE (2)
-#define RETRY_INTERVAL (5)
-#define LIMIT_RETRY_SIGNING (5)
+#define MAX_RETRY_COUNT (5)
 
-typedef enum {
-  PUBLISH_RESOURCE = 1 << 0,
-  PUBLISH_DEV_PROFILE = 1 << 1
-} publish_state_t;
+static int session_timeout[5] = { 3, 50, 50, 50, 10 };
+static int message_timeout[5] = { 1, 2, 4, 8, 10 };
 
 typedef struct st_cloud_context
 {
   struct st_cloud_context *next;
   st_cloud_access_cb_t callback;
-  st_cloud_access_status_t cloud_access_status;
   oc_endpoint_t cloud_ep;
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
   oc_string_t refresh_token;
-  uint8_t publish_state;
   int device_index;
+  st_cloud_access_status_t cloud_access_status;
   uint8_t retry_count;
 } st_cloud_context_t;
 
 OC_LIST(st_cloud_context_list);
 OC_MEMB(st_cloud_context_s, st_cloud_context_t, MAX_CONTEXT_SIZE);
 
-static bool sign_up_process(st_cloud_context_t *context);
-static void sign_up_handler(oc_client_response_t *data);
-static void sign_in_handler(oc_client_response_t *data);
-static void session_event_handler(const oc_endpoint_t *endpoint,
-                                  oc_session_state_t state);
+static bool cloud_start_process(st_cloud_context_t *context);
+static oc_event_callback_retval_t sign_up(void *data);
+static oc_event_callback_retval_t sign_in(void *data);
+static oc_event_callback_retval_t refresh_token(void *data);
+static oc_event_callback_retval_t set_dev_profile(void *data);
+static oc_event_callback_retval_t publish_resource(void *data);
 static oc_event_callback_retval_t find_ping(void *data);
+static oc_event_callback_retval_t send_ping(void *data);
+
+static int ping_interval = 1;
+
+static void
+session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
+{
+  st_print_log("[Cloud_Access] session state(%d)\n", state);
+  st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
+  while (context != NULL && context->device_index != endpoint->device) {
+    context = context->next;
+  }
+
+  if (context && state == OC_SESSION_DISCONNECTED) {
+    if (context->cloud_access_status == CLOUD_ACCESS_FINISH) {
+      oc_remove_delayed_callback(context, send_ping);
+      context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
+    }
+
+    cloud_start_process(context);
+  }
+}
 
 int
 st_cloud_access_start(st_store_t *cloud_info, int device_index,
@@ -84,40 +100,31 @@ st_cloud_access_start(st_store_t *cloud_info, int device_index,
     return -1;
 
   context->callback = cb;
-  context->cloud_access_status = CLOUD_ACCESS_INITIALIZE;
+  if (cloud_info->cloudinfo.status == CLOUD_ACCESS_PUBLISHED)
+    context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
+  else
+    context->cloud_access_status =
+      (st_cloud_access_status_t)cloud_info->cloudinfo.status;
   context->device_index = device_index;
 
-  oc_string_t ep_str;
-  oc_new_string(&ep_str, oc_string(cloud_info->cloudinfo.ci_server),
-                oc_string_len(cloud_info->cloudinfo.ci_server));
-
-  if (oc_string_to_endpoint(&ep_str, &context->cloud_ep, NULL) != 0) {
-    oc_free_string(&ep_str);
+  if (oc_string_to_endpoint(&cloud_info->cloudinfo.ci_server,
+                            &context->cloud_ep, NULL) != 0) {
     goto errors;
   }
-  oc_free_string(&ep_str);
 
   oc_new_string(&context->auth_provider,
                 oc_string(cloud_info->cloudinfo.auth_provider),
                 oc_string_len(cloud_info->cloudinfo.auth_provider));
-  if (oc_string(cloud_info->cloudinfo.access_token)) {
-    oc_new_string(&context->access_token,
-                  oc_string(cloud_info->cloudinfo.access_token),
-                  oc_string_len(cloud_info->cloudinfo.access_token));
-  }
-  if (oc_string(cloud_info->cloudinfo.refresh_token)) {
-    oc_new_string(&context->refresh_token,
-                  oc_string(cloud_info->cloudinfo.refresh_token),
-                  oc_string_len(cloud_info->cloudinfo.refresh_token));
-  }
-  if (oc_string(cloud_info->cloudinfo.uid)) {
-    oc_new_string(&context->uid, oc_string(cloud_info->cloudinfo.uid),
-                  oc_string_len(cloud_info->cloudinfo.uid));
-  }
+  oc_new_string(&context->access_token,
+                oc_string(cloud_info->cloudinfo.access_token),
+                oc_string_len(cloud_info->cloudinfo.access_token));
+  oc_new_string(&context->refresh_token,
+                oc_string(cloud_info->cloudinfo.refresh_token),
+                oc_string_len(cloud_info->cloudinfo.refresh_token));
+  oc_new_string(&context->uid, oc_string(cloud_info->cloudinfo.uid),
+                oc_string_len(cloud_info->cloudinfo.uid));
 
-  st_print_log("[Cloud_Access] sign up to %s\n",
-               oc_string(cloud_info->cloudinfo.ci_server));
-  if (!sign_up_process(context)) {
+  if (!cloud_start_process(context)) {
     goto errors;
   }
 
@@ -138,6 +145,7 @@ errors:
 void
 st_cloud_access_stop(int device_index)
 {
+  st_print_log("[Cloud_Access] st_cloud_access_stop in\n");
   st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
   while (context != NULL && context->device_index != device_index) {
     context = context->next;
@@ -186,38 +194,15 @@ get_cloud_access_status(int device_index)
 }
 
 int
-st_cloud_access_check_connection(const char *ci_server)
+st_cloud_access_check_connection(oc_string_t *ci_server)
 {
-  st_print_log("[st_cloud_access_check_connection] ci_server %s\n", ci_server);
-  oc_string_t dns_str;
-  oc_new_string(&dns_str, CONNECTION_CHECK_SERVER,
-                strlen(CONNECTION_CHECK_SERVER));
-
-  oc_endpoint_t ep;
-  if (oc_string_to_endpoint(&dns_str, &ep, NULL) != 0) {
-    oc_free_string(&dns_str);
-    st_print_log("error in getting conn server endpoint!\n");
+  if (!ci_server)
     return -1;
-  }
-  oc_free_string(&dns_str);
 
-  st_print_log("oc_string_to_endpoint for conn check server completed\n");
+  st_print_log("[Cloud_Access] check connection: %s\n", oc_string(*ci_server));
+  oc_endpoint_t ep;
 
-  if (ci_server) {
-    oc_new_string(&dns_str, ci_server, strlen(ci_server));
-
-    if (oc_string_to_endpoint(&dns_str, &ep, NULL) != 0) {
-      oc_free_string(&dns_str);
-      st_print_log("error in getting ci server endpoint!\n");
-      return -1;
-    }
-    oc_free_string(&dns_str);
-
-    st_print_log("oc_string_to_endpoint for ci server completed\n");
-  }
-
-  st_print_log("[st_cloud_access_check_connection] out\n");
-  return 0;
+  return oc_string_to_endpoint(ci_server, &ep, NULL);
 }
 
 static oc_event_callback_retval_t
@@ -225,315 +210,299 @@ callback_handler(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   context->callback(context->cloud_access_status);
-  return OC_EVENT_DONE;
-}
 
-static oc_event_callback_retval_t
-re_sign_up(void *data)
-{
-  st_cloud_context_t *context = (st_cloud_context_t *)data;
-
-  if (context->retry_count < LIMIT_RETRY_SIGNING) {
-    st_print_log("[Cloud_Access] retry sign-up(%d)\n", context->retry_count);
-    if (!sign_up_process(context)) {
-      st_print_log("[Cloud_Access] retry sign-up failed\n");
-      goto error;
-    }
-    context->retry_count++;
-    return OC_EVENT_CONTINUE;
-  }
-  st_print_log("[Cloud_Access] retry sign-up count over\n");
-
-error:
-  // TODO : right error handling.
-  context->cloud_access_status = CLOUD_ACCESS_FAIL;
-  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-  oc_set_delayed_callback(context, callback_handler, 0);
   return OC_EVENT_DONE;
 }
 
 static bool
-sign_up_process(st_cloud_context_t *context)
+is_retry_over(st_cloud_context_t *context)
 {
-  if (strncmp(oc_string(context->auth_provider), AUTH_PROVIDER_STCLOUD,
-              strlen(AUTH_PROVIDER_STCLOUD)) == 0) {
-    es_set_state(ES_STATE_REGISTERING_TO_CLOUD);
-    st_print_log("[Cloud_Access] auth_provider : %s\n",
-                 oc_string(context->auth_provider));
-    st_print_log("[Cloud_Access] uid : %s\n", oc_string(context->uid));
-    st_print_log("[Cloud_Access] access_token : %s\n",
-                 oc_string(context->access_token));
-    if (!oc_sign_up(&context->cloud_ep, oc_string(context->auth_provider),
-                    oc_string(context->uid), oc_string(context->access_token),
-                    context->device_index, sign_up_handler, context)) {
-      goto retry;
-    }
-  } else {
-    st_print_log("sign_up_process: oc_sign_up failed!\n");
+  if (context->retry_count < MAX_RETRY_COUNT)
     return false;
-  }
-  st_print_log("sign_up_process: success\n");
-  return true;
 
-retry:
-  if (context->retry_count == 0) {
-    oc_set_delayed_callback(context, re_sign_up, RETRY_INTERVAL);
-    _oc_signal_event_loop();
-  }
-  st_print_log("sign_up_process: attempting retry\n");
-  return true;
-}
-
-static oc_event_callback_retval_t
-re_sign_in(void *data)
-{
-  st_cloud_context_t *context = (st_cloud_context_t *)data;
-
-  if (context->retry_count < LIMIT_RETRY_SIGNING) {
-    st_print_log("[Cloud_Access] sign in(%d) with\n", context->retry_count);
-    st_print_log("[Cloud_Access]  - uid: %s\n", oc_string(context->uid));
-    st_print_log("[Cloud_Access]  - accesstoken: %s\n",
-                 oc_string(context->access_token));
-    oc_sign_in(&context->cloud_ep, oc_string(context->uid),
-               oc_string(context->access_token), 0, sign_in_handler, context);
-    context->retry_count++;
-    return OC_EVENT_CONTINUE;
-  }
-  st_print_log("[Cloud_Access] retry sign-in count over\n");
-
-  // TODO : right error handling.
   context->cloud_access_status = CLOUD_ACCESS_FAIL;
   es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
   oc_set_delayed_callback(context, callback_handler, 0);
-  return OC_EVENT_DONE;
+  return true;
 }
 
 static void
-session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
+error_handler(oc_client_response_t *data, oc_trigger_t callback)
 {
-  st_print_log("st_cloud_context_list size : %d\n",
-               oc_list_length(st_cloud_context_list));
-  st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
-  while (context != NULL && context->device_index != endpoint->device) {
-    context = context->next;
-  }
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  if (context->retry_count < MAX_RETRY_COUNT - 1)
+    return;
 
-  if (context) {
-    if (state == OC_SESSION_CONNECTED) {
-      st_print_log("[Cloud_Access] session connected.(%d)\n",
-                   context->cloud_access_status);
-      if (context->cloud_access_status == CLOUD_ACCESS_DISCONNECTED) {
-        context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
-      }
-    } else if (state == OC_SESSION_DISCONNECTED) {
-      st_print_log("[Cloud_Access] session disconnected.(%d)\n",
-                   context->cloud_access_status);
-      if (context->cloud_access_status == CLOUD_ACCESS_INITIALIZE) {
-        if (context->retry_count == 0) {
-          oc_set_delayed_callback(context, re_sign_up, RETRY_INTERVAL);
-        }
-      } else {
-        if (context->cloud_access_status == CLOUD_ACCESS_FINISH) {
-          context->cloud_access_status = CLOUD_ACCESS_DISCONNECTED;
-        }
-        if (context->retry_count == 0) {
-          oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
-        }
-      }
-    }
-  }
+  oc_remove_delayed_callback(context, callback);
+  context->cloud_access_status = CLOUD_ACCESS_FAIL;
+  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
+  oc_set_delayed_callback(context, callback_handler, 0);
 }
 
 static bool
-is_resource_publish_finish(st_cloud_context_t *context)
+cloud_start_process(st_cloud_context_t *context)
 {
-  if (context->publish_state & PUBLISH_RESOURCE &&
-      context->publish_state & PUBLISH_DEV_PROFILE) {
-    return true;
-  }
-  return false;
-}
+  es_set_state(ES_STATE_REGISTERING_TO_CLOUD);
+  st_print_log("[Cloud_Access] uid : %s\n", oc_string(context->uid));
+  st_print_log("[Cloud_Access] access_token : %s\n",
+               oc_string(context->access_token));
 
-static void
-common_publish_handler(oc_client_response_t *data, publish_state_t state)
-{
-  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
-
-  if (data->code == OC_STATUS_CHANGED) {
-    st_print_log("[Cloud_Access] %s publish success.\n",
-                 state == PUBLISH_RESOURCE ? "resource" : "dev profile");
-    context->publish_state |= state;
-    if (is_resource_publish_finish(context)) {
-      context->cloud_access_status = CLOUD_ACCESS_PUBLISHED;
-      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, find_ping, 0);
-    }
+  if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING ||
+      context->cloud_access_status == CLOUD_ACCESS_SIGNED_UP) {
+    oc_set_delayed_callback(context, sign_in, session_timeout[0]);
   } else {
-    st_print_log("[Cloud_Access] %s publish failed(%d)!!\n",
-                 state == PUBLISH_RESOURCE ? "resouce" : "dev profile",
-                 data->code);
-    if (context->cloud_access_status != CLOUD_ACCESS_FAIL) {
-      // TODO : re-publish?
-      context->cloud_access_status = CLOUD_ACCESS_FAIL;
-      es_set_state(ES_STATE_FAILED_TO_PUBLISH_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, callback_handler, 0);
-    }
+    oc_set_delayed_callback(context, sign_up, session_timeout[0]);
   }
-}
+  _oc_signal_event_loop();
 
-static void
-resource_publish_handler(oc_client_response_t *data)
-{
-  common_publish_handler(data, PUBLISH_RESOURCE);
-}
-
-static void
-dev_profile_publish_handler(oc_client_response_t *data)
-{
-  common_publish_handler(data, PUBLISH_DEV_PROFILE);
-}
-
-static void
-sign_in_handler(oc_client_response_t *data)
-{
-  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
-
-  if (data->code == OC_STATUS_CHANGED) {
-    if (context->retry_count > 0) {
-      oc_remove_delayed_callback(context, re_sign_in);
-      context->retry_count = 0;
-    }
-
-    if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING) {
-      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, find_ping, 0);
-    } else if (context->cloud_access_status == CLOUD_ACCESS_SIGNED_UP) {
-      st_print_log("[Cloud_Access] sign in success.\n");
-      es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
-      context->publish_state = 0;
-
-      st_print_log("[Cloud_Access] Resource publish start.\n");
-      rd_publish_all(&context->cloud_ep, context->device_index,
-                     resource_publish_handler, LOW_QOS, context);
-
-      st_print_log("[Cloud_Access] Set device profile start.\n");
-      oc_set_device_profile(&context->cloud_ep, dev_profile_publish_handler,
-                            context);
-    }
-  } else {
-    st_print_log("[Cloud_Access] Sign in failed!!\n");
-    es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-    if (context->retry_count == 0) {
-      oc_set_delayed_callback(context, re_sign_in, RETRY_INTERVAL);
-    }
-  }
+  return true;
 }
 
 static void
 sign_up_handler(oc_client_response_t *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] sign up handler(%d)\n", data->code);
 
-  if (data->code == OC_STATUS_CHANGED) {
-    st_print_log("[Cloud_Access] sign up success.\n");
-    oc_rep_t *rep = data->payload;
-    while (rep != NULL) {
-      st_print_log("[Cloud_Access]  - %s: ", oc_string(rep->name));
-      switch (rep->type) {
-      case OC_REP_BOOL:
-        st_print_log("%d\n", rep->value.boolean);
-        break;
-      case OC_REP_INT:
-        st_print_log("%d\n", rep->value.integer);
-        break;
-      case OC_REP_STRING:
-        st_print_log("%s\n", oc_string(rep->value.string));
-        if (strncmp(UID_KEY, oc_string(rep->name), oc_string_len(rep->name)) ==
-            0) {
-          if (!oc_string(context->uid)) {
-            oc_new_string(&context->uid, oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          } else {
-            if (oc_string_len(context->uid) !=
-                  oc_string_len(rep->value.string) ||
-                strncmp(oc_string(context->uid), oc_string(rep->value.string),
-                        oc_string_len(context->uid)) != 0) {
-              st_print_log("[Cloud_Access] different uid from cloud.\n");
-              goto error;
-            }
-          }
-        } else if (strncmp(ACCESS_TOKEN_KEY, oc_string(rep->name),
-                           oc_string_len(rep->name)) == 0) {
-          if (!oc_string(context->access_token)) {
-            oc_new_string(&context->access_token, oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          } else {
-            oc_free_string(&context->access_token);
-            oc_new_string(&context->access_token, oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
-        } else if (strncmp(REDIRECTURI_KEY, oc_string(rep->name),
-                           oc_string_len(rep->name)) == 0) {
-          if (oc_string_to_endpoint(&rep->value.string, &context->cloud_ep,
-                                    NULL) != 0) {
-            st_print_log("[Cloud_Access] invalid redirect server address.\n");
-            goto error;
-          }
-        }
-        break;
-      default:
-        st_print_log("NULL\n");
-        break;
-      }
-      rep = rep->next;
-    }
+  if (data->code != OC_STATUS_CHANGED) {
+    goto error;
+  }
 
-    if (oc_string_len(context->uid) > 0 &&
-        oc_string_len(context->access_token) > 0) {
-      context->cloud_access_status = CLOUD_ACCESS_SIGNED_UP;
-      if (context->retry_count > 0) {
-        oc_remove_delayed_callback(context, re_sign_up);
-        context->retry_count = 0;
-      }
-      es_set_state(ES_STATE_REGISTERED_TO_CLOUD);
+  oc_rep_t *rep = data->payload;
+  char *value = NULL;
+  int size;
+  if (oc_rep_get_string(rep, UID_KEY, &value, &size)) {
+    if (!oc_string(context->uid)) {
+      oc_new_string(&context->uid, value, size);
     } else {
-      goto error;
-    }
-  } else {
-    st_print_log("[Cloud_Access] Sign up failed!!\n");
-    es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-    if (context->retry_count == 0) {
-      oc_set_delayed_callback(context, re_sign_up, RETRY_INTERVAL);
+      if ((int)oc_string_len(context->uid) != size ||
+          strncmp(oc_string(context->uid), value, size) != 0) {
+        st_print_log("[Cloud_Access] different uid from cloud.\n");
+        goto error;
+      }
     }
   }
+  if (oc_rep_get_string(rep, ACCESS_TOKEN_KEY, &value, &size)) {
+    if (oc_string_len(context->access_token) > 0)
+      oc_free_string(&context->access_token);
+    oc_new_string(&context->access_token, value, size);
+  }
+  if (oc_rep_get_string(rep, REDIRECTURI_KEY, &value, &size)) {
+    oc_string_t re_uri;
+    oc_new_string(&re_uri, value, size);
+    int ret = oc_string_to_endpoint(&re_uri, &context->cloud_ep, NULL);
+    oc_free_string(&re_uri);
+
+    if (ret != 0) {
+      st_print_log("[Cloud_Access] invalid redirect server address.\n");
+      goto error;
+    }
+  }
+
+  if (oc_string_len(context->uid) == 0 ||
+      oc_string_len(context->access_token) == 0) {
+    goto error;
+  }
+
+  oc_remove_delayed_callback(context, sign_up);
+  context->retry_count = 0;
+  context->cloud_access_status = CLOUD_ACCESS_SIGNED_UP;
+  es_set_state(ES_STATE_REGISTERED_TO_CLOUD);
+  st_dump();
 
   return;
 
 error:
-  context->cloud_access_status = CLOUD_ACCESS_FAIL;
-  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-  oc_set_delayed_callback(context, callback_handler, 0);
+  error_handler(data, sign_up);
+}
+
+static oc_event_callback_retval_t
+sign_up(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try sign up(%d)\n", context->retry_count++);
+
+  if (!is_retry_over(context)) {
+    oc_sign_up(&context->cloud_ep, oc_string(context->auth_provider),
+               oc_string(context->uid), oc_string(context->access_token),
+               context->device_index, sign_up_handler, context);
+    oc_set_delayed_callback(context, sign_up,
+                            session_timeout[context->retry_count]);
+  }
+
+  return OC_EVENT_DONE;
 }
 
 static void
-send_ping_handler(oc_client_response_t *data)
+sign_in_handler(oc_client_response_t *data)
 {
-  if (data->code != OC_STATUS_NOT_MODIFIED) {
-    st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
-    context->cloud_access_status = CLOUD_ACCESS_FAIL;
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] sign in handler(%d)\n", data->code);
+
+  if (data->code == OC_STATUS_CHANGED) {
+    oc_remove_delayed_callback(context, sign_in);
+    context->retry_count = 0;
+
+    if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING) {
+      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
+      oc_set_delayed_callback(context, find_ping,
+                              message_timeout[context->retry_count]);
+    } else {
+      es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
+      oc_set_delayed_callback(context, set_dev_profile,
+                              message_timeout[context->retry_count]);
+    }
+    context->cloud_access_status = CLOUD_ACCESS_SIGNED_IN;
+  } else {
+    int code;
+    if (oc_rep_get_int(data->payload, "code", &code)) {
+      if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
+        context->retry_count = 0;
+        oc_set_delayed_callback(context, refresh_token,
+                                session_timeout[context->retry_count]);
+      }
+    } else {
+      error_handler(data, sign_in);
+    }
   }
 }
 
 static oc_event_callback_retval_t
-send_ping(void *data)
+sign_in(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  if (CLOUD_ACCESS_FAIL == context->cloud_access_status)
-    return OC_EVENT_DONE;
+  st_print_log("[Cloud_Access] try sign in(%d)\n", context->retry_count++);
 
-  st_print_log("[Cloud_Access] Send ping request.\n");
-  if (oc_send_ping_request(&context->cloud_ep, 8, send_ping_handler, context))
-    return OC_EVENT_CONTINUE;
+  if (!is_retry_over(context)) {
+    oc_sign_in(&context->cloud_ep, oc_string(context->uid),
+               oc_string(context->access_token), 0, sign_in_handler, context);
+    oc_set_delayed_callback(context, sign_in,
+                            session_timeout[context->retry_count]);
+  }
+
+  return OC_EVENT_DONE;
+}
+
+static void
+refresh_token_handler(oc_client_response_t *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] refresh token handler(%d)\n", data->code);
+
+  if (data->code != OC_STATUS_CHANGED)
+    goto error;
+
+  char *value = NULL;
+  int size;
+  if (oc_rep_get_string(data->payload, ACCESS_TOKEN_KEY, &value, &size)) {
+    if (oc_string_len(context->access_token) > 0)
+      oc_free_string(&context->access_token);
+    oc_new_string(&context->access_token, value, size);
+  }
+  if (oc_rep_get_string(data->payload, REFRESH_TOKEN_KEY, &value, &size)) {
+    if (oc_string_len(context->refresh_token) > 0)
+      oc_free_string(&context->refresh_token);
+    oc_new_string(&context->refresh_token, value, size);
+  }
+  if (oc_string_len(context->access_token) == 0 ||
+      oc_string_len(context->refresh_token) == 0)
+    goto error;
+
+  oc_remove_delayed_callback(context, refresh_token);
+  context->retry_count = 0;
+  oc_set_delayed_callback(context, sign_in,
+                          session_timeout[context->retry_count]);
+  st_dump();
+
+  return;
+
+error:
+  error_handler(data, refresh_token);
+}
+
+static oc_event_callback_retval_t
+refresh_token(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try refresh token(%d)\n",
+               context->retry_count++);
+
+  if (!is_retry_over(context)) {
+    oc_refresh_access_token(&context->cloud_ep, oc_string(context->uid),
+                            oc_string(context->refresh_token),
+                            context->device_index, refresh_token_handler,
+                            context);
+    oc_set_delayed_callback(context, refresh_token,
+                            session_timeout[context->retry_count]);
+  }
+
+  return OC_EVENT_DONE;
+}
+
+static void
+set_dev_profile_handler(oc_client_response_t *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] set dev profile handler(%d)\n", data->code);
+
+  if (data->code == OC_STATUS_CHANGED) {
+    oc_remove_delayed_callback(context, set_dev_profile);
+    context->retry_count = 0;
+    oc_set_delayed_callback(context, publish_resource,
+                            message_timeout[context->retry_count]);
+  } else {
+    error_handler(data, set_dev_profile);
+  }
+}
+
+static oc_event_callback_retval_t
+set_dev_profile(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try set dev profile(%d)\n",
+               context->retry_count++);
+
+  if (!is_retry_over(context)) {
+    oc_set_device_profile(&context->cloud_ep, set_dev_profile_handler, context);
+    oc_set_delayed_callback(context, set_dev_profile,
+                            message_timeout[context->retry_count]);
+  }
+
+  return OC_EVENT_DONE;
+}
+
+static void
+publish_resource_handler(oc_client_response_t *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] publish resource handler(%d)\n", data->code);
+
+  if (data->code == OC_STATUS_CHANGED) {
+    oc_remove_delayed_callback(context, publish_resource);
+    context->retry_count = 0;
+    context->cloud_access_status = CLOUD_ACCESS_PUBLISHED;
+    es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
+    oc_set_delayed_callback(context, find_ping,
+                            message_timeout[context->retry_count]);
+    st_dump();
+  } else {
+    error_handler(data, publish_resource);
+  }
+}
+
+static oc_event_callback_retval_t
+publish_resource(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try publish resource(%d)\n",
+               context->retry_count++);
+
+  if (!is_retry_over(context)) {
+    rd_publish_all(&context->cloud_ep, context->device_index,
+                   publish_resource_handler, LOW_QOS, context);
+    oc_set_delayed_callback(context, publish_resource,
+                            message_timeout[context->retry_count]);
+  }
 
   return OC_EVENT_DONE;
 }
@@ -541,11 +510,23 @@ send_ping(void *data)
 static void
 find_ping_handler(oc_client_response_t *data)
 {
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] find ping handler(%d)\n", data->code);
+
   if (data->code == OC_STATUS_OK) {
-    st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+    oc_remove_delayed_callback(context, find_ping);
+    context->retry_count = 0;
     context->cloud_access_status = CLOUD_ACCESS_FINISH;
+
+    int *interval = NULL, size;
+    oc_rep_get_int_array(data->payload, "inarray", &interval, &size);
+    if (interval)
+      ping_interval = interval[size - 1];
     oc_set_delayed_callback(context, callback_handler, 0);
-    oc_set_delayed_callback(context, send_ping, 50);
+    oc_set_delayed_callback(context, send_ping,
+                            message_timeout[context->retry_count]);
+  } else {
+    error_handler(data, find_ping);
   }
 }
 
@@ -553,11 +534,49 @@ static oc_event_callback_retval_t
 find_ping(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try find ping(%d)\n", context->retry_count++);
 
-  if (CLOUD_ACCESS_PUBLISHED == context->cloud_access_status ||
-      CLOUD_ACCESS_RE_CONNECTING == context->cloud_access_status) {
-    st_print_log("[Cloud_Access] Find ping resource.\n");
-    oc_find_ping_resource(&context->cloud_ep, find_ping_handler, context);
+  if (!is_retry_over(context)) {
+    if (context->cloud_access_status == CLOUD_ACCESS_SIGNED_IN ||
+        context->cloud_access_status == CLOUD_ACCESS_PUBLISHED) {
+      oc_find_ping_resource(&context->cloud_ep, find_ping_handler, context);
+      oc_set_delayed_callback(context, find_ping,
+                              message_timeout[context->retry_count]);
+    }
   }
+
+  return OC_EVENT_DONE;
+}
+
+static void
+send_ping_handler(oc_client_response_t *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  st_print_log("[Cloud_Access] send ping handler(%d)\n", data->code);
+
+  if (data->code == OC_STATUS_NOT_MODIFIED) {
+    oc_remove_delayed_callback(context, send_ping);
+    context->retry_count = 0;
+    oc_set_delayed_callback(context, send_ping, ping_interval * ONE_MINUTE);
+  } else {
+    error_handler(data, send_ping);
+  }
+}
+
+static oc_event_callback_retval_t
+send_ping(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  st_print_log("[Cloud_Access] try send ping(%d)\n", context->retry_count++);
+
+  if (!is_retry_over(context)) {
+    if (context->cloud_access_status == CLOUD_ACCESS_FINISH) {
+      oc_send_ping_request(&context->cloud_ep, ping_interval, send_ping_handler,
+                           context);
+      oc_set_delayed_callback(context, send_ping,
+                              message_timeout[context->retry_count]);
+    }
+  }
+
   return OC_EVENT_DONE;
 }
