@@ -352,6 +352,7 @@ ifneq ($(AUTH_OPTION),0)
 	cp ../../apps/cloud_linux_cred $@_creds/cred_0
 endif
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
+			../../apps/st_app/json_builder/*.c ../../deps/json/cJSON.c -I../../deps -I ../../apps/st_app/json_builder/ \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
 
