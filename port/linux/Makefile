@@ -344,9 +344,13 @@ client_multithread_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
+json_to_header:
+	${ROOT_DIR}/apps/st_app/json_builder/json_to_header.sh
+
+st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a json_to_header
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
+			../../apps/st_app/json_builder/*.c ../../deps/json/cJSON.c -I../../deps -I ../../apps/st_app/json_builder/ \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
 
