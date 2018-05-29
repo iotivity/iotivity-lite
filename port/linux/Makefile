@@ -342,7 +342,7 @@ client_multithread_linux: libiotivity-constrained-client.a
 st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
 	cp ../../apps/cloud_linux_cred $@_creds/cred_0
-	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
+	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/json_builder/*.c ../../apps/st_app/linux/*.c  ../../deps/json/cJSON.c -I../../deps -I ../../apps/st_app/json_builder/ \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
 
