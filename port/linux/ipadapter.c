@@ -1386,7 +1386,7 @@ oc_get_mac_addr(unsigned char* mac)
 
     if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
       struct sockaddr_ll *addr = (struct sockaddr_ll *)(ifa->ifa_addr);
-      memcpy(mac, addr->sll_addr, sizeof(mac));
+      memcpy(mac, addr->sll_addr, OC_MAC_SIZE);
       break;
     }
   }
