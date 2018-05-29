@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_d1045017",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-29T09:08:55Z",
+      "side": 1,
+      "message": "or: may I suggest that we put out prefix at beggining:\n\nout.*.massif.log.txt could be fine",
+      "range": {
+        "startLine": 53,
+        "startChar": 12,
+        "endLine": 53,
+        "endChar": 55
+      },
+      "revId": "0e9b9710123e707c719c1ca65ce441db309cfeff",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f1ffd4ff",
+        "filename": "tests/port/linux/test-runner.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-29T09:08:55Z",
+      "side": 1,
+      "message": "if [ \"${TEST_RUN}\" \u003d \"0\" ]\nis safer",
+      "range": {
+        "startLine": 54,
+        "startChar": 17,
+        "endLine": 54,
+        "endChar": 19
+      },
+      "revId": "0e9b9710123e707c719c1ca65ce441db309cfeff",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
