@@ -21,19 +21,12 @@
 #include "samsung/sc_easysetup.h"
 #include "st_port.h"
 #include "st_process.h"
+//Sushil
+#include "st_json_parser.h"
+#include "port/oc_assert.h"
 
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;
-
-static const char *switch_rsc_uri = "/capability/switch/main/0";
-static const int switch_rt_num = 1;
-static const char *switch_rsc_rt[1] = { "x.com.st.powerswitch" };
-static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
-static const int switchleve_rt_num = 1;
-static const char *switchlevel_rsc_rt[1] = { "oic.r.light.dimming" };
-static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
-static const int color_temp_rt_num = 1;
-static const char *color_temp_rsc_rt[1] = { "x.com.st.color.temperature" };
 
 static int device_index = 0;
 
@@ -94,7 +87,8 @@ st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 
 static void
 st_register_resource(const char *uri, const char **rt, int rt_num,
-                     uint8_t interface, uint8_t default_interface, int device)
+                     uint8_t interface, uint8_t default_interface,
+                     bool discoverable, bool observable, int device)
 {
   st_print_log("uri : %s\n", uri);
   oc_resource_t *resource = oc_new_resource(NULL, uri, rt_num, device);
@@ -107,8 +101,8 @@ st_register_resource(const char *uri, const char **rt, int rt_num,
   oc_resource_bind_resource_interface(resource, interface);
   st_print_log("default_interface : %d\n", default_interface);
   oc_resource_set_default_interface(resource, default_interface);
-  oc_resource_set_discoverable(resource, true);
-  oc_resource_set_observable(resource, true);
+  oc_resource_set_discoverable(resource, discoverable);
+  oc_resource_set_observable(resource, observable);
   oc_resource_set_request_handler(resource, OC_GET, st_resource_get_handler,
                                   NULL);
   oc_resource_set_request_handler(resource, OC_POST, st_resource_post_handler,
@@ -116,17 +110,53 @@ st_register_resource(const char *uri, const char **rt, int rt_num,
   oc_add_resource(resource);
 }
 
+struct if_types_to_mask_s{
+  const char *if_type;
+  const int if_type_len;
+  const oc_interface_mask_t if_mask;
+};
+
+static const int k_if_mask_map_count = 7;
+static struct if_types_to_mask_s if_mask_map[] = {
+  {"oic.if.baseline", sizeof("oic.if.baseline"), OC_IF_BASELINE},
+  {"oic.if.ll", sizeof("oic.if.ll"), OC_IF_LL},
+  {"oic.if.b", sizeof("oic.if.b"), OC_IF_B},
+  {"oic.if.r", sizeof("oic.if.r"), OC_IF_R},
+  {"oic.if.rw", sizeof("oic.if.rw"), OC_IF_RW},
+  {"oic.if.a", sizeof("oic.if.a"), OC_IF_A},
+  {"oic.if.s", sizeof("oic.if.s"), OC_IF_S},
+};
+
+static oc_interface_mask_t if_types_to_if_mask(char **if_types, int if_cnt){
+  oc_interface_mask_t  mask = 0;
+  for(int i = 0; i < if_cnt; ++i){
+    for(int j = 0; j < k_if_mask_map_count; ++j){
+      if(!(mask & if_mask_map[j].if_mask) &&
+          0 == strncmp(if_types[i],if_mask_map[j].if_type,if_mask_map[j].if_type_len)) {
+        mask |= if_mask_map[j].if_mask;
+      }
+
+    }
+  }
+  return mask;
+}
+
 void
 st_register_resources(int device)
 {
-  st_register_resource(switch_rsc_uri, switch_rsc_rt, switch_rt_num,
-                       OC_IF_A | OC_IF_BASELINE, OC_IF_A, device);
+  st_device_s *d = st_manager_json_get_device(device);
+  oc_assert(d != NULL);
+  oc_assert(d->single != NULL);
+  oc_assert(d->sig_cnt > 0);
 
-  st_register_resource(switchlevel_rsc_uri, switchlevel_rsc_rt,
-                       switchleve_rt_num, OC_IF_A, OC_IF_A, device);
+  for(int i = 0; i < d->sig_cnt; ++i){
+    things_resource_info_s *r = &d->single[i];
+    oc_interface_mask_t mask = if_types_to_if_mask(r->interface_types, r->if_cnt);
+    bool discoverable = (r->policy & 0x1 ? true: false);
+    bool observable   = (r->policy & 0x2 ? true: false);
 
-  st_register_resource(color_temp_rsc_uri, color_temp_rsc_rt, color_temp_rt_num,
-                       OC_IF_A | OC_IF_S | OC_IF_BASELINE, OC_IF_A, device);
+    st_register_resource(r->uri, (const char**)r->resource_types, r->rt_cnt, mask, OC_IF_A, discoverable, observable, device);
+  }
 
   init_provisioning_info_resource(NULL);
 
