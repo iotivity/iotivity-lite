@@ -24,7 +24,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 GTEST = gtest_build
 GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
-TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT -fprofile-arcs -ftest-coverage
 HEADER_DIR = $(ROOT_DIR)/include
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
