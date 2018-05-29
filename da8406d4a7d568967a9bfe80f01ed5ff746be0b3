@@ -144,6 +144,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e6639818",
+        "filename": "port/oc_connectivity.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-29T02:14:25Z",
+      "side": 1,
+      "message": "I understand your idea.\nBut I have one concern about that. this change is because when send function is failed, tls peer need to be free (especially handshake step). That means when send fail, mbedtls_ssl_read return minus value. As you can see in oc_tls line 951~975 return 0 is not going to free peer buffer. Then when application retry some message send, this will stuck in handshake step.\nIs it okay to let this happen remain?\n\nIf this is fine, I will change to return value to 0 when error occur.",
+      "parentUuid": "da33351e_4610844e",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4637e4e3",
         "filename": "port/openthread/ipadapter.c",
         "patchSetId": 1
