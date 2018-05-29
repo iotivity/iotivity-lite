@@ -18,7 +18,7 @@
 #}
 
 port?=linux
-srcs?=$(wildcard *.c ${port}/*.c)
+srcs?=$(wildcard *.c ${port}/*.c json_builder/*.c ../../deps/json/cJSON.c)
 objs?=${srcs:.c=.o}
 topdir?=../..
 
@@ -30,8 +30,13 @@ CFLAGS+=-I${topdir}/service/easy-setup/enrollee/include
 CFLAGS+=-I${topdir}/service/cloud-access/include
 CFLAGS+=-I${topdir}/service/resource-directory/client/include
 CFLAGS+=-I${topdir}/service/easy-setup/enrollee/include/samsung
+CFLAGS+=-I${topdir}/apps/st_app/json_builder
+CFLAGS+=-I${topdir}/deps
 
-all: ${objs}
+json_to_header:
+	${topdir}/apps/st_app/json_builder/json_to_header.sh
+
+all: json_to_header ${objs}
 	ls $<
 
 clean:

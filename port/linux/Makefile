@@ -174,6 +174,15 @@ ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DST_OC_CON_RES_OPT
 endif
 
+ifeq ($(JSON),1)
+	JSON_CFLAGS += -DJSON_ENABLED
+	JSON_INCLUDES += -I../../deps
+	JSON_INCLUDES += -I ../../apps/st_app/json_builder/
+	JSON_FILES += ../../apps/st_app/json_builder/*.c
+	JSON_FILES += ../../deps/json/cJSON.c
+	JSON_TO_HEADER_DEPS += json_to_header
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
@@ -353,9 +362,13 @@ client_multithread_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
+json_to_header:
+	${ROOT_DIR}/apps/st_app/json_builder/json_to_header.sh
+
+st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a ${JSON_TO_HEADER_DEPS}
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
+		${JSON_CFLAGS} ${JSON_INCLUDES} ${JSON_FILES} \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
 
