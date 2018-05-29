@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_110fd831",
+        "filename": "tests/port/linux/configFile.txt",
+        "patchSetId": 15
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-05-29T09:14:06Z",
+      "side": 1,
+      "message": "why not turn it on now ?\n\nI didnt see that out.* files \nat:\n\nhttps://jenkins.iotivity.org/job/iotivity-constrained-verify-linux_test/815/consoleText",
+      "revId": "0e9b9710123e707c719c1ca65ce441db309cfeff",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_d1045017",
         "filename": "tests/port/linux/memory_profile.sh",
         "patchSetId": 15
