@@ -37,6 +37,10 @@ static int dimming_step = 5;
 static int ct = 50;
 static int ct_range[2] = { 0, 100 };
 
+//Forward declaration
+int st_manager_json_initialize(void);
+void st_manager_json_deinitialize(void);
+
 static void
 switch_resource_construct(void)
 {
@@ -162,11 +166,17 @@ main(void)
   st_register_resource_handler(get_resource_handler, set_resource_handler);
   st_register_otm_confirm_handler(otm_confirm_handler);
 
+  int line_failed;
+  if ((line_failed = st_manager_json_initialize()) != 0){
+    st_print_log("[ST_APP] st_manager_json_initialize failed at line = %d.\n",line_failed);
+  }
+
   if (st_manager_start() != 0) {
     st_print_log("[ST_APP] st_manager_start failed.\n");
   }
 
   st_manager_stop();
   st_manager_deinitialize();
+  st_manager_json_deinitialize();
   return 0;
 }
