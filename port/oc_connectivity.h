@@ -78,6 +78,8 @@ enum
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#define OC_MAC_SIZE 6
+
 struct oc_message_s
 {
   struct oc_message_s *next;

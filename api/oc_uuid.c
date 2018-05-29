@@ -130,7 +130,7 @@ oc_gen_uuid(oc_uuid_t *uuid)
 void
 oc_gen_uuid_from_mac(oc_uuid_t *uuid)
 {
-  unsigned char mac[6] = {0};
+  unsigned char mac[OC_MAC_SIZE] = {0};
   unsigned char hash[32] = {0};
   if (!uuid || !oc_get_mac_addr(mac))
    return;
