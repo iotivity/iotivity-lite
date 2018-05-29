@@ -1382,7 +1382,7 @@ oc_domain_to_ip(const char *domain, oc_string_t *ip)
 }
 
 bool
-oc_get_mac_addr(unsigned char* mac)
+oc_get_mac_addr(unsigned char mac[6])
 {
     //WiFiGetMac(mac);
     mac[0] = 0x28;

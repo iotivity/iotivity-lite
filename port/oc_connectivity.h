@@ -107,7 +107,7 @@ void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 bool oc_domain_to_ip(const char *domain, oc_string_t *ip);
 
-bool oc_get_mac_addr(unsigned char* mac);
+bool oc_get_mac_addr(unsigned char mac[6]);
 
 oc_endpoint_t *oc_connectivity_get_endpoints(int device);
 
