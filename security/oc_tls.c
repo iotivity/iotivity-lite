@@ -77,15 +77,20 @@ static mbedtls_ssl_config client_conf_tls[1];
 static mbedtls_ssl_config client_conf[1];
 #endif /* OC_CLIENT */
 #define PERSONALIZATION_STR "IoTivity-Constrained"
-static const int ciphers[4] = {MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+static const int ciphers[5] = {MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
                                MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
                                MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+                               MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
                                0};
+
 #ifdef OC_CLIENT
-static const int anon_ciphers[4] = {
+static const int anon_ciphers[5] = {
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
     MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8, 0};
+    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
+    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+    0};
+
 #endif /* OC_CLIENT */
 
 #ifdef OC_DEBUG
@@ -634,6 +639,12 @@ oc_sec_load_certs(int device)
           OC_DBG("oc_tls: mfgtrustca loaded ");
         }
         mbedtls_ssl_conf_ca_chain(&server_conf[i], cacert, NULL);
+#ifdef OC_CLIENT
+#ifdef OC_TCP
+        mbedtls_ssl_conf_ca_chain(&client_conf_tls[0], cacert, NULL);
+#endif /* OC_TCP */
+        mbedtls_ssl_conf_ca_chain(&client_conf[0], cacert, NULL);
+#endif /* OC_CLIENT */
       }
       if (c->mfgkeylen != 0) {
         ret =  mbedtls_pk_parse_key(pkey, (const unsigned char *) c->mfgkey,
@@ -657,6 +668,12 @@ oc_sec_load_certs(int device)
             OC_DBG("oc_tls: mfgowncert loaded ");
           }
           ret = mbedtls_ssl_conf_own_cert(&server_conf[i], owncert, pkey);
+#ifdef OC_CLIENT
+#ifdef OC_TCP
+          ret = mbedtls_ssl_conf_own_cert(&client_conf_tls[0], owncert, pkey);
+#endif /* OC_TCP */
+          ret = mbedtls_ssl_conf_own_cert(&client_conf[0], owncert, pkey);
+#endif /* OC_CLIENT */
           if( ret < 0 )
           {
               OC_ERR( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
@@ -696,6 +713,12 @@ oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
       OC_DBG("oc_tls: trust ca cert loaded ");
     }
     mbedtls_ssl_conf_ca_chain(&server_conf[i], ca_crt, NULL);
+#ifdef OC_CLIENT
+#ifdef OC_TCP
+    mbedtls_ssl_conf_ca_chain(&client_conf_tls[0], ca_crt, NULL);
+#endif /* OC_TCP */
+    mbedtls_ssl_conf_ca_chain(&client_conf[0], ca_crt, NULL);
+#endif /* OC_CLIENT */
   }
   return true;
 tls_load_ca_cert_err:
