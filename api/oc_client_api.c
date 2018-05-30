@@ -318,7 +318,7 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
 
   return status;
 }
-
+#ifndef ST_APP_OPTIMIZATION
 #ifdef OC_IPV4
 static bool
 oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb,
@@ -421,7 +421,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 {
   return dispatch_ip_discovery(rt, handler, endpoint, user_data) ? true : false;
 }
-
+#endif /* ST_APP SPECIFIC */
 void
 oc_close_session(oc_endpoint_t *endpoint)
 {

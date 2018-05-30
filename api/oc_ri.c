@@ -848,6 +848,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  * internal handler for collections.
  */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#ifndef OC_SPEC_VER_OIC
       if (resource_is_collection) {
         if (endpoint->version == OIC_VER_1_1_0) {
           oc_handle_oic_1_1_collection_request(method, &request_obj, interface);
@@ -855,6 +856,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
           oc_handle_collection_request(method, &request_obj, interface);
         }
       } else
+#else
+      if (resource_is_collection) {
+        oc_handle_oic_1_1_collection_request(method, &request_obj, interface);
+      } else
+#endif
 #endif  /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
          * its handler for the requested method. If it has not
@@ -1208,6 +1214,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     }
 #endif /* OC_SPEC_VER_OIC */
     if (cb->discovery) {
+#ifndef ST_APP_OPTIMIZATION
       if (oc_ri_process_discovery_payload(payload, payload_len,
                                           cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
@@ -1225,6 +1232,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
         return true;
       }
+#endif /* ST_APP SPECIFIC */
     } else {
       int err = oc_parse_rep(payload, payload_len, &client_response.payload);
       if (err == 0) {
