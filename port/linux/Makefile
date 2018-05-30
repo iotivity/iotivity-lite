@@ -316,6 +316,7 @@ ${OBT}: libiotivity-constrained-client.a
 
 cloud_linux: libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
+	cp ../../apps/cloud_linux_cred $@_creds/cred_0
 	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${LIBS}
 
 server_multithread_linux: libiotivity-constrained-server.a
@@ -328,6 +329,7 @@ client_multithread_linux: libiotivity-constrained-client.a
 
 st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
+	cp ../../apps/cloud_linux_cred $@_creds/cred_0
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
