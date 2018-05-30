@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d1cc5038",
+        "filename": "apps/st_app/st_cloud_access.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:16:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_11d0784f",
+      "range": {
+        "startLine": 291,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 56
+      },
+      "revId": "2af3c60eb37754fdc6254add62a24c8e743caa06",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_31cbfca6",
         "filename": "apps/st_app/st_cloud_access.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-05-29T14:31:10Z",
       "side": 1,
       "message": "I think if ( retry){} else{} logic is repeated for every cloud access functions.\nSo, how about make check RETRY_LIMIT check function and if not excute normal logic like below.\n\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\nstatic bool\nst_check_retry_limit_over(st_cloud_contex_t *context)\n{\n  if (context-\u003eretry_count \u003e\u003d MAX_RETRY_COUNT) {\n    context-\u003ecloud_access_status \u003d CLOUD_ACCESS_FAIL;\n    es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);\n    oc_set_delayed_callback(context, callback_handler, 0);\n    return true;\n  }\n\n  return false;\n}\n\n\nAnd sign_up example\n\n\nstatic oc_event_callback_retval_t\nsign_up(void *data)\n{\n  st_cloud_context_t *context \u003d (st_cloud_context_t *)data;\n  st_print_log(\"[Cloud_Access] try sign up(%d)\\n\", context-\u003eretry_count++);\n\n  if (!st_check_retry_limit_over(context)) {\n    oc_sign_up(\u0026context-\u003ecloud_ep, oc_string(context-\u003eauth_provider),\n               oc_string(context-\u003euid), oc_string(context-\u003eaccess_token),\n               context-\u003edevice_index, sign_up_handler, context);\n    oc_set_delayed_callback(context, sign_up,\n                            session_timeout[context-\u003eretry_count]);\n  }\n\n  return OC_EVENT_DONE;\n}",
+      "range": {
+        "startLine": 305,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 3
+      },
+      "revId": "2af3c60eb37754fdc6254add62a24c8e743caa06",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_31d2dcd2",
+        "filename": "apps/st_app/st_cloud_access.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:16:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_31cbfca6",
       "range": {
         "startLine": 305,
         "startChar": 0,
