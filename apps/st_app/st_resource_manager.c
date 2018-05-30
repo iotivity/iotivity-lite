@@ -125,7 +125,7 @@ st_register_resources(int device)
   st_register_resource(color_temp_rsc_uri, color_temp_rsc_rt, color_temp_rt_num,
                        OC_IF_A | OC_IF_S | OC_IF_BASELINE, OC_IF_A, device);
 
-  register_sc_provisioning_info_resource();
+  init_provisioning_info_resource(NULL);
 }
 
 void

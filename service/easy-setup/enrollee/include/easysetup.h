@@ -20,7 +20,6 @@
 #define EASYSETUP_ENROLLEE_H
 
 #include "es_enrollee_common.h"
-#include "es_common.h"
 
 /**
  * @file
@@ -55,12 +54,21 @@ typedef void (*es_write_userdata_cb)(oc_rep_t *payload, char *resource_type);
  * then you can extract a corresponding value if it exists.
  * @param resource_type Used to distinguish which resource the received property
  * belongs to
- * @param userdata User-specific data you want to deliver to desired users, i.e.
+ * @param user_data User-specific data you want to deliver to desired users, i.e.
  * application.
  * The user should know a data structure of passed userdata.
  */
 typedef void (*es_read_userdata_cb)(oc_rep_t *payload, char *resource_type,
-                                    void **userdata);
+                                    void **user_data);
+
+/**
+ * deleter method for cleaning user data provided in write userdata callback.
+ * @param user_data User-specific data you want delivered to desired users, i.e.
+ * application.
+ * @param resource_type Used to distinguish which resource the received property
+ * belongs to
+ */
+typedef void (*es_free_userdata)(void *user_data, char *resource_type);
 
 /**
  * This function initializes the EasySetup. This API must be called prior to
@@ -146,7 +154,8 @@ es_result_e es_terminate_enrollee(void);
  * @see es_write_userdata_cb
  */
 es_result_e es_set_callback_for_userdata(es_read_userdata_cb readcb,
-                                         es_write_userdata_cb writecb);
+                                         es_write_userdata_cb writecb,
+                                         es_free_userdata free_userdata);
 
 #ifdef __cplusplus
 }

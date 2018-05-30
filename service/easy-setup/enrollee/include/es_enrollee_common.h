@@ -117,4 +117,4 @@ typedef struct
 }
 #endif
 
-#endif // ES_ENROLLEE_COMMON_H
+#endif /* ES_ENROLLEE_COMMON_H */
