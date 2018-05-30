@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 
 #ifdef OC_TCP
