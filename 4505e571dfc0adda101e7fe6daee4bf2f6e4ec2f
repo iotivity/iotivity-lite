@@ -22,6 +22,30 @@
       "revId": "4505e571dfc0adda101e7fe6daee4bf2f6e4ec2f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ec74179e",
+        "filename": "apps/simpleserver.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T12:37:22Z",
+      "side": 1,
+      "message": "In normal case is just use root map enough. But rd client can not use root map. See the patch and if you have some idea please share to me.  https://gerrit.iotivity.org/gerrit/25205",
+      "parentUuid": "da33351e_d1945039",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 1
+      },
+      "revId": "4505e571dfc0adda101e7fe6daee4bf2f6e4ec2f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
