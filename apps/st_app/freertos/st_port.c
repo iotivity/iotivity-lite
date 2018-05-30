@@ -1,0 +1,346 @@
+/****************************************************************************
+ *
+ * Copyright 2018 Samsung Electronics All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
+
+#define _GNU_SOURCE
+#include "../st_port.h"
+#include "../st_process.h"
+#include "port/oc_assert.h"
+#include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
+#include "util/oc_memb.h"
+#include <pthread.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <unistd.h>
+
+
+typedef struct
+{
+  st_thread_t thread;
+  st_mutex_t mutex;
+  st_cond_t cv;
+  int is_soft_ap_on;
+  oc_string_t ssid;
+  oc_string_t pwd;
+  int channel;
+} st_soft_ap_t;
+
+static st_soft_ap_t g_soft_ap;
+
+OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
+OC_MEMB(st_cond_s, pthread_cond_t, 10);
+OC_MEMB(st_thread_s, pthread_t, 10);
+
+extern int quit;
+
+static void *soft_ap_process_routine(void *data);
+
+static void
+handle_signal(int signal)
+{
+  (void)signal;
+  st_process_signal();
+  quit = 1;
+}
+
+int
+st_port_specific_init(void)
+{
+  /* set port specific logics. in here */
+  st_set_sigint_handler(handle_signal);
+  return 0;
+}
+
+void
+st_port_specific_destroy(void)
+{
+  /* set initialized port specific logics destroyer. in here */
+  return;
+}
+
+static void
+print_menu(void)
+{
+  st_process_app_sync_lock();
+  st_print_log("=====================================\n");
+  st_print_log("1. Reset device\n");
+  st_print_log("0. Quit\n");
+  st_print_log("=====================================\n");
+  st_process_app_sync_unlock();
+}
+
+st_loop_status_t
+st_port_main_loop(int *quit_flag)
+{
+  st_loop_status_t status;
+  char key[10];
+
+  while (*quit_flag != 1) {
+    print_menu();
+    fflush(stdin);
+    if (!scanf("%s", &key)) {
+      st_print_log("scanf failed!!!!\n");
+      *quit_flag = 1;
+      st_process_signal();
+      break;
+    }
+
+    st_process_app_sync_lock();
+    switch (key[0]) {
+    case '1':
+      status = ST_LOOP_RESET;
+      st_process_app_sync_unlock();
+      goto reset;
+    case '0':
+      *quit_flag = 1;
+      status = ST_LOOP_QUIT;
+      st_process_signal();
+      break;
+    default:
+      st_print_log("unsupported command.\n");
+      break;
+    }
+    st_process_app_sync_unlock();
+  }
+reset:
+  return status;
+}
+
+void
+st_print_log(const char *fmt, ...)
+{
+  va_list arg;
+
+  va_start(arg, fmt);
+  vprintf(fmt, arg);
+  va_end(arg);
+}
+
+st_mutex_t
+st_mutex_init(void)
+{
+  st_mutex_t mutex = (st_mutex_t)oc_memb_alloc(&st_mutex_s);
+  if (!mutex)
+    oc_abort("alloc failed");
+
+  pthread_mutex_init((pthread_mutex_t *)mutex, NULL);
+
+  return mutex;
+}
+
+int
+st_mutex_destroy(st_mutex_t mutex)
+{
+  if (!mutex)
+    return -1;
+
+  pthread_mutex_destroy((pthread_mutex_t *)mutex);
+
+  oc_memb_free(&st_mutex_s, mutex);
+
+  return 0;
+}
+
+int
+st_mutex_lock(st_mutex_t mutex)
+{
+  if (!mutex)
+    return -1;
+
+  pthread_mutex_lock((pthread_mutex_t *)mutex);
+
+  return 0;
+}
+
+int
+st_mutex_unlock(st_mutex_t mutex)
+{
+  if (!mutex)
+    return -1;
+
+  pthread_mutex_unlock((pthread_mutex_t *)mutex);
+
+  return 0;
+}
+
+st_cond_t
+st_cond_init(void)
+{
+  st_cond_t cv = (st_cond_t)oc_memb_alloc(&st_cond_s);
+  if (!cv)
+    oc_abort("alloc failed");
+
+  pthread_cond_init((pthread_cond_t *)cv, NULL);
+
+  return cv;
+}
+
+int
+st_cond_destroy(st_cond_t cv)
+{
+  if (!cv)
+    return -1;
+
+  pthread_cond_destroy((pthread_cond_t *)cv);
+
+  oc_memb_free(&st_cond_s, cv);
+
+  return 0;
+}
+
+int
+st_cond_wait(st_cond_t cv, st_mutex_t mutex)
+{
+  if (!cv || !mutex)
+    return -1;
+
+  return pthread_cond_wait((pthread_cond_t *)cv, (pthread_mutex_t *)mutex);
+}
+
+int
+st_cond_timedwait(st_cond_t cv, st_mutex_t mutex, oc_clock_time_t time)
+{
+  if (!cv || !mutex)
+    return -1;
+
+  struct timespec ts;
+  ts.tv_sec = (time / OC_CLOCK_SECOND);
+  ts.tv_nsec = (time % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+  return pthread_cond_timedwait((pthread_cond_t *)cv, (pthread_mutex_t *)mutex,
+                                &ts);
+}
+
+int
+st_cond_signal(st_cond_t cv)
+{
+  if (!cv)
+    return -1;
+
+  return pthread_cond_signal((pthread_cond_t *)cv);
+}
+
+int
+st_set_sigint_handler(st_sig_handler_t handler)
+{
+  oc_abort(__func__);
+  return 0;
+}
+
+st_thread_t
+st_thread_create(st_thread_process_t handler, const char *name, void *user_data)
+{
+  oc_abort(__func__);
+  return NULL;
+}
+
+int
+st_thread_destroy(st_thread_t thread)
+{
+  if (!thread)
+    return -1;
+
+  pthread_join(*(pthread_t *)(thread), NULL);
+
+  oc_memb_free(&st_thread_s, thread);
+
+  return 0;
+}
+
+int
+st_thread_cancel(st_thread_t thread)
+{
+  if (!thread)
+    return -1;
+
+  return pthread_cancel(*(pthread_t *)thread);
+}
+
+void
+st_thread_exit(void *retval)
+{
+  pthread_exit(retval);
+}
+
+void
+st_sleep(int seconds)
+{
+  sleep(seconds);
+}
+
+void
+st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
+{
+  if (g_soft_ap.is_soft_ap_on) {
+    st_print_log("[St_Port] Soft AP is already turned on\n");
+    return;
+  }
+
+  st_print_log("[St_Port] st_turn_on_soft_AP\n");
+
+  if (oc_string(g_soft_ap.ssid)) {
+    oc_free_string(&g_soft_ap.ssid);
+  }
+  if (oc_string(g_soft_ap.pwd)) {
+    oc_free_string(&g_soft_ap.pwd);
+  }
+
+  oc_new_string(&g_soft_ap.ssid, ssid, strlen(ssid));
+  oc_new_string(&g_soft_ap.pwd, pwd, strlen(pwd));
+  g_soft_ap.channel = channel;
+
+  g_soft_ap.mutex = st_mutex_init();
+  g_soft_ap.cv = st_cond_init();
+  g_soft_ap.is_soft_ap_on = 1;
+  g_soft_ap.thread =
+    st_thread_create(soft_ap_process_routine, "SOFT_AP", &g_soft_ap);
+
+  st_mutex_lock(g_soft_ap.mutex);
+  st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);
+  st_mutex_unlock(g_soft_ap.mutex);
+
+  st_print_log("[St_Port] st_turn_on_soft_AP success\n");
+}
+
+static int
+system_ret_chcek(int ret)
+{
+  if (ret == -1 || ret == 127) {
+    st_print_log("[St_Port] system() invoke error(%d).\n", ret);
+    return -1;
+  }
+  return 0;
+}
+
+void
+st_turn_off_soft_AP(void)
+{
+  oc_abort(__func__);
+}
+
+void
+st_connect_wifi(const char *ssid, const char *pwd)
+{
+  oc_abort(__func__);
+}
+
+static void *
+soft_ap_process_routine(void *data)
+{
+  oc_abort(__func__);
+}
