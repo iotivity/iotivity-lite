@@ -1,0 +1,204 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_91e2c89d",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "Add new line.",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b1e54caa",
+        "filename": "include/oc_rep.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "I think this change should be separate patch into master branch.",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f1eeb48a",
+        "filename": "service/easy-setup/enrollee/es_utils.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "How about des_string, src_string",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d1f3b071",
+        "filename": "service/easy-setup/enrollee/include/easysetup.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "Deleter",
+      "range": {
+        "startLine": 65,
+        "startChar": 3,
+        "endLine": 65,
+        "endChar": 10
+      },
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_11eeb888",
+        "filename": "service/easy-setup/enrollee/include/easysetup.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "add param",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7102a43f",
+        "filename": "service/easy-setup/enrollee/include/samsung/sc_easysetup.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "add new line",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 118
+      },
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91f92850",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "Is it impossible using function? Macro increase ROM size.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 11
+      },
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_51ffa034",
+        "filename": "service/easy-setup/enrollee/resourcehandler.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "/* xx */",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f19514e5",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "What\u0027s mean?",
+      "range": {
+        "startLine": 152,
+        "startChar": 17,
+        "endLine": 152,
+        "endChar": 19
+      },
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d19a9013",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T08:32:24Z",
+      "side": 1,
+      "message": "Please define",
+      "range": {
+        "startLine": 516,
+        "startChar": 21,
+        "endLine": 516,
+        "endChar": 37
+      },
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
