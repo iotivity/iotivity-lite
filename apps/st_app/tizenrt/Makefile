@@ -49,7 +49,7 @@ CFLAGS += -D__TIZENRT__ -DOC_SECURITY -DOC_CLIENT -DOC_IPV4 -DOC_DEBUG -DOC_SERV
 ASRCS =
 CSRCS =
 
-MAINSRC = st_ref_app_tizenrt.c st_manager.c st_easy_setup.c st_cloud_access.c st_store.c st_resource_manager.c tizenrt/st_port.c tizenrt/st_process.c tizenrt/wifi_soft_ap_util.c
+MAINSRC = tizenrt/st_ref_app_tizenrt.c st_manager.c st_easy_setup.c st_cloud_access.c st_store.c st_resource_manager.c tizenrt/st_port.c tizenrt/st_process.c tizenrt/wifi_soft_ap_util.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))

@@ -14,7 +14,7 @@ Copy <iotivity-constrained>/port/tizenrt/iotlite_apps folder to TizenRT/apps/
 
 ** For Building st_app on Tizen RT
  - Copy <iotivity-constrained>/apps/st_app to TizenRT/apps/iotlite_apps/
- - Copy <iotivity-constrained>/apps/st_app/Make* to TizenRT/apps/iotlite_apps/st_app/
+ - Copy <iotivity-constrained>/apps/st_app/tizenrt/Make* to TizenRT/apps/iotlite_apps/st_app/
  - Edit os/include/net/lwip/lwipopts.h to change like below (TODO: Do this via build configuration)
 		+#define LWIP_DHCPS                      1
 		+#define LWIP_DHCP                       1
