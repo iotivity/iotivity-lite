@@ -46,6 +46,7 @@
 #include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
+#include "tlsmutex.h"
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -451,6 +452,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 void
 oc_tls_shutdown(void)
 {
+  oc_tls_mutex_destroy();
   oc_tls_peer_t *p = oc_list_pop(tls_peers);
   while (p != NULL) {
     oc_tls_free_peer(p, false);
@@ -621,6 +623,7 @@ oc_tls_init_context(void)
 
   mbedtls_ssl_conf_handshake_timeout(&client_conf[0], 2500, 20000);
 #endif /* OC_CLIENT */
+  oc_tls_mutex_init();
   return 0;
 dtls_init_err:
   OC_ERR("oc_tls: TLS initialization error");
@@ -984,6 +987,7 @@ oc_tls_demote_anon_ciphersuite(void)
 static void
 oc_tls_init_connection(oc_message_t *message)
 {
+  oc_tls_mutex_lock();
   oc_tls_peer_t *peer =
     oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
   if (peer) {
@@ -1012,6 +1016,7 @@ oc_tls_init_connection(oc_message_t *message)
     }
   }
   oc_message_unref(message);
+  oc_tls_mutex_unlock();
 }
 #endif /* OC_CLIENT */
 
@@ -1047,7 +1052,7 @@ read_application_data(oc_tls_peer_t *peer)
     OC_DBG("oc_tls: read_application_data: Peer not active");
     return;
   }
-
+  oc_tls_mutex_lock();
   if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
     int ret = 0;
     do {
@@ -1074,6 +1079,7 @@ read_application_data(oc_tls_peer_t *peer)
                 &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
                 sizeof(peer->endpoint.addr)) != 0) {
           oc_tls_free_peer(peer, false);
+          oc_tls_mutex_unlock();
           return;
         }
       } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
@@ -1084,6 +1090,7 @@ read_application_data(oc_tls_peer_t *peer)
         OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         oc_tls_free_peer(peer, false);
+        oc_tls_mutex_unlock();
         return;
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
@@ -1171,6 +1178,7 @@ read_application_data(oc_tls_peer_t *peer)
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
             ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
           OC_DBG("oc_tls: Received WantRead/WantWrite");
+          oc_tls_mutex_unlock();
           return;
         }
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
@@ -1188,6 +1196,7 @@ read_application_data(oc_tls_peer_t *peer)
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
         oc_tls_free_peer(peer, false);
+        oc_tls_mutex_unlock();
         return;
       }
       message->length = ret;
@@ -1195,6 +1204,7 @@ read_application_data(oc_tls_peer_t *peer)
       OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
+  oc_tls_mutex_unlock();
 }
 
 static void
