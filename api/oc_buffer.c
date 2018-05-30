@@ -187,7 +187,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 #endif /* !OC_SECURITY */
     } else if (ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
       oc_message_t *message = (oc_message_t *)data;
-
+#ifndef ST_APP_OPTIMIZATION
 #ifdef OC_CLIENT
       if (message->endpoint.flags & DISCOVERY) {
         OC_DBG("Outbound network event: multicast request");
@@ -195,6 +195,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         oc_message_unref(message);
       } else
 #endif /* OC_CLIENT */
+#endif/* ST_APP SPECIFIC */
 #ifdef OC_SECURITY
           if (message->endpoint.flags & SECURED) {
         OC_DBG("Outbound network event: forwarding to TLS");
