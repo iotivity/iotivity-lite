@@ -16,28 +16,27 @@
  *
  ****************************************************************************/
 
-
 #include "oc_api.h"
 #include "port/oc_clock.h"
 
+#include "samsung/sc_easysetup.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
-#include "samsung/sc_easysetup.h"
 
 #include "easysetup.h"
 
 const char *deviceType = "deviceType";
 static const char *deviceSubType = "deviceSubType";
 static const char *regSetDev =
-  "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\","
-  "\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\","
-  "\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\","
-  "\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}";
+    "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\","
+    "\"bm\":\"00:11:22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\","
+    "\"BTHIDPOWERON\"],\"sl\":[\"TV2MOBILE\",\"MOBILE2TV\","
+    "\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\",\"DLNADMR\"]}";
 static const char *nwProvInfo =
-  "{\"IMEI\":\"123456789012345 / "
-  "01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\","
-  "\"SN\":\"XY0123456XYZ\"}";
+    "{\"IMEI\":\"123456789012345 / "
+    "01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\","
+    "\"SN\":\"XY0123456XYZ\"}";
 static const char *pnpPin = "pinNumber";
 static const char *modelNumber = "Model Number";
 static const char *esProtocolVersion = "2.0";
@@ -57,47 +56,45 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = false;
 
-static sc_properties g_SCProperties ;
+static sc_properties g_SCProperties;
 
-static provisioning_info_resource g_provisioninginfo_resource;
+static sec_provisioning_info g_provisioninginfo_resource;
 
-void SetProvInfo()
-{
+void SetProvInfo() {
   // Set prov info properties
-  int target_size =1;
+  int target_size = 1;
   char uuid[37];
   memset(&g_provisioninginfo_resource, 0, sizeof(g_provisioninginfo_resource));
-  oc_get_device_id(0,uuid, 37 );
-  g_provisioninginfo_resource.targets = (provisioning_info_targets*)malloc(target_size * sizeof(provisioning_info_targets));
-  for (int i=0;i<target_size;i++){
-    oc_new_string(&g_provisioninginfo_resource.targets[i].targetDi, uuid, strlen(uuid));
-    oc_new_string(&g_provisioninginfo_resource.targets[i].targetRt,  "oic.d.tv", 9);
+  oc_get_device_id(0, uuid, 37);
+  g_provisioninginfo_resource.targets = (sec_provisioning_info_targets *)malloc(
+      target_size * sizeof(sec_provisioning_info_targets));
+  for (int i = 0; i < target_size; i++) {
+    oc_new_string(&g_provisioninginfo_resource.targets[i].target_di, uuid,
+                  strlen(uuid));
+    oc_new_string(&g_provisioninginfo_resource.targets[i].target_rt, "oic.d.tv",
+                  9);
     g_provisioninginfo_resource.targets[i].published = false;
   }
-  g_provisioninginfo_resource.targets_size=target_size;
+  g_provisioninginfo_resource.targets_size = target_size;
   g_provisioninginfo_resource.owned = false;
-  oc_new_string(&g_provisioninginfo_resource.easysetupdi,  uuid, 38);
+  oc_new_string(&g_provisioninginfo_resource.easysetup_di, uuid, 38);
 
-  if(set_properties_for_sc_prov_info(&g_provisioninginfo_resource) == ES_ERROR)
+  if (set_sec_prov_info(&g_provisioninginfo_resource) == ES_ERROR)
     PRINT("SetProvInfo Error\n");
 
   PRINT("[ES App] SetProvInfo OUT\n");
 }
 
-
-static int
-app_init(void)
-{
+static int app_init(void) {
   int err = oc_init_platform("Samsung", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung", "ocf.1.0.0",
-                        "ocf.res.1.0.0", NULL, NULL);
+  err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung",
+                       "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
   return err;
 }
 
-static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
+static void get_temp(oc_request_t *request, oc_interface_mask_t interface,
+                     void *user_data) {
   (void)user_data;
   PRINT("[ES App] GET_temp:\n");
   bool invalid_query = false;
@@ -168,9 +165,8 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
+static void post_temp(oc_request_t *request, oc_interface_mask_t interface,
+                      void *user_data) {
   (void)interface;
   (void)user_data;
   PRINT("[ES App] POST_temp:\n");
@@ -210,219 +206,201 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-void WiFiProvCbInApp(es_wifi_conf_data*eventData)
-{
-    printf("WiFiProvCbInApp IN\n");
+void WiFiProvCbInApp(es_wifi_conf_data *eventData) {
+  printf("WiFiProvCbInApp IN\n");
 
-    if(eventData == NULL)
-    {
-        printf("ESWiFiProvData is NULL\n");
-        return ;
-    }
+  if (eventData == NULL) {
+    printf("ESWiFiProvData is NULL\n");
+    return;
+  }
 
-    printf("SSID : %s\n", oc_string(eventData->ssid));
-    printf("Password : %s\n", oc_string(eventData->pwd));
-    printf("AuthType : %d\n", eventData->authtype);
-    printf("EncType : %d\n", eventData->enctype);
+  printf("SSID : %s\n", oc_string(eventData->ssid));
+  printf("Password : %s\n", oc_string(eventData->pwd));
+  printf("AuthType : %d\n", eventData->authtype);
+  printf("EncType : %d\n", eventData->enctype);
 
-    if(eventData->userdata != NULL)
-    {
-        sc_wifi_conf_properties*data = eventData->userdata;
-        printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
-    }
+  if (eventData->userdata != NULL) {
+    sc_wifi_conf_properties *data = eventData->userdata;
+    printf("[SC] DiscoveryChannel : %d\n", data->disc_channel);
+  }
 
-    printf("WiFiProvCbInApp OUT\n");
+  printf("WiFiProvCbInApp OUT\n");
 }
 
-void DevConfProvCbInApp(es_dev_conf_data*eventData)
-{
-    printf("[ES App] DevConfProvCbInApp IN\n");
+void DevConfProvCbInApp(es_dev_conf_data *eventData) {
+  printf("[ES App] DevConfProvCbInApp IN\n");
 
-    if(eventData == NULL)
-    {
-        printf("[ES App] ESDevConfProvData is NULL\n");
-        return ;
+  if (eventData == NULL) {
+    printf("[ES App] ESDevConfProvData is NULL\n");
+    return;
+  }
+
+  if (eventData->userdata != NULL) {
+    sc_dev_conf_properties *data = eventData->userdata;
+    for (uint8_t i = 0; i < oc_string_array_get_allocated_size(data->location);
+         ++i) {
+      printf("[SC] Location : %s\n",
+             oc_string_array_get_item(data->location, i));
     }
+    printf("[SC] Register Mobile Device : %s\n",
+           oc_string(data->reg_mobile_dev));
+    printf("[SC] Country : %s\n", oc_string(data->country));
+    printf("[SC] Language : %s\n", oc_string(data->language));
+    printf("[SC] GPS Location : %s\n", oc_string(data->gps_location));
+    printf("[SC] UTC Date time : %s\n", oc_string(data->utc_date_time));
+    printf("[SC] Regional time : %s\n", oc_string(data->regional_date_time));
+    printf("[SC] SSO List : %s\n", oc_string(data->sso_list));
+  }
 
-    if (eventData->userdata != NULL) {
-      sc_dev_conf_properties *data = eventData->userdata;
-      for (uint8_t i = 0; i < oc_string_array_get_allocated_size(data->location); ++i) {
-        printf("[SC] Location : %s\n",
-               oc_string_array_get_item(data->location, i));
-      }
-      printf("[SC] Register Mobile Device : %s\n",
-             oc_string(data->regMobileDev));
-      printf("[SC] Country : %s\n", oc_string(data->country));
-      printf("[SC] Language : %s\n", oc_string(data->language));
-      printf("[SC] GPS Location : %s\n", oc_string(data->gpsLocation));
-      printf("[SC] UTC Date time : %s\n", oc_string(data->utcDateTime));
-      printf("[SC] Regional time : %s\n", oc_string(data->regionalDateTime));
-      printf("[SC] SSO List : %s\n", oc_string(data->ssoList));
-    }
-
-    printf("[ES App] DevConfProvCbInApp OUT\n");
+  printf("[ES App] DevConfProvCbInApp OUT\n");
 }
 
-void CloudDataProvCbInApp(es_coap_cloud_conf_data *eventData)
-{
-   printf("[ES App] cloud_conf_prov_cb_in_app in\n");
+void CloudDataProvCbInApp(es_coap_cloud_conf_data *eventData) {
+  printf("[ES App] cloud_conf_prov_cb_in_app in\n");
 
-   if (eventData == NULL) {
-     printf("es_coap_cloud_conf_data is NULL\n");
-     return;
-   }
+  if (eventData == NULL) {
+    printf("es_coap_cloud_conf_data is NULL\n");
+    return;
+  }
 
-   if (oc_string(eventData->auth_code)) {
-     printf("AuthCode : %s\n", oc_string(eventData->auth_code));
-   }
+  if (oc_string(eventData->auth_code)) {
+    printf("AuthCode : %s\n", oc_string(eventData->auth_code));
+  }
 
-   if (oc_string(eventData->access_token)) {
-     printf("Access Token : %s\n", oc_string(eventData->access_token));
-   }
+  if (oc_string(eventData->access_token)) {
+    printf("Access Token : %s\n", oc_string(eventData->access_token));
+  }
 
-   if (oc_string(eventData->auth_provider)) {
-     printf("AuthProvider : %s\n", oc_string(eventData->auth_provider));
-   }
+  if (oc_string(eventData->auth_provider)) {
+    printf("AuthProvider : %s\n", oc_string(eventData->auth_provider));
+  }
 
-   if (oc_string(eventData->ci_server)) {
-     printf("CI Server : %s\n", oc_string(eventData->ci_server));
-   }
+  if (oc_string(eventData->ci_server)) {
+    printf("CI Server : %s\n", oc_string(eventData->ci_server));
+  }
 
-   if(eventData->userdata != NULL)
-   {
-      sc_coap_cloud_server_conf_properties *data = (sc_coap_cloud_server_conf_properties *)eventData->userdata;
-      printf("[SC] ClientID : %s\n", data->clientID);
-    }
+  if (eventData->userdata != NULL) {
+    sc_cloud_server_conf_properties *data =
+        (sc_cloud_server_conf_properties *)eventData->userdata;
+    printf("[SC] ClientID : %s\n", data->client_id);
+  }
 
-    printf("[ES App] CloudDataProvCbInApp OUT\n");
+  printf("[ES App] CloudDataProvCbInApp OUT\n");
 }
 
 es_provisioning_callbacks_s gCallbacks = {
     .wifi_prov_cb = &WiFiProvCbInApp,
     .dev_conf_prov_cb = &DevConfProvCbInApp,
-    .cloud_data_prov_cb = &CloudDataProvCbInApp
-};
+    .cloud_data_prov_cb = &CloudDataProvCbInApp};
 
-void StartEasySetup()
-{
-    printf("[ES App] StartEasySetup IN\n");
+void StartEasySetup() {
+  printf("[ES App] StartEasySetup IN\n");
 
-    es_connect_type resourcemMask = ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
-    if(es_init_enrollee(gIsSecured, resourcemMask, gCallbacks) != ES_OK)
-    {
-        printf("[ES App] Easy Setup Enrollee init error!!\n");
-        return;
-    }
+  es_connect_type resourcemMask =
+      ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
+  if (es_init_enrollee(gIsSecured, resourcemMask, gCallbacks) != ES_OK) {
+    printf("[ES App] Easy Setup Enrollee init error!!\n");
+    return;
+  }
 
-    printf("[ES App] ESInitEnrollee Success\n");
+  printf("[ES App] ESInitEnrollee Success\n");
 
-    // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
-    printf("[ES App] StartEasySetup OUT\n");
+  // Set callbacks for Vendor Specific Properties
+  es_set_callback_for_userdata(&sc_read_userdata_cb, &sc_write_userdata_cb,
+                               &sc_free_userdata);
+  printf("[ES App] StartEasySetup OUT\n");
 }
 
-void SetDeviceInfo()
-{
-    printf("[ES App] SetDeviceInfo IN\n");
-    char *device_name = "TEST_DEVICE";
+void SetDeviceInfo() {
+  printf("[ES App] SetDeviceInfo IN\n");
+  char *device_name = "TEST_DEVICE";
 
-    es_device_property deviceProperty ={
-              .WiFi={{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF },WIFI_5G},
-              .DevConf={{0}}
-    };
+  es_device_property deviceProperty = {
+      .WiFi = {{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF}, WIFI_5G},
+      .DevConf = {{0}}};
 
-    oc_new_string(&deviceProperty.DevConf.device_name, device_name, strlen(device_name));
+  oc_new_string(&deviceProperty.DevConf.device_name, device_name,
+                strlen(device_name));
 
-    if(es_set_device_property(&deviceProperty) == ES_ERROR)
-        printf("[ES App] ESSetDeviceProperty Error\n");
+  if (es_set_device_property(&deviceProperty) == ES_ERROR)
+    printf("[ES App] ESSetDeviceProperty Error\n");
 
-    // Set user properties if needed
+  // Set user properties if needed
 
-    memset(&g_SCProperties, 0, sizeof(sc_properties));
+  memset(&g_SCProperties, 0, sizeof(sc_properties));
 
-    oc_new_string(&g_SCProperties.deviceType, deviceType, strlen(deviceType));
-    oc_new_string(&g_SCProperties.deviceSubType, deviceSubType,
-                  strlen(deviceSubType));
-    g_SCProperties.netConnectionState = NET_STATE_INIT;
-    g_SCProperties.discoveryChannel = WIFI_DISCOVERY_CHANNEL_INIT;
-    oc_new_string(&g_SCProperties.regSetDev, regSetDev, strlen(regSetDev));
-    oc_new_string(&g_SCProperties.nwProvInfo, nwProvInfo, strlen(nwProvInfo));
-    oc_new_string(&g_SCProperties.pnpPin, pnpPin, strlen(pnpPin));
-    oc_new_string(&g_SCProperties.modelNumber, modelNumber,
-                  strlen(modelNumber));
-    oc_new_string(&g_SCProperties.esProtocolVersion, esProtocolVersion,
-                  strlen(esProtocolVersion));
+  oc_new_string(&g_SCProperties.device_type, deviceType, strlen(deviceType));
+  oc_new_string(&g_SCProperties.device_sub_type, deviceSubType,
+                strlen(deviceSubType));
+  g_SCProperties.net_conn_state = NET_STATE_INIT;
+  g_SCProperties.disc_channel = WIFI_DISCOVERY_CHANNEL_INIT;
+  oc_new_string(&g_SCProperties.reg_set_dev, regSetDev, strlen(regSetDev));
+  oc_new_string(&g_SCProperties.net_prov_info, nwProvInfo, strlen(nwProvInfo));
+  oc_new_string(&g_SCProperties.pnp_pin, pnpPin, strlen(pnpPin));
+  oc_new_string(&g_SCProperties.model, modelNumber, strlen(modelNumber));
+  oc_new_string(&g_SCProperties.es_protocol_ver, esProtocolVersion,
+                strlen(esProtocolVersion));
 
-    if (set_sc_properties(&g_SCProperties) == ES_ERROR)
-      printf("SetSCProperties Error\n");
+  if (set_sc_properties(&g_SCProperties) == ES_ERROR)
+    printf("SetSCProperties Error\n");
 
-    printf("[ES App] SetDeviceInfo OUT\n");
+  printf("[ES App] SetDeviceInfo OUT\n");
 }
 
-void StopEasySetup()
-{
+void StopEasySetup() {
   printf("[ES App] StopEasySetup IN\n");
   if (reset_sc_properties() == ES_ERROR) {
     printf("Reset Properties Failed!!\n");
     return;
-    }
-    if (es_terminate_enrollee() == ES_ERROR)
-    {
-        printf("ESTerminateEnrollee Failed!!\n");
-        return;
-    }
+  }
+  if (es_terminate_enrollee() == ES_ERROR) {
+    printf("ESTerminateEnrollee Failed!!\n");
+    return;
+  }
 
-    printf("[ES App] StopEasySetup OUT\n");
+  printf("[ES App] StopEasySetup OUT\n");
 }
 
-static void
-register_resources(void)
-{
-    printf("[ES App] register_resources IN\n");
+static void register_resources(void) {
+  printf("[ES App] register_resources IN\n");
 
-    oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
-    oc_resource_bind_resource_type(temp, "oic.r.temperature");
-    oc_resource_bind_resource_interface(temp, OC_IF_A);
-    oc_resource_bind_resource_interface(temp, OC_IF_S);
-    oc_resource_set_default_interface(temp, OC_IF_A);
-    oc_resource_set_discoverable(temp, true);
-    oc_resource_set_periodic_observable(temp, 1);
-    oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
-    oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
-    oc_add_resource(temp);
+  oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
+  oc_resource_bind_resource_type(temp, "oic.r.temperature");
+  oc_resource_bind_resource_interface(temp, OC_IF_A);
+  oc_resource_bind_resource_interface(temp, OC_IF_S);
+  oc_resource_set_default_interface(temp, OC_IF_A);
+  oc_resource_set_discoverable(temp, true);
+  oc_resource_set_periodic_observable(temp, 1);
+  oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
+  oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
+  oc_add_resource(temp);
 
 #ifdef OC_SECURITY
-    gIsSecured = true;
+  gIsSecured = true;
 #else
-    gIsSecured = false;
+  gIsSecured = false;
 #endif
-    register_sc_provisioning_info_resource();
-    StartEasySetup();
-    SetDeviceInfo();
-    SetProvInfo();
-    printf("[ES App] register_resources OUT\n");
+  init_provisioning_info_resource(NULL);
+  StartEasySetup();
+  SetDeviceInfo();
+  SetProvInfo();
+  printf("[ES App] register_resources OUT\n");
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
-    int init;
+int main(void) {
+  int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -435,7 +413,7 @@ main(void)
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources =
-                                         register_resources };
+                                           register_resources};
 
   oc_clock_time_t next_event;
 
@@ -464,6 +442,7 @@ main(void)
   }
   printf("[ES App] StopEasySetup..\n");
   StopEasySetup();
+  deinit_provisioning_info_resource();
   printf("[ES App] StopEasySetup done\n");
 
   oc_main_shutdown();
@@ -471,4 +450,3 @@ main(void)
   printf("[ES App] Exit..\n");
   return 0;
 }
-

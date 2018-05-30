@@ -473,4 +473,4 @@ typedef enum {
 }
 #endif
 
-#endif // ES_COMMON_H
+#endif /* ES_COMMON_H */
