@@ -159,6 +159,7 @@ es_enrollee_t *g_enrollee;
 static void
 update_wifi_conf_resource(oc_request_t *request)
 {
+  bool changed = false;
   es_wifi_conf_data wifi_cb_data;
   es_wifi_conf_resource_t *wifi_res =
     wifi_res_cast(g_enrollee->res[ES_RES_TYPE_WIFI_CONF]);
@@ -169,6 +170,7 @@ update_wifi_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_SSID, &str_val,
                           &str_len)) {
       es_new_string(&(wifi_res->data.ssid), str_val);
+      changed = true;
     }
 
     str_val = NULL;
@@ -176,6 +178,7 @@ update_wifi_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_CRED, &str_val,
                           &str_len)) {
       es_new_string(&(wifi_res->data.cred), str_val);
+      changed = true;
     }
   }
 
@@ -184,11 +187,13 @@ update_wifi_conf_resource(oc_request_t *request)
     if (oc_rep_get_int(request->request_payload, OC_RSRVD_ES_AUTHTYPE,
                        &int_val)) {
       wifi_res->data.auth_type = int_val;
+      changed = true;
     }
 
     if (oc_rep_get_int(request->request_payload, OC_RSRVD_ES_ENCTYPE,
                        &int_val)) {
       wifi_res->data.enc_type = int_val;
+      changed = true;
     }
   }
 
@@ -200,22 +205,26 @@ update_wifi_conf_resource(oc_request_t *request)
                         &wifi_cb_data.userdata);
   }
 
-  if (wifi_res->wifi_prov_cb) {
-    wifi_res->wifi_prov_cb(&wifi_cb_data);
+  // TODO: what about user data change?
+  if (changed) {
+    if (wifi_res->wifi_prov_cb) {
+      wifi_res->wifi_prov_cb(&wifi_cb_data);
+    }
+
+    // Notify observers about data change
+    oc_notify_observers(wifi_res->base.handle);
   }
 
   if (g_enrollee->free_userdata) {
     g_enrollee->free_userdata(wifi_cb_data.userdata,
                               OC_RSRVD_ES_RES_TYPE_WIFICONF);
-  }
-
-  // Notify observers about data change
-  oc_notify_observers(wifi_res->base.handle);
+  }  
 }
 
 static void
 update_coap_cloud_conf_resource(oc_request_t *request)
 {
+  bool changed = false;
   es_coap_cloud_conf_data cloud_cb_data;
   es_cloud_conf_resource_t *cloud_res =
     cloud_res_cast(g_enrollee->res[ES_RES_TYPE_CLOUD_CONF]);
@@ -226,6 +235,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_AUTHCODE,
                           &str_val, &str_len)) {
       es_new_string(&(cloud_res->data.auth_code), str_val);
+      changed = true;
     }
 
     str_val = NULL;
@@ -233,6 +243,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_ACCESSTOKEN,
                           &str_val, &str_len)) {
       es_new_string(&(cloud_res->data.access_token), str_val);
+      changed = true;
     }
 
     str_val = NULL;
@@ -240,6 +251,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_AUTHPROVIDER,
                           &str_val, &str_len)) {
       es_new_string(&(cloud_res->data.auth_provider), str_val);
+      changed = true;
     }
 
     str_val = NULL;
@@ -247,6 +259,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_CISERVER,
                           &str_val, &str_len)) {
       es_new_string(&(cloud_res->data.ci_server), str_val);
+      changed = true;
     }
   }
 
@@ -255,6 +268,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
     if (oc_rep_get_int(request->request_payload, OC_RSRVD_ES_ACCESSTOKEN_TYPE,
                        &int_val)) {
       cloud_res->data.access_token_type = int_val;
+      changed = true;
     }
   }
 
@@ -267,17 +281,20 @@ update_coap_cloud_conf_resource(oc_request_t *request)
                         &cloud_cb_data.userdata);
   }
 
-  if (cloud_res->cloud_prov_cb) {
-    cloud_res->cloud_prov_cb(&cloud_cb_data);
+  // TODO: what about user data change?
+  if (changed) {
+    if (cloud_res->cloud_prov_cb) {
+      cloud_res->cloud_prov_cb(&cloud_cb_data);
+    }
+
+    // Notify observers about data change
+    oc_notify_observers(cloud_res->base.handle);
   }
 
   if (g_enrollee->free_userdata) {
     g_enrollee->free_userdata(cloud_cb_data.userdata,
                               OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF);
   }
-
-  // Notify observers about data change
-  oc_notify_observers(cloud_res->base.handle);
 }
 
 static void
@@ -870,12 +887,14 @@ exit:
 void
 delete_easysetup_resources(void)
 {
-  deinit_wifi_conf_resource();
-  deinit_coap_cloudconf_resource();
-  deinit_devconf_resource();
-  deinit_easysetup_resource();
-  oc_mem_free(g_enrollee);
-  g_enrollee = NULL;
+  if (g_enrollee) {
+    deinit_wifi_conf_resource();
+    deinit_coap_cloudconf_resource();
+    deinit_devconf_resource();
+    deinit_easysetup_resource();
+    oc_mem_free(g_enrollee);
+    g_enrollee = NULL;
+  }
 }
 
 es_result_e
@@ -911,6 +930,9 @@ set_enrollee_state(es_enrollee_state es_state)
     OC_ERR("Invalid es_set_state to set: %d", es_state);
     return ES_ERROR;
   }
+
+  if (!g_enrollee)
+    return ES_OK;
 
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
