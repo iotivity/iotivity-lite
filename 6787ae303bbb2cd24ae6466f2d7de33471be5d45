@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0ce33b08",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "I understand why DNS lookup is necessary here, but it should be made optional as an implementation cannot be guaranteed to be available in all ports.\n\nFor this, define two build options OC_DNS_LOOKUP and OC_DNS_LOOKUP_IPV6 that are both #defined inside config.h. All invocations of the oc_dns_lookup() API should occur inside an #ifdfef OC_DNS_LOOKUP.\n\nWhile OC_DNS_LOOKUP is a necessity if we want to allow DNS lookup at all, OC_DNS_LOOKUP_IPV6 could be optional, allowed in those environments where IPv6 routing is setup and available, so it can take precedence over IPv4.\n\nLook at my code snippet below in comments for an idea of what I\u0027m talking about.",
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6ce76713",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Right at line 388 you can have the following. First declare \noc_string_t ipaddress; and then immediately check if address is a domain name:\n\n#ifdef OC_DNS_LOOKUP\n\n  oc_string_t ipaddress;\n\n#endif /* OC_DNS_LOOKUP */\n\n  if (\u0027A\u0027 \u003c\u003d address[address_len - 1] \u0026\u0026 \n\n      \u0027z\u0027 \u003e\u003d address[address_len - 1]) {\n\n#ifdef OC_DNS_LOOKUP\n\n    char domain[address_len + 1];\n\n    strncpy(domain, address, address_len);\n\n    domain[address_len] \u003d \u0027\\0\u0027;\n\n#ifdef OC_DNS_LOOKUP_IPV6\n\n    if (!oc_dns_lookup(domain, \u0026ipaddress, endpoint-\u003eflags | IPV6) {\n\n#endif /* OC_DNS_LOOKUP_IPV6 */\n\n      if (!oc_dns_lookup(domain, \u0026ipaddress, endpoint-\u003eflags | IPV4)) {\n\n        return -1;\n\n      }\n\n#ifdef OC_DNS_LOOKUP_IPV6\n\n   }\n\n#endif /* OC_DNS_LOOKUP_IPV6 */\n\n  address \u003d oc_string(ipaddress);\n\n  address_len \u003d oc_string_len(address_len);      \n\n#else /* OC_DNS_LOOKUP */\n\n    return -1;\n\n#endif /* !OC_DNS_LOOKUP */\n\n  }\n\nRest of the code could remain as before..\n\n if (address[0] \u003d\u003d \u0027[\u0027 \u0026\u0026 address[address_len - 1] \u003d\u003d \u0027]\u0027) {\n\n...",
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2cdeff3f",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Rename to \n\nbool oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)\n\nSo this way you could invoke as follows:\n\noc_dns_lookup(\"openconnectivity.org\", \u0026ip, endpoint-\u003eflags | IPV4)\n\nor \n\noc_dns_lookup(\"openconnectivity.org\", \u0026ip, endpoint-\u003eflags | IPV6)\n\nIf endpoint-\u003eflags has TCP set, then the implementation could\nlookup only SOCK_STREAM addresses.\nIf TCP is not set, then it would look for SOCK_DGRAM addresses.",
+      "range": {
+        "startLine": 401,
+        "startChar": 13,
+        "endLine": 401,
+        "endChar": 41
+      },
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4c1d430f",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Why can\u0027t a DNS lookup for a domain-name return an IPv6 address?",
+      "range": {
+        "startLine": 395,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 7
+      },
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4ce4230d",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Here you should add:\n\n#ifdef OC_DNS_LOOKUP\n\noc_free_string(\u0026ipaddress);\n\n#endif /* OC_DNS_LOOKUP */",
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_acf16fcf",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Implement this using getaddrinfo(), and check with the supplied flags to this function to pick IPV4/IPV6 and SOCK_STREAM/SOCK_DGRAM which you set in the \"hints\" structure given to getaddrinfo().\n\nFor IPv6 addresses, you should ensure that this function returns the address enclosed within [..].",
+      "range": {
+        "startLine": 1351,
+        "startChar": 0,
+        "endLine": 1365,
+        "endChar": 46
+      },
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8cee2beb",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-30T22:07:53Z",
+      "side": 1,
+      "message": "Put this entire block inside an #ifdef OC_DNS_LOOKUP.",
+      "range": {
+        "startLine": 1348,
+        "startChar": 0,
+        "endLine": 1368,
+        "endChar": 1
+      },
+      "revId": "6787ae303bbb2cd24ae6466f2d7de33471be5d45",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
