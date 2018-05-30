@@ -20,7 +20,6 @@
 #define EASYSETUP_ENROLLEE_H
 
 #include "es_enrollee_common.h"
-#include "es_common.h"
 
 /**
  * @file
@@ -55,12 +54,23 @@ typedef void (*es_write_userdata_cb)(oc_rep_t *payload, char *resource_type);
  * then you can extract a corresponding value if it exists.
  * @param resource_type Used to distinguish which resource the received property
  * belongs to
- * @param userdata User-specific data you want to deliver to desired users, i.e.
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
  * application.
  * The user should know a data structure of passed userdata.
  */
 typedef void (*es_read_userdata_cb)(oc_rep_t *payload, char *resource_type,
-                                    void **userdata);
+                                    void **user_data);
+
+/**
+ * A callback function to clean up user data created in es_wifi_conf_data,
+ * es_dev_conf_data and es_coap_cloud_conf_data.
+ *
+ * @param user_data User-specific data free up it's memory.
+ * @param resource_type Used to distinguish which resource user data
+ * beongs to.
+ */
+typedef void (*es_free_userdata)(void *user_data, char *resource_type);
 
 /**
  * This function initializes the EasySetup. This API must be called prior to
@@ -139,6 +149,8 @@ es_result_e es_terminate_enrollee(void);
  *
  * @param readcb a callback for parsing properties from POST request
  * @param writecb a callback for putting properties to a response to be sent
+ * @param free_userdata callback to free allocated memory of user data in
+ * s_wifi_conf_data, es_dev_conf_data and es_coap_cloud_conf_data.
  *
  * @return ::ES_OK on success, some other value upon failure.
  *
@@ -146,7 +158,8 @@ es_result_e es_terminate_enrollee(void);
  * @see es_write_userdata_cb
  */
 es_result_e es_set_callback_for_userdata(es_read_userdata_cb readcb,
-                                         es_write_userdata_cb writecb);
+                                         es_write_userdata_cb writecb,
+                                         es_free_userdata free_userdata);
 
 #ifdef __cplusplus
 }

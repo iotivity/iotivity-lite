@@ -27,7 +27,8 @@
 
 #include "easysetup.h"
 
-/** Note: Comment below line to test without Soft AP and automatic Wi-Fi Connection. */
+/** Note: Comment below line to test without Soft AP and automatic Wi-Fi
+ * Connection. */
 #define WITH_SOFTAP
 
 static pthread_mutex_t mutex;
@@ -57,9 +58,8 @@ static bool g_is_secured = true;
 
 #define MAXLEN_STRING 100
 
-typedef struct
-{
-  int user_value_int;                 /**< User-specific property in WiFi Resource **/
+typedef struct {
+  int user_value_int; /**< User-specific property in WiFi Resource **/
   char user_value_str[MAXLEN_STRING]; /**< User-specific property in DevConf
                                          Resource **/
 } user_properties_t;
@@ -68,15 +68,12 @@ user_properties_t g_user_properties;
 
 #ifdef WITH_SOFTAP
 
-typedef struct
-{
+typedef struct {
   char ssid[128];
   char password[128];
 } soft_ap_data_t;
 
-bool
-execute_command(const char *cmd, char *result, int result_len)
-{
+bool execute_command(const char *cmd, char *result, int result_len) {
   char buffer[128];
   FILE *fp = popen(cmd, "r");
 
@@ -99,9 +96,7 @@ execute_command(const char *cmd, char *result, int result_len)
   return true;
 }
 
-void *
-es_worker_thread_routine(void *thread_data)
-{
+void *es_worker_thread_routine(void *thread_data) {
   printf("es_worker_thread_routine in\n");
 
   soft_ap_data_t *wifi_data = (soft_ap_data_t *)thread_data;
@@ -139,8 +134,9 @@ es_worker_thread_routine(void *thread_data)
   sleep(1);
 
   /** Connect to Target Wi-Fi AP */
-  char nmcli_command[64+strlen(ssid)+strlen(pwd)];
-  snprintf(nmcli_command, sizeof(nmcli_command), "nmcli d wifi connect %s password %s", ssid, pwd);
+  char nmcli_command[64 + strlen(ssid) + strlen(pwd)];
+  snprintf(nmcli_command, sizeof(nmcli_command),
+           "nmcli d wifi connect %s password %s", ssid, pwd);
 
   printf("executing commnad: %s\n", nmcli_command);
 
@@ -159,17 +155,13 @@ es_worker_thread_routine(void *thread_data)
 
 #endif // WITH_SOFTAP
 
-void
-set_user_properties()
-{
+void set_user_properties() {
   g_user_properties.user_value_int = 0;
   strncpy(g_user_properties.user_value_str, "User String", MAXLEN_STRING);
   printf("[ES App] set_user_properties done\n");
 }
 
-void
-read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata)
-{
+void read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata) {
   (void)resourceType;
   (void)payload;
   (void)userdata;
@@ -204,9 +196,7 @@ read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata)
   printf("[ES App] read_user_data_cb out\n");
 }
 
-void
-write_user_data_cb(oc_rep_t *payload, char *resourceType)
-{
+void write_user_data_cb(oc_rep_t *payload, char *resourceType) {
   (void)resourceType;
   (void)payload;
 
@@ -220,9 +210,7 @@ write_user_data_cb(oc_rep_t *payload, char *resourceType)
   printf("[ES App] write_user_data_cb out\n");
 }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int err = oc_init_platform("Samsung", NULL, NULL);
 
   err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung",
@@ -230,9 +218,8 @@ app_init(void)
   return err;
 }
 
-static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
+static void get_temp(oc_request_t *request, oc_interface_mask_t interface,
+                     void *user_data) {
   (void)user_data;
   PRINT("[ES App] GET_temp:\n");
   bool invalid_query = false;
@@ -303,9 +290,8 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
+static void post_temp(oc_request_t *request, oc_interface_mask_t interface,
+                      void *user_data) {
   (void)interface;
   (void)user_data;
   PRINT("[ES App] POST_temp:\n");
@@ -345,9 +331,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-void
-wifi_prov_cb_in_app(es_wifi_conf_data *event_data)
-{
+void wifi_prov_cb_in_app(es_wifi_conf_data *event_data) {
   printf("[ES App] wifi_prov_cb_in_app in\n");
 
   if (event_data == NULL) {
@@ -365,7 +349,7 @@ wifi_prov_cb_in_app(es_wifi_conf_data *event_data)
   pthread_t wifi_cn_thread;
 
   soft_ap_data_t *soft_ap_data =
-    (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
+      (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
   strcpy(soft_ap_data->ssid, oc_string(event_data->ssid));
   strcpy(soft_ap_data->password, oc_string(event_data->pwd));
   pthread_create(&wifi_cn_thread, NULL, es_worker_thread_routine,
@@ -375,9 +359,7 @@ wifi_prov_cb_in_app(es_wifi_conf_data *event_data)
   printf("[ES App] wifi_prov_cb_in_app out\n");
 }
 
-void
-dev_conf_prov_cb_in_app(es_dev_conf_data *event_data)
-{
+void dev_conf_prov_cb_in_app(es_dev_conf_data *event_data) {
   printf("[ES App] dev_conf_prov_cb_in_app in\n");
 
   if (event_data == NULL) {
@@ -388,9 +370,7 @@ dev_conf_prov_cb_in_app(es_dev_conf_data *event_data)
   printf("[ES App] dev_conf_prov_cb_in_app out\n");
 }
 
-void
-cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data)
-{
+void cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data) {
   printf("[ES App] cloud_conf_prov_cb_in_app in\n");
 
   if (event_data == NULL) {
@@ -417,19 +397,16 @@ cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data)
   printf("[ES App] cloud_conf_prov_cb_in_app out\n");
 }
 
-es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = &wifi_prov_cb_in_app,
-                                           .dev_conf_prov_cb =
-                                             &dev_conf_prov_cb_in_app,
-                                           .cloud_data_prov_cb =
-                                             &cloud_conf_prov_cb_in_app };
+es_provisioning_callbacks_s g_callbacks = {
+    .wifi_prov_cb = &wifi_prov_cb_in_app,
+    .dev_conf_prov_cb = &dev_conf_prov_cb_in_app,
+    .cloud_data_prov_cb = &cloud_conf_prov_cb_in_app};
 
-void
-start_easy_setup()
-{
+void start_easy_setup() {
   printf("[ES App] start_easy_setup in\n");
 
   es_connect_type resourcemMask =
-    ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
+      ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
   if (es_init_enrollee(g_is_secured, resourcemMask, g_callbacks) != ES_OK) {
     printf("[ES App] es_init_enrollee error!\n");
     return;
@@ -438,19 +415,19 @@ start_easy_setup()
   printf("[ES App] es_init_enrollee Success\n");
 
   // Set callbacks for Vendor Specific Properties
-  es_set_callback_for_userdata(&read_user_data_cb, &write_user_data_cb);
+  es_set_callback_for_userdata(&read_user_data_cb, &write_user_data_cb, NULL);
   printf("[ES App] start_easy_setup out\n");
 }
 
-void
-set_device_info()
-{
+void set_device_info() {
   printf("[ES App] set_device_info in\n");
   char *device_name = "TEST_DEVICE";
 
-  es_device_property device_property ={{{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF },WIFI_5G},{{0}}};
+  es_device_property device_property = {
+      {{WIFI_11G, WIFI_11N, WIFI_11AC, WiFi_EOF}, WIFI_5G}, {{0}}};
 
-  oc_new_string(&device_property.DevConf.device_name, device_name, strlen(device_name));
+  oc_new_string(&device_property.DevConf.device_name, device_name,
+                strlen(device_name));
 
   if (es_set_device_property(&device_property) == ES_ERROR)
     printf("[ES App] es_set_device_property error!\n");
@@ -458,9 +435,7 @@ set_device_info()
   printf("[ES App] set_device_info out\n");
 }
 
-void
-stop_easy_setup()
-{
+void stop_easy_setup() {
   printf("[ES App] stop_easy_setup in\n");
 
   if (es_terminate_enrollee() == ES_ERROR) {
@@ -471,9 +446,7 @@ stop_easy_setup()
   printf("[ES App] stop_easy_setup out\n");
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   printf("[ES App] register_resources in\n");
 
   oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
@@ -500,25 +473,19 @@ register_resources(void)
   printf("[ES App] register_resources out\n");
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -532,7 +499,7 @@ main(void)
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources =
-                                         register_resources };
+                                           register_resources};
 
   oc_clock_time_t next_event;
 
