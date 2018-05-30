@@ -19,18 +19,18 @@
 
 default: all
 
-top_dir?=../../..
-extra_dir?=${CURDIR}/${top_dir}/deps
+top_dir?=${CURDIR}/../../..
+extra_dir?=${top_dir}/deps
 
 port?=freertos
+export port
+
 os_url?=https://github.com/espressif/esp-idf
 os_dir?=${extra_dir}/esp-idf
 os_branch?=master
 #os_machine?=esp32
 IDF_PATH=${os_dir}
 export IDF_PATH
-
-app_dir?=${top_dir}/port/${port}
 
 toolchain_url?=https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 toolchain_abi?=xtensa-esp32-elf
@@ -40,10 +40,19 @@ toolchain_bin?=${toolchain_dir}/bin
 CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-
 CC=${CROSSCOMPIL}gcc
 export CC
+
+CFLAGS+=-Werror
+export CFLAGS
 PATH:=${toolchain_bin}:${PATH}
 export PATH
 
 prep_files+=${CC}
+
+app_dir?=${top_dir}/port/${port}
+sub_dirs+=${app_dir}
+sub_dirs+=${top_dir}/apps/st_app/
+#TODO: try to build more gemeric code
+#sub_dirs+=${top_dir}/apps
 
 ${os_dir}:
 	git clone --depth 1 --recursive -b ${os_branch} ${os_url} $@
@@ -71,5 +80,6 @@ prep: ${prep_files} ${CC}
 build/hello: ${os_dir}
 	${MAKE} -C $</examples/get-started/hello_world/ all
 
-build: ${app_dir} ${prep_files}
-	${MAKE} -C $<
+build: ${sub_dirs}
+	for sub_dir in $^; do ${MAKE} -C $${sub_dir} ; done
+
