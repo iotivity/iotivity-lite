@@ -15,6 +15,7 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#include <stdlib.h>
 
 #include "st_manager.h"
 #include "oc_api.h"
@@ -336,8 +337,10 @@ st_manager_start(void)
   int device_num = 0;
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = st_process_signal,
-                                       .register_resources =
-                                         register_resources };
+#ifdef OC_SERVER
+                                       .register_resources = register_resources
+#endif
+  };
 
 restart:
   if (st_load() < 0) {
