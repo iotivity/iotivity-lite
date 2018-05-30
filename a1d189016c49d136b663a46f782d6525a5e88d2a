@@ -22,6 +22,30 @@
       "revId": "a1d189016c49d136b663a46f782d6525a5e88d2a",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9173e84c",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-30T00:30:38Z",
+      "side": 1,
+      "message": "My object is reducing the MEMORY usage,\n\n- blockwise buffers are not needed between   coap_serialize_message and coap_send_transaction/coap_clear_transaction anymore\n\n- In addition, coap_send_transaction may take or delay longer time than we expect because it uses proto thread.\n\n- Moreover duplicate   calling   oc_blockwise_scrub_buffers  doesn\u0027t bring problem since it check internally",
+      "parentUuid": "da33351e_71ce2485",
+      "range": {
+        "startLine": 674,
+        "startChar": 0,
+        "endLine": 676,
+        "endChar": 26
+      },
+      "revId": "a1d189016c49d136b663a46f782d6525a5e88d2a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
