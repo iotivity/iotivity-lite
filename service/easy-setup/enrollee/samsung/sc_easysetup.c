@@ -155,9 +155,11 @@ read_sc_int_prop_from_payload(oc_rep_t *payload, char *prop_key,
 static void
 write_sc_string_prop_to_payload(char *prop_key, oc_string_t *prop_value)
 {
-  char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
-  construct_attribute_name(attr_name, prop_key);
-  oc_rep_set_text_string_with_key(root, attr_name, oc_string(*prop_value));
+  if (prop_value && oc_string_len(*prop_value) > 0) {
+    char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
+    construct_attribute_name(attr_name, prop_key);
+    oc_rep_set_text_string_with_key(root, attr_name, oc_string(*prop_value));
+  }
 }
 
 static void
