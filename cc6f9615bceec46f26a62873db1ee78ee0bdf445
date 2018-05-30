@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_51a04090",
+        "filename": "security/oc_pstat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T00:03:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_f1ba34e0",
+      "range": {
+        "startLine": 145,
+        "startChar": 0,
+        "endLine": 145,
+        "endChar": 30
+      },
+      "revId": "cc6f9615bceec46f26a62873db1ee78ee0bdf445",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_d1bf30cf",
         "filename": "security/oc_pstat.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-05-29T22:00:44Z",
       "side": 1,
       "message": "I would prefer if you moved each of these calls to the end of\ntheir xxx_default(...) functions in their respective modules.\nSo, for e.g., oc_sec_dump_doxm() would appear at the end\nof oc_sec_doxm_default() in oc_doxm.c.\n\nOnce you\u0027ve submitted this change, there is another change that needs to be made in oc_store for this change to have the intended effect, and I can take care of that.",
+      "range": {
+        "startLine": 145,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 28
+      },
+      "revId": "cc6f9615bceec46f26a62873db1ee78ee0bdf445",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91aac86e",
+        "filename": "security/oc_pstat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T00:03:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_d1bf30cf",
       "range": {
         "startLine": 145,
         "startChar": 0,
