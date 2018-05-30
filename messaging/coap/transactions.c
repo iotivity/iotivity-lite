@@ -114,7 +114,6 @@ coap_send_transaction(coap_transaction_t *t)
 {
   OC_DBG("Sending transaction(len: %d) %u: %p", t->message->length, t->mid,
          (void *)t);
-  OC_LOGbytes(t->message->data, t->message->length);
   bool confirmable = false;
 
   confirmable =

@@ -54,6 +54,7 @@ static void udp_receive_cbk(void *context, otMessage *ot_message,
     oc_message->endpoint.addr.ipv6.port = ot_message_info->mPeerPort;
 
 #ifdef OC_DEBUG
+    OC_LOGbytes(message->data, message->length);
     PRINT("Incoming message from ");
     PRINTipaddr(message->endpoint);
     PRINT("\n\n");
@@ -120,6 +121,7 @@ oc_send_buffer(oc_message_t *message)
   message_info.mPeerPort = message->endpoint.addr.ipv6.port;
 
 #ifdef OC_DEBUG
+  OC_LOGbytes(message->data, message->length);
   PRINT("Outgoing message to ");
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
