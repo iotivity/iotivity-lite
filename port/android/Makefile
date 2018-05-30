@@ -85,8 +85,13 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 MBEDTLS_DIR := ../../deps/mbedtls
 
-SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
-SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+SRC_COMMON:=$(wildcard ../../util/*.c) ${CBOR}
+SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+
+# From API level 24 on Android supports getifaddrs itself.
+ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
+	SRC:=$(filter-out ../../port/android/ifaddrs-android.c,${SRC})
+endif
 
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/android/config.h
@@ -107,7 +112,7 @@ LIBS?= -lm
 
 SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
-	  client_scenes_linux server_scenes_linux
+	  client_scenes_linux server_scenes_linux smart_lock server_multithread_linux client_multithread_linux
 
 ifneq ($(IOT_NAME_SUFFIX),)
 SAMPLES := $(addsuffix $(IOT_NAME_SUFFIX),$(SAMPLES))
@@ -143,6 +148,10 @@ ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
 endif
 
+ifeq ($(TCP),1)
+	EXTRA_CFLAGS += -DOC_TCP
+endif
+
 CONSTRAINED_LIBS = libiotivity-constrained-server$(IOT_NAME_SUFFIX).a libiotivity-constrained-client$(IOT_NAME_SUFFIX).a \
 		    libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a
 
@@ -150,6 +159,8 @@ all: $(CONSTRAINED_LIBS) $(SAMPLES)
 default: all
 
 .PHONY: clean
+
+${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 ${OBJDIR}/%.o: %.c
 	@mkdir -p ${@D}
@@ -176,11 +187,22 @@ libiotivity-constrained-client$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT)
 libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
+server_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-client.a
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
+
+smart_lock$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
 temp_sensor$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
@@ -221,8 +243,29 @@ client_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/client_scenes_linux.c libiotiv
 ${OBT}: libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+ifeq ($(SECURE),1)
+MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
+${MBEDTLS_DIR}/.git:
+	git submodule update --init ${@D}
+
+$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
+	if [ -d ${MBEDTLS_DIR} ]; then \
+	cd ${MBEDTLS_DIR} && \
+	git clean -fdx . && \
+	git reset --hard && \
+	cd -; \
+	fi && \
+	git submodule update --init && \
+	cd ${MBEDTLS_DIR} && \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > ${@F}
+endif
+
 clean:
 	$(RM) -rf ${OBJDIR} $(CONSTRAINED_LIBS)
 
 cleanall: clean
-	$(RM) -rf ${all} $(SAMPLES) $(OBT)
+	$(RM) -rf ${all} $(SAMPLES) $(OBT) $(MBEDTLS_PATCH_FILE)
+
+distclean: cleanall
+

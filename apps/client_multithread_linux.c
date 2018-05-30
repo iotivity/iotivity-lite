@@ -366,11 +366,11 @@ main(void)
   custom_func_s first_func = {.func = find_first_endpoint };
   custom_func_s same_func = {.func = find_same_endpoint };
 
-  char key[10];
+  int key;
   while (quit != 1) {
     print_menu();
     fflush(stdin);
-    if (!scanf("%s", &key)) {
+    if (!scanf("%d", &key)) {
       printf("scanf failed!!!!\n");
       quit = 1;
       handle_signal(0);
@@ -378,29 +378,29 @@ main(void)
     }
 
     pthread_mutex_lock(&app_mutex);
-    switch (key[0]) {
-    case '1':
+    switch (key) {
+    case 1:
       resource_found = false;
       oc_do_ip_discovery(resource_rt, &discovery_handler, &first_func);
       break;
-    case '2':
+    case 2:
       resource_found = false;
       oc_do_ip_discovery_at_endpoint(resource_rt, &discovery_handler, &set_ep,
                                      &same_func);
       break;
-    case '3':
+    case 3:
       get_request();
       break;
-    case '4':
+    case 4:
       post_request();
       break;
-    case '5':
+    case 5:
       observe_request();
       break;
-    case '6':
+    case 6:
       stop_observe();
       break;
-    case '0':
+    case 0:
       quit = 1;
       handle_signal(0);
       break;

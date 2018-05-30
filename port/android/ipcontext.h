@@ -25,7 +25,8 @@
 #include <sys/socket.h>
 
 #ifdef OC_TCP
-typedef struct tcp_context_t {
+typedef struct tcp_context_t
+{
   struct sockaddr_storage server;
   int server_sock;
   uint16_t port;
@@ -49,7 +50,8 @@ typedef struct tcp_context_t {
 } tcp_context_t;
 #endif
 
-typedef struct ip_context_t {
+typedef struct ip_context_t
+{
   struct ip_context_t *next;
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;

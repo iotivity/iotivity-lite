@@ -35,6 +35,8 @@
 #include <errno.h>
 #if __ANDROID_API__ >= 24
 #include <ifaddrs.h>
+#else
+#include "ifaddrs-android.h"
 #endif /* __ANDROID_API__ >= 24 */
 #include <linux/ipv6.h>
 #include <linux/netlink.h>
@@ -119,7 +121,12 @@ static bool
 check_new_ip_interfaces(void)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
+#if __ANDROID_API__ < 24
+  if (android_getifaddrs(&ifs) < 0) {
+#else
   if (getifaddrs(&ifs) < 0) {
+#endif
+
     OC_ERR("querying interface address");
     return false;
   }
@@ -134,7 +141,12 @@ check_new_ip_interfaces(void)
 
     add_ip_interface(if_index);
   }
+#if __ANDROID_API__ < 24
+  android_freeifaddrs(ifs);
+#else
   freeifaddrs(ifs);
+#endif
+
   return true;
 }
 
@@ -238,9 +250,10 @@ get_ip_context_for_device(int device)
 }
 
 #ifdef OC_IPV4
-static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
-                                              const struct in_addr *local,
-                                              int interface_index) {
+static int
+add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
+                                   int interface_index)
+{
   struct ip_mreqn mreq;
 
   memset(&mreq, 0, sizeof(mreq));
@@ -261,8 +274,9 @@ static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
 }
 #endif /* OC_IPV4 */
 
-static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
-                                              int interface_index) {
+static int
+add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
+{
   struct ipv6_mreq mreq;
 
   /* Link-local scope */
@@ -310,10 +324,17 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
   return 0;
 }
 
-static int configure_mcast_socket(int mcast_sock, int sa_family) {
+static int
+configure_mcast_socket(int mcast_sock, int sa_family)
+{
   int ret = 0;
   struct ifaddrs *ifs = NULL, *interface = NULL;
+#if __ANDROID_API__ < 24
+  if (android_getifaddrs(&ifs) < 0) {
+#else
   if (getifaddrs(&ifs) < 0) {
+#endif
+
     OC_ERR("querying interface addrs");
     return -1;
   }
@@ -324,7 +345,7 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
     }
     /* Ignore interfaces not belonging to the address family under consideration
      */
-    if (interface->ifa_addr->sa_family != sa_family) {
+    if (interface->ifa_addr && interface->ifa_addr->sa_family != sa_family) {
       continue;
     }
     /* Obtain interface index for this address */
@@ -332,19 +353,25 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6) {
       struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
-      if (IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
+      if (a && IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
         ret += add_mcast_sock_to_ipv6_mcast_group(mcast_sock, if_index);
       }
     }
 #ifdef OC_IPV4
     else if (sa_family == AF_INET) {
       struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
-      ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
-                                                if_index);
+      if (a)
+        ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
+                                                  if_index);
     }
 #endif /* OC_IPV4 */
   }
+#if __ANDROID_API__ < 24
+  android_freeifaddrs(ifs);
+#else
   freeifaddrs(ifs);
+#endif
+
   return ret;
 }
 
@@ -352,7 +379,9 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
  */
-static int process_interface_change_event(void) {
+static int
+process_interface_change_event(void)
+{
   int ret = 0, i, num_devices = oc_core_get_num_devices();
   struct nlmsghdr *response = NULL;
 
@@ -396,12 +425,12 @@ static int process_interface_change_event(void) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv4_mcast_group(
-                    dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+                  dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
               }
             } else
 #endif /* OC_IPV4 */
-                if (ifa->ifa_family == AF_INET6 &&
-                    ifa->ifa_scope == RT_SCOPE_LINK) {
+              if (ifa->ifa_family == AF_INET6 &&
+                  ifa->ifa_scope == RT_SCOPE_LINK) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
@@ -477,7 +506,7 @@ network_event_thread(void *data)
       char buf;
       // write to pipe shall not block - so read the byte we wrote
       if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
-          // intentionally left blank
+        // intentionally left blank
       }
     }
 
@@ -593,9 +622,8 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
 
 #ifdef OC_TCP
-      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
-                                                              &setfds,
-                                                              message);
+      tcp_receive_state_t tcp_status =
+        oc_tcp_receive_message(dev, &setfds, message);
       if (tcp_status == TCP_STATUS_RECEIVE) {
         goto common_tcp;
       } else {
@@ -623,7 +651,8 @@ network_event_thread(void *data)
     common_tcp:
 #endif /* OC_TCP */
 #ifdef OC_DEBUG
-      PRINT("Incoming message of size %lu bytes from ", (unsigned long int)message->length);
+      PRINT("Incoming message of size %lu bytes from ",
+            (unsigned long int)message->length);
       PRINTipaddr(message->endpoint);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -796,9 +825,12 @@ oc_connectivity_get_endpoints(int device)
   return oc_get_endpoint_list();
 }
 
-void oc_send_buffer(oc_message_t *message) {
+void
+oc_send_buffer(oc_message_t *message)
+{
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %lu bytes to ", (unsigned long int)message->length);
+  PRINT("Outgoing message of size %lu bytes to ",
+        (unsigned long int)message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -862,8 +894,8 @@ void oc_send_buffer(oc_message_t *message) {
   int bytes_sent = 0, x;
   while (bytes_sent < (int)message->length) {
     x = sendto(send_sock, message->data + bytes_sent,
-        message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
-        sizeof(receiver));
+               message->length - bytes_sent, 0, (struct sockaddr *)&receiver,
+               sizeof(receiver));
     if (x < 0) {
       OC_WRN("sendto() returned errno %d", errno);
       return;
@@ -874,12 +906,15 @@ void oc_send_buffer(oc_message_t *message) {
 }
 
 #ifdef OC_CLIENT
-#if __ANDROID_API__ >= 24
 void
 oc_send_discovery_request(oc_message_t *message)
 {
   struct ifaddrs *ifs = NULL, *interface = NULL;
+#if __ANDROID_API__ < 24
+  if (android_getifaddrs(&ifs) < 0) {
+#else
   if (getifaddrs(&ifs) < 0) {
+#endif
     OC_ERR("querying interfaces: %d", errno);
     goto done;
   }
@@ -891,7 +926,8 @@ oc_send_discovery_request(oc_message_t *message)
        and multicast flags set. */
     if ((interface->ifa_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
         OCF_IF_FLAGS) {
-      OC_DBG("skipping %s", (interface->ifa_name ? interface->ifa_name : "<none>"));
+      OC_DBG("skipping %s",
+             (interface->ifa_name ? interface->ifa_name : "<none>"));
       continue;
     }
     if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
@@ -914,8 +950,7 @@ oc_send_discovery_request(oc_message_t *message)
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
       if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF,
                      &addr->sin_addr, sizeof(addr->sin_addr)) == -1) {
-        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d",
-               errno);
+        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);
         goto done;
       }
       oc_send_buffer(message);
@@ -925,202 +960,13 @@ oc_send_discovery_request(oc_message_t *message)
 #endif /* !OC_IPV4 */
   }
 done:
+#if __ANDROID_API__ < 24
+  android_freeifaddrs(ifs);
+#else
   freeifaddrs(ifs);
-}
-
-#else /* __ANDROID_API__ < 24 */
-
-static void
-oc_send_discovery_request_ipv6(oc_message_t *message)
-{
-  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
-
-  int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
-
-  struct sockaddr_nl nl;
-  memset(&nl, 0, sizeof(nl));
-  nl.nl_family = AF_NETLINK;
-  if (bind(nl_sock, (struct sockaddr*)&nl, sizeof(nl)) < 0)
-  {
-    close(nl_sock);
-    OC_ERR("Cannot bind netlink socket: %d", errno);
-    return;
-  }
-
-  struct
-  {
-    struct nlmsghdr nlhdr;
-    struct ifinfomsg infomsg;
-  } request;
-
-  memset(&request, 0, sizeof(request));
-  request.nlhdr.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
-  request.nlhdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_ROOT;
-  request.nlhdr.nlmsg_type = RTM_GETLINK;
-  request.infomsg.ifi_family = AF_INET6;
-
-  if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
-    close(nl_sock);
-    OC_ERR("cannot send getlink query: %d", errno);
-    return;
-  }
-
-  fd_set rfds;
-  FD_ZERO(&rfds);
-  FD_SET(nl_sock, &rfds);
-
-  if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
-    close(nl_sock);
-    return;
-  }
-
-  /* On Android there can be quite a number of interfaces (over 10).
-     In this case the kernel returns the response in chunks.
-     So we need to continue receiving the response until we
-     receive the DONE message. */
-  bool done = false;
-  while (!done) {
-    int guess = 512, response_len;
-    do {
-      guess <<= 1;
-      uint8_t dummy[guess];
-      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
-      if (response_len <= 0) {
-        close(nl_sock);
-        OC_ERR("cannot peek getlink response: %d", errno);
-        return;
-      }
-    } while (response_len == guess);
-
-    uint8_t buffer[response_len];
-    response_len = recv(nl_sock, buffer, response_len, 0);
-    if (response_len <= 0) {
-      close(nl_sock);
-        OC_ERR("cannot get getlink response: %d", errno);
-      return;
-    }
-
-    struct nlmsghdr *response = (struct nlmsghdr *)buffer;
-    if (response->nlmsg_type == NLMSG_ERROR) {
-      close(nl_sock);
-      OC_ERR("getlink signalled error");
-      return;
-    }
-
-    while
-      NLMSG_OK(response, response_len)
-        {
-          if (response->nlmsg_type == NLMSG_DONE) {
-            /* Set by the kernel when all interfaces were sent. */
-            done = true;
-            break;
-          }
-          struct ifinfomsg *infomsg = (struct ifinfomsg *)NLMSG_DATA(response);
-          if ((infomsg->ifi_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) ==
-              OCF_IF_FLAGS) {
-            int mif = infomsg->ifi_index;
-            if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
-                           sizeof(mif)) == -1) {
-              OC_ERR("setting socket option for IPV6_MULTICAST_IF on if %d: %d",
-                     mif, errno);
-            }
-            else {
-              OC_DBG("IPv6 discovery on if %d", infomsg->ifi_index);
-              oc_send_buffer(message);
-            }
-          }
-          else {
-            OC_DBG("skipping IPv6 discovery on if %d", infomsg->ifi_index);
-          }
-
-          response = NLMSG_NEXT(response, response_len);
-        }
-  }
-
-  close(nl_sock);
-}
-
-#ifdef OC_IPV4
-static void
-oc_send_discovery_request_ipv4(oc_message_t *message)
-{
-  int cnf_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-  if (cnf_socket < 0) {
-    OC_ERR("opening configuration socket failed: %d", errno);
-    return;
-  }
-
-  struct ifconf	if_conf = { 0 };
-  struct ifreq  if_req[OC_MAX_NUM_INTERFACES];
-  memset(if_req, 0, sizeof(if_req));
-  if_conf.ifc_len = sizeof(if_req);
-  if_conf.ifc_req = if_req;
-
-  /* Note: This delivers only IPv4 interfaces */
-  if (ioctl(cnf_socket, SIOCGIFCONF, &if_conf) < 0) {
-    OC_ERR("acquiring network interfaces failed: %d", errno);
-    goto done;
-  }
-
-  int num_interfaces = if_conf.ifc_len / sizeof(struct ifreq);
-  if (num_interfaces <= 0) {
-    close(cnf_socket);
-    OC_ERR("no interfaces detected");
-    goto done;
-  }
-
-  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
-
-  int loop;
-  for (loop = 0; loop < num_interfaces; ++loop) {
-    struct ifreq flags_req;
-    struct ifreq addrs_req;
-    memset(&flags_req, 0, sizeof(flags_req));
-    memset(&addrs_req, 0, sizeof(addrs_req));
-    memcpy(flags_req.ifr_name, if_req[loop].ifr_name, strlen(if_req[loop].ifr_name)+1);
-    memcpy(addrs_req.ifr_name, if_req[loop].ifr_name, strlen(if_req[loop].ifr_name)+1);
-
-    /* Only broadcast on LAN/WLAN. 3G/4G/5G should not have the broadcast
-       and multicast flags set. */
-    if (ioctl(cnf_socket, SIOCGIFFLAGS, &flags_req) < 0 ||
-        (flags_req.ifr_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
-        OCF_IF_FLAGS ||
-        ioctl(cnf_socket, SIOCGIFADDR, &addrs_req) < 0 ||
-        addrs_req.ifr_addr.sa_family != AF_INET) {
-      OC_DBG("skipping IPv4 %s", flags_req.ifr_name);
-      continue;
-    }
-
-    struct sockaddr_in *addr = (struct sockaddr_in *)&addrs_req.ifr_addr;
-    if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
-                   sizeof(addr->sin_addr)) == -1) {
-      OC_ERR("setting socket option for default IP_MULTICAST_IF of %s: %d",
-             flags_req.ifr_name, errno);
-      continue;
-    }
-
-    OC_DBG("IPv4 discovery on %s", flags_req.ifr_name);
-    oc_send_buffer(message);
-  }
-
-done:
-  close(cnf_socket);
-}
 #endif
-
-void
-oc_send_discovery_request(oc_message_t *message)
-{
-  if (message) {
-    if (message->endpoint.flags & IPV6)
-      oc_send_discovery_request_ipv6(message);
-#ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4)
-      oc_send_discovery_request_ipv4(message);
-#endif
-  }
 }
-#endif /* __ANDROID_API__ < 24 */
+
 #endif /* OC_CLIENT */
 
 int
@@ -1324,7 +1170,9 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-int oc_connectivity_init(int device) {
+int
+oc_connectivity_init(int device)
+{
   OC_DBG("Initializing connectivity for device %d", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
@@ -1468,12 +1316,11 @@ int oc_connectivity_init(int device) {
     memset(&ifchange_nl, 0, sizeof(struct sockaddr_nl));
     ifchange_nl.nl_family = AF_NETLINK;
     ifchange_nl.nl_groups =
-        RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+      RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
     ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
     if (ifchange_sock < 0) {
-      OC_ERR(
-          "creating netlink socket to monitor network interface changes %d",
-          errno);
+      OC_ERR("creating netlink socket to monitor network interface changes %d",
+             errno);
       return -1;
     }
     if (bind(ifchange_sock, (struct sockaddr *)&ifchange_nl,
@@ -1505,7 +1352,7 @@ oc_connectivity_shutdown(int device)
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-      OC_WRN("cannot wakeup network thread");
+    OC_WRN("cannot wakeup network thread");
   }
 
   close(dev->server_sock);
