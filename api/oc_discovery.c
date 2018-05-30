@@ -28,6 +28,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 
+#ifndef OC_SPEC_VER_OIC
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
                 const char *anchor, CborEncoder *links)
@@ -174,6 +175,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
 
   return matches;
 }
+#endif
 
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
@@ -417,7 +419,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_core_1_1_discovery_handler(request, interface, data);
     return;
   }
-
+#ifndef OC_SPEC_VER_OIC
   int matches = 0, device = request->resource->device;
 
   switch (interface) {
@@ -453,6 +455,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
+#endif
 }
 
 void
@@ -462,7 +465,7 @@ oc_create_discovery_resource(int resource_idx, int device)
     resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
     oc_core_discovery_handler, 0, 0, 0, 1, "oic.wk.res");
 }
-
+#ifndef ST_APP_OPTIMIZATION
 #ifdef OC_CLIENT
 static oc_endpoint_t*
 create_endpoints_1_1(oc_rep_t *policy, oc_endpoint_t *endpoint) {
@@ -688,3 +691,4 @@ done:
   return ret;
 }
 #endif /* OC_CLIENT */
+#endif
