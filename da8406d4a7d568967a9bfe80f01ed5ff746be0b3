@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f104f47f",
+        "filename": "port/contiki/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a61d1069",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 38
+      },
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_861a8c6c",
         "filename": "port/freertos/ipadapter.c",
         "patchSetId": 1
@@ -76,6 +100,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d17e10e4",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c62bf480",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_262100a0",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -87,6 +129,24 @@
       "writtenOn": "2018-05-28T20:46:30Z",
       "side": 1,
       "message": "Remove.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_51ce805b",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_262100a0",
       "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -110,6 +170,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b1db8c1a",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_06267cb7",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_663ae8ce",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -121,6 +199,24 @@
       "writtenOn": "2018-05-28T20:46:30Z",
       "side": 1,
       "message": "Move this below the label.",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91d8081f",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_663ae8ce",
       "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -230,6 +326,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_718904ca",
+        "filename": "port/openthread/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e64d5874",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c652d412",
         "filename": "port/riot/ipadapter.c",
         "patchSetId": 1
@@ -241,6 +355,24 @@
       "writtenOn": "2018-05-28T20:46:30Z",
       "side": 1,
       "message": "return message-\u003elength;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_518680ba",
+        "filename": "port/riot/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c652d412",
       "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -292,6 +424,24 @@
       "writtenOn": "2018-05-28T20:46:30Z",
       "side": 1,
       "message": "break;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b1938cf9",
+        "filename": "port/windows/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_66414839",
       "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -360,6 +510,24 @@
       "writtenOn": "2018-05-28T20:46:30Z",
       "side": 1,
       "message": "Change to return message-\u003elength;",
+      "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_919008ee",
+        "filename": "port/zephyr/src/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-30T08:51:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e674389e",
       "revId": "da8406d4a7d568967a9bfe80f01ed5ff746be0b3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
