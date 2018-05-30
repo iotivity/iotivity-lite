@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ac904f96",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1631,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-30T14:12:48Z",
+      "side": 1,
+      "message": "use TIZENRT_WIFI_IF_NAME here..",
+      "revId": "eef0054d920004bf1248561e641ad8b7f63f100a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4c9383a3",
+        "filename": "port/tizenrt/scripts/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-30T14:12:48Z",
+      "side": 1,
+      "message": "-DTIZENRT_WIFI_IF_NAME\u003dCONFIG_NET_CTRL_IFNAME_STA",
+      "revId": "eef0054d920004bf1248561e641ad8b7f63f100a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
