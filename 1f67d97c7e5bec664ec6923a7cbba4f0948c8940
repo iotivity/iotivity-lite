@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_31b77c88",
+        "filename": "include/oc_rep.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-05-30T08:54:30Z",
+      "side": 1,
+      "message": "How about making the separate patch for oc_rep.h for master.",
+      "parentUuid": "da33351e_b1e54caa",
+      "revId": "1f67d97c7e5bec664ec6923a7cbba4f0948c8940",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f1eeb48a",
         "filename": "service/easy-setup/enrollee/es_utils.h",
         "patchSetId": 14
