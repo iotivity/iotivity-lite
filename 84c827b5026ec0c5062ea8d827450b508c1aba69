@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0c74db97",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-05-30T12:45:52Z",
+      "side": 1,
+      "message": "(int)bytes_send;",
+      "revId": "84c827b5026ec0c5062ea8d827450b508c1aba69",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
