@@ -46,6 +46,30 @@
       "revId": "2073346c9e13c9378da0498e86a724e0d19f04ac",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b1aa6c17",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-05-30T09:06:27Z",
+      "side": 1,
+      "message": "Two problems there are.\n. If platform provides 4 byte case, there are two byte dummy value. This may causes the change the sha256(mac) from some events.\n. 4 byte cause the duplication of uuid, there should be update for UUID generation rule adding time and so on. Please apply the correct rule.\nWhatever happens, code should be updated in ioTivity initialization part to skip the uuid generation in case of easy-setup was done before instead of always generation.",
+      "parentUuid": "da33351e_d130d058",
+      "range": {
+        "startLine": 1389,
+        "startChar": 34,
+        "endLine": 1389,
+        "endChar": 35
+      },
+      "revId": "2073346c9e13c9378da0498e86a724e0d19f04ac",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
