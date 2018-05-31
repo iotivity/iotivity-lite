@@ -944,6 +944,9 @@ set_enrollee_state(es_enrollee_state es_state)
 es_enrollee_state
 get_enrollee_state(void)
 {
+  if (!g_enrollee)
+    return ES_STATE_INIT;
+
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
   return es_res->data.status;
@@ -956,6 +959,9 @@ set_enrollee_err_code(es_error_code es_err_code)
     OC_ERR("Invalid lec to set: %d", es_err_code);
     return ES_ERROR;
   }
+
+  if (!g_enrollee)
+    return ES_OK;
 
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
