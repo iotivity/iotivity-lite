@@ -310,11 +310,11 @@ main(void)
     goto exit;
   }
 
-  char key[10];
+  int key;
   while (quit != 1) {
     print_menu();
     fflush(stdin);
-    if (!scanf("%s", &key)) {
+    if (!scanf("%d", &key)) {
       printf("scanf failed!!!!\n");
       quit = 1;
       handle_signal(0);
@@ -322,17 +322,17 @@ main(void)
     }
 
     pthread_mutex_lock(&app_mutex);
-    switch (key[0]) {
-    case '1':
+    switch (key) {
+    case 1:
       change_state();
       break;
-    case '2':
+    case 2:
       change_power();
       break;
-    case '3':
+    case 3:
       change_separate_response_policy();
       break;
-    case '0':
+    case 0:
       quit = 1;
       handle_signal(0);
       break;
