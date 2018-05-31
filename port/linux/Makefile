@@ -97,9 +97,14 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
-ifeq ($(MFG),1)
+ifneq ($(AUTH_OPTION),0)
 SAMPLES += mfgserver
 CFLAGS += -DOC_MFG
+ifeq ($(AUTH_OPTION),1)
+CFLAGS += -DOC_UNLOAD_CERT
+endif
+else
+CFLAGS += -DOC_SKIP_CERT
 endif
 endif
 
