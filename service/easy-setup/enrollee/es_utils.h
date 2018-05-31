@@ -36,6 +36,30 @@ extern "C" {
       oc_rep_set_text_string(object, key, value);                              \
   } while (0);
 
+#define es_rep_set_text_string_with_keystr(object, key, value)                 \
+  do {                                                                         \
+    if (value) {                                                               \
+      g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));       \
+      g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
+    }                                                                          \
+  } while (0);
+
+#define es_rep_set_int_with_keystr(object, key, value)                         \
+  do {                                                                         \
+    if (value) {                                                               \
+      g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));       \
+      g_err |= cbor_encode_int(&object##_map, value);                          \
+    }                                                                          \
+  } while (0);
+
+#define es_rep_set_boolean_with_keystr(object, key, value)                     \
+  do {                                                                         \
+    if (value) {                                                               \
+      g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));       \
+      g_err |= cbor_encode_boolean(&object##_map, value);                      \
+    }                                                                          \
+  } while (0);
+
 #define es_free_string(str)                                                    \
   if (oc_string_len(str) > 0)                                                  \
     oc_free_string(&str);
