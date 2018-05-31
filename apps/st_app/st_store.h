@@ -22,13 +22,6 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 
-// typedef struct {
-//   oc_string_t device_name;
-//   oc_string_t manufactuarer_name;
-//   oc_string_t model_number;
-//   oc_string_t vendor_id;
-// } st_device_store_t;
-
 typedef struct
 {
   oc_string_t ssid;
@@ -48,12 +41,13 @@ typedef struct
 typedef struct
 {
   bool status;
-  // st_device_store_t device;
   st_ap_store_t accesspoint;
   st_cloud_store_t cloudinfo;
 } st_store_t;
 
-int st_load(void);
-void st_dump(void);
+int st_store_load(void);
+void st_store_dump(void);
+void st_store_info_initialize(void);
+st_store_t *st_store_get_info(void);
 
 #endif /* ST_STORE_H */
