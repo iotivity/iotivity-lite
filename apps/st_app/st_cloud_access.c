@@ -308,7 +308,7 @@ sign_up_handler(oc_client_response_t *data)
   context->retry_count = 0;
   context->cloud_access_status = CLOUD_ACCESS_SIGNED_UP;
   es_set_state(ES_STATE_REGISTERED_TO_CLOUD);
-  st_dump();
+  st_store_dump();
 
   return;
 
@@ -421,7 +421,7 @@ refresh_token_handler(oc_client_response_t *data)
   context->retry_count = 0;
   oc_set_delayed_callback(context, sign_in,
                           session_timeout[context->retry_count]);
-  st_dump();
+  st_store_dump();
 
   return;
 
@@ -493,7 +493,7 @@ publish_resource_handler(oc_client_response_t *data)
     es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
     oc_set_delayed_callback(context, find_ping,
                             message_timeout[context->retry_count]);
-    st_dump();
+    st_store_dump();
   } else {
     error_handler(data, publish_resource);
   }
