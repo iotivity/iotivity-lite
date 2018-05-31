@@ -156,6 +156,11 @@ st_cloud_access_stop(int device_index)
     return;
   }
 
+  if (context->cloud_access_status == CLOUD_ACCESS_FINISH) {
+    oc_remove_delayed_callback(context, sign_in);
+    oc_remove_delayed_callback(context, send_ping);
+  }
+
   oc_list_remove(st_cloud_context_list, context);
 
   if (oc_string_len(context->auth_provider) > 0) {
@@ -343,14 +348,19 @@ sign_in_handler(oc_client_response_t *data)
     oc_remove_delayed_callback(context, sign_in);
     context->retry_count = 0;
 
-    if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING) {
-      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, find_ping,
-                              message_timeout[context->retry_count]);
-    } else {
+    if (context->cloud_access_status == CLOUD_ACCESS_SIGNED_UP) {
       es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
       oc_set_delayed_callback(context, set_dev_profile,
                               message_timeout[context->retry_count]);
+    } else {
+      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
+      oc_set_delayed_callback(context, find_ping,
+                              message_timeout[context->retry_count]);
+    }
+    int expiresin;
+    if (oc_rep_get_int(data->payload, "expiresin", &expiresin)) {
+      expiresin = expiresin / 10 + 10;
+      oc_set_delayed_callback(context, sign_in, expiresin);
     }
     context->cloud_access_status = CLOUD_ACCESS_SIGNED_IN;
   } else {
