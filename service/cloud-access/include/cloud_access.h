@@ -74,9 +74,11 @@ bool oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
                           const char *auth_code, int device_index,
                           oc_response_handler_t handler, void *user_data);
+#endif
 
 /**
   @brief Function for sign-in to account server.
@@ -140,9 +142,11 @@ bool oc_set_device_profile(oc_endpoint_t *endpoint,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool oc_delete_device(oc_endpoint_t *endpoint, const char *uid,
                       int device_index, oc_response_handler_t handler,
                       void *user_data);
+#endif
 
 /**
   @brief Function for discovers on a ping resource.
@@ -174,8 +178,10 @@ bool oc_send_ping_request(oc_endpoint_t *endpoint, int interval,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool oc_send_ping_update(oc_endpoint_t *endpoint, const int *interval,
                          int length, oc_response_handler_t handler,
                          void *user_data);
+#endif
 
 #endif /* CLOUD_ACCESS_H */

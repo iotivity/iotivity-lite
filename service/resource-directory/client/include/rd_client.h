@@ -41,8 +41,10 @@
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
                 oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+#endif
 
 /**
   @brief Publish RD resource to Resource Directory.
@@ -55,10 +57,12 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                                const char *id, const char *name,
                                oc_response_handler_t handler, oc_qos_t qos,
                                void *user_data);
+#endif
 
 /**
   @brief Publish all resource to Resource Directory.
@@ -83,8 +87,10 @@ bool rd_publish_all(oc_endpoint_t *endpoint, int device_index,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+#endif
 
 /**
   @brief Delete RD resource from Resource Directory.
@@ -96,8 +102,10 @@ bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
+#ifndef ST_APP_OPTIMIZATION
 bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                               const char *id, oc_response_handler_t handler,
                               oc_qos_t qos, void *user_data);
+#endif
 
 #endif /* RD_CLIENT_H */

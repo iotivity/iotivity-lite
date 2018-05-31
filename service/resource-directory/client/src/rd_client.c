@@ -57,6 +57,7 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
   oc_rep_end_object(*parent, links);
 }
 
+#ifndef ST_APP_OPTIMIZATION
 bool
 rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
            oc_response_handler_t handler, oc_qos_t qos, void *user_data)
@@ -86,7 +87,9 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
 
   return status;
 }
+#endif
 
+#ifndef ST_APP_OPTIMIZATION
 bool
 rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                           const char *id, const char *name,
@@ -131,6 +134,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 
   return oc_do_post();
 }
+#endif
 
 bool
 rd_publish_all(oc_endpoint_t *endpoint, int device_index,
@@ -176,6 +180,7 @@ rd_publish_all(oc_endpoint_t *endpoint, int device_index,
   return oc_do_post();
 }
 
+#ifndef ST_APP_OPTIMIZATION
 bool
 rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
@@ -186,7 +191,9 @@ rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
 }
+#endif
 
+#ifndef ST_APP_OPTIMIZATION
 bool
 rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                          const char *id, oc_response_handler_t handler,
@@ -205,3 +212,4 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return oc_do_delete(OC_RSRVD_RD_URI, endpoint, query, handler, qos,
                       user_data);
 }
+#endif
