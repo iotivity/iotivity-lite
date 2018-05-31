@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ac068f1e",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-05-31T13:51:34Z",
+      "side": 1,
+      "message": "any chance of double free of message-\u003edata as oc_message_unref() and oc_resize_message() both free message-\u003edata.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 34
+      },
+      "revId": "f9e350eeebe97e64f95dea38b369fad7f46e6ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
