@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_376f6cc7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-05-31T19:01:27Z",
+      "side": 1,
+      "message": "Could you explain exactly where you saw this happen?\n\nI am curious because oc_sec_dump_xxx() calls happen after oc_send_response() returns. Those CborEncoder objects should not be touched after this point.\n\nFurther oc_sec_dump_xxx() initializes those CborEncoder objects with a totally separate buffer.\n\nSo, I want to know what it is that I am missing here.",
+      "range": {
+        "startLine": 13,
+        "startChar": 15,
+        "endLine": 13,
+        "endChar": 53
+      },
+      "revId": "e3e6bf2cac7af18e79ec5bdbd5f6708febc491c9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
