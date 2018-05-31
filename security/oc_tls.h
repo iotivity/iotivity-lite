@@ -32,6 +32,11 @@ int oc_tls_init_context(void);
 bool oc_sec_load_certs(int device);
 bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
                          size_t ca_cet_buf_len);
+#ifdef OC_MFG
+void
+oc_sec_unload_own_certs();
+#endif
+
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);
 

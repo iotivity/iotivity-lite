@@ -216,6 +216,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
       goto pstat_state_error;
     }
     ps->p = false;
+#ifdef OC_MFG
+    if (OC_DOS_RFOTM == pstat[device].s){
+      oc_sec_unload_own_certs(device);
+    }
+#endif
   } break;
   case OC_DOS_RFNOP: {
     ps->p = true;
