@@ -900,6 +900,11 @@ delete_easysetup_resources(void)
 es_result_e
 set_device_property(es_device_property *device_property)
 {
+  if (!g_enrollee) {
+    OC_ERR("Enrollee is not initialized!");
+    return ES_ERROR;
+  }
+
   es_wifi_conf_resource_t *wifi_res =
     wifi_res_cast(g_enrollee->res[ES_RES_TYPE_WIFI_CONF]);
   wifi_res->data.supported_freq = (device_property->WiFi).supported_freq;
@@ -926,13 +931,15 @@ set_device_property(es_device_property *device_property)
 es_result_e
 set_enrollee_state(es_enrollee_state es_state)
 {
+  if (!g_enrollee) {
+    OC_ERR("Enrollee is not initialized!");
+    return ES_ERROR;
+  }
+
   if (es_state < ES_STATE_INIT || es_state >= ES_STATE_EOF) {
     OC_ERR("Invalid es_set_state to set: %d", es_state);
     return ES_ERROR;
   }
-
-  if (!g_enrollee)
-    return ES_OK;
 
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
@@ -941,17 +948,14 @@ set_enrollee_state(es_enrollee_state es_state)
   return ES_OK;
 }
 
-es_enrollee_state
-get_enrollee_state(void)
-{
-  es_easy_setup_resource_t *es_res =
-    es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
-  return es_res->data.status;
-}
-
 es_result_e
 set_enrollee_err_code(es_error_code es_err_code)
 {
+  if (!g_enrollee) {
+    OC_ERR("Enrollee is not initialized!");
+    return ES_ERROR;
+  }
+
   if (es_err_code < ES_ERRCODE_NO_ERROR || es_err_code > ES_ERRCODE_UNKNOWN) {
     OC_ERR("Invalid lec to set: %d", es_err_code);
     return ES_ERROR;

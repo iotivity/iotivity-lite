@@ -46,12 +46,6 @@ int oc_rep_finalize(void);
     g_err |= cbor_encode_int(&object##_map, value);                            \
   } while (0)
 
-#define oc_rep_set_int_with_key(object, key, value)                            \
-  do {                                                                         \
-    g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));         \
-    g_err |= cbor_encode_int(&object##_map, value);                            \
-  } while (0)
-
 #define oc_rep_set_uint(object, key, value)                                    \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
@@ -64,21 +58,9 @@ int oc_rep_finalize(void);
     g_err |= cbor_encode_boolean(&object##_map, value);                        \
   } while (0)
 
-#define oc_rep_set_boolean_with_key(object, key, value)                        \
-  do {                                                                         \
-    g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));         \
-    g_err |= cbor_encode_boolean(&object##_map, value);                        \
-  } while (0)
-
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
-    g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));     \
-  } while (0)
-
-#define oc_rep_set_text_string_with_key(object, key, value)                    \
-  do {                                                                         \
-    g_err |= cbor_encode_text_string(&object##_map, key, strlen(key));         \
     g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));     \
   } while (0)
 

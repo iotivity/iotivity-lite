@@ -26,7 +26,7 @@
 #include "oc_log.h"
 #include "resourcehandler.h"
 
-es_enrollee_state g_state;
+es_enrollee_state g_en_state = ES_STATE_EOF;
 
 es_result_e
 es_init_enrollee(bool is_secured, es_resource_mask_e resource_mask,
@@ -44,15 +44,14 @@ es_set_device_property(es_device_property *device_property)
 es_result_e
 es_set_state(es_enrollee_state es_state)
 {
-  g_state = es_state;
+  g_en_state = es_state;
   return set_enrollee_state(es_state);
 }
 
 es_enrollee_state
 es_get_state(void)
 {
-  return g_state;
-  //return get_enrollee_state();
+  return g_en_state;
 }
 
 es_result_e
