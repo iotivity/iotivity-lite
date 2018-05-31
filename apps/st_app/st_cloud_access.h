@@ -29,7 +29,8 @@ typedef enum {
   CLOUD_ACCESS_PUBLISHED = 1 << 2,
   CLOUD_ACCESS_FINISH = 1 << 3,
   CLOUD_ACCESS_FAIL = 1 << 4,
-  CLOUD_ACCESS_RE_CONNECTING = 1 << 5
+  CLOUD_ACCESS_RE_CONNECTING = 1 << 5,
+  CLOUD_ACCESS_RESET = 1 << 6
 } st_cloud_access_status_t;
 
 typedef void (*st_cloud_access_cb_t)(st_cloud_access_status_t status);

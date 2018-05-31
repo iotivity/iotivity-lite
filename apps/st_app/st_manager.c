@@ -104,9 +104,11 @@ void
 easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
+    st_print_log("Easy setup succeed!!!\n");
     is_easy_setup_success = true;
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("Easy setup failed!!!\n");
+    quit = 1;
   }
 }
 
@@ -115,12 +117,11 @@ void
 cloud_access_handler(st_cloud_access_status_t status)
 {
   if (status == CLOUD_ACCESS_FINISH) {
+    st_print_log("Cloud access succeed!!!\n");
     is_cloud_access_success = true;
   } else if (status == CLOUD_ACCESS_FAIL) {
     st_print_log("Cloud access failed!!!\n");
-  } else if (status == CLOUD_ACCESS_RE_CONNECTING) {
-    st_print_log("Disconnected from cloud!\n");
-    is_cloud_access_success = false;
+    quit = 1;
   }
 }
 
@@ -212,10 +213,7 @@ st_main_initialize(void)
   st_print_log("easy setup is started.\n");
   while (!is_easy_setup_success && quit != 1) {
     st_process_app_sync_lock();
-    if (get_easy_setup_status() == EASY_SETUP_FINISH) {
-      st_process_app_sync_unlock();
-      break;
-    } else if (get_easy_setup_status() == EASY_SETUP_RESET) {
+    if (get_easy_setup_status() == EASY_SETUP_RESET) {
       st_process_app_sync_unlock();
       st_print_log("easy setup timeout!\n");
       goto exit;
@@ -228,7 +226,6 @@ st_main_initialize(void)
   st_print_log("\n");
 
   if (is_easy_setup_success) {
-    st_print_log("easy setup is successfully finished!\n");
     st_easy_setup_stop();
   } else {
     goto exit;
@@ -257,7 +254,7 @@ st_main_initialize(void)
   st_print_log("cloud access started.\n");
   while (!is_cloud_access_success && quit != 1) {
     st_process_app_sync_lock();
-    if (get_cloud_access_status(device_index) == CLOUD_ACCESS_FINISH) {
+    if (get_cloud_access_status(device_index) == CLOUD_ACCESS_RESET) {
       st_process_app_sync_unlock();
       break;
     }
@@ -268,9 +265,7 @@ st_main_initialize(void)
   }
   st_print_log("\n");
 
-  if (is_cloud_access_success) {
-    st_print_log("cloud access successfully finished!\n");
-  } else {
+  if (!is_cloud_access_success) {
     goto exit;
   }
   return true;
@@ -391,8 +386,8 @@ restart:
   }
 
   if (!st_main_initialize()) {
-    if (get_easy_setup_status() == EASY_SETUP_RESET) {
-      st_main_reset();
+    if (get_easy_setup_status() == EASY_SETUP_RESET ||
+        get_cloud_access_status(device_index) == CLOUD_ACCESS_RESET) {
       goto reset;
     }
     st_print_log("Failed to start easy setup & cloud access!\n");
