@@ -17,9 +17,9 @@
  ****************************************************************************/
 
 #include "st_resource_manager.h"
-#include "st_port.h"
 #include "oc_api.h"
-#include "sc_easysetup.h"
+#include "samsung/sc_easysetup.h"
+#include "st_port.h"
 
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;

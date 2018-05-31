@@ -357,13 +357,22 @@ sign_in_handler(oc_client_response_t *data)
     int code;
     if (oc_rep_get_int(data->payload, "code", &code)) {
       if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
+        // TOKEN_EXPIRED
+        oc_remove_delayed_callback(context, sign_in);
         context->retry_count = 0;
         oc_set_delayed_callback(context, refresh_token,
                                 session_timeout[context->retry_count]);
+        return;
+      } else if (code == 200 && data->code == OC_STATUS_NOT_FOUND) {
+        // DEVICE_NOT_FOUND
+        oc_remove_delayed_callback(context, sign_in);
+        context->cloud_access_status = CLOUD_ACCESS_RESET;
+        oc_set_delayed_callback(context, callback_handler, 0);
+        return;
       }
-    } else {
-      error_handler(data, sign_in);
     }
+
+    error_handler(data, sign_in);
   }
 }
 
