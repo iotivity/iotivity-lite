@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_51ade030",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "actully linux waits tcp connect for more than a minute.\nif 5s is too long, then how long we will wait for tcp connect?",
+      "parentUuid": "da33351e_b1c8ac75",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_717c6421",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d168d0f7",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_f1887424",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3183fc05",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_316e5c02",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3183fc05",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_5179602e",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -81,6 +135,24 @@
       "writtenOn": "2018-05-29T23:43:37Z",
       "side": 1,
       "message": "Shouldn\u0027t this be goto done?",
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ccbb13c3",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "if connect_nonb() return error, then socke is closed in out of function. (line 477)",
+      "parentUuid": "da33351e_5179602e",
       "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -195,6 +267,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8caaab6e",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_919c886b",
+      "range": {
+        "startLine": 440,
+        "startChar": 2,
+        "endLine": 440,
+        "endChar": 32
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_b176ec3c",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -218,6 +314,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_4ca0a390",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b176ec3c",
+      "range": {
+        "startLine": 441,
+        "startChar": 6,
+        "endLine": 441,
+        "endChar": 11
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_1188781e",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 1
@@ -229,6 +349,30 @@
       "writtenOn": "2018-05-29T23:43:37Z",
       "side": 1,
       "message": "I have added some comments to the function above, but I\u0027m still questioning the need for this complexity.\n\nWhat is the trouble with simply doing back-to-back retries right here in this function?\n\nIt does also concern me that we\u0027d be holding back the main thread with the select().",
+      "range": {
+        "startLine": 472,
+        "startChar": 0,
+        "endLine": 475,
+        "endChar": 5
+      },
+      "revId": "9302bd7b29a549cfefc4d4d1497f0ff2f112685d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_acadef8a",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-05-31T07:36:23Z",
+      "side": 1,
+      "message": "As I told above, linux waits tcp connect for more than a minute. if this is reasonable to wait until that time and retry again, I will change this to just connect and retry when timeout.",
+      "parentUuid": "da33351e_1188781e",
       "range": {
         "startLine": 472,
         "startChar": 0,
