@@ -742,6 +742,24 @@ tls_load_ca_cert_err:
   return false;
 }
 
+#ifdef OC_MFG
+bool
+oc_sec_unload_own_certs()
+{
+  int i = 0;
+  for (i = 0; i < oc_core_get_num_devices(); i++) {
+    mbedtls_ssl_key_cert * tmp = server_conf[i].key_cert;
+    while (tmp) {
+      mbedtls_x509_crt_free(tmp->cert);
+      mbedtls_pk_free(tmp->key);
+      tmp = tmp->next;
+    }
+  }
+  return true;
+}
+#endif
+
+
 int
 oc_tls_update_psk_identity(int device)
 {
