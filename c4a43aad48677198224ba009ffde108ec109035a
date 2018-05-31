@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0c733bea",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-31T11:47:14Z",
+      "side": 1,
+      "message": "please use \"\" for project\u0027s include files..\n\ninclude \"easysetup.h\"\ninclude \"easysetup_wifi_softap.h\"",
+      "revId": "c4a43aad48677198224ba009ffde108ec109035a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ac816f91",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-31T11:47:14Z",
+      "side": 1,
+      "message": "can\u0027t we just use the one line \n\n oc_new_string(dst, oc_string(*src), oc_string_len(*src));\n\nrather than calling this function ?",
+      "revId": "c4a43aad48677198224ba009ffde108ec109035a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ec4a5782",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-31T11:47:14Z",
+      "side": 1,
+      "message": "where is BUFSIZE defined ?",
+      "revId": "c4a43aad48677198224ba009ffde108ec109035a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8c7e2bad",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-05-31T11:47:14Z",
+      "side": 1,
+      "message": "remove unwanted code.",
+      "revId": "c4a43aad48677198224ba009ffde108ec109035a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
