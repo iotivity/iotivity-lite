@@ -631,6 +631,7 @@ dtls_init_err:
 bool
 oc_sec_load_certs(int device)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
   int i = 0, j = 0, ret = 0;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     mbedtls_x509_crt *cacert =
@@ -701,6 +702,9 @@ oc_sec_load_certs(int device)
     }
   }
   return true;
+#else
+  oc_abort("alloc failed");
+#endif
 tls_certs_load_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
@@ -714,6 +718,7 @@ oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
     OC_ERR("oc_tls: empty ca cert buffer");
     goto tls_load_ca_cert_err;
   }
+#ifdef OC_DYNAMIC_ALLOCATION
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     if (server_conf[i].ca_chain != NULL) {
       mbedtls_x509_crt_free(server_conf[i].ca_chain);
@@ -737,6 +742,9 @@ oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
 #endif /* OC_CLIENT */
   }
   return true;
+#else
+  oc_abort("alloc failed");
+#endif
 tls_load_ca_cert_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
