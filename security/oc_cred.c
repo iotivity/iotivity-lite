@@ -338,7 +338,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   if (size == 0)
                     goto next_item;
                   if (mfgcert_flag) {
+#ifdef OC_DYNAMIC_ALLOCATION
                     mfgkey = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
+#endif
                     memcpy(mfgkey, p, size);
                     mfgkeylen = size;
                     mfgkey_flag = true;
@@ -381,7 +383,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
+#ifdef OC_DYNAMIC_ALLOCATION
                   cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
+#endif
                   memcpy(cert, p, size);
                   certlen = size;
                 }
@@ -428,12 +432,16 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             }
           }
           if (mfgcert_flag) {
+#ifdef OC_DYNAMIC_ALLOCATION
             credobj->mfgowncert = (uint8_t **)oc_mem_realloc(
               credobj->mfgowncert,
               sizeof(uint8_t *) * (credobj->ownchainlen + 1));
+#endif
             credobj->mfgowncert[credobj->ownchainlen] = cert;
+#ifdef OC_DYNAMIC_ALLOCATION
             credobj->mfgowncertlen = (int *)oc_mem_realloc(
               credobj->mfgowncertlen, sizeof(int) * (credobj->ownchainlen + 1));
+#endif
             credobj->mfgowncertlen[credobj->ownchainlen] = certlen;
             credobj->ownchainlen += 1;
           } else if (mfgtrustca_flag) {
