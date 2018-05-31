@@ -23,7 +23,10 @@
 #include <signal.h>
 #include <stdio.h>
 
-#include <easysetup.h>
+#include "easysetup.h"
+#include "easysetup_wifi_softap.h"
+
+#define AUTH_CODE_BUF_SIZE     20
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -40,34 +43,31 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = true;
 
-static void ReadUserdataCb(oc_rep_t* payload, char* resourceType, void** userdata)
+static void read_userdata_cb(oc_rep_t* payload, char* resource_type, void** userdata)
 {
-    (void)resourceType;
+    (void)resource_type;
     (void)payload;
     (void)userdata;
 
-    printf("[ES App] ReadUserdataCb IN");
+    printf("[ES App] read_userdata_cb IN");
 
-    printf("[ES App] ReadUserdataCb OUT");
+    printf("[ES App] read_userdata_cb OUT");
 }
 
-static void WriteUserdataCb(oc_rep_t* payload, char* resourceType)
+static void write_userdata_cb(oc_rep_t* payload, char* resource_type)
 {
-    (void)resourceType;
+    (void)resource_type;
     (void)payload;
 
-    printf("[ES App] WriteUserdataCb IN");
+    printf("[ES App] write_userdata_cb IN");
 
-    printf("[ES App] WriteUserdataCb OUT");
+    printf("[ES App] write_userdata_cb OUT");
 }
 
 static int
 app_init(void)
 {
   int err = oc_init_platform("Samsung", NULL, NULL);
-
-  // err |= oc_add_device("/oic/d", "oic.d.airconditioner", "[Floor A/C] Samsung", "ocf.1.0.0",
-  //                      "ocf.res.1.0.0", NULL, NULL);
 
   err |= oc_add_device("/oic/d", "oic.d.washer", "[washer] Samsung", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -189,81 +189,128 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-void WiFiProvCbInApp(es_wifi_conf_data* eventData)
+void wifi_prov_cb_in_app(es_wifi_conf_data* event_data)
 {
-    printf("[ES App] WiFiProvCbInApp IN\n");
+    oc_string_t ssid;
+    oc_string_t pwd;
+    char auth_type[AUTH_CODE_BUF_SIZE];
 
-    if(eventData == NULL)
-    {
-        printf("ESWiFiProvData is NULL\n");
-        return ;
+    printf("[ES App] wifi_prov_cb_in_app IN\n");
+
+    if (event_data == NULL) {
+        printf("es_wifi_conf_data is NULL\n");
+        return;
     }
 
-    printf("SSID : %s\n", eventData->ssid);
-    printf("Password : %s\n", eventData->pwd);
-    printf("AuthType : %d\n", eventData->authtype);
-    printf("EncType : %d\n", eventData->enctype);
+    printf("SSID : %s\n", oc_string(event_data->ssid));
+    printf("Password : %s\n", oc_string(event_data->pwd));
+    printf("AuthType : %d\n", event_data->authtype);
+    printf("EncType : %d\n", event_data->enctype);
 
-    printf("[ES App] WiFiProvCbInApp OUT\n");
+    if (!oc_string(event_data->ssid) || !oc_string(event_data->pwd)) {
+        printf("[Easy_Setup] wifi provision info is not enough!");
+        return;
+    }
+
+    oc_new_string(&ssid, oc_string(event_data->ssid), oc_string_len(event_data->ssid));
+    oc_new_string(&pwd, oc_string(event_data->pwd), oc_string_len(event_data->pwd));
+
+    if(event_data->authtype >= NONE_AUTH && event_data->authtype <= WPA2_PSK) {
+        switch(event_data->authtype) {
+            case WEP:
+                snprintf(auth_type, AUTH_CODE_BUF_SIZE, "%s", "wep");
+                break;
+            case WPA_PSK:
+                snprintf(auth_type, AUTH_CODE_BUF_SIZE, "%s", "wpa_psk");
+                break;
+            case WPA2_PSK:
+                snprintf(auth_type, AUTH_CODE_BUF_SIZE, "%s", "wpa2_psk");
+                break;
+            case NONE_AUTH:
+            default:
+                snprintf(auth_type, AUTH_CODE_BUF_SIZE, "%s", "open");
+                break;
+        }
+    } else {
+        snprintf(auth_type, AUTH_CODE_BUF_SIZE, "%s", "open");
+    }
+    stop_dhcp(SLSI_WIFI_SOFT_AP_IF);
+
+    if (wifi_start_station() < 0) {
+      printf("start station error \n");
+      return;
+    }
+
+    while (wifi_join(oc_string(ssid), auth_type, oc_string(pwd)) != 0) {
+      printf("Retry to Join\n");
+      sleep(1);
+    }
+
+    printf("AP join :\n");
+    while (dhcpc_start() != 0) {
+        printf("Get IP address Fail\n");
+    }
+
+    printf("DHCP Client Start :\n");
+
+    printf("[ES App] wifi_prov_cb_in_app OUT\n");
 }
 
-void DevConfProvCbInApp(es_dev_conf_data* eventData)
+void devconf_prov_cb_in_app(es_dev_conf_data* event_data)
 {
-    printf("[ES App] DevConfProvCbInApp IN\n");
+    printf("[ES App] devconf_prov_cb_in_app IN\n");
 
-    if(eventData == NULL)
-    {
-        printf("[ES App] ESDevConfProvData is NULL\n");
-        return ;
+    if (event_data == NULL) {
+        printf("[ES App] es_dev_conf_data is NULL\n");
+        return;
     }
 
-    printf("[ES App] DevConfProvCbInApp OUT\n");
+    printf("[ES App] devconf_prov_cb_in_app OUT\n");
 }
 
-void CloudDataProvCbInApp(es_coap_cloud_conf_data* eventData)
+void cloud_data_prov_cb_in_app(es_coap_cloud_conf_data* event_data)
 {
-    printf("[ES App] CloudDataProvCbInApp IN\n");
+    printf("[ES App] cloud_data_prov_cb_in_app IN\n");
 
-    if(eventData == NULL)
-    {
-        printf("ESCloudProvData is NULL\n");
-        return ;
+    if(event_data == NULL) {
+        printf("es_coap_cloud_conf_data is NULL\n");
+        return;
     }
 
-    printf("AuthCode : %s\n", eventData->auth_code);
-    printf("AuthProvider : %s\n", eventData->auth_provider);
-    printf("CI Server : %s\n", eventData->ci_server);
+    printf("AuthCode : %s\n", event_data->auth_code);
+    printf("AuthProvider : %s\n", event_data->auth_provider);
+    printf("CI Server : %s\n", event_data->ci_server);
 
-    printf("[ES App] CloudDataProvCbInApp OUT\n");
+    printf("[ES App] cloud_data_prov_cb_in_app OUT\n");
 }
 
 es_provisioning_callbacks_s gCallbacks = {
-    .wifi_prov_cb = &WiFiProvCbInApp,
-    .dev_conf_prov_cb = &DevConfProvCbInApp,
-    .cloud_data_prov_cb = &CloudDataProvCbInApp
+    .wifi_prov_cb = &wifi_prov_cb_in_app,
+    .dev_conf_prov_cb = &devconf_prov_cb_in_app,
+    .cloud_data_prov_cb = &cloud_data_prov_cb_in_app
 };
 
-void StartEasySetup(void)
+void start_easysetup(void)
 {
-    printf("[ES App] StartEasySetup IN\n");
+    printf("[ES App] start_easysetup IN\n");
 
-    es_connect_type resourcemMask = ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
-    if(es_init_enrollee(gIsSecured, resourcemMask, gCallbacks) != ES_OK)
+    es_connect_type resourcem_mask = ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
+    if(es_init_enrollee(gIsSecured, resourcem_mask, gCallbacks) != ES_OK)
     {
         printf("[ES App] Easy Setup Enrollee init error!!\n");
         return;
     }
 
-    printf("[ES App] ESInitEnrollee Success\n");
+    printf("[ES App] es_init_enrollee Success\n");
 
     // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&ReadUserdataCb, &WriteUserdataCb);
-    printf("[ES App] StartEasySetup OUT\n");
+    es_set_callback_for_userdata(&read_userdata_cb, &write_userdata_cb);
+    printf("[ES App] start_easysetup OUT\n");
 }
 
-void SetDeviceInfo(void)
+void set_device_info(void)
 {
-    printf("[ES App] SetDeviceInfo IN\n");
+    printf("[ES App] set_device_info IN\n");
 
     char *device_name = "TEST_DEVICE";
 
@@ -274,20 +321,20 @@ void SetDeviceInfo(void)
     if (es_set_device_property(&device_property) == ES_ERROR)
         printf("[ES App] es_set_device_property error!\n");
 
-    printf("[ES App] SetDeviceInfo OUT\n");
+    printf("[ES App] set_device_info OUT\n");
 }
 
-void StopEasySetup(void)
+void stop_easysetup(void)
 {
-    printf("[ES App] StopEasySetup IN\n");
+    printf("[ES App] stop_easysetup IN\n");
 
     if (es_terminate_enrollee() == ES_ERROR)
     {
-        printf("ESTerminateEnrollee Failed!!\n");
+        printf("es_terminate_enrollee Failed!!\n");
         return;
     }
 
-    printf("[ES App] StopEasySetup OUT\n");
+    printf("[ES App] stop_easysetup OUT\n");
 }
 
 static void
@@ -312,8 +359,8 @@ register_resources(void)
     gIsSecured = false;
 #endif
 
-    StartEasySetup();
-    SetDeviceInfo();
+    start_easysetup();
+    set_device_info();
 
     printf("[ES App] register_resources OUT\n");
 }
@@ -338,6 +385,13 @@ int
 easysetup_main(void)
 {
   int init;
+
+  if (es_create_softap() != 0){
+    printf("Softap mode failed \n");
+    return 0;
+  }
+
+  dhcpserver_start();
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cv, NULL);
@@ -375,7 +429,7 @@ easysetup_main(void)
 
   oc_main_shutdown();
 
-  StopEasySetup();
+  stop_easysetup();
 
   printf("[ES App] Exit..\n");
   return 0;
