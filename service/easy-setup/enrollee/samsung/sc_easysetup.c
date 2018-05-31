@@ -158,7 +158,7 @@ write_sc_string_prop_to_payload(char *prop_key, oc_string_t *prop_value)
   if (prop_value && oc_string_len(*prop_value) > 0) {
     char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
     construct_attribute_name(attr_name, prop_key);
-    oc_rep_set_text_string_with_key(root, attr_name, oc_string(*prop_value));
+    es_rep_set_text_string_with_keystr(root, attr_name, oc_string(*prop_value));
   }
 }
 
@@ -167,7 +167,7 @@ write_sc_int_prop_to_payload(char *prop_key, int prop_value)
 {
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
   construct_attribute_name(attr_name, prop_key);
-  oc_rep_set_int_with_key(root, attr_name, prop_value);
+  es_rep_set_int_with_keystr(root, attr_name, prop_value);
 }
 
 static void
@@ -457,27 +457,27 @@ construct_response_of_sec_provisioning(void)
     oc_rep_object_array_start_item(provisioning_targets);
 
     construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI);
-    oc_rep_set_text_string_with_key(provisioning_targets, key_name,
-                                    oc_string(info->targets[i].target_di));
+    es_rep_set_text_string_with_keystr(provisioning_targets, key_name,
+                                       oc_string(info->targets[i].target_di));
 
     construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT);
-    oc_rep_set_text_string_with_key(provisioning_targets, key_name,
-                                    oc_string(info->targets[i].target_rt));
+    es_rep_set_text_string_with_keystr(provisioning_targets, key_name,
+                                       oc_string(info->targets[i].target_rt));
 
     construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED);
-    oc_rep_set_boolean_with_key(provisioning_targets, key_name,
-                                info->targets[i].published);
+    es_rep_set_boolean_with_keystr(provisioning_targets, key_name,
+                                   info->targets[i].published);
     oc_rep_object_array_end_item(provisioning_targets);
   }
   oc_rep_close_array(root, provisioning_targets);
 
   construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_OWNED);
-  oc_rep_set_boolean_with_key(root, key_name, info->owned);
+  es_rep_set_boolean_with_keystr(root, key_name, info->owned);
 
   construct_attribute_name(key_name,
                            SC_RSRVD_ES_PROVISIONING_INFO_EASY_SETUP_DI);
-  oc_rep_set_text_string_with_key(root, key_name,
-                                  oc_string(info->easysetup_di));
+  es_rep_set_text_string_with_keystr(root, key_name,
+                                     oc_string(info->easysetup_di));
 
   oc_rep_end_root_object();
 }
@@ -521,7 +521,7 @@ es_result_e
 init_provisioning_info_resource(sec_provisioning_info *prov_info)
 {
   if (g_sec_prov) {
-    return ES_ERROR;
+    deinit_provisioning_info_resource();
   }
 
   g_sec_prov = oc_mem_calloc(1, sizeof(sec_provisioning_t));
