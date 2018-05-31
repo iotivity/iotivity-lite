@@ -742,6 +742,20 @@ tls_load_ca_cert_err:
   return false;
 }
 
+#ifdef OC_UNLOAD_CERT
+void
+oc_sec_unload_own_certs(int device)
+{
+  mbedtls_ssl_key_cert * tmp = server_conf[device].key_cert;
+  while (tmp) {
+    mbedtls_x509_crt_free(tmp->cert);
+    mbedtls_pk_free(tmp->key);
+    tmp = tmp->next;
+  }
+}
+#endif
+
+
 int
 oc_tls_update_psk_identity(int device)
 {
