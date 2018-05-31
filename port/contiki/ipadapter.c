@@ -44,7 +44,6 @@ handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
     memcpy(message->endpoint.addr.ipv6.address, addr, 16);
     message->endpoint.addr.ipv6.port = port;
 #ifdef OC_DEBUG
-    OC_LOGbytes(message->data, message->length);
     PRINT("Incoming message from ");
     PRINTipaddr(message->endpoint);
     PRINT("\n\n");
@@ -146,7 +145,6 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  OC_LOGbytes(message->data, message->length);
   PRINT("Outgoing message to ");
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");

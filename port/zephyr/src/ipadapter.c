@@ -117,7 +117,6 @@ static void oc_network_receive(struct net_context *context, struct net_pkt *pkt,
 
     OC_DBG("oc_network_receive: received %d bytes", (int)message->length);
 #ifdef OC_DEBUG
-    OC_LOGbytes(message->data, message->length);
     PRINT("oc_network_receive: incoming message from ");
     PRINTipaddr(message->endpoint);
     PRINT("\n\n");
@@ -143,7 +142,6 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  OC_LOGbytes(message->data, message->length);
   PRINT("oc_send_buffer: outgoing message to ");
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");

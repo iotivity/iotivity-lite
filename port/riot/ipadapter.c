@@ -69,7 +69,6 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  OC_LOGbytes(message->data, message->length);
   PRINT("Outgoing message to ");
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
@@ -96,7 +95,6 @@ handle_incoming_message(uint8_t *buffer, int *size, uint8_t *addr,
     message->endpoint.addr.ipv6.port = *port;
 
 #ifdef OC_DEBUG
-    OC_LOGbytes(message->data, message->length);
     PRINT("Incoming message from ");
     PRINTipaddr(message->endpoint);
     PRINT("\n\n");

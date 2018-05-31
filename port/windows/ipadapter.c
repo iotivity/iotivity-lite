@@ -586,7 +586,6 @@ network_event_thread(void *data)
         }
 
 #ifdef OC_DEBUG
-        OC_LOGbytes(message->data, message->length);
         PRINT("Incoming message of size %d bytes from ", message->length);
         PRINTipaddr(message->endpoint);
         PRINT("\n\n");
@@ -671,7 +670,6 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  OC_LOGbytes(message->data, message->length);
   PRINT("Outgoing message of size %d bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n");
