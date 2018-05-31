@@ -70,7 +70,8 @@ static int ping_interval = 1;
 static void
 session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
-  st_print_log("[Cloud_Access] session state(%d)\n", state);
+  st_print_log("[Cloud_Access] session state (%s)\n",
+               (state) ? "DISCONNECTED" : "CONNECTED");
   st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
   while (context != NULL && context->device_index != endpoint->device) {
     context = context->next;
@@ -156,6 +157,9 @@ st_cloud_access_stop(int device_index)
     return;
   }
 
+  if (context->cloud_access_status == CLOUD_ACCESS_FINISH)
+    oc_remove_delayed_callback(context, send_ping);
+
   oc_list_remove(st_cloud_context_list, context);
 
   if (oc_string_len(context->auth_provider) > 0) {
@@ -230,6 +234,25 @@ static void
 error_handler(oc_client_response_t *data, oc_trigger_t callback)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+
+  int code;
+  if (oc_rep_get_int(data->payload, "code", &code)) {
+    if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
+      // TOKEN_EXPIRED
+      oc_remove_delayed_callback(context, callback);
+      context->retry_count = 0;
+      oc_set_delayed_callback(context, refresh_token,
+                              session_timeout[context->retry_count]);
+      return;
+    } else if (code == 200 && data->code == OC_STATUS_NOT_FOUND) {
+      // DEVICE_NOT_FOUND
+      oc_remove_delayed_callback(context, callback);
+      context->cloud_access_status = CLOUD_ACCESS_RESET;
+      oc_set_delayed_callback(context, callback_handler, 0);
+      return;
+    }
+  }
+
   if (context->retry_count < MAX_RETRY_COUNT - 1)
     return;
 
@@ -339,41 +362,25 @@ sign_in_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[Cloud_Access] sign in handler(%d)\n", data->code);
 
-  if (data->code == OC_STATUS_CHANGED) {
-    oc_remove_delayed_callback(context, sign_in);
-    context->retry_count = 0;
+  if (data->code != OC_STATUS_CHANGED)
+    goto error;
 
-    if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING) {
-      es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, find_ping,
-                              message_timeout[context->retry_count]);
-    } else {
-      es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
-      oc_set_delayed_callback(context, set_dev_profile,
-                              message_timeout[context->retry_count]);
-    }
-    context->cloud_access_status = CLOUD_ACCESS_SIGNED_IN;
+  oc_remove_delayed_callback(context, sign_in);
+  context->retry_count = 0;
+
+  if (context->cloud_access_status == CLOUD_ACCESS_SIGNED_UP) {
+    es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
+    oc_set_delayed_callback(context, set_dev_profile,
+                            message_timeout[context->retry_count]);
   } else {
-    int code;
-    if (oc_rep_get_int(data->payload, "code", &code)) {
-      if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
-        // TOKEN_EXPIRED
-        oc_remove_delayed_callback(context, sign_in);
-        context->retry_count = 0;
-        oc_set_delayed_callback(context, refresh_token,
-                                session_timeout[context->retry_count]);
-        return;
-      } else if (code == 200 && data->code == OC_STATUS_NOT_FOUND) {
-        // DEVICE_NOT_FOUND
-        oc_remove_delayed_callback(context, sign_in);
-        context->cloud_access_status = CLOUD_ACCESS_RESET;
-        oc_set_delayed_callback(context, callback_handler, 0);
-        return;
-      }
-    }
-
-    error_handler(data, sign_in);
+    es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
+    oc_set_delayed_callback(context, find_ping,
+                            message_timeout[context->retry_count]);
   }
+  context->cloud_access_status = CLOUD_ACCESS_SIGNED_IN;
+
+error:
+  error_handler(data, sign_in);
 }
 
 static oc_event_callback_retval_t
