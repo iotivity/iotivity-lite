@@ -231,8 +231,8 @@ st_main_initialize(void)
     goto exit;
   }
 
-  st_store_t *cloud_info = get_cloud_informations();
-  if (!cloud_info) {
+  st_store_t *cloud_info = st_store_get_info();
+  if (!cloud_info || !cloud_info->status) {
     st_print_log("could not get cloud informations.\n");
     goto exit;
   }
@@ -285,6 +285,8 @@ st_main_deinitialize(void)
     st_cloud_access_stop(device_index);
     st_print_log("cloud access stop done\n");
   }
+
+  st_store_info_initialize();
 }
 
 static void
@@ -293,12 +295,7 @@ st_main_reset(void)
 #ifdef OC_SECURITY
   oc_sec_reset();
 #endif /* OC_SECURITY */
-
-  st_easy_setup_reset();
-  is_easy_setup_success = false;
-
-  st_cloud_access_stop(device_index);
-  is_cloud_access_success = false;
+  st_store_dump();
 }
 
 int
@@ -340,7 +337,7 @@ st_manager_start(void)
                                          register_resources };
 
 restart:
-  if (st_load() < 0) {
+  if (st_store_load() < 0) {
     st_print_log("[ST_App] Could not load store informations.\n");
     return -1;
   }
@@ -400,9 +397,9 @@ restart:
   return 0;
 
 reset:
+  st_manager_stop();
   st_main_reset();
   st_print_log("reset finished\n");
-  st_manager_stop();
   goto restart;
 }
 

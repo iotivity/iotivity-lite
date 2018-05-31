@@ -23,20 +23,20 @@
 #include "st_port.h"
 #include "util/oc_mem.h"
 
-#define SVR_TAG_MAX (32)
 #define ST_MAX_DATA_SIZE (1024)
 #define ST_STORE_NAME "st_info"
 
-// static void
-// gen_svr_tag(const char *name, char *svr_tag)
-// {
-//   int svr_tag_len = snprintf(svr_tag, SVR_TAG_MAX, "%s", name);
-//   svr_tag_len = (svr_tag_len < SVR_TAG_MAX) ? svr_tag_len + 1 : SVR_TAG_MAX;
-//   svr_tag[svr_tag_len] = '\0';
-// }
+#define st_rep_set_string_with_chk(object, key, value)                         \
+  if (value)                                                                   \
+    oc_rep_set_text_string(object, key, value);
+
+static st_store_t g_store_info;
+
+static int st_decode_store_info(oc_rep_t *rep);
+static void st_encode_store_info(void);
 
 int
-st_load(void)
+st_store_load(void)
 {
   int ret = 0;
   oc_rep_t *rep;
@@ -71,7 +71,7 @@ st_load(void)
     ret = st_decode_store_info(rep);
     oc_free_rep(rep);
   } else {
-    st_set_default_store_info();
+    st_store_info_initialize();
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
@@ -81,9 +81,8 @@ st_load(void)
 }
 
 void
-st_dump(void)
+st_store_dump(void)
 {
-#ifdef OC_SECURITY
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf)
@@ -93,16 +92,187 @@ st_dump(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, ST_MAX_DATA_SIZE);
-  // TODO : encode
   st_encode_store_info();
   int size = oc_rep_finalize();
+#ifdef OC_SECURITY
   if (size > 0) {
     OC_DBG("[ST_Store] encoded info size %d", size);
     oc_storage_write(ST_STORE_NAME, buf, size);
   }
+#endif /* OC_SECURITY */
   OC_LOGbytes(buf, size);
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
-#endif /* OC_SECURITY */
+}
+
+void
+st_store_info_initialize(void)
+{
+  g_store_info.status = false;
+  if (oc_string(g_store_info.accesspoint.ssid)) {
+    oc_free_string(&g_store_info.accesspoint.ssid);
+  } else if (oc_string(g_store_info.accesspoint.pwd)) {
+    oc_free_string(&g_store_info.accesspoint.pwd);
+  } else if (oc_string(g_store_info.cloudinfo.ci_server)) {
+    oc_free_string(&g_store_info.cloudinfo.ci_server);
+  } else if (oc_string(g_store_info.cloudinfo.auth_provider)) {
+    oc_free_string(&g_store_info.cloudinfo.auth_provider);
+  } else if (oc_string(g_store_info.cloudinfo.uid)) {
+    oc_free_string(&g_store_info.cloudinfo.uid);
+  } else if (oc_string(g_store_info.cloudinfo.access_token)) {
+    oc_free_string(&g_store_info.cloudinfo.access_token);
+  } else if (oc_string(g_store_info.cloudinfo.refresh_token)) {
+    oc_free_string(&g_store_info.cloudinfo.refresh_token);
+  }
+}
+
+st_store_t *
+st_store_get_info(void)
+{
+  return &g_store_info;
+}
+
+static int
+st_decode_ap_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_STRING:
+      if (len == 4 && memcmp(oc_string(t->name), "ssid", 4) == 0) {
+        oc_new_string(&g_store_info.accesspoint.ssid,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 3 && memcmp(oc_string(t->name), "pwd", 3) == 0) {
+        oc_new_string(&g_store_info.accesspoint.pwd, oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+static int
+st_decode_cloud_access_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_STRING:
+      if (len == 9 && memcmp(oc_string(t->name), "ci_server", 9) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.ci_server,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 13 &&
+                 memcmp(oc_string(t->name), "auth_provider", 13) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.auth_provider,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 3 && memcmp(oc_string(t->name), "uid", 3) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.uid, oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 12 &&
+                 memcmp(oc_string(t->name), "access_token", 12) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.access_token,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 13 &&
+                 memcmp(oc_string(t->name), "refresh_token", 13) == 0) {
+        oc_new_string(&g_store_info.cloudinfo.refresh_token,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+static int
+st_decode_store_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_BOOL:
+      if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
+        g_store_info.status = t->value.boolean;
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    case OC_REP_OBJECT:
+      if (len == 11 && memcmp(oc_string(t->name), "accesspoint", 11) == 0) {
+        if (st_decode_ap_info(t->value.object) != 0)
+          return -1;
+      } else if (len == 9 && memcmp(oc_string(t->name), "cloudinfo", 9) == 0) {
+        if (st_decode_cloud_access_info(t->value.object) != 0)
+          return -1;
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s, %d", oc_string(t->name), t->type);
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+static void
+st_encode_store_info(void)
+{
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, status, g_store_info.status);
+  oc_rep_set_object(root, accesspoint);
+  st_rep_set_string_with_chk(accesspoint, ssid,
+                             oc_string(g_store_info.accesspoint.ssid));
+  st_rep_set_string_with_chk(accesspoint, pwd,
+                             oc_string(g_store_info.accesspoint.pwd));
+  oc_rep_close_object(root, accesspoint);
+  oc_rep_set_object(root, cloudinfo);
+  st_rep_set_string_with_chk(cloudinfo, ci_server,
+                             oc_string(g_store_info.cloudinfo.ci_server));
+  st_rep_set_string_with_chk(cloudinfo, auth_provider,
+                             oc_string(g_store_info.cloudinfo.auth_provider));
+  st_rep_set_string_with_chk(cloudinfo, uid,
+                             oc_string(g_store_info.cloudinfo.uid));
+  st_rep_set_string_with_chk(cloudinfo, access_token,
+                             oc_string(g_store_info.cloudinfo.access_token));
+  st_rep_set_string_with_chk(cloudinfo, refresh_token,
+                             oc_string(g_store_info.cloudinfo.refresh_token));
+  oc_rep_close_object(root, cloudinfo);
+  oc_rep_end_root_object();
 }
