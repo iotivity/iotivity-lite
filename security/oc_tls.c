@@ -742,6 +742,16 @@ tls_load_ca_cert_err:
   return false;
 }
 
+#ifdef OC_MFG
+bool
+oc_sec_unload_own_certs(int device)
+{
+  OC_ERR("oc_tls: unimplemented");
+  return false;
+}
+#endif
+
+
 int
 oc_tls_update_psk_identity(int device)
 {
