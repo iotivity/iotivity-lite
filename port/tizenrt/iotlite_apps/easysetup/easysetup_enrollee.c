@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 #include <easysetup.h>
+#include <easysetup_wifi_softap.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -188,9 +189,17 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   else
     oc_send_response(request, OC_STATUS_CHANGED);
 }
+static void es_string_copy(oc_string_t *dst, oc_string_t *src)
+{
+    oc_new_string(dst, oc_string(*src), oc_string_len(*src));
+}
 
 void WiFiProvCbInApp(es_wifi_conf_data* eventData)
 {
+    oc_string_t ssid;
+    oc_string_t pwd;
+    char auth_type[BUFSIZE];
+
     printf("[ES App] WiFiProvCbInApp IN\n");
 
     if(eventData == NULL)
@@ -199,10 +208,61 @@ void WiFiProvCbInApp(es_wifi_conf_data* eventData)
         return ;
     }
 
-    printf("SSID : %s\n", eventData->ssid);
-    printf("Password : %s\n", eventData->pwd);
+    printf("SSID : %s\n", oc_string(eventData->ssid));
+    printf("Password : %s\n", oc_string(eventData->pwd));
     printf("AuthType : %d\n", eventData->authtype);
     printf("EncType : %d\n", eventData->enctype);
+
+    if(eventData->userdata != NULL)
+    {
+        //SCWiFiConfProperties *data = eventData->userdata;
+        //printf("[SC] DiscoveryChannel : %d\n", data->discoveryChannel);
+    }
+    if (!oc_string(eventData->ssid) || !oc_string(eventData->pwd)) {
+        printf("[Easy_Setup] wifi provision info is not enough!");
+        return;
+    }
+
+    es_string_copy(&ssid, &eventData->ssid);
+    es_string_copy(&pwd, &eventData->pwd);
+
+    if(eventData->authtype >= NONE_AUTH && eventData->authtype <= WPA2_PSK) {
+        switch(eventData->authtype) {
+            case WEP:
+                snprintf(auth_type, BUFSIZE, "%s", "wep");
+                break;
+            case WPA_PSK:
+                snprintf(auth_type, BUFSIZE, "%s", "wpa_psk");
+                break;
+            case WPA2_PSK:
+                snprintf(auth_type, BUFSIZE, "%s", "wpa2_psk");
+                break;
+            case NONE_AUTH:
+            default:
+                snprintf(auth_type, BUFSIZE, "%s", "open");
+                break;
+        }
+    } else {
+        snprintf(auth_type, BUFSIZE, "%s", "open");
+    }
+    stop_dhcp(SLSI_WIFI_SOFT_AP_IF);
+
+    if (wifi_start_station() < 0) {
+      printf("start station error \n");
+      return;
+    }
+
+    while (wifi_join(oc_string(ssid), auth_type, oc_string(pwd)) != 0) {
+      printf("Retry to Join\n");
+      sleep(1);
+    }
+
+    printf("AP join :\n");
+    while (dhcpc_start() != 0) {
+        printf("Get IP address Fail\n");
+    }
+
+    printf("DHCP Client Start :\n");
 
     printf("[ES App] WiFiProvCbInApp OUT\n");
 }
@@ -338,6 +398,13 @@ int
 easysetup_main(void)
 {
   int init;
+
+  if(es_create_softap() == -1){
+    printf("Softap mode failed \n");
+    return 0;
+  }
+
+  dhcpserver_start();
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cv, NULL);
