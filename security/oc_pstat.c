@@ -33,6 +33,27 @@ static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 static bool set_post_otm_acl = true;
 
+oc_sec_otm_state_handler_t g_otm_handler = NULL;
+oc_sec_otm_state_t g_cur_otm_state = SEC_OTM_INITIALIZED;
+
+void
+oc_sec_register_otm_handler(oc_sec_otm_state_handler_t handler)
+{
+  if (!handler)
+    return;
+
+  g_otm_handler = handler;
+}
+
+static oc_event_callback_retval_t
+otm_callback_handler(void *data)
+{
+  (void)data;
+  if (g_otm_handler)
+    g_otm_handler(g_cur_otm_state);
+  return OC_EVENT_DONE;
+}
+
 void
 oc_sec_pstat_free(void)
 {
@@ -436,6 +457,10 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       if (from_storage && oc_string_len(rep->name) == 4 &&
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         ps.isop = rep->value.boolean;
+        if (g_otm_handler && ps.isop && g_cur_otm_state == SEC_OTM_STARTED) {
+          g_cur_otm_state = SEC_OTM_FINISHED;
+          oc_set_delayed_callback(NULL, otm_callback_handler, 0);
+        }
       } else {
         return false;
       }
@@ -493,6 +518,12 @@ void
 get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)data;
+
+  if (g_otm_handler && g_cur_otm_state == SEC_OTM_INITIALIZED) {
+    g_cur_otm_state = SEC_OTM_STARTED;
+    oc_set_delayed_callback(NULL, otm_callback_handler, 0);
+  }
+
   switch (interface) {
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat(request->resource->device);
@@ -533,5 +564,6 @@ oc_sec_reset()
   oc_sec_pstat_t ps = {.s = OC_DOS_RESET};
   for (int device = 0; device < oc_core_get_num_devices(); device++)
     oc_pstat_handle_state(&ps, device);
+  g_cur_otm_state = SEC_OTM_INITIALIZED;
 }
 #endif /* OC_SECURITY */

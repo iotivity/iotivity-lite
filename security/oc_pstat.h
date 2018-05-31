@@ -39,6 +39,17 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_pstat_t;
 
+typedef enum {
+  SEC_OTM_INITIALIZED,
+  SEC_OTM_STARTED,
+  SEC_OTM_FINISHED,
+  SEC_OTM_FAILED
+} oc_sec_otm_state_t;
+
+typedef void (*oc_sec_otm_state_handler_t)(oc_sec_otm_state_t state);
+
+void oc_sec_register_otm_handler(oc_sec_otm_state_handler_t handler);
+
 void oc_sec_pstat_init(void);
 void oc_sec_pstat_free(void);
 bool oc_sec_is_operational(int device);
