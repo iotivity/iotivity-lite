@@ -229,6 +229,7 @@ oc_sec_dump_pstat(int device)
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("pstat", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
+    oc_rep_reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -255,6 +256,7 @@ oc_sec_dump_cred(int device)
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("cred", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
+    oc_rep_reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -282,6 +284,7 @@ oc_sec_dump_doxm(int device)
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("doxm", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
+    oc_rep_reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -308,6 +311,7 @@ oc_sec_dump_acl(int device)
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("acl", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
+    oc_rep_reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -404,6 +408,7 @@ oc_sec_dump_unique_ids(int device)
     char svr_tag[SVR_TAG_MAX];
     gen_svr_tag("u_ids", device, svr_tag);
     oc_storage_write(svr_tag, buf, size);
+    oc_rep_reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
