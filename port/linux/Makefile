@@ -97,9 +97,14 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
-ifeq ($(MFG),1)
+ifneq ($(AUTH_OPTION),0)
 SAMPLES += mfgserver
 CFLAGS += -DOC_MFG
+ifeq ($(AUTH_OPTION),1)
+CFLAGS += -DOC_UNLOAD_CERT
+endif
+else
+CFLAGS += -DOC_SKIP_CERT
 endif
 endif
 
@@ -375,6 +380,9 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
+ifeq ($(AUTH_OPTION),0)
+MBEDTLS_PATCHES += $(sort $(wildcard ../../patches/*.off))
+endif
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 
