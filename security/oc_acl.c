@@ -860,7 +860,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
                        &aclist[device].rowneruuid);
       }
       break;
-#if defined(OC_SPEC_VER_OIC)
+#if 0
     case OC_REP_OBJECT: {
       oc_rep_t *aces = rep->value.object;
       while (aces) {
@@ -952,7 +952,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
         }
       }
       break;
-#else //OC_SPEC_VER_OIC
+//#else //OC_SPEC_VER_OIC
     case OC_REP_OBJECT_ARRAY: {
       oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
