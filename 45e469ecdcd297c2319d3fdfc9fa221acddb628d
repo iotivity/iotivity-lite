@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cc8dd333",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-31T02:02:52Z",
+      "side": 1,
+      "message": "I think oc_tls_mutex_destroy(void) should be located in oc_tls_shutdown()",
+      "revId": "45e469ecdcd297c2319d3fdfc9fa221acddb628d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2c839f05",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-05-31T02:02:52Z",
+      "side": 1,
+      "message": "I\u0027m just curious about applying mutex to only oc_tls_init_connection \u0026 read_application_data.\n\nI thought write_application_data also needs mutex if read_application_data needs mutex\n\nit is just question. I\u0027d like to know your idea..",
+      "revId": "45e469ecdcd297c2319d3fdfc9fa221acddb628d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
