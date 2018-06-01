@@ -56,7 +56,11 @@
   } while (0)
 #define OC_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
 #define OC_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
-#define OC_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
+#ifndef ST_APP_OPTIMIZATION
+#define OC_ERR(...)  OC_LOG("ERROR", __VA_ARGS__)
+#else
+#define OC_ERR(...)  OC_LOG2( __FILE__,__func__,__LINE__,__VA_ARGS__)
+#endif
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
     PRINT("DEBUG: %s <%s:%d>: ", __FILE__, __func__, __LINE__);                \
@@ -79,5 +83,7 @@
 #define OC_LOGipaddr(endpoint)
 #define OC_LOGbytes(bytes, length)
 #endif
+
+void OC_LOG2(const char *file,const char *func,int line, __const char *__restrict __format,...);
 
 #endif /* OC_LOG_H */

@@ -212,6 +212,7 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
   return collection;
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_link_t *
 oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len)
 {
@@ -236,6 +237,7 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_pa
 
   return link;
 }
+#endif
 
 bool
 oc_check_if_collection(oc_resource_t *resource)

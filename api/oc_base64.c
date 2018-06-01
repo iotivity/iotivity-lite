@@ -24,6 +24,7 @@ int
 oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
                  int output_buffer_len)
 {
+#ifndef ST_APP_OPTIMIZATION
   /* The Base64 alphabet. This table provides a mapping from 6-bit binary
    * values to Base64 characters.
    */
@@ -109,6 +110,9 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
   }
 
   return j;
+#else
+  return (0);
+#endif
 }
 
 int
