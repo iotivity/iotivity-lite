@@ -465,6 +465,7 @@ oc_create_discovery_resource(int resource_idx, int device)
     resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
     oc_core_discovery_handler, 0, 0, 0, 1, "oic.wk.res");
 }
+
 #ifndef ST_APP_OPTIMIZATION
 #ifdef OC_CLIENT
 static oc_endpoint_t*
@@ -691,4 +692,4 @@ done:
   return ret;
 }
 #endif /* OC_CLIENT */
-#endif/* ST_APP SPECIFIC */
+#endif /*.ST_APP_OPTIMIZATION */
