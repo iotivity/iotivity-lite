@@ -16,6 +16,24 @@
       "revId": "3a35b1a022236bb9a7a98c943e2d8dbe6d75628c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f70504c3",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-01T05:21:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_f7d06455",
+      "revId": "3a35b1a022236bb9a7a98c943e2d8dbe6d75628c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
