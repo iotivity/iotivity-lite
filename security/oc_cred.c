@@ -28,6 +28,7 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#include "oc_err.h"
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
@@ -535,6 +536,8 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
   if (!success) {
     if (owner) {
       oc_sec_remove_cred_by_credid(owner->credid, request->resource->device);
+    } else {
+      OC_SEC_ERR();
     }
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {

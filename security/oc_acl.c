@@ -26,6 +26,7 @@
 #include "oc_rep.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "oc_err.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1188,6 +1189,7 @@ get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    OC_SEC_ERR();
   }
 }
 

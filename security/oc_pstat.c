@@ -23,6 +23,7 @@
 #include "oc_doxm.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "oc_err.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -522,6 +523,8 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 #endif //OC_SPEC_VER_OIC
     response_code = OC_STATUS_CHANGED;
     oc_sec_dump_pstat(device);
+  } else {
+    OC_SEC_ERR();
   }
   oc_send_response(request, response_code);
   OC_DBG("response code: %d", response_code);

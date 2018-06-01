@@ -25,10 +25,18 @@
 #include "oc_pstat.h"
 #include "oc_ri.h"
 #include "port/oc_log.h"
+#include "oc_err.h"
+
+void
+oc_sec_err_cb()
+{
+  OC_ERR("error");
+}
 
 void
 oc_sec_create_svr(void)
 {
+  oc_sec_set_err_cb(oc_sec_err_cb);
   oc_sec_doxm_init();
   oc_sec_pstat_init();
   oc_sec_cred_init();
