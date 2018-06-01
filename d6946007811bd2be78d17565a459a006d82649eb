@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_177348ea",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_wifi_softap.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T11:42:02Z",
+      "side": 1,
+      "message": "#include \"easysetup_wifi_softap.h\"",
+      "revId": "d6946007811bd2be78d17565a459a006d82649eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
