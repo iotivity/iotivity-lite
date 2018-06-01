@@ -509,7 +509,6 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   (void)interface;
   (void)data;
   int device = request->resource->device;
-  oc_status_t response_code = OC_STATUS_BAD_REQUEST;
 #if defined(OC_SPEC_VER_OIC)
   bool flag = false;
   if (request->origin && request->origin->version == OIC_VER_1_1_0)
@@ -519,12 +518,12 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   if (oc_sec_decode_pstat(request->request_payload, flag, device)) {
 #else
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
-#endif //OC_SPEC_VER_OIC
-    response_code = OC_STATUS_CHANGED;
+#endif // OC_SPEC_VER_OIC
+    oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_pstat(device);
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  oc_send_response(request, response_code);
-  OC_DBG("response code: %d", response_code);
 }
 
 void
