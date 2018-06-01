@@ -343,9 +343,9 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
   st_sleep(5);
 
-  //TODO: auth and enc type should be passed from Wi-Fi Prob Cb
+  // TODO: auth and enc type should be passed from Wi-Fi Prob Cb
   char auth_type[20] = "wpa2_psk";
-  //char enc_type[20] = "aes";
+  // char enc_type[20] = "aes";
 
   if (wifi_start_station() < 0) {
     st_print_log("start station error! \n");
@@ -355,10 +355,10 @@ st_connect_wifi(const char *ssid, const char *pwd)
   int retry;
   for (retry = 0; retry < 5; ++retry) {
     if (0 == wifi_join(ssid, auth_type, pwd)) {
-        st_print_log("wifi_join success\n");
-        break;
+      st_print_log("wifi_join success\n");
+      break;
     } else {
-        st_print_log("wifi_join failed\n");
+      st_print_log("wifi_join failed\n");
     }
   }
 
@@ -366,8 +366,8 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
   for (retry = 0; retry < 5; ++retry) {
     if (0 == dhcpc_start()) {
-        st_print_log("dhcpc_start success\n");
-        break;
+      st_print_log("dhcpc_start success\n");
+      break;
     } else {
       st_print_log("Get IP address failed\n");
     }
@@ -386,7 +386,7 @@ soft_ap_process_routine(void *data)
 
   st_print_log("[St_Port] soft_ap_handler in\n");
 
-  if(es_create_softap() == -1){
+  if (es_create_softap() == -1) {
     st_print_log("Soft AP mode failed!!\n");
     st_mutex_lock(soft_ap->mutex);
     soft_ap->is_soft_ap_on = 0;
