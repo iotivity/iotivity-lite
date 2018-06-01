@@ -1,0 +1,311 @@
+From acc73f7e47d42dac1ba23c5800f191f4bb728604 Mon Sep 17 00:00:00 2001
+From: agrkush <kush.agrawal@samsung.com>
+Date: Fri, 1 Jun 2018 19:40:50 +0900
+Subject: [PATCH] Reduce unused code
+
+Signed-off-by: agrkush <kush.agrawal@samsung.com>
+---
+ library/asn1parse.c |   20 ++++++++++++++++++++
+ library/ecdsa.c     |   16 ++++++++++++++++
+ library/pkparse.c   |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 64 insertions(+)
+ mode change 100644 => 100755 library/asn1parse.c
+ mode change 100644 => 100755 library/ecdsa.c
+ mode change 100644 => 100755 library/pkparse.c
+
+diff --git a/library/asn1parse.c b/library/asn1parse.c
+old mode 100644
+new mode 100755
+index 4dd65c0..83b9c22
+--- a/library/asn1parse.c
++++ b/library/asn1parse.c
+@@ -243,6 +243,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
+                           mbedtls_asn1_sequence *cur,
+                           int tag)
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     size_t len;
+     mbedtls_asn1_buf *buf;
+@@ -286,6 +287,9 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
+         return( MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ int mbedtls_asn1_get_alg( unsigned char **p,
+@@ -336,6 +340,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+                        const unsigned char *end,
+                        mbedtls_asn1_buf *alg )
+ {
++#ifdef ST_MBEDTLS_OPT
+     int ret;
+     mbedtls_asn1_buf params;
+ 
+@@ -348,10 +353,14 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+         return( MBEDTLS_ERR_ASN1_INVALID_DATA );
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
+ {
++#ifdef ST_MBEDTLS_OPT
+     if( cur == NULL )
+         return;
+ 
+@@ -359,10 +368,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
+     mbedtls_free( cur->val.p );
+ 
+     mbedtls_zeroize( cur, sizeof( mbedtls_asn1_named_data ) );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
+ {
++#ifdef ST_MBEDTLS_OPT
+     mbedtls_asn1_named_data *cur;
+ 
+     while( ( cur = *head ) != NULL )
+@@ -371,11 +384,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
+         mbedtls_asn1_free_named_data( cur );
+         mbedtls_free( cur );
+     }
++#else
++    return( 0 );
++#endif
+ }
+ 
+ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *list,
+                                        const char *oid, size_t len )
+ {
++#ifdef ST_MBEDTLS_OPT
+     while( list != NULL )
+     {
+         if( list->oid.len == len &&
+@@ -388,6 +405,9 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
+     }
+ 
+     return( list );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ #endif /* MBEDTLS_ASN1_PARSE_C */
+diff --git a/library/ecdsa.c b/library/ecdsa.c
+old mode 100644
+new mode 100755
+index 826fefe..0a6901a
+--- a/library/ecdsa.c
++++ b/library/ecdsa.c
+@@ -74,6 +74,7 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
+                 const mbedtls_mpi *d, const unsigned char *buf, size_t blen,
+                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret, key_tries, sign_tries, blind_tries;
+     mbedtls_ecp_point R;
+     mbedtls_mpi k, e, t;
+@@ -157,6 +158,9 @@ cleanup:
+     mbedtls_mpi_free( &k ); mbedtls_mpi_free( &e ); mbedtls_mpi_free( &t );
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ #endif /* MBEDTLS_ECDSA_SIGN_ALT */
+ 
+@@ -292,6 +296,7 @@ cleanup:
+ static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
+                                     unsigned char *sig, size_t *slen )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     unsigned char buf[MBEDTLS_ECDSA_MAX_LEN];
+     unsigned char *p = buf + sizeof( buf );
+@@ -308,6 +313,9 @@ static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
+     *slen = len;
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -319,6 +327,7 @@ int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx, mbedtls_md_type_t
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     mbedtls_mpi r, s;
+ 
+@@ -345,6 +354,9 @@ cleanup:
+     mbedtls_mpi_free( &s );
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ #if ! defined(MBEDTLS_DEPRECATED_REMOVED) && \
+@@ -417,8 +429,12 @@ cleanup:
+ int mbedtls_ecdsa_genkey( mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,
+                   int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
+ {
++#ifndef ST_MBEDTLS_OPT
+     return( mbedtls_ecp_group_load( &ctx->grp, gid ) ||
+             mbedtls_ecp_gen_keypair( &ctx->grp, &ctx->d, &ctx->Q, f_rng, p_rng ) );
++#else
++    return( 0 );
++#endif
+ }
+ #endif /* MBEDTLS_ECDSA_GENKEY_ALT */
+ 
+diff --git a/library/pkparse.c b/library/pkparse.c
+old mode 100644
+new mode 100755
+index e19511e..2045424
+--- a/library/pkparse.c
++++ b/library/pkparse.c
+@@ -179,6 +179,7 @@ int mbedtls_pk_parse_public_keyfile( mbedtls_pk_context *ctx, const char *path )
+ static int pk_get_ecparams( unsigned char **p, const unsigned char *end,
+                             mbedtls_asn1_buf *params )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+ 
+     /* Tag may be either OID or SEQUENCE */
+@@ -206,6 +207,9 @@ static int pk_get_ecparams( unsigned char **p, const unsigned char *end,
+                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ #if defined(MBEDTLS_PK_PARSE_EC_EXTENDED)
+@@ -515,6 +519,7 @@ static int pk_get_rsapubkey( unsigned char **p,
+                              const unsigned char *end,
+                              mbedtls_rsa_context *rsa )
+ {
++#ifndef ST_APP_OPTMIZATION
+     int ret;
+     size_t len;
+ 
+@@ -557,6 +562,9 @@ static int pk_get_rsapubkey( unsigned char **p,
+                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ #endif /* MBEDTLS_RSA_C */
+ 
+@@ -666,6 +674,7 @@ static int pk_parse_key_pkcs1_der( mbedtls_rsa_context *rsa,
+                                    const unsigned char *key,
+                                    size_t keylen )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret, version;
+     size_t len;
+     unsigned char *p, *end;
+@@ -782,6 +791,9 @@ cleanup:
+     }
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ #endif /* MBEDTLS_RSA_C */
+ 
+@@ -793,6 +805,7 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
+                                   const unsigned char *key,
+                                   size_t keylen )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     int version, pubkey_done;
+     size_t len;
+@@ -911,6 +924,9 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
+     }
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ #endif /* MBEDTLS_ECP_C */
+ 
+@@ -932,6 +948,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
+                                     const unsigned char* key,
+                                     size_t keylen )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret, version;
+     size_t len;
+     mbedtls_asn1_buf params;
+@@ -1010,6 +1027,9 @@ static int pk_parse_key_pkcs8_unencrypted_der(
+         return( MBEDTLS_ERR_PK_UNKNOWN_PK_ALG );
+ 
+     return( 0 );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -1146,6 +1166,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
+                   const unsigned char *key, size_t keylen,
+                   const unsigned char *pwd, size_t pwdlen )
+ {
++#ifdef ST_MBEDTLS_OPT
+     int ret;
+     const mbedtls_pk_info_t *pk_info;
+ 
+@@ -1341,6 +1362,9 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
+ #endif /* MBEDTLS_ECP_C */
+ 
+     return( MBEDTLS_ERR_PK_KEY_INVALID_FORMAT );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ /*
+@@ -1349,6 +1373,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
+ int mbedtls_pk_parse_public_key( mbedtls_pk_context *ctx,
+                          const unsigned char *key, size_t keylen )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     unsigned char *p;
+ #if defined(MBEDTLS_PEM_PARSE_C)
+@@ -1389,6 +1414,9 @@ int mbedtls_pk_parse_public_key( mbedtls_pk_context *ctx,
+ #endif
+ 
+     return( ret );
++#else
++    return( 0 );
++#endif
+ }
+ 
+ #endif /* MBEDTLS_PK_PARSE_C */
+-- 
+1.7.9.5
+

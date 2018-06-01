@@ -85,10 +85,10 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
-	  server_collections_linux server_block_linux smart_home_server_linux multi_device_server server_multithread_linux
+	  server_collections_linux smart_home_server_linux multi_device_server
 
 ifneq ($(OPTIMIZE),1)
-SAMPLES += client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux
+SAMPLES += server_block_linux client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux server_multithread_linux
 endif
 
 ifeq ($(EASYSETUP),1)
@@ -157,6 +157,7 @@ endif
 
 ifeq ($(OPTIMIZE),1)
 	CFLAGS += -DST_APP_OPTIMIZATION
+	CFLAGS += -DST_MBEDTLS_OPT
 endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})

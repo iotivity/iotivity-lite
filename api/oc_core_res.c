@@ -357,9 +357,9 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   oc_create_discovery_resource(OCF_RES, device_count);
-
+#ifndef OC_SPEC_VER_OIC
   oc_create_introspection_resource(device_count);
-
+#endif
   oc_device_info[device_count].data = data;
 
   if (oc_connectivity_init(device_count) < 0) {
@@ -495,7 +495,7 @@ oc_core_get_resource_by_index(int type, int device)
   }
   return &core_resources[OCF_D * device + type];
 }
-
+#ifndef ST_APP_OPTIMIZATION
 oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri, int device)
 {
@@ -541,7 +541,7 @@ oc_core_get_resource_by_uri(const char *uri, int device)
   int res = OCF_D * device + type;
   return &core_resources[res];
 }
-
+#endif /* ST_APP SPECIFIC */
 bool
 oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
 {
