@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_571dd00e",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:39:44Z",
+      "side": 1,
+      "message": "event_data",
+      "revId": "eb03f16adc7829a5725fd9caf668cd3a58e4f6fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d731e0a3",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:39:44Z",
+      "side": 1,
+      "message": "rename as AUTH_CODE_BUF_SIZE and define at the top of this file as its not used anywhere else in this project.",
+      "range": {
+        "startLine": 223,
+        "startChar": 36,
+        "endLine": 223,
+        "endChar": 43
+      },
+      "revId": "eb03f16adc7829a5725fd9caf668cd3a58e4f6fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_172ce846",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:39:44Z",
+      "side": 1,
+      "message": "change to contained style coding guideline.. \n\ndev_conf_prov_cb_in_app ..",
+      "revId": "eb03f16adc7829a5725fd9caf668cd3a58e4f6fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7720d449",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:39:44Z",
+      "side": 1,
+      "message": "event_data",
+      "revId": "eb03f16adc7829a5725fd9caf668cd3a58e4f6fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_37276c66",
+        "filename": "port/tizenrt/iotlite_apps/easysetup/easysetup_enrollee.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:39:44Z",
+      "side": 1,
+      "message": "1. coding style: space needed after if \n\n2. Compare the return value for all non success case altogether (!\u003d 0 instead of \u003d\u003d -1).\n\n\nif (es_create_softap() !\u003d0) {\n..\n}",
+      "revId": "eb03f16adc7829a5725fd9caf668cd3a58e4f6fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
