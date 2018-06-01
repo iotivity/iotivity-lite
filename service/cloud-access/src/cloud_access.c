@@ -76,7 +76,7 @@ oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
   return _oc_sign_up(endpoint, auth_provider, auth_code, NULL, NULL,
                      device_index, handler, user_data);
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */
 
 static bool
 oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
@@ -193,7 +193,7 @@ oc_delete_device(oc_endpoint_t *endpoint, const char *uid, int device_index,
   return oc_do_delete(OC_RSRVD_DEVICE_URI, endpoint, query, handler, LOW_QOS,
                       user_data);
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */
 
 bool
 oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
@@ -281,4 +281,4 @@ oc_send_ping_update(oc_endpoint_t *endpoint, const int *interval, int length,
 
   return oc_do_post();
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */

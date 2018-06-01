@@ -50,7 +50,7 @@ DTLS= 	aes.c		aesni.c 	asn1parse.c	asn1write.c	base64.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c
 
-ifneq ($(OPTIMIZE),1)
+ifneq ($(CODE_SIZE_OPT),1)
 DTLS += arc4.c blowfish.c camellia.c rsa.c rsa_internal.c
 endif
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
@@ -62,6 +62,10 @@ SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
 SRC_RD_CLIENT=$(wildcard ../../service/resource-directory/client/src/*.c)
+
+ifeq ($(CODE_SIZE_OPT),1)
+SRC +=../../port/oc_log.c
+endif
 
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/config.h
@@ -81,14 +85,14 @@ OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../port/
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
-	  server_collections_linux server_block_linux smart_home_server_linux multi_device_server server_multithread_linux
+	  server_collections_linux smart_home_server_linux multi_device_server
 
-ifneq ($(OPTIMIZE),1)
-SAMPLES += client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux
+ifneq ($(CODE_SIZE_OPT),1)
+SAMPLES += server_block_linux client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux server_multithread_linux
 endif
 
 ifeq ($(EASYSETUP),1)
@@ -132,7 +136,7 @@ ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_otm_state.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
-ifeq ($(DYNAMIC)$(OPTIMIZE),10)
+ifeq ($(DYNAMIC)$(CODE_SIZE_OPT),10)
 	SRC += ../../security/oc_obt.c
 	SAMPLES += ${OBT}
 else
@@ -161,8 +165,13 @@ ifneq ($(OIC),0)
     CFLAGS += -DOC_SPEC_VER_OIC
 endif
 
-ifeq ($(OPTIMIZE),1)
+ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DST_APP_OPTIMIZATION
+	CFLAGS += -DST_MBEDTLS_OPT
+	CFLAGS += -DST_OC_CLIENT_OPT
+	CFLAGS += -DST_OC_INTROSPECTION_OPT
+	CFLAGS += -DST_OC_PERIODIC_OPT
+	CFLAGS += -DST_OC_CON_RES_OPT
 endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
