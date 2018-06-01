@@ -169,7 +169,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         oc_message_unref(message);
       } else
 #endif /* OC_CLIENT */
-#endif/* ST_APP SPECIFIC */
+#endif/*.ST_APP_OPTIMIZATION */
 #ifdef OC_SECURITY
           if (message->endpoint.flags & SECURED) {
         OC_DBG("Outbound network event: forwarding to TLS");

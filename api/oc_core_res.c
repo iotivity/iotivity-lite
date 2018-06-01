@@ -202,6 +202,7 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_OK);
 }
 
+#ifndef ST_OC_CON_RES_OPT
 static void
 oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
                         void *data)
@@ -271,6 +272,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
+#endif /*.ST_OC_CON_RES_OPT */
 
 int
 oc_core_get_num_devices(void)
@@ -348,6 +350,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
+#ifndef ST_OC_CON_RES_OPT
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
     oc_core_populate_resource(
@@ -355,11 +358,12 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
       oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
   }
+#endif /*.ST_OC_CON_RES_OPT */
 
   oc_create_discovery_resource(OCF_RES, device_count);
-
+#ifndef ST_OC_INTROSPECTION_OPT
   oc_create_introspection_resource(device_count);
-
+#endif /*ST_OC_INTROSPECTION_OPT */
   oc_device_info[device_count].data = data;
 
   if (oc_connectivity_init(device_count) < 0) {
@@ -496,6 +500,7 @@ oc_core_get_resource_by_index(int type, int device)
   return &core_resources[OCF_D * device + type];
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri, int device)
 {
@@ -541,6 +546,7 @@ oc_core_get_resource_by_uri(const char *uri, int device)
   int res = OCF_D * device + type;
   return &core_resources[res];
 }
+#endif /*.ST_APP_OPTIMIZATION */
 
 bool
 oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
