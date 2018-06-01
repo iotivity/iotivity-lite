@@ -23,6 +23,7 @@
 #include "oc_doxm.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "oc_err.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -523,6 +524,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_sec_dump_pstat(device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_sec_err(device, OC_SEC_ERR_PSTAT);
   }
 }
 

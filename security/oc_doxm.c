@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
+#include "oc_err.h"
 #include <stddef.h>
 #include <string.h>
 
@@ -265,6 +266,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_sec_dump_doxm(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_sec_err(request->resource->device, OC_SEC_ERR_DOXM);
   }
 }
 
