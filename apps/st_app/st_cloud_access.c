@@ -24,6 +24,7 @@
 #include "oc_network_monitor.h"
 #include "rd_client.h"
 #include "st_port.h"
+#include "st_store.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 
@@ -269,27 +270,27 @@ sign_up_handler(oc_client_response_t *data)
   }
 
   oc_rep_t *rep = data->payload;
-  char *value = NULL;
+  char *uid_value = NULL, *token_value = NULL, *uri_value = NULL;
   int size;
-  if (oc_rep_get_string(rep, UID_KEY, &value, &size)) {
+  if (oc_rep_get_string(rep, UID_KEY, &uid_value, &size)) {
     if (!oc_string(context->uid)) {
-      oc_new_string(&context->uid, value, size);
+      oc_new_string(&context->uid, uid_value, size);
     } else {
       if ((int)oc_string_len(context->uid) != size ||
-          strncmp(oc_string(context->uid), value, size) != 0) {
+          strncmp(oc_string(context->uid), uid_value, size) != 0) {
         st_print_log("[Cloud_Access] different uid from cloud.\n");
         goto error;
       }
     }
   }
-  if (oc_rep_get_string(rep, ACCESS_TOKEN_KEY, &value, &size)) {
+  if (oc_rep_get_string(rep, ACCESS_TOKEN_KEY, &token_value, &size)) {
     if (oc_string_len(context->access_token) > 0)
       oc_free_string(&context->access_token);
-    oc_new_string(&context->access_token, value, size);
+    oc_new_string(&context->access_token, token_value, size);
   }
-  if (oc_rep_get_string(rep, REDIRECTURI_KEY, &value, &size)) {
+  if (oc_rep_get_string(rep, REDIRECTURI_KEY, &uri_value, &size)) {
     oc_string_t re_uri;
-    oc_new_string(&re_uri, value, size);
+    oc_new_string(&re_uri, uri_value, size);
     int ret = oc_string_to_endpoint(&re_uri, &context->cloud_ep, NULL);
     oc_free_string(&re_uri);
 
@@ -299,8 +300,7 @@ sign_up_handler(oc_client_response_t *data)
     }
   }
 
-  if (oc_string_len(context->uid) == 0 ||
-      oc_string_len(context->access_token) == 0) {
+  if (!uid_value || !token_value || !uri_value) {
     goto error;
   }
 
@@ -308,6 +308,16 @@ sign_up_handler(oc_client_response_t *data)
   context->retry_count = 0;
   context->cloud_access_status = CLOUD_ACCESS_SIGNED_UP;
   es_set_state(ES_STATE_REGISTERED_TO_CLOUD);
+
+  st_store_t *store_info = st_store_get_info();
+  if (oc_string_len(store_info->cloudinfo.ci_server) > 0)
+    oc_free_string(&store_info->cloudinfo.ci_server);
+  oc_new_string(&store_info->cloudinfo.ci_server, uri_value, strlen(uri_value));
+  if (oc_string_len(store_info->cloudinfo.access_token) > 0)
+    oc_free_string(&store_info->cloudinfo.access_token);
+  oc_new_string(&store_info->cloudinfo.access_token, token_value,
+                strlen(token_value));
+  store_info->cloudinfo.status = CLOUD_ACCESS_SIGNED_UP;
   st_store_dump();
 
   return;
@@ -421,6 +431,18 @@ refresh_token_handler(oc_client_response_t *data)
   context->retry_count = 0;
   oc_set_delayed_callback(context, sign_in,
                           session_timeout[context->retry_count]);
+
+  st_store_t *store_info = st_store_get_info();
+  if (oc_string_len(store_info->cloudinfo.access_token) > 0)
+    oc_free_string(&store_info->cloudinfo.access_token);
+  oc_new_string(&store_info->cloudinfo.access_token,
+                oc_string(context->access_token),
+                oc_string_len(context->access_token));
+  if (oc_string_len(store_info->cloudinfo.refresh_token) > 0)
+    oc_free_string(&store_info->cloudinfo.refresh_token);
+  oc_new_string(&store_info->cloudinfo.refresh_token,
+                oc_string(context->refresh_token),
+                oc_string_len(context->refresh_token));
   st_store_dump();
 
   return;
@@ -493,6 +515,8 @@ publish_resource_handler(oc_client_response_t *data)
     es_set_state(ES_STATE_PUBLISHED_RESOURCES_TO_CLOUD);
     oc_set_delayed_callback(context, find_ping,
                             message_timeout[context->retry_count]);
+    st_store_t *store_info = st_store_get_info();
+    store_info->cloudinfo.status = CLOUD_ACCESS_PUBLISHED;
     st_store_dump();
   } else {
     error_handler(data, publish_resource);

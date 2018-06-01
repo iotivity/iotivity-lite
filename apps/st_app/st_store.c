@@ -125,6 +125,7 @@ st_store_info_initialize(void)
   } else if (oc_string(g_store_info.cloudinfo.refresh_token)) {
     oc_free_string(&g_store_info.cloudinfo.refresh_token);
   }
+  g_store_info.cloudinfo.status = 0;
 }
 
 st_store_t *
@@ -202,6 +203,11 @@ st_decode_cloud_access_info(oc_rep_t *rep)
         return -1;
       }
       break;
+    case OC_REP_INT:
+      if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
+        g_store_info.cloudinfo.status = t->value.integer;
+      }
+      break;
     default:
       OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
       return -1;
@@ -273,6 +279,7 @@ st_encode_store_info(void)
                              oc_string(g_store_info.cloudinfo.access_token));
   st_rep_set_string_with_chk(cloudinfo, refresh_token,
                              oc_string(g_store_info.cloudinfo.refresh_token));
+  oc_rep_set_int(cloudinfo, status, g_store_info.cloudinfo.status);
   oc_rep_close_object(root, cloudinfo);
   oc_rep_end_root_object();
 }
