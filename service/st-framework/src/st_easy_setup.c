@@ -112,7 +112,8 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   }
 
   // Set callbacks for Vendor Specific Properties
-  es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb, sc_free_userdata);
+  es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb,
+                               sc_free_userdata);
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
 
   // Set timeout for easy setup procedure.
@@ -429,8 +430,7 @@ wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
 
   if (wifi_prov_data->userdata) {
     sc_wifi_conf_properties *data = wifi_prov_data->userdata;
-    st_print_log("[Easy_Setup] DiscoveryChannel : %d\n",
-                 data->disc_channel);
+    st_print_log("[Easy_Setup] DiscoveryChannel : %d\n", data->disc_channel);
   }
 
   if (!oc_string(wifi_prov_data->ssid) || !oc_string(wifi_prov_data->pwd)) {
@@ -557,8 +557,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
 
   st_string_copy(&g_store_info.cloudinfo.access_token,
                  &cloud_prov_data->access_token);
-  st_string_copy(&g_store_info.cloudinfo.refresh_token,
-                 &data->refresh_token);
+  st_string_copy(&g_store_info.cloudinfo.refresh_token, &data->refresh_token);
   st_string_copy(&g_store_info.cloudinfo.auth_provider,
                  &cloud_prov_data->auth_provider);
   st_string_copy(&g_store_info.cloudinfo.ci_server,

@@ -64,11 +64,11 @@ static sec_provisioning_info g_prov_resource;
 static int device_index = 0;
 
 static const char *device_rt = "oic.d.light";
-static const char *device_name = "Samsung";
+static const char *device_name = "Ambience1";
 
-static const char *manufacturer = "xxxx";
-static const char *sid = "000";
-static const char *vid = "IoT2020";
+static const char *manufacturer = "fALu";
+static const char *sid = "001";
+static const char *vid = "Ambience2019";
 
 int quit = 0;
 
