@@ -36,6 +36,11 @@ OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#define MESSAGE_RECV_RATIO (0.3)
+#define MESSAGE_SEND_RATIO (0.3)
+#endif
+
 static oc_message_t *
 allocate_message(struct oc_memb *pool)
 {
@@ -119,17 +124,51 @@ oc_message_unref(oc_message_t *message)
   }
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  
+// If a transaction's data size is less than OC_PDU_SIZE * ratio,
+// resize the buffer as the real data size.
+// 'ratio' helps to avoid resize all buffer
+
+static void
+oc_resize_message(oc_message_t *message, float ratio)
+{
+  if (message) {
+    if ((message->length > 0 &&
+        message->length < (unsigned)(OC_PDU_SIZE * ratio)) &&
+        message->data) {
+      uint8_t *buf = NULL;
+      buf = oc_mem_malloc(message->length);
+      if (buf) {
+        memcpy(buf, message->data, message->length);
+        oc_mem_free(message->data);
+        message->data = buf;
+      }
+    }
+  }
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 void
 oc_recv_message(oc_message_t *message)
 {
   if (oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
-                      message) == OC_PROCESS_ERR_FULL)
+                      message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  else {
+    oc_resize_message(message, MESSAGE_RECV_RATIO);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
 oc_send_message(oc_message_t *message)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_resize_message(message, MESSAGE_SEND_RATIO);
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (oc_process_post(&message_buffer_handler,
                       oc_events[OUTBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL)
