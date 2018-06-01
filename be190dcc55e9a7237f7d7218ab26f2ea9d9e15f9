@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_178988eb",
+        "filename": "tests/port/tizenrt/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T10:10:27Z",
+      "side": 1,
+      "message": "minimal configuration seems to be very basic without any networking support ..\n\nis there a configuration we can use that supports networking fuctions (IP stack, wpa supplicant, dhcp ..etc) which is typically needed for IoTivity / IoTivity lite build ?",
+      "revId": "be190dcc55e9a7237f7d7218ab26f2ea9d9e15f9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
