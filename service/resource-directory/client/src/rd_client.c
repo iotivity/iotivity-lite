@@ -87,7 +87,7 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
 
   return status;
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */
 
 #ifndef ST_APP_OPTIMIZATION
 bool
@@ -134,7 +134,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 
   return oc_do_post();
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */
 
 bool
 rd_publish_all(oc_endpoint_t *endpoint, int device_index,
@@ -191,7 +191,7 @@ rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */
 
 #ifndef ST_APP_OPTIMIZATION
 bool
@@ -212,4 +212,4 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return oc_do_delete(OC_RSRVD_RD_URI, endpoint, query, handler, qos,
                       user_data);
 }
-#endif
+#endif /*.ST_APP_OPTIMIZATION */

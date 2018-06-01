@@ -13,7 +13,7 @@
  // See the License for the specific language governing permissions and
  // limitations under the License.
  */
-
+#ifndef ST_OC_INTROSPECTION_OPT
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -125,3 +125,4 @@ oc_create_introspection_resource(int device)
                             oc_core_introspection_data_handler, 0, 0, 0, 1,
                             "oic.introspection.data");
 }
+#endif /*ST_OC_INTROSPECTION_OPT */
