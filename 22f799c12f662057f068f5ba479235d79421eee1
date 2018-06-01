@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_57e4b00c",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "add error log before return.",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_77e73413",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "why ! is needed for (ifa-\u003eifa_flags \u0026 IFF_UP) ?\n\nthis should return true if interface is found and it\u0027s in UP state.",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_37de4c40",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "rename this function to find_network_changes",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b7f1bccf",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "add some code comments before this block of code like\n\n/* Check if new interfaces were added */",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_17e34808",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "extra blank line, remove it",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_97ee38eb",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "add some code comments before this block of code like\n\n/* Check if existing interfaces were removed */",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_971758ed",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "define timeout as a macro on top of this file..\n\n#define SELECT_TIMEOUT 5",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f7d34436",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "1. Rename getinterfaceinformation --\u003e find_network_changes\n\n2. Add this code only when OC_NETLINK is NOT defined. \n\n#ifndef OC_NETLINK \n\nif (n \u003d\u003d 0) {\n  find_network_changes();\n}\n\n#endif // OC_NETLINK",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d7d8c055",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1626,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-01T06:51:39Z",
+      "side": 1,
+      "message": "extra space after (, please remove it",
+      "revId": "22f799c12f662057f068f5ba479235d79421eee1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
