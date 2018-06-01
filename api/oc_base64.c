@@ -24,6 +24,7 @@ int
 oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
                  int output_buffer_len)
 {
+#ifndef ST_APP_OPTIMIZATION
   /* The Base64 alphabet. This table provides a mapping from 6-bit binary
    * values to Base64 characters.
    */
@@ -109,11 +110,15 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
   }
 
   return j;
+#else
+  return (0);
+#endif
 }
 
 int
 oc_base64_decode(uint8_t *str, int len)
 {
+#ifndef ST_APP_OPTIMIZATION
   /* The Base64 input string is decoded in-place. */
   int i = 0, j = 0;
   unsigned char val_c = 0, val_s = 0;
@@ -179,4 +184,7 @@ oc_base64_decode(uint8_t *str, int len)
   }
 
   return j;
+#else
+  return (0);
+#endif
 }

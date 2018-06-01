@@ -171,6 +171,7 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   }
 }
 
+#ifndef ST_APP_OPTIMIZATION
 void
 oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
 {
@@ -193,6 +194,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 {
   oc_string_array_add_item(link->rel, rel);
 }
+#endif
 
 oc_collection_t *
 oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
@@ -212,6 +214,7 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
   return collection;
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_link_t *
 oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len)
 {
@@ -236,6 +239,7 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_pa
 
   return link;
 }
+#endif
 
 bool
 oc_check_if_collection(oc_resource_t *resource)

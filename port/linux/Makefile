@@ -63,6 +63,10 @@ SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
 SRC_RD_CLIENT=$(wildcard ../../service/resource-directory/client/src/*.c)
 
+ifeq ($(OPTIMIZE),1)
+SRC +=../../port/oc_log.c
+endif
+
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/config.h
 
@@ -81,14 +85,14 @@ OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../port/
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
-	  server_collections_linux server_block_linux smart_home_server_linux multi_device_server server_multithread_linux
+	  server_collections_linux smart_home_server_linux multi_device_server
 
 ifneq ($(OPTIMIZE),1)
-SAMPLES += client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux
+SAMPLES += server_block_linux client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux server_multithread_linux
 endif
 
 ifeq ($(EASYSETUP),1)
@@ -162,6 +166,7 @@ endif
 
 ifeq ($(OPTIMIZE),1)
 	CFLAGS += -DST_APP_OPTIMIZATION
+	CFLAGS += -DST_MBEDTLS_OPT
 endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})

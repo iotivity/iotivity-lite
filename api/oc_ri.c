@@ -442,6 +442,7 @@ oc_observe_notification_delayed(void *data)
 static oc_event_callback_retval_t
 periodic_observe_handler(void *data)
 {
+#ifndef ST_APP_OPTIMIZATION
   oc_resource_t *resource = (oc_resource_t *)data;
 
   if (coap_notify_observers(resource, NULL, NULL)) {
@@ -449,11 +450,15 @@ periodic_observe_handler(void *data)
   }
 
   return OC_EVENT_DONE;
+#else
+  return (0);
+#endif
 }
 
 static oc_event_callback_t *
 get_periodic_observe_callback(oc_resource_t *resource)
 {
+#ifndef ST_APP_OPTIMIZATION
   oc_event_callback_t *event_cb;
   bool found = false;
 
@@ -470,11 +475,15 @@ get_periodic_observe_callback(oc_resource_t *resource)
   }
 
   return NULL;
+#else
+  return (0);
+#endif
 }
 
 static void
 remove_periodic_observe_callback(oc_resource_t *resource)
 {
+#ifndef ST_APP_OPTIMIZATION
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
 
   if (event_cb) {
@@ -482,11 +491,15 @@ remove_periodic_observe_callback(oc_resource_t *resource)
     oc_list_remove(observe_callbacks, event_cb);
     oc_memb_free(&event_callbacks_s, event_cb);
   }
+#else
+  return (0);
+#endif
 }
 
 static bool
 add_periodic_observe_callback(oc_resource_t *resource)
 {
+#ifndef ST_APP_OPTIMIZATION
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
 
   if (!event_cb) {
@@ -507,6 +520,9 @@ add_periodic_observe_callback(oc_resource_t *resource)
   }
 
   return true;
+#else
+  return (0);
+#endif
 }
 #endif
 
@@ -1100,6 +1116,7 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
   }
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_client_cb_t *
 oc_ri_find_client_cb_by_mid(uint16_t mid)
 {
@@ -1111,6 +1128,7 @@ oc_ri_find_client_cb_by_mid(uint16_t mid)
   }
   return cb;
 }
+#endif
 
 oc_client_cb_t *
 oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
@@ -1271,6 +1289,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   return true;
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_client_cb_t *
 oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                     oc_method_t method)
@@ -1288,6 +1307,7 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
 
   return cb;
 }
+#endif
 
 static void
 free_all_client_cbs(void)

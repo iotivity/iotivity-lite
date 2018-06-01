@@ -175,6 +175,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   return true;
 }
 
+#ifndef ST_APP_OPTIMIZATION
 void
 oc_free_server_endpoints(oc_endpoint_t *endpoint)
 {
@@ -185,6 +186,7 @@ oc_free_server_endpoints(oc_endpoint_t *endpoint)
     endpoint = next;
   }
 }
+#endif /* ST_APP SPECIFIC */
 
 bool
 oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
@@ -231,6 +233,7 @@ oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
   return status;
 }
 
+#ifndef ST_APP_OPTIMIZATON
 bool
 oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
@@ -245,6 +248,7 @@ oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
 
   return prepare_coap_request(cb);
 }
+#endif /* ST_APP SPECIFIC */
 
 bool
 oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
@@ -273,7 +277,7 @@ oc_do_post(void)
 {
   return dispatch_coap_request();
 }
-
+#ifndef ST_APP_OPTIMIZATION
 bool
 oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
               oc_response_handler_t handler, oc_qos_t qos, void *user_data)
@@ -318,7 +322,7 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
 
   return status;
 }
-#ifndef ST_APP_OPTIMIZATION
+
 #ifdef OC_IPV4
 static bool
 oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb,
@@ -421,7 +425,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 {
   return dispatch_ip_discovery(rt, handler, endpoint, user_data) ? true : false;
 }
-#endif /* ST_APP SPECIFIC */
+
 void
 oc_close_session(oc_endpoint_t *endpoint)
 {
@@ -437,3 +441,4 @@ oc_close_session(oc_endpoint_t *endpoint)
 }
 
 #endif /* OC_CLIENT */
+#endif /* ST_APP SPECIFIC */
