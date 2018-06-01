@@ -321,6 +321,7 @@ oc_delete_resource(oc_resource_t *resource)
   oc_ri_delete_resource(resource);
 }
 
+#ifndef ST_APP_OPTIMIZATION
 void
 oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
@@ -429,7 +430,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
   oc_mem_free(handle->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
-
+#endif /* ST_APP SPECIFIC */
 int
 oc_notify_observers(oc_resource_t *resource)
 {

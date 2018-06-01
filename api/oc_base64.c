@@ -20,6 +20,7 @@
  * based on their definitions in RFC 4648.
  */
 
+#ifndef ST_APP_OPTIMIZATION
 int
 oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
                  int output_buffer_len)
@@ -110,6 +111,7 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
 
   return j;
 }
+#endif /* ST_APP_SPECIFIC */
 
 int
 oc_base64_decode(uint8_t *str, int len)
