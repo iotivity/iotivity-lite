@@ -439,6 +439,7 @@ oc_observe_notification_delayed(void *data)
 #endif
 
 #ifdef OC_SERVER
+#ifndef ST_APP_OPTIMIZATION
 static oc_event_callback_retval_t
 periodic_observe_handler(void *data)
 {
@@ -508,7 +509,8 @@ add_periodic_observe_callback(oc_resource_t *resource)
 
   return true;
 }
-#endif
+#endif /* ST_APP_SPECIFIC */
+#endif /* OC_SERVER */
 
 static void
 free_all_event_timers(void)
@@ -958,6 +960,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
            * polling mechanism.
            */
           bool set_observe_option = true;
+#ifndef ST_APP_OPTIMIZATION
           if (cur_resource->properties & OC_PERIODIC) {
             if (!add_periodic_observe_callback(cur_resource)) {
               set_observe_option = false;
@@ -965,6 +968,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                                             packet->token_len);
             }
           }
+#endif /* ST_APP_SPECIFIC */
 
           if (set_observe_option) {
             coap_set_header_observe(response, 0);
@@ -984,9 +988,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         if (coap_observe_handler(request, response, cur_resource, endpoint) >
             0) {
 #endif /* !OC_BLOCK_WISE */
+#ifndef ST_APP_OPTIMIZATION
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
           }
+#endif
         }
       }
     }
@@ -1100,6 +1106,7 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
   }
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_client_cb_t *
 oc_ri_find_client_cb_by_mid(uint16_t mid)
 {
@@ -1111,6 +1118,7 @@ oc_ri_find_client_cb_by_mid(uint16_t mid)
   }
   return cb;
 }
+#endif
 
 oc_client_cb_t *
 oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
@@ -1271,6 +1279,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   return true;
 }
 
+#ifndef ST_APP_OPTIMIZATION
 oc_client_cb_t *
 oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                     oc_method_t method)
@@ -1288,6 +1297,7 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
 
   return cb;
 }
+#endif
 
 static void
 free_all_client_cbs(void)
