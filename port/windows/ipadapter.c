@@ -859,6 +859,8 @@ oc_send_discovery_request(oc_message_t *message)
 
   for (ifaddr = ifaddr_list; ifaddr != NULL; ifaddr = ifaddr->next) {
     if (message->endpoint.flags & IPV6 && ifaddr->addr.ss_family == AF_INET6) {
+// Temporary fix for issues with IoTivity devices.
+#ifndef OC_IPV4
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)&ifaddr->addr;
       int mif = addr->sin6_scope_id;
       if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF,
@@ -868,6 +870,7 @@ oc_send_discovery_request(oc_message_t *message)
         goto done;
       }
       oc_send_buffer(message);
+#endif
 #ifdef OC_IPV4
     } else if (message->endpoint.flags & IPV4 &&
                ifaddr->addr.ss_family == AF_INET) {
