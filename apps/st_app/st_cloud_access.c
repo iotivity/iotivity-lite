@@ -238,6 +238,11 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
 
   int code;
   if (oc_rep_get_int(data->payload, "code", &code)) {
+    char *message = NULL;
+    int size;
+    if (oc_rep_get_string(data->payload, "message", &message, &size))
+      st_print_log("[Cloud_Access] ci message : %s\n", message);
+
     if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
       // TOKEN_EXPIRED
       oc_remove_delayed_callback(context, callback);
@@ -342,7 +347,6 @@ sign_up_handler(oc_client_response_t *data)
                 strlen(token_value));
   store_info->cloudinfo.status = CLOUD_ACCESS_SIGNED_UP;
   st_store_dump();
-
   return;
 
 error:
@@ -388,6 +392,7 @@ sign_in_handler(oc_client_response_t *data)
                             message_timeout[context->retry_count]);
   }
   context->cloud_access_status = CLOUD_ACCESS_SIGNED_IN;
+  return;
 
 error:
   error_handler(data, sign_in);
@@ -451,7 +456,6 @@ refresh_token_handler(oc_client_response_t *data)
                 oc_string(context->refresh_token),
                 oc_string_len(context->refresh_token));
   st_store_dump();
-
   return;
 
 error:
