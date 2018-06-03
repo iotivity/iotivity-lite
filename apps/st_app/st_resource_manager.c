@@ -20,6 +20,7 @@
 #include "oc_api.h"
 #include "samsung/sc_easysetup.h"
 #include "st_port.h"
+#include "st_process.h"
 
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;
@@ -33,6 +34,8 @@ static const char *switchlevel_rsc_rt[1] = { "oic.r.light.dimming" };
 static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
 static const int color_temp_rt_num = 1;
 static const char *color_temp_rsc_rt[1] = { "x.com.st.color.temperature" };
+
+static int device_index = 0;
 
 static void
 st_resource_get_handler(oc_request_t *request, oc_interface_mask_t interface,
@@ -126,6 +129,8 @@ st_register_resources(int device)
                        OC_IF_A | OC_IF_S | OC_IF_BASELINE, OC_IF_A, device);
 
   init_provisioning_info_resource(NULL);
+
+  device_index = device;
 }
 
 void
@@ -139,4 +144,25 @@ st_register_resource_handler(st_resource_handler get_handler,
 
   g_resource_get_handler = get_handler;
   g_resource_set_handler = set_handler;
+}
+
+void
+st_notify_back(const char *uri)
+{
+  if (!uri) {
+    st_print_log("[St_rsc_mgr] invalid parameter.");
+    return;
+  }
+
+  st_process_app_sync_lock();
+  oc_resource_t *resource =
+    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+  if (!resource) {
+    st_print_log("[St_rsc_mgr] invalid resource uri(%s)\n", uri);
+    return;
+  }
+
+  oc_notify_observers(resource);
+  st_process_app_sync_unlock();
+  _oc_signal_event_loop();
 }

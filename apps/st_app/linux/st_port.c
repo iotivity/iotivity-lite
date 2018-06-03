@@ -20,6 +20,7 @@
 #include "../st_port.h"
 #include "../st_manager.h"
 #include "../st_process.h"
+#include "../st_resource_manager.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
@@ -85,6 +86,7 @@ print_menu(void)
   st_process_app_sync_lock();
   st_print_log("=====================================\n");
   st_print_log("1. Reset device\n");
+  st_print_log("2. notify switch resource\n");
   st_print_log("0. Quit\n");
   st_print_log("=====================================\n");
   st_process_app_sync_unlock();
@@ -110,6 +112,9 @@ st_port_user_input_loop(void *data)
     case '1':
       st_manager_reset();
       goto exit;
+    case '2':
+      st_notify_back("/capability/switch/main/0"); // TODO
+      break;
     case '0':
       st_manager_quit();
       st_process_signal();
