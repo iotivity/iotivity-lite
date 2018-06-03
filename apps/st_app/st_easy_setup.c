@@ -129,6 +129,8 @@ st_easy_setup_stop(void)
 
   reset_sc_properties();
 
+  deinit_provisioning_info_resource();
+
   g_callback = NULL;
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
   g_prov_step_check = 0;
