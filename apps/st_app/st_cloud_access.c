@@ -37,7 +37,7 @@
 #define MAX_CONTEXT_SIZE (2)
 #define MAX_RETRY_COUNT (5)
 
-static int session_timeout[5] = { 3, 50, 50, 50, 10 };
+static int session_timeout[5] = { 15, 50, 50, 50, 10 };
 static int message_timeout[5] = { 1, 2, 4, 8, 10 };
 
 typedef struct st_cloud_context
