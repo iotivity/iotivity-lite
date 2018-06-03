@@ -32,7 +32,6 @@ typedef enum { ST_LOOP_QUIT, ST_LOOP_RESET } st_loop_status_t;
 
 int st_port_specific_init(void);
 void st_port_specific_destroy(void);
-st_loop_status_t st_port_main_loop(int *quit);
 
 void st_print_log(const char *log, ...);
 
@@ -46,7 +45,6 @@ int st_cond_destroy(st_cond_t cv);
 int st_cond_wait(st_cond_t cv, st_mutex_t mutex);
 int st_cond_timedwait(st_cond_t cv, st_mutex_t mutex, oc_clock_time_t time);
 int st_cond_signal(st_cond_t cv);
-int st_set_sigint_handler(st_sig_handler_t handler);
 
 st_thread_t st_thread_create(st_thread_process_t handler, const char *name,
                              void *user_data);

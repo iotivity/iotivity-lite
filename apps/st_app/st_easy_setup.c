@@ -198,6 +198,7 @@ easy_setup_timeout_handler(void *data)
   (void)data;
   st_print_log("[Easy_Setup] Timeout easy-setup procedure.\n");
   g_easy_setup_status = EASY_SETUP_RESET;
+  oc_set_delayed_callback(NULL, callback_handler, 0);
   return OC_EVENT_DONE;
 }
 

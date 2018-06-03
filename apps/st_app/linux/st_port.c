@@ -18,6 +18,7 @@
 
 #define _GNU_SOURCE
 #include "../st_port.h"
+#include "../st_manager.h"
 #include "../st_process.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
@@ -49,27 +50,23 @@ typedef struct
 
 static st_soft_ap_t g_soft_ap;
 
+static st_thread_t g_user_input_thread = NULL;
+
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
 
-extern int quit;
+extern void st_manager_quit(void);
 
+static void *st_port_user_input_loop(void *data);
 static void *soft_ap_process_routine(void *data);
-
-static void
-handle_signal(int signal)
-{
-  (void)signal;
-  st_process_signal();
-  quit = 1;
-}
 
 int
 st_port_specific_init(void)
 {
   /* set port specific logics. in here */
-  st_set_sigint_handler(handle_signal);
+  g_user_input_thread =
+    st_thread_create(st_port_user_input_loop, "INPUT", NULL);
   return 0;
 }
 
@@ -77,6 +74,8 @@ void
 st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
+  st_thread_destroy(g_user_input_thread);
+  g_user_input_thread = NULL;
   return;
 }
 
@@ -91,41 +90,38 @@ print_menu(void)
   st_process_app_sync_unlock();
 }
 
-st_loop_status_t
-st_port_main_loop(int *quit_flag)
+static void *
+st_port_user_input_loop(void *data)
 {
-  st_loop_status_t status;
+  (void)data;
   char key[10];
 
-  while (*quit_flag != 1) {
+  while (1) {
     print_menu();
     fflush(stdin);
     if (!scanf("%s", &key)) {
       st_print_log("scanf failed!!!!\n");
-      *quit_flag = 1;
+      st_manager_quit();
       st_process_signal();
-      break;
+      goto exit;
     }
 
-    st_process_app_sync_lock();
     switch (key[0]) {
     case '1':
-      status = ST_LOOP_RESET;
-      st_process_app_sync_unlock();
-      goto reset;
+      st_manager_reset();
+      goto exit;
     case '0':
-      *quit_flag = 1;
-      status = ST_LOOP_QUIT;
+      st_manager_quit();
       st_process_signal();
-      break;
+      goto exit;
     default:
       st_print_log("unsupported command.\n");
       break;
     }
-    st_process_app_sync_unlock();
   }
-reset:
-  return status;
+exit:
+  st_thread_exit(NULL);
+  return NULL;
 }
 
 void
@@ -239,16 +235,6 @@ st_cond_signal(st_cond_t cv)
     return -1;
 
   return pthread_cond_signal((pthread_cond_t *)cv);
-}
-
-int
-st_set_sigint_handler(st_sig_handler_t handler)
-{
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handler;
-  return sigaction(SIGINT, &sa, NULL);
 }
 
 st_thread_t
