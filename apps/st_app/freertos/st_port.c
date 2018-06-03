@@ -52,12 +52,6 @@ extern int quit;
 
 static void *soft_ap_process_routine(void *data);
 
-static void
-handle_signal(int signal)
-{
-  oc_abort(__func__);
-}
-
 int
 st_port_specific_init(void)
 {
@@ -74,12 +68,6 @@ st_port_specific_destroy(void)
 
 static void
 print_menu(void)
-{
-  oc_abort(__func__);
-}
-
-st_loop_status_t
-st_port_main_loop(int *quit_flag)
 {
   oc_abort(__func__);
 }
@@ -149,13 +137,6 @@ int
 st_cond_signal(st_cond_t cv)
 {
   oc_abort(__func__);
-}
-
-int
-st_set_sigint_handler(st_sig_handler_t handler)
-{
-  oc_abort(__func__);
-  return 0;
 }
 
 st_thread_t

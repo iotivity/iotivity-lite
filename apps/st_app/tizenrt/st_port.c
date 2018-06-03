@@ -69,19 +69,6 @@ st_port_specific_destroy(void)
   return;
 }
 
-st_loop_status_t
-st_port_main_loop(int *quit_flag)
-{
-  st_loop_status_t status;
-
-  while (*quit_flag != 1) {
-    st_sleep(3);
-  }
-
-  status = ST_LOOP_QUIT;
-  return status;
-}
-
 void
 st_print_log(const char *fmt, ...)
 {
@@ -194,18 +181,6 @@ st_cond_signal(st_cond_t cv)
 
   return pthread_cond_signal((pthread_cond_t *)cv);
 }
-
-#if 0
-int
-st_set_sigint_handler(st_sig_handler_t handler)
-{
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handler;
-  return sigaction(SIGINT, &sa, NULL);
-}
-#endif
 
 st_thread_t
 st_thread_create(st_thread_process_t handler, const char *name, void *user_data)

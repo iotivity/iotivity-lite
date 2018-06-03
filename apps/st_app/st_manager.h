@@ -21,6 +21,7 @@
 
 int st_manager_initialize(void);
 int st_manager_start(void);
+void st_manager_reset(void);
 void st_manager_stop(void);
 void st_manager_deinitialize(void);
 
