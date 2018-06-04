@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_52c79e45",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T11:34:54Z",
+      "side": 1,
+      "message": "please insert blank line between functions for readability.",
+      "revId": "c8047af3f44a2d7eb59ee913b03c34f27cb2ced8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_92c12631",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T11:34:54Z",
+      "side": 1,
+      "message": "blank line at the start of function can be removed.",
+      "revId": "c8047af3f44a2d7eb59ee913b03c34f27cb2ced8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b2c42a41",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T11:34:54Z",
+      "side": 1,
+      "message": "please check formatting (comments should align to code). \n\nthere is automatic for-matter available in tools/check_style too if you prefer that..",
+      "revId": "c8047af3f44a2d7eb59ee913b03c34f27cb2ced8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
