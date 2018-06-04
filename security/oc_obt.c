@@ -325,16 +325,33 @@ free_otm_ctx(oc_otm_ctx_t *ctx, int status)
   free_otm_state(ctx, status);
 }
 
+#ifdef OC_DEBUG
+static void
+print_endpoint(oc_endpoint_t *ep)
+{
+  if (ep) {
+    PRINT("%ssecure endpoint ", (ep->flags & SECURED ? "" : "un"));
+    PRINTipaddr(*ep);
+    PRINT("\n");
+  }
+  else {
+    OC_ERR("no endpoint");
+  }
+}
+#endif /* OC_DEBUG */
+
 static void
 obt_jw_13(oc_client_response_t *data)
 {
   if (!is_item_in_list(oc_otm_ctx_l, data->user_data)) {
+    OC_ERR("unknown context");
     return;
   }
 
   OC_DBG("In obt_jw_13");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
+    OC_ERR("status code %d", (int)data->code);
     free_otm_ctx(o, -1);
     return;
   }
@@ -343,8 +360,10 @@ obt_jw_13(oc_client_response_t *data)
    */
   oc_dostype_t s = parse_dos(data->payload);
   if (s == OC_DOS_RFNOP) {
+    OC_DBG("pstat is RFNOP");
     free_otm_ctx(o, 0);
   } else {
+    OC_ERR("DOS type is %d, expected 3", (int)s);
     free_otm_ctx(o, -1);
   }
 }
@@ -353,12 +372,14 @@ static void
 obt_jw_12(oc_client_response_t *data)
 {
   if (!is_item_in_list(oc_otm_ctx_l, data->user_data)) {
+    OC_ERR("unknown context");
     return;
   }
 
   OC_DBG("In obt_jw_12");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
+    OC_ERR("status code %d", (int)data->code);
     goto err_obt_jw_12;
   }
 
@@ -366,6 +387,10 @@ obt_jw_12(oc_client_response_t *data)
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+
+#ifdef OC_DEBUG
+  print_endpoint(ep);
+#endif
 
   oc_tls_close_connection(ep);
 
@@ -383,12 +408,14 @@ static void
 obt_jw_11(oc_client_response_t *data)
 {
   if (!is_item_in_list(oc_otm_ctx_l, data->user_data)) {
+    OC_ERR("unknown context");
     return;
   }
 
   OC_DBG("In obt_jw_11");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
+    OC_ERR("status code %d", (int)data->code);
     goto err_obt_jw_11;
   }
 
@@ -398,6 +425,9 @@ obt_jw_11(oc_client_response_t *data)
      */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+#ifdef OC_DEBUG
+    print_endpoint(ep);
+#endif
     if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, HIGH_QOS, o)) {
       oc_rep_start_root_object();
       oc_rep_set_object(root, dos);
@@ -408,6 +438,9 @@ obt_jw_11(oc_client_response_t *data)
         return;
       }
     }
+  }
+  else {
+    OC_ERR("DOS type is %d, expected 2", (int)s);
   }
 
 err_obt_jw_11:
