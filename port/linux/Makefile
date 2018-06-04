@@ -44,14 +44,14 @@ DTLS= 	aes.c		aesni.c 	asn1parse.c	asn1write.c	base64.c	\
 	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
 	md5.c		md_wrap.c	oid.c		padlock.c	\
 	pem.c		pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	\
-	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
+	pkwrite.c	platform.c	ripemd160.c	sha1.c		sha256.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c
 
 ifneq ($(OPTIMIZE),1)
-DTLS+= 	arc4.c	blowfish.c	camellia.c
+DTLS += arc4.c blowfish.c camellia.c rsa.c rsa_internal.c
 endif
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
