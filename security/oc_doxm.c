@@ -36,6 +36,14 @@ static oc_sec_doxm_t *doxm;
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+static oc_sec_change_owner_cb_t _oc_sec_change_owner_cb = NULL;
+
+void
+oc_sec_set_owner_cb(oc_sec_change_owner_cb_t cb)
+{
+  _oc_sec_change_owner_cb = cb;
+}
+
 void
 oc_sec_doxm_free(void)
 {
@@ -227,6 +235,12 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         memcpy(deviceuuid->id, doxm[device].deviceuuid.id, 16);
       } else if (len == 12 &&
                  memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
+        if(_oc_sec_change_owner_cb) {
+          if(!_oc_sec_change_owner_cb()) {
+            doxm[device].owned = false;
+            return false;
+          }
+        }
         oc_str_to_uuid(oc_string(rep->value.string),
                        &doxm[device].devowneruuid);
 #if !defined(OC_SPEC_VER_OIC)
