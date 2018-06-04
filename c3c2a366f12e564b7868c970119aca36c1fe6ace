@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d2bbaec2",
+        "filename": "security/oc_err.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 3073
+      },
+      "writtenOn": "2018-06-04T11:01:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_32213aa0",
+      "range": {
+        "startLine": 24,
+        "startChar": 5,
+        "endLine": 24,
+        "endChar": 22
+      },
+      "revId": "c3c2a366f12e564b7868c970119aca36c1fe6ace",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7213c25c",
         "filename": "security/oc_err.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-02T01:50:12Z",
       "side": 1,
       "message": "However, If you include the error handling during provisioning process and reset process, this name is OK but it may requires additional parameter for state as like oc_sec_err(device_id, pstat_state, error_code).\nOtherwise API name should be more otm centric as like oc_sec_otm_err.",
+      "range": {
+        "startLine": 29,
+        "startChar": 5,
+        "endLine": 29,
+        "endChar": 15
+      },
+      "revId": "c3c2a366f12e564b7868c970119aca36c1fe6ace",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_32b13ae2",
+        "filename": "security/oc_err.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 3073
+      },
+      "writtenOn": "2018-06-04T11:01:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7213c25c",
       "range": {
         "startLine": 29,
         "startChar": 5,
