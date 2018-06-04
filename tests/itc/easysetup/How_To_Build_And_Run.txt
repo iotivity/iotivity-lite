@@ -1,0 +1,15 @@
+
+==== Enrollee Test Case (based on IoTivity Lite) =====
+
+Build :
+
+	cd port/linux
+	make all EASYSETUP=1 DEBUG=1 DYNAMIC=1 IPV4=1 SECURE=0
+
+	cd tests/itc/easysetup
+	make apitest
+
+Run:
+	./easysetup_Test
+
+==========================================================
