@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_52231e05",
+        "filename": "tests/itc/easysetup/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-06-04T16:06:52Z",
+      "side": 1,
+      "message": "please run tests here or rename test to something different ie: apitests",
+      "revId": "c8047af3f44a2d7eb59ee913b03c34f27cb2ced8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_52c79e45",
         "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
         "patchSetId": 5
