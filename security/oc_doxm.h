@@ -35,6 +35,8 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
+typedef bool (*oc_sec_change_owner_cb_t)(void);
+
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device);
@@ -45,5 +47,5 @@ void oc_sec_doxm_default(int device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
-
+void oc_sec_set_owner_cb(oc_sec_change_owner_cb_t cb);
 #endif /* OC_DOXM_H */
