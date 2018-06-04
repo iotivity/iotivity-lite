@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_32ac9aa0",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "can the timeout be defined in a common place (may be on top of this file or a separate testconfig.h file?)",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_12b196f8",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "using braces {} for all if-else conditions would help readability here.",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_12ba36de",
+        "filename": "tests/itc/easysetup/include/EasySetupHelper.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "RI_HELPER ? Do you need to replace with ES_HELPER ?",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_72ce2285",
+        "filename": "tests/itc/easysetup/include/EasySetupHelper.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "tabs -\u003e Please replace with spaces.",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_92c5a65d",
+        "filename": "tests/itc/easysetup/src/EasySetupIntegrationTest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "naming .. should it be m_pEasySetupHelper ?",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f2a192aa",
+        "filename": "tests/itc/easysetup/src/EasySetupIntegrationTest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "these two lines (77, 78) can be clubbed into one.",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_52cb1e72",
+        "filename": "tests/itc/easysetup/src/EasySetupIntegrationTest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "please removeextra blank line",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b2c8aa75",
+        "filename": "tests/itc/easysetup/src/EasySetupIntegrationTest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "here too and other places.",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d2a60ec1",
+        "filename": "tests/itc/easysetup/src/EasySetupIntegrationTest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:52:07Z",
+      "side": 1,
+      "message": "formatting needs to be fixed (usually there should be spaces after for and around all binary operators).",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
