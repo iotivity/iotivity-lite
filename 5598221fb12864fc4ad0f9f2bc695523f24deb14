@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_929c866b",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:57:35Z",
+      "side": 1,
+      "message": "is this variable (s_ts) getting used ?",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_32ac9aa0",
         "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
         "patchSetId": 3
@@ -13,6 +30,23 @@
       "writtenOn": "2018-06-04T09:52:07Z",
       "side": 1,
       "message": "can the timeout be defined in a common place (may be on top of this file or a separate testconfig.h file?)",
+      "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f2887224",
+        "filename": "tests/itc/easysetup/helper/EasySetupHelper.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-04T09:57:35Z",
+      "side": 1,
+      "message": "seems like \"payload\" and userdata are used in below code block.",
       "revId": "5598221fb12864fc4ad0f9f2bc695523f24deb14",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
