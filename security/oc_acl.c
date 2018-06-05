@@ -828,7 +828,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   int len = 0;
-
+#ifndef OC_SPEC_VER_OIC
   while (t != NULL) {
     len = oc_string_len(t->name);
     switch (t->type) {
@@ -851,7 +851,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
     }
     t = t->next;
   }
-
+#endif
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {

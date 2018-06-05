@@ -483,6 +483,24 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
     }
     rep = rep->next;
   }
+#ifdef OC_SPEC_VER_OIC
+  if ((ps.cm & 0x01) && false == ps.isop) {
+    ps.s = OC_DOS_RESET;
+    transition_state = true;
+  }
+  else if ((ps.cm & 0x02) && false == ps.isop) {
+    ps.s = OC_DOS_RFOTM;
+    transition_state = true;
+  }
+  else if ((ps.cm & 0x3C) && false == ps.isop) {
+    ps.s = OC_DOS_RFPRO;
+    transition_state = true;
+  }
+  else if (false == (ps.cm & 0x02) && true == ps.isop) {
+    ps.s = OC_DOS_RFNOP;
+    transition_state = true;
+  }
+#endif
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
