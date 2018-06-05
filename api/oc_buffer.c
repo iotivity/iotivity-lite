@@ -157,11 +157,6 @@ oc_recv_message(oc_message_t *message)
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
   }
-#ifdef OC_DYNAMIC_ALLOCATION
-  else {
-    oc_resize_message(message, MESSAGE_RECV_RATIO);
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
