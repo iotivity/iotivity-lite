@@ -553,7 +553,7 @@ post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
     if (owner) {
       oc_sec_remove_cred_by_credid(owner->credid, request->resource->device);
     } else {
-      oc_sec_otm_err(request->resource->device, OC_SEC_ERR_CRED);
+      oc_sec_otm_cb(request->resource->device, OC_SEC_ERR_CRED);
     }
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {

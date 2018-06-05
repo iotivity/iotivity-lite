@@ -19,18 +19,18 @@
 #include "oc_err.h"
 #include "oc_pstat.h"
 
-static oc_sec_otm_err_cb_t _cb;
+static oc_sec_otm_cb_t _cb;
 
-void oc_sec_otm_set_err_cb(oc_sec_otm_err_cb_t cb)
+void oc_sec_otm_set_cb(oc_sec_otm_cb_t cb)
 {
   _cb = cb;
 }
 
-void oc_sec_otm_err(int device, oc_sec_otm_err_code_t code)
+void oc_sec_otm_cb(int device, oc_sec_otm_code_t code)
 {
   if (_cb) {
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-    if (pstat->s == OC_DOS_RFOTM) {
+    if ((pstat->s == OC_DOS_RFOTM && code < OC_SEC_OTM_RESET) || (code > OC_SEC_ERR_PSTAT)) {
       _cb(code);
     }
   }

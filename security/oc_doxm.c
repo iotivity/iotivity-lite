@@ -266,7 +266,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_sec_dump_doxm(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
-    oc_sec_otm_err(request->resource->device, OC_SEC_ERR_DOXM);
+    oc_sec_otm_cb(request->resource->device, OC_SEC_ERR_DOXM);
   }
 }
 

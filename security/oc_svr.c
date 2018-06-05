@@ -28,15 +28,19 @@
 #include "oc_err.h"
 
 void
-oc_sec_otm_err_cb(oc_sec_otm_err_code_t code)
+oc_sec_otm_info_cb(oc_sec_otm_code_t code)
 {
-  OC_ERR("error code: %d", code);
+  if (code < OC_SEC_OTM_RESET) {
+    OC_ERR("error code: %d", code);
+  } else {
+    OC_LOG("info code: %d",code);
+  }
 }
 
 void
 oc_sec_create_svr(void)
 {
-  oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
+  oc_sec_otm_set_cb(oc_sec_otm_info_cb);
   oc_sec_doxm_init();
   oc_sec_pstat_init();
   oc_sec_cred_init();
