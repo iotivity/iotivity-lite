@@ -119,6 +119,7 @@ coap_receive(oc_message_t *msg)
   OC_DBG("CoAP Engine: received datalen=%u from",
          (unsigned int)msg->length);
   OC_LOGipaddr(msg->endpoint);
+  OC_LOGbytes(msg->data, msg->length);
 
   /* static declaration reduces stack peaks and program code size */
   static coap_packet_t

@@ -83,4 +83,3 @@ build/hello: ${os_dir}
 
 build: ${sub_dirs} ${prep_files}
 	for sub_dir in ${sub_dirs}; do ${MAKE} -C $${sub_dir} ; done
-

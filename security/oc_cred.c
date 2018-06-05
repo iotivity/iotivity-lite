@@ -53,6 +53,7 @@ oc_sec_cred_default(int device)
     cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
   }
   memset(devices[device].rowneruuid.id, 0, 16);
+  oc_sec_dump_cred(device);
 }
 
 oc_sec_creds_t *
