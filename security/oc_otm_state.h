@@ -23,7 +23,10 @@ typedef enum {
   OC_SEC_ERR_ACL,
   OC_SEC_ERR_CRED,
   OC_SEC_ERR_DOXM,
-  OC_SEC_ERR_PSTAT
+  OC_SEC_ERR_PSTAT,
+  OC_SEC_OTM_INIT,
+  OC_SEC_OTM_START,
+  OC_SEC_OTM_FINISH
 } oc_sec_otm_err_code_t;
 
 typedef void (*oc_sec_otm_err_cb_t)(oc_sec_otm_err_code_t);
