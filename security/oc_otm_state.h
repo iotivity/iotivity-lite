@@ -16,22 +16,24 @@
  *
  ****************************************************************************/
 
-#include "oc_err.h"
-#include "oc_pstat.h"
+#ifndef OC_SEC_ERROR_H
+#define OC_SEC_ERROR_H
 
-static oc_sec_otm_err_cb_t _cb;
+typedef enum {
+  OC_SEC_ERR_ACL,
+  OC_SEC_ERR_CRED,
+  OC_SEC_ERR_DOXM,
+  OC_SEC_ERR_PSTAT,
+  OC_SEC_OTM_RESET,
+  OC_SEC_OTM_RFOTM,
+  OC_SEC_OTM_RFPRO,
+  OC_SEC_OTM_RFNOP
+} oc_sec_otm_err_code_t;
 
-void oc_sec_otm_set_err_cb(oc_sec_otm_err_cb_t cb)
-{
-  _cb = cb;
-}
+typedef void (*oc_sec_otm_err_cb_t)(oc_sec_otm_err_code_t);
 
-void oc_sec_otm_err(int device, oc_sec_otm_err_code_t code)
-{
-  if (_cb) {
-    oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-    if (pstat->s == OC_DOS_RFOTM) {
-      _cb(code);
-    }
-  }
-}
+void oc_sec_otm_set_err_cb(oc_sec_otm_err_cb_t cb);
+
+void oc_sec_otm_err(int device, oc_sec_otm_err_code_t code);
+
+#endif /* OC_SEC_ERROR_H */
