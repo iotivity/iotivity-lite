@@ -26,7 +26,7 @@
 #include "oc_rep.h"
 #include "oc_store.h"
 #include "oc_tls.h"
-#include "oc_err.h"
+#include "oc_otm_state.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
