@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "oc_err.h"
+#include "oc_otm_state.h"
 #include "oc_pstat.h"
 
 static oc_sec_otm_err_cb_t _cb;

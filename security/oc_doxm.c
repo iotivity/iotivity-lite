@@ -22,7 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
-#include "oc_err.h"
+#include "oc_otm_state.h"
 #include <stddef.h>
 #include <string.h>
 
