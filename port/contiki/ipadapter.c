@@ -141,7 +141,7 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
   PROCESS_END();
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
@@ -154,6 +154,8 @@ oc_send_buffer(oc_message_t *message)
     &server, message->data, message->length,
     (const uip_ipaddr_t *)message->endpoint.addr.ipv6.address,
     message->endpoint.addr.ipv6.port);
+
+  return message->lengh;
 }
 
 int

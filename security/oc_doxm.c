@@ -66,6 +66,7 @@ oc_sec_doxm_default(int device)
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
+  oc_sec_dump_doxm(device);
 }
 
 void

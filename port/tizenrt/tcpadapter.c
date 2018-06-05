@@ -469,13 +469,13 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   return sock;
 }
 
-void
-oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
-                   const struct sockaddr_storage *receiver)
+int oc_tcp_send_buffer(ip_context_t * dev, oc_message_t * message,
+                       const struct sockaddr_storage *receiver)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   int send_sock = get_session_socket(&message->endpoint);
 
+  size_t bytes_sent = 0;
   if (send_sock < 0) {
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
@@ -484,20 +484,25 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     }
   }
 
-  size_t bytes_sent = 0;
   do {
     ssize_t send_len = send(send_sock, message->data + bytes_sent,
                             message->length - bytes_sent, 0);
     if (send_len < 0) {
-      OC_WRN("send() returned errno %d\n", errno);
+      OC_WRN("send() returned errno %d", errno);
       goto oc_tcp_send_buffer_done;
     }
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %d bytes\n", bytes_sent);
+  OC_DBG("Sent %d bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
+
+  if (bytes_sent == 0) {
+    return -1;
+  }
+
+  return bytes_sent;
 }
 
 #ifdef OC_IPV4

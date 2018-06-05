@@ -46,7 +46,6 @@ toolchain_bin?=${toolchain_dir}/bin
 CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-
 CC=${CROSSCOMPIL}gcc
 export CC
-
 PATH:=${toolchain_bin}:${PATH}
 export PATH
 
@@ -81,6 +80,11 @@ prep: ${prep_files} ${CC}
 build/hello: ${os_dir}
 	${MAKE} -C $</examples/get-started/hello_world/ all
 
+<<<<<<< HEAD
 build: ${sub_dirs} ${prep_files}
 	for sub_dir in ${sub_dirs}; do ${MAKE} -C $${sub_dir} ; done
 
+=======
+build: ${app_dir} ${prep_files}
+	${MAKE} -C $<
+>>>>>>> master

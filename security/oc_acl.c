@@ -784,6 +784,7 @@ oc_sec_acl_default(int device)
 
   OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
+  oc_sec_dump_acl(device);
 }
 
 void
