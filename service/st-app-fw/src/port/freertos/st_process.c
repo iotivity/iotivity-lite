@@ -16,9 +16,9 @@
  *
  ****************************************************************************/
 
-#include "oc_assert.h"
-#include "../st_process.h"
+#include "st_process.h"
 #include "oc_api.h"
+#include "oc_assert.h"
 
 typedef struct
 {

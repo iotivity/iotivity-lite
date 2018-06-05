@@ -16,9 +16,8 @@
  *
  ****************************************************************************/
 
-#include "../st_manager.h"
-#include "../st_port.h"
-#include "../st_resource_manager.h"
+#include "st_manager.h"
+#include "st_resource_manager.h"
 
 static const char *switch_rsc_uri = "/capability/switch/main/0";
 static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
@@ -71,8 +70,7 @@ get_resource_handler(oc_request_t *request)
                      strlen(color_temp_rsc_uri)) == 0) {
     color_temp_resource_construct();
   } else {
-    st_print_log("[ST_APP] invalid uri %s\n",
-                 oc_string(request->resource->uri));
+    printf("[ST_APP] invalid uri %s\n", oc_string(request->resource->uri));
     return false;
   }
 
@@ -86,7 +84,7 @@ switch_resource_change(oc_rep_t *rep)
   if (oc_rep_get_string(rep, power_prop_key, &m_power, &len)) {
     strncpy(power, m_power, len);
     power[len] = '\0';
-    st_print_log("[ST_APP]  %s : %s\n", oc_string(rep->name), power);
+    printf("[ST_APP]  %s : %s\n", oc_string(rep->name), power);
 
     // TODO: device specific behavior.
   }
@@ -96,7 +94,7 @@ static void
 switchlevel_resource_change(oc_rep_t *rep)
 {
   if (oc_rep_get_int(rep, dimming_prop_key, &dimmingSetting)) {
-    st_print_log("[ST_APP]  %s : %d\n", oc_string(rep->name), dimmingSetting);
+    printf("[ST_APP]  %s : %d\n", oc_string(rep->name), dimmingSetting);
 
     // TODO: device specific behavior.
   }
@@ -106,7 +104,7 @@ static void
 color_temp_resource_change(oc_rep_t *rep)
 {
   if (oc_rep_get_int(rep, ct_prop_key, &ct)) {
-    st_print_log("[ST_APP]  %s : %d\n", oc_string(rep->name), ct);
+    printf("[ST_APP]  %s : %d\n", oc_string(rep->name), ct);
 
     // TODO: device specific behavior.
   }
@@ -128,8 +126,7 @@ set_resource_handler(oc_request_t *request)
     color_temp_resource_change(request->request_payload);
     color_temp_resource_construct();
   } else {
-    st_print_log("[ST_APP] invalid uri %s\n",
-                 oc_string(request->resource->uri));
+    printf("[ST_APP] invalid uri %s\n", oc_string(request->resource->uri));
     return false;
   }
 
@@ -141,7 +138,7 @@ int
 stapp_main(void)
 {
   if (st_manager_initialize() != 0) {
-    st_print_log("[ST_APP] st_manager_initialize failed.\n");
+    printf("[ST_APP] st_manager_initialize failed.\n");
     return -1;
   }
 
@@ -150,7 +147,7 @@ stapp_main(void)
   // TODO: callback registration. (ex. user confirm cb)
 
   if (st_manager_start() != 0) {
-    st_print_log("[ST_APP] st_manager_start failed.\n");
+    printf("[ST_APP] st_manager_start failed.\n");
   }
 
   st_manager_stop();
