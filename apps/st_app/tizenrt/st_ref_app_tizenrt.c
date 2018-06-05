@@ -16,9 +16,9 @@
  *
  ****************************************************************************/
 
-#include "../st_manager.h"
-#include "../st_port.h"
-#include "../st_resource_manager.h"
+#include "st_manager.h"
+#include "st_port.h"
+#include "st_resource_manager.h"
 
 static const char *switch_rsc_uri = "/capability/switch/main/0";
 static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
