@@ -17,19 +17,18 @@
  ****************************************************************************/
 
 #define _GNU_SOURCE
+#include "st_port.h"
 #include "oc_assert.h"
-#include "../st_port.h"
-#include "../st_process.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
+#include "st_process.h"
 #include "util/oc_memb.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
-
 
 typedef struct
 {

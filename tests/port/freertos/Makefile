@@ -34,7 +34,7 @@ export IDF_PATH
 
 app_dir?=${top_dir}/port/${port}
 sub_dirs+=${app_dir}
-sub_dirs+=${top_dir}/apps/st_app/
+sub_dirs+=${top_dir}/apps/st_app/${port}
 #TODO: try to build more gemeric code
 #sub_dirs+=${top_dir}/apps
 

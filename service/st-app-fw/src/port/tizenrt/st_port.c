@@ -16,15 +16,13 @@
  *
  ****************************************************************************/
 
-#define _GNU_SOURCE
-#include "../st_port.h"
-#include "../st_manager.h"
-#include "../st_process.h"
-#include "../st_resource_manager.h"
+#include "st_port.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
+#include "st_process.h"
 #include "util/oc_memb.h"
+#include "wifi_soft_ap_util.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -51,23 +49,16 @@ typedef struct
 
 static st_soft_ap_t g_soft_ap;
 
-static st_thread_t g_user_input_thread = NULL;
-
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
 
-extern void st_manager_quit(void);
-
-static void *st_port_user_input_loop(void *data);
 static void *soft_ap_process_routine(void *data);
 
 int
 st_port_specific_init(void)
 {
   /* set port specific logics. in here */
-  g_user_input_thread =
-    st_thread_create(st_port_user_input_loop, "INPUT", NULL);
   return 0;
 }
 
@@ -75,58 +66,7 @@ void
 st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
-  st_thread_destroy(g_user_input_thread);
-  g_user_input_thread = NULL;
   return;
-}
-
-static void
-print_menu(void)
-{
-  st_process_app_sync_lock();
-  st_print_log("=====================================\n");
-  st_print_log("1. Reset device\n");
-  st_print_log("2. notify switch resource\n");
-  st_print_log("0. Quit\n");
-  st_print_log("=====================================\n");
-  st_process_app_sync_unlock();
-}
-
-static void *
-st_port_user_input_loop(void *data)
-{
-  (void)data;
-  char key[10];
-
-  while (1) {
-    print_menu();
-    fflush(stdin);
-    if (!scanf("%s", &key)) {
-      st_print_log("scanf failed!!!!\n");
-      st_manager_quit();
-      st_process_signal();
-      goto exit;
-    }
-
-    switch (key[0]) {
-    case '1':
-      st_manager_reset();
-      goto exit;
-    case '2':
-      st_notify_back("/capability/switch/main/0"); // TODO
-      break;
-    case '0':
-      st_manager_quit();
-      st_process_signal();
-      goto exit;
-    default:
-      st_print_log("unsupported command.\n");
-      break;
-    }
-  }
-exit:
-  st_thread_exit(NULL);
-  return NULL;
 }
 
 void
@@ -346,7 +286,8 @@ st_turn_off_soft_AP(void)
   st_print_log("[St_Port] st_turn_off_soft_AP\n");
   st_mutex_lock(g_soft_ap.mutex);
   if (g_soft_ap.is_soft_ap_on) {
-    SYSTEM_RET_CHECK(system("sudo pkill hostapd"));
+    // Platform specific funtion for stopping Soft AP
+    es_stop_softap();
     st_thread_cancel(g_soft_ap.thread);
     g_soft_ap.is_soft_ap_on = 0;
   }
@@ -375,36 +316,40 @@ st_connect_wifi(const char *ssid, const char *pwd)
 {
   st_print_log("[St_Port] st_connect_wifi in\n");
 
-  /** sleep to allow response sending from post_callback thread before turning
-   * Off Soft AP. */
-  st_sleep(1);
+  st_sleep(5);
 
-  st_print_log("[St_Port] target ap ssid: %s\n", ssid);
-  st_print_log("[St_Port] password: %s\n", pwd);
+  //TODO: auth and enc type should be passed from Wi-Fi Prob Cb
+  char auth_type[20] = "wpa2_psk";
+  //char enc_type[20] = "aes";
 
-  /** Stop Soft AP */
-  st_print_log("[St_Port] Stopping Soft AP\n");
-  SYSTEM_RET_CHECK(system("sudo service hostapd stop"));
+  if (wifi_start_station() < 0) {
+    st_print_log("start station error! \n");
+    return;
+  }
 
-  /** Turn On Wi-Fi */
-  st_print_log("[St_Port] Turn on the AP\n");
-  SYSTEM_RET_CHECK(system("sudo nmcli radio wifi on"));
+  int retry;
+  for (retry = 0; retry < 5; ++retry) {
+    if (0 == wifi_join(ssid, auth_type, pwd)) {
+        st_print_log("wifi_join success\n");
+        break;
+    } else {
+        st_print_log("wifi_join failed\n");
+    }
+  }
 
-  /** On some systems it may take time for Wi-Fi to turn ON. */
-  st_sleep(1);
+  st_print_log("AP join done\n");
 
-  /** Connect to Target Wi-Fi AP */
-  st_print_log("[St_Port] connect to %s AP.\n", ssid);
-  char nmcli_command[200];
-  sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
-  st_print_log("[St_Port] $ %s\n", nmcli_command);
-  SYSTEM_RET_CHECK(system(nmcli_command));
+  for (retry = 0; retry < 5; ++retry) {
+    if (0 == dhcpc_start()) {
+        st_print_log("dhcpc_start success\n");
+        break;
+    } else {
+      st_print_log("Get IP address failed\n");
+    }
+  }
 
   st_print_log("[St_Port] st_connect_wifi out\n");
   return;
-
-exit:
-  st_print_log("[St_Port] st_connect_wifi error occur\n");
 }
 
 static void *
@@ -416,35 +361,21 @@ soft_ap_process_routine(void *data)
 
   st_print_log("[St_Port] soft_ap_handler in\n");
 
-  /** Stop AP */
-  st_print_log("[St_Port] Stopping AP\n");
-  SYSTEM_RET_CHECK(system("sudo nmcli radio wifi off"));
-  SYSTEM_RET_CHECK(system("sudo rfkill unblock wlan"));
+  if(es_create_softap() == -1){
+    st_print_log("Soft AP mode failed!!\n");
+    st_mutex_lock(soft_ap->mutex);
+    soft_ap->is_soft_ap_on = 0;
+    st_mutex_unlock(soft_ap->mutex);
+    return NULL;
+  }
 
-  /** Turn On Wi-Fi interface */
-  st_print_log("[St_Port] Turn on the wifi interface\n");
-  SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce05a49 10.0.0.2/24 up"));
-
-  /** On some systems it may take time for Wi-Fi to turn ON. */
-  st_print_log("[St_Port] $ sudo service dnsmasq restart\n");
-  SYSTEM_RET_CHECK(system("sudo service dnsmasq restart"));
-
-  st_print_log("[St_Port] $ sudo service radvd restart\n");
-  SYSTEM_RET_CHECK(system("sudo service radvd restart"));
-
-  st_print_log("[St_Port] $ sudo service hostapd start\n");
-  SYSTEM_RET_CHECK(system("sudo service hostapd start"));
+  dhcpserver_start();
 
   st_mutex_lock(soft_ap->mutex);
   st_cond_signal(soft_ap->cv);
   st_mutex_unlock(soft_ap->mutex);
 
-  st_print_log("[St_Port] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
-  SYSTEM_RET_CHECK(system("sudo hostapd /etc/hostapd/hostapd.conf"));
-
-  st_print_log("[St_Port] $ Soft ap is off\n");
-
-exit:
+  st_print_log("[St_Port] soft_ap_handler out\n");
   st_thread_exit(NULL);
   return NULL;
 }
