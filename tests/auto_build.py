@@ -10,7 +10,8 @@ build_option_param = {
     "DYNAMIC": 1,
     "IPV4": 1,
     "TCP": 1,
-    "EASYSETUP": 1
+    "EASYSETUP": 1,
+    "ST_APP_FW": 1
 }
 
 # help message

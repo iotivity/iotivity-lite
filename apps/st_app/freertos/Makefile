@@ -26,6 +26,11 @@ CFLAGS+=-I${topdir}
 CFLAGS+=-I${topdir}/include
 CFLAGS+=-I${topdir}/port/
 CFLAGS+=-I${topdir}/port/${port}
+CFLAGS+=-I${topdir}/service/easy-setup/enrollee/include
+CFLAGS+=-I${topdir}/service/cloud-access/include
+CFLAGS+=-I${topdir}/service/resource-directory/client/include
+CFLAGS+=-I${topdir}/service/easy-setup/enrollee/include/samsung
+CFLAGS+=-I${topdir}/service/st-app-fw/include
 
 all: ${objs}
 	ls $<
