@@ -19,10 +19,10 @@
 #ifndef ST_WIFI_SOFT_AP_UTIL_H
 #define ST_WIFI_SOFT_AP_UTIL_H
 
-#include <stdint.h>
 #include <slsi_wifi/slsi_wifi_api.h>
+#include <stdint.h>
 
-int es_create_softap (void);
+int es_create_softap(void);
 
 void es_stop_softap(void);
 
@@ -31,22 +31,22 @@ int wifi_start_station(void);
 int wifi_join(const char *ssid, const char *security, const char *passwd);
 int dhcpc_start(void);
 
-#define SLSI_WIFI_SECURITY_OPEN          "open"
-#define SLSI_WIFI_SECURITY_WEP_OPEN      "wep"
-#define SLSI_WIFI_SECURITY_WEP_SHARED    "wep_shared"
-#define SLSI_WIFI_SECURITY_WPA_MIXED     "wpa_mixed"
-#define SLSI_WIFI_SECURITY_WPA_TKIP      "wpa_tkip"
-#define SLSI_WIFI_SECURITY_WPA_AES       "wpa_aes"
-#define SLSI_WIFI_SECURITY_WPA2_MIXED    "wpa2_mixed"
-#define SLSI_WIFI_SECURITY_WPA2_TKIP     "wpa2_tkip"
-#define SLSI_WIFI_SECURITY_WPA2_AES      "wpa2_aes"
-#define SLSI_WIFI_SECURITY_WPA_PSK       "wpa_psk"
-#define SLSI_WIFI_SECURITY_WPA2_PSK      "wpa2_psk"
+#define SLSI_WIFI_SECURITY_OPEN "open"
+#define SLSI_WIFI_SECURITY_WEP_OPEN "wep"
+#define SLSI_WIFI_SECURITY_WEP_SHARED "wep_shared"
+#define SLSI_WIFI_SECURITY_WPA_MIXED "wpa_mixed"
+#define SLSI_WIFI_SECURITY_WPA_TKIP "wpa_tkip"
+#define SLSI_WIFI_SECURITY_WPA_AES "wpa_aes"
+#define SLSI_WIFI_SECURITY_WPA2_MIXED "wpa2_mixed"
+#define SLSI_WIFI_SECURITY_WPA2_TKIP "wpa2_tkip"
+#define SLSI_WIFI_SECURITY_WPA2_AES "wpa2_aes"
+#define SLSI_WIFI_SECURITY_WPA_PSK "wpa_psk"
+#define SLSI_WIFI_SECURITY_WPA2_PSK "wpa2_psk"
 
-enum wifi_state {
-    WIFI_CONNECTED,
-    WIFI_DISCONNECTED,
+enum wifi_state
+{
+  WIFI_CONNECTED,
+  WIFI_DISCONNECTED,
 };
 
 #endif /* ST_WIFI_SOFT_AP_UTIL_H */
-
