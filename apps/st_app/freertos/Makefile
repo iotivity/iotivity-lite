@@ -26,6 +26,7 @@ CFLAGS+=-I${topdir}
 CFLAGS+=-I${topdir}/include
 CFLAGS+=-I${topdir}/port/
 CFLAGS+=-I${topdir}/port/${port}
+CFLAGS+=-I${topdir}/service/st-app-fw/include
 
 all: ${objs}
 	ls $<
