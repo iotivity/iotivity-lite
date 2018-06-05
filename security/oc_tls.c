@@ -78,6 +78,15 @@ static mbedtls_ssl_config client_conf[1];
 #endif /* OC_CLIENT */
 #define PERSONALIZATION_STR "IoTivity-Constrained"
 
+#define CCM_MAC_KEY_LENGTH (0)
+#define CBC_IV_LENGTH (0)
+#define CCM_IV_LENGTH (4)
+#define GCM_IV_LENGTH (12)
+#define AES128_KEY_LENGTH (16)
+#define AES256_KEY_LENGTH (32)
+#define SHA256_MAC_KEY_LENGTH (32)
+#define SHA384_MAC_KEY_LENGTH (48)
+
 static const int ciphers[12] = {
   MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256,
   MBEDTLS_TLS_RSA_WITH_AES_128_GCM_SHA256,
@@ -906,11 +915,60 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   uint8_t key_block[96];
   uint8_t label[] = { 0x6b, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70,
                       0x61, 0x6e, 0x73, 0x69, 0x6f, 0x6e };
-#ifdef OC_MFG
-  int key_block_len = 40;
-#else
-  int key_block_len = 96;
-#endif
+
+  // key_block_len set up according to OIC 1.1 Security Specification Section 7.3.2
+  int mac_key_len = 0;
+  int iv_size = 0;
+  int key_size = 0;
+  int key_block_len = 0;
+  if (MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == peer->ssl_ctx.session->ciphersuite ||
+      MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == peer->ssl_ctx.session->ciphersuite ||
+      MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 == peer->ssl_ctx.session->ciphersuite ||
+      MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 32 + 0 + 16 ) = 96
+    mac_key_len = SHA256_MAC_KEY_LENGTH;
+    iv_size = CBC_IV_LENGTH;
+    key_size = AES128_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM == peer->ssl_ctx.session->ciphersuite ||
+           MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 0 + 4 + 16 ) = 40
+    mac_key_len = CCM_MAC_KEY_LENGTH;
+    iv_size = CCM_IV_LENGTH;
+    key_size = AES128_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 32 + 12 + 16 ) = 120
+    mac_key_len = SHA256_MAC_KEY_LENGTH;
+    iv_size = GCM_IV_LENGTH;
+    key_size = AES128_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 32 + 0 + 32 ) = 128
+    mac_key_len = SHA256_MAC_KEY_LENGTH;
+    iv_size = CBC_IV_LENGTH;
+    key_size = AES256_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 48 + 0 + 32 ) = 160
+    mac_key_len = SHA384_MAC_KEY_LENGTH;
+    iv_size = CBC_IV_LENGTH;
+    key_size = AES256_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 48 + 12 + 32 ) = 184
+    mac_key_len = SHA384_MAC_KEY_LENGTH;
+    iv_size = GCM_IV_LENGTH;
+    key_size = AES256_KEY_LENGTH;
+  }
+  else if (MBEDTLS_TLS_RSA_WITH_AES_128_GCM_SHA256 == peer->ssl_ctx.session->ciphersuite) {
+    // 2 * ( 48 + 12 + 32 ) = 184
+    mac_key_len = SHA256_MAC_KEY_LENGTH;
+    iv_size = GCM_IV_LENGTH;
+    key_size = AES128_KEY_LENGTH;
+  }
+  key_block_len = 2 * (mac_key_len + key_size + iv_size);
+
   if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
                  sizeof(label), peer->client_server_random + 32, 32,
                  peer->client_server_random, 32) != key_block_len) {
