@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "../st_process.h"
+#include "st_process.h"
 #include "oc_api.h"
 
 typedef struct
