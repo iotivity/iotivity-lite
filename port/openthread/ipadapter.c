@@ -93,20 +93,20 @@ oc_connectivity_get_endpoints(int device)
   return oc_get_endpoint_list();
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
   otMessage *ot_message = otUdpNewMessage(ot_instance, true);
 
   if (!ot_message) {
     OC_ERR("No more buffer to send");
-    return;
+    return -1;
   }
 
   if (otMessageAppend(ot_message,
                       message->data, message->length) != OT_ERROR_NONE) {
     OC_ERR("Can't append message");
-    return;
+    return -1;
   }
 
   otMessageInfo message_info;
@@ -127,8 +127,9 @@ oc_send_buffer(oc_message_t *message)
 
   if (otUdpSend(&unicast_socket, ot_message, &message_info) != OT_ERROR_NONE) {
     OC_ERR("Can't send message");
-    return;
+    return -1;
   }
+  return 0;
 }
 
 int
@@ -180,7 +181,7 @@ oc_connectivity_init(int device)
     return -1;
   }
 
-  return 0;
+  return message->length;
 }
 
 void

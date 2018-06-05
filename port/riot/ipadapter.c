@@ -65,7 +65,9 @@ oc_network_event_handler_mutex_unlock(void)
 
 void oc_network_event_handler_mutex_destroy(void) {}
 
-void oc_send_buffer(oc_message_t *message) {
+int
+oc_send_buffer(oc_message_t *message)
+{
 #ifdef OC_DEBUG
   PRINT("Outgoing message to ");
   PRINTipaddr(message->endpoint);
@@ -75,6 +77,8 @@ void oc_send_buffer(oc_message_t *message) {
   conn_udp_sendto(message->data, message->length, local_addr, 16,
                   message->endpoint.addr.ipv6.address, 16, AF_INET6,
                   OCF_SERVER_PORT_UNSECURED, message->endpoint.addr.ipv6.port);
+
+  return message->length;
 }
 
 void

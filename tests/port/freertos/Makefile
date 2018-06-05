@@ -17,70 +17,134 @@
 # limitations under the License.
 #}
 
-default: all
+port?=$(shell basename -- "${CURDIR}")
+DESTDIR ?=
+extradir?=${DESTDIR}/${libdir}/iotivity-constrained/
+prefix ?= /usr
+exec_prefix ?= $(prefix)
+bindir ?= $(exec_prefix)/bin
+libdir ?= $(exec_prefix)/lib
+includedir ?= $(prefix)/include
+pkgconfigdir ?= $(libdir)/pkgconfig
+topdir?=../..
+portdir?=${topdir}/port/${port}
 
-top_dir?=../../..
-extra_dir?=${CURDIR}/${top_dir}/deps
+DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
+	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
+	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
+	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
+	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
+	md5.c		md_wrap.c	oid.c		padlock.c	\
+	pem.c		pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	\
+	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
+	sha512.c	threading.c	timing.c	version.c	version_features.c		\
+	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c
+DTLSFLAGS=-I${topdir}/deps/mbedtls/include -D__OC_RANDOM
 
-port?=freertos
-export port
+CBOR=${topdir}/deps/tinycbor/src/cborencoder.c ${topdir}/deps/tinycbor/src/cborencoder_close_container_checked.c ${topdir}/deps/tinycbor/src/cborparser.c
+MBEDTLS_DIR := ${topdir}/deps/mbedtls
 
-os_url?=https://github.com/espressif/esp-idf
-os_dir?=${extra_dir}/esp-idf
-os_branch?=master
-#os_machine?=esp32
-IDF_PATH=${os_dir}
-export IDF_PATH
+SRC_COMMON=$(wildcard ${topdir}/util/*.c) ${CBOR}
+SRC=$(wildcard ${topdir}/messaging/coap/*.c ${topdir}/api/*.c ${portdir}/*.c)
 
-app_dir?=${top_dir}/port/${port}
-sub_dirs+=${app_dir}
-sub_dirs+=${top_dir}/apps/st_app/
-#TODO: try to build more gemeric code
-#sub_dirs+=${top_dir}/apps
+HEADERS = $(wildcard ${topdir}/include/*.h)
+HEADERS += ${portdir}/config.h
 
-toolchain_url?=https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
-toolchain_abi?=xtensa-esp32-elf
-toolchain_dir?=${extra_dir}/${toolchain_abi}
-toolchain_bin?=${toolchain_dir}/bin
+HEADERS_COAP = $(wildcard ${topdir}/messaging/coap/*.h)
+HEADERS_UTIL = $(wildcard ${topdir}/util/*.h)
+HEADERS_UTIL_PT = $(wildcard ${topdir}/util/pt/*.h)
+HEADERS_PORT = $(wildcard ${topdir}/port/*.h)
+HEADERS_TINYCBOR = $(wildcard ${topdir}/deps/tinycbor/*.h)
 
-CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-
-CC=${CROSSCOMPIL}gcc
-export CC
+CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -std=gnu99
+topdir?=${topdir}/
 
-PATH:=${toolchain_bin}:${PATH}
-export PATH
+OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
+OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
+OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
+OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
+VPATH=${topdir}/messaging/coap/:${topdir}/util/:${topdir}/api/:${topdir}/deps/tinycbor/src/:${topdir}/deps/mbedtls/library:
+LIBS?=
 
-prep_files+=${CC}
+SAMPLES?= 
 
-CFLAGS+=-Werror
-export CFLAGS
+ifeq ($(DEBUG),1)
+	CFLAGS += -DOC_DEBUG -g -O0
+else
+	CFLAGS += -Wl,--gc-sections
+endif
 
-${os_dir}:
-	git clone --depth 1 --recursive -b ${os_branch} ${os_url} $@
+ifeq ($(DYNAMIC),1)
+	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
 
-${os_dir}/%: ${os_dir}
-	ls $@
+ifeq ($(SECURE),1)
+	SRC += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
+ifeq ($(DYNAMIC),1)
+	SRC_COMMON += ${DTLS}
+	SRC += oc_obt.c
+else
+	SRC_COMMON += ${DTLS} memory_buffer_alloc.c
+endif
+	CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
+	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
+endif
 
-${toolchain_dir}:
-	mkdir -p ${@D}
-	cd ${@D} && curl -sL ${toolchain_url} | tar xz
-	ls $@ 
-	ls ${toolchain_bin}
-	ls ${CC}
-	-file ${CC}
-	${CC} --version
+CFLAGS+=-I${topdir}/include/ -I${topdir}
+CFLAGS+=-I.
 
-${toolchain_dir}/%: ${toolchain_dir}
-	ls $@
+ifeq ($(IPV4),1)
+	CFLAGS += -DOC_IPV4
+endif
 
-all: prep build
+ifeq ($(TCP),1)
+	CFLAGS += -DOC_TCP
+endif
 
-prep: ${prep_files} ${CC}
-	${CC} --version
+SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES}
+CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
+libiotivity-constrained-client-server.a
+all: $(MBEDTLS_PATCH_FILE) $(CONSTRAINED_LIBS) $(SAMPLES)
+.PHONY: clean
+obj/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS}
+obj/server/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_SERVER
+obj/client/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
+obj/client_server/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
+libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+ifeq ($(SECURE),1)
+$(MBEDTLS_PATCH_FILE):
+	git submodule update --init && \
+	cd $(MBEDTLS_DIR) && \
+	git clean -fdx . && \
+	git reset --hard && \
+	patch -r - -s -N -p1 < ${topdir}/patches/mbedtls_ocf_patch_1 && \
+	patch -r - -s -N -p1 < ${topdir}/patches/mbedtls_iotivity_constrained_patch_2 && \
+	echo patches applied > $(MBEDTLS_PATCH_FILE)
+endif
 
-build/hello: ${os_dir}
-	${MAKE} -C $</examples/get-started/hello_world/ all
+clean:
+	rm -rf obj $(CONSTRAINED_LIBS)
 
-build: ${sub_dirs} ${prep_files}
-	for sub_dir in ${sub_dirs}; do ${MAKE} -C $${sub_dir} ; done
+cleanall: clean
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 
+distclean: cleanall
+
+test:
+	@echo "TODO: https://jira.iotivity.org/browse/LITE-4"
