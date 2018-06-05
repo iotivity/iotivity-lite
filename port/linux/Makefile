@@ -81,7 +81,7 @@ OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
@@ -93,6 +93,15 @@ endif
 
 ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
+endif
+
+ifeq ($(ST_FRAMEWORK),1)
+ifneq ($(EASYSETUP),1)
+$(error To use ST_FRAMEWORK you should include EASYSETUP flag also.)
+endif
+ifneq ($(SECURE),1)
+$(error To use ST_FRAMEWORK you should include SECURE flag also.)
+endif
 SAMPLES += st_things
 endif
 
@@ -115,6 +124,13 @@ ifeq ($(EASYSETUP),1)
 	CFLAGS_ES=-I../../service/easy-setup/enrollee/include -I../../service/easy-setup/enrollee/ -I../../port -I../../service/easy-setup/enrollee/include/samsung/
 	CFLAGS_ES+= -DEASYSETUP
 	OBJ_ES=$(addprefix obj/es/,$(notdir $(SRC_ES:.c=.o)))
+endif
+
+ifeq ($(ST_FRAMEWORK),1)
+	SRC_ST=$(wildcard ../../service/st-app-fw/src/*.c ../../service/st-app-fw/src/port/linux/*.c)
+	CFLAGS_ST=-I../../service/st-app-fw/include
+	CFLAGS_ST+= -DST_FRAMEWORK
+	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
 endif
 
 ifeq ($(DEBUG),1)
@@ -171,7 +187,8 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 		   libiotivity-constrained-client-server.a libiotivity-constrained-client-server.so \
            libiotivity-constrained-easysetup.a \
 		   libiotivity-constrained-cloudaccess.a libiotivity-constrained-cloudaccess.so \
-		   libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so
+		   libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so \
+		   libst-things-framework.a libst-things-framework.so
 
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
@@ -231,6 +248,10 @@ obj/rd_client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
 
+obj/st/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
@@ -263,6 +284,12 @@ libiotivity-constrained-rd-client.a: $(OBJ_RD_CLIENT)
 
 libiotivity-constrained-rd-client.so: $(OBJ_RD_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_RD_CLIENT) $(LIBS)
+
+libst-things-framework.a: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(AR) -rcs $@  $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+
+libst-things-framework.so: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(CC) -shared -o $@ $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
@@ -341,11 +368,18 @@ endif
 server_multithread_linux: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
-	
+
 client_multithread_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+st_things: libst-things-framework.a
+	@mkdir -p $@_creds
+ifneq ($(AUTH_OPTION),0)
+	cp ../../apps/cloud_linux_cred $@_creds/cred_0
+endif
+	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
+			libst-things-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS}	
 st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
 ifneq ($(AUTH_OPTION),0)
