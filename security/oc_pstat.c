@@ -483,6 +483,24 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
     }
     rep = rep->next;
   }
+#if defined(OC_SPEC_VER_OIC)
+  if ((ps.cm & 0x01) && false == ps.isop)
+  {
+    oc_sec_otm_err(device, OC_SEC_OTM_RESET);
+  }
+  else if ((ps.cm & 0x02) && false == ps.isop)
+  {
+    oc_sec_otm_err(device, OC_SEC_OTM_RFOTM);
+  }
+  else if (false == (ps.cm & 0x02) && false == ps.isop)
+  {
+    oc_sec_otm_err(device, OC_SEC_OTM_RFPRO);
+  }
+  else if (false == (ps.cm & 0x02) && true == ps.isop)
+  {
+    oc_sec_otm_err(device, OC_SEC_OTM_RFNOP);
+  }
+#endif //!OC_SPEC_VER_OIC
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
