@@ -141,12 +141,8 @@ static ip_context_t *get_ip_context_for_device(int device) {
 static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
                                               const struct in_addr *local,
                                               int interface_index) {
-  struct ip_mreqn mreq;
-
-  memset(&mreq, 0, sizeof(mreq));
-  mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  mreq.imr_ifindex = interface_index;
-  memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
+  struct ip_mreq mreq = {.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4),
+                          .imr_interface.s_addr = htonl(interface_index)};
 
   (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));

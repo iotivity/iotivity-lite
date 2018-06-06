@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <net/lwip/dhcp.h>
+#include <net/lwip/prot/dhcp.h>
 #include <net/lwip/netif.h>
 #include "easysetup_wifi_softap.h"
 
@@ -232,13 +233,13 @@ int dhcpc_start(void)
 
     int32_t timeleft = 5000000;
 
-    while (gnet_if->dhcp->state != DHCP_BOUND) {
+    while (gnet_if->dhcp->state != DHCP_STATE_BOUND) {
         usleep(10000);
         timeleft -= 10000;
         if (timeleft <= 0)
             break;
     }
-    if (gnet_if->dhcp->state == DHCP_BOUND) {
+    if (gnet_if->dhcp->state == DHCP_STATE_BOUND) {
         printf("DHCP Client - got IP address %u.%u.%u.%u\n",
                 (unsigned char) ((htonl(gnet_if->ip_addr.addr) >> 24) & 0xff),
                 (unsigned char) ((htonl(gnet_if->ip_addr.addr) >> 16) & 0xff),
