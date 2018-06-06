@@ -2,7 +2,7 @@
 
 git clone https://github.com/Samsung/TizenRT
 
-git checkout 13aa00554e0b7a416ff3c453bf3192c40c71ae86
+git checkout 2.0_GBM_M1
 
 Create folder "iotivity-constrained" in this path (TizenRT/external/) (EX:mkdir iotivity-constrained)
 
@@ -19,7 +19,7 @@ Copy <iotivity-constrained>/port/tizenrt/iotlite_apps folder to TizenRT/apps/
 		+#define LWIP_DHCPS                      1
 		+#define LWIP_DHCP                       1
 
-Copy <iotivity-constrained>/port/tizenrt/iotliteconfig folder to TizenRT/build/configs/artik053/
+Copy <iotivity-constrained>/apps/tizenrt/configs/artik053/iotlite folder to TizenRT/build/configs/artik053/
 
 Copy iotivity-constrained/tizenrt/scripts/Makefile and tizenrt/scripts/Make.defs to TizenRT/external/iotivity-constrained/
 

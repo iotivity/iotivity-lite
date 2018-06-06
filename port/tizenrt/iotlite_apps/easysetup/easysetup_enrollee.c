@@ -43,6 +43,16 @@ typedef enum { C = 100, F, K } units_t;
  */
 static bool gIsSecured = true;
 
+static void free_userdata_cb(void* userdata, char* resource_type)
+{
+    (void)resource_type;
+    (void)userdata;
+
+    printf("[ES App] free_userdata_cb IN");
+
+    printf("[ES App] free_userdata_cb OUT");
+}
+
 static void read_userdata_cb(oc_rep_t* payload, char* resource_type, void** userdata)
 {
     (void)resource_type;
@@ -304,7 +314,7 @@ void start_easysetup(void)
     printf("[ES App] es_init_enrollee Success\n");
 
     // Set callbacks for Vendor Specific Properties
-    es_set_callback_for_userdata(&read_userdata_cb, &write_userdata_cb);
+    es_set_callback_for_userdata(&read_userdata_cb, &write_userdata_cb, &free_userdata_cb);
     printf("[ES App] start_easysetup OUT\n");
 }
 
