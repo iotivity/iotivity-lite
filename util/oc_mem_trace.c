@@ -69,6 +69,8 @@ oc_mem_trace_init(void)
 void
 oc_mem_trace_add_pace(const char *func, int size, int type, void *address)
 {
+  if(!mInfo.mem_log_list)
+    oc_mem_trace_init();
 
   if (type == MEM_TRACE_ALLOC) {
     mInfo.current += size;
