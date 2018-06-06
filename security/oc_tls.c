@@ -267,11 +267,11 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   size_t send_len = (len < (unsigned)OC_PDU_SIZE) ? len : (unsigned)OC_PDU_SIZE;
   memcpy(message.data, buf, send_len);
   message.length = send_len;
-  oc_send_buffer(&message);
+  int ret = oc_send_buffer(&message);
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(message.data);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return send_len;
+  return ret;
 }
 
 static void

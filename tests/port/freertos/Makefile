@@ -46,7 +46,6 @@ toolchain_bin?=${toolchain_dir}/bin
 CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-
 CC=${CROSSCOMPIL}gcc
 export CC
-
 PATH:=${toolchain_bin}:${PATH}
 export PATH
 
