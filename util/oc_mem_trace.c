@@ -69,6 +69,10 @@ oc_mem_trace_init(void)
 void
 oc_mem_trace_add_pace(const char *func, int size, int type, void *address)
 {
+  if((!mInfo.mem_log_list) || !address || !func) {
+    OC_ERR("mem trace : invalid param");
+    return;
+  }
 
   if (type == MEM_TRACE_ALLOC || type == MEM_TRACE_REALLOC) {
     mInfo.current += size;
