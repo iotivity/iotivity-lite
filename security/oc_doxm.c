@@ -236,16 +236,18 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
         memcpy(deviceuuid->id, doxm[device].deviceuuid.id, 16);
       } else if (len == 12 &&
                  memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
-        if(_oc_sec_change_owner_cb) {
-          if(!_oc_sec_change_owner_cb()) {
+        oc_uuid_t uuid;
+        oc_str_to_uuid(oc_string(rep->value.string), &uuid);
+        if (_oc_sec_change_owner_cb && !from_storage &&
+            memcmp(&uuid, &doxm[device].devowneruuid, sizeof(oc_uuid_t)) != 0) {
+          if (!_oc_sec_change_owner_cb()) {
             doxm[device].owned = false;
             return false;
           }
         }
-        oc_str_to_uuid(oc_string(rep->value.string),
-                       &doxm[device].devowneruuid);
+        memcpy(&doxm[device].devowneruuid, &uuid, sizeof(oc_uuid_t));
 #if !defined(OC_SPEC_VER_OIC)
-       if (!from_storage) {
+        if (!from_storage) {
           int i;
           for (i = 0; i < 16; i++) {
             if (doxm[device].devowneruuid.id[i] != 0) {
