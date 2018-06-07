@@ -954,7 +954,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
         }
       }
       break;
-#else //OC_SPEC_VER_OIC
+#endif //OC_SPEC_VER_OIC
     case OC_REP_OBJECT_ARRAY: {
       oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
@@ -1129,7 +1129,6 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
         aclist2 = aclist2->next;
       }
     } break;
-#endif //OC_SPEC_VER_OIC
     default:
       break;
     }
