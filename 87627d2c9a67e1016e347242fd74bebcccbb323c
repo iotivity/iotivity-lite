@@ -22,6 +22,30 @@
       "revId": "87627d2c9a67e1016e347242fd74bebcccbb323c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_660023ab",
+        "filename": "apps/st_app/st_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-07T09:16:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_266f3b94",
+      "range": {
+        "startLine": 32,
+        "startChar": 5,
+        "endLine": 32,
+        "endChar": 37
+      },
+      "revId": "87627d2c9a67e1016e347242fd74bebcccbb323c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
