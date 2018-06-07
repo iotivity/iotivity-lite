@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e6ec33ca",
+        "filename": "util/oc_mem_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-07T17:27:27Z",
+      "side": 1,
+      "message": "Change this to \"return\".\n\nIf that list hasn\u0027t been initialized, this function should simply return.\n\nThis is because oc_mem_trace_init() is separately being called  from oc_main_init(), which would overwrite the tracer\u0027s state and lose information, if ever there was a tracked allocation prior to calling oc_main_init().",
+      "range": {
+        "startLine": 73,
+        "startChar": 2,
+        "endLine": 73,
+        "endChar": 24
+      },
+      "revId": "b9bba6bea081c87b98e3f7394b7e2123d5bb0b17",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
