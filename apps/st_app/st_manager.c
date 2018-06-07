@@ -18,14 +18,15 @@
 
 #include <stdlib.h>
 
-#include "st_manager.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
+#include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
 #include "st_cloud_access.h"
 #include "st_easy_setup.h"
+#include "st_manager.h"
 #include "st_port.h"
 #include "st_process.h"
 #include "st_resource_manager.h"
@@ -84,7 +85,7 @@ static int device_index = 0;
 static const char *device_rt = "oic.d.light";
 static const char *device_name = "Samsung";
 
-static const char *manufacturer = "xxxx";
+static const char *manufacturer = "fAL4";
 static const char *sid = "000";
 static const char *vid = "IoT2020";
 
@@ -446,4 +447,14 @@ st_manager_deinitialize(void)
   st_vendor_props_shutdown();
   st_port_specific_destroy();
   st_process_destroy();
+}
+
+void
+st_register_user_confirm_handler(st_user_confirm_cb_t cb)
+{
+  if (!cb) {
+    return;
+  }
+
+  oc_sec_set_owner_cb((oc_sec_change_owner_cb_t)cb);
 }

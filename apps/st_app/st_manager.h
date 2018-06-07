@@ -19,10 +19,16 @@
 #ifndef ST_MANAGER_H
 #define ST_MANAGER_H
 
+#include <stdbool.h>
+
+typedef bool (*st_user_confirm_cb_t)(void);
+
 int st_manager_initialize(void);
 int st_manager_start(void);
 void st_manager_reset(void);
 void st_manager_stop(void);
 void st_manager_deinitialize(void);
+
+void st_register_user_confirm_handler(st_user_confirm_cb_t cb);
 
 #endif /* ST_MANAGER_H */
