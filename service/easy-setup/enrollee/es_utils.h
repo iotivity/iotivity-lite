@@ -25,6 +25,33 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define MEM_ALLOC_CHECK(mem)                                                   \
+  do {                                                                         \
+    if (!mem) {                                                                \
+      OC_ERR("Memory allocation failed!");                                     \
+      goto exit;                                                               \
+    }                                                                          \
+  } while (0)
+
+#define INPUT_PARAM_NULL_CHECK(in)                                             \
+  do {                                                                         \
+    if (!in) {                                                                 \
+      OC_ERR("Invalid input!");                                                \
+      goto exit;                                                               \
+    }                                                                          \
+  } while (0)
+
+#define NULL_CHECK(p, mes)                                                     \
+  do {                                                                         \
+    if (!p) {                                                                  \
+      OC_ERR(mes);                                                             \
+      goto exit;                                                               \
+    }                                                                          \
+  } while (0)
+
+#define RESOURCE_CHECK(r) NULL_CHECK(r, "Failed to create resource!")
+#define RESOURCE_LINK_CHECK(r) NULL_CHECK(r, "Failed to create link!")
+
 #define es_rep_set_boolean(object, key, value)                                 \
   oc_rep_set_boolean(object, key, value)
 
