@@ -450,6 +450,7 @@ oc_sec_encode_acl(int device)
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+#if !defined(OC_SPEC_VER_OIC)
   oc_rep_set_array(root, aclist2);
   oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
 
@@ -520,6 +521,82 @@ oc_sec_encode_acl(int device)
     sub = sub->next;
   }
   oc_rep_close_array(root, aclist2);
+#else //!OC_SPEC_VER_OIC
+  oc_rep_set_object(root, acl);
+  oc_rep_set_array(acl, aclist);
+
+  oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
+  while (sub != NULL) {
+    oc_rep_object_array_start_item(aclist);
+    oc_rep_set_object(aclist, subject);
+    switch (sub->subject_type) {
+    case OC_SUBJECT_UUID:
+      oc_uuid_to_str(&sub->subject.uuid, uuid, 37);
+      oc_rep_set_text_string(subject, uuid, uuid);
+      break;
+    case OC_SUBJECT_ROLE:
+      oc_rep_set_text_string(subject, role, oc_string(sub->subject.role.role));
+      if (oc_string_len(sub->subject.role.authority) > 0) {
+        oc_rep_set_text_string(subject, authority,
+                               oc_string(sub->subject.role.authority));
+      }
+      break;
+    case OC_SUBJECT_CONN: {
+      switch (sub->subject.conn) {
+      case OC_CONN_AUTH_CRYPT:
+        oc_rep_set_text_string(subject, conntype, auth_crypt);
+        break;
+      case OC_CONN_ANON_CLEAR:
+        oc_rep_set_text_string(subject, conntype, anon_clear);
+        break;
+      }
+    } break;
+    }
+    oc_rep_close_object(aclist, subject);
+
+    oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(sub->resources);
+    oc_rep_set_array(aclist, resources);
+
+    while (res != NULL) {
+      oc_rep_object_array_start_item(resources);
+      if (res->interfaces != 0) {
+        oc_core_encode_interfaces_mask(oc_rep_object(resources),
+                                       res->interfaces);
+      }
+      if (oc_string_array_get_allocated_size(res->types) > 0) {
+        oc_rep_set_string_array(resources, rt, res->types);
+      }
+      if (oc_string_len(res->href) > 0) {
+        oc_rep_set_text_string(resources, href, oc_string(res->href));
+      } else {
+        switch (res->wildcard) {
+        case OC_ACE_WC_ALL_DISCOVERABLE:
+          oc_rep_set_text_string(resources, wc, wc_discoverable);
+          break;
+        case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+          oc_rep_set_text_string(resources, wc, wc_non_discoverable);
+          break;
+        case OC_ACE_WC_ALL:
+          oc_rep_set_text_string(resources, wc, wc_all);
+          break;
+        default:
+          break;
+        }
+      }
+      oc_rep_object_array_end_item(resources);
+      res = res->next;
+    }
+    oc_rep_close_array(aclist, resources);
+    oc_rep_set_uint(aclist, permission, sub->permission);
+    oc_rep_set_int(aclist, aceid, sub->aceid);
+
+    oc_rep_object_array_end_item(aclist);
+    sub = sub->next;
+  }
+
+  oc_rep_close_array(acl, aclist);
+  oc_rep_close_object(root, acl);
+#endif //!OC_SPEC_VER_OIC
   oc_uuid_to_str(&aclist[device].rowneruuid, uuid, 37);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
