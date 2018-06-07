@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e6aa73d3",
+        "filename": "security/oc_otm_state.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-07T01:35:30Z",
+      "side": 1,
+      "message": "Are these value is valid to OIC1.1 spec?\nOtherwise do you think concept is valid, Even though RFPRO state spec is not defined in OIC1.1?",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 18
+      },
+      "revId": "0776327eb99cf9029c979e9df8a9339719817368",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
