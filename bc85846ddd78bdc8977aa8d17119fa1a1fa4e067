@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_261d7b10",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-07T09:23:26Z",
+      "side": 1,
+      "message": "please rename into AP_CONNECT_RETRY_LIMIT.",
+      "range": {
+        "startLine": 36,
+        "startChar": 8,
+        "endLine": 36,
+        "endChar": 30
+      },
+      "revId": "bc85846ddd78bdc8977aa8d17119fa1a1fa4e067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
