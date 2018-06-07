@@ -19,10 +19,24 @@
 #ifndef ST_MANAGER_H
 #define ST_MANAGER_H
 
+#include <stdbool.h>
+
+/**
+  @brief A function pointer for handling otm confirm function.
+  @return true if otm confirm by user or false.
+*/
+typedef bool (*st_otm_confirm_cb_t)(void);
+
 int st_manager_initialize(void);
 int st_manager_start(void);
 void st_manager_reset(void);
 void st_manager_stop(void);
 void st_manager_deinitialize(void);
+
+/**
+  @brief Function for register otm confirm handler
+  @param cb callback function to require otm confirm.
+*/
+void st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
 
 #endif /* ST_MANAGER_H */

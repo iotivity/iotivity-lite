@@ -136,6 +136,21 @@ set_resource_handler(oc_request_t *request)
   return true;
 }
 
+static bool
+otm_confirm_handler(void)
+{
+  st_print_log("[ST_APP] OTM request is comming. Will you confirm?[y/n]\n");
+  char ret[10];
+  scanf("%s", ret);
+  if (ret[0] == 'y' || ret[0] == 'Y') {
+    st_print_log("[ST_APP] CONFIRMED.\n");
+    return true;
+  } else {
+    st_print_log("[ST_APP] DENIED.\n");
+    return false;
+  }
+}
+
 int
 main(void)
 {
@@ -145,8 +160,7 @@ main(void)
   }
 
   st_register_resource_handler(get_resource_handler, set_resource_handler);
-
-  // TODO: callback registration. (ex. user confirm cb)
+  st_register_otm_confirm_handler(otm_confirm_handler);
 
   if (st_manager_start() != 0) {
     st_print_log("[ST_APP] st_manager_start failed.\n");
