@@ -180,7 +180,7 @@ sc_properties *get_sc_properties(void);
 es_result_e set_sc_properties(sc_properties *prop);
 es_result_e reset_sc_properties(void);
 
-// --- "/sec/provisioninginfo" resource related code -----
+// --- "/sec/provisioninginfo" resource -----
 typedef struct
 {
   oc_string_t target_di;
@@ -200,4 +200,30 @@ es_result_e init_provisioning_info_resource(sec_provisioning_info *prov_info);
 es_result_e set_sec_prov_info(sec_provisioning_info *prov_info);
 es_result_e deinit_provisioning_info_resource(void);
 
+// --- "/sec/accesspointlist" resource -----
+typedef struct
+{
+  oc_string_t channel;
+  oc_string_t enc_type;
+  oc_string_t mac_address;
+  oc_string_t max_rate;
+  oc_string_t rssi;
+  oc_string_t security_type;
+  oc_string_t ssid;
+} sec_accesspoint;
+
+typedef struct
+{
+  sec_accesspoint *access_points;
+  int size;
+} sec_accesspoint_list;
+
+typedef struct
+{
+  void (*get_ap_list)(sec_accesspoint_list **ap_list);
+  void (*free_ap_list)(sec_accesspoint_list *ap_list);
+} sec_accesspoint_cb;
+
+es_result_e init_accesspointlist_resource(sec_accesspoint_cb cb);
+es_result_e deinit_accesspointlist_resource(void);
 #endif /* SC_EASYSETUP_H */
