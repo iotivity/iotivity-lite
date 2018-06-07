@@ -45,6 +45,7 @@ typedef struct st_cloud_context
   struct st_cloud_context *next;
   st_cloud_access_cb_t callback;
   oc_endpoint_t cloud_ep;
+  oc_string_t ci_server;
   oc_string_t auth_provider;
   oc_string_t uid;
   oc_string_t access_token;
@@ -89,11 +90,11 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 }
 
 int
-st_cloud_access_start(st_store_t *cloud_info, int device_index,
+st_cloud_access_start(st_store_t *store_info, int device_index,
                       st_cloud_access_cb_t cb)
 {
   st_print_log("[Cloud_Access] st_cloud_access_start in\n");
-  if (!cloud_info || !cb)
+  if (!store_info || !cb)
     return -1;
 
   st_cloud_context_t *context =
@@ -102,29 +103,26 @@ st_cloud_access_start(st_store_t *cloud_info, int device_index,
     return -1;
 
   context->callback = cb;
-  if (cloud_info->cloudinfo.status == CLOUD_ACCESS_PUBLISHED)
+  if (store_info->cloudinfo.status == CLOUD_ACCESS_PUBLISHED)
     context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
   else
     context->cloud_access_status =
-      (st_cloud_access_status_t)cloud_info->cloudinfo.status;
+      (st_cloud_access_status_t)store_info->cloudinfo.status;
   context->device_index = device_index;
 
-  if (oc_string_to_endpoint(&cloud_info->cloudinfo.ci_server,
-                            &context->cloud_ep, NULL) != 0) {
-    goto errors;
-  }
-
+  oc_new_string(&context->ci_server, oc_string(store_info->cloudinfo.ci_server),
+                oc_string_len(store_info->cloudinfo.ci_server));
   oc_new_string(&context->auth_provider,
-                oc_string(cloud_info->cloudinfo.auth_provider),
-                oc_string_len(cloud_info->cloudinfo.auth_provider));
+                oc_string(store_info->cloudinfo.auth_provider),
+                oc_string_len(store_info->cloudinfo.auth_provider));
+  oc_new_string(&context->uid, oc_string(store_info->cloudinfo.uid),
+                oc_string_len(store_info->cloudinfo.uid));
   oc_new_string(&context->access_token,
-                oc_string(cloud_info->cloudinfo.access_token),
-                oc_string_len(cloud_info->cloudinfo.access_token));
+                oc_string(store_info->cloudinfo.access_token),
+                oc_string_len(store_info->cloudinfo.access_token));
   oc_new_string(&context->refresh_token,
-                oc_string(cloud_info->cloudinfo.refresh_token),
-                oc_string_len(cloud_info->cloudinfo.refresh_token));
-  oc_new_string(&context->uid, oc_string(cloud_info->cloudinfo.uid),
-                oc_string_len(cloud_info->cloudinfo.uid));
+                oc_string(store_info->cloudinfo.refresh_token),
+                oc_string_len(store_info->cloudinfo.refresh_token));
 
   if (!cloud_start_process(context)) {
     goto errors;
@@ -163,6 +161,9 @@ st_cloud_access_stop(int device_index)
 
   oc_list_remove(st_cloud_context_list, context);
 
+  if (oc_string_len(context->ci_server) > 0) {
+    oc_free_string(&context->ci_server);
+  }
   if (oc_string_len(context->auth_provider) > 0) {
     oc_free_string(&context->auth_provider);
   }
@@ -360,9 +361,12 @@ sign_up(void *data)
   st_print_log("[Cloud_Access] try sign up(%d)\n", context->retry_count++);
 
   if (!is_retry_over(context)) {
-    oc_sign_up(&context->cloud_ep, oc_string(context->auth_provider),
-               oc_string(context->uid), oc_string(context->access_token),
-               context->device_index, sign_up_handler, context);
+    if (0 ==
+        oc_string_to_endpoint(&context->ci_server, &context->cloud_ep, NULL)) {
+      oc_sign_up(&context->cloud_ep, oc_string(context->auth_provider),
+                 oc_string(context->uid), oc_string(context->access_token),
+                 context->device_index, sign_up_handler, context);
+    }
     oc_set_delayed_callback(context, sign_up,
                             session_timeout[context->retry_count]);
   }
@@ -405,8 +409,11 @@ sign_in(void *data)
   st_print_log("[Cloud_Access] try sign in(%d)\n", context->retry_count++);
 
   if (!is_retry_over(context)) {
-    oc_sign_in(&context->cloud_ep, oc_string(context->uid),
-               oc_string(context->access_token), 0, sign_in_handler, context);
+    if (0 ==
+        oc_string_to_endpoint(&context->ci_server, &context->cloud_ep, NULL)) {
+      oc_sign_in(&context->cloud_ep, oc_string(context->uid),
+                 oc_string(context->access_token), 0, sign_in_handler, context);
+    }
     oc_set_delayed_callback(context, sign_in,
                             session_timeout[context->retry_count]);
   }
