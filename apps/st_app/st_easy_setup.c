@@ -178,15 +178,11 @@ easy_setup_finish_handler(void *data)
 {
   (void)data;
   if (is_easy_setup_step_done()) {
-    st_print_log("[Easy_Setup] Terminate Soft AP thread.\n");
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
-    st_turn_off_soft_AP();
-    st_store_t *store_info = st_store_get_info();
-    st_connect_wifi(oc_string(store_info->accesspoint.ssid),
-                    oc_string(store_info->accesspoint.pwd));
     es_set_state(ES_STATE_CONNECTED_TO_ENROLLER);
     es_set_error_code(ES_ERRCODE_NO_ERROR);
     g_easy_setup_status = EASY_SETUP_FINISH;
+    st_store_t *store_info = st_store_get_info();
     store_info->status = true;
     st_store_dump();
     oc_set_delayed_callback(NULL, callback_handler, 0);
