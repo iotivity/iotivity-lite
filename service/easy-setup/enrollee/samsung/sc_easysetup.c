@@ -26,7 +26,11 @@
 
 #define SC_RSRVD_ES_URI_PROVISIONING_INFO "/sec/provisioninginfo"
 #define SC_RSRVD_ES_RES_TYPE_PROVISIONING_INFO "x.com.samsung.provisioninginfo"
-#define SC_RSRVD_ES_RES_NAME_PROVISIONING_INFO "provisioninginfo"
+#define SC_RSRVD_ES_RES_NAME_PROVISIONING_INFO "x.network.provisioning.info"
+
+#define SC_RSRVD_ES_URI_ACCESSPOINT_LIST "/sec/accesspointlist"
+#define SC_RSRVD_ES_RES_TYPE_ACCESSPOINT_LIST "x.com.samsung.acesspointlist"
+#define SC_RSRVD_ES_RES_NAME_ACCESSPOINT_LIST "x.network.wifi.ap"
 
 #define SC_RSRVD_ES_ATTR_NAME_PREFIX "x.com.samsung."
 #define SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN 14
@@ -66,24 +70,32 @@
 #define SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT "targetRt"
 #define SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED "published"
 
-#define SC_MAX_ES_ATTR_NAME_LEN 50
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS "accesspoint.items"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL "channel"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_ENCRYPTION_TYPE "encryptionType"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS "macAddress"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE "maxRate"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_RSSI "rssi"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE "securityType"
+#define SC_RSRVD_ES_ACCESSPOINT_LIST_SSID "ssid"
 
-#define MEM_ALLOC_CHECK(mem)                                                   \
-  do {                                                                         \
-    if (!mem) {                                                                \
-      OC_ERR("Memory allocation failed!");                                     \
-      goto exit;                                                               \
-    }                                                                          \
-  } while (0)
+#define SC_MAX_ES_ATTR_NAME_LEN 50
 
 typedef struct
 {
   oc_resource_t *res;
   sec_provisioning_info *info;
-} sec_provisioning_t;
+} sec_provisioning_res_t;
+
+typedef struct
+{
+  oc_resource_t *res;
+  get_ap_list_cb get_ap_list;
+} sec_accesspoints_res_t;
 
 sc_properties *g_scprop;
-sec_provisioning_t *g_sec_prov;
+sec_provisioning_res_t *g_sec_prov;
+sec_accesspoints_res_t *g_sec_aplist;
 
 static void
 construct_attribute_name(char res[], char *attr)
@@ -103,13 +115,13 @@ get_sc_properties(void)
 es_result_e
 set_sc_properties(sc_properties *prop)
 {
-  if (!prop) {
-    OC_ERR("Invalid input!");
-    return ES_ERROR;
-  }
+  INPUT_PARAM_NULL_CHECK(prop);
 
   g_scprop = prop;
   return ES_OK;
+
+exit:
+  return ES_ERROR;
 }
 
 es_result_e
@@ -524,18 +536,12 @@ init_provisioning_info_resource(sec_provisioning_info *prov_info)
     deinit_provisioning_info_resource();
   }
 
-  g_sec_prov = oc_mem_calloc(1, sizeof(sec_provisioning_t));
-  if (!g_sec_prov) {
-    OC_ERR("Memory allocation failed!");
-    return ES_ERROR;
-  }
+  g_sec_prov = oc_mem_calloc(1, sizeof(sec_provisioning_res_t));
+  MEM_ALLOC_CHECK(g_sec_prov);
 
   g_sec_prov->res = oc_new_resource(SC_RSRVD_ES_RES_NAME_PROVISIONING_INFO,
                                     SC_RSRVD_ES_URI_PROVISIONING_INFO, 1, 0);
-  if (!g_sec_prov->res) {
-    OC_ERR("Failed to create resource!");
-    return ES_ERROR;
-  }
+  RESOURCE_CHECK(g_sec_prov->res);
 
   oc_resource_bind_resource_type(g_sec_prov->res,
                                  SC_RSRVD_ES_RES_TYPE_PROVISIONING_INFO);
@@ -554,27 +560,163 @@ init_provisioning_info_resource(sec_provisioning_info *prov_info)
 
   g_sec_prov->info = prov_info;
   return ES_OK;
+
+exit:
+  deinit_provisioning_info_resource();
+  return ES_ERROR;
 }
 
 es_result_e
 set_sec_prov_info(sec_provisioning_info *prov_info)
 {
-  if (!prov_info) {
-    OC_ERR("Invalid input!");
-    return ES_ERROR;
-  }
+  INPUT_PARAM_NULL_CHECK(prov_info);
 
   g_sec_prov->info = prov_info;
   return ES_OK;
+
+exit:
+  return ES_ERROR;
 }
 
 es_result_e
 deinit_provisioning_info_resource(void)
 {
   if (g_sec_prov) {
-    oc_delete_resource(g_sec_prov->res);
+    if (g_sec_prov->res) {
+      oc_delete_resource(g_sec_prov->res);
+    }
     oc_mem_free(g_sec_prov);
     g_sec_prov = NULL;
+  }
+  return ES_OK;
+}
+
+// --- "/sec/accesspointlist" resource related code -----
+static void
+construct_response_of_sec_aplist(sec_accesspoint_list *ap_list)
+{
+  char key_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
+
+  oc_rep_start_root_object();
+  construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS);
+  oc_rep_set_key(root_map, key_name);
+  oc_rep_start_array(root_map, ap_items);
+  for (int i = 0; i < ap_list->size; i++) {
+    oc_rep_object_array_start_item(ap_items);
+
+    OC_DBG("Channel - %s", oc_string(ap_list->access_points[i].channel));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].channel));
+
+    OC_DBG("Encryption Type - %s", oc_string(ap_list->access_points[i].enc_type));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_ENCRYPTION_TYPE);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].enc_type));
+
+    OC_DBG("Mac address - %s", oc_string(ap_list->access_points[i].mac_address));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].mac_address));
+
+    OC_DBG("Max rate - %s", oc_string(ap_list->access_points[i].max_rate));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].max_rate));
+
+    OC_DBG("RSSI - %s", oc_string(ap_list->access_points[i].rssi));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_RSSI);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].rssi));
+
+    OC_DBG("Security type - %s", oc_string(ap_list->access_points[i].security_type));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].security_type));
+
+    OC_DBG("SSID - %s", oc_string(ap_list->access_points[i].ssid));
+    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SSID);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(ap_list->access_points[i].ssid));
+
+    oc_rep_object_array_end_item(ap_items);
+  }
+  oc_rep_close_array(root, ap_items);
+  oc_rep_end_root_object();
+}
+
+static void
+get_sec_aplist(oc_request_t *request, oc_interface_mask_t interface,
+               void *user_data)
+{
+  (void)user_data;
+  OC_DBG("GET request received");
+
+  if (!g_sec_aplist) {
+    OC_ERR("sec aplist resource is invalid!");
+    return;
+  }
+
+  if (interface != OC_IF_S) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  // TODO: Check is there time delay in getting scanned AP list
+  // from application on real device.
+  sec_accesspoint_list *ap_list = NULL;
+  g_sec_aplist->get_ap_list(&ap_list);
+  OC_DBG("Received AP list of size %d from application", ap_list->size);
+
+  construct_response_of_sec_aplist(ap_list);
+  oc_send_response(request, OC_STATUS_OK);
+ 
+  // TODO: Free ap list either here or receiving free method from application
+}
+
+es_result_e
+init_accesspointlist_resource(get_ap_list_cb cb)
+{
+  INPUT_PARAM_NULL_CHECK(cb);
+
+  g_sec_aplist = oc_mem_calloc(1, sizeof(sec_accesspoints_res_t));
+  MEM_ALLOC_CHECK(g_sec_aplist);
+
+  g_sec_aplist->res = oc_new_resource(SC_RSRVD_ES_RES_NAME_ACCESSPOINT_LIST,
+                                      SC_RSRVD_ES_URI_ACCESSPOINT_LIST, 1, 0);
+  RESOURCE_CHECK(g_sec_aplist->res);
+
+  oc_resource_bind_resource_type(g_sec_aplist->res,
+                                 SC_RSRVD_ES_RES_TYPE_ACCESSPOINT_LIST);
+  oc_resource_bind_resource_interface(g_sec_aplist->res, OC_IF_S);
+  oc_resource_set_default_interface(g_sec_aplist->res, OC_IF_S);
+  oc_resource_set_discoverable(g_sec_aplist->res, true);
+  oc_resource_set_observable(g_sec_aplist->res, false);
+#ifdef OC_SECURITY
+  oc_resource_make_public(g_sec_aplist->res);
+#endif
+  oc_resource_set_request_handler(g_sec_aplist->res, OC_GET, get_sec_aplist,
+                                  NULL);
+  oc_add_resource(g_sec_aplist->res);
+  g_sec_aplist->get_ap_list = cb;
+  return ES_OK;
+
+exit:
+  deinit_accesspointlist_resource();
+  return ES_ERROR;
+}
+
+es_result_e
+deinit_accesspointlist_resource(void)
+{
+  if (g_sec_aplist) {
+    if (g_sec_aplist->res) {
+      oc_delete_resource(g_sec_aplist->res);
+    }
+    g_sec_aplist->get_ap_list = NULL;
+    oc_mem_free(g_sec_aplist);
+    g_sec_aplist = NULL;
   }
   return ES_OK;
 }

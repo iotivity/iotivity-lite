@@ -23,6 +23,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "easysetup.h"
 
@@ -361,6 +362,41 @@ void StopEasySetup() {
   printf("[ES App] StopEasySetup OUT\n");
 }
 
+static void
+scan_access_points(sec_accesspoint_list **ap_list) {
+  if (!ap_list) {
+    return;
+  }
+
+  // Fill scanned access points list
+  sec_accesspoint_list *scan_ap_list;
+  scan_ap_list = malloc(sizeof(sec_accesspoint_list));
+  if (!scan_ap_list) {
+    return;
+  }
+
+  scan_ap_list->access_points = calloc(5, sizeof(sec_accesspoint));
+  if (!scan_ap_list->access_points) {
+    free(scan_ap_list);
+    return;
+  }
+
+  scan_ap_list->size = 5;
+  for (int i=0; i<5; i++) {
+    char name[10];
+    sprintf(name, "iot_home_%d", i+1);
+    oc_new_string(&(scan_ap_list->access_points[i].ssid), name, strlen(name));
+    oc_new_string(&(scan_ap_list->access_points[i].channel), "15", strlen("15"));
+    oc_new_string(&(scan_ap_list->access_points[i].enc_type), "AES", strlen("AES"));
+    oc_new_string(&(scan_ap_list->access_points[i].mac_address), "00:11:22:33:44:55", strlen("00:11:22:33:44:55"));
+    oc_new_string(&(scan_ap_list->access_points[i].max_rate), "0", strlen("0"));
+    oc_new_string(&(scan_ap_list->access_points[i].rssi), "33", strlen("33"));
+    oc_new_string(&(scan_ap_list->access_points[i].security_type), "WPA2-PSK", strlen("WPA2-PSK"));
+  }
+
+  *ap_list = scan_ap_list;
+}
+
 static void register_resources(void) {
   printf("[ES App] register_resources IN\n");
 
@@ -381,6 +417,7 @@ static void register_resources(void) {
   gIsSecured = false;
 #endif
   init_provisioning_info_resource(NULL);
+  init_accesspointlist_resource(scan_access_points);
   StartEasySetup();
   SetDeviceInfo();
   SetProvInfo();
@@ -443,6 +480,7 @@ int main(void) {
   printf("[ES App] StopEasySetup..\n");
   StopEasySetup();
   deinit_provisioning_info_resource();
+  deinit_accesspointlist_resource();
   printf("[ES App] StopEasySetup done\n");
 
   oc_main_shutdown();
