@@ -34,6 +34,12 @@ void st_manager_stop(void);
 void st_manager_deinitialize(void);
 
 /**
+  @brief Return the connect status.
+  @return 1 if connected, 0 if not.
+*/
+int st_get_connect_status(void);
+
+/**
   @brief Function for register otm confirm handler
   @param cb callback function to require otm confirm.
 */

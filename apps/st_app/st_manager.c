@@ -468,6 +468,12 @@ st_manager_deinitialize(void)
   st_process_destroy();
 }
 
+int
+st_get_connect_status(void)
+{
+  return (MAIN_STATUS_DONE == g_main_status) ? 1 : 0;
+}
+
 void
 st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
 {
