@@ -76,57 +76,78 @@ OC_PROCESS(timed_callback_events, "OC timed callbacks");
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
+static unsigned int oc_http_status_codes[__NUM_OC_STATUS_CODES__];
 
 oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
 
 static void
 set_mpro_status_codes(void)
 {
-  /* OK_200 */
+  /* OK_205 */
   oc_coap_status_codes[OC_STATUS_OK] = CONTENT_2_05;
+  oc_http_status_codes[OC_STATUS_OK] = 205;
   /* CREATED_201 */
   oc_coap_status_codes[OC_STATUS_CREATED] = CREATED_2_01;
+  oc_http_status_codes[OC_STATUS_CREATED] = 201;
   /* NO_CONTENT_204 */
   oc_coap_status_codes[OC_STATUS_CHANGED] = CHANGED_2_04;
-  /* NO_CONTENT_204 */
+  oc_http_status_codes[OC_STATUS_CHANGED] = 204;
+  /* DELETED_202 */
   oc_coap_status_codes[OC_STATUS_DELETED] = DELETED_2_02;
-  /* NOT_MODIFIED_304 */
+  oc_http_status_codes[OC_STATUS_DELETED] = 202;
+  /* NOT_MODIFIED_203 */
   oc_coap_status_codes[OC_STATUS_NOT_MODIFIED] = VALID_2_03;
+  oc_http_status_codes[OC_STATUS_NOT_MODIFIED] = 203;
   /* BAD_REQUEST_400 */
   oc_coap_status_codes[OC_STATUS_BAD_REQUEST] = BAD_REQUEST_4_00;
+  oc_http_status_codes[OC_STATUS_BAD_REQUEST] = 400;
   /* UNAUTHORIZED_401 */
   oc_coap_status_codes[OC_STATUS_UNAUTHORIZED] = UNAUTHORIZED_4_01;
-  /* BAD_REQUEST_400 */
+  oc_http_status_codes[OC_STATUS_UNAUTHORIZED] = 401;
+  /* BAD_OPTION_402 */
   oc_coap_status_codes[OC_STATUS_BAD_OPTION] = BAD_OPTION_4_02;
+  oc_http_status_codes[OC_STATUS_BAD_OPTION] = 402;
   /* FORBIDDEN_403 */
   oc_coap_status_codes[OC_STATUS_FORBIDDEN] = FORBIDDEN_4_03;
+  oc_http_status_codes[OC_STATUS_FORBIDDEN] = 403;
   /* NOT_FOUND_404 */
   oc_coap_status_codes[OC_STATUS_NOT_FOUND] = NOT_FOUND_4_04;
+  oc_http_status_codes[OC_STATUS_NOT_FOUND] = 404;
   /* METHOD_NOT_ALLOWED_405 */
   oc_coap_status_codes[OC_STATUS_METHOD_NOT_ALLOWED] = METHOD_NOT_ALLOWED_4_05;
+  oc_http_status_codes[OC_STATUS_METHOD_NOT_ALLOWED] = 405;
   /* NOT_ACCEPTABLE_406 */
   oc_coap_status_codes[OC_STATUS_NOT_ACCEPTABLE] = NOT_ACCEPTABLE_4_06;
+  oc_http_status_codes[OC_STATUS_NOT_ACCEPTABLE] = 406;
   /* REQUEST_ENTITY_TOO_LARGE_413 */
   oc_coap_status_codes[OC_STATUS_REQUEST_ENTITY_TOO_LARGE] =
     REQUEST_ENTITY_TOO_LARGE_4_13;
+  oc_http_status_codes[OC_STATUS_REQUEST_ENTITY_TOO_LARGE] = 413;
   /* UNSUPPORTED_MEDIA_TYPE_415 */
   oc_coap_status_codes[OC_STATUS_UNSUPPORTED_MEDIA_TYPE] =
     UNSUPPORTED_MEDIA_TYPE_4_15;
+  oc_http_status_codes[OC_STATUS_UNSUPPORTED_MEDIA_TYPE] = 415;
   /* INTERNAL_SERVER_ERROR_500 */
   oc_coap_status_codes[OC_STATUS_INTERNAL_SERVER_ERROR] =
     INTERNAL_SERVER_ERROR_5_00;
+  oc_http_status_codes[OC_STATUS_INTERNAL_SERVER_ERROR] = 500;
   /* NOT_IMPLEMENTED_501 */
   oc_coap_status_codes[OC_STATUS_NOT_IMPLEMENTED] = NOT_IMPLEMENTED_5_01;
+  oc_http_status_codes[OC_STATUS_NOT_IMPLEMENTED] = 501;
   /* BAD_GATEWAY_502 */
   oc_coap_status_codes[OC_STATUS_BAD_GATEWAY] = BAD_GATEWAY_5_02;
+  oc_http_status_codes[OC_STATUS_BAD_GATEWAY] = 502;
   /* SERVICE_UNAVAILABLE_503 */
   oc_coap_status_codes[OC_STATUS_SERVICE_UNAVAILABLE] =
     SERVICE_UNAVAILABLE_5_03;
+  oc_http_status_codes[OC_STATUS_SERVICE_UNAVAILABLE] = 503;
   /* GATEWAY_TIMEOUT_504 */
   oc_coap_status_codes[OC_STATUS_GATEWAY_TIMEOUT] = GATEWAY_TIMEOUT_5_04;
-  /* INTERNAL_SERVER_ERROR_500 */
+  oc_http_status_codes[OC_STATUS_GATEWAY_TIMEOUT] = 504;
+  /* PROXYING_NOT_SUPPORTED_505 */
   oc_coap_status_codes[OC_STATUS_PROXYING_NOT_SUPPORTED] =
     PROXYING_NOT_SUPPORTED_5_05;
+  oc_http_status_codes[OC_STATUS_PROXYING_NOT_SUPPORTED] = 505;
 }
 
 #ifdef OC_SERVER
@@ -141,6 +162,12 @@ int
 oc_status_code(oc_status_t key)
 {
   return oc_coap_status_codes[key];
+}
+
+int
+oc_http_code(oc_status_t key)
+{
+  return oc_http_status_codes[key];
 }
 
 int
