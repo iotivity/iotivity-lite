@@ -36,6 +36,9 @@
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
+#ifdef OC_LOAD_CA
+#include "security/oc_cacert.h"
+#endif /* OC_LOAD_CA */
 #endif /* OC_SECURITY */
 
 #ifdef OC_MEMORY_TRACE
@@ -189,6 +192,14 @@ oc_main_init(const oc_handler_t *handler)
 #ifdef OC_CLIENT
   if (app_callbacks->requests_entry)
     app_callbacks->requests_entry();
+#endif
+
+#ifdef OC_SECURITY
+#ifdef OC_LOAD_CA
+  if (!oc_sec_load_ca_cert(rootca_crt, rootca_crt_len)) {
+    goto err;
+  }
+#endif
 #endif
 
   initialized = true;
