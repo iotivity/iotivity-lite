@@ -19,6 +19,9 @@
 #include "st_easy_setup.h"
 #include "oc_helpers.h"
 #include "oc_network_monitor.h"
+#ifdef OC_SECURITY
+#include "security/oc_otm_state.h"
+#endif
 #include "st_port.h"
 #include "st_store.h"
 
@@ -52,6 +55,9 @@ static void cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data);
 static bool is_easy_setup_step_done(void);
 static oc_event_callback_retval_t easy_setup_finish_handler(void *data);
 static oc_event_callback_retval_t easy_setup_timeout_handler(void *data);
+#ifdef OC_SECURITY
+static void st_otm_state_handler(oc_sec_otm_err_code_t state);
+#endif
 
 static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                   .dev_conf_prov_cb =
@@ -110,9 +116,10 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb, sc_free_userdata);
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
 
-  // Set timeout for easy setup procedure.
-  oc_set_delayed_callback(NULL, easy_setup_timeout_handler, EASYSETUP_TIMEOUT);
-  _oc_signal_event_loop();
+#ifdef OC_SECURITY
+  // Set OTM status changed callback.
+  oc_sec_otm_set_err_cb(st_otm_state_handler);
+#endif
 
   return 0;
 }
@@ -199,6 +206,26 @@ easy_setup_timeout_handler(void *data)
   oc_set_delayed_callback(NULL, callback_handler, 0);
   return OC_EVENT_DONE;
 }
+
+#ifdef OC_SECURITY
+static void
+st_otm_state_handler(oc_sec_otm_err_code_t state)
+{
+  if (state == OC_SEC_OTM_START) {
+    st_print_log("[Easy_Setup] OTM provisioning started.\n");
+    // Set timeout for easy setup procedure.
+    oc_set_delayed_callback(NULL, easy_setup_timeout_handler,
+                            EASYSETUP_TIMEOUT);
+  } else if (state == OC_SEC_OTM_FINISH) {
+    st_print_log("[Easy_Setup] OTM provisioning done.\n");
+    oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
+  } else if (state <= OC_SEC_ERR_PSTAT) {
+    st_print_log("[Easy_Setup] OTM provisioning failed with %d.\n", state);
+    oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
+    oc_set_delayed_callback(NULL, easy_setup_timeout_handler, 0);
+  }
+}
+#endif
 
 static void
 st_string_copy(oc_string_t *dst, oc_string_t *src)
