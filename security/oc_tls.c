@@ -606,6 +606,9 @@ int
 oc_tls_update_psk_identity(int device)
 {
   oc_uuid_t *device_id = oc_core_get_device_id(device);
+  if (!device_id) {
+    return -1;
+  }
   if (mbedtls_ssl_conf_psk(&server_conf[device], device_id->id, 1,
                            device_id->id, 16) != 0) {
     return -1;
