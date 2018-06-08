@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_891d7869",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-08T10:14:59Z",
+      "side": 1,
+      "message": "use set_main_status_sync for consistency",
+      "range": {
+        "startLine": 441,
+        "startChar": 2,
+        "endLine": 441,
+        "endChar": 35
+      },
+      "revId": "e7836585a0c37fdcf51ca46c2bea4def0de21c71",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
