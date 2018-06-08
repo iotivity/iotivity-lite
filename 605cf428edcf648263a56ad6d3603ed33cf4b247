@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_296f0c94",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-08T18:08:38Z",
+      "side": 1,
+      "message": "You need to also include oc_core_res.h here.",
+      "revId": "605cf428edcf648263a56ad6d3603ed33cf4b247",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_896c589e",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-08T18:08:38Z",
+      "side": 1,
+      "message": "You need to call oc_core_init() just after oc_ri_init() for things to work. This is the sequence of calls in oc_main_init().",
+      "revId": "605cf428edcf648263a56ad6d3603ed33cf4b247",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4972507d",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-08T18:08:38Z",
+      "side": 1,
+      "message": "I\u0027m not sure what you intended here, but if you\u0027re passing in a device index of 1, then oc_tls_update_psk_identity() will return -1 because you\u0027ve initialized only one logical device above.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 50
+      },
+      "revId": "605cf428edcf648263a56ad6d3603ed33cf4b247",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
