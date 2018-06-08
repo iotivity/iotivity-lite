@@ -1,0 +1,395 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_06b79787",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "is it required to be volatile ?",
+      "range": {
+        "startLine": 30,
+        "startChar": 7,
+        "endLine": 30,
+        "endChar": 15
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_265bbb55",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "files paths are different for iotivity lite. Not sure we require to parse and store these information.",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 70
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_66a78350",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "what is the need of returning line nor?",
+      "range": {
+        "startLine": 155,
+        "startChar": 8,
+        "endLine": 155,
+        "endChar": 23
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c663ef18",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "works in release mode also. Use it only whenever is needed to avoid increase of text section due to string literals.",
+      "range": {
+        "startLine": 160,
+        "startChar": 4,
+        "endLine": 160,
+        "endChar": 16
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a6686bf6",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "not required in our case i think",
+      "range": {
+        "startLine": 178,
+        "startChar": 14,
+        "endLine": 178,
+        "endChar": 25
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e67273e4",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "make it a util function in this file and use it.",
+      "range": {
+        "startLine": 191,
+        "startChar": 20,
+        "endLine": 192,
+        "endChar": 104
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4677dfd4",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "string length is already restricting for 4 in prev condition block. No need to call strlen() again.",
+      "range": {
+        "startLine": 229,
+        "startChar": 85,
+        "endLine": 229,
+        "endChar": 123
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_26745bce",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "avoid calling strlen() for same string again.",
+      "range": {
+        "startLine": 234,
+        "startChar": 83,
+        "endLine": 234,
+        "endChar": 120
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_667e63b0",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "check memory allocation failures",
+      "range": {
+        "startLine": 330,
+        "startChar": 77,
+        "endLine": 330,
+        "endChar": 90
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a64fcb91",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "properties are needed if we are validating POST requests for read only properties. I don\u0027t think we are doing validation now, right ?\nAnyway we have to think about and decide.",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 5
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_86fc4740",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "I feel this should be taken care by common logic of application layer - st_manager.c",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 3
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_06a03742",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "do we need extern here? how about retrieving it through some API. Personally I don\u0027t like externs as they mess up when somebody defines global variable with same name and type. This is true in case of shared libraries but her whole app and stack build as one. Hmm I don\u0027t see any problem with extern here. But think about API it gives freedom to change names later.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 6
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8693a7f9",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "can we move this to st_resource_manager.c ?",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 16
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a6c18be6",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "can we move this to st_resource_manager.c ?",
+      "range": {
+        "startLine": 111,
+        "startChar": 9,
+        "endLine": 111,
+        "endChar": 22
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_66f9434d",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "not safe!\n\"oic.if.baseline\" matches with both \"oic.if.baseline\" and \"oic.if.b\"",
+      "range": {
+        "startLine": 135,
+        "startChar": 15,
+        "endLine": 135,
+        "endChar": 86
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a69a2b12",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "how about using generic API name, so that this file can decouple from internal implementation json or cbor.",
+      "range": {
+        "startLine": 147,
+        "startChar": 19,
+        "endLine": 147,
+        "endChar": 45
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c695afe5",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-08T08:52:30Z",
+      "side": 1,
+      "message": "oc_assert is defined to work in release mode too. think about it if you intended to use it in debug mode.",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 148,
+        "endChar": 11
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
