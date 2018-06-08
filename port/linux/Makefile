@@ -100,6 +100,7 @@ ifeq ($(SECURE),1)
 ifneq ($(AUTH_OPTION),0)
 SAMPLES += mfgserver
 CFLAGS += -DOC_MFG
+CFLAGS += -DOC_LOAD_CA
 ifeq ($(AUTH_OPTION),1)
 CFLAGS += -DOC_UNLOAD_CERT
 endif
@@ -333,9 +334,6 @@ ${OBT}: libiotivity-constrained-client.a
 
 cloud_linux: libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
-ifneq ($(AUTH_OPTION),0)
-	cp ../../apps/cloud_linux_cred $@_creds/cred_0
-endif
 	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${LIBS}
 
 server_multithread_linux: libiotivity-constrained-server.a
@@ -348,9 +346,6 @@ client_multithread_linux: libiotivity-constrained-client.a
 
 st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a
 	@mkdir -p $@_creds
-ifneq ($(AUTH_OPTION),0)
-	cp ../../apps/cloud_linux_cred $@_creds/cred_0
-endif
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
 		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
