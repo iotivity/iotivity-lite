@@ -55,17 +55,6 @@ typedef struct st_cloud_context
   uint8_t retry_count;
 } st_cloud_context_t;
 
-typedef enum {
-  CI_TOKEN_VALIDATION_FAILED = 4000002,
-  CI_TOKEN_EXPIRED = 4000004,
-  CI_SAMSUNG_ACCOUNT_AUTHORIZATION_FAILED = 4010001,
-  CI_SAMSUNG_ACCOUNT_UNAUTHORIZED_TOKEN = 4010201,
-  CI_FORBIDDEN = 4030003,
-  CI_USER_NOT_FOUND = 4040100,
-  CI_DEVICE_NOT_FOUND = 4040200,
-  CI_INTERNAL_SERVER_ERROR = 5000000
-} ci_error_code_t;
-
 OC_LIST(st_cloud_context_list);
 OC_MEMB(st_cloud_context_s, st_cloud_context_t, MAX_CONTEXT_SIZE);
 
@@ -250,39 +239,24 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
 
   int code;
   if (oc_rep_get_int(data->payload, "code", &code)) {
-    code += oc_http_code(data->code) * 10000;
     char *message = NULL;
     int size;
     if (oc_rep_get_string(data->payload, "message", &message, &size))
-      st_print_log("[Cloud_Access] ci message : %s (%d)\n", message, code);
+      st_print_log("[Cloud_Access] ci message : %s\n", message);
 
-    switch (code) {
-    case CI_TOKEN_VALIDATION_FAILED:
-    case CI_TOKEN_EXPIRED:
+    if ((code == 2 || code == 4) && data->code == OC_STATUS_BAD_REQUEST) {
+      // TOKEN_EXPIRED
       oc_remove_delayed_callback(context, callback);
       context->retry_count = 0;
       oc_set_delayed_callback(context, refresh_token,
                               session_timeout[context->retry_count]);
       return;
-    case CI_SAMSUNG_ACCOUNT_AUTHORIZATION_FAILED:
-    case CI_SAMSUNG_ACCOUNT_UNAUTHORIZED_TOKEN:
-    case CI_FORBIDDEN:
-    case CI_USER_NOT_FOUND:
-      oc_remove_delayed_callback(context, callback);
-      context->retry_count = 0;
-      oc_set_delayed_callback(context, sign_in,
-                              session_timeout[context->retry_count]);
-      return;
-    case CI_DEVICE_NOT_FOUND:
+    } else if (code == 200 && data->code == OC_STATUS_NOT_FOUND) {
+      // DEVICE_NOT_FOUND
       oc_remove_delayed_callback(context, callback);
       context->cloud_access_status = CLOUD_ACCESS_RESET;
       oc_set_delayed_callback(context, callback_handler, 0);
       return;
-    case CI_INTERNAL_SERVER_ERROR:
-      context->retry_count = MAX_RETRY_COUNT;
-      break;
-    default:
-      break;
     }
   }
 
