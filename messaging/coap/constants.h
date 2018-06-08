@@ -201,6 +201,4 @@ typedef enum {
   APPLICATION_VND_OCF_CBOR = 10000
 } coap_content_format_t;
 
-typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
-
 #endif /* CONSTANTS_H */

@@ -17,8 +17,9 @@
 #ifndef OC_ENDPOINT_H
 #define OC_ENDPOINT_H
 
-#include "messaging/coap/conf.h"
 #include "oc_helpers.h"
+
+typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
 
 typedef struct
 {
