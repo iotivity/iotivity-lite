@@ -433,7 +433,12 @@ st_manager_start(void)
 void
 st_manager_reset(void)
 {
-  set_main_status_sync(MAIN_STATUS_RESET);
+  st_process_app_sync_lock();
+  st_manager_stop();
+  st_main_reset();
+  st_print_log("[ST_MGR] reset finished\n");
+  g_main_status = MAIN_STATUS_INIT;
+  st_process_app_sync_unlock();
 }
 
 void
