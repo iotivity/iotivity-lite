@@ -235,6 +235,7 @@ st_main_reset(void)
 #ifdef OC_SECURITY
   oc_sec_reset();
 #endif /* OC_SECURITY */
+  st_store_info_initialize();
   st_store_dump();
 }
 
@@ -413,8 +414,8 @@ st_manager_start(void)
       st_sleep(1);
       break;
     case MAIN_STATUS_RESET:
-      st_manager_stop();
       st_main_reset();
+      st_manager_stop();
       st_print_log("[ST_MGR] reset finished\n");
       set_main_status_sync(MAIN_STATUS_INIT);
       break;
@@ -433,7 +434,12 @@ st_manager_start(void)
 void
 st_manager_reset(void)
 {
-  set_main_status_sync(MAIN_STATUS_RESET);
+  st_process_app_sync_lock();
+  st_main_reset();
+  st_manager_stop();
+  st_print_log("[ST_MGR] reset finished\n");
+  g_main_status = MAIN_STATUS_INIT;
+  st_process_app_sync_unlock();
 }
 
 void

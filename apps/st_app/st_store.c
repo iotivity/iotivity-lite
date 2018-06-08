@@ -112,17 +112,23 @@ st_store_info_initialize(void)
   g_store_info.status = false;
   if (oc_string(g_store_info.accesspoint.ssid)) {
     oc_free_string(&g_store_info.accesspoint.ssid);
-  } else if (oc_string(g_store_info.accesspoint.pwd)) {
+  }
+  if (oc_string(g_store_info.accesspoint.pwd)) {
     oc_free_string(&g_store_info.accesspoint.pwd);
-  } else if (oc_string(g_store_info.cloudinfo.ci_server)) {
+  }
+  if (oc_string(g_store_info.cloudinfo.ci_server)) {
     oc_free_string(&g_store_info.cloudinfo.ci_server);
-  } else if (oc_string(g_store_info.cloudinfo.auth_provider)) {
+  }
+  if (oc_string(g_store_info.cloudinfo.auth_provider)) {
     oc_free_string(&g_store_info.cloudinfo.auth_provider);
-  } else if (oc_string(g_store_info.cloudinfo.uid)) {
+  }
+  if (oc_string(g_store_info.cloudinfo.uid)) {
     oc_free_string(&g_store_info.cloudinfo.uid);
-  } else if (oc_string(g_store_info.cloudinfo.access_token)) {
+  }
+  if (oc_string(g_store_info.cloudinfo.access_token)) {
     oc_free_string(&g_store_info.cloudinfo.access_token);
-  } else if (oc_string(g_store_info.cloudinfo.refresh_token)) {
+  }
+  if (oc_string(g_store_info.cloudinfo.refresh_token)) {
     oc_free_string(&g_store_info.cloudinfo.refresh_token);
   }
   g_store_info.cloudinfo.status = 0;
