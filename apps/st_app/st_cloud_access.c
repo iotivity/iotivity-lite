@@ -90,7 +90,12 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     context = context->next;
   }
 
-  if (context && state == OC_SESSION_DISCONNECTED) {
+  if (!context || context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING)
+    return;
+
+  if (state == OC_SESSION_DISCONNECTED &&
+      (0 == oc_endpoint_compare(endpoint, &context->cloud_ep) ||
+       CLOUD_ACCESS_SIGNED_UP == context->cloud_access_status)) {
     if (context->cloud_access_status == CLOUD_ACCESS_FINISH) {
       oc_remove_delayed_callback(context, send_ping);
       context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
@@ -114,11 +119,8 @@ st_cloud_access_start(st_store_t *store_info, int device_index,
     return -1;
 
   context->callback = cb;
-  if (store_info->cloudinfo.status == CLOUD_ACCESS_PUBLISHED)
-    context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
-  else
-    context->cloud_access_status =
-      (st_cloud_access_status_t)store_info->cloudinfo.status;
+  context->cloud_access_status =
+    (st_cloud_access_status_t)store_info->cloudinfo.status;
   context->device_index = device_index;
 
   oc_new_string(&context->ci_server, oc_string(store_info->cloudinfo.ci_server),
@@ -272,6 +274,7 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
     case CI_TOKEN_EXPIRED:
       oc_remove_delayed_callback(context, callback);
       context->retry_count = 0;
+      context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
       oc_set_delayed_callback(context, refresh_token,
                               session_timeout[context->retry_count]);
       return;
@@ -281,6 +284,7 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
     case CI_USER_NOT_FOUND:
       oc_remove_delayed_callback(context, callback);
       context->retry_count = 0;
+      context->cloud_access_status = CLOUD_ACCESS_RE_CONNECTING;
       oc_set_delayed_callback(context, sign_in,
                               session_timeout[context->retry_count]);
       return;
@@ -312,11 +316,10 @@ cloud_start_process(st_cloud_context_t *context)
   st_print_log("[Cloud_Access] access_token : %s\n",
                oc_string(context->access_token));
 
-  if (context->cloud_access_status == CLOUD_ACCESS_RE_CONNECTING ||
-      context->cloud_access_status == CLOUD_ACCESS_SIGNED_UP) {
-    oc_set_delayed_callback(context, sign_in, session_timeout[0]);
-  } else {
+  if (context->cloud_access_status == CLOUD_ACCESS_INITIALIZE) {
     oc_set_delayed_callback(context, sign_up, session_timeout[0]);
+  } else {
+    oc_set_delayed_callback(context, sign_in, session_timeout[0]);
   }
   _oc_signal_event_loop();
 
