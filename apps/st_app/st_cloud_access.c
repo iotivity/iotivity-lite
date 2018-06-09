@@ -194,22 +194,6 @@ st_cloud_access_stop(int device_index)
   }
 }
 
-st_cloud_access_status_t
-get_cloud_access_status(int device_index)
-{
-  st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
-  while (context != NULL && context->device_index != device_index) {
-    context = context->next;
-  }
-  if (!context) {
-    st_print_log("[Cloud_Access] can't find any context regarding device(%d)\n",
-                 device_index);
-    return CLOUD_ACCESS_FAIL;
-  }
-
-  return context->cloud_access_status;
-}
-
 int
 st_cloud_access_check_connection(oc_string_t *ci_server)
 {
@@ -243,6 +227,33 @@ is_retry_over(st_cloud_context_t *context)
   return true;
 }
 
+static int
+get_ci_error_code(oc_status_t response_code, int ci_code)
+{
+  int code = 0;
+  switch (response_code) {
+  case OC_STATUS_BAD_REQUEST:
+    code = 400;
+    break;
+  case OC_STATUS_UNAUTHORIZED:
+    code = 401;
+    break;
+  case OC_STATUS_FORBIDDEN:
+    code = 403;
+    break;
+  case OC_STATUS_NOT_FOUND:
+    code = 404;
+    break;
+  case OC_STATUS_INTERNAL_SERVER_ERROR:
+    code = 500;
+    break;
+  default:
+    break;
+  }
+
+  return (code * 10000 + ci_code);
+}
+
 static void
 error_handler(oc_client_response_t *data, oc_trigger_t callback)
 {
@@ -250,7 +261,7 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
 
   int code;
   if (oc_rep_get_int(data->payload, "code", &code)) {
-    code += oc_http_code(data->code) * 10000;
+    code = get_ci_error_code(data->code, code);
     char *message = NULL;
     int size;
     if (oc_rep_get_string(data->payload, "message", &message, &size))
@@ -280,8 +291,6 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
       return;
     case CI_INTERNAL_SERVER_ERROR:
       context->retry_count = MAX_RETRY_COUNT;
-      break;
-    default:
       break;
     }
   }

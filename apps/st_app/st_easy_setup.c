@@ -158,12 +158,6 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
   return 0;
 }
 
-st_easy_setup_status_t
-get_easy_setup_status(void)
-{
-  return g_easy_setup_status;
-}
-
 static oc_event_callback_retval_t
 callback_handler(void *data)
 {

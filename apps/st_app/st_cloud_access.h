@@ -39,8 +39,6 @@ int st_cloud_access_start(st_store_t *cloud_info, int device_index,
                           st_cloud_access_cb_t cb);
 void st_cloud_access_stop(int device_index);
 
-st_cloud_access_status_t get_cloud_access_status(int device_index);
-
 int st_cloud_access_check_connection(oc_string_t *ci_server);
 
 #endif /* ST_CLOUD_ACCESS_H */
