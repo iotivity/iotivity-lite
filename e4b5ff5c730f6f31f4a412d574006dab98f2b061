@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_89f1f8cf",
+        "filename": "util/oc_mem_trace.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-09T02:04:56Z",
+      "side": 1,
+      "message": "How about checking func and address null check also?",
+      "revId": "e4b5ff5c730f6f31f4a412d574006dab98f2b061",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
