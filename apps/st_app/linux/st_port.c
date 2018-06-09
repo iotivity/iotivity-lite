@@ -111,7 +111,7 @@ st_port_user_input_loop(void *data)
     switch (key[0]) {
     case '1':
       st_manager_reset();
-      goto exit;
+      break;
     case '2':
       st_notify_back("/capability/switch/main/0"); // TODO
       break;

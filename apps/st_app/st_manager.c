@@ -462,6 +462,8 @@ st_manager_stop(void)
 
   st_store_info_initialize();
 
+  deinit_provisioning_info_resource();
+
   oc_main_shutdown();
 }
 
