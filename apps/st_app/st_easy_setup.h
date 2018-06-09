@@ -41,6 +41,4 @@ void st_easy_setup_stop(void);
 int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
                 const char *sid);
 
-st_easy_setup_status_t get_easy_setup_status(void);
-
 #endif /* ST_EASY_SETUP_H */
