@@ -27,6 +27,7 @@
 #include "security/oc_pstat.h"
 #endif
 #include "st_cloud_manager.h"
+#include "st_data_manager.h"
 #include "st_easy_setup.h"
 #include "st_manager.h"
 #include "st_port.h"
@@ -287,7 +288,7 @@ st_manager_initialize(void)
 }
 
 static int
-st_manager_init_step(void)
+st_manager_stack_init(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = st_process_signal,
@@ -298,6 +299,11 @@ st_manager_init_step(void)
 
   if (st_store_load() < 0) {
     st_print_log("[ST_MGR] Could not load store informations.\n");
+    return -1;
+  }
+
+  if (st_data_mgr_info_load() != 0) {
+    st_print_log("[ST_MGR] st_data_mgr_info_load failed!\n");
     return -1;
   }
 
@@ -319,6 +325,8 @@ st_manager_init_step(void)
     st_print_log("[ST_MGR] oc_main_init failed!\n");
     return -1;
   }
+
+  st_data_mgr_info_free();
 
   char uuid[MAX_UUID_LENGTH] = { 0 };
   oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
@@ -359,7 +367,7 @@ st_manager_start(void)
   while (quit != 1) {
     switch (g_main_status) {
     case ST_STATUS_INIT:
-      if (st_manager_init_step() < 0) {
+      if (st_manager_stack_init() < 0) {
         return -1;
       }
       store_info = NULL;
