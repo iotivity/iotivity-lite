@@ -53,7 +53,7 @@ static struct net_context *dtls_recv6;
 static struct sockaddr_in6 dtls_addr6;
 #define MY_DTLS_PORT (56789)
 #endif /* OC_SECURITY */
-
+static oc_endpoint_t *eps;
 /* For synchronizing the network receive thread with IoTivity-Constrained's
  * event loop.
  */
@@ -186,29 +186,46 @@ oc_send_buffer(oc_message_t *message)
   return message->length;
 }
 
+static void
+free_endpoints(void)
+{
+  oc_endpoint_t *ep = eps, *next;
+  while (ep != NULL) {
+    next = ep->next;
+    oc_free_endpoint(ep);
+    ep = next;
+  }
+}
+
 oc_endpoint_t *
 oc_connectivity_get_endpoints(int device)
 {
   (void)device;
-  oc_init_endpoint_list();
-  oc_endpoint_t ep;
-  memset(&ep, 0, sizeof(oc_endpoint_t));
-  ep.flags = IPV6;
-  net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR, ep.addr.ipv6.address);
-  ep.addr.ipv6.port = ntohs(my_addr6.sin6_port);
-  ep.device = 0;
-  oc_add_endpoint_to_list(&ep);
+  if (!eps) {
+    oc_endpoint_t *ep = oc_new_endpoint();
+    if (!ep) {
+      return NULL;
+    }
+    eps = ep;
+    memset(ep, 0, sizeof(oc_endpoint_t));
+    ep->flags = IPV6;
+    net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR, ep->addr.ipv6.address);
+    ep->addr.ipv6.port = ntohs(my_addr6.sin6_port);
+    ep->device = 0;
 #ifdef OC_SECURITY
-  oc_endpoint_t ep_sec;
-  memset(&ep_sec, 0, sizeof(oc_endpoint_t));
-  ep_sec.flags = IPV6 | SECURED;
-  net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR,
-                ep_sec.addr.ipv6.address);
-  ep_sec.addr.ipv6.port = ntohs(dtls_addr6.sin6_port);
-  ep_sec.device = 0;
-  oc_add_endpoint_to_list(&ep_sec);
+    oc_endpoint_t *ep_sec = oc_new_endpoint();
+    if (ep_sec) {
+      memset(ep_sec, 0, sizeof(oc_endpoint_t));
+      ep_sec->flags = IPV6 | SECURED;
+      net_addr_pton(AF_INET6, CONFIG_NET_APP_MY_IPV6_ADDR,
+                    ep_sec->addr.ipv6.address);
+      ep_sec->addr.ipv6.port = ntohs(dtls_addr6.sin6_port);
+      ep_sec->device = 0;
+      ep->next = ep_sec;
+    }
 #endif /* OC_SECURITY */
-  return oc_get_endpoint_list();
+  }
+  return eps;
 }
 
 int
@@ -344,6 +361,7 @@ oc_connectivity_shutdown(int device)
 #endif /* OC_SECURITY */
   net_context_put(udp_recv6);
   net_context_put(mcast_recv6);
+  free_endpoints();
 }
 
 #ifdef OC_CLIENT
