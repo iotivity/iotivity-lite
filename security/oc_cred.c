@@ -54,7 +54,7 @@ oc_sec_cred_default(int device)
     cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
   }
   memset(devices[device].rowneruuid.id, 0, 16);
-  oc_sec_dump_cred(device);
+  //oc_sec_dump_cred(device);
 }
 
 oc_sec_creds_t *
@@ -151,6 +151,13 @@ oc_sec_cred_free(void)
     oc_mem_free(devices);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_set_preconfpin(int device, uint8_t *pin, int pin_len)
+{
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  memcpy(cred->preconfpin, pin, pin_len);
 }
 
 oc_sec_cred_t *

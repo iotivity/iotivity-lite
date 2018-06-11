@@ -36,6 +36,7 @@ bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
 void
 oc_sec_unload_own_certs();
 #endif
+bool oc_sec_get_rdp_psk(int device, unsigned char *psk, int *psk_len);
 
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);

@@ -88,6 +88,16 @@ oc_sec_doxm_mfg(int device)
 }
 
 void
+oc_sec_doxm_rpk(int device)
+{
+  doxm[device].oxmsel = 1;  // TODO: replace with 0xFF03
+  doxm[device].sct = 1;
+  doxm[device].owned = false;
+  memset(doxm[device].devowneruuid.id, 0, 16);
+  memset(doxm[device].rowneruuid.id, 0, 16);
+}
+
+void
 oc_sec_encode_doxm(int device)
 {
   int oxms[1] = { doxm[device].oxmsel };

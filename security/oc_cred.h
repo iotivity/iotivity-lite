@@ -34,6 +34,7 @@ typedef struct oc_sec_cred_s
   int ownchainlen;
   uint8_t *mfgtrustca;
   int mfgtrustcalen;
+  uint8_t preconfpin[8];
   struct
   {
     oc_string_t role;
@@ -58,6 +59,7 @@ bool oc_cred_remove_subject(const char *subjectuuid, int device);
 oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, int device);
 oc_sec_creds_t *oc_sec_get_creds(int device);
 oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, int device);
+void oc_sec_set_preconfpin(int device, uint8_t *pin, int pin_len);
 void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
                void *data);

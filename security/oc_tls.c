@@ -46,6 +46,7 @@
 #include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
+#include "oc_doxm.h"
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -360,6 +361,15 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
         return -1;
       }
       OC_DBG("oc_tls: Set peer credential to SSL handle");
+      return 0;
+    }
+    else {
+      unsigned char psk[16] = { 0x0 };
+      int psk_len = 0;
+      oc_sec_get_rdp_psk(0, psk, &psk_len);
+      if (mbedtls_ssl_set_hs_psk(ssl, psk, psk_len) != 0) {
+        return -1;
+      }
       return 0;
     }
   }
@@ -717,6 +727,89 @@ oc_sec_load_certs(int device)
 tls_certs_load_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
+}
+
+#define PBKDF_ITERATIONS 1000
+#include "mbedtls/pkcs5.h"
+#include "mbedtls/md.h"
+
+int DeriveCryptoKeyFromPassword(const unsigned char *passwd, size_t pLen,
+    const uint8_t *salt, size_t saltLen,
+    size_t iterations,
+    size_t keyLen, uint8_t *derivedKey)
+{
+    mbedtls_md_context_t sha_ctx;
+    const mbedtls_md_info_t *info_sha;
+    int ret = -1;
+
+    if (iterations > UINT_MAX)
+    {
+        OC_ERR("Number of iterations over maximum %u", UINT_MAX);
+        return ret;
+    }
+
+    if (keyLen > UINT32_MAX)
+    {
+        OC_ERR("DeriveCryptoKeyFromPassword: Key length over maximum %u", UINT32_MAX);
+        return ret;
+    }
+
+    /* Setup the hash/HMAC function, for the PBKDF2 function. */
+    mbedtls_md_init(&sha_ctx);
+
+    info_sha = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+    if (info_sha == NULL)
+    {
+        OC_ERR("DeriveCryptoKeyFromPassword: Failed to get hash information");
+        return ret;
+    }
+
+    ret = mbedtls_md_setup(&sha_ctx, info_sha, 1);
+    if (ret != 0)
+    {
+        OC_ERR("DeriveCryptoKeyFromPassword: Failed to setup hash function");
+        return ret;
+    }
+
+    ret = mbedtls_pkcs5_pbkdf2_hmac(&sha_ctx,
+                                    passwd, pLen,
+                                    salt, saltLen,
+                                    (unsigned int)iterations,
+                                    (uint32_t)keyLen, derivedKey);
+    if (ret != 0)
+    {
+        OC_ERR("DeriveCryptoKeyFromPassword: Call to mbedtls PBKDF2 function failed");
+    }
+
+    mbedtls_md_free(&sha_ctx);
+    return ret;
+}
+
+bool
+oc_sec_get_rdp_psk(int device, unsigned char *psk, int *psk_len)
+{
+  int i = 0, ret = 0;
+  uint32_t r;
+
+  oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
+
+  int pin_len = 8;
+  uint8_t *pin = cred->preconfpin;
+
+  char uuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
+
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  oc_uuid_to_str(doxm->deviceuuid.id, uuid, MAX_UUID_LENGTH);
+
+  ret = DeriveCryptoKeyFromPassword((const unsigned char *)pin, pin_len,
+                                     oc_core_get_device_id(0), 16,
+                                     PBKDF_ITERATIONS,
+                                     /*OWNER_PSK_LENGTH_128*/ 16, psk);
+  *psk_len = 16;
+
+  return true;
 }
 
 bool
