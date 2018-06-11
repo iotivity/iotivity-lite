@@ -27,6 +27,7 @@
 #include "security/oc_pstat.h"
 #endif
 #include "st_cloud_manager.h"
+#include "st_data_manager.h"
 #include "st_easy_setup.h"
 #include "st_manager.h"
 #include "st_port.h"
@@ -277,6 +278,11 @@ st_manager_initialize(void)
     return -1;
   }
 
+  if (st_data_mgr_info_load() != 0) {
+    st_print_log("[ST_MGR] st_data_mgr_info_load failed!\n");
+    return -1;
+  }
+
   oc_set_max_app_data_size(3072);
   st_vendor_props_initialize();
 
@@ -287,7 +293,7 @@ st_manager_initialize(void)
 }
 
 static int
-st_manager_init_step(void)
+st_manager_stack_init(void)
 {
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = st_process_signal,
@@ -359,7 +365,7 @@ st_manager_start(void)
   while (quit != 1) {
     switch (g_main_status) {
     case ST_STATUS_INIT:
-      if (st_manager_init_step() < 0) {
+      if (st_manager_stack_init() < 0) {
         return -1;
       }
       store_info = NULL;
@@ -478,6 +484,8 @@ st_manager_stop(void)
   st_print_log("[ST_MGR] cloud manager stop done\n");
 
   st_store_info_initialize();
+
+  st_data_mgr_info_remove_all();
 
   deinit_provisioning_info_resource();
 
