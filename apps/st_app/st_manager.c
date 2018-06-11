@@ -38,22 +38,8 @@
 #define SOFT_AP_CHANNEL (6)
 #define AP_CONNECT_RETRY_LIMIT (20)
 
-typedef enum {
-  MAIN_STATUS_INIT,
-  MAIN_STATUS_EASY_SETUP,
-  MAIN_STATUS_EASY_SETUP_PROGRESSING,
-  MAIN_STATUS_EASY_SETUP_DONE,
-  MAIN_STATUS_AP_CONNECTING,
-  MAIN_STATUS_WIFI_CONNECTION_CHECKING,
-  MAIN_STATUS_CLOUD_ACCESS,
-  MAIN_STATUS_CLOUD_ACCESS_PROGRESSING,
-  MAIN_STATUS_CLOUD_ACCESS_DONE,
-  MAIN_STATUS_DONE,
-  MAIN_STATUS_RESET,
-  MAIN_STATUS_QUIT
-} st_main_status_t;
-
-static st_main_status_t g_main_status = MAIN_STATUS_INIT;
+static st_status_t g_main_status = ST_STATUS_INIT;
+static st_status_cb_t g_st_status_cb = NULL;
 
 // define vendor specific properties.
 static const char *st_device_type = "deviceType";
@@ -95,6 +81,8 @@ static const char *vid = "IoT2020";
 
 int quit = 0;
 
+static void set_st_manager_status(st_status_t status);
+
 static void
 init_platform_cb(CborEncoder *object, void *data)
 {
@@ -127,13 +115,13 @@ easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
     st_print_log("[ST_MGR] Easy setup succeed!!!\n");
-    g_main_status = MAIN_STATUS_EASY_SETUP_DONE;
+    set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
   } else if (status == EASY_SETUP_RESET) {
     st_print_log("[ST_MGR] Easy setup reset!!!\n");
-    g_main_status = MAIN_STATUS_RESET;
+    set_st_manager_status(ST_STATUS_RESET);
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("[ST_MGR] Easy setup failed!!!\n");
-    g_main_status = MAIN_STATUS_QUIT;
+    set_st_manager_status(ST_STATUS_QUIT);
   }
 }
 
@@ -142,13 +130,13 @@ cloud_access_handler(st_cloud_access_status_t status)
 {
   if (status == CLOUD_ACCESS_FINISH) {
     st_print_log("[ST_MGR] Cloud access succeed!!!\n");
-    g_main_status = MAIN_STATUS_CLOUD_ACCESS_DONE;
+    set_st_manager_status(ST_STATUS_CLOUD_ACCESS_DONE);
   } else if (status == CLOUD_ACCESS_RESET) {
     st_print_log("[ST_MGR] Cloud access reset!!!\n");
-    g_main_status = MAIN_STATUS_RESET;
+    set_st_manager_status(ST_STATUS_RESET);
   } else if (status == CLOUD_ACCESS_FAIL) {
     st_print_log("[ST_MGR] Cloud access failed!!!\n");
-    g_main_status = MAIN_STATUS_QUIT;
+    set_st_manager_status(ST_STATUS_QUIT);
   }
 }
 
@@ -239,11 +227,28 @@ st_main_reset(void)
   st_store_dump();
 }
 
+static oc_event_callback_retval_t
+status_callback(void *data)
+{
+  (void)data;
+  if (g_st_status_cb)
+    g_st_status_cb(g_main_status);
+
+  return OC_EVENT_DONE;
+}
+
 static void
-set_main_status_sync(st_main_status_t status)
+set_st_manager_status(st_status_t status)
+{
+  g_main_status = status;
+  oc_set_delayed_callback(NULL, status_callback, 0);
+}
+
+static void
+set_main_status_sync(st_status_t status)
 {
   st_process_app_sync_lock();
-  g_main_status = status;
+  set_st_manager_status(status);
   st_process_app_sync_unlock();
 }
 
@@ -272,7 +277,8 @@ st_manager_initialize(void)
   oc_set_max_app_data_size(3072);
   st_vendor_props_initialize();
 
-  set_main_status_sync(MAIN_STATUS_INIT);
+  st_unregister_status_handler();
+  set_main_status_sync(ST_STATUS_INIT);
 
   return 0;
 }
@@ -345,27 +351,27 @@ st_manager_start(void)
 
   while (quit != 1) {
     switch (g_main_status) {
-    case MAIN_STATUS_INIT:
+    case ST_STATUS_INIT:
       if (st_manager_init_step() < 0) {
         return -1;
       }
       store_info = NULL;
-      set_main_status_sync(MAIN_STATUS_EASY_SETUP);
+      set_main_status_sync(ST_STATUS_EASY_SETUP_START);
       break;
-    case MAIN_STATUS_EASY_SETUP:
+    case ST_STATUS_EASY_SETUP_START:
       if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start easy setup!\n");
         return -1;
       }
-      set_main_status_sync(MAIN_STATUS_EASY_SETUP_PROGRESSING);
+      set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       break;
-    case MAIN_STATUS_EASY_SETUP_PROGRESSING:
-    case MAIN_STATUS_CLOUD_ACCESS_PROGRESSING:
+    case ST_STATUS_EASY_SETUP_PROGRESSING:
+    case ST_STATUS_CLOUD_ACCESS_PROGRESSING:
       st_sleep(1);
       st_print_log(".");
       fflush(stdout);
       break;
-    case MAIN_STATUS_EASY_SETUP_DONE:
+    case ST_STATUS_EASY_SETUP_DONE:
       st_print_log("\n");
       st_easy_setup_stop();
       store_info = st_store_get_info();
@@ -373,53 +379,53 @@ st_manager_start(void)
         st_print_log("[ST_MGR] could not get cloud informations.\n");
         return -1;
       }
-      set_main_status_sync(MAIN_STATUS_AP_CONNECTING);
+      set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
       break;
-    case MAIN_STATUS_AP_CONNECTING:
+    case ST_STATUS_WIFI_CONNECTING:
       st_turn_off_soft_AP();
       st_connect_wifi(oc_string(store_info->accesspoint.ssid),
                       oc_string(store_info->accesspoint.pwd));
-      set_main_status_sync(MAIN_STATUS_WIFI_CONNECTION_CHECKING);
+      set_main_status_sync(ST_STATUS_WIFI_CONNECTION_CHECKING);
       break;
-    case MAIN_STATUS_WIFI_CONNECTION_CHECKING:
+    case ST_STATUS_WIFI_CONNECTION_CHECKING:
       if (st_cloud_access_check_connection(&store_info->cloudinfo.ci_server) !=
           0) {
         st_print_log("[ST_MGR] AP is not connected.\n");
         conn_cnt++;
         if (conn_cnt > AP_CONNECT_RETRY_LIMIT) {
           conn_cnt = 0;
-          set_main_status_sync(MAIN_STATUS_RESET);
+          set_main_status_sync(ST_STATUS_RESET);
         } else if (conn_cnt == (AP_CONNECT_RETRY_LIMIT >> 1)) {
-          set_main_status_sync(MAIN_STATUS_AP_CONNECTING);
+          set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
         }
         st_sleep(3);
       } else {
         conn_cnt = 0;
-        set_main_status_sync(MAIN_STATUS_CLOUD_ACCESS);
+        set_main_status_sync(ST_STATUS_CLOUD_ACCESS_START);
       }
       break;
-    case MAIN_STATUS_CLOUD_ACCESS:
+    case ST_STATUS_CLOUD_ACCESS_START:
       if (st_cloud_access_start(store_info, device_index,
                                 cloud_access_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start access cloud!\n");
         return -1;
       }
-      set_main_status_sync(MAIN_STATUS_CLOUD_ACCESS_PROGRESSING);
+      set_main_status_sync(ST_STATUS_CLOUD_ACCESS_PROGRESSING);
       break;
-    case MAIN_STATUS_CLOUD_ACCESS_DONE:
+    case ST_STATUS_CLOUD_ACCESS_DONE:
       st_print_log("\n");
-      set_main_status_sync(MAIN_STATUS_DONE);
+      set_main_status_sync(ST_STATUS_DONE);
       break;
-    case MAIN_STATUS_DONE:
+    case ST_STATUS_DONE:
       st_sleep(1);
       break;
-    case MAIN_STATUS_RESET:
+    case ST_STATUS_RESET:
       st_main_reset();
       st_manager_stop();
       st_print_log("[ST_MGR] reset finished\n");
-      set_main_status_sync(MAIN_STATUS_INIT);
+      set_main_status_sync(ST_STATUS_INIT);
       break;
-    case MAIN_STATUS_QUIT:
+    case ST_STATUS_QUIT:
       quit = 1;
       break;
     default:
@@ -438,14 +444,14 @@ st_manager_reset(void)
   st_main_reset();
   st_manager_stop();
   st_print_log("[ST_MGR] reset finished\n");
-  g_main_status = MAIN_STATUS_INIT;
+  set_st_manager_status(ST_STATUS_INIT);
   st_process_app_sync_unlock();
 }
 
 void
 st_manager_quit(void)
 {
-  set_main_status_sync(MAIN_STATUS_QUIT);
+  set_main_status_sync(ST_STATUS_QUIT);
 }
 
 void
@@ -470,6 +476,7 @@ st_manager_stop(void)
 void
 st_manager_deinitialize(void)
 {
+  st_unregister_status_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
   st_port_specific_destroy();
@@ -488,4 +495,21 @@ st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
 #else
   st_print_log("Un-secured build can't handle otm confirm\n");
 #endif
+}
+
+void
+st_register_status_handler(st_status_cb_t cb)
+{
+  if (!cb || g_st_status_cb) {
+    st_print_log("Failed to register status handler\n");
+    return;
+  }
+
+  g_st_status_cb = cb;
+}
+
+void
+st_unregister_status_handler(void)
+{
+  g_st_status_cb = NULL;
 }
