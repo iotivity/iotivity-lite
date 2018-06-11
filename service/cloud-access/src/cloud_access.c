@@ -155,8 +155,11 @@ oc_set_device_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
                        oc_core_get_resource_by_index(OCF_D, device)->types, 0));
       oc_rep_set_text_string(devices, mnmn, oc_string(platform_info->mfg_name));
       if (platform_info->init_platform_cb) {
-        platform_info->init_platform_cb(oc_rep_object(devices),
-                                        platform_info->data);
+        CborEncoder root_backup;
+        memcpy(&root_backup, &root_map, sizeof(CborEncoder));
+        memcpy(&root_map, &devices_map, sizeof(CborEncoder));
+        platform_info->init_platform_cb(platform_info->data);
+        memcpy(&root_map, &root_backup, sizeof(CborEncoder));
       }
       oc_rep_object_array_end_item(devices);
     }

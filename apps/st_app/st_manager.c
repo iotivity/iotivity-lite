@@ -84,15 +84,15 @@ int quit = 0;
 static void set_st_manager_status(st_status_t status);
 
 static void
-init_platform_cb(CborEncoder *object, void *data)
+init_platform_cb(void *data)
 {
   (void)data;
-  oc_set_custom_platform_property(*object, mnmo, sid);
-  oc_set_custom_platform_property(*object, mnpv, "1.0");
-  oc_set_custom_platform_property(*object, mnos, "1.0");
-  oc_set_custom_platform_property(*object, mnhw, "1.0");
-  oc_set_custom_platform_property(*object, mnfv, "1.0");
-  oc_set_custom_platform_property(*object, vid, vid);
+  oc_set_custom_platform_property(mnmo, sid);
+  oc_set_custom_platform_property(mnpv, "1.0");
+  oc_set_custom_platform_property(mnos, "1.0");
+  oc_set_custom_platform_property(mnhw, "1.0");
+  oc_set_custom_platform_property(mnfv, "1.0");
+  oc_set_custom_platform_property(vid, vid);
 }
 
 static int
