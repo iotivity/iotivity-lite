@@ -133,6 +133,10 @@ ifeq ($(ST_APP_FW),1)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
+	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
+	ST_JSON_FILE := $(wildcard ../../service/st-app-fw/json/*.json)
+	ST_DEVICE_DEF_HEADER=../../service/st-app-fw/include/st_device_def.h
+	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor
 endif
 
 ifeq ($(DEBUG),1)
@@ -224,6 +228,23 @@ $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
+prep_st_app_fw:
+ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
+else
+ifneq ("$(wildcard $(ST_JSON_FILE))", "")
+else
+	$(error please use proper json file in service/st-app-fw/json)
+endif
+ifneq ($(words $(ST_JSON_FILE)), 1)
+	$(error please use 1 json file in service/st-app-fw/json)
+else
+	$(info make new st_device_def file using $(ST_JSON_FILE))
+	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
+	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
+	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
+endif
+endif
+
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/es/%.o: %.c
@@ -255,7 +276,7 @@ obj/rd_client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
 
-obj/st/%.o: %.c
+obj/st/%.o: %.c prep_st_app_fw
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
 
@@ -436,7 +457,7 @@ clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
