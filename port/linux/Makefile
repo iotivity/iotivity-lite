@@ -8,6 +8,7 @@ CHECK_SCRIPT = ../../tools/check.py
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
+ARCH := $(shell arch)
 
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
@@ -145,6 +146,14 @@ ifeq ($(ST_APP_FW),1)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
+	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
+	ST_JSON_FILE := $(wildcard ../../service/st-app-fw/json/*.json)
+	ST_DEVICE_DEF_HEADER=../../service/st-app-fw/include/st_device_def.h
+ifeq ($(ARCH), "x86_64")
+	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor
+else
+	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor_32
+endif
 	ST_APP_TEST_DIR = $(ROOT_DIR)/service/st-app-fw/unittest
 	ST_APP_TEST_OBJ_DIR = $(ST_APP_TEST_DIR)/obj
 	ST_APP_TEST_SRC_FILES := $(wildcard $(ST_APP_TEST_DIR)/*.cpp)
@@ -294,7 +303,7 @@ obj/rd_client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
 
-obj/st/%.o: %.c
+obj/st/%.o: %.c prep_st_app_fw
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
 
@@ -421,6 +430,23 @@ st_things: libst-app-framework.a
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
 			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS} ${IWLIB}
 
+prep_st_app_fw:
+ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
+else
+ifneq ("$(wildcard $(ST_JSON_FILE))", "")
+else
+	$(error please use proper json file in service/st-app-fw/json)
+endif
+ifneq ($(words $(ST_JSON_FILE)), 1)
+	$(error please use 1 json file in service/st-app-fw/json)
+else
+	$(info make new st_device_def file using $(ST_JSON_FILE))
+	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
+	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
+	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
+endif
+endif
+
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
@@ -475,7 +501,7 @@ clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
