@@ -9,12 +9,6 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
-SECURE=1
-DEBUG=1
-DYNAMIC=1
-OIC=1
-EASYSETUP=1
-
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
