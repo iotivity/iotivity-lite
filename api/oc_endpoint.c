@@ -16,6 +16,7 @@
 
 #include "oc_endpoint.h"
 #include "oc_core_res.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
