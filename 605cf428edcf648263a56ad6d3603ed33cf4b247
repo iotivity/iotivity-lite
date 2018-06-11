@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a97e7ce2",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-06-11T03:38:05Z",
+      "side": 1,
+      "message": "oc_core_res.h has an api with signature:\nvoid oc_core_populate_resource(\n  int core_resource, int device_index, const char *uri,\n  oc_interface_mask_t interfaces, oc_interface_mask_t default_interface,\n  oc_resource_properties_t properties, oc_request_callback_t get,\n  oc_request_callback_t put, oc_request_callback_t post,\n  oc_request_callback_t delete, int num_resource_types, ...);\n\nbecause delete is used as a variable name there, I am unable to build using g++ when oc_core_res.h is included.",
+      "parentUuid": "da33351e_296f0c94",
+      "revId": "605cf428edcf648263a56ad6d3603ed33cf4b247",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_896c589e",
         "filename": "security/unittest/tlstest.cpp",
         "patchSetId": 1
@@ -47,6 +65,30 @@
       "writtenOn": "2018-06-08T18:08:38Z",
       "side": 1,
       "message": "I\u0027m not sure what you intended here, but if you\u0027re passing in a device index of 1, then oc_tls_update_psk_identity() will return -1 because you\u0027ve initialized only one logical device above.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 50
+      },
+      "revId": "605cf428edcf648263a56ad6d3603ed33cf4b247",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e98884e9",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-06-11T03:38:05Z",
+      "side": 1,
+      "message": "But this TC is actually passing for me, even in single run.",
+      "parentUuid": "da33351e_4972507d",
       "range": {
         "startLine": 81,
         "startChar": 0,
