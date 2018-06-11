@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_c9bca06f",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-11T09:57:08Z",
+      "side": 1,
+      "message": "How about make the return type of function into bool.\nIn case of g_st_status_cb is already set, we need to return fail for failing to registration.\nI think it will be bettter to change st_register_otm_confirm_handler return type into bool as same reason.",
+      "range": {
+        "startLine": 500,
+        "startChar": 0,
+        "endLine": 500,
+        "endChar": 4
+      },
+      "revId": "70e806a073de7a6b9d644c750ff3d60d567d44a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
