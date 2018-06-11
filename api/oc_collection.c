@@ -225,7 +225,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           oc_rep_object_array_end_item(eps);
           eps = eps->next;
         }
-        oc_free_endpoint_list();
         oc_rep_close_array(links, eps);
 
         oc_rep_object_array_end_item(links);
@@ -267,7 +266,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           oc_rep_object_array_end_item(eps);
           eps = eps->next;
         }
-        oc_free_endpoint_list();
         oc_rep_close_array(links, eps);
 
         oc_rep_object_array_end_item(links);

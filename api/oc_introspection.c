@@ -80,7 +80,6 @@ oc_core_introspection_wk_handler(oc_request_t *request,
     }
     eps = eps->next;
   }
-  oc_free_endpoint_list();
 
   if (oc_string_len(uri) <= 0) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
