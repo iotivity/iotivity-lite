@@ -27,6 +27,7 @@
 #include "security/oc_pstat.h"
 #endif
 #include "st_cloud_manager.h"
+#include "st_data_manager.h"
 #include "st_easy_setup.h"
 #include "st_manager.h"
 #include "st_port.h"
@@ -75,7 +76,7 @@ static int device_index = 0;
 static const char *device_rt = "oic.d.light";
 static const char *device_name = "Samsung";
 
-static const char *manufacturer = "xxxx";
+static const char *manufacturer = "fALu";
 static const char *sid = "000";
 static const char *vid = "IoT2020";
 
@@ -315,6 +316,11 @@ st_manager_init_step(void)
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
   }
 
+  if (st_data_mgr_info_load() != 0) {
+    st_print_log("[ST_MGR] st_data_mgr_info_load failed!\n");
+    return -1;
+  }
+
   if (oc_main_init(&handler) != 0) {
     st_print_log("[ST_MGR] oc_main_init failed!\n");
     return -1;
@@ -478,6 +484,8 @@ st_manager_stop(void)
   st_print_log("[ST_MGR] cloud manager stop done\n");
 
   st_store_info_initialize();
+
+  st_data_mgr_info_remove_all();
 
   deinit_provisioning_info_resource();
 
