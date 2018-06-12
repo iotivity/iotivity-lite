@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_fcf32408",
+        "filename": "apps/rpkserver.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-06-12T03:09:08Z",
+      "side": 1,
+      "message": "???",
+      "range": {
+        "startLine": 2,
+        "startChar": 3,
+        "endLine": 2,
+        "endChar": 39
+      },
+      "revId": "01ad7db7eabb91fa6523e15b5eac69543b37641c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5c8df07a",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-06-12T03:09:08Z",
+      "side": 1,
+      "message": "credentials will not used for rpk otm",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 41
+      },
+      "revId": "01ad7db7eabb91fa6523e15b5eac69543b37641c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9cee5821",
+        "filename": "security/oc_cred.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-06-12T03:09:08Z",
+      "side": 1,
+      "message": "please rename it to raw public key then..",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 24
+      },
+      "revId": "01ad7db7eabb91fa6523e15b5eac69543b37641c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bce99c1c",
+        "filename": "security/oc_cred.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-06-12T03:09:08Z",
+      "side": 1,
+      "message": "please rename it to raw public key then..",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 26
+      },
+      "revId": "01ad7db7eabb91fa6523e15b5eac69543b37641c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7c90b495",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-06-12T03:09:08Z",
+      "side": 1,
+      "message": "please rename according to the codestyle rules",
+      "range": {
+        "startLine": 736,
+        "startChar": 4,
+        "endLine": 736,
+        "endChar": 31
+      },
+      "revId": "01ad7db7eabb91fa6523e15b5eac69543b37641c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
