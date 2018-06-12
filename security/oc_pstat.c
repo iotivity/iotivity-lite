@@ -34,6 +34,8 @@ static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 static bool set_post_otm_acl = true;
 
+extern void coap_reset();
+
 void
 oc_sec_pstat_free(void)
 {
@@ -555,8 +557,13 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 void
 oc_sec_reset()
 {
-  oc_sec_pstat_t ps = {.s = OC_DOS_RESET};
-  for (int device = 0; device < oc_core_get_num_devices(); device++)
-    oc_pstat_handle_state(&ps, device);
+  coap_reset();
+  for (int device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_sec_pstat_default(device);
+    oc_sec_dump_pstat(device);
+    oc_sec_dump_acl(device);
+    oc_sec_dump_cred(device);
+    oc_sec_dump_doxm(device);
+  }
 }
 #endif /* OC_SECURITY */

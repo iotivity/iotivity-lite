@@ -94,6 +94,15 @@ check_if_duplicate(uint16_t mid, uint8_t device)
 }
 
 void
+coap_reset()
+{
+  for (size_t i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
+     history[i] = 0;
+     history_dev[i] = 0;
+    }
+}
+
+void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
