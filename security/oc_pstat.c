@@ -150,7 +150,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
   case OC_DOS_RFOTM: {
     ps->p = true;
     ps->s = OC_DOS_RFOTM;
+#if !defined(OC_SPEC_VER_OIC)
     ps->cm = 2;
+#else //!OC_SPEC_VER_OIC
+    ps->cm = 1;
+#endif //!OC_SPEC_VER_OIC
     ps->tm = 0;
     if (doxm->owned || !nil_uuid(&doxm->devowneruuid) || ps->isop ||
         (ps->cm & 0xC3) != 2 || (ps->tm & 0xC3) != 0) {
