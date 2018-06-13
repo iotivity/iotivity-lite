@@ -392,7 +392,7 @@ client_multithread_linux: libiotivity-constrained-client.a
 st_things: libst-app-framework.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
-			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS}
+			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS} -liw
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
