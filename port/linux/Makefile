@@ -192,6 +192,12 @@ ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DST_OC_CON_RES_OPT
 endif
 
+ifneq ($(MOCK_WIFI_SCAN),0)
+	CFLAGS += -DMOCK_WIFI_SCAN
+else
+	IWLIB = -liw
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
@@ -392,7 +398,7 @@ client_multithread_linux: libiotivity-constrained-client.a
 st_things: libst-app-framework.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
-			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS}
+			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS} ${IWLIB}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
