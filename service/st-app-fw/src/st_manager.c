@@ -302,7 +302,12 @@ st_manager_init_step(void)
   }
 
   if (st_is_easy_setup_finish() != 0) {
+    // Scan for neighbor wifi access points
+    st_start_scan_wifi();
+
+    // Turn on soft-ap
     st_print_log("[ST_MGR] Soft AP turn on.\n");
+
     char ssid[MAX_SSID_LEN + 1];
     if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
       return -1;
