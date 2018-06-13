@@ -90,7 +90,7 @@ typedef struct
 typedef struct
 {
   oc_resource_t *res;
-  sec_accesspoint_cb cbs;
+  get_ap_scan_list cb;
 } sec_accesspoints_res_t;
 
 sc_properties *g_scprop;
@@ -593,53 +593,59 @@ deinit_provisioning_info_resource(void)
 
 // --- "/sec/accesspointlist" resource related code -----
 static void
-construct_response_of_sec_aplist(sec_accesspoint_list *ap_list)
+construct_response_of_sec_aplist(sec_accesspoint *ap_list)
 {
+  if (!ap_list) {
+    return;
+  }
+
+  sec_accesspoint *wifi_ap = ap_list;
   char key_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
   oc_rep_start_root_object();
   construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS);
   oc_rep_set_key(root_map, key_name);
   oc_rep_start_array(root_map, ap_items);
-  for (int i = 0; i < ap_list->size; i++) {
+  while (wifi_ap) {
     oc_rep_object_array_start_item(ap_items);
 
-    OC_DBG("Channel - %s", oc_string(ap_list->access_points[i].channel));
+    OC_DBG("Channel - %s", oc_string(wifi_ap->channel));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].channel));
+                                       oc_string(wifi_ap->channel));
 
-    OC_DBG("Encryption Type - %s", oc_string(ap_list->access_points[i].enc_type));
+    OC_DBG("Encryption Type - %s", oc_string(wifi_ap->enc_type));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_ENCRYPTION_TYPE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].enc_type));
+                                       oc_string(wifi_ap->enc_type));
 
-    OC_DBG("Mac address - %s", oc_string(ap_list->access_points[i].mac_address));
+    OC_DBG("Mac address - %s", oc_string(wifi_ap->mac_address));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].mac_address));
+                                       oc_string(wifi_ap->mac_address));
 
-    OC_DBG("Max rate - %s", oc_string(ap_list->access_points[i].max_rate));
+    OC_DBG("Max rate - %s", oc_string(wifi_ap->max_rate));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].max_rate));
+                                       oc_string(wifi_ap->max_rate));
 
-    OC_DBG("RSSI - %s", oc_string(ap_list->access_points[i].rssi));
+    OC_DBG("RSSI - %s", oc_string(wifi_ap->rssi));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_RSSI);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].rssi));
+                                       oc_string(wifi_ap->rssi));
 
-    OC_DBG("Security type - %s", oc_string(ap_list->access_points[i].security_type));
+    OC_DBG("Security type - %s", oc_string(wifi_ap->security_type));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].security_type));
+                                       oc_string(wifi_ap->security_type));
 
-    OC_DBG("SSID - %s", oc_string(ap_list->access_points[i].ssid));
+    OC_DBG("SSID - %s", oc_string(wifi_ap->ssid));
     construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SSID);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(ap_list->access_points[i].ssid));
+                                       oc_string(wifi_ap->ssid));
 
     oc_rep_object_array_end_item(ap_items);
+    wifi_ap = wifi_ap->next;
   }
   oc_rep_close_array(root, ap_items);
   oc_rep_end_root_object();
@@ -663,20 +669,32 @@ get_sec_aplist(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
-  sec_accesspoint_list *ap_list = NULL;
-  g_sec_aplist->cbs.get_ap_list(&ap_list);
-  OC_DBG("Received AP list of size %d from application", ap_list->size);
+  sec_accesspoint *ap_list = NULL;
+  g_sec_aplist->cb(&ap_list);
 
   construct_response_of_sec_aplist(ap_list);
   oc_send_response(request, OC_STATUS_OK);
- 
-  g_sec_aplist->cbs.free_ap_list(ap_list);
+
+  // Free scan list
+  while (ap_list) {
+    sec_accesspoint *del = ap_list;
+    ap_list = ap_list->next;
+
+    oc_free_string(&(del->ssid));
+    oc_free_string(&(del->channel));
+    oc_free_string(&(del->enc_type));
+    oc_free_string(&(del->mac_address));
+    oc_free_string(&(del->max_rate));
+    oc_free_string(&(del->rssi));
+    oc_free_string(&(del->security_type));
+    free(del);
+  }
 }
 
 es_result_e
-init_accesspointlist_resource(sec_accesspoint_cb cb)
+init_accesspointlist_resource(get_ap_scan_list cb)
 {
-  if (!cb.get_ap_list || !cb.free_ap_list) {
+  if (!cb) {
     OC_ERR("Invalid input!");
     return ES_ERROR;
   }
@@ -700,7 +718,7 @@ init_accesspointlist_resource(sec_accesspoint_cb cb)
   oc_resource_set_request_handler(g_sec_aplist->res, OC_GET, get_sec_aplist,
                                   NULL);
   oc_add_resource(g_sec_aplist->res);
-  g_sec_aplist->cbs = cb;
+  g_sec_aplist->cb = cb;
   return ES_OK;
 
 exit:
@@ -715,8 +733,7 @@ deinit_accesspointlist_resource(void)
     if (g_sec_aplist->res) {
       oc_delete_resource(g_sec_aplist->res);
     }
-    g_sec_aplist->cbs.get_ap_list = NULL;
-    g_sec_aplist->cbs.free_ap_list = NULL;
+    g_sec_aplist->cb = NULL;
     oc_mem_free(g_sec_aplist);
     g_sec_aplist = NULL;
   }
