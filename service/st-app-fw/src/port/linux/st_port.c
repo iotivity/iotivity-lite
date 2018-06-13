@@ -30,6 +30,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <iwlib.h>
 
 #define ST_DEFAULT_STACK_SIZE 8192
 
@@ -54,6 +55,8 @@ typedef struct
 static st_soft_ap_t g_soft_ap;
 
 static st_thread_t g_user_input_thread = NULL;
+
+static st_wifi_ap_t *g_ap_scan_list = NULL;
 
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
@@ -120,6 +123,8 @@ st_port_user_input_loop(void *data)
     case '0':
       st_manager_quit();
       st_process_signal();
+      st_free_wifi_scan_list(g_ap_scan_list);
+      g_ap_scan_list = NULL;
       goto exit;
     default:
       st_print_log("unsupported command.\n");
@@ -411,6 +416,166 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
 exit:
   st_print_log("[St_Port] st_connect_wifi error occur\n");
+}
+
+static void
+str_dup(char **dest, char *src) {
+  if (!src) {
+    return;
+  }
+
+  *dest = (char*) calloc(strlen(src)+1, sizeof(char));
+  strncpy(*dest, src, strlen(src));
+}
+
+static st_wifi_ap_t*
+wifi_scan_list_dup(st_wifi_ap_t *scan_list) {
+  if (!scan_list) {
+    return NULL;
+  }
+
+  st_wifi_ap_t *res_list = NULL;
+  st_wifi_ap_t *list_tail = NULL;
+  while (scan_list) {
+    st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
+    str_dup(&ap->ssid, scan_list->ssid);
+    str_dup(&ap->mac_addr, scan_list->mac_addr);
+    str_dup(&ap->channel, scan_list->channel);
+    str_dup(&ap->max_bitrate, scan_list->max_bitrate);
+    str_dup(&ap->rssi, scan_list->rssi);
+    str_dup(&ap->enc_type, scan_list->enc_type);
+    str_dup(&ap->sec_type, scan_list->sec_type);
+
+    if (!res_list) {
+      res_list = ap;
+    }
+    else {
+      list_tail->next = ap;
+    }
+
+    list_tail = ap;
+    scan_list = scan_list->next;
+  }
+
+  return res_list;
+}
+
+void
+st_scan_wifi(st_wifi_ap_t **ap_list)
+{
+  if (!ap_list) {
+    return;
+  }
+
+  if (g_ap_scan_list) {
+    st_print_log("[St_Port] Returning cached WiFi AP scan list\n");
+    *ap_list = wifi_scan_list_dup(g_ap_scan_list);
+    return;
+  }
+
+  wireless_scan_head head;
+  iwrange range;
+  int sock;
+  char *wiface = "wlp2s0";  // NOTE: Replace wlp2s0 with proper interface name.
+
+  st_print_log("[St_Port] Scanning for neighbour wifi accesspoints\n");
+
+  /* Open socket to kernel */
+  sock = iw_sockets_open();
+
+  /* Get some metadata to use for scanning */
+  if (iw_get_range_info(sock, wiface, &range) < 0) {
+    st_print_log("[St_Port] failed to get range info\n");
+    return;
+  }
+
+  /* Perform the scan */
+  if (iw_scan(sock, wiface, range.we_version_compiled, &head) < 0) {
+    st_print_log("[St_Port] scan failed!\n");
+    return;
+  }
+
+  wireless_scan *result = head.result;
+  st_wifi_ap_t *tail = NULL;
+  int cnt = 0;
+  // TODO: Restricting to 10 as failed to send response with more wifi aps.
+  // Is there a priority to select wifi aps to include in response ?
+  while (result && cnt < 10) {
+    st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
+
+    // ssid
+    int len = strlen(result->b.essid);
+    ap->ssid = (char*) calloc(len+1, sizeof(char));
+    strncpy(ap->ssid, result->b.essid, len);
+
+    // mac address
+    ap->mac_addr = (char*) calloc(18, sizeof(char));
+    iw_sawap_ntop(&result->ap_addr, ap->mac_addr);
+
+    // channel
+    ap->channel = (char*)calloc(4, sizeof(char));
+    snprintf(ap->channel, 4, "%d", iw_freq_to_channel(result->b.freq, &range));
+
+    // max bitrate
+    ap->max_bitrate = (char*)calloc(5, sizeof(char));
+    snprintf(ap->max_bitrate, 5, "%d", result->maxbitrate.value/(int)1e6);
+
+    // rssi
+    if (result->has_stats) {
+      char quality[40]={0};
+      iw_print_stats(quality, sizeof(quality), &result->stats.qual, &range, 1);
+      char *sig_start = strstr(quality, "Signal level=");
+      if (sig_start) {
+        sig_start += strlen("Signal level=");
+        char *sig_end = strstr(sig_start, " ");
+        ap->rssi = (char*) calloc((sig_end - sig_start)+1, sizeof(char));
+        strncpy(ap->rssi, sig_start, sig_end-sig_start);
+      }
+    }
+
+    // encryption type and security type
+    if (result->b.has_key) {
+      // TODO: Getting security type is tough, thus using hardcode value
+      // as of now
+      const char *sec_type = "WPA2";
+      ap->sec_type = (char*) calloc(strlen(sec_type)+1, sizeof(char));
+      strncpy(ap->sec_type, sec_type, strlen(sec_type));
+
+      const char *enc_type = "AES";
+      ap->enc_type = (char*) calloc(strlen(enc_type)+1, sizeof(char));
+      strncpy(ap->enc_type, enc_type, strlen(enc_type));
+    }
+
+    if (!g_ap_scan_list) {
+      g_ap_scan_list = ap;
+    } else {
+      tail->next = ap;
+    }
+    tail = ap;
+    result = result->next;
+    cnt++;
+  }
+
+  *ap_list = wifi_scan_list_dup(g_ap_scan_list);
+  st_print_log("[St_Port] Found %d neighbor wifi access points\n", cnt);
+}
+
+void
+st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
+{
+  while (scanlist) {
+    st_wifi_ap_t *del = scanlist;
+    scanlist = scanlist->next;
+
+    free(del->ssid);
+    free(del->mac_addr);
+    free(del->channel);
+    free(del->max_bitrate);
+    free(del->rssi);
+    free(del->enc_type);
+    free(del->sec_type);
+    free(del);
+  }
 }
 
 static void *
