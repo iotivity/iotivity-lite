@@ -20,7 +20,6 @@
 #include "oc_endpoint.h"
 #include <stdio.h>
 
-
 #define MAX_FILENAME_LENGTH 128
 
 #ifdef OC_IDD_FILE
@@ -30,20 +29,21 @@
 static void
 gen_idd_tag(const char *name, int device_index, char *idd_tag)
 {
-  int idd_tag_len = snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
-  idd_tag_len = (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
+  int idd_tag_len =
+    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
+  idd_tag_len =
+    (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
   idd_tag[idd_tag_len] = '\0';
 }
 
-
-int get_IDD_filename(int device_index, char* filename)
+int
+get_IDD_filename(int device_index, char *filename)
 {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device_index, idd_tag);
   int ret = oc_storage_read(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
   PRINT("get_IDD_filename: oc_storage_read %d\n", ret);
-  if (ret <= 0)
-  {
+  if (ret <= 0) {
     strcpy(filename, "server_introspection.dat");
   }
   PRINT("get_IDD_filename: returning %s\n", filename);
@@ -51,13 +51,13 @@ int get_IDD_filename(int device_index, char* filename)
 }
 
 void
-oc_set_introspection_file(int device, const char* filename)
+oc_set_introspection_file(int device, const char *filename)
 {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
-  long ret = oc_storage_write(idd_tag, (uint8_t*)filename, MAX_FILENAME_LENGTH);
-  if (ret == 0)
-  {
+  long ret =
+    oc_storage_write(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
+  if (ret == 0) {
     OC_ERR("oc_set_introspection_file: could not set %s in store\n", filename);
   }
 }
@@ -69,8 +69,7 @@ IDD_storage_size(const char *store)
   long filesize;
 
   fp = fopen(store, "rb");
-  if (!fp)
-  {
+  if (!fp) {
     OC_ERR("IDD_storage_size: ERROR file %s does not open\n", store);
     return 0;
   }
@@ -88,8 +87,7 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
   FILE *fp = 0;
 
   fp = fopen(store, "rb");
-  if (!fp)
-  {
+  if (!fp) {
     OC_ERR("IDD_storage_size file %s does not open\n", store);
     return 0;
   }
@@ -103,7 +101,8 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 
 #include "server_introspection.dat.h"
 
-int get_IDD_filename(int index, char* filename)
+int
+get_IDD_filename(int index, char *filename)
 {
   (void)index;
   (void)filename;
@@ -134,11 +133,8 @@ oc_core_introspection_data_handler(oc_request_t *request,
   (void)interface;
   (void)data;
 
-  PRINT("oc_introspection: oc_core_introspection_data_handler\n");
+  OC_DBG("in oc_core_introspection_data_handler");
 
-  /* The file shall contain a CBOR-encoded swagger description of
-  * introspection data to return to clients.
-  */
   int index = request->resource->device;
   char filename[MAX_FILENAME_LENGTH];
   long filesize;
@@ -146,17 +142,18 @@ oc_core_introspection_data_handler(oc_request_t *request,
   get_IDD_filename(index, filename);
 
   filesize = IDD_storage_size(filename);
-  if (filesize < OC_MAX_APP_DATA_SIZE)
-  {
-    IDD_storage_read(filename, request->response->response_buffer->buffer, filesize);
+  if (filesize < OC_MAX_APP_DATA_SIZE) {
+    IDD_storage_read(filename, request->response->response_buffer->buffer,
+                     filesize);
     request->response->response_buffer->response_length = (uint16_t)filesize;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  }
-  else
-  {
-    OC_ERR("oc_core_introspection_data_handler : %d is too big for buffer %d \n", filesize, OC_MAX_APP_DATA_SIZE);
+  } else {
+    OC_ERR(
+      "oc_core_introspection_data_handler : %d is too big for buffer %d \n",
+      filesize, OC_MAX_APP_DATA_SIZE);
     request->response->response_buffer->response_length = (uint16_t)0;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 }
 
@@ -166,28 +163,27 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 {
   (void)data;
 
+  int interface_index =
+    (request->origin) ? request->origin->interface_index : -1;
   /* We are interested in only a single coap:// endpoint on this logical device.
   */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
   memset(&uri, 0, sizeof(oc_string_t));
   while (eps != NULL) {
-#ifdef OC_SECURITY
-  if ((eps->flags & SECURED)) {
-#else /* OC_SECURITY */
-  if (!(eps->flags & SECURED)) {
-#endif /* OC_SECURITY */
-    if (oc_endpoint_to_string(eps, &ep) == 0) {
-      oc_concat_strings(&uri, oc_string(ep), "/oc/introspection");
-      oc_free_string(&ep);
-      break;
+    if ((interface_index == -1 || eps->interface_index == interface_index) &&
+        !(eps->flags & SECURED)) {
+      if (oc_endpoint_to_string(eps, &ep) == 0) {
+        oc_concat_strings(&uri, oc_string(ep), "/oc/introspection");
+        oc_free_string(&ep);
+        break;
+      }
     }
-  }
-
-  eps = eps->next;
+    eps = eps->next;
   }
 
   if (oc_string_len(uri) <= 0) {
+    OC_ERR("could not obtain introspection resource uri");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -197,16 +193,12 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   switch (interface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-    /* fall through */
+  /* fall through */
   case OC_IF_R: {
     oc_rep_set_array(root, urlInfo);
     oc_rep_object_array_start_item(urlInfo);
-    oc_rep_set_text_string(urlInfo, content-type, "application/cbor");
-#ifdef OC_SECURITY
-    oc_rep_set_text_string(urlInfo, protocol, "coaps");
-#else /* OC_SECURITY */
+    oc_rep_set_text_string(urlInfo, content - type, "application/cbor");
     oc_rep_set_text_string(urlInfo, protocol, "coap");
-#endif /* OC_SECURITY */
     oc_rep_set_text_string(urlInfo, url, oc_string(uri));
     oc_rep_object_array_end_item(urlInfo);
     oc_rep_close_array(root, urlInfo);
@@ -218,36 +210,21 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 
-  PRINT("oc_introspection: oc_core_introspection_wk_handler  %s\n", oc_string(uri));
+  OC_DBG("got introspection resource uri %s", oc_string(uri));
   oc_free_string(&uri);
 }
 
 void
 oc_create_introspection_resource(int device)
 {
-  OC_DBG("oc_introspection: Initializing introspection resource\n");
+  OC_DBG("oc_introspection: Initializing introspection resource");
 
-#ifdef OC_SERVER
-  PRINT("oc_introspection: Initializing introspection resource as server\n");
-#endif /* OC_SERVER */
-
-  oc_core_populate_resource(  OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
-                              OC_IF_R | OC_IF_BASELINE,
-                              OC_IF_R,
-#ifdef OC_SECURITY
-                              OC_DISCOVERABLE | OC_SECURE,
-#else /* OC_SECURITY */
-                              OC_DISCOVERABLE,
-#endif /* OC_SECURITY */
-                              oc_core_introspection_wk_handler, 0, 0, 0, 1,
-                              "oic.wk.introspection");
-  oc_core_populate_resource( OCF_INTROSPECTION_DATA, device, "oc/introspection",
-                             OC_IF_BASELINE, OC_IF_BASELINE,
-#ifdef OC_SECURITY
-                             OC_SECURE,
-#else /* OC_SECURITY */
-                             0,
-#endif /* OC_SECURITY */
-                             oc_core_introspection_data_handler, 0, 0, 0, 1,
-                             "oic.introspection.data");
+  oc_core_populate_resource(OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
+                            OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_DISCOVERABLE,
+                            oc_core_introspection_wk_handler, 0, 0, 0, 1,
+                            "oic.wk.introspection");
+  oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
+                            OC_IF_BASELINE, OC_IF_BASELINE, 0,
+                            oc_core_introspection_data_handler, 0, 0, 0, 1,
+                            "oic.introspection.data");
 }
