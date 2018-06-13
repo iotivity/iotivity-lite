@@ -201,7 +201,7 @@ es_result_e set_sec_prov_info(sec_provisioning_info *prov_info);
 es_result_e deinit_provisioning_info_resource(void);
 
 // --- "/sec/accesspointlist" resource -----
-typedef struct
+typedef struct sec_accesspoint_s
 {
   oc_string_t channel;
   oc_string_t enc_type;
@@ -210,18 +210,13 @@ typedef struct
   oc_string_t rssi;
   oc_string_t security_type;
   oc_string_t ssid;
+  struct sec_accesspoint_s *next;
 } sec_accesspoint;
 
 typedef struct
 {
-  sec_accesspoint *access_points;
-  int size;
-} sec_accesspoint_list;
-
-typedef struct
-{
-  void (*get_ap_list)(sec_accesspoint_list **ap_list);
-  void (*free_ap_list)(sec_accesspoint_list *ap_list);
+  void (*get_ap_list)(sec_accesspoint **ap_list);
+  void (*free_ap_list)(sec_accesspoint *ap_list);
 } sec_accesspoint_cb;
 
 es_result_e init_accesspointlist_resource(sec_accesspoint_cb cb);

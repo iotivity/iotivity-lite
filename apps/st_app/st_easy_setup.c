@@ -49,6 +49,8 @@ static st_easy_setup_status_t g_easy_setup_status = EASY_SETUP_INITIALIZE;
 
 static st_prov_step_t g_prov_step_check;
 
+static st_wifi_ap_t *g_aplist = NULL;
+
 static void wifi_prov_cb(es_wifi_conf_data *event_data);
 static void dev_conf_prov_cb(es_dev_conf_data *event_data);
 static void cloud_conf_prov_cb(es_coap_cloud_conf_data *event_data);
@@ -58,6 +60,8 @@ static oc_event_callback_retval_t easy_setup_timeout_handler(void *data);
 #ifdef OC_SECURITY
 static void st_otm_state_handler(oc_sec_otm_err_code_t state);
 #endif
+static void get_ap_list(sec_accesspoint **ap_list);
+static void free_ap_list(sec_accesspoint *ap_list);
 
 static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                   .dev_conf_prov_cb =
@@ -112,6 +116,10 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
     }
   }
 
+  // Init /sec/accesspointlist resource
+  sec_accesspoint_cb ap_scan_cbs = {get_ap_list, free_ap_list};
+  init_accesspointlist_resource(ap_scan_cbs);
+
   // Set callbacks for Vendor Specific Properties
   es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb, sc_free_userdata);
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
@@ -135,6 +143,24 @@ st_easy_setup_stop(void)
   }
 
   reset_sc_properties();
+
+  // Free scan list
+  deinit_accesspointlist_resource();
+
+  while (g_aplist) {
+    st_wifi_ap_t *del = g_aplist;
+    g_aplist = g_aplist->next;
+
+    free(del->ssid);
+    free(del->mac_addr);
+    free(del->channel);
+    free(del->max_bitrate);
+    free(del->rssi);
+    free(del->enc_type);
+    free(del->sec_type);
+    free(del);
+  }
+  g_aplist = NULL;
 
   g_callback = NULL;
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
@@ -161,6 +187,12 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
 
   st_print_log("[St_app] ssid : %s\n", ssid);
   return 0;
+}
+
+void
+st_set_scan_wifi_list(void)
+{
+  st_scan_wifi(&g_aplist);
 }
 
 static oc_event_callback_retval_t
@@ -398,6 +430,67 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
     oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
   }
   st_print_log("[Easy_Setup] cloud_conf_prov_cb out\n");
+}
+
+static void
+get_ap_list(sec_accesspoint **ap_list) {
+  if (!g_aplist) {
+    st_print_log("[Easy_Setup] WiFi scan list is empty!\n");
+    return;
+  }
+
+  st_print_log("[Easy_Setup] WiFi scan list -> \n");
+
+  sec_accesspoint *list_tail = NULL;
+  *ap_list = NULL;
+  st_wifi_ap_t *cur = g_aplist;
+  int cnt = 0;
+  // TODO: Restricting to 15 as failed to send response with more wifi aps.
+  // Is there a priority to select wifi aps to include in response ?
+  while(cur && cnt<15) {
+    sec_accesspoint *ap = (sec_accesspoint *) calloc(1, sizeof(sec_accesspoint));
+    if (cur->ssid)
+      oc_new_string(&(ap->ssid), cur->ssid, strlen(cur->ssid));
+    if (cur->channel)
+      oc_new_string(&(ap->channel), cur->channel, strlen(cur->channel));
+    if (cur->enc_type)
+      oc_new_string(&(ap->enc_type), cur->enc_type, strlen(cur->enc_type));
+    if (cur->mac_addr)
+      oc_new_string(&(ap->mac_address), cur->mac_addr, strlen(cur->mac_addr));
+    if (cur->max_bitrate)
+      oc_new_string(&(ap->max_rate), cur->max_bitrate, strlen(cur->max_bitrate));
+    if (cur->rssi)
+      oc_new_string(&(ap->rssi), cur->rssi, strlen(cur->rssi));
+    if (cur->sec_type)
+      oc_new_string(&(ap->security_type), cur->sec_type, strlen(cur->sec_type));
+
+    st_print_log("[Easy_Setup] ssid=%s mac=%s\n", cur->ssid, cur->mac_addr);
+    if (!*ap_list) {
+      *ap_list = ap;
+    } else {
+      list_tail->next = ap;
+    }
+    list_tail = ap;
+    cur = cur->next;
+    cnt++;
+  }
+}
+
+static void
+free_ap_list(sec_accesspoint *ap_list) {
+  while (ap_list) {
+    sec_accesspoint *del = ap_list;
+    ap_list = ap_list->next;
+
+    oc_free_string(&(del->ssid));
+    oc_free_string(&(del->channel));
+    oc_free_string(&(del->enc_type));
+    oc_free_string(&(del->mac_address));
+    oc_free_string(&(del->max_rate));
+    oc_free_string(&(del->rssi));
+    oc_free_string(&(del->security_type));
+    free(del);
+  }
 }
 
 static bool
