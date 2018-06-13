@@ -352,6 +352,12 @@ st_connect_wifi(const char *ssid, const char *pwd)
   return;
 }
 
+void
+st_scan_wifi(st_wifi_ap_t **ap_list)
+{
+  oc_abort(__func__);
+}
+
 static void *
 soft_ap_process_routine(void *data)
 {

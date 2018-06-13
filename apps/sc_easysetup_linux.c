@@ -363,54 +363,51 @@ void StopEasySetup() {
 }
 
 static void
-scan_access_points(sec_accesspoint_list **ap_list) {
+scan_access_points(sec_accesspoint **ap_list) {
   if (!ap_list) {
     return;
   }
 
   // Fill scanned access points list
-  sec_accesspoint_list *scan_ap_list;
-  scan_ap_list = malloc(sizeof(sec_accesspoint_list));
-  if (!scan_ap_list) {
-    return;
-  }
+  sec_accesspoint *list_tail = NULL;
+  int cnt=0;
+  *ap_list = NULL;
+  while(cnt++ < 3) {
+    sec_accesspoint *ap = (sec_accesspoint *) calloc(1, sizeof(sec_accesspoint));
 
-  scan_ap_list->access_points = calloc(5, sizeof(sec_accesspoint));
-  if (!scan_ap_list->access_points) {
-    free(scan_ap_list);
-    return;
-  }
-
-  scan_ap_list->size = 3;
-  for (int i=0; i<scan_ap_list->size; i++) {
     char name[15];
-    sprintf(name, "iot_home_%d", i+1);
-    oc_new_string(&(scan_ap_list->access_points[i].ssid), name, strlen(name));
-    oc_new_string(&(scan_ap_list->access_points[i].channel), "15", strlen("15"));
-    oc_new_string(&(scan_ap_list->access_points[i].enc_type), "AES", strlen("AES"));
-    oc_new_string(&(scan_ap_list->access_points[i].mac_address), "00:11:22:33:44:55", strlen("00:11:22:33:44:55"));
-    oc_new_string(&(scan_ap_list->access_points[i].max_rate), "0", strlen("0"));
-    oc_new_string(&(scan_ap_list->access_points[i].rssi), "33", strlen("33"));
-    oc_new_string(&(scan_ap_list->access_points[i].security_type), "WPA2-PSK", strlen("WPA2-PSK"));
-  }
+    sprintf(name, "iot_home_%d", cnt);
+    oc_new_string(&(ap->ssid), name, strlen(name));
+    oc_new_string(&(ap->channel), "15", strlen("15"));
+    oc_new_string(&(ap->enc_type), "AES", strlen("AES"));
+    oc_new_string(&(ap->mac_address), "00:11:22:33:44:55", strlen("00:11:22:33:44:55"));
+    oc_new_string(&(ap->max_rate), "0", strlen("0"));
+    oc_new_string(&(ap->rssi), "33", strlen("33"));
+    oc_new_string(&(ap->security_type), "WPA2-PSK", strlen("WPA2-PSK"));
 
-  *ap_list = scan_ap_list;
+    if (!*ap_list) {
+      *ap_list = ap;
+    } else {
+      list_tail->next = ap;
+    }
+    list_tail = ap;
+  }
 }
 
 static void
-free_ap_list(sec_accesspoint_list *ap_list) {
-  if (ap_list) {
-    for (int i=0; i<ap_list->size; i++) {
-      oc_free_string(&(ap_list->access_points[i].ssid));
-      oc_free_string(&(ap_list->access_points[i].channel));
-      oc_free_string(&(ap_list->access_points[i].enc_type));
-      oc_free_string(&(ap_list->access_points[i].mac_address));
-      oc_free_string(&(ap_list->access_points[i].max_rate));
-      oc_free_string(&(ap_list->access_points[i].rssi));
-      oc_free_string(&(ap_list->access_points[i].security_type));
-    }
-    free(ap_list->access_points);
-    free(ap_list);
+free_ap_list(sec_accesspoint *ap_list) {
+  while (ap_list) {
+    sec_accesspoint *del = ap_list;
+    ap_list = ap_list->next;
+
+    oc_free_string(&(del->ssid));
+    oc_free_string(&(del->channel));
+    oc_free_string(&(del->enc_type));
+    oc_free_string(&(del->mac_address));
+    oc_free_string(&(del->max_rate));
+    oc_free_string(&(del->rssi));
+    oc_free_string(&(del->security_type));
+    free(del);
   }
 }
 

@@ -357,7 +357,7 @@ st_things: libiotivity-constrained-client-server.a libiotivity-constrained-easys
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/*.c ../../apps/st_app/linux/*.c  \
 			libiotivity-constrained-easysetup.a libiotivity-constrained-cloudaccess.a libiotivity-constrained-rd-client.a  \
-		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS}	
+		  libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ES} ${LIBS} -liw
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
