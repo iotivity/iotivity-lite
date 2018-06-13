@@ -40,5 +40,6 @@ int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
 int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
                 const char *sid);
+void st_start_wifi_scan(void);
 
 #endif /* ST_EASY_SETUP_H */
