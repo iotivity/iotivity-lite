@@ -30,6 +30,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <iwlib.h>
 
 #define SYSTEM_RET_CHECK(ret)                                                  \
   do {                                                                         \
@@ -405,6 +406,89 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
 exit:
   st_print_log("[St_Port] st_connect_wifi error occur\n");
+}
+
+void
+st_scan_wifi(st_wifi_ap_t **ap_list)
+{
+  if (!ap_list) {
+    return;
+  }
+
+  wireless_scan_head head;
+  iwrange range;
+  int sock;
+  char *wiface = "wlp2s0";  // NOTE: Replace wlp2s0 with proper interface name.
+
+  st_print_log("[St_Port] Scanning for neighbour wifi accesspoints\n");
+
+  /* Open socket to kernel */
+  sock = iw_sockets_open();
+
+  /* Get some metadata to use for scanning */
+  if (iw_get_range_info(sock, wiface, &range) < 0) {
+    st_print_log("[St_Port] failed to get range info\n");
+    return;
+  }
+
+  /* Perform the scan */
+  if (iw_scan(sock, wiface, range.we_version_compiled, &head) < 0) {
+    st_print_log("[St_Port] scan failed!\n");
+    return;
+  }
+
+  wireless_scan *result = head.result;
+  st_wifi_ap_t *tail = NULL;
+  while (!result) {
+    st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
+
+    // ssid
+    int len = strlen(result->b.essid);
+    ap->ssid = (char*) calloc(len+1, sizeof(char));
+    strncpy(ap->ssid, result->b.essid, len);
+
+    // mac address
+    ap->mac_addr = (char*) calloc(18, sizeof(char));
+    iw_sawap_ntop(&result->ap_addr, ap->mac_addr);
+
+    // channel
+    ap->channel = (char*)calloc(4, sizeof(char));
+    snprintf(ap->channel, 4, "%d", iw_freq_to_channel(result->b.freq, &range));
+
+    // max bitrate
+    ap->max_bitrate = (char*)calloc(5, sizeof(char));
+    snprintf(ap->max_bitrate, 5, "%d", result->maxbitrate.value/(int)1e6);
+
+    // rssi
+    if (result->has_stats) {
+      char quality[40]={0};
+      iw_print_stats(quality, sizeof(quality), &result->stats.qual, &range, 1);
+      char *sig_start = strstr(quality, "Signal level=");
+      if (sig_start) {
+        sig_start += strlen("Signal level=");
+        char *sig_end = strstr(sig_start, " ");
+        ap->rssi = (char*) calloc((sig_end - sig_start)+1, sizeof(char));
+        strncpy(ap->rssi, sig_start, sig_end-sig_start);
+      }
+    }
+
+    // encryption type
+    // security type
+    if (result->b.has_key) {
+      // TODO: How to get encryption and security type?
+      const char *sec_type = "WPA2";
+      ap->sec_type = (char*) malloc(strlen(sec_type)+1);
+      strncpy(ap->sec_type, sec_type, strlen(sec_type));
+    }
+
+    if (!*ap_list) {
+      *ap_list = ap;
+    } else {
+      tail->next = ap;
+    }
+    tail = ap;
+    result = result->next;
+  }
 }
 
 static void *
