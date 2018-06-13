@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_46251fc1",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done! Not required. Will remove it.",
+      "parentUuid": "da33351e_06b79787",
+      "range": {
+        "startLine": 30,
+        "startChar": 7,
+        "endLine": 30,
+        "endChar": 15
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_265bbb55",
         "filename": "apps/st_app/json_builder/st_json_parser.c",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "files paths are different for iotivity lite. Not sure we require to parse and store these information.",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 70
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c6180f87",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done! Will comment this portion and parsing logic as well.",
+      "parentUuid": "da33351e_265bbb55",
       "range": {
         "startLine": 32,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_3ccaac4f",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Keeping it for now. Can remove if we decide the return enums for the JSON parsing logic.",
+      "parentUuid": "da33351e_66a78350",
+      "range": {
+        "startLine": 155,
+        "startChar": 8,
+        "endLine": 155,
+        "endChar": 23
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c663ef18",
         "filename": "apps/st_app/json_builder/st_json_parser.c",
         "patchSetId": 11
@@ -82,6 +154,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "works in release mode also. Use it only whenever is needed to avoid increase of text section due to string literals.",
+      "range": {
+        "startLine": 160,
+        "startChar": 4,
+        "endLine": 160,
+        "endChar": 16
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1cc7e846",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Okay!",
+      "parentUuid": "da33351e_c663ef18",
       "range": {
         "startLine": 160,
         "startChar": 4,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8606071f",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a6686bf6",
+      "range": {
+        "startLine": 178,
+        "startChar": 14,
+        "endLine": 178,
+        "endChar": 25
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e67273e4",
         "filename": "apps/st_app/json_builder/st_json_parser.c",
         "patchSetId": 11
@@ -128,6 +248,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "make it a util function in this file and use it.",
+      "range": {
+        "startLine": 191,
+        "startChar": 20,
+        "endLine": 192,
+        "endChar": 104
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2609fb31",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e67273e4",
       "range": {
         "startLine": 191,
         "startChar": 20,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_06131767",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_4677dfd4",
+      "range": {
+        "startLine": 229,
+        "startChar": 85,
+        "endLine": 229,
+        "endChar": 123
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_26745bce",
         "filename": "apps/st_app/json_builder/st_json_parser.c",
         "patchSetId": 11
@@ -174,6 +342,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "avoid calling strlen() for same string again.",
+      "range": {
+        "startLine": 234,
+        "startChar": 83,
+        "endLine": 234,
+        "endChar": 120
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e6171350",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_26745bce",
       "range": {
         "startLine": 234,
         "startChar": 83,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_7cc43440",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_667e63b0",
+      "range": {
+        "startLine": 330,
+        "startChar": 77,
+        "endLine": 330,
+        "endChar": 90
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a64fcb91",
         "filename": "apps/st_app/json_builder/st_json_parser.c",
         "patchSetId": 11
@@ -220,6 +436,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "properties are needed if we are validating POST requests for read only properties. I don\u0027t think we are doing validation now, right ?\nAnyway we have to think about and decide.",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 5
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dcb580ce",
+        "filename": "apps/st_app/json_builder/st_json_parser.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Keeping it right now. Can be removed if we\u0027re not validating properties.",
+      "parentUuid": "da33351e_a64fcb91",
       "range": {
         "startLine": 363,
         "startChar": 0,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e640b358",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Done! I will move this code under:\n\n    case MAIN_STATUS_INIT:\n      if (st_manager_init_step() \u003c 0) {\n        return -1;\n      }\n      store_info \u003d NULL;\n      set_main_status_sync(MAIN_STATUS_EASY_SETUP);\n      break;",
+      "parentUuid": "da33351e_86fc4740",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 3
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_06a03742",
         "filename": "apps/st_app/st_manager.c",
         "patchSetId": 11
@@ -266,6 +530,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "do we need extern here? how about retrieving it through some API. Personally I don\u0027t like externs as they mess up when somebody defines global variable with same name and type. This is true in case of shared libraries but her whole app and stack build as one. Hmm I don\u0027t see any problem with extern here. But think about API it gives freedom to change names later.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 6
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_49541054",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "I guess this won\u0027t be required as this will be used from Broadlink\u0027s data.",
+      "parentUuid": "da33351e_06a03742",
       "range": {
         "startLine": 84,
         "startChar": 0,
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_bcdd1c17",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "This callback was already here. I just replaced values from  the JSON file instead of predefined.",
+      "parentUuid": "da33351e_8693a7f9",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 16
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a6c18be6",
         "filename": "apps/st_app/st_manager.c",
         "patchSetId": 11
@@ -312,6 +624,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "can we move this to st_resource_manager.c ?",
+      "range": {
+        "startLine": 111,
+        "startChar": 9,
+        "endLine": 111,
+        "endChar": 22
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9ce2d8d3",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "This function was already here. Not sure if this was expected design.",
+      "parentUuid": "da33351e_a6c18be6",
       "range": {
         "startLine": 111,
         "startChar": 9,
@@ -347,6 +683,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a965dc46",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "strncmp(if_types[i],if_mask_map[j].if_type,if_mask_map[j].if_type_len))\n\nIt wont match oic.if.baseline and oic.if.b.\n\nPlease note that sizeof() is used instead of strlen. It has two benefits:\n1. sizeof() is computed at compile time and stored.\n2. sizeof(\"a\") \u003d 2 because it counts \u0027\\0\u0027 char as well.\n\nstatic struct if_types_to_mask_s if_mask_map[] \u003d {\n  {\"oic.if.baseline\", sizeof(\"oic.if.baseline\"), OC_IF_BASELINE},\n  {\"oic.if.ll\", sizeof(\"oic.if.ll\"), OC_IF_LL},\n  {\"oic.if.b\", sizeof(\"oic.if.b\"), OC_IF_B},\n  {\"oic.if.r\", sizeof(\"oic.if.r\"), OC_IF_R},\n  {\"oic.if.rw\", sizeof(\"oic.if.rw\"), OC_IF_RW},\n  {\"oic.if.a\", sizeof(\"oic.if.a\"), OC_IF_A},\n  {\"oic.if.s\", sizeof(\"oic.if.s\"), OC_IF_S},\n};\n\nSo it will be fine.",
+      "parentUuid": "da33351e_66f9434d",
+      "range": {
+        "startLine": 135,
+        "startChar": 15,
+        "endLine": 135,
+        "endChar": 86
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a69a2b12",
         "filename": "apps/st_app/st_resource_manager.c",
         "patchSetId": 11
@@ -370,6 +730,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_095b2888",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "Okay!",
+      "parentUuid": "da33351e_a69a2b12",
+      "range": {
+        "startLine": 147,
+        "startChar": 19,
+        "endLine": 147,
+        "endChar": 45
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c695afe5",
         "filename": "apps/st_app/st_resource_manager.c",
         "patchSetId": 11
@@ -381,6 +765,30 @@
       "writtenOn": "2018-06-08T08:52:30Z",
       "side": 1,
       "message": "oc_assert is defined to work in release mode too. think about it if you intended to use it in debug mode.",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 148,
+        "endChar": 11
+      },
+      "revId": "76f26af71d6a4e364662ead6c67b8c585972cf65",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e95fe470",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-13T12:36:21Z",
+      "side": 1,
+      "message": "What are the ground rules or policy for using functions like oc_assert() and st_print_log()? If we have clearly defined the policy, I can change the code according to that.\nIf not, then we should have a policy for iotivity lite implementation.",
+      "parentUuid": "da33351e_c695afe5",
       "range": {
         "startLine": 148,
         "startChar": 2,
