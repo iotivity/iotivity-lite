@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_dc03c071",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-13T21:15:42Z",
+      "side": 1,
+      "message": "Add  #include \"oc_core_res.h\" here.",
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3cf8ec7b",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-13T21:15:42Z",
+      "side": 1,
+      "message": "Add oc_core_init() on line 49.",
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1cf52883",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-13T21:15:42Z",
+      "side": 1,
+      "message": "Add this sequence of lines to the TeatDown() function.\n\n           oc_ri_shutdown();\n\n           oc_tls_shutdown();\n\n           oc_connectivity_shutdown(0);\n\n           oc_core_shutdown();",
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7cf2749b",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-13T21:15:42Z",
+      "side": 1,
+      "message": "-1 if you\u0027re calling ...update_psk_identity(1).",
+      "range": {
+        "startLine": 82,
+        "startChar": 14,
+        "endLine": 82,
+        "endChar": 15
+      },
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
