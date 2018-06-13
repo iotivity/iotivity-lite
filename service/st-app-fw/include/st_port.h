@@ -30,6 +30,18 @@ typedef void (*st_sig_handler_t)(int);
 
 typedef enum { ST_LOOP_QUIT, ST_LOOP_RESET } st_loop_status_t;
 
+typedef struct st_wifi_ap_s
+{
+  char *ssid;
+  char *mac_addr;
+  char *channel;
+  char *max_bitrate;
+  char *rssi;
+  char *enc_type;
+  char *sec_type;
+  struct st_wifi_ap_s *next;
+} st_wifi_ap_t;
+
 int st_port_specific_init(void);
 void st_port_specific_destroy(void);
 
@@ -57,5 +69,7 @@ void st_sleep(int seconds);
 void st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel);
 void st_turn_off_soft_AP(void);
 void st_connect_wifi(const char *ssid, const char *pwd);
+void st_scan_wifi(st_wifi_ap_t **ap_list);
+void st_free_wifi_scan_list(st_wifi_ap_t *scanlist);
 
 #endif /* ST_PORT_H */
