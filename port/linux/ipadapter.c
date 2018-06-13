@@ -947,6 +947,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 
     msg.msg_control = msg_control;
     msg.msg_controllen = CMSG_SPACE(sizeof(struct in6_pktinfo));
+    memset(msg.msg_control, 0, msg.msg_controllen);
 
     cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_level = IPPROTO_IPV6;
@@ -970,6 +971,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 
     msg.msg_control = msg_control;
     msg.msg_controllen = CMSG_SPACE(sizeof(struct in_pktinfo));
+    memset(msg.msg_control, 0, msg.msg_controllen);
 
     cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_level = SOL_IP;
