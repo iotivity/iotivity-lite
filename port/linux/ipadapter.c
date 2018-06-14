@@ -924,6 +924,8 @@ oc_send_discovery_request(oc_message_t *message)
       continue;
     if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
         interface->ifa_addr->sa_family == AF_INET6) {
+// Temporary fix for issues with IoTivity devices.
+#ifndef OC_IPV4
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
       if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
         int mif = addr->sin6_scope_id;
@@ -936,6 +938,7 @@ oc_send_discovery_request(oc_message_t *message)
         message->endpoint.addr.ipv6.scope = mif;
         oc_send_buffer(message);
       }
+#endif
 #ifdef OC_IPV4
     } else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
                interface->ifa_addr->sa_family == AF_INET) {
