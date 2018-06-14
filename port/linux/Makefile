@@ -31,6 +31,7 @@ HEADER_DIR = -I$(ROOT_DIR)/include \
              -I$(OUT_DIR)
 SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
+MESSAGING_HEADERS = -I$(ROOT_DIR)/messaging/coap
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
@@ -39,10 +40,15 @@ SECURITY_TEST_DIR = $(ROOT_DIR)/security/unittest
 SECURITY_TEST_OBJ_DIR = $(SECURITY_TEST_DIR)/obj
 SECURITY_TEST_SRC_FILES := $(wildcard $(SECURITY_TEST_DIR)/*.cpp)
 SECURITY_TEST_OBJ_FILES := $(patsubst $(SECURITY_TEST_DIR)/%.cpp,$(SECURITY_TEST_OBJ_DIR)/%.o,$(SECURITY_TEST_SRC_FILES))
+PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
 PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
 PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
 PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
-UNIT_TESTS = apitest platformtest securitytest
+MESSAGING_TEST_DIR = $(ROOT_DIR)/messaging/coap/unittest
+MESSAGING_TEST_OBJ_DIR = $(MESSAGING_TEST_DIR)/obj
+MESSAGING_TEST_SRC_FILES := $(wildcard $(MESSAGING_TEST_DIR)/*.cpp)
+MESSAGING_TEST_OBJ_FILES := $(patsubst $(MESSAGING_TEST_DIR)/%.cpp,$(MESSAGING_TEST_OBJ_DIR)/%.o,$(MESSAGING_TEST_SRC_FILES))
+UNIT_TESTS = apitest platformtest securitytest messagingtest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -156,6 +162,13 @@ $(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -c $< -o $@
 
 securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(MESSAGING_HEADERS) -c $< -o $@
+
+messagingtest: $(MESSAGING_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
