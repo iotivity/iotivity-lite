@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3c258cc2",
+        "filename": "api/oc_ri.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-14T08:14:40Z",
+      "side": 1,
+      "message": "checking range of key (like 0 ~ __NUM_OC_STATUS_CODES__ ) would be preferred.\n\nI think oc_status_code() is also  needed.",
+      "revId": "9e21ef0342435690a00cb5bfa79378a34cf1590d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
