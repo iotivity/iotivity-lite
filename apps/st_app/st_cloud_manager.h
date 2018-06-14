@@ -16,29 +16,28 @@
  *
  ****************************************************************************/
 
-#ifndef ST_CLOUD_ACCESS_H
-#define ST_CLOUD_ACCESS_H
+#ifndef ST_CLOUD_MANAGER_H
+#define ST_CLOUD_MANAGER_H
 
-#include "cloud_access.h"
 #include "st_store.h"
 
 typedef enum {
-  CLOUD_ACCESS_INITIALIZE = 0,
-  CLOUD_ACCESS_SIGNED_UP = 1 << 0,
-  CLOUD_ACCESS_SIGNED_IN = 1 << 1,
-  CLOUD_ACCESS_PUBLISHED = 1 << 2,
-  CLOUD_ACCESS_FINISH = 1 << 3,
-  CLOUD_ACCESS_FAIL = 1 << 4,
-  CLOUD_ACCESS_RE_CONNECTING = 1 << 5,
-  CLOUD_ACCESS_RESET = 1 << 6
-} st_cloud_access_status_t;
+  CLOUD_MANAGER_INITIALIZE = 0,
+  CLOUD_MANAGER_SIGNED_UP = 1 << 0,
+  CLOUD_MANAGER_SIGNED_IN = 1 << 1,
+  CLOUD_MANAGER_PUBLISHED = 1 << 2,
+  CLOUD_MANAGER_FINISH = 1 << 3,
+  CLOUD_MANAGER_FAIL = 1 << 4,
+  CLOUD_MANAGER_RE_CONNECTING = 1 << 5,
+  CLOUD_MANAGER_RESET = 1 << 6
+} st_cloud_manager_status_t;
 
-typedef void (*st_cloud_access_cb_t)(st_cloud_access_status_t status);
+typedef void (*st_cloud_manager_cb_t)(st_cloud_manager_status_t status);
 
-int st_cloud_access_start(st_store_t *cloud_info, int device_index,
-                          st_cloud_access_cb_t cb);
-void st_cloud_access_stop(int device_index);
+int st_cloud_manager_start(st_store_t *cloud_info, int device_index,
+                           st_cloud_manager_cb_t cb);
+void st_cloud_manager_stop(int device_index);
 
-int st_cloud_access_check_connection(oc_string_t *ci_server);
+int st_cloud_manager_check_connection(oc_string_t *ci_server);
 
-#endif /* ST_CLOUD_ACCESS_H */
+#endif /* ST_CLOUD_MANAGER_H */

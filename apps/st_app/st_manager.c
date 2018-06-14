@@ -26,7 +26,7 @@
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
 #endif
-#include "st_cloud_access.h"
+#include "st_cloud_manager.h"
 #include "st_easy_setup.h"
 #include "st_manager.h"
 #include "st_port.h"
@@ -126,15 +126,15 @@ easy_setup_handler(st_easy_setup_status_t status)
 }
 
 void
-cloud_access_handler(st_cloud_access_status_t status)
+cloud_manager_handler(st_cloud_manager_status_t status)
 {
-  if (status == CLOUD_ACCESS_FINISH) {
+  if (status == CLOUD_MANAGER_FINISH) {
     st_print_log("[ST_MGR] Cloud access succeed!!!\n");
-    set_st_manager_status(ST_STATUS_CLOUD_ACCESS_DONE);
-  } else if (status == CLOUD_ACCESS_RESET) {
+    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_DONE);
+  } else if (status == CLOUD_MANAGER_RESET) {
     st_print_log("[ST_MGR] Cloud access reset!!!\n");
     set_st_manager_status(ST_STATUS_RESET);
-  } else if (status == CLOUD_ACCESS_FAIL) {
+  } else if (status == CLOUD_MANAGER_FAIL) {
     st_print_log("[ST_MGR] Cloud access failed!!!\n");
     set_st_manager_status(ST_STATUS_QUIT);
   }
@@ -366,7 +366,7 @@ st_manager_start(void)
       set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       break;
     case ST_STATUS_EASY_SETUP_PROGRESSING:
-    case ST_STATUS_CLOUD_ACCESS_PROGRESSING:
+    case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
       st_sleep(1);
       st_print_log(".");
       fflush(stdout);
@@ -388,7 +388,7 @@ st_manager_start(void)
       set_main_status_sync(ST_STATUS_WIFI_CONNECTION_CHECKING);
       break;
     case ST_STATUS_WIFI_CONNECTION_CHECKING:
-      if (st_cloud_access_check_connection(&store_info->cloudinfo.ci_server) !=
+      if (st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server) !=
           0) {
         st_print_log("[ST_MGR] AP is not connected.\n");
         conn_cnt++;
@@ -401,18 +401,18 @@ st_manager_start(void)
         st_sleep(3);
       } else {
         conn_cnt = 0;
-        set_main_status_sync(ST_STATUS_CLOUD_ACCESS_START);
+        set_main_status_sync(ST_STATUS_CLOUD_MANAGER_START);
       }
       break;
-    case ST_STATUS_CLOUD_ACCESS_START:
-      if (st_cloud_access_start(store_info, device_index,
-                                cloud_access_handler) != 0) {
+    case ST_STATUS_CLOUD_MANAGER_START:
+      if (st_cloud_manager_start(store_info, device_index,
+                                 cloud_manager_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start access cloud!\n");
         return -1;
       }
-      set_main_status_sync(ST_STATUS_CLOUD_ACCESS_PROGRESSING);
+      set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       break;
-    case ST_STATUS_CLOUD_ACCESS_DONE:
+    case ST_STATUS_CLOUD_MANAGER_DONE:
       st_print_log("\n");
       set_main_status_sync(ST_STATUS_DONE);
       break;
@@ -463,7 +463,7 @@ st_manager_stop(void)
   st_easy_setup_stop();
   st_print_log("[ST_MGR] easy setup stop done\n");
 
-  st_cloud_access_stop(device_index);
+  st_cloud_manager_stop(device_index);
   st_print_log("[ST_MGR] cloud access stop done\n");
 
   st_store_info_initialize();
