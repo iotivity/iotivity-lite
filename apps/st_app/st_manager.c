@@ -483,29 +483,43 @@ st_manager_deinitialize(void)
   st_process_destroy();
 }
 
-void
+bool
 st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
 {
   if (!cb) {
-    return;
+    st_print_log("Failed to register otm confirm handler\n");
+    return false;
   }
 
 #ifdef OC_SECURITY
   oc_sec_set_owner_cb((oc_sec_change_owner_cb_t)cb);
 #else
   st_print_log("Un-secured build can't handle otm confirm\n");
+  return false;
 #endif
+  return true;
 }
 
 void
+st_unregister_otm_confirm_handler(void)
+{
+#ifdef OC_SECURITY
+  oc_sec_set_owner_cb(NULL);
+#else
+  st_print_log("Un-secured build can't handle otm confirm\n");
+#endif
+}
+
+bool
 st_register_status_handler(st_status_cb_t cb)
 {
   if (!cb || g_st_status_cb) {
     st_print_log("Failed to register status handler\n");
-    return;
+    return false;
   }
 
   g_st_status_cb = cb;
+  return true;
 }
 
 void

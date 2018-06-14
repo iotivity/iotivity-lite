@@ -56,15 +56,22 @@ void st_manager_deinitialize(void);
 
 /**
   @brief Function for register otm confirm handler
-  @param cb callback function to require otm confirm.
+  @param cb Callback function to require otm confirm.
+  @return Returns true if success.
 */
-void st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
+bool st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
+
+/**
+  @brief Function for unregister otm confirm handler
+*/
+void st_unregister_otm_confirm_handler(void);
 
 /**
   @brief Function for register st status handler
   @param cb Callback function to return the st manager status.
+  @return Returns true if success.
 */
-void st_register_status_handler(st_status_cb_t cb);
+bool st_register_status_handler(st_status_cb_t cb);
 
 /**
   @brief Function for unregister st status handler
