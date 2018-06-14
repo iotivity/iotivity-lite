@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define ST_DEFAULT_STACK_SIZE 8192
+
 #define SYSTEM_RET_CHECK(ret)                                                  \
   do {                                                                         \
     if (system_ret_chcek(ret) != 0) {                                          \
@@ -67,7 +69,7 @@ st_port_specific_init(void)
 {
   /* set port specific logics. in here */
   g_user_input_thread =
-    st_thread_create(st_port_user_input_loop, "INPUT", NULL);
+    st_thread_create(st_port_user_input_loop, "INPUT", 0, NULL);
   return 0;
 }
 
@@ -243,15 +245,19 @@ st_cond_signal(st_cond_t cv)
 }
 
 st_thread_t
-st_thread_create(st_thread_process_t handler, const char *name, void *user_data)
+st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
+                 void *user_data)
 {
-  if (!handler)
+  if (!handler || stack_size < 0)
     return NULL;
+
+  stack_size = stack_size == 0 ? ST_DEFAULT_STACK_SIZE : stack_size;
 
   st_thread_t thread = (st_thread_t)oc_memb_alloc(&st_thread_s);
   if (!thread)
     oc_abort("alloc failed");
 
+  // TODO : stack size set api call.
   pthread_create((pthread_t *)thread, NULL, handler, user_data);
   pthread_setname_np(*(pthread_t *)thread, name);
 
@@ -317,7 +323,7 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
   g_soft_ap.cv = st_cond_init();
   g_soft_ap.is_soft_ap_on = 1;
   g_soft_ap.thread =
-    st_thread_create(soft_ap_process_routine, "SOFT_AP", &g_soft_ap);
+    st_thread_create(soft_ap_process_routine, "SOFT_AP", 0, &g_soft_ap);
 
   st_mutex_lock(g_soft_ap.mutex);
   st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);

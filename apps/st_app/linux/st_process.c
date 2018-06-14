@@ -63,7 +63,7 @@ st_process_start(void)
 {
   g_process_data.quit = 0;
   g_process_data.thread =
-    st_thread_create(st_process_func, "MAIN", &g_process_data);
+    st_thread_create(st_process_func, "MAIN", 0, &g_process_data);
   if (!g_process_data.thread) {
     st_print_log("[St_Proc] Failed to create main thread\n");
     return -1;
