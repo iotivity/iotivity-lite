@@ -173,7 +173,7 @@ st_decode_ap_info(oc_rep_t *rep)
 }
 
 static int
-st_decode_cloud_access_info(oc_rep_t *rep)
+st_decode_cloud_manager_info(oc_rep_t *rep)
 {
   oc_rep_t *t = rep;
   int len = 0;
@@ -246,7 +246,7 @@ st_decode_store_info(oc_rep_t *rep)
         if (st_decode_ap_info(t->value.object) != 0)
           return -1;
       } else if (len == 9 && memcmp(oc_string(t->name), "cloudinfo", 9) == 0) {
-        if (st_decode_cloud_access_info(t->value.object) != 0)
+        if (st_decode_cloud_manager_info(t->value.object) != 0)
           return -1;
       } else {
         OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
