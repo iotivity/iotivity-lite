@@ -159,7 +159,7 @@ bool oc_find_ping_resource(oc_endpoint_t *endpoint,
                            oc_response_handler_t handler, void *user_data);
 
 /**
-  @brief Function for discovers on a ping resource.
+  @brief Function for send ping message to remote endpoint.
   @param endpoint The endpoint of the Cloud.
   @param interval The interval value for keep-alive.
   @param handler To refer to the request sent out on behalf of calling this API.
@@ -170,7 +170,7 @@ bool oc_send_ping_request(oc_endpoint_t *endpoint, int interval,
                           oc_response_handler_t handler, void *user_data);
 
 /**
-  @brief Function for discovers on a ping resource.
+  @brief Function for update value of ping interval.
   @param endpoint The endpoint of the Cloud.
   @param interval Integer array for update the interval.
   @param length The length of the interval array.
