@@ -28,6 +28,9 @@
 
 OC_PROCESS_NAME(oc_tls_handler);
 
+typedef void (*oc_sec_get_rpk)(uint8_t *rpk, int *rpk_len);
+void oc_sec_set_rpk_cb(oc_sec_get_rpk rpk_cb);
+
 int oc_tls_init_context(void);
 bool oc_sec_load_certs(int device);
 bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
@@ -36,6 +39,7 @@ bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
 void
 oc_sec_unload_own_certs();
 #endif
+bool oc_sec_get_rdp_psk(int device, unsigned char *psk, int *psk_len);
 
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);
