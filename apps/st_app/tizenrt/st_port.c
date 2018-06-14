@@ -183,9 +183,10 @@ st_cond_signal(st_cond_t cv)
 }
 
 st_thread_t
-st_thread_create(st_thread_process_t handler, const char *name, void *user_data)
+st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
+                 void *user_data)
 {
-  if (!handler)
+  if (!handler || stack_size < 0)
     return NULL;
 
   st_thread_t thread = (st_thread_t)oc_memb_alloc(&st_thread_s);
@@ -257,7 +258,7 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
   g_soft_ap.cv = st_cond_init();
   g_soft_ap.is_soft_ap_on = 1;
   g_soft_ap.thread =
-    st_thread_create(soft_ap_process_routine, "SOFT_AP", &g_soft_ap);
+    st_thread_create(soft_ap_process_routine, "SOFT_AP", 0, &g_soft_ap);
 
   st_mutex_lock(g_soft_ap.mutex);
   st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);

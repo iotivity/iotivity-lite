@@ -140,7 +140,8 @@ st_cond_signal(st_cond_t cv)
 }
 
 st_thread_t
-st_thread_create(st_thread_process_t handler, const char *name, void *user_data)
+st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
+                 void *user_data)
 {
   oc_abort(__func__);
   return NULL;
