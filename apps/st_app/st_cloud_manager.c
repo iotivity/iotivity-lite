@@ -51,12 +51,8 @@ typedef struct st_cloud_context
 } st_cloud_context_t;
 
 typedef enum {
-  CI_TOKEN_VALIDATION_FAILED = 4000002,
   CI_TOKEN_EXPIRED = 4000004,
-  CI_SAMSUNG_ACCOUNT_AUTHORIZATION_FAILED = 4010001,
-  CI_SAMSUNG_ACCOUNT_UNAUTHORIZED_TOKEN = 4010201,
   CI_FORBIDDEN = 4030003,
-  CI_USER_NOT_FOUND = 4040100,
   CI_DEVICE_NOT_FOUND = 4040200,
   CI_INTERNAL_SERVER_ERROR = 5000000
 } ci_error_code_t;
@@ -236,7 +232,6 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
       st_print_log("[Cloud_Manager] ci message : %s (%d)\n", message, code);
 
     switch (code) {
-    case CI_TOKEN_VALIDATION_FAILED:
     case CI_TOKEN_EXPIRED:
       oc_remove_delayed_callback(context, callback);
       context->retry_count = 0;
@@ -244,10 +239,7 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
       oc_set_delayed_callback(context, refresh_token,
                               session_timeout[context->retry_count]);
       return;
-    case CI_SAMSUNG_ACCOUNT_AUTHORIZATION_FAILED:
-    case CI_SAMSUNG_ACCOUNT_UNAUTHORIZED_TOKEN:
     case CI_FORBIDDEN:
-    case CI_USER_NOT_FOUND:
       oc_remove_delayed_callback(context, callback);
       context->retry_count = 0;
       context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
