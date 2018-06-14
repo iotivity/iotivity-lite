@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_bc607c36",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-06-14T04:42:47Z",
+      "side": 1,
+      "message": "I understand your concern, and yes, I already tried to add \"oc_core_res.h\" and then call oc_core_init()\nbut as I already said, I am unable to build it using g++, as there an API in \"oc_core_res.h\" with below signature:\nvoid oc_core_populate_resource(  int core_resource, int device_index, const char *uri,   oc_interface_mask_t interfaces, oc_interface_mask_t default_interface,   oc_resource_properties_t properties, oc_request_callback_t get, oc_request_callback_t put, oc_request_callback_t post,   oc_request_callback_t delete, int num_resource_types, ...);\n\nbecause delete is used as a variable name there, g++ issues a build failure.",
+      "parentUuid": "da33351e_dc03c071",
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3cf8ec7b",
         "filename": "security/unittest/tlstest.cpp",
         "patchSetId": 2
