@@ -670,19 +670,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   /* Obtain query string from CoAP packet. */
   const char *uri_query = 0;
-  int uri_query_len = 0;
-
-#ifdef OC_BLOCK_WISE
-  if (*request_state) {
-    uri_query_len = oc_string_len((*request_state)->uri_query);
-    if (uri_query_len > 0) {
-      uri_query = oc_string((*request_state)->uri_query);
-    }
-  } else
-#endif /* OC_BLOCK_WISE */
-  {
-    uri_query_len = coap_get_header_uri_query(request, &uri_query);
-  }
+  int uri_query_len = coap_get_header_uri_query(request, &uri_query);
 
   if (uri_query_len) {
     request_obj.query = uri_query;
