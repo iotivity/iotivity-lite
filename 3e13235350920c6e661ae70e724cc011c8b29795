@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_3ff9fec8",
+        "filename": "security/unittest/tlstest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-14T22:05:31Z",
+      "side": 1,
+      "message": "I hope you read both my comments in their entirety. I think it contains everything you need to know to get going on this.\n\nThe issue you point to has already been fixed last week as I mentioned. Please update your working copy (rebase this change) and then try.",
+      "parentUuid": "da33351e_bc607c36",
+      "revId": "3e13235350920c6e661ae70e724cc011c8b29795",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3cf8ec7b",
         "filename": "security/unittest/tlstest.cpp",
         "patchSetId": 2
