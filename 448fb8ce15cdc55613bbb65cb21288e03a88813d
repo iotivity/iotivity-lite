@@ -42,6 +42,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_bf886e23",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-15T10:40:41Z",
+      "side": 1,
+      "message": "I am curious: can\u0027t we just store json\u0027s parsed values in these same local variables (device_rt, spec_version) etc during initialization and remove the conditional code at rest of the places ?\n\nIs there a trade off in terms of RAM, ROM usage ? Please analyze.\n\n@Harish, @Kush, if you have any comments based on memory optimization experience please share..",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 21
+      },
+      "revId": "448fb8ce15cdc55613bbb65cb21288e03a88813d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7f9f0660",
         "filename": "apps/st_app/st_resource_manager.c",
         "patchSetId": 16
