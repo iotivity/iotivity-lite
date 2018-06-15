@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3f957e40",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-15T10:36:22Z",
+      "side": 1,
+      "message": "aren\u0027t these retrieved from json ?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 47
+      },
+      "revId": "448fb8ce15cdc55613bbb65cb21288e03a88813d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1f923a57",
+        "filename": "apps/st_app/st_manager.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-15T10:36:22Z",
+      "side": 1,
+      "message": "macro name is not very clear.. \n\ncan it be \"JSON_RESOURCE_BUILDER\" / \"JSON_DEVICE_BUILDER\" instead ?",
+      "revId": "448fb8ce15cdc55613bbb65cb21288e03a88813d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7f9f0660",
+        "filename": "apps/st_app/st_resource_manager.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-15T10:36:22Z",
+      "side": 1,
+      "message": "lines should be wrapped to 100 chars as much as possible",
+      "revId": "448fb8ce15cdc55613bbb65cb21288e03a88813d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
