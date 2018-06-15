@@ -19,23 +19,19 @@
 #include "st_resource_manager.h"
 #include "oc_api.h"
 #include "samsung/sc_easysetup.h"
+#include "st_data_manager.h"
 #include "st_port.h"
 #include "st_process.h"
 
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;
 
-static const char *switch_rsc_uri = "/capability/switch/main/0";
-static const int switch_rt_num = 1;
-static const char *switch_rsc_rt[1] = { "x.com.st.powerswitch" };
-static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
-static const int switchleve_rt_num = 1;
-static const char *switchlevel_rsc_rt[1] = { "oic.r.light.dimming" };
-static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
-static const int color_temp_rt_num = 1;
-static const char *color_temp_rsc_rt[1] = { "x.com.st.color.temperature" };
-
 static int device_index = 0;
+
+typedef enum {
+  ST_RSC_READABLE = (1 << 0),
+  ST_RSC_WRITABLE = (1 << 1)
+} st_permission_t;
 
 static void
 st_resource_get_handler(oc_request_t *request, oc_interface_mask_t interface,
@@ -93,40 +89,73 @@ st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-st_register_resource(const char *uri, const char **rt, int rt_num,
-                     uint8_t interface, uint8_t default_interface, int device)
+st_register_resource(st_resource_info_t *resource_info)
 {
-  st_print_log("uri : %s\n", uri);
-  oc_resource_t *resource = oc_new_resource(NULL, uri, rt_num, device);
+  st_print_log("[St_rsc_mgr] st_egister_resource IN\n");
+  st_print_log("[St_rsc_mgr] uri : %s\n", oc_string(resource_info->uri));
+  oc_resource_t *resource =
+    oc_new_resource(NULL, oc_string(resource_info->uri),
+                    oc_string_array_get_allocated_size(resource_info->types),
+                    resource_info->device_idx);
   int i;
-  for (i = 0; i < rt_num; i++) {
-    oc_resource_bind_resource_type(resource, rt[i]);
-    st_print_log("rt : %s\n", rt[i]);
+  int rw = 0;
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource_info->types);
+       i++) {
+    char *value = oc_string_array_get_item(resource_info->types, i);
+    oc_resource_bind_resource_type(resource, value);
+    st_print_log("[St_rsc_mgr] rt : %s\n", value);
+    if (rw < (ST_RSC_READABLE | ST_RSC_WRITABLE)) {
+      st_resource_type_t *rt_info = st_data_mgr_get_rsc_type_info(value);
+      st_property_t *prop = oc_list_head(rt_info->properties);
+      if (prop) {
+        if (rw < prop->rw)
+          rw = prop->rw;
+        prop = prop->next;
+      }
+    }
   }
-  st_print_log("interface : %d\n", interface);
-  oc_resource_bind_resource_interface(resource, interface);
-  st_print_log("default_interface : %d\n", default_interface);
-  oc_resource_set_default_interface(resource, default_interface);
-  oc_resource_set_discoverable(resource, true);
-  oc_resource_set_observable(resource, true);
-  oc_resource_set_request_handler(resource, OC_GET, st_resource_get_handler,
-                                  NULL);
-  oc_resource_set_request_handler(resource, OC_POST, st_resource_post_handler,
-                                  NULL);
+
+  st_print_log("[St_rsc_mgr] interface : %d\n", resource_info->interfaces);
+  oc_resource_bind_resource_interface(resource, resource_info->interfaces);
+  st_print_log("[St_rsc_mgr] default_interface : %d\n",
+               resource_info->default_interface);
+  oc_resource_set_default_interface(resource, resource_info->default_interface);
+
+  st_print_log("[St_rsc_mgr] policy : %d\n", resource_info->policy);
+  oc_resource_set_discoverable(
+    resource, resource_info->policy & OC_DISCOVERABLE ? true : false);
+  oc_resource_set_observable(
+    resource, resource_info->policy & OC_OBSERVABLE ? true : false);
+
+  st_print_log("[St_rsc_mgr] read : %s, write %s\n",
+               rw & ST_RSC_READABLE ? "true" : "false",
+               rw & ST_RSC_WRITABLE ? "true" : "false");
+  if (rw & ST_RSC_READABLE) {
+    oc_resource_set_request_handler(resource, OC_GET, st_resource_get_handler,
+                                    NULL);
+  }
+  if (rw & ST_RSC_WRITABLE) {
+    oc_resource_set_request_handler(resource, OC_POST, st_resource_post_handler,
+                                    NULL);
+  }
+
   oc_add_resource(resource);
+  st_print_log("[St_rsc_mgr] st_egister_resource OUT\n");
 }
 
 void
 st_register_resources(int device)
 {
-  st_register_resource(switch_rsc_uri, switch_rsc_rt, switch_rt_num,
-                       OC_IF_A | OC_IF_BASELINE, OC_IF_A, device);
+  st_resource_info_t *resources = st_data_mgr_get_resource_info();
+  if (!resources) {
+    st_print_log("[St_rsc_mgr] resource list not exist");
+    return;
+  }
 
-  st_register_resource(switchlevel_rsc_uri, switchlevel_rsc_rt,
-                       switchleve_rt_num, OC_IF_A, OC_IF_A, device);
-
-  st_register_resource(color_temp_rsc_uri, color_temp_rsc_rt, color_temp_rt_num,
-                       OC_IF_A | OC_IF_S | OC_IF_BASELINE, OC_IF_A, device);
+  while (resources) {
+    st_register_resource(resources);
+    resources = resources->next;
+  }
 
   init_provisioning_info_resource(NULL);
 
