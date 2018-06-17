@@ -359,11 +359,11 @@ st_manager_start(void)
       set_main_status_sync(ST_STATUS_EASY_SETUP_START);
       break;
     case ST_STATUS_EASY_SETUP_START:
+      set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start easy setup!\n");
         return -1;
       }
-      set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       break;
     case ST_STATUS_EASY_SETUP_PROGRESSING:
     case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
@@ -405,12 +405,12 @@ st_manager_start(void)
       }
       break;
     case ST_STATUS_CLOUD_MANAGER_START:
+      set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       if (st_cloud_manager_start(store_info, device_index,
                                  cloud_manager_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start access cloud!\n");
         return -1;
       }
-      set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       break;
     case ST_STATUS_CLOUD_MANAGER_DONE:
       st_print_log("\n");
