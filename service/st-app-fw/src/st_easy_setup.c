@@ -82,19 +82,6 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   }
 
   g_callback = cb;
-
-  if (st_is_easy_setup_finish() == 0) {
-    st_print_log("[Easy_Setup] Easy Setup is already done.\n");
-    g_prov_step_check |= ST_EASY_SETUP_DEV_PROV | ST_EASY_SETUP_WIFI_PROV |
-                         ST_EASY_SETUP_CLOUD_PROV;
-    oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
-    _oc_signal_event_loop();
-    return 0;
-  }
-
-  st_store_t *store_info = st_store_get_info();
-  store_info->status = false;
-
   es_connect_type resourcemMask =
     ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
   if (es_init_enrollee(g_is_secured, resourcemMask, g_callbacks) != ES_OK) {

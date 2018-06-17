@@ -359,11 +359,15 @@ st_manager_start(void)
       set_main_status_sync(ST_STATUS_EASY_SETUP_START);
       break;
     case ST_STATUS_EASY_SETUP_START:
-      if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
-        st_print_log("[ST_MGR] Failed to start easy setup!\n");
-        return -1;
+      if (st_is_easy_setup_finish() == 0) {
+        set_main_status_sync(ST_STATUS_EASY_SETUP_DONE);
+      } else {
+        if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
+          st_print_log("[ST_MGR] Failed to start easy setup!\n");
+          return -1;
+        }
+        set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       }
-      set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       break;
     case ST_STATUS_EASY_SETUP_PROGRESSING:
     case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
