@@ -91,6 +91,53 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
+static int
+get_interface_index(int sock)
+{
+  int interface_index = -1;
+
+  struct sockaddr_storage addr;
+  socklen_t socklen = sizeof(addr);
+  if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
+    OC_ERR("obtaining socket information %d", errno);
+    return -1;
+  }
+
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interfaces: %d", errno);
+    return -1;
+  }
+
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+      continue;
+    if (addr.ss_family == interface->ifa_addr->sa_family) {
+      if (addr.ss_family == AF_INET6) {
+        struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
+        struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
+        if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
+          interface_index = if_nametoindex(interface->ifa_name);
+          break;
+        }
+      }
+#ifdef OC_IPV4
+      else if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
+        struct sockaddr_in *b = (struct sockaddr_in *)&addr;
+        if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
+          interface_index = if_nametoindex(interface->ifa_name);
+          break;
+        }
+      }
+#endif /* OC_IPV4 */
+    }
+  }
+
+  freeifaddrs(ifs);
+  return interface_index;
+}
+
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 {
@@ -130,13 +177,15 @@ free_tcp_session(tcp_session_t *session)
 }
 
 static int
-add_new_session(int sock, ip_context_t *dev, const oc_endpoint_t *endpoint)
+add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
     OC_ERR("could not allocate new TCP session object");
     return -1;
   }
+
+  endpoint->interface_index = get_interface_index(sock);
 
   session->dev = dev;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));

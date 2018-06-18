@@ -60,7 +60,8 @@ typedef struct oc_endpoint_t
     oc_ipv6_addr_t ipv6;
     oc_ipv4_addr_t ipv4;
     oc_le_addr_t bt;
-  } addr;
+  } addr, addr_local;
+  int interface_index;
   uint8_t priority;
   ocf_version_t version;
 } oc_endpoint_t;
@@ -74,10 +75,6 @@ typedef struct oc_endpoint_t
                             .addr.ipv6 = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
 
-void oc_init_endpoint_list(void);
-int oc_add_endpoint_to_list(oc_endpoint_t *endpoint);
-oc_endpoint_t *oc_get_endpoint_list(void);
-void oc_free_endpoint_list(void);
 oc_endpoint_t *oc_new_endpoint(void);
 void oc_free_endpoint(oc_endpoint_t *endpoint);
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);

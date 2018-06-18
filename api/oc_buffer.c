@@ -54,6 +54,7 @@ allocate_message(struct oc_memb *pool)
     message->length = 0;
     message->next = 0;
     message->ref_count = 1;
+    message->endpoint.interface_index = -1;
 #ifndef OC_DYNAMIC_ALLOCATION
     OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
            oc_memb_numfree(pool));
