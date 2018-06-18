@@ -90,6 +90,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     if (context->cloud_manager_status == CLOUD_MANAGER_FINISH) {
       oc_remove_delayed_callback(context, send_ping);
       context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
+      oc_set_delayed_callback(context, callback_handler, 0);
     }
 
     cloud_start_process(context);
