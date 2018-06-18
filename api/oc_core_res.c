@@ -475,12 +475,18 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
 oc_uuid_t *
 oc_core_get_device_id(int device)
 {
+  if (device >= device_count) {
+    return NULL;
+  }
   return &oc_device_info[device].di;
 }
 
 oc_device_info_t *
 oc_core_get_device_info(int device)
 {
+  if (device >= device_count) {
+    return NULL;
+  }
   return &oc_device_info[device];
 }
 

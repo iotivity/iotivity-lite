@@ -35,12 +35,14 @@ os_image_type?=minimal
 configure_file?=${os_dir}/.config
 os_external_makefile?=${tizenrt_dir}/external/Makefile
 
-toolchain_file?=${toolchain_package}-2015q3-20150921-linux.tar.bz2
-toolchain_url?=https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2
-toolchain_web_url?=https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update
+toolchain_file?=${toolchain_package}-${toolchain_host}.tar.bz2
+toolchain_url?=https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6_1-2017q1/${toolchain_file}
+toolchain_web_url?=https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads/6-2017-q1-update
 toolchain_abi?=arm-none-eabi
+toolchain_version?=6-2017-q1-update
+toolchain_host?=linux
 toolchain_dir?=${extra_dir}/${toolchain_package}
-toolchain_package?=gcc-${toolchain_abi}-4_9-2015q3
+toolchain_package?=gcc-${toolchain_abi}-${toolchain_version}
 toolchain_bin?=${toolchain_dir}/bin
 
 CROSSCOMPIL?=${toolchain_bin}/${toolchain_abi}-

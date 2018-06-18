@@ -34,44 +34,6 @@
 #define OC_IPV4_ADDRLEN (4)
 
 OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
-OC_LIST(oc_endpoints);
-
-void
-oc_init_endpoint_list(void)
-{
-  oc_list_init(oc_endpoints);
-}
-
-oc_endpoint_t *
-oc_get_endpoint_list(void)
-{
-  return oc_list_head(oc_endpoints);
-}
-
-int
-oc_add_endpoint_to_list(oc_endpoint_t *endpoint)
-{
-  oc_endpoint_t *ep = oc_new_endpoint();
-  if (ep != NULL) {
-    memcpy(ep, endpoint, sizeof(oc_endpoint_t));
-    ep->priority = 1;
-    oc_list_add(oc_endpoints, ep);
-    return 0;
-  }
-  return -1;
-}
-
-void
-oc_free_endpoint_list(void)
-{
-  oc_endpoint_t *ep = (oc_endpoint_t *)oc_list_head(oc_endpoints), *next;
-  while (ep != NULL) {
-    next = ep->next;
-    oc_memb_free(&oc_endpoints_s, ep);
-    ep = next;
-  }
-  oc_init_endpoint_list();
-}
 
 oc_endpoint_t *
 oc_new_endpoint(void)
