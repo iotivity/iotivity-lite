@@ -77,8 +77,13 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
     /*  If this resource has been explicitly tagged as SECURE on the
      *  application layer, skip all coap:// endpoints, and only include
      *  coaps:// endpoints.
+     *  Also, exclude all endpoints that are not associated with the interface
+     *  through which this request arrived. This is achieved by checking if the
+     *  interface index matches.
      */
-    if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+    if ((resource->properties & OC_SECURE && !(eps->flags & SECURED)) ||
+        (request->origin && request->origin->interface_index != -1 &&
+         request->origin->interface_index != eps->interface_index)) {
       goto next_eps;
     }
     oc_rep_object_array_start_item(eps);
@@ -91,7 +96,6 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   next_eps:
     eps = eps->next;
   }
-  oc_free_endpoint_list();
   oc_rep_close_array(link, eps);
 
   oc_rep_end_object(*links, link);
@@ -268,13 +272,12 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     }
     next_eps:
     eps = eps->next;
-  }
-  oc_free_endpoint_list();
+    }
 
-  oc_rep_close_object(res, p);
+    oc_rep_close_object(res, p);
 
-  oc_rep_end_object(*links, res);
-  return true;
+    oc_rep_end_object(*links, res);
+    return true;
 }
 
 static int
@@ -623,13 +626,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                 memset(&temp_ep, 0, sizeof(oc_endpoint_t));
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
-                  /* Return all endpoints whose address matches with the source
-                   * address of this response.
-                   */
-                  if (oc_endpoint_compare_address(&temp_ep, endpoint) != 0) {
-                    goto next_ep;
-                  }
-
                   if (eps_cur) {
                     eps_cur->next = oc_new_endpoint();
                     eps_cur = eps_cur->next;
@@ -650,7 +646,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             default:
               break;
             }
-          next_ep:
             ep = ep->next;
           }
           eps = eps->next;

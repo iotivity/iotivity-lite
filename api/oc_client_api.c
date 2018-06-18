@@ -53,7 +53,7 @@ dispatch_coap_request(void)
         request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
         coap_set_payload(request, payload, block_size);
-        coap_set_header_block1(request, 0, 1, block_size);
+        coap_set_header_block1(request, 0, 1, (uint16_t)block_size);
         coap_set_header_size1(request, payload_size);
         request->type = COAP_TYPE_CON;
         client_cb->qos = HIGH_QOS;

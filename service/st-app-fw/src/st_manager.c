@@ -333,7 +333,6 @@ st_manager_init_step(void)
       ep = ep->next;
     }
   }
-  oc_free_endpoint_list();
 
   if (st_process_start() != 0) {
     st_print_log("[ST_MGR] st_process_start failed.\n");
