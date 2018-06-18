@@ -133,6 +133,11 @@ ifeq ($(ST_APP_FW),1)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
+	ST_APP_TEST_DIR = $(ROOT_DIR)/service/st-app-fw/unittest
+	ST_APP_TEST_OBJ_DIR = $(ST_APP_TEST_DIR)/obj
+	ST_APP_TEST_SRC_FILES := $(wildcard $(ST_APP_TEST_DIR)/*.cpp)
+	ST_APP_TEST_OBJ_FILES := $(patsubst $(ST_APP_TEST_DIR)/%.cpp,$(ST_APP_TEST_OBJ_DIR)/%.o,$(ST_APP_TEST_SRC_FILES))
+	UNIT_TESTS += stapptest
 endif
 
 ifeq ($(DEBUG),1)
@@ -223,6 +228,13 @@ $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+stapptest: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -433,7 +445,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
@@ -488,4 +500,4 @@ tests/client_get_linux_test: libiotivity-constrained-client-server.a
 		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
 check: $(TESTS)
-	$(Q)$(PYTHON) $(CHECK_SCRIPT) --tests="$(TESTS)"
+	$(Q)$(PYTHON) $(CHECK_SCRIPT) --tests="$(TESTS)"	
