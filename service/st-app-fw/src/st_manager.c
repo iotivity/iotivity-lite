@@ -129,14 +129,17 @@ void
 cloud_manager_handler(st_cloud_manager_status_t status)
 {
   if (status == CLOUD_MANAGER_FINISH) {
-    st_print_log("[ST_MGR] Cloud access succeed!!!\n");
+    st_print_log("[ST_MGR] Cloud manager succeed!!!\n");
     set_st_manager_status(ST_STATUS_CLOUD_MANAGER_DONE);
-  } else if (status == CLOUD_MANAGER_RESET) {
-    st_print_log("[ST_MGR] Cloud access reset!!!\n");
-    set_st_manager_status(ST_STATUS_RESET);
   } else if (status == CLOUD_MANAGER_FAIL) {
-    st_print_log("[ST_MGR] Cloud access failed!!!\n");
+    st_print_log("[ST_MGR] Cloud manager failed!!!\n");
     set_st_manager_status(ST_STATUS_QUIT);
+  } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
+    st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
+    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
+  } else if (status == CLOUD_MANAGER_RESET) {
+    st_print_log("[ST_MGR] Cloud manager reset!!!\n");
+    set_st_manager_status(ST_STATUS_RESET);
   }
 }
 
@@ -407,7 +410,7 @@ st_manager_start(void)
     case ST_STATUS_CLOUD_MANAGER_START:
       if (st_cloud_manager_start(store_info, device_index,
                                  cloud_manager_handler) != 0) {
-        st_print_log("[ST_MGR] Failed to start access cloud!\n");
+        st_print_log("[ST_MGR] Failed to start cloud manager!\n");
         return -1;
       }
       set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
@@ -464,7 +467,7 @@ st_manager_stop(void)
   st_print_log("[ST_MGR] easy setup stop done\n");
 
   st_cloud_manager_stop(device_index);
-  st_print_log("[ST_MGR] cloud access stop done\n");
+  st_print_log("[ST_MGR] cloud manager stop done\n");
 
   st_store_info_initialize();
 
