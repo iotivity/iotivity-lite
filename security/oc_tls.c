@@ -54,6 +54,7 @@ OC_LIST(tls_peers);
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
+static mbedtls_ecdh_context ecdh_ctx;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "util/oc_mem.h"
 
@@ -481,6 +482,7 @@ oc_tls_shutdown(void)
   }
 #endif /* OC_TCP */
 #endif /* OC_DYNAMIC_ALLOCATION */
+  mbedtls_ecdh_free(&ecdh_ctx);
   mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&cookie_ctx);
   mbedtls_entropy_free(&entropy_ctx);
@@ -621,6 +623,10 @@ oc_tls_init_context(void)
 
   mbedtls_ssl_conf_handshake_timeout(&client_conf[0], 2500, 20000);
 #endif /* OC_CLIENT */
+  mbedtls_ecdh_init(&ecdh_ctx);
+  if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
+    goto dtls_init_err;
+  }
   return 0;
 dtls_init_err:
   OC_ERR("oc_tls: TLS initialization error");
@@ -875,6 +881,45 @@ exit_tls_prf:
   mbedtls_md_free(&hmacA);
   mbedtls_md_free(&hmacA_next);
   return gen_output;
+}
+
+bool
+oc_sec_ecdh_load_keys(const uint8_t *priv, const size_t priv_len,
+                      const uint8_t *pub,  const size_t pub_len)
+{
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
+    OC_ERR("%s: load private key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
+    OC_ERR("%s: load public key", __func__);
+    return false;
+  }
+  return true;
+}
+
+bool
+oc_sec_ecdh_compute_shared(const uint8_t *peer, const size_t peer_len,
+                            uint8_t *key_block, const size_t key_block_len)
+{
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
+    OC_ERR("%s: load peer's public key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_lset(&ecdh_ctx.Qp.Z, 1) != 0) {
+    OC_ERR("%s: clear shared key", __func__);
+    return false;
+  }
+  if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
+       &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
+    OC_ERR("%s: compute shared key", __func__);
+    return false;
+  }
+  if (oc_tls_prf(&ecdh_ctx.z, 24, key_block, key_block_len, 0) != key_block_len) {
+    OC_ERR("%s: compute hmac", __func__);
+    return false;
+  }
+  return true;
 }
 
 bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
