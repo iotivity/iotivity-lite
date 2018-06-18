@@ -16,7 +16,7 @@
 # limitations under the License.
 #}
 
-FROM debian:stable
+FROM i386/debian:stable
 MAINTAINER Philippe Coval (philippe.coval@osg.samsung.com)
 
 ENV DEBIAN_FRONTEND noninteractive
