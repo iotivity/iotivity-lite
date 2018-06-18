@@ -71,6 +71,15 @@ static oc_event_callback_retval_t send_ping(void *data);
 
 static int ping_interval = 1;
 
+static oc_event_callback_retval_t
+callback_handler(void *data)
+{
+  st_cloud_context_t *context = (st_cloud_context_t *)data;
+  context->callback(context->cloud_manager_status);
+
+  return OC_EVENT_DONE;
+}
+
 static void
 session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
@@ -90,6 +99,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     if (context->cloud_manager_status == CLOUD_MANAGER_FINISH) {
       oc_remove_delayed_callback(context, send_ping);
       context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
+      oc_set_delayed_callback(context, callback_handler, 0);
     }
 
     cloud_start_process(context);
@@ -168,15 +178,6 @@ st_cloud_manager_check_connection(oc_string_t *ci_server)
   oc_endpoint_t ep;
 
   return oc_string_to_endpoint(ci_server, &ep, NULL);
-}
-
-static oc_event_callback_retval_t
-callback_handler(void *data)
-{
-  st_cloud_context_t *context = (st_cloud_context_t *)data;
-  context->callback(context->cloud_manager_status);
-
-  return OC_EVENT_DONE;
 }
 
 static bool
