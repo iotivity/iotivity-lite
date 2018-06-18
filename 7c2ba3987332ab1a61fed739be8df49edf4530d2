@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3adaac78",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-18T23:57:05Z",
+      "side": 1,
+      "message": "remove it",
+      "range": {
+        "startLine": 503,
+        "startChar": 0,
+        "endLine": 503,
+        "endChar": 1
+      },
+      "revId": "7c2ba3987332ab1a61fed739be8df49edf4530d2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
