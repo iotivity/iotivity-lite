@@ -118,6 +118,10 @@ st_process_func(void *data)
     st_mutex_lock(process_data->app_mutex);
     next_event = oc_main_poll();
     st_mutex_unlock(process_data->app_mutex);
+
+    if (process_data->quit == 1)
+      break;
+
     st_mutex_lock(process_data->mutex);
     if (next_event == 0) {
       st_cond_wait(process_data->cv, process_data->mutex);

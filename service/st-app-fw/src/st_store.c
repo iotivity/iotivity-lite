@@ -104,6 +104,7 @@ st_store_dump(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_reset();
 }
 
 void
