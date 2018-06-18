@@ -148,6 +148,16 @@ otm_confirm_handler(void)
   }
 }
 
+static void
+st_status_handler(st_status_t status)
+{
+  if (status == ST_STATUS_DONE) {
+    printf("[ST_APP] ST connected\n");
+  } else {
+    printf("[ST_APP] ST connecting(%d)\n", status);
+  }
+}
+
 int
 main(void)
 {
@@ -158,11 +168,13 @@ main(void)
 
   st_register_resource_handler(get_resource_handler, set_resource_handler);
   st_register_otm_confirm_handler(otm_confirm_handler);
+  st_register_status_handler(st_status_handler);
 
   if (st_manager_start() != 0) {
     printf("[ST_APP] st_manager_start failed.\n");
   }
 
+  st_unregister_status_handler();
   st_manager_stop();
   st_manager_deinitialize();
   return 0;
