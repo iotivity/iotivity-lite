@@ -46,7 +46,13 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t server_uuid_len,
                              const uint8_t *obt_uuid, const size_t obt_uuid_len,
                              uint8_t *key, const size_t key_len);
-
+bool
+oc_sec_ecdh_load_keys(const uint8_t *priv, const size_t priv_len,
+                      const uint8_t *pub,  const size_t pub_len);
+bool
+oc_sec_ecdh_compute_master_psk(oc_endpoint_t *endpoint,
+                               const uint8_t *hash, const size_t hash_len,
+                               uint8_t *key, const size_t key_len);
 void oc_tls_remove_peer(oc_endpoint_t *endpoint);
 int oc_tls_send_message(oc_message_t *message);
 oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);

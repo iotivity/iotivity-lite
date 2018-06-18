@@ -54,6 +54,7 @@ OC_LIST(tls_peers);
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
+static mbedtls_ecdh_context ecdh_ctx;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "util/oc_mem.h"
 
@@ -481,6 +482,7 @@ oc_tls_shutdown(void)
   }
 #endif /* OC_TCP */
 #endif /* OC_DYNAMIC_ALLOCATION */
+  mbedtls_ecdh_free(&ecdh_ctx);
   mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&cookie_ctx);
   mbedtls_entropy_free(&entropy_ctx);
@@ -621,6 +623,10 @@ oc_tls_init_context(void)
 
   mbedtls_ssl_conf_handshake_timeout(&client_conf[0], 2500, 20000);
 #endif /* OC_CLIENT */
+  mbedtls_ecdh_init(&ecdh_ctx);
+  if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
+    goto dtls_init_err;
+  }
   return 0;
 dtls_init_err:
   OC_ERR("oc_tls: TLS initialization error");
@@ -877,6 +883,72 @@ exit_tls_prf:
   return gen_output;
 }
 
+bool
+oc_sec_ecdh_load_keys(const uint8_t *priv, const size_t priv_len,
+                      const uint8_t *pub,  const size_t pub_len)
+{
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
+    OC_ERR("%s: load private key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
+    OC_ERR("%s: load public key", __func__);
+    return false;
+  }
+  return true;
+}
+
+static bool
+check_zero(const uint8_t *a, size_t len) {
+  int sum = 0;
+  for (size_t i = 0; i < len; ++i)
+    sum |= a[i];
+  return sum == 0;
+}
+
+bool
+oc_sec_ecdh_compute_master_psk(oc_endpoint_t *endpoint,
+                               const uint8_t *peer_pub, const size_t peer_pub_len,
+                               uint8_t *key, const size_t key_len)
+{
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (!peer) {
+    OC_WRN("%s: no peer", __func__);
+    return false;
+  }
+  if (!check_zero(peer->master_secret, 48)) {
+    OC_WRN("%s: zero master key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer_pub, peer_pub_len) != 0) {
+    OC_ERR("%s: load peer's public key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_lset(&ecdh_ctx.Qp.Z, 1) != 0) {
+    OC_ERR("%s: clear shared key", __func__);
+    return false;
+  }
+  if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
+       &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
+    OC_ERR("%s: compute shared key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_write_binary(&ecdh_ctx.z, peer->master_secret, 48) != 0) {
+    OC_ERR("%s: get key", __func__);
+    return false;
+  }
+  if (oc_tls_prf(peer->master_secret, 48, key, key_len, 1,
+        peer->ssl_ctx.session->master, 48) != (int)key_len) {
+    OC_ERR("%s: compute hmac", __func__);
+    return false;
+  }
+  OC_DBG("oc_tls: master secret:");
+  OC_LOGbytes(peer->master_secret, 48);
+  OC_DBG("oc_tls:%s: master secret:",__func__);
+  OC_LOGbytes(key, key_len);
+  return true;
+}
+
 bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t oxm_len, const uint8_t *server_uuid,
                              const size_t server_uuid_len,
@@ -886,21 +958,8 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   if (!peer) {
     return false;
   }
-  size_t j;
-  for (j = 0; j < 48; j++) {
-    if (peer->master_secret[j] != 0) {
-      break;
-    }
-  }
-  if (j == 48) {
-    return false;
-  }
-  for (j = 0; j < 64; j++) {
-    if (peer->client_server_random[j] != 0) {
-      break;
-    }
-  }
-  if (j == 64) {
+  if (!check_zero(peer->master_secret, 48)
+   || !check_zero(peer->client_server_random, 64)) {
     return false;
   }
   uint8_t key_block[96];
