@@ -32,6 +32,18 @@ public:
 	}
 };
 
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri Initialize server and shutDown server with positive values
+ * @target int oc_main_init(const oc_handler_t *handler);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. oc_main_init
+ * @post_condition 1.  oc_main_shutdown()
+ * @expected api should not crash
+ */
+
 TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P)
 {
 
@@ -40,6 +52,18 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P)
 	m_pRIHelper->initServer();
 	m_pRIHelper->shutDown();
 }
+
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri Initialize client and shutDown server with positive values
+ * @target int oc_main_init(const oc_handler_t *handler);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. oc_main_init
+ * @post_condition 1.  oc_main_shutdown()
+ * @expected api should not crash
+ */
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_initclient_P)
 {
@@ -50,6 +74,19 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_initclient_P)
 	m_pRIHelper->shutDown();
 }
 
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri create resource with positive values
+ * @target int oc_main_init(const oc_handler_t *handler);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. oc_main_init
+ * 	2. Discover resource
+ * @post_condition 1.  oc_main_shutdown()
+ * @expected sucessfully discover created resource
+ */
+
 TEST(RIGeneralIntegrationTest, ri_nonsecure_client_createResource_P)
 {
 
@@ -57,12 +94,25 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_client_createResource_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isDiscoverResourceSucessfull );
 	m_pRIHelper->unRegisterResources();
 	m_pRIHelper->shutDown();
 }
+
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri create resource with positive values
+ * @target int oc_main_init(const oc_handler_t *handler);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. oc_main_init
+ * 	2. Discover resource
+ * @post_condition 1.  oc_main_shutdown()
+ * @expected sucessfully discover created resource
+ */
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_client_discover_P)
 {
@@ -71,13 +121,28 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_client_discover_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isDiscoverResourceSucessfull );
 	m_pRIHelper->unRegisterResources();
 	m_pRIHelper->shutDown();
 }
 
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri observe resource with positive values
+ * @target bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                   oc_response_handler_t handler, oc_qos_t qos,
+                   void *user_data);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. Discover resource
+ * 	2. observe resource
+ * @post_condition 1. unregister resource
+ *  2. oc_main_shutdown()
+ * @expected sucessfully observe created resource
+ */
 TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_observe_P)
 {
 
@@ -85,15 +150,28 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_observe_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
-	m_pRIHelper->observeResource();
+	m_pRIHelper->observeResource(NULL);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isObserveResourceSuccessfull);
 	m_pRIHelper->unRegisterResources();
 	m_pRIHelper->shutDown();
 }
 
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri client send post request
+ * @target bool oc_do_post(void);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. Discover resource
+ * 	2. bool oc_do_post(void);
+ * @post_condition 1. unregister resource
+ *  2. oc_main_shutdown()
+ * @expected post request should be successful
+ */
 TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_post_request_P)
 {
 
@@ -101,14 +179,28 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_post_request_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
-	m_pRIHelper->postRequestResource();
+	m_pRIHelper->postRequestResource(NULL);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isRequestSucessfull);
 	m_pRIHelper->unRegisterResources();
 	m_pRIHelper->shutDown();
 }
+
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri client send put request
+ * @target bool oc_do_put(void);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. Discover resource
+ * 	2. bool oc_do_put(void);
+ * @post_condition 1. unregister resource
+ *  2. oc_main_shutdown()
+ * @expected put request should be successful
+ */
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_put_request_P)
 {
@@ -117,14 +209,28 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_put_request_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
-	m_pRIHelper->putRequestResource();
+	m_pRIHelper->putRequestResource(NULL);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isRequestSucessfull);
 	m_pRIHelper->unRegisterResources();
 	m_pRIHelper->shutDown();
 }
+
+/**
+ * @since 2018-06-04
+ * @see oc_main_init
+ * @objective Test iotivity-constrained ri client send get request
+ * @target bool oc_do_get(void);
+ * @test_data     node
+ * @pre_condition 1. create resource
+ * @procedure     1. Discover resource
+ * 	2. bool oc_do_get(void);
+ * @post_condition 1. unregister resource
+ *  2. oc_main_shutdown()
+ * @expected get request should be successful
+ */
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_get_request_P)
 {
@@ -133,9 +239,9 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_get_request_P)
 	m_pRIHelper = RIHelper::getInstance();
 
 	m_pRIHelper->createResource();
-	m_pRIHelper->discoverResource();
+	m_pRIHelper->discoverResource(RESOURCE_TYPE_LIGHT);
 	m_pRIHelper->waitForEvent();
-	m_pRIHelper->getResource();
+	m_pRIHelper->getResource(NULL);
 	m_pRIHelper->waitForEvent();
 	EXPECT_TRUE( m_pRIHelper->s_isRequestSucessfull);
 	m_pRIHelper->unRegisterResources();
