@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_9a55b8c8",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-19T06:45:21Z",
+      "side": 1,
+      "message": "oc_string_array_t.size looks profer.\noc_string_array_get_allocated_size divide size by ITEM_MAX_LEN\n#define oc_string_array_get_allocated_size(ocstringarray)  ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)\nPlease check it.",
+      "range": {
+        "startLine": 98,
+        "startChar": 20,
+        "endLine": 98,
+        "endChar": 54
+      },
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_da3740af",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 3
