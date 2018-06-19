@@ -80,9 +80,10 @@ st_store_load(void)
   return ret;
 }
 
-void
-st_store_dump(void)
+static oc_event_callback_retval_t
+st_store_dump_handler(void *data)
 {
+  (void)data;
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf)
@@ -105,6 +106,13 @@ st_store_dump(void)
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_reset();
+  return OC_EVENT_DONE;
+}
+
+void
+st_store_dump(void)
+{
+  oc_set_delayed_callback(NULL, st_store_dump_handler, 0);
 }
 
 void
