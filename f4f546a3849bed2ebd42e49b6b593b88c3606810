@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_3a6f4c94",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-19T02:41:11Z",
+      "side": 1,
+      "message": "if(!( rw ^ ( writable | readable) )",
+      "parentUuid": "da33351e_fa5de4ea",
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ba3cfc94",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 3
@@ -48,6 +66,24 @@
       "writtenOn": "2018-06-19T01:00:08Z",
       "side": 1,
       "message": "what about bit operation instead of \u0027\u003c\u0027?",
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a6c989e",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-19T02:41:11Z",
+      "side": 1,
+      "message": "if( (prop-\u003erw) \u0026( readable |writeable) )\n   rw\u003d ( prop-\u003erw) \u0026 ( readable |writeable);\n\n\notherwise\n  int prop_rw\u003d ( prop-\u003erw) \u0026 ( readable |writeable);\n  if (rw) \n     rw\u003dprop_rw;\n\n\n--\u003e\n( possible value of rw is only  readalbe. logically rw is only writable..)\n\npossible value of prop-\u003erw is \n     no readble, no writable    -\u003e skip \n     readable                   -\u003e rw  \u003d  prop-\u003erw :keep going\n     readbal , writalbe         -\u003e rw  \u003d  prop-\u003erw :stop \"if\" line 107 next time \n     writable (logical)         -\u003e rw  \u003d  prop-\u003erw :keep going",
+      "parentUuid": "da33351e_ba3cfc94",
       "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
