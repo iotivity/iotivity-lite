@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_dad0e055",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-19T00:35:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1af408f1",
+      "range": {
+        "startLine": 94,
+        "startChar": 32,
+        "endLine": 94,
+        "endChar": 39
+      },
+      "revId": "0e83b178f8facce71813826d78dc8d3e3200f83f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_faf844e7",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-18T23:48:20Z",
       "side": 1,
       "message": "register?",
+      "range": {
+        "startLine": 143,
+        "startChar": 32,
+        "endLine": 143,
+        "endChar": 39
+      },
+      "revId": "0e83b178f8facce71813826d78dc8d3e3200f83f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bad51c45",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-19T00:35:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_faf844e7",
       "range": {
         "startLine": 143,
         "startChar": 32,
