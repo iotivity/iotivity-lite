@@ -1,21 +1,36 @@
-From 6612bb3462e7977363b989b512801c21b4b6c5ac Mon Sep 17 00:00:00 2001
-From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 4 Jun 2018 11:01:25 +0300
-Subject: [PATCH] mbedtls reduce
+From a8d8b1bf305b37afe4b2d55f1fad9108d9a09708 Mon Sep 17 00:00:00 2001
+From: "v.riznyk" <v.riznyk@samsung.com>
+Date: Tue, 19 Jun 2018 16:27:27 +0300
+Subject: [PATCH] .
 
-Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h |  9 +++++++--
- library/bignum.c         | 48 +++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 52 insertions(+), 5 deletions(-)
+ include/mbedtls/config.h | 15 +++++++++--
+ library/bignum.c         | 55 +++++++++++++++++++++++++++++++++++++---
+ library/camellia.c       |  2 +-
+ library/cipher.c         |  2 +-
+ library/net_sockets.c    |  1 +
+ library/rsa.c            |  8 +++---
+ library/ssl_cli.c        |  2 +-
+ library/ssl_ticket.c     |  1 +
+ library/ssl_tls.c        | 11 ++++----
+ library/x509.c           |  2 +-
+ library/x509_crt.c       |  2 +-
+ 11 files changed, 82 insertions(+), 19 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..e107860 100644
+index 45143a5d..2e605c81 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -59,7 +59,9 @@
+@@ -58,8 +58,16 @@
+ #define MBEDTLS_SSL_SRV_C
  #define MBEDTLS_SSL_TLS_C
  
++#define MBEDTLS_ECDH_C
++#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
++#define MBEDTLS_ENTROPY_C
++#define MBEDTLS_CTR_DRBG_C
++#define MBEDTLS_PKCS5_C
++
  /* Save RAM at the expense of ROM */
 +#ifndef ST_APP_OPTIMIZATION
  #define MBEDTLS_AES_ROM_TABLES
@@ -23,7 +38,7 @@ index 45143a5..e107860 100644
  
  /* Save some RAM by adjusting to your exact needs */
  #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
-@@ -82,12 +84,13 @@
+@@ -82,12 +90,13 @@
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
@@ -39,7 +54,7 @@ index 45143a5..e107860 100644
  #define MBEDTLS_X509_USE_C
  
  #define MBEDTLS_ASN1_PARSE_C
-@@ -98,7 +101,9 @@
+@@ -98,7 +107,9 @@
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -50,7 +65,7 @@ index 45143a5..e107860 100644
  #define MBEDTLS_CIPHER_MODE_CBC
  
 diff --git a/library/bignum.c b/library/bignum.c
-index 6fdf317..8ab25b2 100644
+index 6fdf3177..6bf64402 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
 @@ -260,6 +260,7 @@ cleanup:
@@ -61,19 +76,20 @@ index 6fdf317..8ab25b2 100644
      int ret, s;
      size_t i;
      mbedtls_mpi_uint tmp;
-@@ -286,7 +287,11 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
+@@ -286,7 +287,12 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
      }
  
  cleanup:
 +
      return( ret );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
-@@ -411,6 +420,7 @@ size_t mbedtls_mpi_size( const mbedtls_mpi *X )
+@@ -411,6 +417,7 @@ size_t mbedtls_mpi_size( const mbedtls_mpi *X )
   */
  static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
  {
@@ -81,16 +97,17 @@ index 6fdf317..8ab25b2 100644
      *d = 255;
  
      if( c >= 0x30 && c <= 0x39 ) *d = c - 0x30;
-@@ -419,7 +429,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+@@ -419,7 +426,8 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
  
      if( *d >= (mbedtls_mpi_uint) radix )
          return( MBEDTLS_ERR_MPI_INVALID_CHARACTER );
 -
 +#endif
++    oc_abort("ST_APP Skipped for optimization");
      return( 0 );
  }
  
-@@ -428,6 +438,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+@@ -428,6 +436,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
   */
  int mbedtls_mpi_read_string( mbedtls_mpi *X, int radix, const char *s )
  {
@@ -98,17 +115,18 @@ index 6fdf317..8ab25b2 100644
      int ret;
      size_t i, j, slen, n;
      mbedtls_mpi_uint d;
-@@ -493,6 +504,9 @@ cleanup:
+@@ -493,6 +502,10 @@ cleanup:
      mbedtls_mpi_free( &T );
  
      return( ret );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
-@@ -500,6 +514,7 @@ cleanup:
+@@ -500,6 +513,7 @@ cleanup:
   */
  static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
  {
@@ -116,11 +134,12 @@ index 6fdf317..8ab25b2 100644
      int ret;
      mbedtls_mpi_uint r;
  
-@@ -520,6 +535,9 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
+@@ -520,6 +534,10 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
  cleanup:
  
      return( ret );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
@@ -134,17 +153,18 @@ index 6fdf317..8ab25b2 100644
      int ret = 0;
      size_t n;
      char *p;
-@@ -596,6 +615,9 @@ cleanup:
+@@ -596,6 +615,10 @@ cleanup:
      mbedtls_mpi_free( &T );
  
      return( ret );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  #if defined(MBEDTLS_FS_IO)
-@@ -1077,6 +1099,7 @@ cleanup:
+@@ -1077,6 +1100,7 @@ cleanup:
   */
  int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -152,17 +172,18 @@ index 6fdf317..8ab25b2 100644
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
  
-@@ -1086,6 +1109,9 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
+@@ -1086,6 +1110,10 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
      _B.p = p;
  
      return( mbedtls_mpi_add_mpi( X, A, &_B ) );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
-@@ -1445,6 +1471,7 @@ cleanup:
+@@ -1445,6 +1473,7 @@ cleanup:
   */
  int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -170,17 +191,18 @@ index 6fdf317..8ab25b2 100644
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
  
-@@ -1454,6 +1481,9 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
+@@ -1454,6 +1483,10 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
      _B.p = p;
  
      return( mbedtls_mpi_div_mpi( Q, R, A, &_B ) );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
-@@ -1484,6 +1514,7 @@ cleanup:
+@@ -1484,6 +1517,7 @@ cleanup:
   */
  int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -188,16 +210,17 @@ index 6fdf317..8ab25b2 100644
      size_t i;
      mbedtls_mpi_uint x, y, z;
  
-@@ -1532,7 +1563,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+@@ -1532,7 +1566,8 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
          y = b - y;
  
      *r = y;
 -
 +#endif
++    oc_abort("ST_APP Skipped for optimization");
      return( 0 );
  }
  
-@@ -1541,6 +1572,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+@@ -1541,6 +1576,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
   */
  static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  {
@@ -205,7 +228,7 @@ index 6fdf317..8ab25b2 100644
      mbedtls_mpi_uint x, m0 = N->p[0];
      unsigned int i;
  
-@@ -1551,6 +1583,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+@@ -1551,6 +1587,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
          x *= ( 2 - ( m0 * x ) );
  
      *mm = ~x + 1;
@@ -213,7 +236,7 @@ index 6fdf317..8ab25b2 100644
  }
  
  /*
-@@ -1559,6 +1592,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+@@ -1559,6 +1596,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
                           const mbedtls_mpi *T )
  {
@@ -221,16 +244,17 @@ index 6fdf317..8ab25b2 100644
      size_t i, n, m;
      mbedtls_mpi_uint u0, u1, *d;
  
-@@ -1592,7 +1626,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1592,7 +1630,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      else
          /* prevent timing attacks */
          mpi_sub_hlp( n, A->p, T->p );
 -
 +#endif
++    oc_abort("ST_APP Skipped for optimization");
      return( 0 );
  }
  
-@@ -1601,6 +1635,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1601,6 +1640,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
   */
  static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
  {
@@ -238,17 +262,18 @@ index 6fdf317..8ab25b2 100644
      mbedtls_mpi_uint z = 1;
      mbedtls_mpi U;
  
-@@ -1608,6 +1643,9 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1608,6 +1648,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
      U.p = &z;
  
      return( mpi_montmul( A, &U, N, mm, T ) );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
-@@ -1615,6 +1653,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1615,6 +1659,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
   */
  int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR )
  {
@@ -256,16 +281,203 @@ index 6fdf317..8ab25b2 100644
      int ret;
      size_t wbits, wsize, one = 1;
      size_t i, j, nblimbs;
-@@ -1816,6 +1855,9 @@ cleanup:
+@@ -1816,6 +1861,10 @@ cleanup:
          mbedtls_mpi_free( &RR );
  
      return( ret );
 +#else
++    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
  
  /*
+diff --git a/library/camellia.c b/library/camellia.c
+index ac6f96a8..c303716e 100644
+--- a/library/camellia.c
++++ b/library/camellia.c
+@@ -1063,7 +1063,7 @@ int mbedtls_camellia_self_test( int verbose )
+     if( verbose != 0 )
+         mbedtls_printf( "\n" );
+ #endif /* MBEDTLS_CIPHER_MODE_CTR */
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+diff --git a/library/cipher.c b/library/cipher.c
+index ff032738..fd25eced 100644
+--- a/library/cipher.c
++++ b/library/cipher.c
+@@ -174,7 +174,7 @@ int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_in
+     (void) mbedtls_cipher_set_padding_mode( ctx, MBEDTLS_PADDING_NONE );
+ #endif
+ #endif /* MBEDTLS_CIPHER_MODE_WITH_PADDING */
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+diff --git a/library/net_sockets.c b/library/net_sockets.c
+index 3f6fbcfb..be35aafe 100644
+--- a/library/net_sockets.c
++++ b/library/net_sockets.c
+@@ -119,6 +119,7 @@ static int net_prepare( void )
+     signal( SIGPIPE, SIG_IGN );
+ #endif
+ #endif
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+diff --git a/library/rsa.c b/library/rsa.c
+index b37b022e..12140b95 100644
+--- a/library/rsa.c
++++ b/library/rsa.c
+@@ -235,7 +235,7 @@ static int rsa_check_context( mbedtls_rsa_context const *ctx, int is_priv,
+         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -450,7 +450,7 @@ int mbedtls_rsa_export_crt( const mbedtls_rsa_context *ctx,
+         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA + ret );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -629,7 +629,7 @@ int mbedtls_rsa_check_privkey( const mbedtls_rsa_context *ctx )
+         return( MBEDTLS_ERR_RSA_KEY_CHECK_FAILED );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -2177,7 +2177,7 @@ static int myrand( void *rng_state, unsigned char *output, size_t len )
+ 
+     arc4random_buf( output, len );
+ #endif /* !OpenBSD */
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ #endif /* MBEDTLS_PKCS1_V15 */
+diff --git a/library/ssl_cli.c b/library/ssl_cli.c
+index e9b0d82e..817c0af6 100644
+--- a/library/ssl_cli.c
++++ b/library/ssl_cli.c
+@@ -2216,7 +2216,7 @@ static int ssl_write_encrypted_pms( mbedtls_ssl_context *ssl,
+         *olen += 2;
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ #endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED ||
+diff --git a/library/ssl_ticket.c b/library/ssl_ticket.c
+index 4d9116d2..2d80a626 100644
+--- a/library/ssl_ticket.c
++++ b/library/ssl_ticket.c
+@@ -113,6 +113,7 @@ static int ssl_ticket_update_keys( mbedtls_ssl_ticket_context *ctx )
+     }
+     else
+ #endif /* MBEDTLS_HAVE_TIME */
++        oc_abort("ST_APP Skipped for optimization");
+         return( 0 );
+ }
+ 
+diff --git a/library/ssl_tls.c b/library/ssl_tls.c
+index d51230df..e05fc1a3 100644
+--- a/library/ssl_tls.c
++++ b/library/ssl_tls.c
+@@ -67,6 +67,7 @@ static inline size_t ssl_ep_len( const mbedtls_ssl_context *ssl )
+ #else
+     ((void) ssl);
+ #endif
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -192,7 +193,7 @@ static int ssl_session_copy( mbedtls_ssl_session *dst, const mbedtls_ssl_session
+         memcpy( dst->ticket, src->ticket, src->ticket_len );
+     }
+ #endif /* MBEDTLS_SSL_SESSION_TICKETS && MBEDTLS_SSL_CLI_C */
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ #endif /* MBEDTLS_SSL_CLI_C */
+@@ -3757,7 +3758,7 @@ static int ssl_parse_record_header( mbedtls_ssl_context *ssl )
+ #endif
+     }
+ #endif /* MBEDTLS_SSL_PROTO_DTLS */
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -3823,7 +3824,7 @@ static int ssl_prepare_record_content( mbedtls_ssl_context *ssl )
+         mbedtls_ssl_dtls_replay_update( ssl );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -4149,7 +4150,7 @@ read_record_header:
+         }
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+@@ -5696,7 +5697,7 @@ static int ssl_handshake_init( mbedtls_ssl_context *ssl )
+         ssl_set_timer( ssl, 0 );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
+diff --git a/library/x509.c b/library/x509.c
+index 8f77559f..bd9d11b1 100644
+--- a/library/x509.c
++++ b/library/x509.c
+@@ -1129,7 +1129,7 @@ int mbedtls_x509_self_test( int verbose )
+ #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+     mbedtls_x509_crt_free( &directorynamecert );
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ #else
+     ((void) verbose);
+diff --git a/library/x509_crt.c b/library/x509_crt.c
+index 35974803..51e6e90b 100644
+--- a/library/x509_crt.c
++++ b/library/x509_crt.c
+@@ -2052,7 +2052,7 @@ static int x509_crt_check_parent( const mbedtls_x509_crt *child,
+         return( -1 );
+     }
+ #endif
+-
++    oc_abort("ST_APP Skipped for optimization");
+     return( 0 );
+ }
+ 
 -- 
-1.9.1
+2.17.1
 
