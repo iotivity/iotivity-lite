@@ -1,0 +1,37 @@
+From 58dc94fe56b632d52b47e3fbfa0b9504d24dc405 Mon Sep 17 00:00:00 2001
+From: agrkush <kush.agrawal@samsung.com>
+Date: Tue, 19 Jun 2018 15:02:36 +0900
+Subject: [PATCH] Revert mbedtls_mpi_set_bit as getting used by ed25519
+ scenario
+
+Signed-off-by: agrkush <kush.agrawal@samsung.com>
+---
+ library/bignum.c |    5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/library/bignum.c b/library/bignum.c
+index 294eed2..4d85f1a 100644
+--- a/library/bignum.c
++++ b/library/bignum.c
+@@ -329,7 +329,6 @@ int mbedtls_mpi_get_bit( const mbedtls_mpi *X, size_t pos )
+  */
+ int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
+ {
+-#ifndef ST_MBEDTLS_OPT
+     int ret = 0;
+     size_t off = pos / biL;
+     size_t idx = pos % biL;
+@@ -351,10 +350,6 @@ int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
+ cleanup:
+ 
+     return( ret );
+-#else
+-    oc_abort("ST_APP Skipped for optimization");
+-    return( 0 );
+-#endif /* ST_MBEDTLS_OPT */
+ }
+ 
+ /*
+-- 
+1.7.9.5
+
