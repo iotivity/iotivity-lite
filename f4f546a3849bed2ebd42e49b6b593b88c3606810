@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_fa5de4ea",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-19T02:20:40Z",
+      "side": 1,
+      "message": "How can I change this to bit operation? please give me an example. I\u0027m not familiar with bit operations.",
+      "parentUuid": "da33351e_da3740af",
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ba3cfc94",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 3
