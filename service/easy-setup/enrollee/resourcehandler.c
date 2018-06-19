@@ -527,9 +527,12 @@ get_easysetup(oc_request_t *request, oc_interface_mask_t interface,
   (void)user_data;
   OC_DBG("GET request received");
 
+  es_easy_setup_resource_t *es_res =
+              es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
+
   oc_rep_start_root_object();
-  es_rep_set_int(root, ps, 0);
-  es_rep_set_int(root, lec, 0);
+  es_rep_set_int(root, ps, es_res->data.status);
+  es_rep_set_int(root, lec, es_res->data.last_err_code);
   oc_rep_end_root_object();
 }
 
