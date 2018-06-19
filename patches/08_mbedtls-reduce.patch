@@ -73,24 +73,6 @@ index 6fdf317..8ab25b2 100644
  }
  
  /*
-@@ -323,6 +328,7 @@ int mbedtls_mpi_get_bit( const mbedtls_mpi *X, size_t pos )
-  */
- int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
- {
-+#if 0
-     int ret = 0;
-     size_t off = pos / biL;
-     size_t idx = pos % biL;
-@@ -344,6 +350,9 @@ int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
- cleanup:
- 
-     return( ret );
-+#else
-+    return( 0 );
-+#endif
- }
- 
- /*
 @@ -411,6 +420,7 @@ size_t mbedtls_mpi_size( const mbedtls_mpi *X )
   */
  static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )

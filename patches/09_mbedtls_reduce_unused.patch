@@ -126,27 +126,7 @@ index 8ab25b2..294eed2 100644
 -#endif
 +#endif /* ST_MBEDTLS_OPT */
  }
- 
- /*
-@@ -328,7 +329,7 @@ int mbedtls_mpi_get_bit( const mbedtls_mpi *X, size_t pos )
-  */
- int mbedtls_mpi_set_bit( mbedtls_mpi *X, size_t pos, unsigned char val )
- {
--#if 0
-+#ifndef ST_MBEDTLS_OPT
-     int ret = 0;
-     size_t off = pos / biL;
-     size_t idx = pos % biL;
-@@ -351,8 +352,9 @@ cleanup:
- 
-     return( ret );
- #else
-+    oc_abort("ST_APP Skipped for optimization");
-     return( 0 );
--#endif
-+#endif /* ST_MBEDTLS_OPT */
- }
- 
+
  /*
 @@ -420,7 +422,7 @@ size_t mbedtls_mpi_size( const mbedtls_mpi *X )
   */
