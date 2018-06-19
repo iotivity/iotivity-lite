@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_dadd8016",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-19T10:03:47Z",
+      "side": 1,
+      "message": "can it crash if someone invoked this api without calling init or after calling terminate ?",
+      "revId": "9f8cdf013b84e06787bf6620eea4b2b1e0c6bd16",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
