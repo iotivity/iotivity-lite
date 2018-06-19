@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5ac4d091",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-19T00:44:41Z",
+      "side": 1,
+      "message": "would you please add checking routine of data\nlike \"if( data)..\"",
+      "revId": "f533005960938a79e6e8180372190c7be37ebe88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
