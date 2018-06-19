@@ -15,6 +15,8 @@
 */
 
 #include "oc_session_events.h"
+#include "config.h"
+
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_signal_event_loop.h"
@@ -136,5 +138,7 @@ oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
     }
 #endif /* OC_SECURITY */
   }
+#ifdef OC_SESSION_EVENTS
   handle_session_event_callback(endpoint, state);
+#endif /* OC_SESSION_EVENTS */
 }
