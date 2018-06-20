@@ -152,6 +152,30 @@
       "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_95b90b31",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-20T15:20:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_d59b93c7",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 38
+      },
+      "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
