@@ -118,6 +118,9 @@ void
 get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)data;
+  if (!request) {
+    return;
+  }
   switch (interface) {
   case OC_IF_BASELINE: {
     char *q;
