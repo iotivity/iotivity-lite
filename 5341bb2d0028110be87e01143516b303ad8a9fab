@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f50e9733",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-20T11:40:27Z",
+      "side": 1,
+      "message": "Do we need to handle it this file instead of sc_easy-setup.c.\nHow about hide sec_accesspoint from here?\nIf happen we can remove free_ap_list code from here.",
+      "range": {
+        "startLine": 417,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 3
+      },
+      "revId": "5341bb2d0028110be87e01143516b303ad8a9fab",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
