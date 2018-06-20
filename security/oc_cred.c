@@ -81,7 +81,7 @@ oc_sec_cred_init(void)
 static bool
 unique_credid(int credid, int device)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(devices[device].creds);
   while (cred != NULL) {
     if (cred->credid == credid)
       return false;
@@ -116,7 +116,7 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, int device)
 static bool
 oc_sec_remove_cred_by_credid(int credid, int device)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(devices[device].creds);
   while (cred != NULL) {
     if (cred->credid == credid) {
       oc_sec_remove_cred(cred, device);
@@ -130,7 +130,7 @@ oc_sec_remove_cred_by_credid(int credid, int device)
 static void
 oc_sec_clear_creds(int device)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(devices[device].creds), *next;
   while (cred != NULL) {
     next = cred->next;
     oc_sec_remove_cred(cred, device);
@@ -155,7 +155,7 @@ oc_sec_cred_free(void)
 oc_sec_cred_t *
 oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(devices[device].creds);
   while (cred != NULL) {
     if (memcmp(cred->subjectuuid.id, subjectuuid->id, 16) == 0) {
       return cred;
@@ -170,7 +170,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 {
   oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid, device);
   if (cred == NULL) {
-    cred = oc_memb_alloc(&creds);
+    cred = (oc_sec_cred_t *)oc_memb_alloc(&creds);
     if (cred != NULL) {
       memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
       oc_list_add(devices[device].creds, cred);
@@ -184,7 +184,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 void
 oc_sec_encode_cred(bool persist, int device)
 {
-  oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
+  oc_sec_cred_t *cr = (oc_sec_cred_t *)oc_list_head(devices[device].creds);
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
@@ -488,7 +488,7 @@ oc_cred_remove_subject(const char *subjectuuid, int device)
 {
   oc_uuid_t _subjectuuid;
   oc_str_to_uuid(subjectuuid, &_subjectuuid);
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next = 0;
+  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(devices[device].creds), *next = 0;
   while (cred != NULL) {
     next = cred->next;
     if (memcmp(cred->subjectuuid.id, _subjectuuid.id, 16) == 0) {
