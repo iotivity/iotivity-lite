@@ -19,6 +19,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#if defined(OC_MFG) || defined (OC_RPK)
+#include "security/oc_doxm.h"
+#endif
 
 pthread_mutex_t mutex;
 pthread_cond_t cv;
@@ -138,6 +141,52 @@ handle_signal(int signal)
   quit = 1;
 }
 
+#if defined(OC_SECURITY) && defined(OC_RPK)
+void
+get_cpubkey_and_token(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token, int *token_len)
+{
+  if (!cpubkey || !cpubkey_len || !token || !token_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t key[32] = {0x5e, 0x7d, 0xad, 0x29, 0x87, 0x87, 0x5f, 0x42,
+                     0x06, 0x0f, 0x37, 0xd4, 0x32, 0x1a, 0xe8, 0xae,
+                     0xb0, 0xed, 0x6c, 0x61, 0xb9, 0x21, 0xba, 0x84,
+                     0x43, 0x1d, 0x2f, 0x13, 0x07, 0xaa, 0x95, 0xe4
+                    };
+  uint8_t tkn[8] = "12345678";
+  memcpy(cpubkey, key, 32);
+  memcpy(token, tkn, 8);
+  *cpubkey_len = 32;
+  *token_len = 8;
+  return;
+}
+
+void
+get_own_key(uint8_t *priv_key, int *priv_key_len, uint8_t *pub_key, int *pub_key_len)
+{
+  if (!priv_key || !priv_key_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t prv[32] = {0x50, 0x08, 0xd9, 0xa8, 0x13, 0xb4, 0x2a, 0xc4,
+                     0x22, 0xc0, 0xf3, 0xcc, 0xbf, 0x98, 0xf6, 0xb7,
+                     0x33, 0xdc, 0x2f, 0xff, 0x58, 0xde, 0xd9, 0x3e,
+                     0x84, 0xe0, 0x17, 0x28, 0x63, 0xd6, 0xbb, 0x30
+                    };
+  uint8_t pub[32] = {0x63, 0x8f, 0x9d, 0x81, 0xba, 0x7d, 0xac, 0xc2,
+                     0x43, 0x28, 0xb9, 0x84, 0x8f, 0x26, 0xe8, 0x0e,
+                     0x4d, 0x46, 0x3f, 0x6f, 0x92, 0x9c, 0x1e, 0x59,
+                     0x0f, 0x38, 0xcd, 0xed, 0x5e, 0xb3, 0xe1, 0x52
+                    };
+  memcpy(priv_key, prv, 32);
+  memcpy(pub_key, pub, 32);
+  *priv_key_len = 32;
+  *pub_key_len = 32;
+  return;
+}
+#endif //OC_SECURITY && OC_RPK
+
 int
 main(void)
 {
@@ -156,12 +205,28 @@ main(void)
   oc_clock_time_t next_event;
 
 #ifdef OC_SECURITY
+#ifdef OC_MFG
+  oc_storage_config("./mfgserver_creds");
+#elif defined(OC_RPK)
+  oc_storage_config("./rpkserver_creds");
+#else
   oc_storage_config("./simpleserver_creds");
+#endif
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+
+#ifdef OC_SECURITY
+#ifdef OC_MFG
+  oc_sec_doxm_mfg(0);
+#elif defined(OC_RPK)
+  oc_sec_doxm_rpk(0);
+  oc_sec_set_cpubkey_and_token_cb(get_cpubkey_and_token);
+  oc_sec_set_own_key_cb(get_own_key);
+#endif
+#endif /* OC_SECURITY */
 
   while (quit != 1) {
     next_event = oc_main_poll();
