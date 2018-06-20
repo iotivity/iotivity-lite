@@ -128,6 +128,30 @@
       "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d59b93c7",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-20T14:51:47Z",
+      "side": 1,
+      "message": "Yes. verification is required for set test case. This code is totally okay, but what I meant was it need not to be SetAndGetState combined there should be one more separate test case for get itself.",
+      "parentUuid": "da33351e_35659fe1",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 38
+      },
+      "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
