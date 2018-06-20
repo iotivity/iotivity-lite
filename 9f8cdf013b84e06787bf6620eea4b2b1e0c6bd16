@@ -16,6 +16,24 @@
       "revId": "9f8cdf013b84e06787bf6620eea4b2b1e0c6bd16",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_da9580e5",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-20T02:32:39Z",
+      "side": 1,
+      "message": "I don\u0027t think so as calls from stack are called when oc_main_poll is called and that call will be synchronized in application layer.",
+      "parentUuid": "da33351e_dadd8016",
+      "revId": "9f8cdf013b84e06787bf6620eea4b2b1e0c6bd16",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
