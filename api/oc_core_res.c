@@ -453,6 +453,9 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           ...)
 {
   oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
+  if (!r) {
+    return;
+  }
   r->device = device_index;
   oc_store_uri(uri, &r->uri);
   r->properties = properties;
