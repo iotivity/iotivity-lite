@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f57337af",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-20T14:45:19Z",
+      "side": 1,
+      "message": "are you commenting on license header ? I aligned it to other easy setup files.\n\nAnd if comment is about C++ files in general, I am not sure if anything in specific. For now i kept it aligned with existing unit test file.",
+      "parentUuid": "da33351e_7548c75b",
+      "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_55414338",
         "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
         "patchSetId": 5
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_556823ba",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-20T14:45:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_55414338",
+      "range": {
+        "startLine": 122,
+        "startChar": 16,
+        "endLine": 122,
+        "endChar": 26
+      },
+      "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_353e3fb9",
         "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
         "patchSetId": 5
@@ -53,6 +95,30 @@
       "writtenOn": "2018-06-20T14:24:41Z",
       "side": 1,
       "message": "better to be in new test case as this is different API",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 38
+      },
+      "revId": "5965331366200c4b2a9e0f1eaa6112ec436a168f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_35659fe1",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-20T14:45:19Z",
+      "side": 1,
+      "message": "in general i would agree. But here i want to test the specific scenario in which I am \u0027expecting\u0027 value returned by \u0027get_xx\u0027 API is same as value set in \u0027set_xx\u0027 API.",
+      "parentUuid": "da33351e_353e3fb9",
       "range": {
         "startLine": 170,
         "startChar": 4,
