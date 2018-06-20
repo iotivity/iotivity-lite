@@ -446,7 +446,7 @@ void
 oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           oc_interface_mask_t interfaces,
                           oc_interface_mask_t default_interface,
-                          oc_resource_properties_t properties,
+                          int properties,
                           oc_request_callback_t get, oc_request_callback_t put,
                           oc_request_callback_t post,
                           oc_request_callback_t delete, int num_resource_types,
