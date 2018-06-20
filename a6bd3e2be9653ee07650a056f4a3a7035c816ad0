@@ -22,6 +22,30 @@
       "revId": "a6bd3e2be9653ee07650a056f4a3a7035c816ad0",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_35ac7fed",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-06-20T15:20:09Z",
+      "side": 1,
+      "message": "not sure if can do it without i some string tricks as logging API does not expect a label. \n\nInstead I have used OC_DGB now which prints file name and line number which is enough.",
+      "parentUuid": "da33351e_b5a08ff5",
+      "range": {
+        "startLine": 112,
+        "startChar": 12,
+        "endLine": 112,
+        "endChar": 17
+      },
+      "revId": "a6bd3e2be9653ee07650a056f4a3a7035c816ad0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
