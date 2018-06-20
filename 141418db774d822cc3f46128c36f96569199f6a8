@@ -1,0 +1,498 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5ab0508b",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Remove space",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 4
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1a452870",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Please remove the below 2 macros I think we are not using them...",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 7
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_da63c018",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Remove the macro, directly string is passed on negative test",
+      "range": {
+        "startLine": 33,
+        "startChar": 1,
+        "endLine": 33,
+        "endChar": 7
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fa7204e4",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Add a comment above saying ./simple_len_cert folder not present",
+      "range": {
+        "startLine": 35,
+        "startChar": 28,
+        "endLine": 35,
+        "endChar": 43
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ba4fdc91",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "remove above line",
+      "range": {
+        "startLine": 38,
+        "startChar": 24,
+        "endLine": 38,
+        "endChar": 26
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5a77b0d4",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Please check whether any further apis need to be called at Setup.",
+      "range": {
+        "startLine": 45,
+        "startChar": 30,
+        "endLine": 45,
+        "endChar": 44
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3aad8c32",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Remove space and add deinit code",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 10
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1a6ec801",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "rectify typo",
+      "range": {
+        "startLine": 62,
+        "startChar": 35,
+        "endLine": 62,
+        "endChar": 107
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9aaad817",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 3
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ba687cf6",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Please make initialization code at the top of block only. move ret1 after ret.\nBetter rename variables to ret_write and ret_read etc...for better readability.\ncompare buf and buf2, to pass the test both should be equal.",
+      "range": {
+        "startLine": 70,
+        "startChar": 4,
+        "endLine": 70,
+        "endChar": 8
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7aa71450",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 75,
+        "startChar": 1,
+        "endLine": 75,
+        "endChar": 3
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a813892",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Please check we need to keep as GRL or Samsung..",
+      "range": {
+        "startLine": 3,
+        "startChar": 41,
+        "endLine": 3,
+        "endChar": 42
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_751a876f",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "To run these test cases we need to modify make file.\n\nAlready there is a patch which is under review:\nhttps://gerrit.iotivity.org/gerrit/#/c/25781/2/port/linux/Makefile\n\nWith above make file we can run these test cases.",
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7a55541c",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "change to INVALID_DEVICE_MAX_NUM",
+      "range": {
+        "startLine": 33,
+        "startChar": 8,
+        "endLine": 33,
+        "endChar": 21
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3a5bcc55",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "keep latest one or latest stable one",
+      "range": {
+        "startLine": 42,
+        "startChar": 35,
+        "endLine": 42,
+        "endChar": 36
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a581858",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Remove extra line",
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_da4aa082",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Remove space",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 12
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5a5e9046",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "Please add de init code",
+      "range": {
+        "startLine": 59,
+        "startChar": 8,
+        "endLine": 59,
+        "endChar": 9
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_da31000d",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "keep as *aclist only.\nI could see expected aclist is same in above and this case...please check once again",
+      "range": {
+        "startLine": 72,
+        "startChar": 18,
+        "endLine": 72,
+        "endChar": 32
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1a3c08e2",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "change accordingly",
+      "range": {
+        "startLine": 86,
+        "startChar": 54,
+        "endLine": 86,
+        "endChar": 57
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fa404458",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "change accordingly",
+      "range": {
+        "startLine": 92,
+        "startChar": 65,
+        "endLine": 92,
+        "endChar": 66
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ba36bc01",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-20T11:56:33Z",
+      "side": 1,
+      "message": "We need to add Negative cases for all above apis ...",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 1
+      },
+      "revId": "141418db774d822cc3f46128c36f96569199f6a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
