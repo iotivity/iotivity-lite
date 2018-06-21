@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_75bba70e",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-21T03:46:26Z",
+      "side": 1,
+      "message": "Don\u0027t know not feeling right about using OC_DBG here. use std::cout for now. we will write scope logger class if required later.",
+      "range": {
+        "startLine": 113,
+        "startChar": 12,
+        "endLine": 113,
+        "endChar": 18
+      },
+      "revId": "b8bbadef3ff2e1cf3c3c2fd8b83429f400c49742",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_95be2bfe",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-21T03:46:26Z",
+      "side": 1,
+      "message": "this can be just SetState_P",
+      "range": {
+        "startLine": 167,
+        "startChar": 26,
+        "endLine": 167,
+        "endChar": 42
+      },
+      "revId": "b8bbadef3ff2e1cf3c3c2fd8b83429f400c49742",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
