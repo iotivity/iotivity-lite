@@ -47,7 +47,7 @@ oc_sec_load_doxm(int device)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
-    oc_sec_doxm_default(device);
+    oc_sec_doxm(device, 0);
     return;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */
