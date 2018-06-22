@@ -68,26 +68,31 @@ user_properties_t g_user_properties;
 
 #ifdef WITH_SOFTAP
 
+#define ES_WIFI_SSID_MAX_LEN 128
+#define ES_WIFI_PASSWD_MAX_LEN 128
+#define COMMAND_BUFFER_MAX_LEN 128
+#define COMMAND_RESULT_MAX_LEN 256
+
 typedef struct {
-  char ssid[128];
-  char password[128];
+  char ssid[ES_WIFI_SSID_MAX_LEN];
+  char password[ES_WIFI_SSID_MAX_LEN];
 } soft_ap_data_t;
 
-bool execute_command(const char *cmd, char *result, int result_len) {
-  char buffer[128];
+bool execute_command(const char *cmd, char *result, size_t result_len) {
+  char buffer[COMMAND_BUFFER_MAX_LEN];
   FILE *fp = popen(cmd, "r");
 
   if (!fp) {
     return false;
   }
 
-  int add_len = 0;
+  size_t add_len = 0;
   while (!feof(fp)) {
-    if (fgets(buffer, 128, fp) != NULL) {
+    if (fgets(buffer, COMMAND_BUFFER_MAX_LEN, fp) != NULL) {
       add_len += strlen(buffer);
 
       if (add_len < result_len) {
-        strcat(result, buffer);
+        strncat(result, buffer, strlen(buffer));
       }
     }
   }
@@ -113,20 +118,20 @@ void *es_worker_thread_routine(void *thread_data) {
 
   printf("Stopping Soft AP\n");
 
-  char result[256];
+  char result[COMMAND_RESULT_MAX_LEN];
 
   /** Stop Soft AP */
-  execute_command("sudo service hostapd stop", result, 256);
+  execute_command("sudo service hostapd stop", result, COMMAND_RESULT_MAX_LEN);
   printf("outputString 1: %s\n", result);
 
   /** Turn On Wi-Fi */
-  execute_command("sudo nmcli nm wifi on", result, 256);
+  execute_command("sudo nmcli nm wifi on", result, COMMAND_RESULT_MAX_LEN);
 
   /**
    * Note: On some linux distributions, nmcli nm may not work. In that case
    * need to enable below command:
    */
-  // execute_command("sudo nmcli n wifi on", result, 256);
+  // execute_command("sudo nmcli n wifi on", result, COMMAND_RESULT_MAX_LEN);
 
   printf("outputString 2: %s\n", result);
 
@@ -163,8 +168,6 @@ void set_user_properties() {
 
 void read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata) {
   (void)resourceType;
-  (void)payload;
-  (void)userdata;
 
   printf("[ES App] read_user_data_cb in\n");
 
@@ -179,9 +182,12 @@ void read_user_data_cb(oc_rep_t *payload, char *resourceType, void **userdata) {
         user_prop_value = rep->value.integer;
         OC_DBG("user_prop_value %u", user_prop_value);
 
-        if (*userdata != NULL) {
+        if (userdata != NULL) {
           *userdata = (void *)malloc(sizeof(user_properties_t));
+
+          if (*userdata) {
           ((user_properties_t *)(*userdata))->user_value_int = user_prop_value;
+          }
         }
 
         g_user_properties.user_value_int = user_prop_value;
@@ -350,8 +356,8 @@ void wifi_prov_cb_in_app(es_wifi_conf_data *event_data) {
 
   soft_ap_data_t *soft_ap_data =
       (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
-  strcpy(soft_ap_data->ssid, oc_string(event_data->ssid));
-  strcpy(soft_ap_data->password, oc_string(event_data->pwd));
+  strncpy(soft_ap_data->ssid, oc_string(event_data->ssid), ES_WIFI_SSID_MAX_LEN);
+  strncpy(soft_ap_data->password, oc_string(event_data->pwd), ES_WIFI_PASSWD_MAX_LEN);
   pthread_create(&wifi_cn_thread, NULL, es_worker_thread_routine,
                  (void *)soft_ap_data);
 #endif // WITH_SOFTAP
