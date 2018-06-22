@@ -74,6 +74,7 @@ SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
 SRC_RD_CLIENT=$(wildcard ../../service/resource-directory/client/src/*.c)
+SRC_FOTA=$(wildcard ../../service/fota/src/*.c)
 
 ifeq ($(CODE_SIZE_OPT),1)
 SRC +=../../port/oc_log.c
@@ -91,13 +92,15 @@ HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../ -I../../ -I../../include/ -std=gnu99 -Wall -Wextra #-Wl,-Map,client.map
 CFLAGS_CA=-I../../service/cloud-access/include
 CFLAGS_RD_CLIENT=-I../../service/resource-directory/client/include
+CFLAGS_FOTA=-I../../service/fota/include
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../port/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
+OBJ_FOTA=$(addprefix obj/fota/,$(notdir $(SRC_FOTA:.c=.o)))
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../port/:../../service/fota/src/:../../port/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
@@ -218,6 +221,7 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
            libiotivity-constrained-easysetup.a \
 		   libiotivity-constrained-cloudaccess.a libiotivity-constrained-cloudaccess.so \
 		   libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so \
+		   libiotivity-constrained-fota.a libiotivity-constrained-fota.so \
 		   libst-app-framework.a libst-app-framework.so
 
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
@@ -294,9 +298,13 @@ obj/rd_client/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
 
+obj/fota/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_FOTA}
+
 obj/st/%.o: %.c
 	@mkdir -p ${@D}
-	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_FOTA} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
 
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
@@ -331,11 +339,17 @@ libiotivity-constrained-rd-client.a: $(OBJ_RD_CLIENT)
 libiotivity-constrained-rd-client.so: $(OBJ_RD_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_RD_CLIENT) $(LIBS)
 
-libst-app-framework.a: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(AR) -rcs $@  $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-fota.a: $(OBJ_FOTA)
+	$(AR) -rcs $@ $(OBJ_FOTA)
 
-libst-app-framework.so: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(CC) -shared -o $@ $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
+libiotivity-constrained-fota.so: $(OBJ_FOTA)
+	$(CC) -shared -o $@ $(OBJ_FOTA) $(LIBS)
+
+libst-app-framework.a: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(AR) -rcs $@  $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+
+libst-app-framework.so: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+	$(CC) -shared -o $@ $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
