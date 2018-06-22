@@ -31,7 +31,7 @@
 
 #define SYSTEM_RET_CHECK(ret)                                                  \
   do {                                                                         \
-    if (system_ret_chcek(ret) != 0) {                                          \
+    if (system_ret_check(ret) != 0) {                                          \
       goto exit;                                                               \
     }                                                                          \
   } while (0);
@@ -268,7 +268,7 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 }
 
 static int
-system_ret_chcek(int ret)
+system_ret_check(int ret)
 {
   if (ret == -1 || ret == 127) {
     st_print_log("[St_Port] system() invoke error(%d).\n", ret);
