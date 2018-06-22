@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_d579d3fd",
+        "filename": "security/oc_doxm.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-22T05:57:33Z",
+      "side": 1,
+      "message": "default is justworks mechanism but strange to call as default.\nThis concept APIs allow User to call the mfg, default and rpk sequentially, then user may expect it to support three OTMs simutaneously. It is better to make the single API to set one with enum.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 33
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1584dbd2",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-22T05:57:33Z",
+      "side": 1,
+      "message": "better to use oc_sec_set_cpubkey_and_token_load_cb",
+      "range": {
+        "startLine": 32,
+        "startChar": 5,
+        "endLine": 32,
+        "endChar": 36
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b57ecfe2",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-22T05:57:33Z",
+      "side": 1,
+      "message": "better not to use \"_cb\" which makes confused with cpubkey_and_token_cb from the logic for example, oc_sec_load_cpubkey_and_token.",
+      "range": {
+        "startLine": 32,
+        "startChar": 37,
+        "endLine": 32,
+        "endChar": 65
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_556dc331",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-22T05:57:33Z",
+      "side": 1,
+      "message": "same opinion as like line:32 comment",
+      "range": {
+        "startLine": 35,
+        "startChar": 5,
+        "endLine": 35,
+        "endChar": 45
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
