@@ -22,6 +22,30 @@
       "revId": "f55bbad5527ea8ea972904505f8eb4bf344f6daa",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_35863fba",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-06-22T10:55:12Z",
+      "side": 1,
+      "message": "Yes, it is done in #25769 RPK OTM",
+      "parentUuid": "da33351e_5502e33e",
+      "range": {
+        "startLine": 548,
+        "startChar": 15,
+        "endLine": 548,
+        "endChar": 32
+      },
+      "revId": "f55bbad5527ea8ea972904505f8eb4bf344f6daa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
