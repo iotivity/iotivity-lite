@@ -177,7 +177,7 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 }
 
 static int
-system_ret_chcek(int ret)
+system_ret_check(int ret)
 {
   oc_abort(__func__);
   return 0;
