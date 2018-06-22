@@ -1,10 +1,10 @@
 #!/bin/sh
 
 
-match='-pedantic'
-insert='-pedantic -ftest-coverage -fprofile-arcs'
+match='-Wextra'
+insert='-Wextra -ftest-coverage -fprofile-arcs'
 file='Makefile'
-
+build_command='make test '$@
 iotivity="$PWD"
 
 root_dir="${iotivity}/../../.."
@@ -15,9 +15,10 @@ cd $linux_dir
 sed -i "s/$match/$insert/" $file
 
 make clean
-make test
+echo ${build_command}
+${build_command}
 mkdir ${iotivity}/coverage_report
-lcov -c -d ../../ -o ${iotivity}/coverage_report/new_coverage.info && lcov --remove ${iotivity}/coverage_report/new_coverage.info 'port/unittest/*' '/usr/include/*' 'api/unittest/*' -o ${iotivity}/coverage_report/main_coverage.info
+lcov -c -d ../../ -o ${iotivity}/coverage_report/new_coverage.info && lcov --remove ${iotivity}/coverage_report/new_coverage.info 'port/unittest/*' 'deps/*' '/usr/include/*' 'api/unittest/*' 'security/unittest/*' 'service/easy-setup/unittest/' 'service/st-app-fw/unittest/*' -o ${iotivity}/coverage_report/main_coverage.info
 
 genhtml ${iotivity}/coverage_report/main_coverage.info --output-directory ${iotivity}/coverage_report/
 
