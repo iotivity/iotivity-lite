@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5502e33e",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-22T10:19:37Z",
+      "side": 1,
+      "message": "Do we need to include the 0xFF03 check also?",
+      "range": {
+        "startLine": 548,
+        "startChar": 15,
+        "endLine": 548,
+        "endChar": 32
+      },
+      "revId": "f55bbad5527ea8ea972904505f8eb4bf344f6daa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
