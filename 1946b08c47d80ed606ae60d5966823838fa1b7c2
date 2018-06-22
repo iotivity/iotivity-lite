@@ -71,6 +71,54 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d59553e5",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-06-22T10:47:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b57ecfe2",
+      "range": {
+        "startLine": 32,
+        "startChar": 37,
+        "endLine": 32,
+        "endChar": 65
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_75f9e74c",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-06-22T10:47:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1584dbd2",
+      "range": {
+        "startLine": 32,
+        "startChar": 5,
+        "endLine": 32,
+        "endChar": 36
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_556dc331",
         "filename": "security/oc_tls.h",
         "patchSetId": 10
@@ -82,6 +130,30 @@
       "writtenOn": "2018-06-22T05:57:33Z",
       "side": 1,
       "message": "same opinion as like line:32 comment",
+      "range": {
+        "startLine": 35,
+        "startChar": 5,
+        "endLine": 35,
+        "endChar": 45
+      },
+      "revId": "1946b08c47d80ed606ae60d5966823838fa1b7c2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b59a4f12",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-06-22T10:47:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_556dc331",
       "range": {
         "startLine": 35,
         "startChar": 5,
