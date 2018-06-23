@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d0e9e11b",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T12:13:09Z",
+      "side": 1,
+      "message": "use define for all \"\"",
+      "range": {
+        "startLine": 54,
+        "startChar": 45,
+        "endLine": 54,
+        "endChar": 52
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_10a6a910",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -64,6 +87,29 @@
         "startChar": 24,
         "endLine": 77,
         "endChar": 48
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b0eedd20",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T12:13:09Z",
+      "side": 1,
+      "message": "foto_init_resource",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 9
       },
       "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
