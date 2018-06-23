@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_d03721af",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T19:39:00Z",
+      "side": 1,
+      "message": "It is strange that free(scanlist) just after scan(\u0026scanlinst) because cache g_scanlist in port.c file is port specific concept and not generic concept regardless of os.",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 35
+      },
+      "revId": "8318ebbcff9747e6ef1854cc42e68bd32f82defc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
