@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_90e75940",
+        "filename": "service/easy-setup/unittest/enrolleeapitest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T12:16:58Z",
+      "side": 1,
+      "message": "test the cb execution with mock for more coverage",
+      "range": {
+        "startLine": 190,
+        "startChar": 39,
+        "endLine": 192,
+        "endChar": 31
+      },
+      "revId": "549114800aba3ab5f031edc0e7f19b05c963c193",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
