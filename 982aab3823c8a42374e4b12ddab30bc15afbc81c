@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_106fc9c6",
+        "filename": "security/oc_doxm.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T10:37:58Z",
+      "side": 1,
+      "message": "provide enum type for oxmsel which this code support. or provide the doxygen comment for user awareness",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 41
+      },
+      "revId": "982aab3823c8a42374e4b12ddab30bc15afbc81c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
