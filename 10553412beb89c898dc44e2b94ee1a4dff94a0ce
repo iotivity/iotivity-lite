@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f081854b",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T12:10:26Z",
+      "side": 1,
+      "message": "st_execute_wifi_scan for generic purpose.",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 18
+      },
+      "revId": "10553412beb89c898dc44e2b94ee1a4dff94a0ce",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
