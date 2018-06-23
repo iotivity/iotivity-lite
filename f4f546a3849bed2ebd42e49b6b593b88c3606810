@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_90b91931",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-23T11:16:07Z",
+      "side": 1,
+      "message": "I checked the alloc code, oc_string_array_get_allocated_size is right. no need to check it.",
+      "parentUuid": "da33351e_9a55b8c8",
+      "range": {
+        "startLine": 98,
+        "startChar": 20,
+        "endLine": 98,
+        "endChar": 54
+      },
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_da3740af",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 3
