@@ -1,0 +1,41 @@
+From cd689531afc74989de46f56143a4a45e2911b035 Mon Sep 17 00:00:00 2001
+From: Philippe Coval <p.coval@samsung.com>
+Date: Mon, 25 Jun 2018 12:27:06 +0200
+Subject: [PATCH 242/242] tizenrt: Prevent missing wint_t
+
+Observed issue on current TizenRT version:
+
+  arm-none-eabi-gcc -c -o obj/cborencoder.o (...)
+  In file included from
+  .../gcc-arm-none-eabi-6-2017-q1-update/.../reent.h:15:0,
+  from
+  .../arm-none-eabi/include/math.h:5,
+  from ../../deps/tinycbor/src/compilersupport_p.h:40,
+  .../sys/_types.h:168:5: error: unknown type name 'wint_t'
+  wint_t __wch;
+
+Bug: https://github.com/intel/tinycbor/pull/134
+Bug-iotivity: https://jira.iotivity.org/projects/LITE/issues/LITE-4
+Change-Id: I9269802eb17a0a5d67d81f7e3cb4af78fc52ad2b
+Signed-off-by: Philippe Coval <p.coval@samsung.com>
+---
+ src/compilersupport_p.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/compilersupport_p.h b/src/compilersupport_p.h
+index d9c8c1f..45ab082 100644
+--- a/src/compilersupport_p.h
++++ b/src/compilersupport_p.h
+@@ -37,6 +37,9 @@
+ #  include <assert.h>
+ #endif
+ #include <float.h>
++#ifdef __TIZENRT__
++#include <wchar.h>
++#endif
+ #include <math.h>
+ #include <stddef.h>
+ #include <stdint.h>
+-- 
+2.17.1
+
