@@ -42,43 +42,13 @@
 static st_status_t g_main_status = ST_STATUS_INIT;
 static st_status_cb_t g_st_status_cb = NULL;
 
-// define vendor specific properties.
-static const char *st_device_type = "deviceType";
-static const char *st_device_sub_type = "deviceSubType";
-static const char *st_reg_set_device =
-  "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\",\"bm\":\"00:11:"
-  "22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\",\"BTHIDPOWERON\"],\"sl\":["
-  "\"TV2MOBILE\",\"MOBILE2TV\",\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\","
-  "\"DLNADMR\"]}";
-static const char *st_network_prov_info =
-  "{\"IMEI\":\"123456789012345 / "
-  "01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\",\"SN\":"
-  "\"XY0123456XYZ\"}";
-static const char *st_pin_number = "pinNumber";
-static const char *st_model_number = "Model Number";
-static const char *st_protocol_version = "2.0";
-
-// define application specific values.
-#ifdef OC_SPEC_VER_OIC
-static const char *spec_version = "core.1.1.0";
-static const char *data_model_version = "res.1.1.0";
-#else  /* OC_SPEC_VER_OIC */
-static const char *spec_version = "ocf.1.0.0";
-static const char *data_model_version = "ocf.res.1.0.0";
-#endif /* !OC_SPEC_VER_OIC */
-
 static sc_properties st_vendor_props;
 
 static sec_provisioning_info g_prov_resource;
 
 static int device_index = 0;
 
-static const char *device_rt = "oic.d.light";
-static const char *device_name = "Samsung";
-
-static const char *manufacturer = "xxxx";
-static const char *sid = "000";
-static const char *vid = "IoT2020";
+static st_platform_info_t platform_info;
 
 int quit = 0;
 
@@ -87,21 +57,52 @@ static void set_st_manager_status(st_status_t status);
 static void
 init_platform_cb(void *data)
 {
-  (void)data;
-  oc_set_custom_platform_property(mnmo, sid);
-  oc_set_custom_platform_property(mnpv, "1.0");
-  oc_set_custom_platform_property(mnos, "1.0");
-  oc_set_custom_platform_property(mnhw, "1.0");
-  oc_set_custom_platform_property(mnfv, "1.0");
-  oc_set_custom_platform_property(vid, vid);
+  if(!data) return;
+  st_platform_info_t *platform = data;
+  oc_set_custom_platform_property(mnmo, oc_string(platform->model_number));
+  oc_set_custom_platform_property(mnpv, oc_string(platform->platform_version));
+  oc_set_custom_platform_property(mnos, oc_string(platform->os_version));
+  oc_set_custom_platform_property(mnhw, oc_string(platform->hardware_version));
+  oc_set_custom_platform_property(mnfv, oc_string(platform->firmware_version));
+  oc_set_custom_platform_property(vid, oc_string(platform->vendor_id));
+}
+
+static st_platform_info_t* init_platform_info(st_specification_t *spec)
+{
+  if(!spec) return NULL;
+  free_specifications_platform(&platform_info);
+  oc_new_string(&platform_info.model_number,
+                oc_string(spec->platform.model_number),
+                oc_string_len(spec->platform.model_number));
+  oc_new_string(&platform_info.platform_version,
+                oc_string(spec->platform.platform_version),
+                oc_string_len(spec->platform.platform_version));
+  oc_new_string(&platform_info.os_version,
+                oc_string(spec->platform.os_version),
+                oc_string_len(spec->platform.os_version));
+  oc_new_string(&platform_info.hardware_version,
+                oc_string(spec->platform.hardware_version),
+                oc_string_len(spec->platform.hardware_version));
+  oc_new_string(&platform_info.firmware_version,
+                oc_string(spec->platform.firmware_version),
+                oc_string_len(spec->platform.firmware_version));
+  oc_new_string(&platform_info.vendor_id,
+                oc_string(spec->platform.vendor_id),
+                oc_string_len(spec->platform.vendor_id));
+  return &platform_info;
 }
 
 static int
 app_init(void)
 {
-  int ret = oc_init_platform(manufacturer, init_platform_cb, NULL);
-  ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                       data_model_version, NULL, NULL);
+  st_specification_t *spec = st_data_mgr_get_spec_info();
+  st_platform_info_t *platform_data = init_platform_info(spec);
+  int ret = oc_init_platform(oc_string(spec->platform.manufacturer_name),
+                             init_platform_cb, platform_data);
+  ret |= oc_add_device("/oic/d", oc_string(spec->device.device_type),
+                       oc_string(spec->device.device_name),
+                       oc_string(spec->device.spec_version),
+                       oc_string(spec->device.data_model_version), NULL, NULL);
   return ret;
 }
 
@@ -155,11 +156,13 @@ set_sc_prov_info(void)
   g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
     target_size, sizeof(sec_provisioning_info_targets));
 
+  st_specification_t *spec = st_data_mgr_get_spec_info();
   for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].target_di, uuid, strlen(uuid));
-    oc_new_string(&g_prov_resource.targets[i].target_rt, device_rt,
-                  strlen(device_rt));
+    oc_new_string(&g_prov_resource.targets[i].target_rt,
+                  oc_string(spec->device.device_type),
+                  oc_string_len(spec->device.device_type));
     g_prov_resource.targets[i].published = false;
   }
   g_prov_resource.targets_size = target_size;
@@ -192,33 +195,18 @@ static void
 st_vendor_props_initialize(void)
 {
   memset(&st_vendor_props, 0, sizeof(sc_properties));
-  oc_new_string(&st_vendor_props.device_type, st_device_type,
-                strlen(st_device_type));
-  oc_new_string(&st_vendor_props.device_sub_type, st_device_sub_type,
-                strlen(st_device_sub_type));
-  st_vendor_props.net_conn_state = NET_STATE_INIT;
-  st_vendor_props.disc_channel = WIFI_DISCOVERY_CHANNEL_INIT;
-  oc_new_string(&st_vendor_props.reg_set_dev, st_reg_set_device,
-                strlen(st_reg_set_device));
-  oc_new_string(&st_vendor_props.net_prov_info, st_network_prov_info,
-                strlen(st_network_prov_info));
-  oc_new_string(&st_vendor_props.pnp_pin, st_pin_number, strlen(st_pin_number));
-  oc_new_string(&st_vendor_props.model, st_model_number,
-                strlen(st_model_number));
-  oc_new_string(&st_vendor_props.es_protocol_ver, st_protocol_version,
-                strlen(st_protocol_version));
+  st_specification_t *spec = st_data_mgr_get_spec_info();
+  oc_new_string(&st_vendor_props.device_type, oc_string(spec->device.device_type),
+                oc_string_len(spec->device.device_type));
+  oc_new_string(&st_vendor_props.model, oc_string(spec->platform.model_number),
+                oc_string_len(spec->platform.model_number));
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
   oc_free_string(&st_vendor_props.device_type);
-  oc_free_string(&st_vendor_props.device_sub_type);
-  oc_free_string(&st_vendor_props.reg_set_dev);
-  oc_free_string(&st_vendor_props.net_prov_info);
-  oc_free_string(&st_vendor_props.pnp_pin);
   oc_free_string(&st_vendor_props.model);
-  oc_free_string(&st_vendor_props.es_protocol_ver);
 }
 
 static void
@@ -279,7 +267,6 @@ st_manager_initialize(void)
   }
 
   oc_set_max_app_data_size(3072);
-  st_vendor_props_initialize();
 
   st_unregister_status_handler();
   set_main_status_sync(ST_STATUS_INIT);
@@ -307,6 +294,8 @@ st_manager_stack_init(void)
     return -1;
   }
 
+  st_vendor_props_initialize();
+
   if (st_is_easy_setup_finish() != 0) {
     // Scan for neighbor wifi access points
     st_start_wifi_scan();
@@ -315,7 +304,10 @@ st_manager_stack_init(void)
     st_print_log("[ST_MGR] Soft AP turn on.\n");
 
     char ssid[MAX_SSID_LEN + 1];
-    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
+    st_specification_t *spec = st_data_mgr_get_spec_info();
+    if (st_gen_ssid(ssid, oc_string(spec->device.device_name),
+                    oc_string(spec->platform.manufacturer_name),
+                    oc_string(spec->platform.model_number)) != 0) {
       return -1;
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
@@ -326,13 +318,11 @@ st_manager_stack_init(void)
     return -1;
   }
 
-  st_data_mgr_info_free();
+  set_sc_prov_info();
 
   char uuid[MAX_UUID_LENGTH] = { 0 };
   oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
   st_print_log("[ST_MGR] uuid : %s\n", uuid);
-
-  set_sc_prov_info();
 
   int i = 0;
   int device_num = 0;
@@ -354,6 +344,8 @@ st_manager_stack_init(void)
     st_print_log("[ST_MGR] st_process_start failed.\n");
     return -1;
   }
+
+  st_data_mgr_info_free();
 
   return 0;
 }
@@ -490,6 +482,8 @@ st_manager_stop(void)
   deinit_provisioning_info_resource();
 
   oc_main_shutdown();
+
+  free_specifications_platform(&platform_info);
 }
 
 void
