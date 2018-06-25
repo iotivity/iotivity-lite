@@ -81,5 +81,7 @@ typedef struct oc_tls_peer_s {
   oc_clock_time_t timestamp;
 } oc_tls_peer_t;
 
+bool oc_sec_get_rpk_hmac(int device, unsigned char *hmac, int *hmac_len);
+
 #endif /* OC_SECURITY */
 #endif /* OC_TLS_H */
