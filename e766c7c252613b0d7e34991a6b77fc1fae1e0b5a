@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f0b065f6",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T05:32:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7a90b4ec",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 20
+      },
+      "revId": "e766c7c252613b0d7e34991a6b77fc1fae1e0b5a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9a93f8f9",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-20T06:48:38Z",
       "side": 1,
       "message": "Please move this logic into st_manager_initialize() to use the loaded data in that function.",
+      "range": {
+        "startLine": 311,
+        "startChar": 0,
+        "endLine": 314,
+        "endChar": 3
+      },
+      "revId": "e766c7c252613b0d7e34991a6b77fc1fae1e0b5a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5095d13e",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T05:32:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9a93f8f9",
       "range": {
         "startLine": 311,
         "startChar": 0,
