@@ -302,8 +302,10 @@ st_manager_init_step(void)
   }
 
   if (st_is_easy_setup_finish() != 0) {
-    // Scan for neighbor wifi access points
-    st_start_wifi_scan();
+    // Scan for neighbor wifi access points and cache list
+    st_wifi_ap_t *ap_list = NULL;
+    st_wifi_scan(&ap_list);
+    st_wifi_set_cache(ap_list);
 
     // Turn on soft-ap
     st_print_log("[ST_MGR] Soft AP turn on.\n");
