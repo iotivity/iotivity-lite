@@ -159,6 +159,31 @@ st_data_mgr_get_rsc_type_info(const char *rt)
   return rt_info;
 }
 
+void
+free_specifications_device(st_device_info_t *device)
+{
+    if(!device) return;
+    st_string_check_free(&device->device_type);
+    st_string_check_free(&device->device_name);
+    st_string_check_free(&device->spec_version);
+    st_string_check_free(&device->data_model_version);
+}
+
+void
+free_specifications_platform(st_platform_info_t *platform)
+{
+    if(!platform) return;
+    st_string_check_free(&platform->manufacturer_name);
+    st_string_check_free(&platform->manufacturer_uri);
+    st_string_check_free(&platform->manufacturing_date);
+    st_string_check_free(&platform->model_number);
+    st_string_check_free(&platform->platform_version);
+    st_string_check_free(&platform->os_version);
+    st_string_check_free(&platform->hardware_version);
+    st_string_check_free(&platform->firmware_version);
+    st_string_check_free(&platform->vendor_id);
+}
+
 static void
 free_specifications(void)
 {
@@ -166,19 +191,8 @@ free_specifications(void)
   while (item != NULL) {
     next = item->next;
     oc_list_remove(st_specification_list, item);
-    st_string_check_free(&item->device.device_type);
-    st_string_check_free(&item->device.device_name);
-    st_string_check_free(&item->device.spec_version);
-    st_string_check_free(&item->device.data_model_version);
-    st_string_check_free(&item->platform.manufacturer_name);
-    st_string_check_free(&item->platform.manufacturer_uri);
-    st_string_check_free(&item->platform.manufacturing_date);
-    st_string_check_free(&item->platform.model_number);
-    st_string_check_free(&item->platform.platform_version);
-    st_string_check_free(&item->platform.os_version);
-    st_string_check_free(&item->platform.hardware_version);
-    st_string_check_free(&item->platform.firmware_version);
-    st_string_check_free(&item->platform.verdor_id);
+    free_specifications_device(&item->device);
+    free_specifications_platform(&item->platform);
     oc_memb_free(&st_specification_s, item);
     item = next;
   }
@@ -307,7 +321,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
     }
     if (oc_rep_get_string(spec_platform_rep, ST_SPEC_VENDER_ID_KEY, &value,
                           &size)) {
-      st_string_check_new(&spec_info->platform.verdor_id, value, size);
+      st_string_check_new(&spec_info->platform.vendor_id, value, size);
     }
   } else {
     st_print_log("[ST_DATA_MGR] can't get specification platform data\n");
