@@ -93,14 +93,14 @@ st_store_dump(void)
 
   oc_rep_new(buf, ST_MAX_DATA_SIZE);
   st_encode_store_info();
-  int size = oc_rep_finalize();
 #ifdef OC_SECURITY
+  int size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("[ST_Store] encoded info size %d", size);
     oc_storage_write(ST_STORE_NAME, buf, size);
   }
-#endif /* OC_SECURITY */
   OC_LOGbytes(buf, size);
+#endif /* OC_SECURITY */
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */

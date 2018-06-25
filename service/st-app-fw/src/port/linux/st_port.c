@@ -474,6 +474,7 @@ void
 st_scan_wifi(st_wifi_ap_t **ap_list)
 {
   st_print_log("[St_Port] Mock wifi scan...\n");
+  (void)wifi_scan_list_dup(NULL);
 
   st_wifi_ap_t *list_tail = NULL;
   int cnt=3;
