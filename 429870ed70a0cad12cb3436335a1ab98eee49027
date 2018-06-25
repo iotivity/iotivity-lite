@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_6b48e45b",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-25T19:06:56Z",
+      "side": 1,
+      "message": "You should probably add:\n\nmemset(\u0026ipaddress, 0, sizeof(oc_string_t));\n\nover here because if this function received an IPv4 address (no DNS lookup) on a build that excluded OC_IPV4, then the condition on line 390 could pass, causing a crash during oc_free_string().",
+      "revId": "429870ed70a0cad12cb3436335a1ab98eee49027",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
