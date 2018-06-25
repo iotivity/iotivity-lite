@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f03a2535",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_90ad998b",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_b0bb7dc3",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2018-06-25T06:12:33Z",
       "side": 1,
       "message": "How about checking resource_info is valid or not?",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_904919d3",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b0bb7dc3",
       "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_303c8d2f",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_10b189e1",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_30c76d47",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 12
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_704615c1",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_30c76d47",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_109a2963",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 12
@@ -81,6 +153,24 @@
       "writtenOn": "2018-06-25T06:12:33Z",
       "side": 1,
       "message": "This function always return 0.\nI hope adding checking error cases,\notherwise, return void may be possible if you think it is always true",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d01281b3",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_109a2963",
       "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
