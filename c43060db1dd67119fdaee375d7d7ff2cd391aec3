@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_50a3119e",
+        "filename": "service/fota/include/fota.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "Should it located in header?\nIf not, how about move these values into implementation logic(.c)?",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 53
+      },
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_70aa9571",
+        "filename": "service/fota/include/fota.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "Don\u0027t need to check return value for fota callback?\n(That means if fota is requested things can\u0027t deny?)",
+      "range": {
+        "startLine": 57,
+        "startChar": 8,
+        "endLine": 57,
+        "endChar": 12
+      },
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9076393d",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "post response don\u0027t need to include payload?",
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7073b54d",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "don\u0027t need.",
+      "range": {
+        "startLine": 95,
+        "startChar": 2,
+        "endLine": 95,
+        "endChar": 18
+      },
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d08f2122",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "actually return int usally use 0 for success and -1 for error in iotivity-lite stack.\nI think it can be confused what is success value.\nIf 1,0 use is proper to you, how about change return type to bool?",
+      "range": {
+        "startLine": 104,
+        "startChar": 11,
+        "endLine": 104,
+        "endChar": 12
+      },
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f09ea555",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T06:05:50Z",
+      "side": 1,
+      "message": "How about add free logic for g_fw_info?\nAnd initialize g_fota_state and g_fota_result also?",
+      "revId": "c43060db1dd67119fdaee375d7d7ff2cd391aec3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
