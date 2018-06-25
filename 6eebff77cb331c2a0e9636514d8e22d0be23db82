@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_90f119d0",
+        "filename": "service/fota/include/fota.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "Because it is string, so can not use enum",
+      "parentUuid": "da33351e_9062b9d6",
+      "range": {
+        "startLine": 52,
+        "startChar": 30,
+        "endLine": 52,
+        "endChar": 45
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_b0a09df5",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-23T11:13:35Z",
       "side": 1,
       "message": "Where is it set to true?",
+      "range": {
+        "startLine": 49,
+        "startChar": 15,
+        "endLine": 49,
+        "endChar": 35
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_50203149",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b0a09df5",
       "range": {
         "startLine": 49,
         "startChar": 15,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_701735ee",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "will do next patch",
+      "parentUuid": "da33351e_d0e9e11b",
+      "range": {
+        "startLine": 54,
+        "startChar": 45,
+        "endLine": 54,
+        "endChar": 52
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_b031bda4",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_901ab915",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "da33351e_b031bda4",
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_10a6a910",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -99,6 +189,30 @@
       "writtenOn": "2018-06-23T11:13:35Z",
       "side": 1,
       "message": "check whether request is within the spec scope. if not oc_send_response(OC_STATUS_BAD_REQUEST);",
+      "range": {
+        "startLine": 77,
+        "startChar": 24,
+        "endLine": 77,
+        "endChar": 48
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d0d3a136",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_10a6a910",
       "range": {
         "startLine": 77,
         "startChar": 24,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b0d89d54",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "Not only resource but also everything about fota.",
+      "parentUuid": "da33351e_b0eedd20",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 9
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_d09ba1c7",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -145,6 +283,30 @@
       "writtenOn": "2018-06-23T11:13:35Z",
       "side": 1,
       "message": "do we need to delete the resource?",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 23
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_10dea93f",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "No need",
+      "parentUuid": "da33351e_d09ba1c7",
       "range": {
         "startLine": 118,
         "startChar": 0,
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f0e22502",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_705f350f",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 4
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f0aa25d3",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_50e79112",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "there are no in spec",
+      "parentUuid": "da33351e_f0aa25d3",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 1
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_50af91e3",
         "filename": "service/fota/src/fota.c",
         "patchSetId": 1
@@ -214,6 +424,30 @@
       "writtenOn": "2018-06-23T11:13:35Z",
       "side": 1,
       "message": "in case of uri change do we need to notify?",
+      "range": {
+        "startLine": 142,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 42
+      },
+      "revId": "6eebff77cb331c2a0e9636514d8e22d0be23db82",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_30e48d0c",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T04:52:45Z",
+      "side": 1,
+      "message": "this is spec",
+      "parentUuid": "da33351e_50af91e3",
       "range": {
         "startLine": 142,
         "startChar": 0,
