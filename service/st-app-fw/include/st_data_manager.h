@@ -21,18 +21,16 @@
 
 #include "oc_helpers.h"
 
-typedef struct st_specification
+typedef struct st_device_info
 {
-  struct st_specification *next;
-  struct st_device_info_t
-  {
     oc_string_t device_type;
     oc_string_t device_name;
     oc_string_t spec_version;
     oc_string_t data_model_version;
-  } device;
-  struct st_platform_info_t
-  {
+} st_device_info_t;
+
+typedef struct st_platform_info
+{
     oc_string_t manufacturer_name;
     oc_string_t manufacturer_uri;
     oc_string_t manufacturing_date;
@@ -41,8 +39,14 @@ typedef struct st_specification
     oc_string_t os_version;
     oc_string_t hardware_version;
     oc_string_t firmware_version;
-    oc_string_t verdor_id;
-  } platform;
+    oc_string_t vendor_id;
+} st_platform_info_t;
+
+typedef struct st_specification
+{
+  struct st_specification *next;
+  st_device_info_t device;
+  st_platform_info_t platform;
   int device_idx;
 } st_specification_t;
 
@@ -96,6 +100,8 @@ typedef struct st_resource_type
 
 int st_data_mgr_info_load(void);
 void st_data_mgr_info_free(void);
+st_platform_info_t *st_data_mgr_platform_data_load(st_specification_t *spec);
+void st_data_mgr_platform_data_free(void);
 
 st_specification_t *st_data_mgr_get_spec_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
