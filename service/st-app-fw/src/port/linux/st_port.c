@@ -71,6 +71,7 @@ extern void st_manager_quit(void);
 
 static void *st_port_user_input_loop(void *data);
 static void *soft_ap_process_routine(void *data);
+static void st_wifi_clear_cache(void);
 
 int
 st_port_specific_init(void)
@@ -162,7 +163,7 @@ st_port_user_input_loop(void *data)
     case '0':
       st_manager_quit();
       st_process_signal();
-      st_free_wifi_scan_list(g_ap_scan_list);
+      st_wifi_clear_cache();
       g_ap_scan_list = NULL;
       goto exit;
     default:
@@ -507,12 +508,13 @@ wifi_scan_list_dup(st_wifi_ap_t *scan_list) {
  */
 #ifdef MOCK_WIFI_SCAN
 void
-st_scan_wifi(st_wifi_ap_t **ap_list)
+st_wifi_scan(st_wifi_ap_t **ap_list)
 {
   st_print_log("[St_Port] Mock wifi scan...\n");
   (void)wifi_scan_list_dup(NULL);
 
   st_wifi_ap_t *list_tail = NULL;
+  *ap_list = NULL;
   int cnt=3;
   while (cnt--) {
     st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
@@ -560,15 +562,9 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
 }
 #else
 void
-st_scan_wifi(st_wifi_ap_t **ap_list)
+st_wifi_scan(st_wifi_ap_t **ap_list)
 {
   if (!ap_list) {
-    return;
-  }
-
-  if (g_ap_scan_list) {
-    st_print_log("[St_Port] Returning cached WiFi AP scan list\n");
-    *ap_list = wifi_scan_list_dup(g_ap_scan_list);
     return;
   }
 
@@ -596,6 +592,7 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
 
   wireless_scan *result = head.result;
   st_wifi_ap_t *tail = NULL;
+  *ap_list = NULL;
   int cnt = 0;
   // TODO: Restricting to 10 as failed to send response with more wifi aps.
   // Is there a priority to select wifi aps to include in response ?
@@ -645,8 +642,8 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
       strncpy(ap->enc_type, enc_type, strlen(enc_type));
     }
 
-    if (!g_ap_scan_list) {
-      g_ap_scan_list = ap;
+    if (!*ap_list) {
+      *ap_list = ap;
     } else {
       tail->next = ap;
     }
@@ -655,17 +652,29 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
     cnt++;
   }
 
-  *ap_list = wifi_scan_list_dup(g_ap_scan_list);
   st_print_log("[St_Port] Found %d neighbor wifi access points\n", cnt);
 }
 #endif
 
 void
-st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
+st_wifi_set_cache(st_wifi_ap_t *ap_list)
 {
-  while (scanlist) {
-    st_wifi_ap_t *del = scanlist;
-    scanlist = scanlist->next;
+  st_wifi_clear_cache();
+  g_ap_scan_list = ap_list;
+}
+
+st_wifi_ap_t*
+st_wifi_get_cache(void)
+{
+  return g_ap_scan_list;
+}
+
+static void
+st_wifi_clear_cache(void)
+{
+  while (g_ap_scan_list) {
+    st_wifi_ap_t *del = g_ap_scan_list;
+    g_ap_scan_list = g_ap_scan_list->next;
 
     free(del->ssid);
     free(del->mac_addr);
@@ -676,6 +685,7 @@ st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
     free(del->sec_type);
     free(del);
   }
+  g_ap_scan_list = NULL;
 }
 
 static void *

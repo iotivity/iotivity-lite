@@ -196,13 +196,19 @@ st_connect_wifi(const char *ssid, const char *pwd)
 }
 
 void
-st_scan_wifi(st_wifi_ap_t **ap_list)
+st_wifi_scan(st_wifi_ap_t **ap_list)
 {
   oc_abort(__func__);
 }
 
 void
-st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
+st_wifi_set_cache(st_wifi_ap_t *scanlist)
+{
+  oc_abort(__func__);
+}
+
+st_wifi_ap_t*
+st_wifi_get_cache(void)
 {
   oc_abort(__func__);
 }
