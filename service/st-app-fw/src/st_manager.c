@@ -246,6 +246,7 @@ set_st_manager_status(st_status_t status)
 {
   g_main_status = status;
   oc_set_delayed_callback(NULL, status_callback, 0);
+  _oc_signal_event_loop();
 }
 
 static void
