@@ -55,6 +55,7 @@ prep_files+=${CC}
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.mk.tmp
 prep_files+=${top_dir}/deps/tinycbor/LICENSE
+prep_files+=${top_dir}/deps/tinycbor/tmp/done.log
 
 all?=prep configure build
 
@@ -73,6 +74,13 @@ ${os_external_makefile}.orig: ${os_external_makefile}
 
 ${top_dir}/deps/tinycbor/%:
 	${MAKE} -C "${top_dir}/tests" prep
+
+tinycbor_patches?=$(sort $(wildcard ${top_dir}/patches/tinycbor/*.patch))
+${top_dir}/deps/tinycbor/tmp/done.log: ${top_dir}/deps/tinycbor/. ${tinycbor_patches}
+	cd ${<D} && for patch in ${tinycbor_patches} ; do patch -r - -s -N -p1 < $${patch} ; done
+	mkdir -p ${@D}
+	echo "Patches applied in $^" > ${@}
+
 
 ${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp: ${CURDIR}/iotivity-constrained.Kconfig ${tizenrt_dir}
 	grep 'iotivity-constrained' "${tizenrt_dir}/external/Kconfig" \
