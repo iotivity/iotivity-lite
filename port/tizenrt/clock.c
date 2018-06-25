@@ -18,6 +18,9 @@
 #include "port/oc_clock.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
+#ifdef __TIZENRT__
+#include <wchar.h>
+#endif
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
