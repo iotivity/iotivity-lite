@@ -59,6 +59,8 @@ static st_soft_ap_t g_soft_ap;
 
 static st_thread_t g_user_input_thread = NULL;
 
+static int g_user_input_shutdown_pipe[2];
+
 static st_wifi_ap_t *g_ap_scan_list = NULL;
 
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
@@ -74,6 +76,10 @@ int
 st_port_specific_init(void)
 {
   /* set port specific logics. in here */
+  if (pipe(g_user_input_shutdown_pipe) < 0) {
+    st_print_log("shutdown pipe error");
+    return -1;
+  }
   g_user_input_thread =
     st_thread_create(st_port_user_input_loop, "INPUT", 0, NULL);
   return 0;
@@ -83,7 +89,13 @@ void
 st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
+  if (write(g_user_input_shutdown_pipe[1], "\n", 1) < 0) {
+    st_print_log("cannot wakeup user input thread");
+    return;
+  }
   st_thread_destroy(g_user_input_thread);
+  close(g_user_input_shutdown_pipe[0]);
+  close(g_user_input_shutdown_pipe[1]);
   g_user_input_thread = NULL;
   return;
 }
@@ -105,15 +117,39 @@ st_port_user_input_loop(void *data)
 {
   (void)data;
   char key[10];
+  fd_set readfds, setfds;
+  int stdin_fd = fileno(stdin);
+
+  FD_ZERO(&readfds);
+  FD_SET(stdin_fd, &readfds);
+  FD_SET(g_user_input_shutdown_pipe[0], &readfds);
 
   while (1) {
     print_menu();
     fflush(stdin);
-    if (!scanf("%s", &key)) {
-      st_print_log("scanf failed!!!!\n");
+
+    setfds = readfds;
+    int n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+
+    if (n == -1) {
+      st_print_log("user input failed!!!!\n");
       st_manager_quit();
       st_process_signal();
       goto exit;
+    }
+
+    if (FD_ISSET(g_user_input_shutdown_pipe[0], &setfds)) {
+      char buf;
+      read(g_user_input_shutdown_pipe[0], &buf, 1);
+      goto exit;
+    }
+
+    if (FD_ISSET(stdin_fd, &setfds)) {
+      int count = read(stdin_fd, key, 10);
+      if (count < 0) {
+        goto exit;
+      }
+      FD_CLR(stdin_fd, &setfds);
     }
 
     switch (key[0]) {
