@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_90ad998b",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-25T06:12:33Z",
+      "side": 1,
+      "message": "how about checking whether spec_info is NULL or not?",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b0bb7dc3",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-25T06:12:33Z",
+      "side": 1,
+      "message": "How about checking resource_info is valid or not?",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_10b189e1",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-25T06:12:33Z",
+      "side": 1,
+      "message": "How about checking rt is valid or not...?",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_30c76d47",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-25T06:12:33Z",
+      "side": 1,
+      "message": "What about checkitn property is valid or not?\nif it\u0027s NULL, it could be one of cases about failure",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_109a2963",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-06-25T06:12:33Z",
+      "side": 1,
+      "message": "This function always return 0.\nI hope adding checking error cases,\notherwise, return void may be possible if you think it is always true",
+      "revId": "7b86a7453372dcdc8ef285901e1c005c602c8b23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
