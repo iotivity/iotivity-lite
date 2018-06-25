@@ -178,7 +178,7 @@ free_specifications(void)
     st_string_check_free(&item->platform.os_version);
     st_string_check_free(&item->platform.hardware_version);
     st_string_check_free(&item->platform.firmware_version);
-    st_string_check_free(&item->platform.verdor_id);
+    st_string_check_free(&item->platform.vendor_id);
     oc_memb_free(&st_specification_s, item);
     item = next;
   }
@@ -307,7 +307,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
     }
     if (oc_rep_get_string(spec_platform_rep, ST_SPEC_VENDER_ID_KEY, &value,
                           &size)) {
-      st_string_check_new(&spec_info->platform.verdor_id, value, size);
+      st_string_check_new(&spec_info->platform.vendor_id, value, size);
     }
   } else {
     st_print_log("[ST_DATA_MGR] can't get specification platform data\n");
