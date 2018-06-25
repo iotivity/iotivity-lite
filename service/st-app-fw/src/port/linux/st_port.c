@@ -61,8 +61,6 @@ static st_thread_t g_user_input_thread = NULL;
 
 static int g_user_input_shutdown_pipe[2];
 
-static st_wifi_ap_t *g_ap_scan_list = NULL;
-
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
@@ -162,8 +160,7 @@ st_port_user_input_loop(void *data)
     case '0':
       st_manager_quit();
       st_process_signal();
-      st_free_wifi_scan_list(g_ap_scan_list);
-      g_ap_scan_list = NULL;
+      st_wifi_clear_cache();
       goto exit;
     default:
       st_print_log("unsupported command.\n");
@@ -457,48 +454,6 @@ exit:
   st_print_log("[St_Port] st_connect_wifi error occur\n");
 }
 
-static void
-str_dup(char **dest, char *src) {
-  if (!src) {
-    return;
-  }
-
-  *dest = (char*) calloc(strlen(src)+1, sizeof(char));
-  strncpy(*dest, src, strlen(src));
-}
-
-static st_wifi_ap_t*
-wifi_scan_list_dup(st_wifi_ap_t *scan_list) {
-  if (!scan_list) {
-    return NULL;
-  }
-
-  st_wifi_ap_t *res_list = NULL;
-  st_wifi_ap_t *list_tail = NULL;
-  while (scan_list) {
-    st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
-    str_dup(&ap->ssid, scan_list->ssid);
-    str_dup(&ap->mac_addr, scan_list->mac_addr);
-    str_dup(&ap->channel, scan_list->channel);
-    str_dup(&ap->max_bitrate, scan_list->max_bitrate);
-    str_dup(&ap->rssi, scan_list->rssi);
-    str_dup(&ap->enc_type, scan_list->enc_type);
-    str_dup(&ap->sec_type, scan_list->sec_type);
-
-    if (!res_list) {
-      res_list = ap;
-    }
-    else {
-      list_tail->next = ap;
-    }
-
-    list_tail = ap;
-    scan_list = scan_list->next;
-  }
-
-  return res_list;
-}
-
 /* TODO: libiw-dev is required to be installed to scan wifi access
  * points. Jenkins build system lacks this package and to avoid build
  * failure in Jenkins we are mocking wifi scan.
@@ -507,12 +462,12 @@ wifi_scan_list_dup(st_wifi_ap_t *scan_list) {
  */
 #ifdef MOCK_WIFI_SCAN
 void
-st_scan_wifi(st_wifi_ap_t **ap_list)
+st_wifi_scan(st_wifi_ap_t **ap_list)
 {
   st_print_log("[St_Port] Mock wifi scan...\n");
-  (void)wifi_scan_list_dup(NULL);
 
   st_wifi_ap_t *list_tail = NULL;
+  *ap_list = NULL;
   int cnt=3;
   while (cnt--) {
     st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
@@ -560,15 +515,9 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
 }
 #else
 void
-st_scan_wifi(st_wifi_ap_t **ap_list)
+st_wifi_scan(st_wifi_ap_t **ap_list)
 {
   if (!ap_list) {
-    return;
-  }
-
-  if (g_ap_scan_list) {
-    st_print_log("[St_Port] Returning cached WiFi AP scan list\n");
-    *ap_list = wifi_scan_list_dup(g_ap_scan_list);
     return;
   }
 
@@ -596,6 +545,7 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
 
   wireless_scan *result = head.result;
   st_wifi_ap_t *tail = NULL;
+  *ap_list = NULL;
   int cnt = 0;
   // TODO: Restricting to 10 as failed to send response with more wifi aps.
   // Is there a priority to select wifi aps to include in response ?
@@ -645,8 +595,8 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
       strncpy(ap->enc_type, enc_type, strlen(enc_type));
     }
 
-    if (!g_ap_scan_list) {
-      g_ap_scan_list = ap;
+    if (!*ap_list) {
+      *ap_list = ap;
     } else {
       tail->next = ap;
     }
@@ -655,17 +605,16 @@ st_scan_wifi(st_wifi_ap_t **ap_list)
     cnt++;
   }
 
-  *ap_list = wifi_scan_list_dup(g_ap_scan_list);
   st_print_log("[St_Port] Found %d neighbor wifi access points\n", cnt);
 }
 #endif
 
 void
-st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
+st_wifi_free_scan_list(st_wifi_ap_t *ap_list)
 {
-  while (scanlist) {
-    st_wifi_ap_t *del = scanlist;
-    scanlist = scanlist->next;
+  while (ap_list) {
+    st_wifi_ap_t *del = ap_list;
+    ap_list = ap_list->next;
 
     free(del->ssid);
     free(del->mac_addr);
@@ -677,6 +626,30 @@ st_free_wifi_scan_list(st_wifi_ap_t *scanlist)
     free(del);
   }
 }
+
+#ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+static st_wifi_ap_t *g_ap_scan_list = NULL;
+
+void
+st_wifi_set_cache(st_wifi_ap_t *ap_list)
+{
+  st_wifi_clear_cache();
+  g_ap_scan_list = ap_list;
+}
+
+st_wifi_ap_t*
+st_wifi_get_cache(void)
+{
+  return g_ap_scan_list;
+}
+
+void
+st_wifi_clear_cache(void)
+{
+  st_wifi_free_scan_list(g_ap_scan_list);
+  g_ap_scan_list = NULL;
+}
+#endif
 
 static void *
 soft_ap_process_routine(void *data)

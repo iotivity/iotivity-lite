@@ -160,13 +160,6 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
   return 0;
 }
 
-void
-st_start_wifi_scan(void) {
-  st_wifi_ap_t *scanlist = NULL;
-  st_scan_wifi(&scanlist);
-  st_free_wifi_scan_list(scanlist);
-}
-
 static oc_event_callback_retval_t
 callback_handler(void *data)
 {
@@ -409,7 +402,11 @@ get_ap_list(sec_accesspoint **ap_list) {
   sec_accesspoint *list_tail = NULL;
 
   st_print_log("[Easy_Setup] WiFi scan list -> \n");
-  st_scan_wifi(&scanlist);
+#ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+  st_wifi_scan(&scanlist);
+#else
+  scanlist = st_wifi_get_cache();
+#endif
 
   st_wifi_ap_t *cur = scanlist;
   int cnt = 0;
@@ -441,7 +438,9 @@ get_ap_list(sec_accesspoint **ap_list) {
     cnt++;
   }
 
-  st_free_wifi_scan_list(scanlist);
+#ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+  st_wifi_free_scan_list(scanlist);
+#endif
 }
 
 static bool
