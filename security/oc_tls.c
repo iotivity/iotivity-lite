@@ -14,7 +14,6 @@
 // limitations under the License.
 */
 
-
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -29,6 +28,7 @@
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
 #include "mbedtls/oid.h"
+#include "mbedtls/pkcs5.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
 #include "mbedtls/error.h"
@@ -46,6 +46,9 @@
 #include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
+#include "oc_doxm.h"
+
+#define PBKDF_ITERATIONS 1000
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -128,6 +131,13 @@ oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
   PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
 }
 #endif /* OC_DEBUG */
+
+static oc_sec_get_cpubkey_and_token g_oc_sec_get_cpubkey_and_token = NULL;
+static oc_sec_get_own_key g_oc_sec_get_own_key = NULL;
+
+static int
+oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
+           size_t output_len, size_t num_message_fragments, ...);
 
 static bool
 is_peer_active(oc_tls_peer_t *peer)
@@ -360,6 +370,17 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
         return -1;
       }
       OC_DBG("oc_tls: Set peer credential to SSL handle");
+      return 0;
+    }
+    else {
+      unsigned char psk[16] = { 0x0 };
+      int psk_len = 0;
+      if (oc_sec_get_rpk_psk(0, psk, &psk_len) != true) {
+        return -1;
+      }
+      if (mbedtls_ssl_set_hs_psk(ssl, psk, psk_len) != 0) {
+        return -1;
+      }
       return 0;
     }
   }
@@ -717,6 +738,156 @@ oc_sec_load_certs(int device)
 tls_certs_load_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
+}
+
+static int
+derive_crypto_key_from_password(const unsigned char *passwd, size_t pLen,
+                                const uint8_t *salt, size_t saltLen,
+                                size_t iterations,
+                                size_t keyLen, uint8_t *derivedKey)
+{
+    mbedtls_md_context_t sha_ctx;
+    const mbedtls_md_info_t *info_sha;
+    int ret = -1;
+
+    if (iterations > UINT_MAX) {
+        OC_ERR("Number of iterations over maximum %u", UINT_MAX);
+        return ret;
+    }
+
+    if (keyLen > UINT32_MAX) {
+        OC_ERR("derive_crypto_key_from_password: Key length over maximum %u", UINT32_MAX);
+        return ret;
+    }
+
+    /* Setup the hash/HMAC function, for the PBKDF2 function. */
+    mbedtls_md_init(&sha_ctx);
+
+    info_sha = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+    if (info_sha == NULL) {
+        OC_ERR("derive_crypto_key_from_password: failed to get hash information");
+        return ret;
+    }
+
+    ret = mbedtls_md_setup(&sha_ctx, info_sha, 1);
+    if (ret != 0) {
+        OC_ERR("derive_crypto_key_from_password: Failed to setup hash function");
+        return ret;
+    }
+
+    ret = mbedtls_pkcs5_pbkdf2_hmac(&sha_ctx,
+                                    passwd, pLen,
+                                    salt, saltLen,
+                                    (unsigned int)iterations,
+                                    (uint32_t)keyLen, derivedKey);
+    if (ret != 0) {
+        OC_ERR("derive_crypto_key_from_password: Call to mbedtls PBKDF2 function failed");
+    }
+
+    mbedtls_md_free(&sha_ctx);
+    return ret;
+}
+
+void
+oc_sec_set_cpubkey_and_token_load(oc_sec_get_cpubkey_and_token cpubkey_and_token_cb)
+{
+  if(NULL == cpubkey_and_token_cb) {
+    OC_ERR("oc_cred: cpubkey_and_token_cb is NULL");
+    return;
+  }
+  g_oc_sec_get_cpubkey_and_token = cpubkey_and_token_cb;
+}
+
+void
+oc_sec_set_own_key_load(oc_sec_get_own_key own_key_cb)
+{
+  if(NULL == own_key_cb) {
+    OC_ERR("oc_cred: own_key_cb is NULL");
+    return;
+  }
+  g_oc_sec_get_own_key = own_key_cb;
+}
+
+static bool
+gen_master_key(uint8_t *master, int *master_len)
+{
+  mbedtls_ecdh_context ecdh_ctx;
+  mbedtls_ecdh_init(&ecdh_ctx);
+  int priv_len = 0, pub_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
+  uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[64] = {0};
+
+  if (!master || !master_len) {
+    OC_ERR("%s: NULL params", __func__);
+    return false;
+  }
+  if (!g_oc_sec_get_own_key || !g_oc_sec_get_cpubkey_and_token) {
+    OC_ERR("%s: callbacks not set", __func__);
+    return false;
+  }
+  g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
+  g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
+  if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
+    OC_ERR("%s: load CURVE25519", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
+    OC_ERR("%s: load private key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
+    OC_ERR("%s: load own public key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
+    OC_ERR("%s: set peer's public key X", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_lset(&ecdh_ctx.Qp.Z, 1) != 0) {
+    OC_ERR("%s: set peer's public key Z", __func__);
+    return false;
+  }
+  if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
+      &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
+    OC_ERR("%s: compute shared key", __func__);
+    return false;
+  }
+  if (mbedtls_mpi_write_binary(&ecdh_ctx.z, shared, 32) != 0) {
+    OC_ERR("%s: write shared key", __func__);
+    return false;
+  }
+  tmp_len = token_len+32;
+  memcpy(tmp, shared, 32);
+  memcpy(tmp+32, token, token_len);
+  if (mbedtls_sha256_ret(tmp, tmp_len, master, 0) != 0) {
+    OC_ERR("%s: sha256 hash", __func__);
+    return false;
+  }
+  *master_len = 32;
+  mbedtls_ecdh_free(&ecdh_ctx);
+  return true;
+}
+
+bool
+oc_sec_get_rpk_psk(int device, unsigned char *psk, int *psk_len)
+{
+  int ret = 0, master_key_len = 0;
+  uint8_t master_key[32];
+
+  if (gen_master_key(master_key, &master_key_len) != true) {
+    OC_ERR("gen_master_key failed");
+    return false;
+  }
+
+  *psk_len = 16;
+  ret = derive_crypto_key_from_password((const unsigned char *)master_key, master_key_len,
+                                        oc_core_get_device_id(device)->id, 16,
+                                        PBKDF_ITERATIONS,
+                                        *psk_len, psk);
+  if (ret != 0) {
+    OC_ERR("derive_crypto_key_from_password failed");
+    return false;
+  }
+  return true;
 }
 
 bool
