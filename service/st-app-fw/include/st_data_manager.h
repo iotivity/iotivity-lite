@@ -41,7 +41,7 @@ typedef struct st_specification
     oc_string_t os_version;
     oc_string_t hardware_version;
     oc_string_t firmware_version;
-    oc_string_t verdor_id;
+    oc_string_t vendor_id;
   } platform;
   int device_idx;
 } st_specification_t;

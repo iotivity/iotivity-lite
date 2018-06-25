@@ -59,13 +59,13 @@ static const char *st_model_number = "Model Number";
 static const char *st_protocol_version = "2.0";
 
 // define application specific values.
-#ifdef OC_SPEC_VER_OIC
-static const char *spec_version = "core.1.1.0";
-static const char *data_model_version = "res.1.1.0";
-#else  /* OC_SPEC_VER_OIC */
-static const char *spec_version = "ocf.1.0.0";
-static const char *data_model_version = "ocf.res.1.0.0";
-#endif /* !OC_SPEC_VER_OIC */
+/*#ifdef OC_SPEC_VER_OIC*/
+/*static const char *spec_version = "core.1.1.0";*/
+/*static const char *data_model_version = "res.1.1.0";*/
+/*#else  [> OC_SPEC_VER_OIC <]*/
+/*static const char *spec_version = "ocf.1.0.0";*/
+/*static const char *data_model_version = "ocf.res.1.0.0";*/
+/*#endif [> !OC_SPEC_VER_OIC <]*/
 
 static sc_properties st_vendor_props;
 
@@ -73,12 +73,11 @@ static sec_provisioning_info g_prov_resource;
 
 static int device_index = 0;
 
-static const char *device_rt = "oic.d.light";
-static const char *device_name = "Samsung";
-
-static const char *manufacturer = "xxxx";
+//static const char *device_rt = "oic.d.light";
+//static const char *device_name = "AmbienceSY18";
+//static const char *manufacturer = "fAMt";
 static const char *sid = "000";
-static const char *vid = "IoT2020";
+//static const char *vid = "AmbienceSY2018";
 
 int quit = 0;
 
@@ -88,20 +87,27 @@ static void
 init_platform_cb(void *data)
 {
   (void)data;
+
+  /*st_resource_info_t *st_data_mgr_get_resource_info(void);*/
+  /*st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);*/
+  st_specification_t *spec = st_data_mgr_get_spec_info();
   oc_set_custom_platform_property(mnmo, sid);
-  oc_set_custom_platform_property(mnpv, "1.0");
-  oc_set_custom_platform_property(mnos, "1.0");
-  oc_set_custom_platform_property(mnhw, "1.0");
-  oc_set_custom_platform_property(mnfv, "1.0");
-  oc_set_custom_platform_property(vid, vid);
+  oc_set_custom_platform_property(mnpv, oc_string(spec->platform.platform_version));
+  oc_set_custom_platform_property(mnos, oc_string(spec->platform.os_version));
+  oc_set_custom_platform_property(mnhw, oc_string(spec->platform.hardware_version));
+  oc_set_custom_platform_property(mnfv, oc_string(spec->platform.firmware_version));
+  oc_set_custom_platform_property(vid, oc_string(spec->platform.vendor_id));
 }
 
 static int
 app_init(void)
 {
-  int ret = oc_init_platform(manufacturer, init_platform_cb, NULL);
-  ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                       data_model_version, NULL, NULL);
+  st_specification_t *spec = st_data_mgr_get_spec_info();
+  int ret = oc_init_platform(oc_string(spec->platform.manufacturer_name), init_platform_cb, NULL);
+  ret |= oc_add_device("/oic/d", oc_string(spec->device.device_type),
+                       oc_string(spec->device.device_name),
+                       oc_string(spec->device.spec_version),
+                       oc_string(spec->device.data_model_version), NULL, NULL);
   return ret;
 }
 
@@ -155,11 +161,13 @@ set_sc_prov_info(void)
   g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
     target_size, sizeof(sec_provisioning_info_targets));
 
+  st_specification_t *spec = st_data_mgr_get_spec_info();
   for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
     oc_new_string(&g_prov_resource.targets[i].target_di, uuid, strlen(uuid));
-    oc_new_string(&g_prov_resource.targets[i].target_rt, device_rt,
-                  strlen(device_rt));
+    oc_new_string(&g_prov_resource.targets[i].target_rt,
+                  oc_string(spec->device.device_type),
+                  oc_string_len(spec->device.device_type));
     g_prov_resource.targets[i].published = false;
   }
   g_prov_resource.targets_size = target_size;
@@ -315,7 +323,10 @@ st_manager_stack_init(void)
     st_print_log("[ST_MGR] Soft AP turn on.\n");
 
     char ssid[MAX_SSID_LEN + 1];
-    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
+    st_specification_t *spec = st_data_mgr_get_spec_info();
+    if (st_gen_ssid(ssid, oc_string(spec->device.device_name),
+                    oc_string(spec->platform.manufacturer_name),
+                    sid) != 0) {
       return -1;
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
