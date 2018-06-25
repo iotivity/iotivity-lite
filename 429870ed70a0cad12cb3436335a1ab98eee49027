@@ -16,6 +16,24 @@
       "revId": "429870ed70a0cad12cb3436335a1ab98eee49027",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2bac1ced",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-25T23:35:15Z",
+      "side": 1,
+      "message": "I update patch according your comment. But I don\u0027t know why occur crash when call the oc_free_string. If not set using memset, oc_string_len return more than 0?",
+      "parentUuid": "da33351e_6b48e45b",
+      "revId": "429870ed70a0cad12cb3436335a1ab98eee49027",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
