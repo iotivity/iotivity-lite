@@ -102,6 +102,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b08d3d34",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-25T05:44:47Z",
+      "side": 1,
+      "message": "I don\u0027t think this is meaningful. Do you think this is better than using just \u0027\u003c\u0027 ?\nI think it can confuse to read a logic.",
+      "parentUuid": "da33351e_3a6f4c94",
+      "revId": "f4f546a3849bed2ebd42e49b6b593b88c3606810",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ba3cfc94",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 3
