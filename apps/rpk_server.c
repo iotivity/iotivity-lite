@@ -1,22 +1,25 @@
-/*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/******************************************************************
+ *
+ * Copyright 2018 Samsung Electronics All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************/
 
 #include "oc_api.h"
-#include "security/oc_doxm.h"
 #include "port/oc_clock.h"
+#include "security/oc_doxm.h"
+#include "security/oc_tls.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -66,7 +69,8 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
 {
   (void)interface;
   (void)user_data;
@@ -99,8 +103,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface,
-           void *user_data)
+put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)interface;
   (void)user_data;
@@ -139,6 +142,51 @@ handle_signal(int signal)
   quit = 1;
 }
 
+#if defined(OC_SECURITY) && defined(OC_RPK)
+void
+get_cpubkey_and_token(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token,
+                      int *token_len)
+{
+  if (!cpubkey || !cpubkey_len || !token || !token_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t key[32] = { 0x41, 0x97, 0x77, 0x33, 0x6e, 0xea, 0x62, 0x6c,
+                      0x5d, 0x89, 0x2e, 0x50, 0x21, 0x94, 0x74, 0xcc,
+                      0x50, 0x24, 0x00, 0x84, 0x42, 0x24, 0x13, 0xeb,
+                      0x64, 0xab, 0x2e, 0xe7, 0x53, 0x28, 0x71, 0x40 };
+  uint8_t tkn[8] = "12345678";
+  memcpy(cpubkey, key, 32);
+  memcpy(token, tkn, 8);
+  *cpubkey_len = 32;
+  *token_len = 8;
+  return;
+}
+
+void
+get_own_key(uint8_t *priv_key, int *priv_key_len, uint8_t *pub_key,
+            int *pub_key_len)
+{
+  if (!priv_key || !priv_key_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t prv[32] = { 0x46, 0x70, 0x85, 0x56, 0xf4, 0x54, 0xdc, 0x63,
+                      0xaa, 0xb9, 0x20, 0xfc, 0x8a, 0xc7, 0x59, 0xf4,
+                      0xf4, 0x6e, 0x37, 0x64, 0xcc, 0x8e, 0xa2, 0xb5,
+                      0x39, 0xe9, 0xe9, 0xb2, 0x69, 0xcd, 0x91, 0x28 };
+  uint8_t pub[32] = { 0x67, 0x32, 0x94, 0x85, 0xcf, 0x46, 0x0f, 0x92,
+                      0x4c, 0x77, 0x18, 0x05, 0xbb, 0xda, 0x7a, 0x50,
+                      0x17, 0xfe, 0xfa, 0x72, 0xc4, 0x51, 0x42, 0x89,
+                      0xa7, 0x3c, 0xc1, 0xcd, 0x23, 0x43, 0x54, 0xed };
+  memcpy(priv_key, prv, 32);
+  memcpy(pub_key, pub, 32);
+  *priv_key_len = 32;
+  *pub_key_len = 32;
+  return;
+}
+#endif // OC_SECURITY && OC_RPK
+
 int
 main(void)
 {
@@ -149,22 +197,37 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 
 #ifdef OC_SECURITY
+#ifdef OC_MFG
   oc_storage_config("./mfgserver_creds");
+#elif defined(OC_RPK)
+  oc_storage_config("./rpkserver_creds");
+#else
+  oc_storage_config("./simpleserver_creds");
+#endif
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
 
-  oc_sec_doxm_mfg(0);
+#ifdef OC_SECURITY
+#ifdef OC_MFG
+  oc_sec_doxm(0, OC_DOXM_MFG);
+#elif defined(OC_RPK)
+  oc_sec_doxm(0, OC_DOXM_RPK);
+  oc_sec_set_cpubkey_and_token_load(get_cpubkey_and_token);
+  oc_sec_set_own_key_load(get_own_key);
+#endif
+  oc_sec_doxm(0, OC_DOXM_JW);
+#endif /* OC_SECURITY */
 
   while (quit != 1) {
     next_event = oc_main_poll();
@@ -178,7 +241,7 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
-
+  oc_free_string(&name);
   oc_main_shutdown();
   return 0;
 }

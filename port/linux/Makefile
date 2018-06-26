@@ -124,8 +124,7 @@ endif
 
 ifeq ($(SECURE),1)
 ifneq ($(AUTH_OPTION),0)
-SAMPLES += mfgserver
-CFLAGS += -DOC_MFG
+SAMPLES += rpk_server
 CFLAGS += -DOC_LOAD_CA
 ifeq ($(AUTH_OPTION),1)
 CFLAGS += -DOC_UNLOAD_CERT
@@ -384,10 +383,9 @@ simpleclient: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-mfgserver: libiotivity-constrained-server.a
+rpk_server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
-	@cp ../../apps/mfgserver_cred $@_creds/cred_0
-	${CC} -o $@ ../../apps/mfgserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_MFG ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
