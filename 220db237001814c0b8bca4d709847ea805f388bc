@@ -131,6 +131,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_cbee508b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-26T08:10:17Z",
+      "side": 1,
+      "message": "Here side sid is equvalent to modelNumber.",
+      "parentUuid": "da33351e_eb035471",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 31
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_0b279865",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
