@@ -272,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_2b6a5c1a",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-26T07:40:04Z",
+      "side": 1,
+      "message": "This is different device_rt. let\u0027s remove this line also.",
+      "parentUuid": "da33351e_6bef44b1",
+      "range": {
+        "startLine": 203,
+        "startChar": 46,
+        "endLine": 203,
+        "endChar": 60
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4b208049",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -366,6 +390,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_4b6d2032",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-26T07:40:04Z",
+      "side": 1,
+      "message": "remove here only. sc_easysetup will remove these properties by later patch. remove all except only model.",
+      "parentUuid": "da33351e_cb049080",
+      "range": {
+        "startLine": 203,
+        "startChar": 2,
+        "endLine": 217,
+        "endChar": 45
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_cbd3f036",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -401,6 +449,30 @@
       "side": 1,
       "message": "What do you mean remove? \nRemove here or remove from the st_vendor_props as well?",
       "parentUuid": "da33351e_cbd3f036",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 51
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cb601038",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-26T07:40:04Z",
+      "side": 1,
+      "message": "sc_easysetup will remove these properties by later patch. remove all except only model.",
+      "parentUuid": "da33351e_ab094c97",
       "range": {
         "startLine": 223,
         "startChar": 0,
