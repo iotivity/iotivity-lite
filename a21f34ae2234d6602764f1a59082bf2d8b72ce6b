@@ -46,6 +46,30 @@
       "revId": "a21f34ae2234d6602764f1a59082bf2d8b72ce6b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6b7e24b0",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T10:49:23Z",
+      "side": 1,
+      "message": "We\u0027re using structure in init_platform_cb()\n\nPartial backtrace:\n#2  0x08049f95 in init_platform_cb (data\u003d0x0) at ../../service/st-app-fw/src/st_manager.c:64\n#3  0x08052596 in oc_core_platform_handler (request\u003d0xb65950ec, interface\u003dOC_IF_R, data\u003d0x0) at ../../api/oc_core_res.c:396\n\n(gdb) print spec\n$2 \u003d (st_specification_t *) 0x0\n\nThe caller of init_platform_cb is from:\n\nvoid\noc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,\n                         void *data)\n{\n...\n  /* fall through */\n  case OC_IF_R: {\n    ...\n    if (oc_platform_info.init_platform_cb) {\n      oc_platform_info.init_platform_cb(oc_platform_info.data);\n    }\n...\n}",
+      "parentUuid": "da33351e_abf30c72",
+      "range": {
+        "startLine": 456,
+        "startChar": 2,
+        "endLine": 456,
+        "endChar": 23
+      },
+      "revId": "a21f34ae2234d6602764f1a59082bf2d8b72ce6b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
