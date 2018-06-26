@@ -22,6 +22,12 @@
 #define OC_RSRVD_FIRMWARE_URI "/firmware"
 #define OC_RSRVD_FIRMWARE_RT "x.com.samsung.firmware"
 
+#define FOTA_INIT_STRING "Init"
+#define FOTA_CHECK_STRING "Check"
+#define FOTA_DOWNLOAD_STRING "Download"
+#define FOTA_UPDATE_STRING "Update"
+#define FOTA_DOWNLOAD_UPDATE_STRING "DownloadUpdate"
+
 typedef struct
 {
   oc_string_t ver;
@@ -77,14 +83,21 @@ post_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   char *cmd = NULL;
   int size;
   if (oc_rep_get_string(request->request_payload, "update", &cmd, &size)) {
-    if (strncmp(FOTA_CMD_INIT, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_CHECK, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_DOWNLOAD, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_UPDATE, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_DOWNLOAD_UPDATE, cmd, size) == 0) {
-      if (g_fota_cmd_cb(cmd) == 0)
-        code = OC_STATUS_CHANGED;
+    fota_cmd_t fota_cmd = 0;
+    if (strncmp(FOTA_INIT_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_INIT;
+    } else if (strncmp(FOTA_CHECK_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_CHECK;
+    } else if (strncmp(FOTA_DOWNLOAD_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_DOWNLOAD;
+    } else if (strncmp(FOTA_UPDATE_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_UPDATE;
+    } else if (strncmp(FOTA_DOWNLOAD_UPDATE_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_DOWNLOAD_UPDATE;
     }
+
+    if (fota_cmd != 0 && g_fota_cmd_cb(fota_cmd) == 0)
+      code = OC_STATUS_CHANGED;
   }
 
   oc_send_response(request, code);
