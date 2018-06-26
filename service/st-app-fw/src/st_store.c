@@ -87,7 +87,7 @@ st_store_dump_handler(void *data)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf)
-    return;
+    return OC_EVENT_DONE;
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[ST_MAX_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
