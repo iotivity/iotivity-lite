@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "st_fota_manager.h"
 #include "st_manager.h"
 #include "st_resource_manager.h"
 
@@ -160,6 +161,33 @@ st_status_handler(st_status_t status)
   }
 }
 
+static bool
+st_fota_cmd_handler(fota_cmd_t cmd)
+{
+  printf("[ST_APP] FOTA Command: %d\n", cmd);
+  switch (cmd) {
+  case FOTA_CMD_INIT:
+    break;
+  case FOTA_CMD_CHECK: {
+    char *ver = "1.0";
+    char *uri = "http://www.samsung.com";
+    // TODO: check
+    if (st_fota_set_fw_info(ver, uri) != 0) {
+      printf("[ST_APP] st_fota_set_fw_info failed.\n");
+    }
+    break;
+  }
+  case FOTA_CMD_DOWNLOAD:
+    break;
+  case FOTA_CMD_UPDATE:
+    break;
+  case FOTA_CMD_DOWNLOAD_UPDATE:
+    break;
+  }
+
+  return true;
+}
+
 int
 main(void)
 {
@@ -171,6 +199,7 @@ main(void)
   st_register_resource_handler(get_resource_handler, set_resource_handler);
   st_register_otm_confirm_handler(otm_confirm_handler);
   st_register_status_handler(st_status_handler);
+  st_register_fota_cmd_handler(st_fota_cmd_handler);
 
   if (st_manager_start() != 0) {
     printf("[ST_APP] st_manager_start failed.\n");
