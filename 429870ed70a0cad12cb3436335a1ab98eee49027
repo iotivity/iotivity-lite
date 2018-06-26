@@ -34,6 +34,24 @@
       "revId": "429870ed70a0cad12cb3436335a1ab98eee49027",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4bcec084",
+        "filename": "api/oc_endpoint.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-26T04:52:10Z",
+      "side": 1,
+      "message": "Yes, it could because ipaddress is allocated on the stack and could contain garbage until explicitly initialized. So, owing to that garbage oc_string_len could return \u003e 0 and freeing an unallocated string in that case would lead to a crash.",
+      "parentUuid": "da33351e_2bac1ced",
+      "revId": "429870ed70a0cad12cb3436335a1ab98eee49027",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
