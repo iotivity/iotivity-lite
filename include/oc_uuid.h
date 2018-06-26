@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 
+#define OC_UUID_LEN (37)
+
 typedef struct
 {
   uint8_t id[16];
