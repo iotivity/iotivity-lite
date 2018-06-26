@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ebb074f6",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 12
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "why not use @mkdir -p ${@D}??",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4b95203f",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2b925c57",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6b9c646a",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0b831805",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_eb87d40d",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8b76083d",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6b73c44d",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-06-26T05:01:31Z",
+      "side": 1,
+      "message": "remove tab",
+      "revId": "410a82f013f34211febcc76e5d4550b6d4e4d35d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
