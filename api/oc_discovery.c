@@ -107,8 +107,8 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
                          int device_index)
 {
   int matches = 0;
-  char uuid[37];
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, 37);
+  char uuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
   oc_string_t anchor;
   oc_concat_strings(&anchor, "ocf://", uuid);
 
@@ -278,8 +278,8 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
                               int device_num, bool baseline)
 {
   int matches = 0;
-  char uuid[37];
-  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, 37);
+  char uuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, MAX_UUID_LENGTH);
 
   oc_rep_start_object(*device, links);
   oc_rep_set_text_string(links, di, uuid);

@@ -991,8 +991,8 @@ oc_tls_recv_message(oc_message_t *message)
 
   if (peer) {
 #ifdef OC_DEBUG
-    char u[37];
-    oc_uuid_to_str(&peer->uuid, u, 37);
+    char u[MAX_UUID_LENGTH];
+    oc_uuid_to_str(&peer->uuid, u, MAX_UUID_LENGTH);
     OC_DBG("oc_tls: Received message from device %s", u);
 #endif /* OC_DEBUG */
 

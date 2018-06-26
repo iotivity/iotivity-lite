@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 
+#define MAX_UUID_LENGTH (37)
+
 typedef struct
 {
   uint8_t id[16];

@@ -77,7 +77,7 @@ void
 oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
 {
   int i, j = 0;
-  if (buflen < 37)
+  if (buflen < MAX_UUID_LENGTH)
     return;
   for (i = 0; i < 16; i++) {
     switch (i) {
