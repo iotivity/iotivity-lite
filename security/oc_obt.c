@@ -300,8 +300,8 @@ free_otm_state(oc_otm_ctx_t *o, int status)
   oc_tls_close_connection(ep);
   oc_tls_demote_anon_ciphersuite();
   if (status == -1) {
-    char suuid[37];
-    oc_uuid_to_str(&o->device->uuid, suuid, 37);
+    char suuid[MAX_UUID_LENGTH];
+    oc_uuid_to_str(&o->device->uuid, suuid, MAX_UUID_LENGTH);
     oc_cred_remove_subject(suuid, 0);
   }
   free_device(o->device);
@@ -519,8 +519,8 @@ obt_jw_7(oc_client_response_t *data)
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_8, HIGH_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-    char uuid[37];
-    oc_uuid_to_str(my_uuid, uuid, 37);
+    char uuid[MAX_UUID_LENGTH];
+    oc_uuid_to_str(my_uuid, uuid, MAX_UUID_LENGTH);
 
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, rowneruuid, uuid);
@@ -555,10 +555,10 @@ obt_jw_6(oc_client_response_t *data)
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  char uuid[37];
-  oc_uuid_to_str(my_uuid, uuid, 37);
-  char suuid[37];
-  oc_uuid_to_str(&device->uuid, suuid, 37);
+  char uuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(my_uuid, uuid, MAX_UUID_LENGTH);
+  char suuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(&device->uuid, suuid, MAX_UUID_LENGTH);
 
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
   bool derived = oc_sec_derive_owner_psk(
@@ -644,8 +644,8 @@ obt_jw_5(oc_client_response_t *data)
 
   if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, HIGH_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-    char uuid[37];
-    oc_uuid_to_str(my_uuid, uuid, 37);
+    char uuid[MAX_UUID_LENGTH];
+    oc_uuid_to_str(my_uuid, uuid, MAX_UUID_LENGTH);
 
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, rowneruuid, uuid);
@@ -705,8 +705,8 @@ obt_jw_3(oc_client_response_t *data)
     oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
     if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_4, HIGH_QOS, o)) {
       oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-      char uuid[37];
-      oc_uuid_to_str(my_uuid, uuid, 37);
+      char uuid[MAX_UUID_LENGTH];
+      oc_uuid_to_str(my_uuid, uuid, MAX_UUID_LENGTH);
 
       oc_rep_start_root_object();
       oc_rep_set_int(root, oxmsel, 0);
@@ -1069,8 +1069,8 @@ free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
 {
   oc_status_cb_t cb = ctx->cb;
   oc_endpoint_t *ep = get_secure_endpoint(ctx->device->endpoint);
-  char subjectuuid[37];
-  oc_uuid_to_str(&ctx->device->uuid, subjectuuid, 37);
+  char subjectuuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(&ctx->device->uuid, subjectuuid, MAX_UUID_LENGTH);
   oc_tls_close_connection(ep);
   free_device(ctx->device);
   if (ctx->switch_dos) {
@@ -1231,8 +1231,8 @@ device1_cred(oc_client_response_t *data)
     return;
   }
 
-  char d1uuid[37];
-  oc_uuid_to_str(&p->device1->uuid, d1uuid, 37);
+  char d1uuid[MAX_UUID_LENGTH];
+  oc_uuid_to_str(&p->device1->uuid, d1uuid, MAX_UUID_LENGTH);
 
   oc_endpoint_t *ep = get_secure_endpoint(p->device2->endpoint);
   int credid = oc_obt_get_next_id();
@@ -1280,8 +1280,8 @@ device2_RFPRO(int status, void *data)
       i += 4;
     }
 
-    char d2uuid[37];
-    oc_uuid_to_str(&p->device2->uuid, d2uuid, 37);
+    char d2uuid[MAX_UUID_LENGTH];
+    oc_uuid_to_str(&p->device2->uuid, d2uuid, MAX_UUID_LENGTH);
 
     oc_endpoint_t *ep = get_secure_endpoint(p->device1->endpoint);
 
@@ -1575,8 +1575,8 @@ provision_ace(int status, void *data)
       oc_rep_set_object(aclist2, subject);
       switch (ace->subject_type) {
       case OC_SUBJECT_UUID: {
-        char uuid[37];
-        oc_uuid_to_str(&ace->subject.uuid, uuid, 37);
+        char uuid[MAX_UUID_LENGTH];
+        oc_uuid_to_str(&ace->subject.uuid, uuid, MAX_UUID_LENGTH);
         oc_rep_set_text_string(subject, uuid, uuid);
       } break;
       case OC_SUBJECT_CONN: {

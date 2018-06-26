@@ -259,8 +259,8 @@ dump_acl(int device)
     PRINT("\n---------\nAce: %d\n---------\n", ace->aceid);
     switch (ace->subject_type) {
     case OC_SUBJECT_UUID: {
-      char u[37];
-      oc_uuid_to_str(&ace->subject.uuid, u, 37);
+      char u[MAX_UUID_LENGTH];
+      oc_uuid_to_str(&ace->subject.uuid, u, MAX_UUID_LENGTH);
       PRINT("UUID: %s\n", u);
     } break;
     case OC_SUBJECT_CONN: {
@@ -432,7 +432,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 bool
 oc_sec_encode_acl(int device)
 {
-  char uuid[37];
+  char uuid[MAX_UUID_LENGTH];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_ACL, device));
@@ -444,7 +444,7 @@ oc_sec_encode_acl(int device)
     oc_rep_set_object(aclist2, subject);
     switch (sub->subject_type) {
     case OC_SUBJECT_UUID:
-      oc_uuid_to_str(&sub->subject.uuid, uuid, 37);
+      oc_uuid_to_str(&sub->subject.uuid, uuid, MAX_UUID_LENGTH);
       oc_rep_set_text_string(subject, uuid, uuid);
       break;
     case OC_SUBJECT_ROLE:
@@ -506,7 +506,7 @@ oc_sec_encode_acl(int device)
     sub = sub->next;
   }
   oc_rep_close_array(root, aclist2);
-  oc_uuid_to_str(&aclist[device].rowneruuid, uuid, 37);
+  oc_uuid_to_str(&aclist[device].rowneruuid, uuid, MAX_UUID_LENGTH);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 
@@ -563,8 +563,8 @@ new_ace:
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
 #ifdef OC_DEBUG
     if (type == OC_SUBJECT_UUID) {
-      char c[37];
-      oc_uuid_to_str(&ace->subject.uuid, c, 37);
+      char c[MAX_UUID_LENGTH];
+      oc_uuid_to_str(&ace->subject.uuid, c, MAX_UUID_LENGTH);
       OC_DBG("Adding ACE for subject %s", c);
     } else if (type == OC_SUBJECT_CONN) {
       if (ace->subject.conn == OC_CONN_ANON_CLEAR) {
