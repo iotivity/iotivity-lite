@@ -22,18 +22,33 @@
 #define OC_RSRVD_FIRMWARE_URI "/firmware"
 #define OC_RSRVD_FIRMWARE_RT "x.com.samsung.firmware"
 
+#define FOTA_INIT_STRING "Init"
+#define FOTA_CHECK_STRING "Check"
+#define FOTA_DOWNLOAD_STRING "Download"
+#define FOTA_UPDATE_STRING "Update"
+#define FOTA_DOWNLOAD_UPDATE_STRING "DownloadUpdate"
+
+enum notify_type
+{
+  FOTA_NOTIFY_DEFAULT,
+  FOTA_NOTIFY_STATE,
+  FOTA_NOTIFY_INFO,
+  FOTA_NOTIFY_RESULT
+};
+
 typedef struct
 {
   oc_string_t ver;
   oc_string_t uri;
-  bool req_notify;
-} fw_info_t;
+  fota_state_t state;
+  fota_result_t result;
+  enum notify_type type;
+} fota_info_t;
 
-static fota_cmd_cb_t g_fota_cmd_cb;
-static fota_state_t g_fota_state;
-static fota_result_t g_fota_result;
-static fw_info_t g_fw_info;
+static fota_info_t g_fota_info;
+static fota_cmd_cb_t g_fota_cmd_cb = NULL;
 static oc_resource_t *resource;
+static enum notify_type g_notify_type;
 
 static void
 get_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
@@ -46,17 +61,19 @@ get_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     oc_process_baseline_interface(request->resource);
   /* fall through */
   case OC_IF_RW:
-    if (g_fota_result != FOTA_RESULT_INIT) {
-      oc_rep_set_int(root, result, g_fota_result);
-    } else if (g_fw_info.req_notify) {
-      oc_rep_set_text_string(root, newversion, oc_string(g_fw_info.ver));
-      oc_rep_set_text_string(root, packageuri, oc_string(g_fw_info.uri));
+    if (g_fota_info.type == FOTA_NOTIFY_STATE) {
+      oc_rep_set_int(root, state, g_fota_info.state);
+    } else if (g_fota_info.type == FOTA_NOTIFY_INFO) {
+      oc_rep_set_text_string(root, newversion, oc_string(g_fota_info.ver));
+      oc_rep_set_text_string(root, packageuri, oc_string(g_fota_info.uri));
+    } else if (g_fota_info.type == FOTA_NOTIFY_RESULT) {
+      oc_rep_set_int(root, result, g_fota_info.result);
     } else {
       oc_rep_set_text_string(root, version, "version");
       oc_rep_set_text_string(root, vendor, "vendor");
       oc_rep_set_text_string(root, model, "model");
-      oc_rep_set_int(root, state, g_fota_state);
-      oc_rep_set_int(root, result, g_fota_result);
+      oc_rep_set_int(root, state, g_fota_info.state);
+      oc_rep_set_int(root, result, FOTA_RESULT_INIT);
     }
     break;
   default:
@@ -77,44 +94,60 @@ post_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   char *cmd = NULL;
   int size;
   if (oc_rep_get_string(request->request_payload, "update", &cmd, &size)) {
-    if (strncmp(FOTA_CMD_INIT, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_CHECK, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_DOWNLOAD, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_UPDATE, cmd, size) == 0 ||
-        strncmp(FOTA_CMD_DOWNLOAD_UPDATE, cmd, size) == 0) {
-      if (g_fota_cmd_cb(cmd) == 0)
-        code = OC_STATUS_CHANGED;
+    fota_cmd_t fota_cmd = 0;
+    if (strncmp(FOTA_INIT_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_INIT;
+    } else if (strncmp(FOTA_CHECK_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_CHECK;
+    } else if (strncmp(FOTA_DOWNLOAD_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_DOWNLOAD;
+    } else if (strncmp(FOTA_UPDATE_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_UPDATE;
+    } else if (strncmp(FOTA_DOWNLOAD_UPDATE_STRING, cmd, size) == 0) {
+      fota_cmd = FOTA_CMD_DOWNLOAD_UPDATE;
     }
+
+    if (fota_cmd != 0 && g_fota_cmd_cb(fota_cmd) == 0)
+      code = OC_STATUS_CHANGED;
   }
 
   oc_send_response(request, code);
 }
 
-static void
-put_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+static oc_event_callback_retval_t
+notify_fota(void *data)
 {
-  post_fota(request, interface, user_data);
+  (void)data;
+  g_fota_info.type = g_notify_type;
+  oc_notify_observers(resource);
+  g_fota_info.type = FOTA_NOTIFY_DEFAULT;
+
+  return OC_EVENT_DONE;
 }
 
-oc_define_interrupt_handler(notify_fota)
+static void
+fota_info_init(void)
 {
-  oc_notify_observers(resource);
-  g_fota_result = FOTA_RESULT_INIT;
-  g_fw_info.req_notify = false;
+  g_fota_info.state = FOTA_STATE_IDLE;
+  g_fota_info.result = FOTA_RESULT_INIT;
+  g_fota_info.type = FOTA_NOTIFY_DEFAULT;
+
+  if (oc_string_len(g_fota_info.ver) > 0)
+    oc_free_string(&g_fota_info.ver);
+  if (oc_string_len(g_fota_info.uri) > 0)
+    oc_free_string(&g_fota_info.uri);
 }
 
 int
 fota_init(fota_cmd_cb_t cb)
 {
-  if (!cb)
+  if (!cb || g_fota_cmd_cb) {
+    OC_ERR("Could not fota init");
     return -1;
+  }
 
   g_fota_cmd_cb = cb;
-  g_fota_state = FOTA_STATE_IDLE;
-  g_fota_result = FOTA_RESULT_INIT;
-  g_fw_info.req_notify = false;
-
-  oc_activate_interrupt_handler(notify_fota);
+  fota_info_init();
 
   resource = oc_new_resource(NULL, OC_RSRVD_FIRMWARE_URI, 1, 0);
   oc_resource_bind_resource_type(resource, OC_RSRVD_FIRMWARE_RT);
@@ -123,7 +156,6 @@ fota_init(fota_cmd_cb_t cb)
   oc_resource_set_discoverable(resource, true);
   oc_resource_set_observable(resource, true);
   oc_resource_set_request_handler(resource, OC_GET, get_fota, NULL);
-  oc_resource_set_request_handler(resource, OC_PUT, put_fota, NULL);
   oc_resource_set_request_handler(resource, OC_POST, post_fota, NULL);
 
   return oc_add_resource(resource) ? 0 : -1;
@@ -133,28 +165,28 @@ void
 fota_deinit(void)
 {
   g_fota_cmd_cb = NULL;
-  g_fota_state = FOTA_STATE_IDLE;
-  g_fota_result = FOTA_RESULT_INIT;
-  g_fw_info.req_notify = false;
-
-  if (oc_string_len(g_fw_info.ver) > 0)
-    oc_free_string(&g_fw_info.ver);
-  if (oc_string_len(g_fw_info.uri) > 0)
-    oc_free_string(&g_fw_info.uri);
+  fota_info_init();
 }
 
 int
 fota_set_state(fota_state_t state)
 {
-  if ((g_fota_state == FOTA_STATE_IDLE && state != FOTA_STATE_DOWNLOADING) ||
-      (g_fota_state == FOTA_STATE_DOWNLOADING &&
+  if ((g_fota_info.state == FOTA_STATE_IDLE &&
+       state != FOTA_STATE_DOWNLOADING) ||
+      (g_fota_info.state == FOTA_STATE_DOWNLOADING &&
        state == FOTA_STATE_UPDATING) ||
-      (g_fota_state == FOTA_STATE_UPDATING && state == FOTA_STATE_DOWNLOADING))
+      (g_fota_info.state == FOTA_STATE_UPDATING &&
+       state == FOTA_STATE_DOWNLOADING)) {
+    OC_ERR("Could not fota set state");
     return -1;
+  }
 
-  g_fota_state = state;
+  g_fota_info.state = state;
 
-  oc_signal_interrupt_handler(notify_fota);
+  g_notify_type = FOTA_NOTIFY_STATE;
+  oc_set_delayed_callback(NULL, notify_fota, 1);
+  _oc_signal_event_loop();
+
   return 0;
 }
 
@@ -166,23 +198,28 @@ fota_set_fw_info(const char *ver, const char *uri)
     return -1;
   }
 
-  if (oc_string_len(g_fw_info.ver) > 0)
-    oc_free_string(&g_fw_info.ver);
-  oc_new_string(&g_fw_info.ver, ver, strlen(ver));
-  if (oc_string_len(g_fw_info.uri) > 0)
-    oc_free_string(&g_fw_info.uri);
-  oc_new_string(&g_fw_info.uri, uri, strlen(uri));
-  g_fw_info.req_notify = true;
+  if (oc_string_len(g_fota_info.ver) > 0)
+    oc_free_string(&g_fota_info.ver);
+  oc_new_string(&g_fota_info.ver, ver, strlen(ver));
+  if (oc_string_len(g_fota_info.uri) > 0)
+    oc_free_string(&g_fota_info.uri);
+  oc_new_string(&g_fota_info.uri, uri, strlen(uri));
 
-  oc_signal_interrupt_handler(notify_fota);
+  g_notify_type = FOTA_NOTIFY_INFO;
+  oc_set_delayed_callback(NULL, notify_fota, 1);
+  _oc_signal_event_loop();
+
   return 0;
 }
 
 int
 fota_set_result(fota_result_t result)
 {
-  g_fota_result = result;
+  g_fota_info.result = result;
 
-  oc_signal_interrupt_handler(notify_fota);
+  g_notify_type = FOTA_NOTIFY_RESULT;
+  oc_set_delayed_callback(NULL, notify_fota, 1);
+  _oc_signal_event_loop();
+
   return 0;
 }
