@@ -47,12 +47,17 @@ static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 void
 oc_sec_cred_default(int device)
 {
-  oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
-  while (cred != NULL) {
-    if (cred->mfgkeylen || cred->mfgowncertlen || cred->mfgtrustcalen)
+  int len = oc_list_length(devices[device].creds);
+  oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
+  for (int i = 0; i < len && c; i++) {
+    if (!c->mfgkeylen && !c->mfgowncertlen && !c->mfgtrustcalen) {
+      oc_sec_cred_t *r = c;
+      c = c->next;
+      oc_list_remove(devices[device].creds, r);
+      oc_memb_free(&creds, r);
       continue;
-    oc_memb_free(&creds, cred);
-    cred = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
+    }
+    c = c->next;
   }
   memset(devices[device].rowneruuid.id, 0, 16);
   oc_sec_dump_cred(device);
