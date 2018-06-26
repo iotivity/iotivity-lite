@@ -403,7 +403,7 @@ simpleclient: libiotivity-constrained-client.a
 
 rpk_server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_MFG ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_RPK ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
