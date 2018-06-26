@@ -67,24 +67,14 @@ oc_sec_doxm_init(void)
 }
 
 void
-oc_sec_doxm_default(int device)
+oc_sec_doxm(int device, oc_doxm_method_t oxmsel)
 {
-  doxm[device].oxmsel = 0;
+  doxm[device].oxmsel = oxmsel;
   doxm[device].sct = 1;
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
   oc_sec_dump_doxm(device);
-}
-
-void
-oc_sec_doxm_mfg(int device)
-{
-  doxm[device].oxmsel = 2;
-  doxm[device].sct = 1;
-  doxm[device].owned = false;
-  memset(doxm[device].devowneruuid.id, 0, 16);
-  memset(doxm[device].rowneruuid.id, 0, 16);
 }
 
 void
