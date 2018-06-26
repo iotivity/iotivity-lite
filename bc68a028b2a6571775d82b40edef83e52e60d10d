@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_8b20c8f8",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T07:54:32Z",
+      "side": 1,
+      "message": "This causes a crash as the *spec \u003d NULL when st_vendor_props_initialize(void) is called.\n\nI moved the st_vendor_props_initialize() function call in st_manager_start().",
+      "range": {
+        "startLine": 172,
+        "startChar": 1,
+        "endLine": 176,
+        "endChar": 60
+      },
+      "revId": "bc68a028b2a6571775d82b40edef83e52e60d10d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
