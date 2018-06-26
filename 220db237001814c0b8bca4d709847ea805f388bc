@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_cb2bf0e9",
+        "filename": "service/st-app-fw/json/ref_st_device_def.json",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_0bde783f",
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_cb2c904d",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2018-06-26T03:54:32Z",
       "side": 1,
       "message": "remove not used code.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 33
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0be838b3",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_cb2c904d",
       "range": {
         "startLine": 45,
         "startChar": 0,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_eb035471",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "We also have setupId in configuration. I think sid stands for setupId. Can you reconfirm once if you really mean modelNumber?\n\n  \"configuration\": {\n    \"easySetup\": {\n      \"connectivity\": {\n        \"type\": 1,\n        \"softAP\": {\n          \"setupId\": \"001\",\n          \"artik\": false\n        }\n      },\n      \"ownershipTransferMethod\": 2\n    },",
+      "parentUuid": "da33351e_ab314ca4",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 31
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_0b279865",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -76,6 +142,30 @@
       "writtenOn": "2018-06-26T03:54:32Z",
       "side": 1,
       "message": "remove",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 44
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4bd1a0fa",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_0b279865",
       "range": {
         "startLine": 76,
         "startChar": 0,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_2bcedc5a",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_eb2b542e",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 72
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_2b1d3c10",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -122,6 +236,30 @@
       "writtenOn": "2018-06-26T03:54:32Z",
       "side": 1,
       "message": "get the value from st_data_mgr_get_spec_info()",
+      "range": {
+        "startLine": 203,
+        "startChar": 46,
+        "endLine": 203,
+        "endChar": 60
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6bef44b1",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "typedef struct\n{\n...\n  /**\u003c Generated with Device Type + Icon Type **/\n  oc_string_t device_type;\n...\n} sc_properties;\n\nWhat is \"Icon Type\" here and how to get it?",
+      "parentUuid": "da33351e_2b1d3c10",
       "range": {
         "startLine": 203,
         "startChar": 46,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_6bd8e41d",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_4b208049",
+      "range": {
+        "startLine": 214,
+        "startChar": 40,
+        "endLine": 214,
+        "endChar": 55
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_6b1744ee",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -168,6 +330,30 @@
       "writtenOn": "2018-06-26T03:54:32Z",
       "side": 1,
       "message": "remove except device_type, model",
+      "range": {
+        "startLine": 203,
+        "startChar": 2,
+        "endLine": 217,
+        "endChar": 45
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cb049080",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "What do you mean remove? \nRemove here or remove from the st_vendor_props as well?",
+      "parentUuid": "da33351e_6b1744ee",
       "range": {
         "startLine": 203,
         "startChar": 2,
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ab094c97",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "What do you mean remove? \nRemove here or remove from the st_vendor_props as well?",
+      "parentUuid": "da33351e_cbd3f036",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 51
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4be7e012",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 1
@@ -214,6 +424,30 @@
       "writtenOn": "2018-06-26T04:01:33Z",
       "side": 1,
       "message": "You need to move this function upper 340 line.\n(before free st_data infomations)",
+      "range": {
+        "startLine": 346,
+        "startChar": 2,
+        "endLine": 346,
+        "endChar": 21
+      },
+      "revId": "220db237001814c0b8bca4d709847ea805f388bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0bff9868",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-26T06:46:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_4be7e012",
       "range": {
         "startLine": 346,
         "startChar": 2,
