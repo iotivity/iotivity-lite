@@ -103,7 +103,7 @@ if __name__ == "__main__":
         elif str(sys.argv[1]) == "tizenrt":
             build_tizenrt("")
         elif str(sys.argv[1]) == "freertos":
-            build_freertos("true", "")
+            build_freertos("")
         elif str(sys.argv[1]) == "-c":
             execute_cmd("rm -rf ../prebuilt")
             sys.exit(0)
