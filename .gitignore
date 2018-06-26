@@ -39,6 +39,7 @@ port/openthread/output
 .clang-format
 _clang-format
 port/linux/platformtest
+port/linux/storage_test
 
 #creds files
 port/linux/client_creds
