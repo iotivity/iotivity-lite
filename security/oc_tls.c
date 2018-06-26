@@ -948,6 +948,41 @@ oc_sec_get_rpk_psk(int device, unsigned char *psk, int *psk_len)
 }
 
 bool
+oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len)
+{
+  if (!endpoint || !hmac || !hmac_len) {
+    OC_ERR("%s: NULL params", __func__);
+    return false;
+  }
+  int master_key_len = 0;
+  uint8_t master_key[32];
+  uint8_t session_master[48];
+  mbedtls_md_context_t ctx;
+  if (gen_master_key(master_key, &master_key_len) != true) {
+    OC_ERR("gen_master_key failed");
+    return false;
+  }
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (!peer) {
+    OC_ERR("%s: unable to get peer", __func__);
+    return false;
+  }
+  if (&(peer->ssl_ctx) == NULL || peer->ssl_ctx.session->master == NULL) {
+    OC_ERR("%s: unable to get master", __func__);
+    return false;
+  }
+  memcpy(session_master, peer->ssl_ctx.session->master, 48);
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+  mbedtls_md_hmac_starts(&ctx, session_master, 48);
+  mbedtls_md_hmac_update(&ctx, (const unsigned char *) master_key, master_key_len);
+  mbedtls_md_hmac_finish(&ctx, hmac);
+  mbedtls_md_free(&ctx);
+  *hmac_len = 32;
+  return true;
+}
+
+bool
 oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
 {
   int i = 0, ret = 0;
