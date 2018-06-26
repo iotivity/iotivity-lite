@@ -46,6 +46,8 @@ PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
 PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
 PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
 PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
+STORAGE_TEST_DIR = storage_test
+$(shell mkdir -p $(STORAGE_TEST_DIR))
 
 EASYSETUP_TEST_DIR = $(ROOT_DIR)/service/easy-setup/unittest
 EASYSETUP_TEST_OBJ_DIR = $(EASYSETUP_TEST_DIR)/obj
@@ -272,10 +274,10 @@ securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-constrained-client-server.a
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
@@ -528,7 +530,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
