@@ -20,18 +20,27 @@ includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
 
+MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 GTEST = gtest_build
 GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
 TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT -fprofile-arcs -ftest-coverage
-HEADER_DIR = $(ROOT_DIR)/include
-
+HEADER_DIR = -I$(ROOT_DIR)/include \
+             -I$(ROOT_DIR) \
+             -I$(OUT_DIR)
+SECURITY_HEADERS = -I$(ROOT_DIR)/security \
+                   -I$(MBEDTLS_DIR)/include
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+
+SECURITY_TEST_DIR = $(ROOT_DIR)/security/unittest
+SECURITY_TEST_OBJ_DIR = $(SECURITY_TEST_DIR)/obj
+SECURITY_TEST_SRC_FILES := $(wildcard $(SECURITY_TEST_DIR)/*.cpp)
+SECURITY_TEST_OBJ_FILES := $(patsubst $(SECURITY_TEST_DIR)/%.cpp,$(SECURITY_TEST_OBJ_DIR)/%.o,$(SECURITY_TEST_SRC_FILES))
 
 PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
 PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
@@ -43,7 +52,7 @@ EASYSETUP_TEST_OBJ_DIR = $(EASYSETUP_TEST_DIR)/obj
 EASYSETUP_TEST_SRC_FILES := $(wildcard $(EASYSETUP_TEST_DIR)/*.cpp)
 EASYSETUP_TEST_OBJ_FILES := $(patsubst $(EASYSETUP_TEST_DIR)/%.cpp,$(EASYSETUP_TEST_OBJ_DIR)/%.o,$(EASYSETUP_TEST_SRC_FILES))
 
-UNIT_TESTS = apitest platformtest
+UNIT_TESTS = apitest platformtest securitytest
 
 ifeq ($(EASYSETUP),1)
 UNIT_TESTS += easysetuptest
@@ -69,7 +78,7 @@ endif
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
-MBEDTLS_DIR := ../../deps/mbedtls
+
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
@@ -247,32 +256,40 @@ $(GTEST):
 
 $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -c $< -o $@
+
+securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) -I$(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 stapptest: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  -I$(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ifeq ($(EASYSETUP),1)
 $(EASYSETUP_TEST_OBJ_DIR)/%.o: $(EASYSETUP_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) -I$(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) $(HEADER_DIR) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 easysetuptest: $(EASYSETUP_TEST_OBJ_FILES) libiotivity-constrained-easysetup.a libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) -I$(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -liotivity-constrained-easysetup -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -liotivity-constrained-easysetup -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 endif
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
@@ -510,7 +527,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
