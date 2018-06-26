@@ -50,6 +50,7 @@ port/linux/platformtest
 port/linux/apitest
 port/linux/easysetuptest
 port/linux/stapptest
+port/linux/securitytest
 prebuilt
 
 #creds files
