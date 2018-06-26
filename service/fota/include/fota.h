@@ -24,11 +24,13 @@
   @file
 */
 
-#define FOTA_CMD_INIT "Init"
-#define FOTA_CMD_CHECK "Check"
-#define FOTA_CMD_DOWNLOAD "Download"
-#define FOTA_CMD_UPDATE "Update"
-#define FOTA_CMD_DOWNLOAD_UPDATE "DownloadUpdate"
+typedef enum {
+  FOTA_CMD_INIT = 1,
+  FOTA_CMD_CHECK,
+  FOTA_CMD_DOWNLOAD,
+  FOTA_CMD_UPDATE,
+  FOTA_CMD_DOWNLOAD_UPDATE
+} fota_cmd_t;
 
 typedef enum {
   FOTA_STATE_IDLE,
@@ -50,7 +52,7 @@ typedef enum {
   FOTA_RESULT_UNSUPPORT_PROTOCOL
 } fota_result_t;
 
-typedef int (*fota_cmd_cb_t)(const char *cmd);
+typedef int (*fota_cmd_cb_t)(fota_cmd_t cmd);
 
 int fota_init(fota_cmd_cb_t cb);
 void fota_deinit(void);

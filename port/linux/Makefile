@@ -110,7 +110,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 OBJ_FOTA=$(addprefix obj/fota/,$(notdir $(SRC_FOTA:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../port/:../../service/fota/src/:../../port/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../port/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../service/fota/src/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
@@ -459,7 +459,7 @@ client_multithread_linux: libiotivity-constrained-client.a
 st_things: libst-app-framework.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
-			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_ST} ${LIBS} ${IWLIB}
+			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_FOTA} ${CFLAGS_ST} ${LIBS} ${IWLIB}
 
 prep_st_app_fw:
 ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")

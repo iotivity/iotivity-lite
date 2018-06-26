@@ -29,6 +29,7 @@
 #include "st_cloud_manager.h"
 #include "st_data_manager.h"
 #include "st_easy_setup.h"
+#include "st_fota_manager.h"
 #include "st_manager.h"
 #include "st_port.h"
 #include "st_process.h"
@@ -337,6 +338,7 @@ st_manager_stack_init(void)
   st_print_log("[ST_MGR] uuid : %s\n", uuid);
 
   set_sc_prov_info();
+  st_fota_manager_start();
 
   int i = 0;
   int device_num = 0;
@@ -488,6 +490,9 @@ st_manager_stop(void)
 
   st_cloud_manager_stop(device_index);
   st_print_log("[ST_MGR] cloud manager stop done\n");
+
+  st_fota_manager_stop();
+  st_print_log("[ST_MGR] fota manager stop done\n");
 
   st_store_info_initialize();
 
