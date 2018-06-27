@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_6bde2341",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "This is used only once , so better remove it.\ndirectly pass the string, make sure string length just more than vaid...\n\nFor making more readable, leave a line empty before macro definations",
+      "range": {
+        "startLine": 30,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4be35f07",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "add static and remove declaration as 0",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 7
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cbee4fec",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "remove _config....make sure all have same name for readability...",
+      "range": {
+        "startLine": 50,
+        "startChar": 5,
+        "endLine": 50,
+        "endChar": 23
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2bbb7be6",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "remove _config",
+      "range": {
+        "startLine": 56,
+        "startChar": 5,
+        "endLine": 56,
+        "endChar": 23
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_abe78b11",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "delete empty line before assert",
+      "range": {
+        "startLine": 58,
+        "startChar": 52,
+        "endLine": 58,
+        "endChar": 55
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8be4470e",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "remove oc here",
+      "range": {
+        "startLine": 77,
+        "startChar": 20,
+        "endLine": 77,
+        "endChar": 35
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ebf193ce",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:13:54Z",
+      "side": 1,
+      "message": "please test and add...\nfor return codes with ret as earlier...",
+      "range": {
+        "startLine": 79,
+        "startChar": 8,
+        "endLine": 79,
+        "endChar": 9
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
