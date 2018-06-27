@@ -35,33 +35,37 @@
 #define SC_RSRVD_ES_ATTR_NAME_PREFIX "x.com.samsung."
 #define SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN 14
 
-#define SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE "ncs"
-#define SC_RSRVD_ES_VENDOR_DISCOVERY_CHANNEL "chn"
+#ifndef SC_ES_OPT
 #define SC_RSRVD_ES_VENDOR_DEVICE_TYPE "dt"
 #define SC_RSRVD_ES_VENDOR_DEVICE_SUBTYPE "sdt"
 #define SC_RSRVD_ES_VENDOR_LOCATION "location"
-#define SC_RSRVD_ES_VENDOR_CLIENTID "clientid"
 #define SC_RSRVD_ES_VENDOR_REGISTER_MOBILE_DEV "rmd"
 #define SC_RSRVD_ES_VENDOR_REGISTER_SET_DEV "rsd"
 #define SC_RSRVD_ES_VENDOR_NETWORK_PROV_INFO "npi"
 #define SC_RSRVD_ES_VENDOR_ACCOUNT "account"
 #define SC_RSRVD_ES_VENDOR_SSO_LIST "ssolist"
-#define SC_RSRVD_ES_VENDOR_AAC "aac"
+#define SC_RSRVD_ES_VENDOR_PNP_PIN "pnppin"
+#define SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION "espv"
 #define SC_RSRVD_ES_VENDOR_TNC_HEADER "tcheader"
 #define SC_RSRVD_ES_VENDOR_TNC_VERSION "tcversion"
 #define SC_RSRVD_ES_VENDOR_TNC_RESULT "tcresult"
 #define SC_RSRVD_ES_VENDOR_TNC_STATUS "tcstatus"
+#endif/* SC_ES_OPT */
+
+#define SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE "ncs"
+#define SC_RSRVD_ES_VENDOR_DISCOVERY_CHANNEL "chn"
 #define SC_RSRVD_ES_VENDOR_REFRESH_TOKEN "refreshtoken"
 #define SC_RSRVD_ES_VENDOR_UID "uid"
 #define SC_RSRVD_ES_VENDOR_BSSID "bssid"
-#define SC_RSRVD_ES_VENDOR_PNP_PIN "pnppin"
+#define SC_RSRVD_ES_VENDOR_CLIENTID "clientid"
 #define SC_RSRVD_ES_VENDOR_MODEL_NUMBER "modelnumber"
 #define SC_RSRVD_ES_VENDOR_LANGUAGE "language"
 #define SC_RSRVD_ES_VENDOR_COUNTRY "country"
 #define SC_RSRVD_ES_VENDOR_GPSLOCATION "gpslocation"
 #define SC_RSRVD_ES_VENDOR_UTC_DATE_TIME "datetime"
 #define SC_RSRVD_ES_VENDOR_REGIONAL_DATE_TIME "regionaldatetime"
-#define SC_RSRVD_ES_VENDOR_ES_PROTOCOL_VERSION "espv"
+#define SC_RSRVD_ES_VENDOR_AAC "aac"
+
 
 #define SC_RSRVD_ES_PROVISIONING_INFO_TARGETS "provisioning.targets"
 #define SC_RSRVD_ES_PROVISIONING_INFO_OWNED "provisioning.owned"
@@ -246,6 +250,7 @@ read_dev_conf_data(oc_rep_t *payload, void **user_data)
     oc_mem_calloc(1, sizeof(sc_dev_conf_properties));
   MEM_ALLOC_CHECK(dev_prop);
 
+#ifndef SC_ES_OPT
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
   oc_string_array_t str_arr;
   int str_arr_len;
@@ -279,7 +284,7 @@ read_dev_conf_data(oc_rep_t *payload, void **user_data)
                                        &dev_prop->account)) {
     es_new_string(&g_scprop->account, oc_string(dev_prop->account));
   }
-
+#endif /* SC_ES_OPT */
   if (read_sc_string_prop_from_payload(payload, SC_RSRVD_ES_VENDOR_COUNTRY,
                                        &dev_prop->country)) {
     es_new_string(&g_scprop->country, oc_string(dev_prop->country));
@@ -395,6 +400,7 @@ sc_write_userdata_cb(oc_rep_t *payload, char *resource_type)
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_WIFICONF)) {
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_BSSID, &g_scprop->bssid);
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
+#ifndef SC_ES_OPT
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_DEVICE_TYPE,
                                     &g_scprop->device_type);
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_DEVICE_SUBTYPE,
@@ -409,8 +415,6 @@ sc_write_userdata_cb(oc_rep_t *payload, char *resource_type)
                                     &g_scprop->sso_list);
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_PNP_PIN,
                                     &g_scprop->pnp_pin);
-    write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_MODEL_NUMBER,
-                                    &g_scprop->model);
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_COUNTRY,
                                     &g_scprop->country);
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_LANGUAGE,
@@ -427,6 +431,9 @@ sc_write_userdata_cb(oc_rep_t *payload, char *resource_type)
                                     &g_scprop->tnc_info.header);
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_TNC_VERSION,
                                     &g_scprop->tnc_info.version);
+#endif /* SC_ES_OPT */
+    write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_MODEL_NUMBER,
+                                    &g_scprop->model);
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)) {
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_TNC_RESULT,
                                     &g_scprop->tnc_result);
