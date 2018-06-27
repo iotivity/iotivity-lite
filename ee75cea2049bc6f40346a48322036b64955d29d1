@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0b95d732",
+        "filename": "service/st-app-fw/unittest/stprocesstest.cpp",
+        "patchSetId": 23
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-27T07:52:10Z",
+      "side": 1,
+      "message": "Below function are not tested.\n\nst_process_func(void *data)\nst_process_signal(void)\nst_process_app_sync_lock(void)\nst_process_app_sync_unlock(void)",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 41
+      },
+      "revId": "ee75cea2049bc6f40346a48322036b64955d29d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6b9aa364",
+        "filename": "service/st-app-fw/unittest/ststoretest.cpp",
+        "patchSetId": 23
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-27T07:52:10Z",
+      "side": 1,
+      "message": "include the test case such as value set, load and check correctly loaded.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 39
+      },
+      "revId": "ee75cea2049bc6f40346a48322036b64955d29d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
