@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ab266b14",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T10:35:42Z",
+      "side": 1,
+      "message": "add a line for readability",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 1
+      },
+      "revId": "fa6c8fd9a5293c08aa2a147d3625c18c25823ded",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4b123fb2",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T10:35:42Z",
+      "side": 1,
+      "message": "please add static",
+      "range": {
+        "startLine": 38,
+        "startChar": 37,
+        "endLine": 38,
+        "endChar": 40
+      },
+      "revId": "fa6c8fd9a5293c08aa2a147d3625c18c25823ded",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_eb2073f9",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T10:35:42Z",
+      "side": 1,
+      "message": "change name to StorageWriteRead",
+      "range": {
+        "startLine": 64,
+        "startChar": 20,
+        "endLine": 64,
+        "endChar": 38
+      },
+      "revId": "fa6c8fd9a5293c08aa2a147d3625c18c25823ded",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
