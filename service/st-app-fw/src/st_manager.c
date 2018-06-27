@@ -173,17 +173,20 @@ static void
 st_vendor_props_initialize(void)
 {
   memset(&st_vendor_props, 0, sizeof(sc_properties));
-  st_specification_t *spec = st_data_mgr_get_spec_info();
-  oc_new_string(&st_vendor_props.device_type, oc_string(spec->device.device_type),
-                oc_string_len(spec->device.device_type));
-  oc_new_string(&st_vendor_props.model, oc_string(spec->platform.model_number),
-                oc_string_len(spec->platform.model_number));
+  st_specification_t  *specification = st_data_mgr_get_spec_info();
+  if (!specification) {
+    st_print_log("[ST_MGR] specification list not exist");
+    return;
+  }
+
+  st_print_log("[ST_MGR] specification model no %s",oc_string(specification->platform.model_number));
+  oc_new_string(&st_vendor_props.model, oc_string(specification->platform.model_number),
+                oc_string_len(specification->platform.model_number));
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
-  oc_free_string(&st_vendor_props.device_type);
   oc_free_string(&st_vendor_props.model);
 }
 
