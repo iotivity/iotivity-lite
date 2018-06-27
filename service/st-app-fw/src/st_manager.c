@@ -43,20 +43,7 @@ static st_status_t g_main_status = ST_STATUS_INIT;
 static st_status_cb_t g_st_status_cb = NULL;
 
 // define vendor specific properties.
-static const char *st_device_type = "deviceType";
-static const char *st_device_sub_type = "deviceSubType";
-static const char *st_reg_set_device =
-  "{\"wm\":\"00:11:22:33:44:55\",\"pm\":\"00:11:22:33:44:55\",\"bm\":\"00:11:"
-  "22:33:44:55\",\"rk\":[\"VOICE\",\"EXTRA\",\"BTHIDPOWERON\"],\"sl\":["
-  "\"TV2MOBILE\",\"MOBILE2TV\",\"BTWAKEUP\",\"WOWLAN\",\"BTREMOTECON\","
-  "\"DLNADMR\"]}";
-static const char *st_network_prov_info =
-  "{\"IMEI\":\"123456789012345 / "
-  "01\",\"IMSI\":\"123401234567890\",\"MCC_MNC\":\"100_10\",\"SN\":"
-  "\"XY0123456XYZ\"}";
-static const char *st_pin_number = "pinNumber";
 static const char *st_model_number = "Model Number";
-static const char *st_protocol_version = "2.0";
 
 // define application specific values.
 #ifdef OC_SPEC_VER_OIC
@@ -192,33 +179,14 @@ static void
 st_vendor_props_initialize(void)
 {
   memset(&st_vendor_props, 0, sizeof(sc_properties));
-  oc_new_string(&st_vendor_props.device_type, st_device_type,
-                strlen(st_device_type));
-  oc_new_string(&st_vendor_props.device_sub_type, st_device_sub_type,
-                strlen(st_device_sub_type));
-  st_vendor_props.net_conn_state = NET_STATE_INIT;
-  st_vendor_props.disc_channel = WIFI_DISCOVERY_CHANNEL_INIT;
-  oc_new_string(&st_vendor_props.reg_set_dev, st_reg_set_device,
-                strlen(st_reg_set_device));
-  oc_new_string(&st_vendor_props.net_prov_info, st_network_prov_info,
-                strlen(st_network_prov_info));
-  oc_new_string(&st_vendor_props.pnp_pin, st_pin_number, strlen(st_pin_number));
   oc_new_string(&st_vendor_props.model, st_model_number,
                 strlen(st_model_number));
-  oc_new_string(&st_vendor_props.es_protocol_ver, st_protocol_version,
-                strlen(st_protocol_version));
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
-  oc_free_string(&st_vendor_props.device_type);
-  oc_free_string(&st_vendor_props.device_sub_type);
-  oc_free_string(&st_vendor_props.reg_set_dev);
-  oc_free_string(&st_vendor_props.net_prov_info);
-  oc_free_string(&st_vendor_props.pnp_pin);
   oc_free_string(&st_vendor_props.model);
-  oc_free_string(&st_vendor_props.es_protocol_ver);
 }
 
 static void
