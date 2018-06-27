@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4b899fea",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T11:09:50Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 35,
+        "startChar": 41,
+        "endLine": 35,
+        "endChar": 42
+      },
+      "revId": "84aa5a364e5d75ad0392560cdc9e291be90866f7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8b6a8718",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T11:09:50Z",
+      "side": 1,
+      "message": "avoid direct hardcoding",
+      "range": {
+        "startLine": 83,
+        "startChar": 15,
+        "endLine": 83,
+        "endChar": 16
+      },
+      "revId": "84aa5a364e5d75ad0392560cdc9e291be90866f7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ab6dcb34",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T11:09:50Z",
+      "side": 1,
+      "message": "add space after comma",
+      "range": {
+        "startLine": 88,
+        "startChar": 72,
+        "endLine": 88,
+        "endChar": 74
+      },
+      "revId": "84aa5a364e5d75ad0392560cdc9e291be90866f7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
