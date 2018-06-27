@@ -160,6 +160,207 @@
       "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6bb583ed",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "please remove empty lines",
+      "range": {
+        "startLine": 36,
+        "startChar": 31,
+        "endLine": 36,
+        "endChar": 32
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4bba3fdf",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "please remove empty lines",
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_abce6b81",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "I think above is not needed, we already have DEVICE_MAX_NIM",
+      "range": {
+        "startLine": 47,
+        "startChar": 25,
+        "endLine": 47,
+        "endChar": 26
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6bac63a1",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "For all  below cases we need to write _N cases...",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 6
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ebc87376",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "please remove message , display message only in failure case",
+      "range": {
+        "startLine": 105,
+        "startChar": 49,
+        "endLine": 105,
+        "endChar": 50
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0ba797be",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "add _ beore P",
+      "range": {
+        "startLine": 114,
+        "startChar": 27,
+        "endLine": 114,
+        "endChar": 40
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8bcba771",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "please keep variable name as ret_init_platform",
+      "range": {
+        "startLine": 116,
+        "startChar": 6,
+        "endLine": 116,
+        "endChar": 16
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cbc5af5c",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "move get_con_announce to top....\navoid declarations in between...\ndo at the top of block",
+      "range": {
+        "startLine": 124,
+        "startChar": 9,
+        "endLine": 124,
+        "endChar": 25
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2ba25bae",
+        "filename": "security/unittest/SecurityTest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T06:24:34Z",
+      "side": 1,
+      "message": "check whether needed to display message",
+      "range": {
+        "startLine": 125,
+        "startChar": 31,
+        "endLine": 125,
+        "endChar": 47
+      },
+      "revId": "3d7c01d573509399f99439dadf87b7398b5b19e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
