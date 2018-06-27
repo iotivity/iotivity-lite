@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cb4befae",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T12:49:11Z",
+      "side": 1,
+      "message": "Change naming to writeread",
+      "range": {
+        "startLine": 64,
+        "startChar": 20,
+        "endLine": 64,
+        "endChar": 38
+      },
+      "revId": "77402c47e738cf33b8a668d3973bcc1a4b426201",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2bc89b21",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T12:49:11Z",
+      "side": 1,
+      "message": "change naming to writeread",
+      "range": {
+        "startLine": 71,
+        "startChar": 20,
+        "endLine": 71,
+        "endChar": 38
+      },
+      "revId": "77402c47e738cf33b8a668d3973bcc1a4b426201",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6bd2a3d3",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T12:49:11Z",
+      "side": 1,
+      "message": "remove extra space inform of oc, keep one space",
+      "range": {
+        "startLine": 87,
+        "startChar": 31,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "77402c47e738cf33b8a668d3973bcc1a4b426201",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0bcdd731",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-27T12:49:11Z",
+      "side": 1,
+      "message": "please add space after comma",
+      "range": {
+        "startLine": 87,
+        "startChar": 72,
+        "endLine": 87,
+        "endChar": 74
+      },
+      "revId": "77402c47e738cf33b8a668d3973bcc1a4b426201",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
