@@ -43,6 +43,15 @@
 static st_status_t g_main_status = ST_STATUS_INIT;
 static st_status_cb_t g_st_status_cb = NULL;
 
+// define application specific values.
+#ifdef OC_SPEC_VER_OIC
+static const char *spec_version = "core.1.1.0";
+static const char *data_model_version = "res.1.1.0";
+#else  /* OC_SPEC_VER_OIC */
+static const char *spec_version = "ocf.1.0.0";
+static const char *data_model_version = "ocf.res.1.0.0";
+#endif /* !OC_SPEC_VER_OIC */
+
 static sc_properties st_vendor_props;
 
 static sec_provisioning_info g_prov_resource;
@@ -173,17 +182,20 @@ static void
 st_vendor_props_initialize(void)
 {
   memset(&st_vendor_props, 0, sizeof(sc_properties));
-  st_specification_t *spec = st_data_mgr_get_spec_info();
-  oc_new_string(&st_vendor_props.device_type, oc_string(spec->device.device_type),
-                oc_string_len(spec->device.device_type));
-  oc_new_string(&st_vendor_props.model, oc_string(spec->platform.model_number),
-                oc_string_len(spec->platform.model_number));
+  st_specification_t  *specification = st_data_mgr_get_spec_info();
+  if (!specification) {
+    st_print_log("[ST_MGR] specification list not exist");
+    return;
+  }
+
+  st_print_log("[ST_MGR] specification model no %s",oc_string(specification->platform.model_number));
+  oc_new_string(&st_vendor_props.model, oc_string(specification->platform.model_number),
+                oc_string_len(specification->platform.model_number));
 }
 
 static void
 st_vendor_props_shutdown(void)
 {
-  oc_free_string(&st_vendor_props.device_type);
   oc_free_string(&st_vendor_props.model);
 }
 
@@ -298,6 +310,8 @@ st_manager_stack_init(void)
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
   }
+
+  st_vendor_props_initialize();
 
   if (oc_main_init(&handler) != 0) {
     st_print_log("[ST_MGR] oc_main_init failed!\n");
