@@ -74,12 +74,16 @@ class ApiHelper
     private:
         static oc_handler_t s_handler;
         static bool s_isServerStarted;
+        static bool s_isResourceDiscovered;
         static bool s_isCallbackReceived;
         static oc_resource_t *s_pResource;
         static pthread_mutex_t s_mutex;
         static pthread_cond_t s_cv;
 
     public:
+
+        static oc_endpoint_t *s_pLightEndpoint;
+
         static int appInit(void)
         {
             int result = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
@@ -119,16 +123,18 @@ class ApiHelper
             (void)di;
             (void)types;
             (void)interfaces;
-            (void)endpoint;
             (void)bm;
             (void)user_data;
             std::string discoveredResourceUri = std::string(uri);
             if (discoveredResourceUri.compare(RESOURCE_URI) == 0)
             {
                 PRINT("Light Resource Discovered....\n");
-                s_isCallbackReceived = true;
+                s_pLightEndpoint = endpoint;
+                s_isResourceDiscovered = true;
                 return OC_STOP_DISCOVERY;
             }
+
+            oc_free_server_endpoints(endpoint);
             return OC_CONTINUE_DISCOVERY;
         }
 
@@ -138,6 +144,11 @@ class ApiHelper
             (void)interface;
             (void)user_data;
             s_isCallbackReceived = true;
+        }
+
+        static bool getDiscoveryStatus(void)
+        {
+            return s_isResourceDiscovered;
         }
 
         static bool startServer(std::string &errorMessage)
@@ -175,14 +186,19 @@ class ApiHelper
         }
         static bool discoverResource(std::string &errorMessage)
         {
-            s_isCallbackReceived = false;
-            oc_do_ip_discovery(NULL, &onResourceDiscovered, NULL);
-            waitForEvent(MAX_WAIT_TIME);
-            if (!s_isCallbackReceived)
+            bool isSuccess = false;
+            s_isResourceDiscovered = false;
+            isSuccess = oc_do_ip_discovery(NULL, &onResourceDiscovered, NULL);
+            if (!isSuccess)
             {
-                errorMessage += "Unable to discover Light Resource";
+                errorMessage = "oc_do_ip_discovery() returned failure.";
             }
-            return s_isCallbackReceived;
+            waitForEvent(MAX_WAIT_TIME);
+            if (!s_isResourceDiscovered)
+            {
+                errorMessage += " Unable to discover Light Resource";
+            }
+            return (s_isResourceDiscovered && isSuccess);
         }
 
         static void waitForEvent(int waitTime)
@@ -200,11 +216,21 @@ class ApiHelper
 
         static bool sendGetRequest(std::string &errorMessage)
         {
-            (void)errorMessage;
-            bool isPassed = true;
+            bool isSuccess = false;
+            s_isCallbackReceived = false;
 
-            // waitForEvent(MAX_WAIT_TIME);
-            return isPassed;
+            isSuccess = oc_do_get(RESOURCE_URI, s_pLightEndpoint, NULL, &onGet, LOW_QOS, NULL);
+            if (!isSuccess)
+            {
+                errorMessage = "oc_do_get() returned failure.";
+            }
+            waitForEvent(MAX_WAIT_TIME);
+            if (!s_isCallbackReceived)
+            {
+                errorMessage += " Callback for get was not called";
+            }
+
+            return (s_isCallbackReceived && isSuccess);
         }
 
         static bool unregisterReresource(std::string &errorMessage)
@@ -214,11 +240,18 @@ class ApiHelper
             oc_delete_resource(s_pResource);
             return isPassed;
         }
+
+        static clearEndpoint()
+        {
+            oc_free_server_endpoints(s_pLightEndpoint);
+        }
 };
 
 bool ApiHelper::s_isServerStarted = false;
+bool ApiHelper::s_isResourceDiscovered = false;
 bool ApiHelper::s_isCallbackReceived = false;
 oc_resource_t *ApiHelper::s_pResource = nullptr;
+oc_endpoint_t *ApiHelper::s_pLightEndpoint = nullptr;
 oc_handler_t ApiHelper::s_handler;
 pthread_mutex_t ApiHelper::s_mutex;
 pthread_cond_t ApiHelper::s_cv;
@@ -228,12 +261,20 @@ class TestUnicastRequest: public testing::Test
     protected:
         virtual void SetUp()
         {
+        }
+
+        virtual void TearDown()
+        {
+        }
+
+        static void SetUpTestCase()
+        {
             std::string msg = "";
             ASSERT_TRUE(ApiHelper::startServer(msg)) << msg;
             ASSERT_TRUE(ApiHelper::discoverResource(msg)) << msg;
         }
 
-        virtual void TearDown()
+        static void TearDownTestCase()
         {
             std::string msg = "";
             ApiHelper::unregisterReresource(msg);
@@ -270,7 +311,12 @@ TEST(TestServerClient, ServerStopTest_P)
     EXPECT_NO_THROW(oc_main_shutdown());
 }
 
-TEST(TestUnicastRequest, SendGetRequest_P)
+TEST_F(TestUnicastRequest, DiscoverResourceTest_P)
+{
+    EXPECT_TRUE(ApiHelper::getDiscoveryStatus()) << "Failed to discover resource";
+}
+
+TEST_F(TestUnicastRequest, SendGetRequest_P)
 {
 
     std::string result = "";
@@ -278,7 +324,7 @@ TEST(TestUnicastRequest, SendGetRequest_P)
     EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
 }
 
-TEST(TestUnicastRequest, SendGetRequestTwice_P)
+TEST_F(TestUnicastRequest, SendGetRequestTwice_P)
 {
 
     std::string result = "";
