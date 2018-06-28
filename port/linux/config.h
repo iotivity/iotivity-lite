@@ -23,6 +23,9 @@ typedef uint64_t oc_clock_time_t;
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
 
+/* Maximum number of concurrent incoming requests */
+#define OC_MAX_NUM_CONCURRENT_INCOMING_REQUESTS (5)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
