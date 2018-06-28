@@ -155,6 +155,10 @@ set_sc_prov_info(void)
 
   g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
     target_size, sizeof(sec_provisioning_info_targets));
+  if (!g_prov_resource.targets) {
+    st_print_log("[ST_MGR] g_prov_resource calloc Error\n");
+    return;
+  }
 
   for (i = 0; i < target_size; i++) {
     oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
