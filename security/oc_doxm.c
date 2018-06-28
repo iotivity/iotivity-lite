@@ -25,8 +25,7 @@
 #include "oc_otm_state.h"
 #include <stddef.h>
 #include <string.h>
-
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
+#include <strings.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -120,6 +119,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
     } else {
       oc_sec_encode_doxm(device);
       oc_send_response(request, OC_STATUS_OK);
+      return;
     }
   } break;
   default:
