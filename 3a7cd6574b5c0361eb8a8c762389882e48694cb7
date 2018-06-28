@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4b735fe9",
+        "filename": "service/easy-setup/unittest/sceasysetupapitest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-28T02:30:57Z",
+      "side": 1,
+      "message": "these need no to be set if you don\u0027t want anything to do in stack initialization.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 9
+      },
+      "revId": "3a7cd6574b5c0361eb8a8c762389882e48694cb7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ab778bd3",
+        "filename": "service/easy-setup/unittest/sceasysetupapitest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-28T02:30:57Z",
+      "side": 1,
+      "message": "free allocated string in sc_properties_setter",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 1
+      },
+      "revId": "3a7cd6574b5c0361eb8a8c762389882e48694cb7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8b7447d0",
+        "filename": "service/easy-setup/unittest/sceasysetupapitest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-28T02:30:57Z",
+      "side": 1,
+      "message": "free allocated string in sc_properties_setter",
+      "revId": "3a7cd6574b5c0361eb8a8c762389882e48694cb7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_eb819390",
+        "filename": "service/easy-setup/unittest/sceasysetupapitest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-28T02:30:57Z",
+      "side": 1,
+      "message": "Take care of memory allocated to provisioninginfo_resource and its members.",
+      "range": {
+        "startLine": 200,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 1
+      },
+      "revId": "3a7cd6574b5c0361eb8a8c762389882e48694cb7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
