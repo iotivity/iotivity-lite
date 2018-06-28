@@ -189,10 +189,11 @@ st_turn_off_soft_AP(void)
   oc_abort(__func__);
 }
 
-void
+int
 st_connect_wifi(const char *ssid, const char *pwd)
 {
   oc_abort(__func__);
+  return 0;
 }
 
 void
