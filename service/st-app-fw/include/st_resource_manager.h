@@ -24,9 +24,9 @@
 
 typedef bool (*st_resource_handler)(oc_request_t *request);
 
-void st_register_resources(int device);
-void st_register_resource_handler(st_resource_handler get_handler,
-                                  st_resource_handler set_handler);
-void st_notify_back(const char *uri);
+int st_register_resources(int device);
+int st_register_resource_handler(st_resource_handler get_handler,
+                                 st_resource_handler set_handler);
+int st_notify_back(const char *uri);
 
 #endif /* ST_RECOURCE_MGR_H */
