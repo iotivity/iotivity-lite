@@ -421,6 +421,8 @@ exit:
 void
 st_connect_wifi(const char *ssid, const char *pwd)
 {
+  if (!ssid)
+    st_print_log("[St_Port] st_connect_wifi failed\n");
   st_print_log("[St_Port] st_connect_wifi in\n");
 
   /** sleep to allow response sending from post_callback thread before turning
