@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0b1e7770",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-28T03:57:01Z",
+      "side": 1,
+      "message": "Please move this to below 325 line.",
+      "range": {
+        "startLine": 352,
+        "startChar": 2,
+        "endLine": 352,
+        "endChar": 26
+      },
+      "revId": "13dd189b31dcf011e48497a81bba1556f5705d7c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
