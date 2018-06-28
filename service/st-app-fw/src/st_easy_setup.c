@@ -180,7 +180,10 @@ easy_setup_finish_handler(void *data)
     g_easy_setup_status = EASY_SETUP_FINISH;
     st_store_t *store_info = st_store_get_info();
     store_info->status = true;
-    st_store_dump();
+    if (st_store_dump() <= 0) {
+      st_print_log("[Easy_Setup] st_store_dump failed\n");
+      g_easy_setup_status = EASY_SETUP_RESET;
+    }
     oc_set_delayed_callback(NULL, callback_handler, 0);
   }
   return OC_EVENT_DONE;

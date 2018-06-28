@@ -80,22 +80,22 @@ st_store_load(void)
   return ret;
 }
 
-static oc_event_callback_retval_t
-st_store_dump_handler(void *data)
+int
+st_store_dump(void)
 {
-  (void)data;
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf)
-    return OC_EVENT_DONE;
+    return -1;
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[ST_MAX_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, ST_MAX_DATA_SIZE);
   st_encode_store_info();
+  int size = -1;
 #ifdef OC_SECURITY
-  int size = oc_rep_finalize();
+  size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("[ST_Store] encoded info size %d", size);
     oc_storage_write(ST_STORE_NAME, buf, size);
@@ -106,13 +106,23 @@ st_store_dump_handler(void *data)
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_reset();
+
+  return size;
+}
+
+static oc_event_callback_retval_t
+st_store_dump_handler(void *data)
+{
+  (void)data;
+  st_store_dump();
   return OC_EVENT_DONE;
 }
 
 void
-st_store_dump(void)
+st_store_dump_async(void)
 {
   oc_set_delayed_callback(NULL, st_store_dump_handler, 0);
+  _oc_signal_event_loop();
 }
 
 void

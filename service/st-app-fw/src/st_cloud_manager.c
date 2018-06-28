@@ -308,7 +308,7 @@ sign_up_handler(oc_client_response_t *data)
     oc_free_string(&store_info->cloudinfo.ci_server);
   oc_new_string(&store_info->cloudinfo.ci_server, uri_value, strlen(uri_value));
   store_info->cloudinfo.status = CLOUD_MANAGER_SIGNED_UP;
-  st_store_dump();
+  st_store_dump_async();
 
   oc_remove_delayed_callback(context, sign_up);
   context->retry_count = 0;
@@ -416,7 +416,7 @@ refresh_token_handler(oc_client_response_t *data)
     oc_free_string(&store_info->cloudinfo.refresh_token);
   oc_new_string(&store_info->cloudinfo.refresh_token, refresh_value,
                 strlen(refresh_value));
-  st_store_dump();
+  st_store_dump_async();
 
   oc_remove_delayed_callback(context, refresh_token);
   context->retry_count = 0;
@@ -501,7 +501,7 @@ publish_resource_handler(oc_client_response_t *data)
 
   st_store_t *store_info = st_store_get_info();
   store_info->cloudinfo.status = CLOUD_MANAGER_PUBLISHED;
-  st_store_dump();
+  st_store_dump_async();
   return;
 
 error:
