@@ -353,7 +353,8 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     oc_string_t ipaddress;
     memset(&ipaddress, 0, sizeof(oc_string_t));
 #endif /* OC_DNS_LOOKUP */
-    if ('A' <= address[address_len - 1] && 'z' >= address[address_len - 1]) {
+    if (('A' <= address[address_len - 1] && 'Z' >= address[address_len - 1]) ||
+        ('a' <= address[address_len - 1] && 'z' >= address[address_len - 1])) {
 #ifdef OC_DNS_LOOKUP
       char domain[address_len + 1];
       strncpy(domain, address, address_len);
