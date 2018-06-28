@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_4e824d50",
+        "filename": "service/st-app-fw/include/st_data_manager.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-28T07:00:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_ee6241d7",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 21
+      },
+      "revId": "ff99a729a6366edd7b8b60b268bc92a5468c258d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_8e6575e3",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2018-06-28T06:49:03Z",
       "side": 1,
       "message": "plaese apply indent rule.\niotivity-lite use 2 spce for the tab.",
+      "range": {
+        "startLine": 166,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 1
+      },
+      "revId": "ff99a729a6366edd7b8b60b268bc92a5468c258d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ae967992",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-28T07:00:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_8e6575e3",
       "range": {
         "startLine": 166,
         "startChar": 0,
