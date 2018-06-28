@@ -68,6 +68,7 @@ port/linux/multi_device_server_creds
 port/linux/server_multithread_linux_creds
 port/linux/client_multithread_linux_creds
 port/linux/cloud_linux_creds
+port/linux/stapptest_creds
 
 #vscode setting files
 .vscode
