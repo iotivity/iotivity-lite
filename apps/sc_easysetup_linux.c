@@ -47,6 +47,8 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
+#define SSID_LEN    15
+
 static double temp_C = 5.0, min_C = 0.0, max_C = 100.0, min_K = 273.15,
               max_K = 373.15, min_F = 32, max_F = 212;
 typedef enum { C = 100, F, K } units_t;
@@ -69,6 +71,11 @@ void SetProvInfo() {
   oc_get_device_id(0, uuid, 37);
   g_provisioninginfo_resource.targets = (sec_provisioning_info_targets *)malloc(
       target_size * sizeof(sec_provisioning_info_targets));
+  if(g_provisioninginfo_resource.targets == NULL)
+  {
+    printf("[ES App] Memory allocation failed for provisioning resource targets \n");
+    return;
+  }
   for (int i = 0; i < target_size; i++) {
     oc_new_string(&g_provisioninginfo_resource.targets[i].target_di, uuid,
                   strlen(uuid));
@@ -78,7 +85,7 @@ void SetProvInfo() {
   }
   g_provisioninginfo_resource.targets_size = target_size;
   g_provisioninginfo_resource.owned = false;
-  oc_new_string(&g_provisioninginfo_resource.easysetup_di, uuid, 38);
+  oc_new_string(&g_provisioninginfo_resource.easysetup_di, uuid, strlen(uuid));
 
   if (set_sec_prov_info(&g_provisioninginfo_resource) == ES_ERROR)
     PRINT("SetProvInfo Error\n");
@@ -375,8 +382,8 @@ scan_access_points(sec_accesspoint **ap_list) {
   while(cnt++ < 3) {
     sec_accesspoint *ap = (sec_accesspoint *) calloc(1, sizeof(sec_accesspoint));
 
-    char name[15];
-    sprintf(name, "iot_home_%d", cnt);
+    char name[SSID_LEN];
+    snprintf(name, SSID_LEN, "iot_home_%d", cnt);
     oc_new_string(&(ap->ssid), name, strlen(name));
     oc_new_string(&(ap->channel), "15", strlen("15"));
     oc_new_string(&(ap->enc_type), "AES", strlen("AES"));
