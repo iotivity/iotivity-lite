@@ -442,8 +442,10 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
   /** Connect to Target Wi-Fi AP */
   st_print_log("[St_Port] connect to %s AP.\n", ssid);
-  char nmcli_command[200];
-  sprintf(nmcli_command, "nmcli d wifi connect %s password %s", ssid, pwd);
+  int len = 32 + strlen(ssid) + strlen(pwd);
+  char nmcli_command[len];
+  snprintf(nmcli_command, len, "nmcli d wifi connect %s password %s", ssid,
+           pwd);
   st_print_log("[St_Port] $ %s\n", nmcli_command);
   SYSTEM_RET_CHECK(system(nmcli_command));
 
