@@ -88,7 +88,7 @@ st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void
+static int
 st_register_resource(st_resource_info_t *resource_info)
 {
   st_print_log("[St_rsc_mgr] st_register_resource IN\n");
@@ -97,6 +97,9 @@ st_register_resource(st_resource_info_t *resource_info)
     oc_new_resource(NULL, oc_string(resource_info->uri),
                     oc_string_array_get_allocated_size(resource_info->types),
                     resource_info->device_idx);
+  if (!resource)
+    return -1;
+
   int i;
   int rw = 0;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource_info->types);
@@ -139,48 +142,53 @@ st_register_resource(st_resource_info_t *resource_info)
                                     NULL);
   }
 
-  oc_add_resource(resource);
   st_print_log("[St_rsc_mgr] st_register_resource OUT\n");
+  return oc_add_resource(resource) ? 0 : -1;
 }
 
-void
+int
 st_register_resources(int device)
 {
   st_resource_info_t *resources = st_data_mgr_get_resource_info();
   if (!resources) {
     st_print_log("[St_rsc_mgr] resource list not exist");
-    return;
+    return -1;
   }
 
   while (resources) {
-    st_register_resource(resources);
+    if (st_register_resource(resources) != 0) {
+      st_print_log("[St_rsc_mgr] st_register_resource failed");
+      return -1;
+    }
     resources = resources->next;
   }
 
-  init_provisioning_info_resource(NULL);
+  es_result_e ret = init_provisioning_info_resource(NULL);
 
   device_index = device;
+  return (ret == ES_OK) ? 0 : -1;
 }
 
-void
+int
 st_register_resource_handler(st_resource_handler get_handler,
                              st_resource_handler set_handler)
 {
   if (!get_handler || !set_handler) {
     st_print_log("[St_rsc_mgr] invalid parameter.");
-    return;
+    return -1;
   }
 
   g_resource_get_handler = get_handler;
   g_resource_set_handler = set_handler;
+  return 0;
 }
 
-void
+int
 st_notify_back(const char *uri)
 {
   if (!uri) {
     st_print_log("[St_rsc_mgr] invalid parameter.");
-    return;
+    return -1;
   }
 
   st_process_app_sync_lock();
@@ -188,10 +196,12 @@ st_notify_back(const char *uri)
     oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
   if (!resource) {
     st_print_log("[St_rsc_mgr] invalid resource uri(%s)\n", uri);
-    return;
+    return -1;
   }
 
   oc_notify_observers(resource);
   st_process_app_sync_unlock();
   _oc_signal_event_loop();
+
+  return 0;
 }
