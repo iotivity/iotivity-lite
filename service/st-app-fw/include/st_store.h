@@ -47,6 +47,7 @@ typedef struct
 
 int st_store_load(void);
 void st_store_dump(void);
+void st_store_dump_delay(void);
 void st_store_info_initialize(void);
 st_store_t *st_store_get_info(void);
 
