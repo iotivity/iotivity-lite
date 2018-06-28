@@ -159,6 +159,7 @@ ifeq ($(ST_APP_FW),1)
 	SRC_ST=$(wildcard ../../service/st-app-fw/src/*.c ../../service/st-app-fw/src/port/linux/*.c)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
+	CFLAGS_ST+= -I../../port/
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
 	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
 	ST_JSON_FILE := $(wildcard ../../service/st-app-fw/json/*.json)
@@ -281,11 +282,11 @@ platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a
 
 $(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c -lpthread $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS) $(CFLAGS_ST) $(CFLAGS_ES) $(CFLAGS_FOTA) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c -lpthread $< -o $@
 
 stapptest: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
 	@mkdir -p st_things_creds
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS) $(CFLAGS_ST) $(CFLAGS_ES) $(CFLAGS_FOTA) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ifeq ($(EASYSETUP),1)
 $(EASYSETUP_TEST_OBJ_DIR)/%.o: $(EASYSETUP_TEST_DIR)/%.cpp
