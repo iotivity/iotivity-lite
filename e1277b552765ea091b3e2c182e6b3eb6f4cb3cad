@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2ebd4969",
+        "filename": "api/oc_server_api.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-28T23:06:17Z",
+      "side": 1,
+      "message": "Should return -1, which is the negative response code.",
+      "range": {
+        "startLine": 58,
+        "startChar": 11,
+        "endLine": 58,
+        "endChar": 12
+      },
+      "revId": "e1277b552765ea091b3e2c182e6b3eb6f4cb3cad",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0ec205e9",
+        "filename": "security/oc_doxm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-06-28T23:06:17Z",
+      "side": 1,
+      "message": "This shouldn\u0027t ever happen in normal use as oc_ri creates oc_request_t and sets its attributes all the time. It is one of the basic design invariants that require no explicit checking. If this were not true, a static analyzer like Coverity would\u0027ve caught this by now.\n\nIt seems like the unit test needs to be fixed to do the right thing, i.e. setup oc_request_t the way it needs to be, and you could take out this block.",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 13
+      },
+      "revId": "e1277b552765ea091b3e2c182e6b3eb6f4cb3cad",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
