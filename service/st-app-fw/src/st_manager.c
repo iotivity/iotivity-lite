@@ -228,7 +228,9 @@ st_main_reset(void)
   oc_sec_reset();
 #endif /* OC_SECURITY */
   st_store_info_initialize();
-  st_store_dump();
+  if (st_store_dump() < 0) {
+    st_print_log("[ST_MGR] st_store_dump failed.\n");
+  }
 }
 
 static oc_event_callback_retval_t
@@ -284,6 +286,8 @@ st_manager_initialize(void)
 
   st_unregister_status_handler();
   set_main_status_sync(ST_STATUS_INIT);
+
+  quit = 0;
 
   return 0;
 }
