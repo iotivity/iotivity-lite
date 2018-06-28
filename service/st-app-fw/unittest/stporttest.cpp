@@ -1,3 +1,21 @@
+/****************************************************************************
+ *
+ * Copyright 2018 Samsung Electronics All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
+
 #include <gtest/gtest.h>
 #include <cstdlib>
 #include <pthread.h>
@@ -230,6 +248,20 @@ TEST_F(TestSTPort, st_scan_wifi_mock)
     st_wifi_free_scan_list(scanlist);
 }
 #endif
+
+TEST_F(TestSTPort, st_wifi_set_cache_and_st_wifi_get_cache_and_st_wifi_clear_cache)
+{
+    st_wifi_ap_t *ap_list, *ap_list_cache = NULL;
+    st_wifi_scan(&ap_list);
+    st_wifi_set_cache(ap_list);
+    ap_list_cache = st_wifi_get_cache();
+
+    EXPECT_NE(NULL, ap_list_cache);
+    EXPECT_EQ(ap_list, ap_list_cache);
+    
+    st_wifi_clear_cache();
+    EXPECT_EQ(NULL, st_wifi_get_cache());
+}
 
 TEST_F(TestSTPort, st_wifi_free_scan_list)
 {
