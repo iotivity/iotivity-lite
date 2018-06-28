@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8eac55ef",
+        "filename": "service/st-app-fw/include/st_store.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-28T06:59:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_4eab6dd8",
+      "range": {
+        "startLine": 50,
+        "startChar": 18,
+        "endLine": 50,
+        "endChar": 24
+      },
+      "revId": "5b0b6e42438225126c6506259716d8317257324f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_2e9c29c0",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ceb65d3d",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-28T06:59:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_2e9c29c0",
+      "range": {
+        "startLine": 231,
+        "startChar": 22,
+        "endLine": 231,
+        "endChar": 23
+      },
+      "revId": "5b0b6e42438225126c6506259716d8317257324f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_6ea63112",
         "filename": "service/st-app-fw/src/st_store.c",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2018-06-28T06:56:05Z",
       "side": 1,
       "message": "why added here? Was it bug code without it?",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 26
+      },
+      "revId": "5b0b6e42438225126c6506259716d8317257324f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_eeb9a12f",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-06-28T06:59:14Z",
+      "side": 1,
+      "message": "In case of st_store_dump_delay called from other thread(not oc_main stack thread), then It should send signal to wake up timer proto thread.",
+      "parentUuid": "da33351e_6ea63112",
       "range": {
         "startLine": 124,
         "startChar": 0,
