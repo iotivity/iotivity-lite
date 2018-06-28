@@ -212,7 +212,7 @@ TEST_F(TestSTPort, st_connect_wifi)
 TEST_F(TestSTPort, st_scan_wifi_mock)
 {
     st_wifi_ap_t *scanlist = NULL;
-    st_scan_wifi(&scanlist);
+    st_wifi_scan(&scanlist);
     st_wifi_ap_t *ap_test = scanlist;
     int cnt = 3;
     while(cnt--){
@@ -227,17 +227,17 @@ TEST_F(TestSTPort, st_scan_wifi_mock)
         EXPECT_STREQ("AES", ap_test->enc_type);
         ap_test = ap_test->next;
     }
-    st_free_wifi_scan_list(scanlist);
+    st_wifi_free_scan_list(scanlist);
 }
 #endif
 
-TEST_F(TestSTPort, st_free_wifi_scan_list)
+TEST_F(TestSTPort, st_wifi_free_scan_list)
 {
     st_wifi_ap_t *ap_test =  (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
     int len = 7;
     ap_test->ssid = (char*) calloc(len+1, sizeof(char));
     strncpy(ap_test->ssid, "abcdefg", len);
-    st_free_wifi_scan_list(ap_test);
+    st_wifi_free_scan_list(ap_test);
 
     EXPECT_STRNE("abcdefg", ap_test->ssid);
 }
