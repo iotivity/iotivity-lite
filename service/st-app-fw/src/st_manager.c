@@ -53,11 +53,64 @@ int quit = 0;
 
 static void set_st_manager_status(st_status_t status);
 
+typedef struct
+{
+  oc_string_t model_number;
+  oc_string_t platform_version;
+  oc_string_t os_version;
+  oc_string_t hardware_version;
+  oc_string_t firmware_version;
+  oc_string_t vendor_id;
+} platform_cb_data_t;
+
+static platform_cb_data_t platform_cb_data;
+
+static void free_platform_cb_data(void)
+{
+  if(oc_string(platform_cb_data.model_number))
+    oc_free_string(&platform_cb_data.model_number);
+  if(oc_string(platform_cb_data.platform_version))
+    oc_free_string(&platform_cb_data.platform_version);
+  if(oc_string(platform_cb_data.os_version))
+    oc_free_string(&platform_cb_data.os_version);
+  if(oc_string(platform_cb_data.hardware_version))
+    oc_free_string(&platform_cb_data.hardware_version);
+  if(oc_string(platform_cb_data.firmware_version))
+    oc_free_string(&platform_cb_data.firmware_version);
+  if(oc_string(platform_cb_data.vendor_id))
+    oc_free_string(&platform_cb_data.vendor_id);
+}
+
+static platform_cb_data_t* clone_platform_cb_data(st_specification_t *spec)
+{
+  if(!spec) return NULL;
+  free_platform_cb_data();
+  oc_new_string(&platform_cb_data.model_number,
+                oc_string(spec->platform.model_number),
+                oc_string_len(spec->platform.model_number));
+  oc_new_string(&platform_cb_data.platform_version,
+                oc_string(spec->platform.platform_version),
+                oc_string_len(spec->platform.platform_version));
+  oc_new_string(&platform_cb_data.os_version,
+                oc_string(spec->platform.os_version),
+                oc_string_len(spec->platform.os_version));
+  oc_new_string(&platform_cb_data.hardware_version,
+                oc_string(spec->platform.hardware_version),
+                oc_string_len(spec->platform.hardware_version));
+  oc_new_string(&platform_cb_data.firmware_version,
+                oc_string(spec->platform.firmware_version),
+                oc_string_len(spec->platform.firmware_version));
+  oc_new_string(&platform_cb_data.vendor_id,
+                oc_string(spec->platform.vendor_id),
+                oc_string_len(spec->platform.vendor_id));
+  return &platform_cb_data;
+}
+
 static void
 init_platform_cb(void *data)
 {
   if(!data) return;
-  st_platform_info_t *platform = data;
+  platform_cb_data_t *platform = data;
   oc_set_custom_platform_property(mnmo, oc_string(platform->model_number));
   oc_set_custom_platform_property(mnpv, oc_string(platform->platform_version));
   oc_set_custom_platform_property(mnos, oc_string(platform->os_version));
@@ -70,7 +123,7 @@ static int
 app_init(void)
 {
   st_specification_t *spec = st_data_mgr_get_spec_info();
-  st_platform_info_t *platform_data = st_data_mgr_platform_data_load(spec);
+  platform_cb_data_t *platform_data = clone_platform_cb_data(spec);
   int ret = oc_init_platform(oc_string(spec->platform.manufacturer_name),
                              init_platform_cb, platform_data);
   ret |= oc_add_device("/oic/d", oc_string(spec->device.device_type),
@@ -475,7 +528,7 @@ st_manager_stop(void)
 
   oc_main_shutdown();
 
-  st_data_mgr_platform_data_free();
+  free_platform_cb_data();
 }
 
 void
