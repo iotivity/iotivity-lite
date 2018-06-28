@@ -68,7 +68,7 @@ void st_thread_exit(void *retval);
 void st_sleep(int seconds);
 void st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel);
 void st_turn_off_soft_AP(void);
-void st_connect_wifi(const char *ssid, const char *pwd);
+int st_connect_wifi(const char *ssid, const char *pwd);
 
 void st_wifi_scan(st_wifi_ap_t **ap_list);
 void st_wifi_free_scan_list(st_wifi_ap_t *ap_list);

@@ -418,9 +418,13 @@ exit:
   g_soft_ap.cv = NULL;
 }
 
-void
+int
 st_connect_wifi(const char *ssid, const char *pwd)
 {
+  if (!ssid) {
+    st_print_log("[St_Port] st_connect_wifi failed\n");
+    return -1;
+  }
   st_print_log("[St_Port] st_connect_wifi in\n");
 
   /** sleep to allow response sending from post_callback thread before turning
@@ -451,10 +455,11 @@ st_connect_wifi(const char *ssid, const char *pwd)
   SYSTEM_RET_CHECK(system(nmcli_command));
 
   st_print_log("[St_Port] st_connect_wifi out\n");
-  return;
+  return 0;
 
 exit:
   st_print_log("[St_Port] st_connect_wifi error occur\n");
+  return -1;
 }
 
 /* TODO: libiw-dev is required to be installed to scan wifi access

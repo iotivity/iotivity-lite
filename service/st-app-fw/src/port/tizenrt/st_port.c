@@ -312,7 +312,7 @@ exit:
   g_soft_ap.cv = NULL;
 }
 
-void
+int
 st_connect_wifi(const char *ssid, const char *pwd)
 {
   st_print_log("[St_Port] st_connect_wifi in\n");
@@ -325,7 +325,7 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
   if (wifi_start_station() < 0) {
     st_print_log("start station error! \n");
-    return;
+    return -1;
   }
 
   int retry;
@@ -350,7 +350,7 @@ st_connect_wifi(const char *ssid, const char *pwd)
   }
 
   st_print_log("[St_Port] st_connect_wifi out\n");
-  return;
+  return 0;
 }
 
 void
