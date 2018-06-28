@@ -253,38 +253,6 @@ st_data_mgr_info_free(void)
   free_resource_types();
 }
 
-st_platform_info_t *
-st_data_mgr_platform_data_load(st_specification_t *spec)
-{
-  if(!spec) return NULL;
-  free_specifications_platform(&platform_data);
-  /* manufacturer_name, manufacturer_uri, manufacturing_date are not used by init_platform_cb() */
-  oc_new_string(&platform_data.model_number,
-                oc_string(spec->platform.model_number),
-                oc_string_len(spec->platform.model_number));
-  oc_new_string(&platform_data.platform_version,
-                oc_string(spec->platform.platform_version),
-                oc_string_len(spec->platform.platform_version));
-  oc_new_string(&platform_data.os_version,
-                oc_string(spec->platform.os_version),
-                oc_string_len(spec->platform.os_version));
-  oc_new_string(&platform_data.hardware_version,
-                oc_string(spec->platform.hardware_version),
-                oc_string_len(spec->platform.hardware_version));
-  oc_new_string(&platform_data.firmware_version,
-                oc_string(spec->platform.firmware_version),
-                oc_string_len(spec->platform.firmware_version));
-  oc_new_string(&platform_data.vendor_id,
-                oc_string(spec->platform.vendor_id),
-                oc_string_len(spec->platform.vendor_id));
-  return &platform_data;
-}
-
-void st_data_mgr_platform_data_free(void)
-{
-  free_specifications_platform(&platform_data);
-}
-
 static int
 st_decode_spec(int device_index, oc_rep_t *spec_rep)
 {
