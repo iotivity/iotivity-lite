@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4eb1adf7",
+        "filename": "port/unittest/storagetest.cpp",
+        "patchSetId": 12
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-28T12:47:11Z",
+      "side": 1,
+      "message": "Please put resource related test cases in another file and raise another gerrit for the same...\nI already gave +1 for storage cases.",
+      "range": {
+        "startLine": 39,
+        "startChar": 32,
+        "endLine": 39,
+        "endChar": 33
+      },
+      "revId": "67d2b545e2bbb976f2fd727ae3294f6fe078b6d5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
