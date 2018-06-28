@@ -54,6 +54,8 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
 int
 oc_get_query_value(oc_request_t *request, const char *key, char **value)
 {
+  if (!request)
+    return -1;
   return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
