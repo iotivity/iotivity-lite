@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_cb55af1e",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-28T03:13:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_6b6e2303",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 1
+      },
+      "revId": "674bbd4bd6f3df4e2f47bdb67652c3f4d3d21af3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_6b45836f",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8b5ba753",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-28T03:13:01Z",
+      "side": 1,
+      "message": "In patch 4, Uze gave a comments to free the JSON parsed structure as soon as possible.\n\nThe function init_platform_cb() will be invoked, whenever there is a query on \"oic/p\". To have that information saved and free the JSON parsed structures, the init_platform_cb() will use this copy.",
+      "parentUuid": "da33351e_6b45836f",
+      "range": {
+        "startLine": 99,
+        "startChar": 2,
+        "endLine": 99,
+        "endChar": 63
+      },
+      "revId": "674bbd4bd6f3df4e2f47bdb67652c3f4d3d21af3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4b4a3f81",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2018-06-28T02:49:17Z",
       "side": 1,
       "message": "vendor properties work is already going on https://gerrit.iotivity.org/gerrit/#/c/26005/. See if you can rebase this work on top of that patch.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 203,
+        "endChar": 1
+      },
+      "revId": "674bbd4bd6f3df4e2f47bdb67652c3f4d3d21af3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_eb587358",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1703
+      },
+      "writtenOn": "2018-06-28T03:13:01Z",
+      "side": 1,
+      "message": "Uze already told me to make these changes as part of this patch. Please refer to his comments here and the patch you mentioned.",
+      "parentUuid": "da33351e_4b4a3f81",
       "range": {
         "startLine": 195,
         "startChar": 0,
