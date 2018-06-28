@@ -281,11 +281,11 @@ platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a
 
 $(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c -lpthread $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c -lpthread $< -o $@
 
 stapptest: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
-	@mkdir -p st_things_creds
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS)  $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+	@mkdir -p $@_creds
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ifeq ($(EASYSETUP),1)
 $(EASYSETUP_TEST_OBJ_DIR)/%.o: $(EASYSETUP_TEST_DIR)/%.cpp
