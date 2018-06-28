@@ -70,7 +70,7 @@ static int
 app_init(void)
 {
   st_specification_t *spec = st_data_mgr_get_spec_info();
-  st_platform_info_t *platform_data = st_data_mgr_platform_data_load(spec);
+  st_platform_info_t *platform_data = st_data_mgr_get_platform_info();
   int ret = oc_init_platform(oc_string(spec->platform.manufacturer_name),
                              init_platform_cb, platform_data);
   ret |= oc_add_device("/oic/d", oc_string(spec->device.device_type),
@@ -277,6 +277,16 @@ st_manager_stack_init(void)
     return -1;
   }
 
+  if (st_data_mgr_load_specification_info() != 0) {
+    st_print_log("[ST_MGR] st_data_mgr_load_specification_info failed!\n");
+    return -1;
+  }
+
+  if (st_data_mgr_load_resource_type_info() != 0) {
+    st_print_log("[ST_MGR] st_data_mgr_load_specification_info failed!\n");
+    return -1;
+  }
+
   st_vendor_props_initialize();
 
   if (st_is_easy_setup_finish() != 0) {
@@ -310,6 +320,7 @@ st_manager_stack_init(void)
 
   set_sc_prov_info();
   st_fota_manager_start();
+  st_data_mgr_free_resource_type_info();
   st_data_mgr_info_free();
 
   int i = 0;
@@ -472,7 +483,7 @@ st_manager_stop(void)
 
   oc_main_shutdown();
 
-  st_data_mgr_platform_data_free();
+  st_data_mgr_free_specification_info();
 }
 
 void

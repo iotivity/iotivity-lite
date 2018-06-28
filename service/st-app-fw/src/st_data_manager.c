@@ -86,17 +86,12 @@ OC_LIST(st_resource_type_list);
 OC_MEMB(st_resource_type_s, st_resource_type_t,
         MAX_NUM_PROPERTIES *OC_MAX_APP_RESOURCES *OC_MAX_NUM_DEVICES);
 
-static int st_decode_device_data_info(oc_rep_t *rep);
-
-/* Store platform data for "/oic/p" resource used from init_platform_cb */
-static st_platform_info_t platform_data;
+static oc_rep_t *g_rep = NULL;
+static int device_idx = 0;
 
 int
 st_data_mgr_info_load(void)
 {
-  int ret = 0;
-  oc_rep_t *rep;
-
   if (st_device_def_len > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
     char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -110,15 +105,10 @@ st_data_mgr_info_load(void)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(st_device_def, (uint16_t)st_device_def_len, &rep);
-    ret = st_decode_device_data_info(rep);
-    oc_free_rep(rep);
-  } else {
-    st_print_log("[ST_DATA_MGR] can't read device info\n");
-    return -1;
+    return oc_parse_rep(st_device_def, (uint16_t)st_device_def_len, &g_rep);
   }
-
-  return ret;
+  st_print_log("[ST_DATA_MGR] can't read device info\n");
+  return -1;
 }
 
 st_specification_t *
@@ -129,37 +119,6 @@ st_data_mgr_get_spec_info(void)
   } else {
     return NULL;
   }
-}
-
-st_resource_info_t *
-st_data_mgr_get_resource_info(void)
-{
-  if (oc_list_length(st_resource_list) > 0) {
-    return (st_resource_info_t *)oc_list_head(st_resource_list);
-  } else {
-    return NULL;
-  }
-}
-
-st_resource_type_t *
-st_data_mgr_get_rsc_type_info(const char *rt)
-{
-  st_resource_type_t *rt_info = oc_list_head(st_resource_type_list);
-
-  size_t rt_len = strlen(rt);
-  while (rt_info != NULL &&
-         (rt_len != oc_string_len(rt_info->type) ||
-          strncmp(rt, oc_string(rt_info->type), rt_len) != 0)) {
-    rt_info = rt_info->next;
-  }
-
-  if (!rt_info) {
-    st_print_log("[ST_DATA_MGR] can't find %s resource type info\n", rt);
-    return NULL;
-  }
-
-  st_print_log("[ST_DATA_MGR] find %s resource type info\n", rt);
-  return rt_info;
 }
 
 static void
@@ -248,41 +207,7 @@ free_resource_types(void)
 void
 st_data_mgr_info_free(void)
 {
-  free_specifications();
-  free_resources();
-  free_resource_types();
-}
-
-st_platform_info_t *
-st_data_mgr_platform_data_load(st_specification_t *spec)
-{
-  if(!spec) return NULL;
-  free_specifications_platform(&platform_data);
-  /* manufacturer_name, manufacturer_uri, manufacturing_date are not used by init_platform_cb() */
-  oc_new_string(&platform_data.model_number,
-                oc_string(spec->platform.model_number),
-                oc_string_len(spec->platform.model_number));
-  oc_new_string(&platform_data.platform_version,
-                oc_string(spec->platform.platform_version),
-                oc_string_len(spec->platform.platform_version));
-  oc_new_string(&platform_data.os_version,
-                oc_string(spec->platform.os_version),
-                oc_string_len(spec->platform.os_version));
-  oc_new_string(&platform_data.hardware_version,
-                oc_string(spec->platform.hardware_version),
-                oc_string_len(spec->platform.hardware_version));
-  oc_new_string(&platform_data.firmware_version,
-                oc_string(spec->platform.firmware_version),
-                oc_string_len(spec->platform.firmware_version));
-  oc_new_string(&platform_data.vendor_id,
-                oc_string(spec->platform.vendor_id),
-                oc_string_len(spec->platform.vendor_id));
-  return &platform_data;
-}
-
-void st_data_mgr_platform_data_free(void)
-{
-  free_specifications_platform(&platform_data);
+    oc_free_rep(g_rep);
 }
 
 static int
@@ -534,11 +459,12 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
   return 0;
 }
 
-static int
-st_decode_device_data_info(oc_rep_t *rep)
+/* Device Specification: Load, Get and Free API */
+/* Device, Platform and Resource Information */
+int st_data_mgr_load_specification_info(void)
 {
   oc_rep_t *device_rep = NULL;
-  if (oc_rep_get_object_array(rep, ST_DEVICE_KEY, &device_rep)) {
+  if (oc_rep_get_object_array(g_rep, ST_DEVICE_KEY, &device_rep)) {
     oc_rep_t *iter = device_rep;
     int i;
     for (i = 0; iter != NULL; iter = iter->next, i++) {
@@ -552,9 +478,42 @@ st_decode_device_data_info(oc_rep_t *rep)
     st_print_log("[ST_DATA_MGR] can't get device data\n");
     return -1;
   }
+}
 
+st_device_info_t *st_data_mgr_get_device_info(void)
+{
+  st_specification_t *spec = st_data_mgr_get_spec_info();
+  if(!spec) return NULL;
+  return &spec->device;
+}
+
+st_platform_info_t *st_data_mgr_get_platform_info(void)
+{
+  st_specification_t *spec = st_data_mgr_get_spec_info();
+  if(!spec) return NULL;
+  return &spec->platform;
+}
+
+st_resource_info_t *st_data_mgr_get_resource_info(void)
+{
+  if (oc_list_length(st_resource_list) > 0) {
+    return (st_resource_info_t *)oc_list_head(st_resource_list);
+  } else {
+    return NULL;
+  }
+}
+
+void st_data_mgr_free_specification_info(void)
+{
+  free_specifications();
+  free_resources();
+}
+
+int
+st_data_mgr_load_resource_type_info(void)
+{
   oc_rep_t *rsc_type_rep = NULL;
-  if (oc_rep_get_object_array(rep, ST_RESOURCE_TYPES_KEY, &rsc_type_rep)) {
+  if (oc_rep_get_object_array(g_rep, ST_RESOURCE_TYPES_KEY, &rsc_type_rep)) {
     oc_rep_t *iter = rsc_type_rep;
     while (iter) {
       oc_rep_t *item = iter->value.object;
@@ -570,4 +529,30 @@ st_decode_device_data_info(oc_rep_t *rep)
   }
 
   return 0;
+}
+
+st_resource_type_t *
+st_data_mgr_get_resource_type_info(const char *rt)
+{
+  st_resource_type_t *rt_info = oc_list_head(st_resource_type_list);
+
+  size_t rt_len = strlen(rt);
+  while (rt_info != NULL &&
+         (rt_len != oc_string_len(rt_info->type) ||
+          strncmp(rt, oc_string(rt_info->type), rt_len) != 0)) {
+    rt_info = rt_info->next;
+  }
+
+  if (!rt_info) {
+    st_print_log("[ST_DATA_MGR] can't find %s resource type info\n", rt);
+    return NULL;
+  }
+
+  st_print_log("[ST_DATA_MGR] find %s resource type info\n", rt);
+  return rt_info;
+}
+
+void st_data_mgr_free_resource_type_info(void)
+{
+  free_resource_types();
 }

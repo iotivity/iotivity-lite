@@ -105,7 +105,7 @@ st_register_resource(st_resource_info_t *resource_info)
     oc_resource_bind_resource_type(resource, value);
     st_print_log("[St_rsc_mgr] rt : %s\n", value);
     if (rw < (ST_RSC_READABLE | ST_RSC_WRITABLE)) {
-      st_resource_type_t *rt_info = st_data_mgr_get_rsc_type_info(value);
+      st_resource_type_t *rt_info = st_data_mgr_get_resource_type_info(value);
       st_property_t *prop = oc_list_head(rt_info->properties);
       if (prop) {
         if (rw < prop->rw)

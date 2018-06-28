@@ -100,11 +100,29 @@ typedef struct st_resource_type
 
 int st_data_mgr_info_load(void);
 void st_data_mgr_info_free(void);
-st_platform_info_t *st_data_mgr_platform_data_load(st_specification_t *spec);
-void st_data_mgr_platform_data_free(void);
 
+ /*
+  * Load API's will read cbored JSON file and store data internally.
+  * Get API's will return the stored data.
+  * Free API's will free the stored data.
+  */
+
+/* Device Specification: Load, Get and Free API */
+int st_data_mgr_load_specification_info(void); // device, platform, resources
 st_specification_t *st_data_mgr_get_spec_info(void);
+st_device_info_t *st_data_mgr_get_device_info(void);
+st_platform_info_t *st_data_mgr_get_platform_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
-st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);
+void st_data_mgr_free_specification_info(void);
+
+/* Resource Type: Load, Get and Free API */
+int st_data_mgr_load_resource_type_info(void);// resource_type
+st_resource_type_t *st_data_mgr_get_resource_type_info(const char *rt);
+void st_data_mgr_free_resource_type_info(void);
+
+/* Easy Setup: Load, Get and Free API */
+/*int st_data_mgr_load_easysetup_info(void); // setupid, otmMethod*/
+/*st_easysetup_t *st_data_mgr_get_easysetup_info(void);*/
+/*void st_data_mgr_free_easysetup_info(void);*/
 
 #endif /* ST_DATA_MANAGER_H */
