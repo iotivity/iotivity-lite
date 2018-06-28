@@ -27,7 +27,7 @@ TEST_F(TestSTStore, st_store_load)
     int ret = st_store_load();
     EXPECT_EQ(0, ret);
 }
-/*
+
 TEST_F(TestSTStore, st_store_dump)
 {
     oc_storage_config("./st_things_creds");
@@ -39,7 +39,7 @@ TEST_F(TestSTStore, st_store_dump)
 
     EXPECT_EQ(true, store_info->status);
 }
-*/
+
 TEST_F(TestSTStore, st_store_info_initialize)
 {
     st_store_t *store_info = st_store_get_info();
