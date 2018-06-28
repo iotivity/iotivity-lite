@@ -138,7 +138,8 @@ st_port_user_input_loop(void *data)
 
     if (FD_ISSET(g_user_input_shutdown_pipe[0], &setfds)) {
       char buf;
-      read(g_user_input_shutdown_pipe[0], &buf, 1);
+      int count = read(g_user_input_shutdown_pipe[0], &buf, 1);
+      (void)count;
       goto exit;
     }
 
