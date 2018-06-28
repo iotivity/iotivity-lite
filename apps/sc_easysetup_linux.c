@@ -69,6 +69,11 @@ void SetProvInfo() {
   oc_get_device_id(0, uuid, 37);
   g_provisioninginfo_resource.targets = (sec_provisioning_info_targets *)malloc(
       target_size * sizeof(sec_provisioning_info_targets));
+  if(g_provisioninginfo_resource.targets == NULL)
+  {
+    printf("[ES App] malloc failed for  g_provisioninginfo_resource.targets \n");
+    return;
+  }
   for (int i = 0; i < target_size; i++) {
     oc_new_string(&g_provisioninginfo_resource.targets[i].target_di, uuid,
                   strlen(uuid));
@@ -78,7 +83,7 @@ void SetProvInfo() {
   }
   g_provisioninginfo_resource.targets_size = target_size;
   g_provisioninginfo_resource.owned = false;
-  oc_new_string(&g_provisioninginfo_resource.easysetup_di, uuid, 38);
+  oc_new_string(&g_provisioninginfo_resource.easysetup_di, uuid, strlen(uuid));
 
   if (set_sec_prov_info(&g_provisioninginfo_resource) == ES_ERROR)
     PRINT("SetProvInfo Error\n");
@@ -376,7 +381,7 @@ scan_access_points(sec_accesspoint **ap_list) {
     sec_accesspoint *ap = (sec_accesspoint *) calloc(1, sizeof(sec_accesspoint));
 
     char name[15];
-    sprintf(name, "iot_home_%d", cnt);
+    snprintf(name, 15,"iot_home_%d", cnt);
     oc_new_string(&(ap->ssid), name, strlen(name));
     oc_new_string(&(ap->channel), "15", strlen("15"));
     oc_new_string(&(ap->enc_type), "AES", strlen("AES"));
