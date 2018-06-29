@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_11d98a57",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "AVoid full capital letters in commit message...\nchange to \"Unit test for Resource\"",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_71de1641",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "any specific sense to add s_...if not rename to Callback_Received...",
+      "range": {
+        "startLine": 32,
+        "startChar": 12,
+        "endLine": 32,
+        "endChar": 14
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_51e31207",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "rename to res",
+      "range": {
+        "startLine": 55,
+        "startChar": 19,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b1e7fe11",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "please align properly",
+      "range": {
+        "startLine": 68,
+        "startChar": 17,
+        "endLine": 68,
+        "endChar": 18
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91e47a0e",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "declaration keep in the top of block",
+      "range": {
+        "startLine": 71,
+        "startChar": 17,
+        "endLine": 71,
+        "endChar": 18
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f1f186ce",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "try avoiding hard coding...define a macro for this",
+      "range": {
+        "startLine": 79,
+        "startChar": 67,
+        "endLine": 79,
+        "endChar": 68
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d1ee02ec",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "take care declaration and allignment",
+      "range": {
+        "startLine": 81,
+        "startChar": 17,
+        "endLine": 81,
+        "endChar": 18
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_11c06a4f",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "Add more negative cases also if needed, by passing NULL to instead of OnGet(N1,N2 etc...)\n\nand verify whether call back function is being called or not",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 1
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b1cede81",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "add space after comma",
+      "range": {
+        "startLine": 89,
+        "startChar": 19,
+        "endLine": 89,
+        "endChar": 28
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_31bbeee6",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "please check ...It is positive test case",
+      "range": {
+        "startLine": 89,
+        "startChar": 4,
+        "endLine": 89,
+        "endChar": 13
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_71b576ed",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "rectify typo",
+      "range": {
+        "startLine": 92,
+        "startChar": 21,
+        "endLine": 92,
+        "endChar": 44
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_51baf2de",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "renames to res",
+      "range": {
+        "startLine": 94,
+        "startChar": 19,
+        "endLine": 94,
+        "endChar": 30
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91cbda71",
+        "filename": "port/unittest/resourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-06-29T10:51:17Z",
+      "side": 1,
+      "message": "add space",
+      "range": {
+        "startLine": 96,
+        "startChar": 15,
+        "endLine": 96,
+        "endChar": 16
+      },
+      "revId": "f934dc6c1b3aa3269012382216ae6d418c47ba70",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
