@@ -29,6 +29,18 @@
 static struct simple_udp_connection server, mcast;
 PROCESS(ip_adapter_process, "IP Adapter");
 static uip_ipaddr_t ipaddr, mcastaddr;
+static oc_endpoint_t *eps;
+
+static void
+free_endpoints(void)
+{
+  oc_endpoint_t *ep = eps, *next;
+  while (ep != NULL) {
+    next = ep->next;
+    oc_free_endpoint(ep);
+    ep = next;
+  }
+}
 
 void
 handle_incoming_message(uint8_t *buffer, int size, uint8_t *addr, uint16_t port)
@@ -71,15 +83,19 @@ oc_endpoint_t *
 oc_connectivity_get_endpoints(int device)
 {
   (void)device;
-  oc_init_endpoint_list();
-  oc_endpoint_t ep;
-  memset(&ep, 0, sizeof(oc_endpoint_t));
-  ep.flags = IPV6;
-  memcpy(ep.addr.ipv6.address, ipaddr.u8, 16);
-  ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
-  ep.device = 0;
-  oc_add_endpoint_to_list(&ep);
-  return oc_get_endpoint_list();
+  if (!eps) {
+    oc_endpoint_t *ep = oc_new_endpoint();
+    if (!ep) {
+      return NULL;
+    }
+    memset(ep, 0, sizeof(oc_endpoint_t));
+    ep->flags = IPV6;
+    memcpy(ep->addr.ipv6.address, ipaddr.u8, 16);
+    ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+    ep->device = 0;
+    eps = ep;
+  }
+  return eps;
 }
 
 static uip_ipaddr_t *
@@ -141,7 +157,7 @@ PROCESS_THREAD(ip_adapter_process, ev, data)
   PROCESS_END();
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
@@ -154,6 +170,8 @@ oc_send_buffer(oc_message_t *message)
     &server, message->data, message->length,
     (const uip_ipaddr_t *)message->endpoint.addr.ipv6.address,
     message->endpoint.addr.ipv6.port);
+
+  return message->length;
 }
 
 int
@@ -168,6 +186,7 @@ void
 oc_connectivity_shutdown(int device)
 {
   (void)device;
+  free_endpoints();
   process_exit(&ip_adapter_process);
 }
 

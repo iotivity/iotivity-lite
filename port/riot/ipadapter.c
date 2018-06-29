@@ -45,6 +45,8 @@ static uint8_t local_addr[16];
 
 static mutex_t mutex;
 
+static oc_endpoint_t *eps;
+
 void
 oc_network_event_handler_mutex_init(void)
 {
@@ -65,7 +67,9 @@ oc_network_event_handler_mutex_unlock(void)
 
 void oc_network_event_handler_mutex_destroy(void) {}
 
-void oc_send_buffer(oc_message_t *message) {
+int
+oc_send_buffer(oc_message_t *message)
+{
 #ifdef OC_DEBUG
   PRINT("Outgoing message to ");
   PRINTipaddr(message->endpoint);
@@ -75,6 +79,8 @@ void oc_send_buffer(oc_message_t *message) {
   conn_udp_sendto(message->data, message->length, local_addr, 16,
                   message->endpoint.addr.ipv6.address, 16, AF_INET6,
                   OCF_SERVER_PORT_UNSECURED, message->endpoint.addr.ipv6.port);
+
+  return message->length;
 }
 
 void
@@ -183,23 +189,38 @@ multicast_receive_thread(void *arg)
   return NULL;
 }
 
+static void
+free_endpoints(void)
+{
+  oc_endpoint_t *ep = eps, *next;
+  while (ep != NULL) {
+    next = ep->next;
+    oc_free_endpoint(ep);
+    ep = next;
+  }
+}
+
 oc_endpoint_t *
 oc_connectivity_get_endpoints(int device)
 {
   (void)device;
-  oc_init_endpoint_list();
-  oc_endpoint_t ep;
-  memset(&ep, 0, sizeof(oc_endpoint_t));
-  ep.flags = IPV6;
+  if (!eps) {
+    oc_endpoint_t *ep = oc_new_endpoint();
+    if (!ep) {
+      return NULL;
+    }
+    memset(ep, 0, sizeof(oc_endpoint_t));
+    ep->flags = IPV6;
 
-  gnrc_ipv6_netif_t *iface = gnrc_ipv6_netif_get(interface_pid);
-  gnrc_ipv6_netif_addr_t *addr = &iface->addrs[1];
-  memcpy(ep.addr.ipv6.address, addr->addr.u8, 16);
+    gnrc_ipv6_netif_t *iface = gnrc_ipv6_netif_get(interface_pid);
+    gnrc_ipv6_netif_addr_t *addr = &iface->addrs[1];
+    memcpy(ep->addr.ipv6.address, addr->addr.u8, 16);
 
-  ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
-  ep.device = 0;
-  oc_add_endpoint_to_list(&ep);
-  return oc_get_endpoint_list();
+    ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+    ep->device = 0;
+    eps = ep;
+  }
+  return eps;
 }
 
 int
@@ -234,6 +255,7 @@ oc_connectivity_shutdown(int device)
 {
   (void)device;
   terminate = true;
+  free_endpoints();
 }
 
 #ifdef OC_CLIENT

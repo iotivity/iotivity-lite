@@ -49,7 +49,11 @@
 
 # Location of the installation directory and the API level.
 ANDROID_API := 19
+ifeq (${NDK_HOME},)
 ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
+else
+ANDROID_BASE := "${NDK_HOME}"
+endif
 # Compiler prefix
 ANDROID_HOST := arm-linux-androideabi-
 
@@ -66,7 +70,9 @@ endif
 RM ?= rm
 MKDIR ?= mkdir
 
+ROOT_DIR = ../..
 OBJDIR ?= ./${ANDROID_HOST}obj$(IOT_NAME_SUFFIX)
+MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -83,7 +89,6 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
-MBEDTLS_DIR := ../../deps/mbedtls
 
 SRC_COMMON:=$(wildcard ../../util/*.c) ${CBOR}
 SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
@@ -187,14 +192,6 @@ libiotivity-constrained-client$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT)
 libiotivity-constrained-client-server$(IOT_NAME_SUFFIX).a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
-server_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server.a
-	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
-
-client_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-client.a
-	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
-
 server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
@@ -228,20 +225,26 @@ server_block_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_S
 smart_home_server_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
-	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
-
-multi_device_client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
-	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
-
 server_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/server_scenes_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ $< libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 client_scenes_linux$(IOT_NAME_SUFFIX): ../../apps/client_scenes_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ $< libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
+multi_device_server$(IOT_NAME_SUFFIX): libiotivity-constrained-server$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server$(IOT_NAME_SUFFIX).a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+multi_device_client$(IOT_NAME_SUFFIX): libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
+	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 ${OBT}: libiotivity-constrained-client$(IOT_NAME_SUFFIX).a
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client$(IOT_NAME_SUFFIX).a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+server_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+client_multithread_linux$(IOT_NAME_SUFFIX): libiotivity-constrained-client.a
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 ifeq ($(SECURE),1)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
@@ -268,4 +271,3 @@ cleanall: clean
 	$(RM) -rf ${all} $(SAMPLES) $(OBT) $(MBEDTLS_PATCH_FILE)
 
 distclean: cleanall
-

@@ -119,9 +119,12 @@ oc_connectivity_get_endpoints(int device)
   return NULL;
 }
 
-void oc_send_buffer(oc_message_t *message) {
-  (void) message;
+int
+oc_send_buffer(oc_message_t *message)
+{
+  (void)message;
   oc_abort(__func__);
+  return -1;
 }
 
 #ifdef OC_CLIENT
@@ -166,18 +169,20 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 }
 #endif /* OC_TCP */
 
-bool
-oc_domain_to_ip(const char *domain, oc_string_t *ip)
+#ifdef OC_DNS_LOOKUP
+int
+oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 {
-  if (!domain || !ip) {
+  if (!domain || !addr || !flags) {
     OC_ERR("Error of input parameters");
-    return false;
+    return -1;
   }
 
   oc_abort(__func__);
 
-  return true;
+  return 0;
 }
+#endif /* OC_DNS_LOOKUP */
 
 bool
 oc_get_mac_addr(unsigned char* mac)

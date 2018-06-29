@@ -19,14 +19,14 @@
 #ifndef IPCONTEXT_H
 #define IPCONTEXT_H
 
-#include <stdint.h>
+#include "oc_endpoint.h"
 #include <pthread.h>
+#include <stdint.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 
 #ifdef OC_TCP
-typedef struct tcp_context_t
-{
+typedef struct tcp_context_t {
   struct sockaddr_storage server;
   int server_sock;
   uint16_t port;
@@ -50,9 +50,9 @@ typedef struct tcp_context_t
 } tcp_context_t;
 #endif
 
-typedef struct ip_context_t
-{
+typedef struct ip_context_t {
   struct ip_context_t *next;
+  OC_LIST_STRUCT(eps);
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;
   int mcast_sock;
