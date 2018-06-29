@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <stdlib.h>
@@ -41,6 +42,10 @@
 
 #define DEFAULT_RECEIVE_SIZE                                                   \
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
+#define LIMIT_RETRY_CONNECT 5
+
+#define TCP_CONNECT_TIMEOUT 5
 
 typedef struct tcp_session
 {
@@ -86,6 +91,53 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
+static int
+get_interface_index(int sock)
+{
+  int interface_index = -1;
+
+  struct sockaddr_storage addr;
+  socklen_t socklen = sizeof(addr);
+  if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
+    OC_ERR("obtaining socket information %d", errno);
+    return -1;
+  }
+
+  struct ifaddrs *ifs = NULL, *interface = NULL;
+  if (getifaddrs(&ifs) < 0) {
+    OC_ERR("querying interfaces: %d", errno);
+    return -1;
+  }
+
+  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+      continue;
+    if (addr.ss_family == interface->ifa_addr->sa_family) {
+      if (addr.ss_family == AF_INET6) {
+        struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
+        struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
+        if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
+          interface_index = if_nametoindex(interface->ifa_name);
+          break;
+        }
+      }
+#ifdef OC_IPV4
+      else if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
+        struct sockaddr_in *b = (struct sockaddr_in *)&addr;
+        if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
+          interface_index = if_nametoindex(interface->ifa_name);
+          break;
+        }
+      }
+#endif /* OC_IPV4 */
+    }
+  }
+
+  freeifaddrs(ifs);
+  return interface_index;
+}
+
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 {
@@ -125,13 +177,15 @@ free_tcp_session(tcp_session_t *session)
 }
 
 static int
-add_new_session(int sock, ip_context_t *dev, const oc_endpoint_t *endpoint)
+add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
     OC_ERR("could not allocate new TCP session object");
     return -1;
   }
+
+  endpoint->interface_index = get_interface_index(sock);
 
   session->dev = dev;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -389,28 +443,104 @@ get_session_socket(oc_endpoint_t *endpoint)
 }
 
 static int
+connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
+{
+  int flags, n, error;
+  socklen_t len;
+  fd_set rset, wset;
+  struct timeval tval;
+
+  flags = fcntl(sockfd, F_GETFL, 0);
+  if (flags < 0) {
+    return -1;
+  }
+
+  error = fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+  if (error < 0) {
+    return -1;
+  }
+
+  error = 0;
+  if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
+    if (errno != EINPROGRESS)
+      return -1;
+  }
+
+  /* Do whatever we want while the connect is taking place. */
+  if (n == 0) {
+    goto done; /* connect completed immediately */
+  }
+
+  FD_ZERO(&rset);
+  FD_SET(sockfd, &rset);
+  wset = rset;
+  tval.tv_sec = nsec;
+  tval.tv_usec = 0;
+
+  if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+    /* timeout */
+    errno = ETIMEDOUT;
+    return -1;
+  }
+
+  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset)) {
+    len = sizeof(error);
+    if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+      return -1; /* Solaris pending error */
+  } else {
+    OC_DBG("select error: sockfd not set");
+    return -1;
+  }
+
+done:
+  if (error < 0) {
+    close(sockfd); /* just in case */
+    errno = error;
+    return -1;
+  } else {
+    error = fcntl(sockfd, F_SETFL, flags); /* restore file status flags */
+    if (error < 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+static int
 initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
                      const struct sockaddr_storage *receiver)
 {
   int sock = -1;
+  uint8_t retry_cnt = 0;
 
-  if (endpoint->flags & IPV6) {
-    sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+  while (retry_cnt < LIMIT_RETRY_CONNECT) {
+    if (endpoint->flags & IPV6) {
+      sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 #ifdef OC_IPV4
-  } else if (endpoint->flags & IPV4) {
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    } else if (endpoint->flags & IPV4) {
+      sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 #endif
-  }
+    }
 
-  if (sock < 0) {
-    OC_ERR("could not create socket for new TCP session");
-    return -1;
-  }
+    if (sock < 0) {
+      OC_ERR("could not create socket for new TCP session");
+      return -1;
+    }
 
-  socklen_t receiver_size = sizeof(*receiver);
-  if (connect(sock, (struct sockaddr *)receiver, receiver_size) < 0) {
-    OC_ERR("could not initiate TCP connection");
+    socklen_t receiver_size = sizeof(*receiver);
+    int ret = 0;
+    if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
+                            TCP_CONNECT_TIMEOUT)) == 0) {
+      break;
+    }
+
     close(sock);
+    retry_cnt++;
+    OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+  }
+
+  if (retry_cnt >= LIMIT_RETRY_CONNECT) {
+    OC_ERR("could not initiate TCP connection");
     return -1;
   }
 
@@ -435,13 +565,14 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   return sock;
 }
 
-void
+int
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const struct sockaddr_storage *receiver)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   int send_sock = get_session_socket(&message->endpoint);
 
+  size_t bytes_sent = 0;
   if (send_sock < 0) {
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
@@ -450,7 +581,6 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     }
   }
 
-  size_t bytes_sent = 0;
   do {
     ssize_t send_len = send(send_sock, message->data + bytes_sent,
                             message->length - bytes_sent, 0);
@@ -464,6 +594,12 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
   OC_DBG("Sent %d bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
+
+  if (bytes_sent == 0) {
+    return -1;
+  }
+
+  return bytes_sent;
 }
 
 #ifdef OC_IPV4

@@ -195,8 +195,13 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
     /*  If this resource has been explicitly tagged as SECURE on the
      *  application layer, skip all coap:// endpoints, and only include
      *  coaps:// endpoints.
+     *  Also, exclude all endpoints that are not associated with the interface
+     *  through which this request arrived. This is achieved by checking if the
+     *  interface index matches.
      */
-    if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
+    if ((resource->properties & OC_SECURE && !(eps->flags & SECURED)) ||
+        (request->origin && request->origin->interface_index != -1 &&
+         request->origin->interface_index != eps->interface_index)) {
       goto next_eps;
     }
     oc_rep_object_array_start_item(eps);
@@ -209,7 +214,6 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   next_eps:
     eps = eps->next;
   }
-  oc_free_endpoint_list();
   oc_rep_close_array(link, eps);
 
   oc_rep_end_object(*links, link);
@@ -409,7 +413,6 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     next_eps:
     eps = eps->next;
   }
-  oc_free_endpoint_list();
 
   oc_rep_close_object(res, p);
 
@@ -741,6 +744,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
                   if (*work_ep) {
                     memcpy(*work_ep, &temp_ep, sizeof(oc_endpoint_t));
+                    (*work_ep)->interface_index = endpoint->interface_index;
                     if (oc_ipv6_endpoint_is_link_local(*work_ep) == 0 &&
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
                       (*work_ep)->addr.ipv6.scope = endpoint->addr.ipv6.scope;

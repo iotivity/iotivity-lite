@@ -122,11 +122,12 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   return sock;
 }
 
-void
+int
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const void *receiver)
 {
   oc_abort(__func__);
+  return -1;
 }
 
 #ifdef OC_IPV4

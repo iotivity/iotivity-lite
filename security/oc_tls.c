@@ -261,11 +261,11 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   size_t send_len = (len < (unsigned)OC_PDU_SIZE) ? len : (unsigned)OC_PDU_SIZE;
   memcpy(message.data, buf, send_len);
   message.length = send_len;
-  oc_send_buffer(&message);
+  int ret = oc_send_buffer(&message);
 #ifdef OC_DYNAMIC_ALLOCATION
   free(message.data);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return send_len;
+  return ret;
 }
 
 static void
@@ -626,6 +626,9 @@ int
 oc_tls_update_psk_identity(int device)
 {
   oc_uuid_t *device_id = oc_core_get_device_id(device);
+  if (!device_id) {
+    return -1;
+  }
   if (mbedtls_ssl_conf_psk(&server_conf[device], device_id->id, 1,
                            device_id->id, 16) != 0) {
     return -1;
