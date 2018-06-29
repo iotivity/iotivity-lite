@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f11a2616",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-29T10:07:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7159f6fd",
+      "range": {
+        "startLine": 776,
+        "startChar": 69,
+        "endLine": 776,
+        "endChar": 71
+      },
+      "revId": "81c10dce03e24d475d903e629e01a0fdb10d905e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_91c11a83",
         "filename": "port/linux/ipadapter.c",
         "patchSetId": 1
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "Oh somehow missed. I will fix it now.",
       "parentUuid": "da33351e_91c11a83",
+      "range": {
+        "startLine": 836,
+        "startChar": 0,
+        "endLine": 836,
+        "endChar": 1
+      },
+      "revId": "81c10dce03e24d475d903e629e01a0fdb10d905e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d11722ec",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-06-29T10:07:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_515e72e7",
       "range": {
         "startLine": 836,
         "startChar": 0,
