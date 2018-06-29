@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_b1c41e93",
+        "filename": "port/linux/config.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-29T05:23:25Z",
+      "side": 1,
+      "message": "Please change into 2 as default value.",
+      "range": {
+        "startLine": 27,
+        "startChar": 49,
+        "endLine": 27,
+        "endChar": 50
+      },
+      "revId": "81c10dce03e24d475d903e629e01a0fdb10d905e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f1bea6fe",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-29T05:23:25Z",
+      "side": 1,
+      "message": "white space",
+      "range": {
+        "startLine": 776,
+        "startChar": 69,
+        "endLine": 776,
+        "endChar": 71
+      },
+      "revId": "81c10dce03e24d475d903e629e01a0fdb10d905e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91c11a83",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-06-29T05:23:25Z",
+      "side": 1,
+      "message": "check intent",
+      "range": {
+        "startLine": 836,
+        "startChar": 0,
+        "endLine": 836,
+        "endChar": 1
+      },
+      "revId": "81c10dce03e24d475d903e629e01a0fdb10d905e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
