@@ -456,6 +456,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #ifdef OC_DYNAMIC_ALLOCATION
             credobj->mfgowncertlen = (int *)oc_mem_realloc(
               credobj->mfgowncertlen, sizeof(int) * (credobj->ownchainlen + 1));
+            if (credobj->mfgowncertlen == NULL) {
+              return false;
+            }
 #else
             oc_abort("alloc failed");
 #endif
