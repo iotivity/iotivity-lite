@@ -1444,7 +1444,7 @@ read_application_data(oc_tls_peer_t *peer)
         oc_tls_free_peer(peer, false);
         return;
       }
-      message->length = ret;
+      message->length = (size_t)ret;
       oc_recv_message(message);
       OC_DBG("oc_tls: Decrypted incoming message");
     }
