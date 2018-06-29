@@ -77,9 +77,9 @@ void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
 void oc_core_populate_resource(
   int core_resource, int device_index, const char *uri,
   oc_interface_mask_t interfaces, oc_interface_mask_t default_interface,
-  oc_resource_properties_t properties, oc_request_callback_t get,
-  oc_request_callback_t put, oc_request_callback_t post,
-  oc_request_callback_t delete, int num_resource_types, ...);
+  int properties, oc_request_callback_t get_cb,
+  oc_request_callback_t put_cb, oc_request_callback_t post_cb,
+  oc_request_callback_t delete_cb, int num_resource_types, ...);
 
 void oc_core_regen_unique_ids(int device);
 

@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 extern CborEncoder g_encoder, root_map, links_array;
-extern CborError g_err;
+extern int g_err;
 
 void oc_rep_new(uint8_t *payload, int size);
 int oc_rep_finalize(void);

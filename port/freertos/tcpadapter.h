@@ -34,8 +34,8 @@ int oc_tcp_connectivity_init(ip_context_t *dev);
 
 void oc_tcp_connectivity_shutdown(ip_context_t *dev);
 
-void oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
-                        const void *receiver);
+int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
+                       const void *receiver);
 
 void oc_tcp_add_socks_to_fd_set(ip_context_t *dev);
 

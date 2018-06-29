@@ -17,8 +17,9 @@
 #ifndef OC_ENDPOINT_H
 #define OC_ENDPOINT_H
 
-#include "messaging/coap/conf.h"
 #include "oc_helpers.h"
+
+typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
 
 typedef struct
 {
@@ -39,27 +40,30 @@ typedef struct
   uint8_t address[6];
 } oc_le_addr_t;
 
+enum transport_flags
+{
+  DISCOVERY = 1 << 0,
+  SECURED = 1 << 1,
+  IPV4 = 1 << 2,
+  IPV6 = 1 << 3,
+  TCP = 1 << 4,
+  GATT = 1 << 5,
+  MULTICAST = 1 << 6
+};
+
 typedef struct oc_endpoint_t
 {
   struct oc_endpoint_t *next;
   int device;
-  enum transport_flags
-  {
-    DISCOVERY = 1 << 0,
-    SECURED = 1 << 1,
-    IPV4 = 1 << 2,
-    IPV6 = 1 << 3,
-    TCP = 1 << 4,
-    GATT = 1 << 5,
-    MULTICAST = 1 << 6
-  } flags;
+  enum transport_flags flags;
 
   union dev_addr
   {
     oc_ipv6_addr_t ipv6;
     oc_ipv4_addr_t ipv4;
     oc_le_addr_t bt;
-  } addr;
+  } addr, addr_local;
+  int interface_index;
   uint8_t priority;
   ocf_version_t version;
 } oc_endpoint_t;
@@ -73,10 +77,6 @@ typedef struct oc_endpoint_t
                             .addr.ipv6 = {.port = __port__,                    \
                                           .address = { __VA_ARGS__ } } }
 
-void oc_init_endpoint_list(void);
-int oc_add_endpoint_to_list(oc_endpoint_t *endpoint);
-oc_endpoint_t *oc_get_endpoint_list(void);
-void oc_free_endpoint_list(void);
 oc_endpoint_t *oc_new_endpoint(void);
 void oc_free_endpoint(oc_endpoint_t *endpoint);
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);
