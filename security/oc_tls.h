@@ -43,6 +43,7 @@ void
 oc_sec_unload_own_certs();
 #endif
 bool oc_sec_get_rpk_psk(int device, unsigned char *psk, int *psk_len);
+bool gen_master_key(uint8_t *master, int *master_len);
 
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);

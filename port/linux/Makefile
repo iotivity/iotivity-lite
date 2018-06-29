@@ -135,7 +135,7 @@ endif
 
 ifeq ($(SECURE),1)
 ifneq ($(AUTH_OPTION),0)
-SAMPLES += rpk_server
+SAMPLES += rpk_server rpk_master_calc
 CFLAGS += -DOC_LOAD_CA
 ifeq ($(AUTH_OPTION),1)
 CFLAGS += -DOC_UNLOAD_CERT
@@ -408,6 +408,9 @@ simpleclient: libiotivity-constrained-client.a
 rpk_server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_RPK ${CFLAGS}  ${LIBS}
+
+rpk_master_calc: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/rpk_master_calc.c libiotivity-constrained-server.a ${CFLAGS}  ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds

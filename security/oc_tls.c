@@ -808,7 +808,7 @@ oc_sec_set_own_key_load(oc_sec_get_own_key own_key_cb)
   g_oc_sec_get_own_key = own_key_cb;
 }
 
-static bool
+bool
 gen_master_key(uint8_t *master, int *master_len)
 {
   mbedtls_ecdh_context ecdh_ctx;
