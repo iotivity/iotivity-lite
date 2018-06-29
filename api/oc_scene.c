@@ -248,7 +248,6 @@ reprocess:
         oc_rep_object_array_end_item(eps);
         eps = eps->next;
       }
-      oc_free_endpoint_list();
       oc_rep_close_array(link, eps);
 
       oc_rep_close_object(root, link);
@@ -292,7 +291,6 @@ reprocess:
           oc_rep_object_array_end_item(eps);
           eps = eps->next;
         }
-        oc_free_endpoint_list();
         oc_rep_close_array(links, eps);
 
         oc_rep_object_array_end_item(links);

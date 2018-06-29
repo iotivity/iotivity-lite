@@ -30,8 +30,11 @@ static otUdpSocket multicast_socket;
 #define OCF_MCAST_PORT_UNSECURED (5683)
 #define OCF_SERVER_PORT_UNSECURED (56789)
 
-static void udp_receive_cbk(void *context, otMessage *ot_message,
-                            const otMessageInfo *ot_message_info)
+static oc_endpoint_t *eps;
+
+static void
+udp_receive_cbk(void *context, otMessage *ot_message,
+                const otMessageInfo *ot_message_info)
 {
   (void)context;
 
@@ -63,50 +66,66 @@ static void udp_receive_cbk(void *context, otMessage *ot_message,
   }
 }
 
+static void
+free_endpoints(void)
+{
+  oc_endpoint_t *ep = eps, *next;
+  while (ep != NULL) {
+    next = ep->next;
+    oc_free_endpoint(ep);
+    ep = next;
+  }
+}
+
 oc_endpoint_t *
 oc_connectivity_get_endpoints(int device)
 {
   (void)device;
 
-  oc_init_endpoint_list();
+  if (!eps) {
+    const otNetifAddress *address = otIp6GetUnicastAddresses(ot_instance);
+    oc_endpoint_t *prev = NULL;
+    while (address) {
+      oc_endpoint_t *ep = oc_new_endpoint();
+      if (!ep) {
+        return eps;
+      }
+      if (!eps) {
+        eps = ep;
+      }
+      if (prev) {
+        prev->next = ep;
+      } else {
+        prev = ep;
+      }
+      ep->flags = IPV6;
+      memcpy(ep->addr.ipv6.address, address->mAddress.mFields.m8,
+             OT_IP6_ADDRESS_SIZE);
+      ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+      ep->device = 0;
 
-  oc_endpoint_t ep;
-
-  memset(&ep, 0, sizeof(oc_endpoint_t));
-
-  const otNetifAddress *address = otIp6GetUnicastAddresses(ot_instance);
-
-  while(address) {
-    ep.flags = IPV6;
-    memcpy(ep.addr.ipv6.address, address->mAddress.mFields.m8,
-           OT_IP6_ADDRESS_SIZE);
-    ep.addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
-    ep.device = 0;
-
-    OC_DBG("Endpoint");
-    OC_LOGipaddr(ep);
-
-    oc_add_endpoint_to_list(&ep);
-
-    address = address->mNext;
+      OC_DBG("Endpoint");
+      OC_LOGipaddr(*ep);
+      address = address->mNext;
+    }
   }
-  return oc_get_endpoint_list();
+  return eps;
 }
 
-void
+int
 oc_send_buffer(oc_message_t *message)
 {
   otMessage *ot_message = otUdpNewMessage(ot_instance, true);
 
   if (!ot_message) {
     OC_ERR("No more buffer to send");
-    return;
+    return -1;
   }
 
   if (otMessageAppend(ot_message,
                       message->data, message->length) != OT_ERROR_NONE) {
     OC_ERR("Can't append message");
-    return;
+    return -1;
   }
 
   otMessageInfo message_info;
@@ -127,8 +146,9 @@ oc_send_buffer(oc_message_t *message)
 
   if (otUdpSend(&unicast_socket, ot_message, &message_info) != OT_ERROR_NONE) {
     OC_ERR("Can't send message");
-    return;
+    return -1;
   }
+  return 0;
 }
 
 int
@@ -179,7 +199,6 @@ oc_connectivity_init(int device)
     OC_ERR("Can't bind multicast port");
     return -1;
   }
-
   return 0;
 }
 
@@ -191,6 +210,7 @@ oc_connectivity_shutdown(int device)
   OC_DBG("Connectivity shutdown: %d", device);
 
   otIp6SetEnabled(ot_instance, false);
+  free_endpoints();
 }
 
 #ifdef OC_CLIENT
