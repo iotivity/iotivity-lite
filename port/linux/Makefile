@@ -163,7 +163,7 @@ ifeq ($(ST_APP_FW),1)
 	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
 	ST_JSON_FILE := $(wildcard ../../service/st-app-fw/json/*.json)
 	ST_DEVICE_DEF_HEADER=../../service/st-app-fw/include/st_device_def.h
-ifeq ($(ARCH), "x86_64")
+ifeq ($(ARCH), x86_64)
 	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor
 else
 	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor_32
