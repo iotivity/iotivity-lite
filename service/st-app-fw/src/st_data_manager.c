@@ -88,9 +88,6 @@ OC_MEMB(st_resource_type_s, st_resource_type_t,
 
 static int st_decode_device_data_info(oc_rep_t *rep);
 
-/* Store platform data for "/oic/p" resource used from init_platform_cb */
-static st_platform_info_t platform_data;
-
 int
 st_data_mgr_info_load(void)
 {
