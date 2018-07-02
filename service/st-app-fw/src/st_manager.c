@@ -136,7 +136,9 @@ app_init(void)
 static void
 register_resources(void)
 {
-  st_register_resources(device_index);
+  if (st_register_resources(device_index) != 0) {
+    st_print_log("[ST_MGR] Failed to register resources.\n");
+  }
 }
 
 void

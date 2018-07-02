@@ -156,7 +156,9 @@ st_port_user_input_loop(void *data)
       st_manager_reset();
       break;
     case '2':
-      st_notify_back("/capability/switch/main/0"); // TODO
+      if (st_notify_back("/capability/switch/main/0") != 0) {
+        st_print_log("Failed to notify switch resource.\n");
+      } // TODO
       break;
     case '0':
       st_manager_quit();
