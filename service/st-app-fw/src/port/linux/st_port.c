@@ -28,7 +28,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #ifndef MOCK_WIFI_SCAN
@@ -57,29 +56,16 @@ typedef struct
 
 static st_soft_ap_t g_soft_ap;
 
-static st_thread_t g_user_input_thread = NULL;
-
-static int g_user_input_shutdown_pipe[2];
-
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
 
-extern void st_manager_quit(void);
-
-static void *st_port_user_input_loop(void *data);
 static void *soft_ap_process_routine(void *data);
 
 int
 st_port_specific_init(void)
 {
   /* set port specific logics. in here */
-  if (pipe(g_user_input_shutdown_pipe) < 0) {
-    st_print_log("shutdown pipe error");
-    return -1;
-  }
-  g_user_input_thread =
-    st_thread_create(st_port_user_input_loop, "INPUT", 0, NULL);
   return 0;
 }
 
@@ -87,90 +73,8 @@ void
 st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
-  if (write(g_user_input_shutdown_pipe[1], "\n", 1) < 0) {
-    st_print_log("cannot wakeup user input thread");
-    return;
-  }
-  st_thread_destroy(g_user_input_thread);
-  close(g_user_input_shutdown_pipe[0]);
-  close(g_user_input_shutdown_pipe[1]);
-  g_user_input_thread = NULL;
+  st_wifi_clear_cache();
   return;
-}
-
-static void
-print_menu(void)
-{
-  st_process_app_sync_lock();
-  st_print_log("=====================================\n");
-  st_print_log("1. Reset device\n");
-  st_print_log("2. notify switch resource\n");
-  st_print_log("0. Quit\n");
-  st_print_log("=====================================\n");
-  st_process_app_sync_unlock();
-}
-
-static void *
-st_port_user_input_loop(void *data)
-{
-  (void)data;
-  char key[10];
-  fd_set readfds, setfds;
-  int stdin_fd = fileno(stdin);
-
-  FD_ZERO(&readfds);
-  FD_SET(stdin_fd, &readfds);
-  FD_SET(g_user_input_shutdown_pipe[0], &readfds);
-
-  while (1) {
-    print_menu();
-    fflush(stdin);
-
-    setfds = readfds;
-    int n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
-
-    if (n == -1) {
-      st_print_log("user input failed!!!!\n");
-      st_manager_quit();
-      st_process_signal();
-      goto exit;
-    }
-
-    if (FD_ISSET(g_user_input_shutdown_pipe[0], &setfds)) {
-      char buf;
-      int count = read(g_user_input_shutdown_pipe[0], &buf, 1);
-      (void)count;
-      goto exit;
-    }
-
-    if (FD_ISSET(stdin_fd, &setfds)) {
-      int count = read(stdin_fd, key, 10);
-      if (count < 0) {
-        goto exit;
-      }
-      FD_CLR(stdin_fd, &setfds);
-    }
-
-    switch (key[0]) {
-    case '1':
-      st_manager_reset();
-      break;
-    case '2':
-      st_notify_back("/capability/switch/main/0"); // TODO
-      break;
-    case '0':
-      st_manager_quit();
-      st_process_signal();
-      st_wifi_clear_cache();
-      goto exit;
-    default:
-      st_print_log("unsupported command.\n");
-      break;
-    }
-  }
-exit:
-  st_thread_exit(NULL);
-  return NULL;
 }
 
 void
