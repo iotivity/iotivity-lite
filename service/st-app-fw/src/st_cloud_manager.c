@@ -20,7 +20,6 @@
 #include "cloud_access.h"
 #include "easysetup.h"
 #include "oc_api.h"
-#include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
 #include "rd_client.h"
@@ -37,9 +36,6 @@
 #define MAX_CONTEXT_SIZE (2)
 #define MAX_RETRY_COUNT (5)
 
-static int session_timeout[5] = { 3, 50, 50, 50, 10 };
-static int message_timeout[5] = { 1, 2, 4, 8, 10 };
-
 typedef struct st_cloud_context
 {
   struct st_cloud_context *next;
@@ -52,6 +48,9 @@ typedef struct st_cloud_context
 
 typedef enum {
   CI_TOKEN_EXPIRED = 4000004,
+  CI_AUTHORIZATION_FAILED = 4000005,
+  CI_CERTIFICATE_FAILED = 4010008,
+  CI_UNAUTHORIZED_TOKEN = 4010200,
   CI_FORBIDDEN = 4030003,
   CI_DEVICE_NOT_FOUND = 4040200,
   CI_INTERNAL_SERVER_ERROR = 5000000
@@ -69,6 +68,8 @@ static oc_event_callback_retval_t publish_resource(void *data);
 static oc_event_callback_retval_t find_ping(void *data);
 static oc_event_callback_retval_t send_ping(void *data);
 
+static int session_timeout[5] = { 3, 50, 50, 50, 10 };
+static int message_timeout[5] = { 1, 2, 4, 8, 10 };
 static int ping_interval = 1;
 
 static oc_event_callback_retval_t
@@ -240,19 +241,17 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
       oc_set_delayed_callback(context, refresh_token,
                               session_timeout[context->retry_count]);
       return;
-    case CI_FORBIDDEN:
-      oc_remove_delayed_callback(context, callback);
-      context->retry_count = 0;
-      context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
-      oc_set_delayed_callback(context, sign_in,
-                              session_timeout[context->retry_count]);
-      return;
     case CI_DEVICE_NOT_FOUND:
       oc_remove_delayed_callback(context, callback);
       context->cloud_manager_status = CLOUD_MANAGER_RESET;
       oc_set_delayed_callback(context, callback_handler, 0);
       return;
     case CI_INTERNAL_SERVER_ERROR:
+      break;
+    case CI_AUTHORIZATION_FAILED:
+    case CI_CERTIFICATE_FAILED:
+    case CI_UNAUTHORIZED_TOKEN:
+    case CI_FORBIDDEN:
       context->retry_count = MAX_RETRY_COUNT;
       break;
     }
