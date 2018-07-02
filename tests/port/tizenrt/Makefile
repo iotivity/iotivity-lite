@@ -56,11 +56,14 @@ prep_files+=${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.mk.tmp
 prep_files+=${top_dir}/deps/tinycbor/LICENSE
 
-all?=prep configure build
 
+all?=prep configure build
 
 ${tizenrt_dir}:
 	git clone --depth 1 --recursive -b "${os_branch}" "${os_url}" "$@"
+
+${tizenrt_dir}/%: ${tizenrt_dir}
+	ls $@
 
 ${tizenrt_dir}/external/iotivity-constrained.mk.tmp: iotivity-constrained.mk ${os_external_makefile}.orig
 	cp "$<" "$@.tmp"
