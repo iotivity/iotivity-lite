@@ -22,6 +22,30 @@
       "revId": "b549a9a9b30301822f283b76baff50896898e0c7",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_946588e3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-07-02T14:35:47Z",
+      "side": 1,
+      "message": "It implements hmac generation on the Thing side (pt. 46-47 from RPK design).",
+      "parentUuid": "da33351e_11506a31",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 13
+      },
+      "revId": "b549a9a9b30301822f283b76baff50896898e0c7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
