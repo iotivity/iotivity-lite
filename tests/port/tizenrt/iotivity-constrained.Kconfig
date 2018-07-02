@@ -7,6 +7,7 @@ config ENABLE_IOTIVITY_CONSTRAINED
 	bool "IoTivity Constrained"
 	default n
         select NET_LWIP
+        select LIBM
         select LWIP_DHCP
 	---help---
 		Enable IoTivity-constrained framework
