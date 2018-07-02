@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1464d8b7",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-02T23:24:29Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 126,
+        "startChar": 3,
+        "endLine": 126,
+        "endChar": 4
+      },
+      "revId": "3c80dca8695b2a97956569ad8b0c80bf04c9cbbe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7459e4fd",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-02T23:24:29Z",
+      "side": 1,
+      "message": "Does it not require message null check?",
+      "revId": "3c80dca8695b2a97956569ad8b0c80bf04c9cbbe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
