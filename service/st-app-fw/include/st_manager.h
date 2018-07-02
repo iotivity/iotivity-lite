@@ -51,6 +51,7 @@ typedef void (*st_status_cb_t)(st_status_t status);
 int st_manager_initialize(void);
 int st_manager_start(void);
 void st_manager_reset(void);
+void st_manager_quit(void);
 void st_manager_stop(void);
 void st_manager_deinitialize(void);
 

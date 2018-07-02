@@ -20,6 +20,14 @@
 #include "st_manager.h"
 #include "st_resource_manager.h"
 
+#define USER_INPUT 1
+
+#ifdef USER_INPUT
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+#endif /* USER_INPUT */
+
 static const char *switch_rsc_uri = "/capability/switch/main/0";
 static const char *switchlevel_rsc_uri = "/capability/switchLevel/main/0";
 static const char *color_temp_rsc_uri = "/capability/colorTemperature/main/0";
@@ -36,6 +44,11 @@ static int dimming_step = 5;
 
 static int ct = 50;
 static int ct_range[2] = { 0, 100 };
+
+#ifdef USER_INPUT
+static pthread_t g_user_input_thread;
+static int g_user_input_shutdown_pipe[2];
+#endif /* USER_INPUT */
 
 static void
 switch_resource_construct(void)
@@ -193,6 +206,102 @@ st_fota_cmd_handler(fota_cmd_t cmd)
   return true;
 }
 
+#ifdef USER_INPUT
+static void
+print_menu(void)
+{
+  printf("[ST_APP] =====================================\n");
+  printf("[ST_APP] 1. Reset device\n");
+  printf("[ST_APP] 2. notify switch resource\n");
+  printf("[ST_APP] 0. Quit\n");
+  printf("[ST_APP] =====================================\n");
+}
+
+static void *
+user_input_loop(void *data)
+{
+  (void)data;
+  char key[10];
+  fd_set readfds, setfds;
+  int stdin_fd = fileno(stdin);
+
+  FD_ZERO(&readfds);
+  FD_SET(stdin_fd, &readfds);
+  FD_SET(g_user_input_shutdown_pipe[0], &readfds);
+
+  while (1) {
+    print_menu();
+    fflush(stdin);
+
+    setfds = readfds;
+    int n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+
+    if (n == -1) {
+      printf("[ST_APP] user input failed!!!!\n");
+      st_manager_quit();
+      goto exit;
+    }
+
+    if (FD_ISSET(g_user_input_shutdown_pipe[0], &setfds)) {
+      char buf;
+      int count = read(g_user_input_shutdown_pipe[0], &buf, 1);
+      (void)count;
+      goto exit;
+    }
+
+    if (FD_ISSET(stdin_fd, &setfds)) {
+      int count = read(stdin_fd, key, 10);
+      if (count < 0) {
+        goto exit;
+      }
+      FD_CLR(stdin_fd, &setfds);
+    }
+
+    switch (key[0]) {
+    case '1':
+      st_manager_reset();
+      break;
+    case '2':
+      st_notify_back("/capability/switch/main/0"); // TODO
+      break;
+    case '0':
+      st_manager_quit();
+      goto exit;
+    default:
+      printf("[ST_APP] unsupported command.\n");
+      break;
+    }
+  }
+exit:
+  pthread_exit(NULL);
+}
+
+static int
+user_input_thread_init(void)
+{
+  if (pipe(g_user_input_shutdown_pipe) < 0) {
+    printf("shutdown pipe error\n");
+    return -1;
+  }
+
+  pthread_create(&g_user_input_thread, NULL, user_input_loop, NULL);
+  return 0;
+}
+
+static void
+user_input_thread_destroy(void)
+{
+  if (write(g_user_input_shutdown_pipe[1], "\n", 1) < 0) {
+    printf("[ST_APP] cannot wakeup user input thread\n");
+    return;
+  }
+  pthread_join(g_user_input_thread, NULL);
+  close(g_user_input_shutdown_pipe[0]);
+  close(g_user_input_shutdown_pipe[1]);
+  return;
+}
+#endif /* USER_INPUT */
+
 int
 main(void)
 {
@@ -206,9 +315,20 @@ main(void)
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
 
+#ifdef USER_INPUT
+  if (user_input_thread_init() != 0) {
+    printf("[ST_APP] user_input_thread_init failed.\n");
+    return -1;
+  }
+#endif /* USER_INPUT */
+
   if (st_manager_start() != 0) {
     printf("[ST_APP] st_manager_start failed.\n");
   }
+
+#ifdef USER_INPUT
+  user_input_thread_destroy();
+#endif /* USER_INPUT */
 
   st_unregister_status_handler();
   st_manager_stop();

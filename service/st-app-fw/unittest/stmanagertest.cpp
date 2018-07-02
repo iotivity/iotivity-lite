@@ -6,7 +6,6 @@ extern "C"{
     #include "st_process.h"
     #include "st_port.h"
     #include "sttestcommon.h"
-    void st_manager_quit(void);
 }
 
 static st_mutex_t mutex = NULL;
