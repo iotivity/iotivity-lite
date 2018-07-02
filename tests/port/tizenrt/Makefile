@@ -31,7 +31,7 @@ os_dir?=${tizenrt_dir}/os
 os_url?=https://github.com/Samsung/TizenRT
 os_branch?=1.1_Public_Release
 os_machine?=artik053
-os_image_type?=minimal
+os_image_type?=nettest
 configure_file?=${os_dir}/.config
 os_external_makefile?=${tizenrt_dir}/external/Makefile
 
