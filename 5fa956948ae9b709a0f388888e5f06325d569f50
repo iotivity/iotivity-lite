@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_51a5d251",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-02T07:13:05Z",
+      "side": 1,
+      "message": "For easy maintenance, please place the JSON payload as comment on top of each data.",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 14
+      },
+      "revId": "5fa956948ae9b709a0f388888e5f06325d569f50",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_91863ab8",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-02T07:13:05Z",
+      "side": 1,
+      "message": "In case of easy-setup has not been done before, this TC is right. But when easy-setup\u0027ed already, this TC is strange.",
+      "range": {
+        "startLine": 263,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 1
+      },
+      "revId": "5fa956948ae9b709a0f388888e5f06325d569f50",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
