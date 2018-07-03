@@ -46,6 +46,9 @@
 # For example: ./make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
 # This makefile uses then the NDK in <install-dir>.
 # For further setup see: https://developer.android.com/ndk/guides/standalone_toolchain.html
+#
+# Either set ANDROID_API and ANDROID_BASE in this makefile
+# or invoke like this: make NDK_HOME=/opt/android-ndk ANDROID_API=24
 
 # Location of the installation directory and the API level.
 ANDROID_API := 19

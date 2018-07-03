@@ -15,7 +15,7 @@
 */
 
 /* struct in6_pktinfo was not found without __USE_GNU */
-//#define _GNU_SOURCE
+#define _GNU_SOURCE
 #define __USE_GNU
 #include "ipcontext.h"
 #ifdef OC_TCP
