@@ -46,6 +46,30 @@
       "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d4aa706f",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-03T07:01:34Z",
+      "side": 1,
+      "message": "Lets move it to st_manager deinit under macro #ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED as we start caching in init.",
+      "parentUuid": "da33351e_94a0e891",
+      "range": {
+        "startLine": 76,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 24
+      },
+      "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
