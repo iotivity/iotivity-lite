@@ -70,6 +70,30 @@
       "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_14bcd8ba",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-03T07:04:41Z",
+      "side": 1,
+      "message": "actually st_wifi_set_cache is called in st_manager_start (in st_manager_stack_init).\nThen is is located in st_manager_stop()?",
+      "parentUuid": "da33351e_d4aa706f",
+      "range": {
+        "startLine": 76,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 24
+      },
+      "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
