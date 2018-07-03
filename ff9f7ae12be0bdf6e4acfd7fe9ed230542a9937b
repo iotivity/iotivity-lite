@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_94ff4834",
+        "filename": "api/unittest/resourcetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-03T13:37:11Z",
+      "side": 1,
+      "message": "please add space",
+      "range": {
+        "startLine": 105,
+        "startChar": 16,
+        "endLine": 105,
+        "endChar": 29
+      },
+      "revId": "ff9f7ae12be0bdf6e4acfd7fe9ed230542a9937b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f4fcd440",
+        "filename": "api/unittest/resourcetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-03T13:37:11Z",
+      "side": 1,
+      "message": "remove extra line",
+      "revId": "ff9f7ae12be0bdf6e4acfd7fe9ed230542a9937b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d4f9d04e",
+        "filename": "api/unittest/resourcetest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-03T13:37:11Z",
+      "side": 1,
+      "message": "rectify spell mistake",
+      "range": {
+        "startLine": 109,
+        "startChar": 21,
+        "endLine": 109,
+        "endChar": 44
+      },
+      "revId": "ff9f7ae12be0bdf6e4acfd7fe9ed230542a9937b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
