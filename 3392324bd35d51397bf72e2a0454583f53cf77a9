@@ -39,6 +39,23 @@
       "revId": "3392324bd35d51397bf72e2a0454583f53cf77a9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f46cd49e",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:15:11Z",
+      "side": 1,
+      "message": "it may need to clarify quit/stop/deinit...",
+      "revId": "3392324bd35d51397bf72e2a0454583f53cf77a9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
