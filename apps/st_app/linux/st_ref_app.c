@@ -201,7 +201,10 @@ main(void)
     return -1;
   }
 
-  st_register_resource_handler(get_resource_handler, set_resource_handler);
+  if (st_register_resource_handler(get_resource_handler,
+                                   set_resource_handler) != 0) {
+    st_print_log("[ST_APP] st_register_resource_handler Failed.\n");
+  }
   st_register_otm_confirm_handler(otm_confirm_handler);
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
