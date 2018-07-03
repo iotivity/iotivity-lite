@@ -44,14 +44,15 @@ ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
 endif
 
 ifeq ($(CONFIG_IOTLITE_SECURE),y)
-	CSRCS   += $(addprefix $(IOTCONS_ROOT_DIR)/security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	CSRCS   += $(addprefix $(IOTCONS_ROOT_DIR)/security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_otm_state.c)
 	OSRCS_C += $(IOTCONS_ROOT_DIR)/security/oc_acl.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_cred.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_doxm.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_pstat.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_tls.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_svr.o) \
-			+= $(IOTCONS_ROOT_DIR)/security/oc_store.o)
+			+= $(IOTCONS_ROOT_DIR)/security/oc_store.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_otm_state.o)
 
 	CSRCS	+= $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
@@ -90,12 +91,17 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 
 ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
 CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c) \
-			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c)
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/*.c) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.c)
 OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o) \
-			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o)
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/*.o) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.o)
 CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
 		    -Iiotivity-constrained/service/easy-setup/enrollee \
-		    -Iiotivity-constrained/service/easy-setup/enrollee/include
+		    -Iiotivity-constrained/service/easy-setup/enrollee/include \
+			-Iiotivity-constrained/service/st-app-fw/include
 endif
 
 OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
@@ -105,6 +111,8 @@ OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   $(wildcard iotivity-constrained/messaging/coap/*.o) \
 			   $(wildcard iotivity-constrained/api/*.o) \
 			   $(wildcard iotivity-constrained/port/tizenrt/*.o)
+
+CFLAGS += -DST_APP_FW
 
 ifeq ($(CONFIG_IOTLITE_IPV4),y)
 	EXTRA_CFLAGS += -DOC_IPV4
@@ -121,6 +129,22 @@ endif
 ifeq ($(CONFIG_WIFI_MANAGER),y)
 	EXTRA_CFLAGS += -DTIZEN_RT_WIFI_MANAGER
 endif
+
+ifeq ($(CONFIG_IOTLITE_SECURE),y)
+ifneq ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+CFLAGS += -DOC_LOAD_CA
+ifeq ($(CONFIG_IOTLITE_AUTH_OPTION),y)
+CFLAGS += -DOC_UNLOAD_CERT
+endif
+else
+CFLAGS += -DOC_SKIP_CERT
+endif
+endif
+
+ifeq ($(CONFIG_IOTLITE_OPTIMIZE),y)
+	CFLAGS += -DST_APP_OPTIMIZATION
+endif
+
 
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
 CFLAGS:=$(filter-out -Wundef,$(CFLAGS))
