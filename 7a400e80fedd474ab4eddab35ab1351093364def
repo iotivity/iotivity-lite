@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_14a7b8be",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-03T06:21:17Z",
+      "side": 1,
+      "message": "Can we move this into st_manager side with \n#ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED ?",
+      "range": {
+        "startLine": 163,
+        "startChar": 1,
+        "endLine": 163,
+        "endChar": 28
+      },
+      "revId": "7a400e80fedd474ab4eddab35ab1351093364def",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
