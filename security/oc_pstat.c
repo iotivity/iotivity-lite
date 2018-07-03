@@ -411,7 +411,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
           case OC_REP_INT: {
             if (oc_string_len(dos->name) == 1 &&
                 oc_string(dos->name)[0] == 's') {
-              ps.s = dos->value.integer;
+              ps.s = (oc_dostype_t)dos->value.integer;
               transition_state = true;
             } else {
               return false;

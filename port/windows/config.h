@@ -22,4 +22,6 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE
 #endif /* OC_BLOCK_WISE */
 
+extern int strncasecmp(const char *s1, const char *s2, size_t n);
+
 #endif /* CONFIG_H */

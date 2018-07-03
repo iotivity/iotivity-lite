@@ -29,8 +29,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
+#include <strings.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -76,7 +75,7 @@ oc_sec_get_acl(int device)
 static bool
 unique_aceid(int aceid, int device)
 {
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(aclist[device].subjects);
   while (ace != NULL) {
     if (ace->aceid == aceid)
       return false;
@@ -253,7 +252,7 @@ static void
 dump_acl(int device)
 {
   oc_sec_acl_t *a = &aclist[device];
-  oc_sec_ace_t *ace = oc_list_head(a->subjects);
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(a->subjects);
   PRINT("\nAccess Control List\n---------\n");
   while (ace != NULL) {
     PRINT("\n---------\nAce: %d\n---------\n", ace->aceid);
@@ -281,7 +280,7 @@ dump_acl(int device)
     } break;
     }
 
-    oc_ace_res_t *r = oc_list_head(ace->resources);
+    oc_ace_res_t *r = (oc_ace_res_t *)oc_list_head(ace->resources);
     PRINT("\nResources:\n");
     while (r != NULL) {
       if (oc_string_len(r->href) > 0) {
@@ -381,7 +380,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
     _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
     do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, -1,
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, (oc_ace_wildcard_t)-1,
                                       0, endpoint->device);
       if (match) {
         permission |= oc_ace_get_permission(match, resource);
@@ -396,7 +395,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
   _anon_clear.conn = OC_CONN_ANON_CLEAR;
   do {
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
+    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, (oc_ace_wildcard_t)-1, 0,
                                     endpoint->device);
     if (match) {
       permission |= oc_ace_get_permission(match, resource);
@@ -437,7 +436,7 @@ oc_sec_encode_acl(int device)
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_ACL, device));
   oc_rep_set_array(root, aclist2);
-  oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
+  oc_sec_ace_t *sub = (oc_sec_ace_t *)oc_list_head(aclist[device].subjects);
 
   while (sub != NULL) {
     oc_rep_object_array_start_item(aclist2);
@@ -678,7 +677,7 @@ static bool
 oc_acl_remove_ace(int aceid, int device)
 {
   bool removed = false;
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects), *next = 0;
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(aclist[device].subjects), *next = 0;
   while (ace != NULL) {
     next = ace->next;
     if (ace->aceid == aceid) {
@@ -832,7 +831,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
       oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
         oc_ace_subject_t subject;
-        oc_ace_subject_type_t subject_type = 0;
+        oc_ace_subject_type_t subject_type = OC_SUBJECT_UUID;
         uint16_t permission = 0;
         int aceid = -1;
         oc_rep_t *resources = 0;
@@ -904,9 +903,9 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
           oc_rep_t *resource = resources->value.object;
           const char *href = 0;
 #ifdef OC_SERVER
-          oc_resource_properties_t wc_r = 0;
+          int wc_r = 0;
 #endif /* OC_SERVER */
-          oc_interface_mask_t interfaces = 0;
+          int interfaces = 0;
           oc_string_array_t *rt = 0;
           int i;
 
@@ -967,7 +966,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
           }
 
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
-                                wc, rt, interfaces, device);
+                                wc, rt, (oc_interface_mask_t)interfaces, device);
 
 #ifdef OC_SERVER
           if (subject_type == OC_SUBJECT_CONN &&
