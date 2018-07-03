@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5415c0ef",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 17
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:25:54Z",
+      "side": 1,
+      "message": "oc_new_string allocs memory, therefore, I suggest oc_free_string() after using oc_new_string  to avoid memory leak",
+      "revId": "3fc27d53e1853324bb142c1978b161fb4172bcbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_34063ccf",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 17
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:25:54Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "3fc27d53e1853324bb142c1978b161fb4172bcbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_140b38d7",
+        "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
+        "patchSetId": 17
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:25:54Z",
+      "side": 1,
+      "message": "if it wouldn\u0027t be used any more, please remove it..",
+      "revId": "3fc27d53e1853324bb142c1978b161fb4172bcbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7410c401",
+        "filename": "service/st-app-fw/unittest/ststoretest.cpp",
+        "patchSetId": 17
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:25:54Z",
+      "side": 1,
+      "message": "is it ok to use \"st_manager.h\"\u0027 instead of \"st_manager.h\"?",
+      "revId": "3fc27d53e1853324bb142c1978b161fb4172bcbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b4f9acca",
+        "filename": "service/st-app-fw/unittest/ststoretest.cpp",
+        "patchSetId": 17
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:25:54Z",
+      "side": 1,
+      "message": "oc_new_string allocs memory, therefore, I suggest oc_free_string() after using oc_new_string  to avoid memory leak",
+      "revId": "3fc27d53e1853324bb142c1978b161fb4172bcbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
