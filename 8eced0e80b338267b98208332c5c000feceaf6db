@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_b4724c7a",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-03T00:08:36Z",
+      "side": 1,
+      "message": "I worry about memory leak.\nfor example,  there is another memory alloc(credobj-\u003emfgowncert)  at line 444\n\nif it return a fail, it may be a memory leak about   credobj-\u003emfgowncert",
+      "revId": "8eced0e80b338267b98208332c5c000feceaf6db",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
