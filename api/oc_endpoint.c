@@ -152,6 +152,9 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 int
 oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
+  if (!endpoint || !endpoint_str)
+    return -1;
+
   if (endpoint->flags & IPV6) {
     oc_ipv6_endpoint_to_string(endpoint, endpoint_str);
   }
@@ -316,6 +319,9 @@ static int
 oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                          oc_string_t *uri)
 {
+  if (!endpoint_str || !endpoint)
+    return -1;
+
   endpoint->flags = 0;
 #ifdef OC_TCP
   if (memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
@@ -414,7 +420,7 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int
 oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 {
-  if (!(endpoint->flags & IPV6)) {
+  if (!endpoint || !(endpoint->flags & IPV6)) {
     return -1;
   }
   if (endpoint->addr.ipv6.address[0] == 0xfe &&
@@ -427,6 +433,9 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 int
 oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 {
+  if (!ep1 || !ep2)
+    return -1;
+
   if ((ep1->flags & ep2->flags) & IPV6) {
     if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0) {
       return 0;
@@ -448,6 +457,9 @@ oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 int
 oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
+  if (!ep1 || !ep2)
+    return -1;
+
   if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
       ep1->device != ep2->device) {
     return -1;
