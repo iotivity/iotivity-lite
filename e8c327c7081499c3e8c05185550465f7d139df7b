@@ -94,6 +94,30 @@
       "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_54b660da",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-03T07:10:46Z",
+      "side": 1,
+      "message": "It is good to be clear after easy-setup success.",
+      "parentUuid": "da33351e_14bcd8ba",
+      "range": {
+        "startLine": 76,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 24
+      },
+      "revId": "e8c327c7081499c3e8c05185550465f7d139df7b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
