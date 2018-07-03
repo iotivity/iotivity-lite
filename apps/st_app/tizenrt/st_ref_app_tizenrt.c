@@ -142,7 +142,10 @@ stapp_main(void)
     return -1;
   }
 
-  st_register_resource_handler(get_resource_handler, set_resource_handler);
+  if (st_register_resource_handler(get_resource_handler,
+                                   set_resource_handler) != 0) {
+    st_print_log("[ST_APP] st_register_resource_handler Failed.\n");
+  }
 
   // TODO: callback registration. (ex. user confirm cb)
 

@@ -54,22 +54,24 @@ TEST_F(TestSTResourceManager, st_register_resources)
     char *uri = "/capability/switch/main/0";
     oc_resource_t *resource = NULL;
     st_data_mgr_info_load();
-    st_register_resources(device_index);
+    int ret = st_register_resources(device_index);
     resource = oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+    EXPECT_EQ(0, ret);
     EXPECT_STREQ(uri, oc_string(resource->uri));
     st_data_mgr_info_free();
+    oc_delete_resource(resource);
 }
 
 TEST_F(TestSTResourceManager, st_register_resource_handler)
 {
-    st_register_resource_handler(resource_handler, resource_handler);
-    // EXPECT_EQ(0, ret);
+    int ret = st_register_resource_handler(resource_handler, resource_handler);
+    EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestSTResourceManager, st_register_resource_handler_fail)
 {
-    st_register_resource_handler(NULL, NULL);
-    // EXPECT_EQ(-1, ret);
+    int ret = st_register_resource_handler(NULL, NULL);
+    EXPECT_EQ(-1, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back)
@@ -94,10 +96,10 @@ TEST_F(TestSTResourceManager, st_notify_back_fail_null)
     char *uri = NULL;
 
     // When
-    st_notify_back(uri);
+    int ret = st_notify_back(uri);
 
     // Then
-    // EXPECT_EQ(-1, ret);
+    EXPECT_EQ(-1, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back_fail)
@@ -106,8 +108,8 @@ TEST_F(TestSTResourceManager, st_notify_back_fail)
     char *uri = "/capability/switch/main/1";
 
     // When
-    st_notify_back(uri);
+    int ret = st_notify_back(uri);
 
     // Then
-    // EXPECT_EQ(-1, ret);
+    EXPECT_EQ(-1, ret);
 }
