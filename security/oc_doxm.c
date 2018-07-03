@@ -24,7 +24,6 @@
 #include "oc_store.h"
 #include <stddef.h>
 #include <string.h>
-#include <strings.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
