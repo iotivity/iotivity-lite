@@ -46,6 +46,30 @@
       "revId": "b549a9a9b30301822f283b76baff50896898e0c7",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_14c0584f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-03T04:48:04Z",
+      "side": 1,
+      "message": "From the patch view, 46~47 page on the side cannot explain anything. make the title understood by anyone who can see it.",
+      "parentUuid": "da33351e_946588e3",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 13
+      },
+      "revId": "b549a9a9b30301822f283b76baff50896898e0c7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
