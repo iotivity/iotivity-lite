@@ -26,8 +26,6 @@
 #include <stddef.h>
 #include <string.h>
 
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
-
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include "util/oc_mem.h"

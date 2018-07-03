@@ -22,6 +22,7 @@
 /* Time resolution */
 #include <stdint.h>
 #include <time.h>
+#include <strings.h>
 typedef uint64_t oc_clock_time_t;
 
 
@@ -86,5 +87,10 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_TCP_PEERS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifndef __WINT_TYPE__
+# define __WINT_TYPE__ unsigned int
+#endif
+typedef __WINT_TYPE__ wint_t;
 
 #endif /* CONFIG_H */
