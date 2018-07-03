@@ -56,6 +56,24 @@
       "revId": "3392324bd35d51397bf72e2a0454583f53cf77a9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d4c5505c",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-03T05:30:36Z",
+      "side": 1,
+      "message": "Agree, Better to combine together at least for API.",
+      "parentUuid": "da33351e_f46cd49e",
+      "revId": "3392324bd35d51397bf72e2a0454583f53cf77a9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
