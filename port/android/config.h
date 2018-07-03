@@ -7,11 +7,6 @@
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 
-#if defined(OC_IPV4) && __ANDROID_API__ < 24
-/* Warning: Android has often over 10 interfaces. */
-#define OC_MAX_NUM_INTERFACES 20
-#endif /* OC_IPV4 */
-
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
