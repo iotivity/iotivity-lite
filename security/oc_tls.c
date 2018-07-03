@@ -190,7 +190,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 static oc_tls_peer_t *
 oc_tls_get_peer(oc_endpoint_t *endpoint)
 {
-  oc_tls_peer_t *peer = oc_list_head(tls_peers);
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   while (peer != NULL) {
     if (oc_endpoint_compare(&peer->endpoint, endpoint) == 0) {
       return peer;
@@ -278,7 +278,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
-  message.data = oc_mem_malloc(OC_PDU_SIZE);
+  message.data = (uint8_t *)oc_mem_malloc(OC_PDU_SIZE);
   if (!message.data)
     return 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -350,7 +350,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
   (void)data;
   (void)identity_len;
   OC_DBG("oc_tls: In PSK callback");
-  oc_tls_peer_t *peer = oc_list_head(tls_peers);
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   while (peer != NULL) {
     if (&peer->ssl_ctx == ssl) {
       break;
@@ -409,7 +409,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
-    peer = oc_memb_alloc(&tls_peers_s);
+    peer = (oc_tls_peer_t *)oc_memb_alloc(&tls_peers_s);
     if (peer) {
       OC_DBG("oc_tls: Allocating new peer");
       memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -481,10 +481,10 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 void
 oc_tls_shutdown(void)
 {
-  oc_tls_peer_t *p = oc_list_pop(tls_peers);
+  oc_tls_peer_t *p = (oc_tls_peer_t *)oc_list_pop(tls_peers);
   while (p != NULL) {
     oc_tls_free_peer(p, false);
-    p = oc_list_pop(tls_peers);
+    p = (oc_tls_peer_t *)oc_list_pop(tls_peers);
   }
 #ifdef OC_CLIENT
   if (oc_core_get_num_devices() >= 1) {
@@ -519,6 +519,7 @@ oc_tls_shutdown(void)
 int
 oc_tls_init_context(void)
 {
+  oc_uuid_t *device_id = NULL;
   if (oc_core_get_num_devices() < 1) {
     goto dtls_init_err;
   }
@@ -575,7 +576,7 @@ oc_tls_init_context(void)
                                     MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
       goto dtls_init_err;
     }
-    oc_uuid_t *device_id = oc_core_get_device_id(i);
+    device_id = oc_core_get_device_id(i);
     if (mbedtls_ssl_conf_psk(&server_conf[i], device_id->id, 1, device_id->id,
                              16) != 0) {
       goto dtls_init_err;
@@ -619,7 +620,7 @@ oc_tls_init_context(void)
                                   MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
     goto dtls_init_err;
   }
-  oc_uuid_t *device_id = oc_core_get_device_id(0);
+  device_id = oc_core_get_device_id(0);
   if (mbedtls_ssl_conf_psk(&client_conf[0], device_id->id, 1, device_id->id,
                            16) != 0) {
     goto dtls_init_err;
@@ -1241,7 +1242,7 @@ oc_tls_init_connection(oc_message_t *message)
   oc_tls_peer_t *peer =
     oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
   if (peer) {
-    oc_message_t *duplicate = oc_list_head(peer->send_q);
+    oc_message_t *duplicate = (oc_message_t *)oc_list_head(peer->send_q);
     while (duplicate != NULL) {
       if (duplicate == message) {
         break;
@@ -1477,23 +1478,23 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data) {
     OC_PROCESS_YIELD();
 
     if (ev == oc_events[UDP_TO_TLS_EVENT]) {
-      oc_tls_recv_message(data);
+      oc_tls_recv_message((oc_message_t *)data);
     }
 #ifdef OC_CLIENT
     else if (ev == oc_events[INIT_TLS_CONN_EVENT]) {
-      oc_tls_init_connection(data);
+      oc_tls_init_connection((oc_message_t *)data);
     }
 #endif /* OC_CLIENT */
     else if (ev == oc_events[RI_TO_TLS_EVENT]) {
-      oc_tls_send_message(data);
+      oc_tls_send_message((oc_message_t *)data);
     } else if (ev == OC_PROCESS_EVENT_TIMER) {
       check_retr_timers();
     } else if (ev == oc_events[TLS_READ_DECRYPTED_DATA]) {
-      read_application_data(data);
+      read_application_data((oc_tls_peer_t *)data);
     }
 #ifdef OC_CLIENT
     else if (ev == oc_events[TLS_WRITE_APPLICATION_DATA]) {
-      write_application_data(data);
+      write_application_data((oc_tls_peer_t *)data);
     }
 #endif /* OC_CLIENT */
   }

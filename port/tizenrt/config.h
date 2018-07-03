@@ -22,6 +22,7 @@
 /* Time resolution */
 #include <stdint.h>
 #include <time.h>
+#include <strings.h>
 typedef uint64_t oc_clock_time_t;
 
 

@@ -20,6 +20,7 @@
 
 /* Time resolution */
 #include <stdint.h>
+#include <strings.h>
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND 1
 
