@@ -37,6 +37,7 @@ st_cond_t cv = NULL;
 st_mutex_t st_mutex = NULL;
 
 static void *thread_test(void *data){
+    (void)data;
     st_mutex_lock(st_mutex);
     st_cond_wait(cv, st_mutex);
     st_print_log("thread_test Entered.\n");
@@ -209,9 +210,7 @@ TEST_F(TestSTPort_Thread, st_thread_cancel_fail)
 TEST_F(TestSTPort, st_turn_on_soft_AP_and_st_turn_off_soft_AP)
 {
     char ssid[MAX_SSID_LEN + 1];
-    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
-      return -1;
-    }
+    EXPECT_EQ(0, st_gen_ssid(ssid, device_name, manufacturer, sid));
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
     sleep(1);
     st_turn_off_soft_AP();
@@ -220,9 +219,7 @@ TEST_F(TestSTPort, st_turn_on_soft_AP_and_st_turn_off_soft_AP)
 TEST_F(TestSTPort, st_connect_wifi)
 {
     char ssid[MAX_SSID_LEN + 1];
-    if (st_gen_ssid(ssid, device_name, manufacturer, sid) != 0) {
-      return -1;
-    }
+    EXPECT_EQ(0, st_gen_ssid(ssid, device_name, manufacturer, sid));
     st_connect_wifi(ssid, SOFT_AP_PWD);
 }
 

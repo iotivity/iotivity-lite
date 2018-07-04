@@ -29,6 +29,7 @@ extern "C"{
 static bool
 st_fota_cmd_handler(fota_cmd_t cmd)
 {
+    (void)cmd;
     return true;
 }
 
@@ -55,7 +56,7 @@ TEST_F(TestSTFotaManager, st_fota_manager_start)
 
 TEST_F(TestSTFotaManager, st_fota_manager_stop)
 {
-    char *uri = "/firmware";
+    char uri[10] = "/firmware";
     oc_resource_t *resource = NULL;
     st_fota_manager_start();
     st_fota_manager_stop();
@@ -92,8 +93,8 @@ TEST_F(TestSTFotaManager, st_fota_set_state_fail)
 TEST_F(TestSTFotaManager, st_fota_set_fw_info)
 {
     // Given
-    char *ver = "1.0";
-    char *uri = "http://www.samsung.com";
+    char ver[4] = "1.0";
+    char uri[23] = "http://www.samsung.com";
 
     // When
     int ret = st_fota_set_fw_info(ver, uri);
@@ -106,7 +107,7 @@ TEST_F(TestSTFotaManager, st_fota_set_fw_info_fail)
 {
     // Given
     char *ver = NULL;
-    char *uri = "http://www.samsung.com";
+    char uri[23] = "http://www.samsung.com";
 
     // When
     int ret = st_fota_set_fw_info(ver, uri);
