@@ -22,6 +22,8 @@
 extern "C"{
     #include "st_fota_manager.h"
     #include "oc_ri.h"
+    extern int st_fota_manager_start(void);
+    extern void st_fota_manager_stop(void);
 }
 
 #define device_index 0

@@ -40,6 +40,9 @@
 #define SOFT_AP_CHANNEL (6)
 #define AP_CONNECT_RETRY_LIMIT (20)
 
+extern int st_fota_manager_start(void);
+extern void st_fota_manager_stop(void);
+
 static st_status_t g_main_status = ST_STATUS_INIT;
 static st_status_cb_t g_st_status_cb = NULL;
 

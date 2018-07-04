@@ -16,23 +16,35 @@
  *
  ****************************************************************************/
 
-/**
-  @brief FOTA API of IoTivity-constrained for firmware update.
-  @file
-*/
+#ifndef FOTA_TYPES_H
+#define FOTA_TYPES_H
 
-#ifndef FOTA_H
-#define FOTA_H
+typedef enum {
+  FOTA_CMD_INIT = 1,
+  FOTA_CMD_CHECK,
+  FOTA_CMD_DOWNLOAD,
+  FOTA_CMD_UPDATE,
+  FOTA_CMD_DOWNLOAD_UPDATE
+} fota_cmd_t;
 
-#include "fota_types.h"
+typedef enum {
+  FOTA_STATE_IDLE,
+  FOTA_STATE_DOWNLOADING,
+  FOTA_STATE_DOWNLOADED,
+  FOTA_STATE_UPDATING
+} fota_state_t;
 
-typedef int (*fota_cmd_cb_t)(fota_cmd_t cmd);
+typedef enum {
+  FOTA_RESULT_INIT,
+  FOTA_RESULT_SUCCESS,
+  FOTA_RESULT_NO_MEMORY,
+  FOTA_RESULT_NO_RAM,
+  FOTA_RESULT_DISCONNECT,
+  FOTA_RESULT_INTEGRITY_FAIL,
+  FOTA_RESULT_UNSUPPORT_TYPE,
+  FOTA_RESULT_INVALID_URI,
+  FOTA_RESULT_FAILED,
+  FOTA_RESULT_UNSUPPORT_PROTOCOL
+} fota_result_t;
 
-int fota_init(fota_cmd_cb_t cb);
-void fota_deinit(void);
-
-int fota_set_state(fota_state_t state);
-int fota_set_fw_info(const char *ver, const char *uri);
-int fota_set_result(fota_result_t result);
-
-#endif /* FOTA_H */
+#endif /* FOTA_TYPES_H */
