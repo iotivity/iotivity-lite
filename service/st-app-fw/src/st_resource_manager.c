@@ -107,11 +107,14 @@ st_register_resource(st_resource_info_t *resource_info)
     if (rw < (ST_RSC_READABLE | ST_RSC_WRITABLE)) {
       st_resource_type_t *rt_info = st_data_mgr_get_rsc_type_info(value);
       st_property_t *prop = oc_list_head(rt_info->properties);
-      if (prop) {
+      while (prop) {
         if (rw < prop->rw)
           rw = prop->rw;
         prop = prop->next;
       }
+    }
+    else {
+      break;
     }
   }
 
