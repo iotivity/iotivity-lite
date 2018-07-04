@@ -47,7 +47,6 @@ typedef struct
 
 static fota_info_t g_fota_info;
 static fota_cmd_cb_t g_fota_cmd_cb = NULL;
-static oc_resource_t *resource;
 static enum notify_type g_notify_type;
 
 static void
@@ -119,7 +118,10 @@ notify_fota(void *data)
 {
   (void)data;
   g_fota_info.type = g_notify_type;
-  oc_notify_observers(resource);
+  oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
+    OC_RSRVD_FIRMWARE_URI, strlen(OC_RSRVD_FIRMWARE_URI), 0);
+  if (resource)
+    oc_notify_observers(resource);
   g_fota_info.type = FOTA_NOTIFY_DEFAULT;
 
   return OC_EVENT_DONE;
@@ -149,7 +151,9 @@ fota_init(fota_cmd_cb_t cb)
   g_fota_cmd_cb = cb;
   fota_info_init();
 
-  resource = oc_new_resource(NULL, OC_RSRVD_FIRMWARE_URI, 1, 0);
+  oc_resource_t *resource = oc_new_resource(NULL, OC_RSRVD_FIRMWARE_URI, 1, 0);
+  if (!resource)
+    return -1;
   oc_resource_bind_resource_type(resource, OC_RSRVD_FIRMWARE_RT);
   oc_resource_bind_resource_interface(resource, OC_IF_RW);
   oc_resource_set_default_interface(resource, OC_IF_RW);
@@ -166,7 +170,10 @@ fota_deinit(void)
 {
   g_fota_cmd_cb = NULL;
   fota_info_init();
-  oc_delete_resource(resource);
+  oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
+    OC_RSRVD_FIRMWARE_URI, strlen(OC_RSRVD_FIRMWARE_URI), 0);
+  if (resource)
+    oc_delete_resource(resource);
 }
 
 int
