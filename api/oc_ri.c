@@ -309,17 +309,24 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
-void
+bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
+  if (!resource)
+    return false;
+
   oc_list_remove(app_resources, resource);
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
+  return true;
 }
 
 bool
 oc_ri_add_resource(oc_resource_t *resource)
 {
+  if (!resource)
+    return false;
+
   bool valid = true;
 
   if (!resource->get_handler.cb && !resource->put_handler.cb &&
