@@ -137,7 +137,7 @@ static void
 register_resources(void)
 {
   if (st_register_resources(device_index) != 0) {
-    st_print_log("[ST_MGR] register_resources Failed.\n");
+    st_print_log("[ST_MGR] register_resources failed.\n");
   }
 }
 

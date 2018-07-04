@@ -63,7 +63,7 @@ TEST_F(TestSTCloudManager, st_cloud_manager_start)
 
 TEST_F(TestSTCloudManager, st_cloud_manager_check_connection)
 {
-    char *url = "coap://www.samsung.com:5683";
+    char url[28] = "coap://www.samsung.com:5683";
     oc_string_t ci_server;
     oc_new_string(&ci_server, url, strlen(url));
     int ret = st_cloud_manager_check_connection(&ci_server);

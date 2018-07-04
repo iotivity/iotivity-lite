@@ -264,7 +264,7 @@ user_input_loop(void *data)
       break;
     case '2':
       if (st_notify_back(switch_rsc_uri) != 0) {
-        printf("[ST_APP] st_notify_back Failed.\n");
+        printf("[ST_APP] st_notify_back failed.\n");
       }
       break;
     case '0':
@@ -315,7 +315,8 @@ main(void)
 
   if (st_register_resource_handler(get_resource_handler,
                                    set_resource_handler) != 0) {
-    printf("[ST_APP] st_register_resource_handler Failed.\n");
+    printf("[ST_APP] st_register_resource_handler failed.\n");
+    return -1;
   }
   st_register_otm_confirm_handler(otm_confirm_handler);
   st_register_status_handler(st_status_handler);
