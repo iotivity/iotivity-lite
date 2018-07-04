@@ -28,12 +28,6 @@
 
 OC_PROCESS_NAME(oc_tls_handler);
 
-typedef void (*oc_sec_get_cpubkey_and_token)(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token, int *token_len);
-void oc_sec_set_cpubkey_and_token_load(oc_sec_get_cpubkey_and_token cpubkey_and_token_cb);
-
-typedef void (*oc_sec_get_own_key)(uint8_t *priv_key, int *priv_key_len, uint8_t *pub_key, int *pub_key_len);
-void oc_sec_set_own_key_load(oc_sec_get_own_key ownkey_cb);
-
 int oc_tls_init_context(void);
 bool oc_sec_load_certs(int device);
 bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
