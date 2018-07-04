@@ -49,6 +49,7 @@ _clang-format
 port/linux/platformtest
 port/linux/apitest
 port/linux/easysetuptest
+port/linux/fotatest
 port/linux/stapptest
 port/linux/securitytest
 port/linux/storage_test

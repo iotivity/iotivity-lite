@@ -54,7 +54,12 @@ EASYSETUP_TEST_OBJ_DIR = $(EASYSETUP_TEST_DIR)/obj
 EASYSETUP_TEST_SRC_FILES := $(wildcard $(EASYSETUP_TEST_DIR)/*.cpp)
 EASYSETUP_TEST_OBJ_FILES := $(patsubst $(EASYSETUP_TEST_DIR)/%.cpp,$(EASYSETUP_TEST_OBJ_DIR)/%.o,$(EASYSETUP_TEST_SRC_FILES))
 
-UNIT_TESTS = apitest platformtest
+FOTA_TEST_DIR = $(ROOT_DIR)/service/fota/unittest
+FOTA_TEST_OBJ_DIR = $(FOTA_TEST_DIR)/obj
+FOTA_TEST_SRC_FILES := $(wildcard $(FOTA_TEST_DIR)/*.cpp)
+FOTA_TEST_OBJ_FILES := $(patsubst $(FOTA_TEST_DIR)/%.cpp,$(FOTA_TEST_OBJ_DIR)/%.o,$(FOTA_TEST_SRC_FILES))
+
+UNIT_TESTS = apitest platformtest fotatest
 
 ifeq ($(EASYSETUP),1)
 UNIT_TESTS += easysetuptest
@@ -297,6 +302,13 @@ easysetuptest: $(EASYSETUP_TEST_OBJ_FILES) libiotivity-constrained-easysetup.a l
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -liotivity-constrained-easysetup -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 endif
 
+$(FOTA_TEST_OBJ_DIR)/%.o: $(FOTA_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_FOTA) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+fotatest: $(FOTA_TEST_OBJ_FILES) libiotivity-constrained-fota.a libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_FOTA) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/es/%.o: %.c
@@ -532,7 +544,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(FOTA_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
