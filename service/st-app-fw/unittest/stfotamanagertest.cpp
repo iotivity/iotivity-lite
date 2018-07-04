@@ -25,6 +25,8 @@ extern "C"{
 }
 
 #define device_index 0
+extern int st_fota_manager_start(void);
+extern void st_fota_manager_stop(void);
 
 static bool
 st_fota_cmd_handler(fota_cmd_t cmd)

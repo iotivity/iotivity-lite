@@ -29,9 +29,6 @@
 */
 typedef bool (*st_fota_cmd_cb_t)(fota_cmd_t cmd);
 
-int st_fota_manager_start(void);
-void st_fota_manager_stop(void);
-
 int st_fota_set_state(fota_state_t state);
 int st_fota_set_fw_info(const char *ver, const char *uri);
 int st_fota_set_result(fota_result_t result);
