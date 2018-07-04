@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
-
 #ifdef OC_DYNAMIC_ALLOCATION
 
 #include "port/oc_assert.h"
@@ -48,6 +46,11 @@ static const char *anon_clear = "anon-clear";
 static const char *wc_all = "*";
 static const char *wc_discoverable = "+";
 static const char *wc_non_discoverable = "-";
+
+#if defined(__cplusplus)
+#define SECURED 1 << 1
+#define TCP 1 << 4
+#endif // __cplusplus
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
