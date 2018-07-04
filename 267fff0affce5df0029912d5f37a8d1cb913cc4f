@@ -22,6 +22,30 @@
       "revId": "267fff0affce5df0029912d5f37a8d1cb913cc4f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5f6f99c5",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-04T04:26:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1f751198",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 39
+      },
+      "revId": "267fff0affce5df0029912d5f37a8d1cb913cc4f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
