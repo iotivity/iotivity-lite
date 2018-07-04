@@ -31,7 +31,10 @@ static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
 
 #ifdef OC_SECURITY
-static bool otm_confirm_handler_test(void){}
+static bool otm_confirm_handler_test(void)
+{
+    return true;
+}
 #endif
 static void st_status_handler_test(st_status_t status)
 {
