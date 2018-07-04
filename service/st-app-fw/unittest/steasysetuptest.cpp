@@ -28,6 +28,10 @@ extern "C"{
     #include "st_port.h"
     #include "sttestcommon.h"
     #include "messaging/coap/engine.h"
+    #include "oc_api.h"
+#ifdef OC_SECURITY
+    #include "security/oc_otm_state.h"
+#endif /* OC_SECURITY */
     void st_manager_quit(void);
 }
 
@@ -322,4 +326,72 @@ TEST_F(TestSTEasySetup_cb, easy_setup_prov_response_test)
 
     ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
+}
+
+#ifdef OC_SECURITY
+static oc_event_callback_retval_t
+otm_test_handler(void *data)
+{
+    oc_sec_otm_err_code_t *state = (oc_sec_otm_err_code_t *)data;
+    oc_sec_otm_err(0, *state);
+    if (*state == OC_SEC_OTM_FINISH) {
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
+    }
+    free(state);
+    return OC_EVENT_DONE;
+}
+
+TEST_F(TestSTEasySetup_cb, easy_setup_otm_start_finish_test)
+{
+    oc_sec_otm_err_code_t *state =
+        (oc_sec_otm_err_code_t *)malloc(sizeof(oc_sec_otm_err_code_t));
+    *state = OC_SEC_OTM_START;
+    oc_set_delayed_callback(state, otm_test_handler, 0);
+    state = (oc_sec_otm_err_code_t *)malloc(sizeof(oc_sec_otm_err_code_t));
+    *state = OC_SEC_OTM_FINISH;
+    oc_set_delayed_callback(state, otm_test_handler, 0);
+    _oc_signal_event_loop();
+
+    int ret = test_wait_until(mutex, cv, 5);
+    EXPECT_EQ(0, ret);
+}
+
+TEST_F(TestSTEasySetup_cb, easy_setup_otm_fail_test)
+{
+    oc_sec_otm_err_code_t *state =
+        (oc_sec_otm_err_code_t *)malloc(sizeof(oc_sec_otm_err_code_t));
+    *state = OC_SEC_ERR_PSTAT;
+    oc_set_delayed_callback(state, otm_test_handler, 0);
+    _oc_signal_event_loop();
+
+    int ret = test_wait_until(mutex, cv, 5);
+    EXPECT_EQ(0, ret);
+}
+#endif /* OC_SECURITY */
+
+static bool g_isCallbackReceived;
+
+static void get_response(oc_client_response_t *data)
+{
+    g_isCallbackReceived = true;
+
+    if (data->code == OC_STATUS_OK) {
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
+    }
+}
+
+TEST_F(TestSTEasySetup_cb, easy_setup_sec_accesslist_test)
+{
+    g_isCallbackReceived = false;
+    oc_endpoint_t *ep = get_endpoint();
+    oc_do_get("/sec/accesspointlist", ep, NULL, get_response, LOW_QOS, NULL);
+
+    int ret = test_wait_until(mutex, cv, 5);
+    EXPECT_EQ(0, ret);
+
+    EXPECT_EQ(true, g_isCallbackReceived);
 }
