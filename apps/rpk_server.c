@@ -20,6 +20,7 @@
 #include "port/oc_clock.h"
 #include "security/oc_doxm.h"
 #include "security/oc_tls.h"
+#include "security/oc_rpk.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
