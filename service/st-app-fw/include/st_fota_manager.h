@@ -19,7 +19,7 @@
 #ifndef ST_FOTA_MANAGER_H
 #define ST_FOTA_MANAGER_H
 
-#include "fota.h"
+#include "fota_types.h"
 #include <stdbool.h>
 
 /**
@@ -28,9 +28,6 @@
   @return true if command confirm by user or false.
 */
 typedef bool (*st_fota_cmd_cb_t)(fota_cmd_t cmd);
-
-int st_fota_manager_start(void);
-void st_fota_manager_stop(void);
 
 int st_fota_set_state(fota_state_t state);
 int st_fota_set_fw_info(const char *ver, const char *uri);

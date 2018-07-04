@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "st_fota_manager.h"
+#include "fota.h"
 #include "st_port.h"
 
 static st_fota_cmd_cb_t g_st_fota_cmd_cb = NULL;
