@@ -157,7 +157,7 @@ endif
 
 ifeq ($(ST_APP_FW),1)
 	SRC_ST=$(wildcard ../../service/st-app-fw/src/*.c ../../service/st-app-fw/src/port/linux/*.c)
-	CFLAGS_ST=-I../../service/st-app-fw/include
+	CFLAGS_ST=-I../../service/st-app-fw/include -I../../port
 	CFLAGS_ST+= -DST_APP_FW
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
 	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
