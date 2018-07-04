@@ -271,7 +271,9 @@ user_input_loop(void *data)
         printf("[ST_APP] power on\n");
         strncpy(power, "on\0", 3);
       }
-      st_notify_back(switch_rsc_uri);
+      if (st_notify_back(switch_rsc_uri) != 0) {
+        printf("[ST_APP] st_notify_back failed.\n");
+      }
       break;
     case '0':
       st_manager_quit();
@@ -319,7 +321,12 @@ main(void)
     return -1;
   }
 
-  st_register_resource_handler(get_resource_handler, set_resource_handler);
+  if (st_register_resource_handler(get_resource_handler,
+                                   set_resource_handler) != 0) {
+    printf("[ST_APP] st_register_resource_handler failed.\n");
+    return -1;
+  }
+
   st_register_otm_confirm_handler(otm_confirm_handler);
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
