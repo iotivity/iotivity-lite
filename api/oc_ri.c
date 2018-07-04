@@ -309,17 +309,34 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
-void
+bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
-  oc_list_remove(app_resources, resource);
-  oc_ri_free_resource_properties(resource);
-  oc_memb_free(&app_resources_s, resource);
+  if (!resource)
+    return false;
+
+  int uri_len = (int)oc_string_len(resource->uri);
+  oc_resource_t *res = oc_ri_get_app_resources();
+  while (res != NULL) {
+    if ((int)oc_string_len(res->uri) == uri_len &&
+        strncmp(oc_string(res->uri), oc_string(resource->uri), uri_len) == 0) {
+      oc_list_remove(app_resources, resource);
+      oc_ri_free_resource_properties(resource);
+      oc_memb_free(&app_resources_s, resource);
+      return true;
+    }
+    res = res->next;
+  }
+
+  return false;
 }
 
 bool
 oc_ri_add_resource(oc_resource_t *resource)
 {
+  if (!resource)
+    return false;
+
   bool valid = true;
 
   if (!resource->get_handler.cb && !resource->put_handler.cb &&
