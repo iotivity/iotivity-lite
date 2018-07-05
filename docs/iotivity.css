@@ -1,0 +1,19 @@
+dl.sideffect
+{
+        margin-left:-7px;
+        padding-left: 3px;
+        border-left:4px solid;
+        border-color: #D0C000;
+}
+
+dl.experimental
+{
+        margin-left:-7px;
+        padding-left: 3px;
+        border-left:4px solid;
+        border-color: #505050;
+}
+
+
+/* customize.html:<dl class="section warning"><dt>Warning</dt><dd>at the moment you should not remove elements from the layout file as a way to hide information. Doing so can cause broken links in the generated output!</dd></dl> */
+
