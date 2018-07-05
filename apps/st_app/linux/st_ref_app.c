@@ -263,6 +263,13 @@ user_input_loop(void *data)
       st_manager_reset();
       break;
     case '2':
+      if (strncmp(power, "on", 2) == 0) {
+        printf("[ST_APP] power off\n");
+        strncpy(power, "off\0", 4);
+      } else {
+        printf("[ST_APP] power on\n");
+        strncpy(power, "on\0", 3);
+      }
       st_notify_back(switch_rsc_uri);
       break;
     case '0':
