@@ -50,10 +50,23 @@ void easy_setup_handler_test(st_easy_setup_status_t status)
 
 class TestSTEasySetup: public testing::Test
 {
+    private:
+        static oc_handler_t s_handler;
+
+        static int appInit(void)
+        {
+            int result = oc_init_platform(manufacturer, NULL, NULL);
+            result |= oc_add_device("/oic/d", "oic.d.light", device_name,
+                                    "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+            return result;
+        }
+
     protected:
         virtual void SetUp()
         {
-
+            s_handler.init = appInit;
+            int initResult = oc_main_init(&s_handler);
+            ASSERT_TRUE((initResult == 0));
         }
 
         virtual void TearDown()
@@ -61,6 +74,7 @@ class TestSTEasySetup: public testing::Test
             st_store_info_initialize();
         }
 };
+oc_handler_t TestSTEasySetup::s_handler;
 
 TEST_F(TestSTEasySetup, st_is_easy_setup_finish)
 {
