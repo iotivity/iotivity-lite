@@ -78,6 +78,7 @@ def make_prebuilt(port):
         "cp port/%(port)s/config.h include/oc_endpoint.h include/oc_helpers.h include/oc_rep.h " \
         "include/oc_ri.h include/oc_uuid.h service/st-app-fw/include/st_manager.h " \
         "service/st-app-fw/include/st_resource_manager.h prebuilt/include && " \
+        "cp service/st-app-fw/include/st_fota_manager.h service/fota/include/fota.h prebuilt/include && " \
         "cp deps/tinycbor/src/cbor.h deps/tinycbor/src/tinycbor-version.h prebuilt/include/deps/tinycbor/src && " \
         "cp port/oc_clock.h prebuilt/include/port && " \
         "cp util/oc_etimer.h util/oc_list.h util/oc_memb.h util/oc_mmem.h util/oc_process.h " \
