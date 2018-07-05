@@ -50,7 +50,7 @@
 /**
   @brief Function for account registration to account server.
   @param endpoint The endpoint of the Cloud.
-  @param authProvider Provider name used for authentication.
+  @param auth_provider Provider name used for authentication.
   @param uid Identifier of the user obtained by account registration.
   @param access_token Identifier of the resource obtained by account
    registration.
@@ -66,8 +66,8 @@ bool oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
 /**
   @brief Function for account registration to account server using auth.
   @param endpoint The endpoint of the Cloud.
-  @param authProvider Provider name used for authentication.
-  @param authCode The authorization code obtained by using an authorization
+  @param auth_provider Provider name used for authentication.
+  @param auth_code The authorization code obtained by using an authorization
    server as an intermediary between the client and resource owner.
   @param device_index Index of the device for an unique identifier.
   @param handler To refer to the request sent out on behalf of calling this API.
