@@ -851,6 +851,14 @@ oc_sec_acl_default(int device)
   success &= oc_sec_ace_update_res(
     OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
     &resource->types, resource->interfaces, device);
+
+  const char *sec_aplist = "/sec/accesspointlist";
+  resource =
+    oc_ri_get_app_resource_by_uri(sec_aplist, strlen(sec_aplist), device);
+  if (resource)
+  success &= oc_sec_ace_update_res(
+    OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
+    &resource->types, resource->interfaces, device);
 #endif
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
