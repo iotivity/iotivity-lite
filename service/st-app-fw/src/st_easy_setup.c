@@ -340,7 +340,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
 
   st_print_log("[Easy_Setup] cloud_conf_prov_cb in\n");
 
-  if (cloud_prov_data == NULL) {
+  if (cloud_prov_data == NULL || cloud_prov_data->userdata == NULL) {
     st_print_log("es_coap_cloud_conf_data is NULL\n");
     g_easy_setup_status = EASY_SETUP_FAIL;
     oc_set_delayed_callback(NULL, callback_handler, 0);
