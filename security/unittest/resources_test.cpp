@@ -35,6 +35,9 @@ extern "C"
 #include "oc_pstat.h"
 #include "oc_ri.h"
 
+#define SECURED     1 << 1
+#define TCP         1 << 4
+
 #include "oc_acl.c"
 #include "oc_cred.c"
 #include "oc_doxm.c"
