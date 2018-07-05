@@ -85,6 +85,7 @@ class TestUnicastRequest: public testing::Test
                 oc_string_array_t types, oc_interface_mask_t interfaces,
                 oc_endpoint_t *endpoint, oc_resource_properties_t bm, void *user_data)
         {
+        	PRINT("onResourceDiscovered....\n");
             (void)di;
             (void)types;
             (void)interfaces;
@@ -96,6 +97,7 @@ class TestUnicastRequest: public testing::Test
                 PRINT("Light Resource Discovered....\n");
                 s_pLightEndpoint = endpoint;
                 s_isResourceDiscovered = true;
+                s_isCallbackReceived = true;
                 return OC_STOP_DISCOVERY;
             }
 
@@ -107,12 +109,59 @@ class TestUnicastRequest: public testing::Test
 
         static void onGetResponse(oc_client_response_t *data)
         {
+        	PRINT("onGetResponse....\n");
+            (void)data;
+            s_isCallbackReceived = true;
+        }
+
+        static void onPutResponse(oc_client_response_t *data)
+        {
+        	PRINT("onPutResponse....\n");
+            (void)data;
+            s_isCallbackReceived = true;
+        }
+
+        static void onPostResponse(oc_client_response_t *data)
+        {
+        	PRINT("onPostResponse....\n");
+            (void)data;
+            s_isCallbackReceived = true;
+        }
+
+        static void onDeleteResponse(oc_client_response_t *data)
+        {
+        	PRINT("onDeleteResponse....\n");
             (void)data;
             s_isCallbackReceived = true;
         }
 
         static void onGetRequest(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
         {
+        	PRINT("onGetRequest....\n");
+            (void)request;
+            (void)interface;
+            (void)user_data;
+        }
+
+        static void onPutRequest(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+        {
+        	PRINT("onPutRequest....\n");
+            (void)request;
+            (void)interface;
+            (void)user_data;
+        }
+
+        static void onPostRequest(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+        {
+        	PRINT("onPostRequest....\n");
+            (void)request;
+            (void)interface;
+            (void)user_data;
+        }
+
+        static void onDeleteRequest(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+        {
+        	PRINT("onDeleteRequest....\n");
             (void)request;
             (void)interface;
             (void)user_data;
@@ -120,6 +169,7 @@ class TestUnicastRequest: public testing::Test
 
         static int appInit(void)
         {
+        	PRINT("appInit....\n");
             int result = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
             result |= oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
                                     OCF_SPEC_VERSION, OCF_DATA_MODEL_VERSION, NULL, NULL);
@@ -128,13 +178,17 @@ class TestUnicastRequest: public testing::Test
 
         static void registerResources(void)
         {
+        	PRINT("registerResources....\n");
             s_pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
             oc_resource_bind_resource_type(s_pResource, RESOURCE_TYPE);
-            oc_resource_bind_resource_interface(s_pResource, OC_IF_BASELINE);
-            oc_resource_set_default_interface(s_pResource, OC_IF_BASELINE);
+            oc_resource_bind_resource_interface(s_pResource, OC_IF_RW);
+            oc_resource_set_default_interface(s_pResource, OC_IF_RW);
             oc_resource_set_discoverable(s_pResource, true);
             oc_resource_set_periodic_observable(s_pResource, 1);
             oc_resource_set_request_handler(s_pResource, OC_GET, onGetRequest, NULL);
+            oc_resource_set_request_handler(s_pResource, OC_PUT, onPutRequest, NULL);
+            oc_resource_set_request_handler(s_pResource, OC_POST, onPostRequest, NULL);
+            oc_resource_set_request_handler(s_pResource, OC_DELETE, onDeleteRequest, NULL);
             oc_process_baseline_interface(s_pResource);
             oc_add_resource(s_pResource);
         }
@@ -148,6 +202,7 @@ class TestUnicastRequest: public testing::Test
 
         static void requestsEntry(void)
         {
+        	PRINT("requestsEntry....\n");
         }
 
         static void waitForEvent(int waitTime)
@@ -194,10 +249,6 @@ class TestUnicastRequest: public testing::Test
             }
 
             s_isResourceDiscovered = false;
-            ASSERT_TRUE(oc_do_ip_discovery(NULL, &onResourceDiscovered, NULL)) << "oc_do_ip_discovery() returned failure.";
-
-            waitForEvent(MAX_WAIT_TIME);
-            ASSERT_TRUE(s_isResourceDiscovered) << " Unable to discover Light Resource";
         }
 
         static void TearDownTestCase()
@@ -254,36 +305,111 @@ TEST(TestServerClient, ServerStopTest_P)
 
 TEST_F(TestUnicastRequest, DiscoverResourceTest_P)
 {
-    EXPECT_TRUE(s_isResourceDiscovered) << "Failed to discover resource";
+    bool isSuccess = false;
+    isSuccess = oc_do_ip_discovery(NULL, onResourceDiscovered, NULL);
+    EXPECT_TRUE(isSuccess) << "Failed to discover resource";
+    waitForEvent(MAX_WAIT_TIME);
+}
+
+TEST_F(TestUnicastRequest, IPDiscoverResourceTest_P)
+{
+    bool isSuccess = false;
+    isSuccess = oc_do_ip_discovery_at_endpoint(RESOURCE_URI, NULL,  s_pLightEndpoint, NULL);
+    EXPECT_TRUE(isSuccess) << "Failed to discover resource";
 }
 
 TEST_F(TestUnicastRequest, SendGetRequest_P)
 {
     bool isSuccess = false;
-    s_isCallbackReceived = false;
 
     isSuccess = oc_do_get(RESOURCE_URI, s_pLightEndpoint, NULL, onGetResponse, HIGH_QOS, NULL);
     ASSERT_TRUE(isSuccess) << "oc_do_get() returned failure";
-
-    waitForEvent(MAX_WAIT_TIME);
-    ASSERT_TRUE(s_isCallbackReceived) << "Callback for get was not called";
 }
 
 TEST_F(TestUnicastRequest, SendGetRequestTwice_P)
 {
     bool isSuccess = false;
-    s_isCallbackReceived = false;
 
     isSuccess = oc_do_get(RESOURCE_URI, s_pLightEndpoint, NULL, onGetResponse, LOW_QOS, NULL);
     ASSERT_TRUE(isSuccess) << "oc_do_get() returned failure";
 
-    waitForEvent(MAX_WAIT_TIME);
-    ASSERT_TRUE(s_isCallbackReceived) << "Callback for get was not called";
-
-    s_isCallbackReceived = false;
     isSuccess = oc_do_get(RESOURCE_URI, s_pLightEndpoint, NULL, onGetResponse, LOW_QOS, NULL);
     ASSERT_TRUE(isSuccess) << "oc_do_get() returned failure during second call";
+}
 
-    waitForEvent(MAX_WAIT_TIME);
-    ASSERT_TRUE(s_isCallbackReceived) << "Callback for get was not called during second call";
+TEST_F(TestUnicastRequest, SendInitPutRequest_P)
+{
+    bool isSuccess = false;
+
+    isSuccess = oc_init_put(RESOURCE_URI, s_pLightEndpoint, NULL, onPutResponse, LOW_QOS, NULL);
+    ASSERT_TRUE(isSuccess) << "oc_init_put() returned failure";
+    oc_rep_start_root_object();
+	oc_rep_set_boolean(root, state, true);
+	oc_rep_end_root_object();
+}
+
+TEST_F(TestUnicastRequest, SendDoPutRequest_P)
+{
+    bool isSuccess = false;
+
+	isSuccess = oc_do_put();
+    ASSERT_TRUE(isSuccess) << "oc_do_put() returned failure";
+}
+
+TEST_F(TestUnicastRequest, SendInitPostRequest_P)
+{
+    bool isSuccess = false;
+
+    isSuccess = oc_init_post(RESOURCE_URI, s_pLightEndpoint, NULL, onPostResponse, LOW_QOS, NULL);
+    ASSERT_TRUE(isSuccess) << "oc_init_put() returned failure";
+    oc_rep_start_root_object();
+	oc_rep_set_boolean(root, state, true);
+	oc_rep_end_root_object();
+}
+
+TEST_F(TestUnicastRequest, SendDoPostRequest_P)
+{
+    bool isSuccess = false;
+
+	isSuccess = oc_do_post();
+    ASSERT_TRUE(isSuccess) << "oc_do_put() returned failure";
+}
+
+TEST_F(TestUnicastRequest, SendObserveRequest_P)
+{
+    bool isSuccess = false;
+
+    isSuccess = oc_do_observe(RESOURCE_URI, s_pLightEndpoint, NULL, NULL, LOW_QOS, NULL);
+    ASSERT_TRUE(isSuccess) << "oc_do_observe() returned failure";
+}
+
+TEST_F(TestUnicastRequest, SendStopObserveRequest_P)
+{
+    bool isSuccess = false;
+
+    isSuccess = oc_stop_observe(RESOURCE_URI, s_pLightEndpoint);
+    ASSERT_TRUE(isSuccess) << "oc_stop_observe() returned failure";
+}
+
+TEST_F(TestUnicastRequest, SendDeleteRequest_P)
+{
+    bool isSuccess = false;
+
+    isSuccess = oc_do_delete(RESOURCE_URI, s_pLightEndpoint, NULL, onGetResponse, LOW_QOS, NULL);
+    ASSERT_TRUE(isSuccess) << "oc_do_delete() returned failure";
+}
+
+TEST_F(TestUnicastRequest, FreeServerEndpoint_P)
+{
+	oc_free_server_endpoints(s_pLightEndpoint);
+}
+
+TEST_F(TestUnicastRequest, FreeServerEndpoint_N)
+{
+	oc_free_server_endpoints(NULL);
+}
+
+TEST_F(TestUnicastRequest, CloseSession_P)
+{
+	oc_close_session(s_pLightEndpoint);
 }
