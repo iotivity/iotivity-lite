@@ -37,8 +37,9 @@
 #define MAX_CONTEXT_SIZE (2)
 #define MAX_RETRY_COUNT (5)
 
-static int session_timeout[5] = { 3, 50, 50, 50, 10 };
-static int message_timeout[5] = { 1, 2, 4, 8, 10 };
+static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 10 };
+static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
+static uint8_t g_sign_in_count = 0;
 
 typedef struct st_cloud_context
 {
@@ -69,7 +70,7 @@ static oc_event_callback_retval_t publish_resource(void *data);
 static oc_event_callback_retval_t find_ping(void *data);
 static oc_event_callback_retval_t send_ping(void *data);
 
-static int ping_interval = 1;
+static uint16_t ping_interval = 1;
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
@@ -120,9 +121,10 @@ st_cloud_manager_start(st_store_t *store_info, int device_index,
     return -1;
 
   context->callback = cb;
+  context->device_index = device_index;
   context->cloud_manager_status =
     (st_cloud_manager_status_t)store_info->cloudinfo.status;
-  context->device_index = device_index;
+  g_sign_in_count = 0;
 
   if (!cloud_start_process(context)) {
     goto errors;
@@ -352,6 +354,7 @@ sign_in_handler(oc_client_response_t *data)
 
   oc_remove_delayed_callback(context, sign_in);
   context->retry_count = 0;
+  g_sign_in_count = 0;
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP) {
     es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
@@ -374,6 +377,9 @@ sign_in(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[Cloud_Manager] try sign in(%d)\n", context->retry_count++);
+
+  if (g_sign_in_count++ > MAX_RETRY_COUNT)
+    context->retry_count = MAX_RETRY_COUNT;
 
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
