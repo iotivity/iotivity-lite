@@ -93,7 +93,7 @@ es_result_e es_init_enrollee(bool is_secured, es_resource_mask_e resource_mask,
 /**
  * This function sets Device information.
  *
- * @param es_device_property Contains device information composed of WiFiConf
+ * @param device_property Contains device information composed of WiFiConf
  * Structure & DevConf
  *                           Structure
  * @return ::ES_OK on success, some other value upon failure.
@@ -105,7 +105,7 @@ es_result_e es_set_device_property(es_device_property *device_property);
 /**
  * This function sets Enrollee's State.
  *
- * @param es_enrollee_state   Contains current enrollee's state.
+ * @param es_state   Contains current enrollee's state.
  * @return ::ES_OK on success, some other value upon failure.
  *
  * @see es_enrollee_state
@@ -115,7 +115,6 @@ es_result_e es_set_state(es_enrollee_state es_state);
 /**
  * This function gets Enrollee's State.
  *
- * @param void
  * @return ::es_enrollee_state
  *
  * @see es_enrollee_state
