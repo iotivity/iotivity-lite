@@ -140,6 +140,7 @@ static void
 register_resources(void)
 {
   st_register_resources(device_index);
+  st_register_aplist_resource();
 }
 
 void

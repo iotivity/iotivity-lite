@@ -75,6 +75,13 @@ st_is_easy_setup_finish(void)
   return store_info->status == true ? 0 : -1;
 }
 
+void
+st_register_aplist_resource(void)
+{
+  // Init /sec/accesspointlist resource
+  init_accesspointlist_resource(get_ap_list);
+}
+
 int
 st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 {
@@ -101,9 +108,6 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
       return -1;
     }
   }
-
-  // Init /sec/accesspointlist resource
-  init_accesspointlist_resource(get_ap_list);
 
   // Set callbacks for Vendor Specific Properties
   es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb,
@@ -132,6 +136,10 @@ st_easy_setup_stop(void)
 
   // Free scan list
   deinit_accesspointlist_resource();
+
+#ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+    st_wifi_clear_cache();
+#endif
 
   g_callback = NULL;
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
