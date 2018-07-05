@@ -102,17 +102,21 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
     }
   }
 
-  // Init /sec/accesspointlist resource
-  init_accesspointlist_resource(get_ap_list);
-
   // Set callbacks for Vendor Specific Properties
   es_set_callback_for_userdata(sc_read_userdata_cb, sc_write_userdata_cb,
                                sc_free_userdata);
+
+  // Init /sec/accesspointlist resource
+  init_accesspointlist_resource(get_ap_list);
+
   st_print_log("[Easy_Setup] st_easy_setup_start out\n");
 
 #ifdef OC_SECURITY
   // Set OTM status changed callback.
   oc_sec_otm_set_err_cb(st_otm_state_handler);
+
+  // Add ACL enty to /sec/accesspointlist resource
+  oc_sec_ace_update_conn_anon_clear("/sec/accesspointlist", 2, 14, 0);
 #endif
 
   return 0;
@@ -132,6 +136,10 @@ st_easy_setup_stop(void)
 
   // Free scan list
   deinit_accesspointlist_resource();
+
+#ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+    st_wifi_clear_cache();
+#endif
 
   g_callback = NULL;
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
