@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9fd121fe",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "Please use like below\n\n#define OCF_SPEC_VERSION \"core.1.1.0\"\n#define OCF_DATA_MODEL_VERSION \"res.1.1.0\"",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 46
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7fcedd5b",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "remove it",
+      "range": {
+        "startLine": 141,
+        "startChar": 8,
+        "endLine": 141,
+        "endChar": 39
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dfdba919",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "remove it.",
+      "range": {
+        "startLine": 195,
+        "startChar": 8,
+        "endLine": 197,
+        "endChar": 9
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bfd8651e",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "remove it.",
+      "range": {
+        "startLine": 228,
+        "startChar": 12,
+        "endLine": 228,
+        "endChar": 52
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ff094d96",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "How about use test_wait_until() function in sttestcommon.h?\nthis function will wait until discovery response receive.\n(use another mutex,cv and signaling in discovery cb)",
+      "range": {
+        "startLine": 249,
+        "startChar": 11,
+        "endLine": 249,
+        "endChar": 40
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3f04557a",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "reset_storage() will require for other test cases.",
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7ff53d82",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-05T00:19:38Z",
+      "side": 1,
+      "message": "How about add some payload and check response packet has same payload in post callback?",
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
