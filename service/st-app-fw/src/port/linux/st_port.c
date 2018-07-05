@@ -73,7 +73,6 @@ void
 st_port_specific_destroy(void)
 {
   /* set initialized port specific logics destroyer. in here */
-  st_wifi_clear_cache();
   return;
 }
 
