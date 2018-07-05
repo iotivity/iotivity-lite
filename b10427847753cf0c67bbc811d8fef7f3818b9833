@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1f2cf101",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-05T00:33:59Z",
+      "side": 1,
+      "message": "f",
+      "range": {
+        "startLine": 267,
+        "startChar": 40,
+        "endLine": 267,
+        "endChar": 41
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ff302d58",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-05T00:33:59Z",
+      "side": 1,
+      "message": "f",
+      "range": {
+        "startLine": 318,
+        "startChar": 50,
+        "endLine": 318,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5f367953",
+        "filename": "apps/st_app/tizenrt/st_ref_app_tizenrt.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-05T00:33:59Z",
+      "side": 1,
+      "message": "f",
+      "range": {
+        "startLine": 147,
+        "startChar": 50,
+        "endLine": 147,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3f3bb53b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-05T00:33:59Z",
+      "side": 1,
+      "message": "f",
+      "range": {
+        "startLine": 140,
+        "startChar": 46,
+        "endLine": 140,
+        "endChar": 47
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
