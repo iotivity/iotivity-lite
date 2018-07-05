@@ -68,9 +68,10 @@ static oc_event_callback_retval_t publish_resource(void *data);
 static oc_event_callback_retval_t find_ping(void *data);
 static oc_event_callback_retval_t send_ping(void *data);
 
-static int session_timeout[5] = { 3, 50, 50, 50, 10 };
-static int message_timeout[5] = { 1, 2, 4, 8, 10 };
-static int ping_interval = 1;
+static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 10 };
+static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
+static uint8_t g_sign_in_count = 0;
+static uint16_t g_ping_interval = 1;
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
@@ -121,9 +122,10 @@ st_cloud_manager_start(st_store_t *store_info, int device_index,
     return -1;
 
   context->callback = cb;
+  context->device_index = device_index;
   context->cloud_manager_status =
     (st_cloud_manager_status_t)store_info->cloudinfo.status;
-  context->device_index = device_index;
+  g_sign_in_count = 0;
 
   if (!cloud_start_process(context)) {
     goto errors;
@@ -236,7 +238,8 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
     switch (code) {
     case CI_TOKEN_EXPIRED:
       oc_remove_delayed_callback(context, callback);
-      context->retry_count = 0;
+      if (context->cloud_manager_status != CLOUD_MANAGER_RE_CONNECTING)
+        context->retry_count = 0;
       context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
       oc_set_delayed_callback(context, refresh_token,
                               session_timeout[context->retry_count]);
@@ -351,6 +354,7 @@ sign_in_handler(oc_client_response_t *data)
 
   oc_remove_delayed_callback(context, sign_in);
   context->retry_count = 0;
+  g_sign_in_count = 0;
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP) {
     es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
@@ -373,6 +377,9 @@ sign_in(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[Cloud_Manager] try sign in(%d)\n", context->retry_count++);
+
+  if (g_sign_in_count++ > MAX_RETRY_COUNT)
+    context->retry_count = MAX_RETRY_COUNT;
 
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
@@ -540,7 +547,7 @@ find_ping_handler(oc_client_response_t *data)
   int *interval = NULL, size;
   oc_rep_get_int_array(data->payload, "inarray", &interval, &size);
   if (interval)
-    ping_interval = interval[size - 1];
+    g_ping_interval = interval[size - 1];
   oc_set_delayed_callback(context, callback_handler, 0);
   oc_set_delayed_callback(context, send_ping,
                           message_timeout[context->retry_count]);
@@ -579,7 +586,7 @@ send_ping_handler(oc_client_response_t *data)
 
   oc_remove_delayed_callback(context, send_ping);
   context->retry_count = 0;
-  oc_set_delayed_callback(context, send_ping, ping_interval * ONE_MINUTE);
+  oc_set_delayed_callback(context, send_ping, g_ping_interval * ONE_MINUTE);
   return;
 
 error:
@@ -594,8 +601,8 @@ send_ping(void *data)
 
   if (!is_retry_over(context)) {
     if (context->cloud_manager_status == CLOUD_MANAGER_FINISH) {
-      oc_send_ping_request(&context->cloud_ep, ping_interval, send_ping_handler,
-                           context);
+      oc_send_ping_request(&context->cloud_ep, g_ping_interval,
+                           send_ping_handler, context);
       oc_set_delayed_callback(context, send_ping,
                               message_timeout[context->retry_count]);
     }
