@@ -111,6 +111,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_450fc830",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7a86ebba",
+      "range": {
+        "startLine": 57,
+        "startChar": 25,
+        "endLine": 57,
+        "endChar": 42
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ba9073ed",
         "filename": "api/unittest/coreres.cpp",
         "patchSetId": 1
@@ -122,6 +146,30 @@
       "writtenOn": "2018-07-06T08:48:56Z",
       "side": 1,
       "message": "check naming here also",
+      "range": {
+        "startLine": 64,
+        "startChar": 25,
+        "endLine": 64,
+        "endChar": 46
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a513345b",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_ba9073ed",
       "range": {
         "startLine": 64,
         "startChar": 25,
@@ -157,6 +205,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8510b04f",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1abd1f69",
+      "range": {
+        "startLine": 71,
+        "startChar": 25,
+        "endLine": 71,
+        "endChar": 54
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3abc6369",
         "filename": "api/unittest/coreres.cpp",
         "patchSetId": 1
@@ -168,6 +240,30 @@
       "writtenOn": "2018-07-06T08:48:56Z",
       "side": 1,
       "message": "move this api to below test case",
+      "range": {
+        "startLine": 75,
+        "startChar": 20,
+        "endLine": 75,
+        "endChar": 43
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e51d3c68",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "add this api test  case in one suite",
+      "parentUuid": "da33351e_3abc6369",
       "range": {
         "startLine": 75,
         "startChar": 20,
@@ -203,6 +299,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_252724b8",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9ab00f8d",
+      "range": {
+        "startLine": 79,
+        "startChar": 25,
+        "endLine": 79,
+        "endChar": 47
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7aad4b31",
         "filename": "api/unittest/coreres.cpp",
         "patchSetId": 1
@@ -214,6 +334,30 @@
       "writtenOn": "2018-07-06T08:48:56Z",
       "side": 1,
       "message": "Add negative cases also if we can test them...",
+      "range": {
+        "startLine": 81,
+        "startChar": 30,
+        "endLine": 81,
+        "endChar": 32
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_052ca098",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-06T12:49:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7aad4b31",
       "range": {
         "startLine": 81,
         "startChar": 30,
