@@ -231,8 +231,8 @@ static
 void *st_manager_func(void *data)
 {
     (void)data;
-    int ret = st_manager_start();
-    EXPECT_EQ(0, ret);
+    st_error_t ret = st_manager_start();
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
 }
