@@ -69,6 +69,30 @@
       "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7a6f0b93",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T04:02:12Z",
+      "side": 1,
+      "message": "I see. But I don\u0027t know why this function is in the easy-setup.",
+      "parentUuid": "da33351e_ba5233db",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 1
+      },
+      "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
