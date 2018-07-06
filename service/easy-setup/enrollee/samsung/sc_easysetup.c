@@ -351,10 +351,12 @@ read_cloud_conf_data(oc_rep_t *payload, void **user_data)
     es_new_string(&g_scprop->aac, oc_string(cloud_prop->aac));
   }
 
+#ifndef SC_ES_OPT
   if (read_sc_string_prop_from_payload(payload, SC_RSRVD_ES_VENDOR_TNC_RESULT,
                                        &cloud_prop->tnc_result)) {
     es_new_string(&g_scprop->tnc_result, oc_string(cloud_prop->tnc_result));
   }
+#endif
 
   if (read_sc_string_prop_from_payload(payload, SC_RSRVD_ES_VENDOR_UID,
                                        &cloud_prop->uid)) {
@@ -395,8 +397,10 @@ sc_write_userdata_cb(oc_rep_t *payload, char *resource_type)
   if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_EASYSETUP)) {
     write_sc_int_prop_to_payload(SC_RSRVD_ES_VENDOR_NETCONNECTION_STATE,
                                  g_scprop->net_conn_state);
+#ifndef SC_ES_OPT
     write_sc_int_prop_to_payload(SC_RSRVD_ES_VENDOR_TNC_STATUS,
                                  g_scprop->tnc_status);
+#endif
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_WIFICONF)) {
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_BSSID, &g_scprop->bssid);
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_DEVCONF)) {
@@ -435,8 +439,10 @@ sc_write_userdata_cb(oc_rep_t *payload, char *resource_type)
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_MODEL_NUMBER,
                                     &g_scprop->model);
   } else if (!strcmp(resource_type, OC_RSRVD_ES_RES_TYPE_COAPCLOUDCONF)) {
+#ifndef SC_ES_OPT
     write_sc_string_prop_to_payload(SC_RSRVD_ES_VENDOR_TNC_RESULT,
                                     &g_scprop->tnc_result);
+#endif
   }
 }
 
