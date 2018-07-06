@@ -117,6 +117,30 @@
       "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3abaa3de",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-06T04:54:09Z",
+      "side": 1,
+      "message": "As /sec/accesspointlist resource is bound to easysetup, I thought it would be proper to put it in st_easysetup. I am okay to move all accesspointlist logic to st_manager in case it has to be aligned with /sec/provisioninginfo.",
+      "parentUuid": "da33351e_7af6ebd8",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 1
+      },
+      "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
