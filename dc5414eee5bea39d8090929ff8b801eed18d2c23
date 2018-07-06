@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9a95af42",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T05:28:31Z",
+      "side": 1,
+      "message": "it may affect line 393  : out of range\n\nif context-\u003eretry_count \u003d MAX_RETRY_COUNT (5)\nthen is_retry_over is false.\ntherefore  session_timeout[context-\u003eretry_count]) is called\nhowever   session_timeout[5] isn\u0027t possible. \n(0 \u003c\u003d possible range  \u003c\u003d 4)\n\nI think referring  count  is supposed to be checked to avoid out of range in timeout array",
+      "revId": "dc5414eee5bea39d8090929ff8b801eed18d2c23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
