@@ -19,9 +19,11 @@
 #ifndef ST_MANAGER_H
 #define ST_MANAGER_H
 
+#include "st_types.h"
 #include <stdbool.h>
 
 typedef enum {
+  ST_STATUS_IDLE,
   ST_STATUS_INIT,
   ST_STATUS_EASY_SETUP_START,
   ST_STATUS_EASY_SETUP_PROGRESSING,
@@ -33,7 +35,8 @@ typedef enum {
   ST_STATUS_CLOUD_MANAGER_DONE,
   ST_STATUS_DONE,
   ST_STATUS_RESET,
-  ST_STATUS_QUIT
+  ST_STATUS_QUIT,
+  ST_STATUS_STOP
 } st_status_t;
 
 /**
@@ -48,11 +51,11 @@ typedef bool (*st_otm_confirm_cb_t)(void);
 */
 typedef void (*st_status_cb_t)(st_status_t status);
 
-int st_manager_initialize(void);
-int st_manager_start(void);
-void st_manager_reset(void);
-void st_manager_stop(void);
-void st_manager_deinitialize(void);
+st_error_t st_manager_initialize(void);
+st_error_t st_manager_start(void);
+st_error_t st_manager_reset(void);
+st_error_t st_manager_stop(void);
+st_error_t st_manager_deinitialize(void);
 
 /**
   @brief Function for register otm confirm handler

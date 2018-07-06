@@ -137,7 +137,7 @@ set_resource_handler(oc_request_t *request)
 int
 stapp_main(void)
 {
-  if (st_manager_initialize() != 0) {
+  if (st_manager_initialize() != ST_ERROR_NONE) {
     printf("[ST_APP] st_manager_initialize failed.\n");
     return -1;
   }
@@ -146,7 +146,7 @@ stapp_main(void)
 
   // TODO: callback registration. (ex. user confirm cb)
 
-  if (st_manager_start() != 0) {
+  if (st_manager_start() != ST_ERROR_NONE) {
     printf("[ST_APP] st_manager_start failed.\n");
   }
 
