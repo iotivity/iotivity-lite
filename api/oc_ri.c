@@ -1066,7 +1066,7 @@ oc_ri_remove_client_cb(void *data)
   return OC_EVENT_DONE;
 }
 
-void
+bool
 oc_ri_remove_client_cb_by_mid(uint16_t mid)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs);
@@ -1078,7 +1078,9 @@ oc_ri_remove_client_cb_by_mid(uint16_t mid)
   if (cb) {
     oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
     free_client_cb(cb);
+    return true;
   }
+  return false;
 }
 
 oc_client_cb_t *
@@ -1119,22 +1121,11 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   int payload_len = 0;
   coap_packet_t *const pkt = (coap_packet_t *)response;
   int i;
-  /*
-    if con then send ack and process as above
-    -empty ack sent from below by engine
-    if ack with piggyback then process as above
-    -processed below
-    if ack and empty then it is a separate response, and keep cb
-    -handled by separate flag
-    if ack is for block then store data and pass to client
-  */
 
-  /* Check code, translate to oc_status_code, store
-     Check observe option:
-     if no observe option, set to -1, else store observe seq
-  */
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
+  client_response.client_cb = cb;
+  client_response.endpoint = endpoint;
   client_response.observe_option = -1;
   client_response.payload = 0;
   client_response.user_data = cb->user_data;
@@ -1156,10 +1147,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* !OC_BLOCK_WISE */
 
   bool separate = false;
-/*
-  if payload exists, process payload and save in client response
-  send client response to callback and return
-*/
+
 #ifdef OC_BLOCK_WISE
   if (response_state) {
     payload = (*response_state)->buffer;
@@ -1187,15 +1175,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       if (oc_ri_process_discovery_payload(payload, payload_len,
                                           cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
-        oc_client_cb_t *r = cb;
-        uint8_t token[COAP_TOKEN_LEN];
-        memcpy(token, cb->token, cb->token_len);
-        uint8_t token_len = cb->token_len;
-        do {
-          oc_ri_remove_timed_event_callback(r, &oc_ri_remove_client_cb);
-          free_client_cb(r);
-          r = oc_ri_find_client_cb_by_token(token, token_len);
-        } while (r);
+        uint16_t mid = cb->mid;
+        while (oc_ri_remove_client_cb_by_mid(mid))
+          ;
 #ifdef OC_BLOCK_WISE
         *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
@@ -1220,15 +1202,17 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     }
   }
 
-  /* check observe sequence number:
-     if -1 then remove cb, else keep cb
-     if it is an ACK for a separate response, keep cb
-     if it is a discovery response, keep cb so that it will last
-     for the entirety of OC_CLIENT_CB_TIMEOUT_SECS
-  */
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
-    oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-    free_client_cb(cb);
+    if (cb->multicast) {
+      if (cb->stop_multicast_receive) {
+        uint16_t mid = cb->mid;
+        while (oc_ri_remove_client_cb_by_mid(mid))
+          ;
+      }
+    } else {
+      oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+      free_client_cb(cb);
+    }
 #ifdef OC_BLOCK_WISE
     *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
