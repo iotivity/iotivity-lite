@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_254e0470",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T11:59:46Z",
+      "side": 1,
+      "message": "please  remove not needed ones..",
+      "range": {
+        "startLine": 30,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 20
+      },
+      "revId": "b19f8c088aab7a9f9f235f96275b5d3e92417960",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e5341ce0",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T11:59:46Z",
+      "side": 1,
+      "message": "move to TearDown",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 19
+      },
+      "revId": "b19f8c088aab7a9f9f235f96275b5d3e92417960",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c53118ee",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T11:59:46Z",
+      "side": 1,
+      "message": "change to strlen",
+      "range": {
+        "startLine": 64,
+        "startChar": 13,
+        "endLine": 64,
+        "endChar": 14
+      },
+      "revId": "b19f8c088aab7a9f9f235f96275b5d3e92417960",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
