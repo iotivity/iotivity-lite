@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3aa58353",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "Rename file name to coreresoucetest.cpp",
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5aa04743",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "please remove space",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 1
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_daaa9718",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "At present you do not need all macros...\nplease add when ever you needed",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 2
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a892fcd",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "The name looks like it needs to move to Setup...please check",
+      "range": {
+        "startLine": 53,
+        "startChar": 12,
+        "endLine": 53,
+        "endChar": 24
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7a86ebba",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "the api we are checking is oc_init_platform...change to name to InitPlatform_P",
+      "range": {
+        "startLine": 57,
+        "startChar": 25,
+        "endLine": 57,
+        "endChar": 42
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ba9073ed",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "check naming here also",
+      "range": {
+        "startLine": 64,
+        "startChar": 25,
+        "endLine": 64,
+        "endChar": 46
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1abd1f69",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "Check naming",
+      "range": {
+        "startLine": 71,
+        "startChar": 25,
+        "endLine": 71,
+        "endChar": 54
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3abc6369",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "move this api to below test case",
+      "range": {
+        "startLine": 75,
+        "startChar": 20,
+        "endLine": 75,
+        "endChar": 43
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9ab00f8d",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "check naming and maintain uniform",
+      "range": {
+        "startLine": 79,
+        "startChar": 25,
+        "endLine": 79,
+        "endChar": 47
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7aad4b31",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-06T08:48:56Z",
+      "side": 1,
+      "message": "Add negative cases also if we can test them...",
+      "range": {
+        "startLine": 81,
+        "startChar": 30,
+        "endLine": 81,
+        "endChar": 32
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
