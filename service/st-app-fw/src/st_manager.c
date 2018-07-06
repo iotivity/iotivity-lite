@@ -43,7 +43,7 @@
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 
-static st_status_t g_main_status = ST_STATUS_INIT;
+static st_status_t g_main_status = ST_STATUS_IDLE;
 static st_status_cb_t g_st_status_cb = NULL;
 
 static sc_properties st_vendor_props;
@@ -55,6 +55,10 @@ static int device_index = 0;
 int quit = 0;
 
 static void set_st_manager_status(st_status_t status);
+
+static void st_stop_handler(void);
+
+static void st_reset_handler(void);
 
 typedef struct
 {
@@ -284,9 +288,18 @@ set_main_status_sync(st_status_t status)
   st_process_app_sync_unlock();
 }
 
-int
+st_error_t
 st_manager_initialize(void)
 {
+
+  if (g_main_status != ST_STATUS_IDLE) {
+    if (g_main_status == ST_STATUS_INIT) {
+      return ST_ERROR_STACK_ALREADY_INITIALIZED;
+    } else {
+      return ST_ERROR_STACK_RUNNING;
+    }
+  }
+
 #ifdef OC_SECURITY
 #ifdef __TIZENRT__
   oc_storage_config("/mnt/st_things_creds");
@@ -297,13 +310,13 @@ st_manager_initialize(void)
 
   if (st_process_init() != 0) {
     st_print_log("[ST_MGR] st_process_init failed.\n");
-    return -1;
+    return ST_ERROR_OPERATION_FAILED;
   }
 
   if (st_port_specific_init() != 0) {
     st_print_log("[ST_MGR] st_port_specific_init failed!");
     st_process_destroy();
-    return -1;
+    return ST_ERROR_OPERATION_FAILED;
   }
 
   oc_set_max_app_data_size(3072);
@@ -313,7 +326,7 @@ st_manager_initialize(void)
 
   quit = 0;
 
-  return 0;
+  return ST_ERROR_NONE;
 }
 
 static int
@@ -395,9 +408,15 @@ st_manager_stack_init(void)
   return 0;
 }
 
-int
+st_error_t
 st_manager_start(void)
 {
+  if (g_main_status == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (g_main_status != ST_STATUS_INIT) {
+    return ST_ERROR_STACK_RUNNING;
+  }
+
   st_store_t *store_info = NULL;
   int conn_cnt = 0;
 
@@ -405,7 +424,7 @@ st_manager_start(void)
     switch (g_main_status) {
     case ST_STATUS_INIT:
       if (st_manager_stack_init() < 0) {
-        return -1;
+        return ST_ERROR_OPERATION_FAILED;
       }
       store_info = NULL;
       set_main_status_sync(ST_STATUS_EASY_SETUP_START);
@@ -416,7 +435,7 @@ st_manager_start(void)
       } else {
         if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
           st_print_log("[ST_MGR] Failed to start easy setup!\n");
-          return -1;
+          return ST_ERROR_OPERATION_FAILED;
         }
         set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       }
@@ -433,7 +452,7 @@ st_manager_start(void)
       store_info = st_store_get_info();
       if (!store_info || !store_info->status) {
         st_print_log("[ST_MGR] could not get cloud informations.\n");
-        return -1;
+        return ST_ERROR_OPERATION_FAILED;
       }
       set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
       break;
@@ -464,7 +483,7 @@ st_manager_start(void)
       if (st_cloud_manager_start(store_info, device_index,
                                  cloud_manager_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start cloud manager!\n");
-        return -1;
+        return ST_ERROR_OPERATION_FAILED;
       }
       set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       break;
@@ -477,7 +496,7 @@ st_manager_start(void)
       break;
     case ST_STATUS_RESET:
       st_main_reset();
-      st_manager_stop();
+      st_stop_handler();
       st_print_log("[ST_MGR] reset finished\n");
       set_main_status_sync(ST_STATUS_INIT);
       break;
@@ -490,16 +509,17 @@ st_manager_start(void)
     }
   }
 
-  return 0;
+  return ST_ERROR_NONE;
 }
 
-void
+st_error_t
 st_manager_reset(void)
 {
+  if (g_main_status == ST_STATUS_IDLE)
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+
   st_process_app_sync_lock();
-  st_main_reset();
-  st_manager_stop();
-  st_print_log("[ST_MGR] reset finished\n");
+  st_reset_handler();
   set_st_manager_status(ST_STATUS_INIT);
   st_process_app_sync_unlock();
 }
@@ -510,38 +530,37 @@ st_manager_quit(void)
   set_main_status_sync(ST_STATUS_QUIT);
 }
 
-void
+st_error_t
 st_manager_stop(void)
 {
-  unset_sc_prov_info();
-  st_process_stop();
-
-  st_easy_setup_stop();
-  st_print_log("[ST_MGR] easy setup stop done\n");
-
-  st_cloud_manager_stop(device_index);
-  st_print_log("[ST_MGR] cloud manager stop done\n");
-
-  st_fota_manager_stop();
-  st_print_log("[ST_MGR] fota manager stop done\n");
-
-  st_store_info_initialize();
-
-  deinit_provisioning_info_resource();
-
-  oc_main_shutdown();
-
-  free_platform_cb_data();
+  if (g_main_status == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (g_main_status == ST_STATUS_INIT) {
+    return ST_ERROR_STACK_NOT_STARTED;
+  }
+  st_stop_handler();
+  set_main_status_sync(ST_STATUS_INIT);
+  return ST_ERROR_NONE;
 }
 
-void
+st_error_t
 st_manager_deinitialize(void)
 {
+
+  if (g_main_status == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (g_main_status != ST_STATUS_INIT) {
+    return ST_ERROR_STACK_RUNNING;
+  }
+
   st_unregister_status_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
   st_port_specific_destroy();
   st_process_destroy();
+
+  set_main_status_sync(ST_STATUS_IDLE);
+  return ST_ERROR_NONE;
 }
 
 bool
@@ -587,4 +606,36 @@ void
 st_unregister_status_handler(void)
 {
   g_st_status_cb = NULL;
+}
+
+static void
+st_stop_handler(void)
+{
+  unset_sc_prov_info();
+  st_process_stop();
+
+  st_easy_setup_stop();
+  st_print_log("[ST_MGR] easy setup stop done\n");
+
+  st_cloud_manager_stop(device_index);
+  st_print_log("[ST_MGR] cloud manager stop done\n");
+
+  st_fota_manager_stop();
+  st_print_log("[ST_MGR] fota manager stop done\n");
+
+  st_store_info_initialize();
+
+  deinit_provisioning_info_resource();
+
+  oc_main_shutdown();
+
+  free_platform_cb_data();
+}
+
+static void
+st_reset_handler(void)
+{
+  st_main_reset();
+  st_stop_handler();
+  st_print_log("[ST_MGR] reset finished\n");
 }

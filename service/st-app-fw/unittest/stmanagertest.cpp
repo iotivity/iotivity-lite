@@ -31,7 +31,10 @@ static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
 
 #ifdef OC_SECURITY
-static bool otm_confirm_handler_test(void){}
+static bool otm_confirm_handler_test(void)
+{ 
+    return true;
+}
 #endif
 static void st_status_handler_test(st_status_t status)
 {
@@ -46,8 +49,8 @@ static
 void *st_manager_func(void *data)
 {
     (void)data;
-    int ret = st_manager_start();
-    EXPECT_EQ(0, ret);
+    st_error_t ret = st_manager_start();
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
 }
@@ -74,20 +77,39 @@ class TestSTManager: public testing::Test
 
 TEST_F(TestSTManager, st_manager_initialize)
 {
-    int ret = st_manager_initialize();
-    EXPECT_EQ(0, ret);
+    st_error_t ret = st_manager_initialize();
+    EXPECT_EQ(ST_ERROR_NONE, ret);
     st_manager_deinitialize();
+
+
+ 
+}
+
+TEST_F(TestSTManager, st_manager_initialize_fail_dueto_callingtwice)
+{
+    st_error_t ret;
+    st_manager_initialize();
+    ret=st_manager_initialize();
+    EXPECT_EQ(ST_ERROR_STACK_ALREADY_INITIALIZED, ret);
+    st_manager_deinitialize();
+    
+}
+
+TEST_F(TestSTManager, st_manager_start_fail_dueto_excluding_init)
+{
+    st_error_t st_error_ret = st_manager_start();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_INITIALIZED, st_error_ret);
 }
 
 TEST_F(TestSTManager, st_manager_start)
 {
-    int ret = st_manager_initialize();
-    EXPECT_EQ(0, ret);
+    st_error_t st_error_ret = st_manager_initialize();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
 
-    ret = test_wait_until(mutex, cv, 5);
+    int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
     st_manager_quit();
     st_thread_destroy(t);
@@ -97,12 +119,12 @@ TEST_F(TestSTManager, st_manager_start)
 
 TEST_F(TestSTManager, st_manager_reset)
 {
-    int ret = st_manager_initialize();
-    EXPECT_EQ(0, ret);
+    int st_error_ret = st_manager_initialize();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
-    ret = test_wait_until(mutex, cv, 5);
+    int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
 
     st_sleep(1);
@@ -116,11 +138,75 @@ TEST_F(TestSTManager, st_manager_reset)
     st_manager_deinitialize();
 }
 
+TEST_F(TestSTManager, st_manager_stop_fail_dueto_excluding_init)
+{
+    st_error_t st_error_ret = st_manager_stop();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_INITIALIZED, st_error_ret);
+}
+
+TEST_F(TestSTManager, st_manager_stop_fail_dueto_excluding_start)
+{
+    st_error_t st_error_ret;
+    st_manager_initialize();
+    st_error_ret = st_manager_stop();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_STARTED, st_error_ret);
+    st_manager_deinitialize();
+    
+}
+
+TEST_F(TestSTManager, st_manager_stop_fail_dueto_callingtwice)
+{
+    st_error_t st_error_ret;
+
+    st_manager_initialize();
+    st_register_status_handler(st_status_handler_test);
+    st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
+
+    test_wait_until(mutex, cv, 5);
+
+    st_manager_quit();
+    st_thread_destroy(t);
+    st_manager_stop();
+    st_error_ret=st_manager_stop();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_STARTED, st_error_ret);
+    st_manager_deinitialize();
+}
+
+TEST_F(TestSTManager, st_manager_reset_fail_dueto_excluding_init)
+{
+    int st_error_ret = st_manager_reset();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_INITIALIZED, st_error_ret);
+}
+
+TEST_F(TestSTManager, st_manager_deinitialize)
+{
+    st_error_t st_error_ret;
+    st_manager_initialize();
+    st_error_ret = st_manager_deinitialize();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
+}
+
+TEST_F(TestSTManager, st_manager_deinitialize_fail_dueto_excluding_init)
+{
+    st_error_t st_error_ret;
+    st_error_ret = st_manager_deinitialize();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_INITIALIZED,st_error_ret);
+}
+
+TEST_F(TestSTManager, st_manager_deinitialize_fail_dueto_callingtwice)
+{
+    st_error_t st_error_ret;
+    st_manager_initialize();
+    st_manager_deinitialize();
+    st_error_ret = st_manager_deinitialize();
+    EXPECT_EQ(ST_ERROR_STACK_NOT_INITIALIZED,st_error_ret);
+}
+
 #ifdef OC_SECURITY
 TEST_F(TestSTManager, st_register_otm_confirm_handler)
 {
     bool ret = st_register_otm_confirm_handler(otm_confirm_handler_test);
-    EXPECT_EQ(true, ret);
+    EXPECT_TRUE(ret);
     st_unregister_otm_confirm_handler();
 }
 #endif
@@ -128,6 +214,6 @@ TEST_F(TestSTManager, st_register_otm_confirm_handler)
 TEST_F(TestSTManager, st_register_status_handler)
 {
     bool ret = st_register_status_handler(st_status_handler_test);
-    EXPECT_EQ(true, ret);
+    EXPECT_TRUE(ret);
     st_unregister_status_handler();
 }
