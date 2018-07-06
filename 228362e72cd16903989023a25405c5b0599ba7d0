@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_3a88e31e",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T05:42:27Z",
+      "side": 1,
+      "message": "sorry for commenting it now.\nit seems to have a memory leak about ecdh_ctx when it returns false\n\n\nI think  mbedtls_ecdh_free(\u0026ecdh_ctx); is supposed to be called before return false.",
+      "revId": "228362e72cd16903989023a25405c5b0599ba7d0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
