@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_fa1ddb74",
+        "filename": "docs/README.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-06T10:53:27Z",
+      "side": 1,
+      "message": "take care of extra space.",
+      "range": {
+        "startLine": 8,
+        "startChar": 60,
+        "endLine": 8,
+        "endChar": 61
+      },
+      "revId": "d57af519e004fa9898f17d8eaabfeb8822f88e91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
