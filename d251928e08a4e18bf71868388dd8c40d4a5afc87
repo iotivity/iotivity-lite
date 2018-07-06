@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5aa68711",
+        "filename": "include/oc_network_monitor.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T00:37:39Z",
+      "side": 1,
+      "message": "these need to be handled in master branch I think.(Below also)",
+      "range": {
+        "startLine": 28,
+        "startChar": 9,
+        "endLine": 28,
+        "endChar": 11
+      },
+      "revId": "d251928e08a4e18bf71868388dd8c40d4a5afc87",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
