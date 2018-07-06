@@ -306,7 +306,7 @@ user_input_thread_destroy(void)
 int
 main(void)
 {
-  if (st_manager_initialize() != 0) {
+  if (st_manager_initialize() != ST_ERROR_NONE) {
     printf("[ST_APP] st_manager_initialize failed.\n");
     return -1;
   }
@@ -323,7 +323,7 @@ main(void)
   }
 #endif /* USER_INPUT */
 
-  if (st_manager_start() != 0) {
+  if (st_manager_start() != ST_ERROR_NONE) {
     printf("[ST_APP] st_manager_start failed.\n");
   }
 
