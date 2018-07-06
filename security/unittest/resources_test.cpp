@@ -1069,6 +1069,17 @@ TEST(Security, TlsFreePeer)
   oc_list_push(peer->recv_q, message1);
   oc_tls_free_peer(peer, true);
   EXPECT_TRUE(peer);
+  peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
+  EXPECT_TRUE(peer);
+  mbedtls_ssl_init(&peer->ssl_ctx);
+  OC_LIST_STRUCT_INIT(peer, send_q);
+  message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  EXPECT_TRUE(message);
+  oc_list_push(peer->send_q, message);
+  OC_LIST_STRUCT_INIT(peer, recv_q);
+  message1 = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  EXPECT_TRUE(message1);
+  oc_list_push(peer->recv_q, message1);
   oc_tls_free_peer(peer, false);
   EXPECT_TRUE(peer);
 }
@@ -1152,14 +1163,14 @@ TEST(Security, TlsSetTimers)
   oc_tls_retr_timer_t *timer =
     (oc_tls_retr_timer_t *)oc_mem_malloc(sizeof(oc_tls_retr_timer_t));
   ssl_set_timer(timer, 100, 102);
-  timer->fin_timer.timer.interval == 1;
+  timer->fin_timer.timer.interval = 1;
   ssl_set_timer(timer, 100, 102);
 }
 TEST(Security, TlsGetPskCb)
 {
   oc_uuid_t uuid;
   oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &uuid);
-  oc_tls_peer_t *peer = oc_list_head(tls_peers);
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   EXPECT_EQ(get_psk_cb(0, &peer->ssl_ctx, (const unsigned char *)&uuid, 16),
             -1);
 }
