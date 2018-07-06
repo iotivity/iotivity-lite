@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_da49f7d1",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T08:39:40Z",
+      "side": 1,
+      "message": "they are same. so STOP has been removed",
+      "parentUuid": "da33351e_ba73534c",
+      "range": {
+        "startLine": 39,
+        "startChar": 2,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9a7c8f22",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-06T05:55:06Z",
       "side": 1,
       "message": "st_stop_handler",
+      "range": {
+        "startLine": 59,
+        "startChar": 12,
+        "endLine": 59,
+        "endChar": 28
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3a3bc33b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T08:39:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9a7c8f22",
       "range": {
         "startLine": 59,
         "startChar": 12,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_9a3f6f25",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T08:39:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7a79cb2e",
+      "range": {
+        "startLine": 61,
+        "startChar": 12,
+        "endLine": 61,
+        "endChar": 29
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_fa94bb38",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_fa179ba1",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T08:39:40Z",
+      "side": 1,
+      "message": "Not required.\nActually, I thought it works as ASSERT_EQ",
+      "parentUuid": "da33351e_fa94bb38",
+      "range": {
+        "startLine": 61,
+        "startChar": 4,
+        "endLine": 61,
+        "endChar": 22
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3a9f4354",
         "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2018-07-06T05:55:06Z",
       "side": 1,
       "message": "Should we check EXPECT_EQ on the last line of TEST CASE?",
+      "range": {
+        "startLine": 203,
+        "startChar": 4,
+        "endLine": 203,
+        "endChar": 25
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3ad743c3",
+        "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T08:39:40Z",
+      "side": 1,
+      "message": "Not Required.\nI thought it works as ASSERT_EQ",
+      "parentUuid": "da33351e_3a9f4354",
       "range": {
         "startLine": 203,
         "startChar": 4,
