@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_1f1351b9",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1f2cf101",
+      "range": {
+        "startLine": 267,
+        "startChar": 40,
+        "endLine": 267,
+        "endChar": 41
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ff302d58",
         "filename": "apps/st_app/linux/st_ref_app.c",
         "patchSetId": 3
@@ -59,6 +83,54 @@
       "writtenOn": "2018-07-05T01:16:39Z",
       "side": 1,
       "message": "return -1;",
+      "parentUuid": "da33351e_ff302d58",
+      "range": {
+        "startLine": 318,
+        "startChar": 50,
+        "endLine": 318,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3f89f5eb",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_df49e9d1",
+      "range": {
+        "startLine": 318,
+        "startChar": 50,
+        "endLine": 318,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ff178da1",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
       "parentUuid": "da33351e_ff302d58",
       "range": {
         "startLine": 318,
@@ -119,6 +191,54 @@
     },
     {
       "key": {
+        "uuid": "da33351e_9f6da135",
+        "filename": "apps/st_app/tizenrt/st_ref_app_tizenrt.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_bf46a5bd",
+      "range": {
+        "startLine": 147,
+        "startChar": 50,
+        "endLine": 147,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5f0dd98f",
+        "filename": "apps/st_app/tizenrt/st_ref_app_tizenrt.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_5f367953",
+      "range": {
+        "startLine": 147,
+        "startChar": 50,
+        "endLine": 147,
+        "endChar": 51
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3f3bb53b",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 3
@@ -142,6 +262,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_3f1295b1",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3f3bb53b",
+      "range": {
+        "startLine": 140,
+        "startChar": 46,
+        "endLine": 140,
+        "endChar": 47
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9f264115",
         "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
         "patchSetId": 3
@@ -153,6 +297,30 @@
       "writtenOn": "2018-07-05T01:16:39Z",
       "side": 1,
       "message": "actually reference json has 3 resources in file.\nshould we remove all resources? Why does it need to delete resource?",
+      "range": {
+        "startLine": 62,
+        "startChar": 4,
+        "endLine": 62,
+        "endChar": 33
+      },
+      "revId": "b10427847753cf0c67bbc811d8fef7f3818b9833",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5f84b9d3",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T07:41:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9f264115",
       "range": {
         "startLine": 62,
         "startChar": 4,
