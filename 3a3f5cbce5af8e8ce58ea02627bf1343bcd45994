@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1a7a3ff1",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-07-06T07:56:07Z",
+      "side": 1,
+      "message": "please use *.out.massif.log.txt suffix\n\nAs I added *.out.* filter :\n\nhttps://gerrit.iotivity.org/gerrit/#/c/25845/2/jjb/iotivity/iotivity-constrained-jobs.yaml\n\nthen it should be listed  as \"build artefacts\" like iotivity:\n\nhttps://jenkins.iotivity.org/job/iotivity-verify-unit_tests/1800/",
+      "revId": "3a3f5cbce5af8e8ce58ea02627bf1343bcd45994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
