@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ba73534c",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T05:55:06Z",
+      "side": 1,
+      "message": "What is different ST_STATUS_INIT and ST_STATUS_STOP?",
+      "range": {
+        "startLine": 39,
+        "startChar": 2,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9a7c8f22",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T05:55:06Z",
+      "side": 1,
+      "message": "st_stop_handler",
+      "range": {
+        "startLine": 59,
+        "startChar": 12,
+        "endLine": 59,
+        "endChar": 28
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7a79cb2e",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T05:55:06Z",
+      "side": 1,
+      "message": "st_reset_handler",
+      "range": {
+        "startLine": 61,
+        "startChar": 12,
+        "endLine": 61,
+        "endChar": 29
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fa94bb38",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T05:55:06Z",
+      "side": 1,
+      "message": "Why these change is required?",
+      "range": {
+        "startLine": 61,
+        "startChar": 4,
+        "endLine": 61,
+        "endChar": 22
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3a9f4354",
+        "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-06T05:55:06Z",
+      "side": 1,
+      "message": "Should we check EXPECT_EQ on the last line of TEST CASE?",
+      "range": {
+        "startLine": 203,
+        "startChar": 4,
+        "endLine": 203,
+        "endChar": 25
+      },
+      "revId": "6c4aa38c3a38b54daeb16f116388c138edd226fd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
