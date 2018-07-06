@@ -256,6 +256,7 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 test: $(UNIT_TESTS)
+	set -e
 	for test in $^ ; do ./$${test} ; done
 
 .PHONY: test clean
