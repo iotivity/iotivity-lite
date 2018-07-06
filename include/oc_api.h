@@ -344,6 +344,11 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
 
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 
+bool oc_do_ip_multicast(const char *uri, const char *query,
+                        oc_response_handler_t handler, void *user_data);
+
+void oc_stop_multicast(oc_client_response_t *response);
+
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 void oc_close_session(oc_endpoint_t *endpoint);
