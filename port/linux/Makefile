@@ -272,7 +272,7 @@ all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 test: $(UNIT_TESTS)
 	set -e
-	for test in $^ ; do ./$${test} ; done
+	for test in $^ ; do ./$${test} || exit $? ; done
 
 .PHONY: test clean
 
