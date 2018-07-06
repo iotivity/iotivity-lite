@@ -141,6 +141,30 @@
       "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dac8d776",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-06T05:00:41Z",
+      "side": 1,
+      "message": "/sec/provisioninginfo will require the callback to execute some logic from st_manager app layer soon.\nCan you point out which logic is in the st_manager for /sec/provisioninginfo?",
+      "parentUuid": "da33351e_3abaa3de",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 1
+      },
+      "revId": "e4a4919d005495d900b93bf9a6e64018fe1cd029",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
