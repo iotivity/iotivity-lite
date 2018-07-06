@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_9ad12ffe",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9fd121fe",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 46
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7fcedd5b",
         "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-05T00:19:38Z",
       "side": 1,
       "message": "remove it",
+      "range": {
+        "startLine": 141,
+        "startChar": 8,
+        "endLine": 141,
+        "endChar": 39
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7aceeb5b",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7fcedd5b",
       "range": {
         "startLine": 141,
         "startChar": 8,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_dadbb719",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_dfdba919",
+      "range": {
+        "startLine": 195,
+        "startChar": 8,
+        "endLine": 197,
+        "endChar": 9
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_bfd8651e",
         "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-05T00:19:38Z",
       "side": 1,
       "message": "remove it.",
+      "range": {
+        "startLine": 228,
+        "startChar": 12,
+        "endLine": 228,
+        "endChar": 52
+      },
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bad8731e",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_bfd8651e",
       "range": {
         "startLine": 228,
         "startChar": 12,
@@ -134,6 +230,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_1a051f7a",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3f04557a",
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7ff53d82",
         "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
         "patchSetId": 5
@@ -145,6 +259,24 @@
       "writtenOn": "2018-07-05T00:19:38Z",
       "side": 1,
       "message": "How about add some payload and check response packet has same payload in post callback?",
+      "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fa095b96",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-06T11:08:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7ff53d82",
       "revId": "8d6c358b6ebd7939a930f2eb659ceb0ddb205d72",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
