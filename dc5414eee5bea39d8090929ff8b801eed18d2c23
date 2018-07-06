@@ -34,6 +34,24 @@
       "revId": "dc5414eee5bea39d8090929ff8b801eed18d2c23",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9aa3ef9d",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-06T05:52:51Z",
+      "side": 1,
+      "message": "Sorry, i don\u0027t understand what you mean. is_retry_over return true when MAX_RETRY_COUNT over",
+      "parentUuid": "da33351e_da9f375e",
+      "revId": "dc5414eee5bea39d8090929ff8b801eed18d2c23",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
