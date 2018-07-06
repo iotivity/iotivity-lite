@@ -57,8 +57,8 @@ TEST_F(TestSTCloudManager, st_cloud_manager_start)
 {
     st_store_t *store_info = st_store_get_info();
     int ret = st_cloud_manager_start(store_info, device_index, cloud_manager_handler_test);
-    EXPECT_EQ(0, ret);
     st_cloud_manager_stop(0);
+    EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestSTCloudManager, st_cloud_manager_check_connection)
@@ -67,8 +67,8 @@ TEST_F(TestSTCloudManager, st_cloud_manager_check_connection)
     oc_string_t ci_server;
     oc_new_string(&ci_server, url, strlen(url));
     int ret = st_cloud_manager_check_connection(&ci_server);
-    EXPECT_EQ(0, ret);
     oc_free_string(&ci_server);
+    EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestSTCloudManager, st_cloud_manager_check_connection_fail)

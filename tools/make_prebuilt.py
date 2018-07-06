@@ -77,6 +77,7 @@ def make_prebuilt(port):
         "mkdir -p prebuilt/lib && " \
         "cp port/%(port)s/config.h include/oc_endpoint.h include/oc_helpers.h include/oc_rep.h " \
         "include/oc_ri.h include/oc_uuid.h service/st-app-fw/include/st_manager.h " \
+        "service/st-app-fw/include/st_types.h " \
         "service/st-app-fw/include/st_resource_manager.h prebuilt/include && " \
         "cp service/st-app-fw/include/st_fota_manager.h service/fota/include/fota_types.h prebuilt/include && " \
         "cp deps/tinycbor/src/cbor.h deps/tinycbor/src/tinycbor-version.h prebuilt/include/deps/tinycbor/src && " \
