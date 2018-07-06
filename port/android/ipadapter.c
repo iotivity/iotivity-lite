@@ -341,7 +341,8 @@ configure_mcast_socket(int mcast_sock, int sa_family)
   }
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
-    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK) {
+    if (!(interface->ifa_flags & IFF_UP) ||
+        interface->ifa_flags & IFF_LOOPBACK) {
       continue;
     }
     /* Ignore interfaces not belonging to the address family under consideration
@@ -677,7 +678,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];
 
   iovec[0].iov_base = recv_buf;
-  iovec[0].iov_len = recv_buf_size;
+  iovec[0].iov_len = (size_t)recv_buf_size;
 
   msg.msg_name = &client;
   msg.msg_namelen = sizeof(client);
@@ -845,7 +846,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV6;
         FD_CLR(dev->server_sock, &setfds);
         goto common;
@@ -858,7 +859,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV6 | MULTICAST;
         FD_CLR(dev->mcast_sock, &setfds);
         goto common;
@@ -872,7 +873,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV4;
         FD_CLR(dev->server4_sock, &setfds);
         goto common;
@@ -885,7 +886,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV4 | MULTICAST;
         FD_CLR(dev->mcast4_sock, &setfds);
         goto common;
@@ -900,7 +901,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV6 | SECURED;
         FD_CLR(dev->secure_sock, &setfds);
         goto common;
@@ -913,7 +914,7 @@ network_event_thread(void *data)
           oc_message_unref(message);
           continue;
         }
-        message->length = count;
+        message->length = (size_t)count;
         message->endpoint.flags = IPV4 | SECURED;
         FD_CLR(dev->secure4_sock, &setfds);
         goto common;
@@ -1015,7 +1016,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
   int bytes_sent = 0, x;
   while (bytes_sent < (int)message->length) {
     iovec[0].iov_base = message->data + bytes_sent;
-    iovec[0].iov_len = message->length - bytes_sent;
+    iovec[0].iov_len = message->length - (size_t)bytes_sent;
     x = sendmsg(sock, &msg, 0);
     if (x < 0) {
       OC_WRN("sendto() returned errno %d", errno);
