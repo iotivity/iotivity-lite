@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_daad778a",
+        "filename": "api/oc_core_res.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T05:54:28Z",
+      "side": 1,
+      "message": "I\u0027m curious why you changed it from \"oc_resource_properties_t\"  into \u0027int\u0027\n\noc_resource_t *r \n\nit has \noc_resoruce_properties_t as a member variable,  (r-\u003eproperties)\nso. it seems to have a mismatch..",
+      "revId": "742fd55567365c7469c1b24a35b08fae3907dde5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1a907f42",
+        "filename": "api/oc_uuid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-06T05:54:28Z",
+      "side": 1,
+      "message": "how about adding to check *buffer?",
+      "revId": "742fd55567365c7469c1b24a35b08fae3907dde5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
