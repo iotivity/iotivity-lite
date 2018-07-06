@@ -345,7 +345,7 @@ obj/fota/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_FOTA}
 
-obj/st/%.o: %.c prep_st_app_fw
+obj/st/%.o: %.c prep_st_app_fw_json_present prep_st_app_fw_create_device_def $(ST_JSON_FILE)
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_FOTA} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
 
@@ -477,7 +477,7 @@ st_things: libst-app-framework.a
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
 			libst-app-framework.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_FOTA} ${CFLAGS_ST} ${LIBS} ${IWLIB}
 
-prep_st_app_fw:
+prep_st_app_fw_json_present:
 ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
 else
 ifneq ("$(wildcard $(ST_JSON_FILE))", "")
@@ -486,13 +486,14 @@ else
 endif
 ifneq ($(words $(ST_JSON_FILE)), 1)
 	$(error please use 1 json file in service/st-app-fw/json)
-else
+endif
+endif
+
+prep_st_app_fw_create_device_def:
 	$(info make new st_device_def file using $(ST_JSON_FILE))
 	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
 	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
 	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
-endif
-endif
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
