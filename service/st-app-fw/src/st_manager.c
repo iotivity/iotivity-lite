@@ -525,7 +525,6 @@ st_manager_reset(void)
   st_manager_evt_reset_handler();
   set_st_manager_status(ST_STATUS_INIT);
   st_process_app_sync_unlock();
-
   return ST_ERROR_NONE;
 }
 
@@ -551,7 +550,6 @@ st_manager_stop(void)
 st_error_t
 st_manager_deinitialize(void)
 {
-
   if (g_main_status == ST_STATUS_IDLE) {
     return ST_ERROR_STACK_NOT_INITIALIZED;
   } else if (g_main_status != ST_STATUS_INIT) {
@@ -578,11 +576,11 @@ st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
 
 #ifdef OC_SECURITY
   oc_sec_set_owner_cb((oc_sec_change_owner_cb_t)cb);
+  return true;
 #else
   st_print_log("Un-secured build can't handle otm confirm\n");
   return false;
 #endif
-  return true;
 }
 
 void
@@ -598,8 +596,12 @@ st_unregister_otm_confirm_handler(void)
 bool
 st_register_status_handler(st_status_cb_t cb)
 {
-  if (!cb || g_st_status_cb) {
-    st_print_log("Failed to register status handler\n");
+  if (!cb) {
+    st_print_log("Failed to register status - invalid parameter\n");
+    return false;
+  }
+  if (g_st_status_cb) {
+    st_print_log("Failed to register status handler - already registered\n");
     return false;
   }
 

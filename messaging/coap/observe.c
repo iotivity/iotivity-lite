@@ -260,7 +260,7 @@ coap_notify_observers(oc_resource_t *resource,
 {
   if (!resource) {
     OC_WRN("coap_notify_observers: no resource passed; returning");
-    return 0;
+    return -1;
   }
 
   int num_observers = 0;
@@ -280,6 +280,7 @@ coap_notify_observers(oc_resource_t *resource,
   uint8_t *buffer = oc_mem_malloc(OC_MAX_APP_DATA_SIZE);
   if (!buffer) {
     OC_WRN("coap_notify_observers: out of memory allocating buffer");
+    num_observers = -1;
     goto leave_notify_observers;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */

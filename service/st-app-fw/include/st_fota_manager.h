@@ -25,8 +25,8 @@
 #define ST_FOTA_MANAGER_H
 
 #include "fota_types.h"
+#include "st_types.h"
 #include <stdbool.h>
-
 /**
   @brief A function pointer for handling the fota command.
   @param cmd Command for firmware update.
@@ -35,36 +35,46 @@
 typedef bool (*st_fota_cmd_cb_t)(fota_cmd_t cmd);
 
 /**
-  @brief Function for set the state of fota progress.
-  @param state Current state of the fota.
-  @return Returns 0 if successful, or -1 otherwise.
+  @brief Function to set the state of fota progress.
+  @param state Desired state of the fota.
+  @return st_error_t An enumeration of possible outcomes.
+  @retval ST_ERROR_NONE if successful.
+  @retval ST_ERROR_OPERATION_FAILED if changing desired state is not allowed.
 */
-int st_fota_set_state(fota_state_t state);
+st_error_t st_fota_set_state(fota_state_t state);
 
 /**
-  @brief Function for set the firmware information.
+  @brief Function to set the firmware information.
   @param ver The version of firmware.
-  @param uri An address of firmware for download.
-  @return Returns 0 if successful, or -1 otherwise.
+  @param uri An address of firmware download.
+  @return st_error_t An enumeration of possible outcomes.
+  @retval ST_ERROR_NONE if successful.
+  @retval ST_ERROR_INVALID_PARAMETER if input parameters are NULL.
 */
-int st_fota_set_fw_info(const char *ver, const char *uri);
+st_error_t st_fota_set_fw_info(const char *ver, const char *uri);
 
 /**
-  @brief Function for set the result of the fota.
+  @brief Function to set the result of the fota operation.
+    This is usally used in callback handler st_fota_cmd_cb_t
+    to return the result of each fota operation request.
   @param result Current result of the fota.
-  @return Returns 0 if successful, or -1 otherwise.
+  @return st_error_t An enumeration of possible outcomes.
+  @retval ST_ERROR_NONE if successful.
+  @retval ST_ERROR_INVALID_PARAMETER if input parameter is not allowed.
 */
-int st_fota_set_result(fota_result_t result);
+st_error_t st_fota_set_result(fota_result_t result);
 
 /**
-  @brief Function for register fota command handler
+  @brief Function to register fota command handler
   @param cb Callback function to return the fota command.
-  @return Returns true if success.
+  @return bool Description of result.
+  @retval true if successful.
+  @retval false Input parameter is NULL or it is already registered.
 */
 bool st_register_fota_cmd_handler(st_fota_cmd_cb_t cb);
 
 /**
-  @brief Function for unregister fota command handler
+  @brief Function to unregister fota command handler
 */
 void st_unregister_fota_cmd_handler(void);
 
