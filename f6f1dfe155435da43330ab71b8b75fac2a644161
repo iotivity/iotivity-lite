@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_05bca0ba",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-09T04:45:50Z",
+      "side": 1,
+      "message": "There are several functions with suffix with handler.\nIt will be better to put more meaning in suffix such as **_fw_event_handler ot _manager_event_handler to distingush with others for easier maintenance.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 35
+      },
+      "revId": "f6f1dfe155435da43330ab71b8b75fac2a644161",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
