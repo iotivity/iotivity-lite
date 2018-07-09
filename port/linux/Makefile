@@ -59,7 +59,7 @@ FOTA_TEST_OBJ_DIR = $(FOTA_TEST_DIR)/obj
 FOTA_TEST_SRC_FILES := $(wildcard $(FOTA_TEST_DIR)/*.cpp)
 FOTA_TEST_OBJ_FILES := $(patsubst $(FOTA_TEST_DIR)/%.cpp,$(FOTA_TEST_OBJ_DIR)/%.o,$(FOTA_TEST_SRC_FILES))
 
-UNIT_TESTS = apitest platformtest fotatest
+UNIT_TESTS = apitest platformtest securitytest fotatest
 
 ifeq ($(EASYSETUP),1)
 UNIT_TESTS += easysetuptest

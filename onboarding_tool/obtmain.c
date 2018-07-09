@@ -129,8 +129,8 @@ unowned_device_cb(oc_device_t *devices, void *data)
   unowned_devices = devices;
   PRINT("\nUnowned devices:\n");
   while (devices != NULL) {
-    char di[37];
-    oc_uuid_to_str(&devices->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&devices->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     devices = devices->next;
@@ -146,8 +146,8 @@ owned_device_cb(oc_device_t *devices, void *data)
   my_devices = devices;
   PRINT("\nMy devices:\n");
   while (devices != NULL) {
-    char di[37];
-    oc_uuid_to_str(&devices->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&devices->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     devices = devices->next;
@@ -198,8 +198,8 @@ take_ownership_of_device(void)
   PRINT("\nUnowned Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[37];
-    oc_uuid_to_str(&device->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     device = device->next;
@@ -247,8 +247,8 @@ reset_device(void)
   PRINT("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[37];
-    oc_uuid_to_str(&device->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     device = device->next;
@@ -295,8 +295,8 @@ provision_credentials(void)
   PRINT("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[37];
-    oc_uuid_to_str(&device->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     device = device->next;
@@ -355,8 +355,8 @@ provision_ace2(void)
   PRINT("\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[37];
-    oc_uuid_to_str(&device->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
     i++;
     device = device->next;
@@ -382,8 +382,8 @@ provision_ace2(void)
   PRINT("[1]: %s\n", conn_types[1]);
   i = 0;
   while (device != NULL) {
-    char di[37];
-    oc_uuid_to_str(&device->uuid, di, 37);
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i + 2, di);
     i++;
     device = device->next;
