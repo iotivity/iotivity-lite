@@ -72,19 +72,15 @@ def make_prebuilt(port):
     print ("*********** make pre-built lib ************")
     cmd_line = \
         "cd ../ && mkdir -p prebuilt && mkdir -p prebuilt/include && " \
-        "mkdir -p prebuilt/include/deps/tinycbor/src && mkdir -p prebuilt/include/port && " \
-        "mkdir -p prebuilt/include/util && mkdir -p prebuilt/include/util/pt && " \
+        "mkdir -p prebuilt/include/deps/tinycbor/src && " \
+        "mkdir -p prebuilt/include/util && " \
         "mkdir -p prebuilt/lib && " \
-        "cp port/%(port)s/config.h include/oc_endpoint.h include/oc_helpers.h include/oc_rep.h " \
-        "include/oc_ri.h include/oc_uuid.h service/st-app-fw/include/st_manager.h " \
-        "service/st-app-fw/include/st_types.h " \
+        "cp port/%(port)s/config.h include/oc_helpers.h include/oc_rep.h " \
+        "service/st-app-fw/include/st_manager.h service/st-app-fw/include/st_types.h " \
         "service/st-app-fw/include/st_resource_manager.h prebuilt/include && " \
         "cp service/st-app-fw/include/st_fota_manager.h service/fota/include/fota_types.h prebuilt/include && " \
         "cp deps/tinycbor/src/cbor.h deps/tinycbor/src/tinycbor-version.h prebuilt/include/deps/tinycbor/src && " \
-        "cp port/oc_clock.h prebuilt/include/port && " \
-        "cp util/oc_etimer.h util/oc_list.h util/oc_memb.h util/oc_mmem.h util/oc_process.h " \
-        "util/oc_timer.h prebuilt/include/util && " \
-        "cp util/pt/lc.h util/pt/lc-switch.h util/pt/pt.h prebuilt/include/util/pt && " \
+        "cp util/oc_list.h util/oc_memb.h util/oc_mmem.h prebuilt/include/util && " \
         "cp port/%(port)s/libst-app-framework.a prebuilt/lib && " \
         "cp apps/st_app/%(port)s/* prebuilt/"
     execute_cmd(cmd_line % {'port': port})
