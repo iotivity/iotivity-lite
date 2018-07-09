@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_a5a3349d",
+        "filename": "docs/README.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T04:34:01Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 8,
+        "startChar": 60,
+        "endLine": 8,
+        "endChar": 61
+      },
+      "revId": "939ab1c49ff0fbbb4049189ae72de9586b977a37",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_85a0b091",
+        "filename": "docs/iotivity_lite.doxyfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T04:34:01Z",
+      "side": 1,
+      "message": "Constrained",
+      "range": {
+        "startLine": 35,
+        "startChar": 35,
+        "endLine": 35,
+        "endChar": 45
+      },
+      "revId": "939ab1c49ff0fbbb4049189ae72de9586b977a37",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e5ad3c8a",
+        "filename": "docs/iotivity_st_app_fw_api.doxyfile",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T04:34:01Z",
+      "side": 1,
+      "message": "Constrained",
+      "range": {
+        "startLine": 35,
+        "startChar": 35,
+        "endLine": 35,
+        "endChar": 45
+      },
+      "revId": "939ab1c49ff0fbbb4049189ae72de9586b977a37",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
