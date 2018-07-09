@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+/**
+  @brief Cloud Manager API for cloud connect and register.
+  @file
+*/
+
 #ifndef ST_CLOUD_MANAGER_H
 #define ST_CLOUD_MANAGER_H
 
@@ -32,12 +37,33 @@ typedef enum {
   CLOUD_MANAGER_RESET = 1 << 6
 } st_cloud_manager_status_t;
 
+/**
+  @brief A function pointer for handling the st cloud manager status.
+  @param status Current status of the st cloud manager.
+*/
 typedef void (*st_cloud_manager_cb_t)(st_cloud_manager_status_t status);
 
+/**
+  @brief Function for start that connect and register to the cloud.
+  @param cloud_info The information for connect to the cloud.
+  @param device_index Index of the device for an unique identifier.
+  @param cb Callback function to return the st cloud manager status.
+  @return Returns 0 if successful, or -1 otherwise.
+*/
 int st_cloud_manager_start(st_store_t *cloud_info, int device_index,
                            st_cloud_manager_cb_t cb);
+
+/**
+  @brief Function for stop about cloud manager.
+  @param device_index Index of the device for an unique identifier.
+*/
 void st_cloud_manager_stop(int device_index);
 
+/**
+  @brief Function for check that connection of an internet.
+  @param ci_server The url for check the connection.
+  @return Returns 0 if successful, or -1 otherwise.
+*/
 int st_cloud_manager_check_connection(oc_string_t *ci_server);
 
 #endif /* ST_CLOUD_MANAGER_H */
