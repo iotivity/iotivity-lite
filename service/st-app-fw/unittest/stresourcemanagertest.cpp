@@ -33,7 +33,7 @@ extern "C"{
 
 static int device_index = 0;
 static bool
-resource_handler(oc_request_t *request)
+resource_handler(st_request_t *request)
 {
     (void)request;
     return true;
