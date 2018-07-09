@@ -18,8 +18,8 @@ port/linux/easysetup_linux
 port/linux/easysetup_linux_creds/
 port/linux/sc_easysetup_linux
 port/linux/sc_easysetup_linux_creds/
-port/linux/mfgserver
-port/linux/mfgserver_creds/
+port/linux/rpk_server
+port/linux/rpk_server_creds/
 port/linux/st_things
 port/linux/st_things_creds/
 port/linux/libiotivity-constrained-*
@@ -70,6 +70,7 @@ port/linux/server_multithread_linux_creds
 port/linux/client_multithread_linux_creds
 port/linux/cloud_linux_creds
 port/linux/stapptest_creds
+port/linux/unittest_creds
 
 #vscode setting files
 .vscode
