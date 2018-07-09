@@ -825,7 +825,7 @@ gen_master_key(uint8_t *master, int *master_len)
     OC_ERR("%s: callbacks not set", __func__);
     return false;
   }
-  g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
+  g_oc_sec_get_own_key(priv, &priv_len);
   g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
   if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
     OC_ERR("%s: load CURVE25519", __func__);
@@ -833,10 +833,6 @@ gen_master_key(uint8_t *master, int *master_len)
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
     OC_ERR("%s: load private key", __func__);
-    return false;
-  }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
-    OC_ERR("%s: load own public key", __func__);
     return false;
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
