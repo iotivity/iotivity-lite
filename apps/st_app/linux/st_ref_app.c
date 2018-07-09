@@ -74,19 +74,18 @@ color_temp_resource_construct(void)
 }
 
 static bool
-get_resource_handler(oc_request_t *request)
+get_resource_handler(st_request_t *request)
 {
-  if (strncmp(oc_string(request->resource->uri), switch_rsc_uri,
-              strlen(switch_rsc_uri)) == 0) {
+  if (strncmp(request->uri, switch_rsc_uri, strlen(switch_rsc_uri)) == 0) {
     switch_resource_construct();
-  } else if (strncmp(oc_string(request->resource->uri), switchlevel_rsc_uri,
+  } else if (strncmp(request->uri, switchlevel_rsc_uri,
                      strlen(switchlevel_rsc_uri)) == 0) {
     switchlevel_resource_construct();
-  } else if (strncmp(oc_string(request->resource->uri), color_temp_rsc_uri,
+  } else if (strncmp(request->uri, color_temp_rsc_uri,
                      strlen(color_temp_rsc_uri)) == 0) {
     color_temp_resource_construct();
   } else {
-    printf("[ST_APP] invalid uri %s\n", oc_string(request->resource->uri));
+    printf("[ST_APP] invalid uri %s\n", request->uri);
     return false;
   }
 
@@ -127,22 +126,21 @@ color_temp_resource_change(oc_rep_t *rep)
 }
 
 static bool
-set_resource_handler(oc_request_t *request)
+set_resource_handler(st_request_t *request)
 {
-  if (strncmp(oc_string(request->resource->uri), switch_rsc_uri,
-              strlen(switch_rsc_uri)) == 0) {
+  if (strncmp(request->uri, switch_rsc_uri, strlen(switch_rsc_uri)) == 0) {
     switch_resource_change(request->request_payload);
     switch_resource_construct();
-  } else if (strncmp(oc_string(request->resource->uri), switchlevel_rsc_uri,
+  } else if (strncmp(request->uri, switchlevel_rsc_uri,
                      strlen(switchlevel_rsc_uri)) == 0) {
     switchlevel_resource_change(request->request_payload);
     switchlevel_resource_construct();
-  } else if (strncmp(oc_string(request->resource->uri), color_temp_rsc_uri,
+  } else if (strncmp(request->uri, color_temp_rsc_uri,
                      strlen(color_temp_rsc_uri)) == 0) {
     color_temp_resource_change(request->request_payload);
     color_temp_resource_construct();
   } else {
-    printf("[ST_APP] invalid uri %s\n", oc_string(request->resource->uri));
+    printf("[ST_APP] invalid uri %s\n", request->uri);
     return false;
   }
 

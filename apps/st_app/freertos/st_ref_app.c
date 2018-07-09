@@ -56,7 +56,7 @@ color_temp_resource_construct(void)
 }
 
 static bool
-get_resource_handler(oc_request_t *request)
+get_resource_handler(st_request_t *request)
 {
   oc_abort(__func__);
 }
@@ -79,7 +79,7 @@ color_temp_resource_change(oc_rep_t *rep)
 }
 
 static bool
-set_resource_handler(oc_request_t *request)
+set_resource_handler(st_request_t *request)
 {
   oc_abort(__func__);
   return true;

@@ -19,10 +19,19 @@
 #ifndef ST_RECOURCE_MGR_H
 #define ST_RECOURCE_MGR_H
 
-#include "oc_ri.h"
+#include "oc_rep.h"
 #include <stdbool.h>
 
-typedef bool (*st_resource_handler)(oc_request_t *request);
+typedef struct
+{
+  const char *uri;
+  int uri_len;
+  const char *query;
+  int query_len;
+  oc_rep_t *request_payload;
+} st_request_t;
+
+typedef bool (*st_resource_handler)(st_request_t *request);
 
 int st_register_resources(int device);
 int st_register_resource_handler(st_resource_handler get_handler,
