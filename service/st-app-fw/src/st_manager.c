@@ -524,6 +524,8 @@ st_manager_reset(void)
   st_manager_evt_reset_handler();
   set_st_manager_status(ST_STATUS_INIT);
   st_process_app_sync_unlock();
+
+  return ST_ERROR_NONE;
 }
 
 void
