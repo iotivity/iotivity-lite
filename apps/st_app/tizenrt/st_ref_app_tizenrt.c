@@ -141,7 +141,7 @@ stapp_main(void)
   }
 
   if (st_register_resource_handler(get_resource_handler,
-                                   set_resource_handler) != 0) {
+                                   set_resource_handler) != ST_ERROR_NONE) {
     printf("[ST_APP] st_register_resource_handler failed.\n");
     return -1;
   }

@@ -117,10 +117,10 @@ TEST_F(TestSTResourceManager, st_notify_back_fail)
     char uri[26] = "/capability/switch/main/1";
 
     // When
-    int ret = st_notify_back(uri);
+    st_error_t ret = st_notify_back(uri);
 
     // Then
-    EXPECT_EQ(-1, ret);
+    EXPECT_NE(ST_ERROR_NONE, ret);
 }
 
 #define MAX_WAIT_TIME 10
