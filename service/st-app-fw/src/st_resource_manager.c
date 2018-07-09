@@ -18,6 +18,7 @@
 
 #include "st_resource_manager.h"
 #include "oc_api.h"
+#include "oc_ri.h"
 #include "samsung/sc_easysetup.h"
 #include "st_data_manager.h"
 #include "st_port.h"
@@ -47,11 +48,17 @@ st_resource_get_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
+  st_request_t req = {.uri = oc_string(request->resource->uri),
+                      .uri_len = oc_string_len(request->resource->uri),
+                      .query = request->query,
+                      .query_len = request->query_len,
+                      .request_payload = request->request_payload };
+
   oc_rep_start_root_object();
   if (interface & OC_IF_BASELINE) {
     oc_process_baseline_interface(request->resource);
   }
-  if (!g_resource_get_handler(request)) {
+  if (!g_resource_get_handler(&req)) {
     oc_rep_reset();
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
@@ -75,11 +82,17 @@ st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
+  st_request_t req = {.uri = oc_string(request->resource->uri),
+                      .uri_len = oc_string_len(request->resource->uri),
+                      .query = request->query,
+                      .query_len = request->query_len,
+                      .request_payload = request->request_payload };
+
   oc_rep_start_root_object();
   if (interface & OC_IF_BASELINE) {
     oc_process_baseline_interface(request->resource);
   }
-  if (!g_resource_set_handler(request)) {
+  if (!g_resource_set_handler(&req)) {
     oc_rep_reset();
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
