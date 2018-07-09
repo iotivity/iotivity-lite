@@ -72,11 +72,11 @@ TEST_F(TestSTFotaManager, st_fota_set_state)
     st_fota_manager_start();
 
     // When
-    int ret = st_fota_set_state(FOTA_STATE_DOWNLOADING);
+    st_error_t ret = st_fota_set_state(FOTA_STATE_DOWNLOADING);
     st_fota_manager_stop();
 
     // Then
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTFotaManager, st_fota_set_state_fail)
@@ -85,11 +85,11 @@ TEST_F(TestSTFotaManager, st_fota_set_state_fail)
     st_fota_manager_start();
 
     // When
-    int ret = st_fota_set_state(FOTA_STATE_IDLE);
+    st_error_t ret = st_fota_set_state(FOTA_STATE_IDLE);
     st_fota_manager_stop();
 
     // Then
-    EXPECT_EQ(-1, ret);
+    EXPECT_NE(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTFotaManager, st_fota_set_fw_info)
@@ -99,10 +99,10 @@ TEST_F(TestSTFotaManager, st_fota_set_fw_info)
     char uri[23] = "http://www.samsung.com";
 
     // When
-    int ret = st_fota_set_fw_info(ver, uri);
+    st_error_t ret = st_fota_set_fw_info(ver, uri);
 
     // Then
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTFotaManager, st_fota_set_fw_info_fail)
@@ -112,10 +112,10 @@ TEST_F(TestSTFotaManager, st_fota_set_fw_info_fail)
     char uri[23] = "http://www.samsung.com";
 
     // When
-    int ret = st_fota_set_fw_info(ver, uri);
+    st_error_t ret = st_fota_set_fw_info(ver, uri);
 
     // Then
-    EXPECT_EQ(-1, ret);
+    EXPECT_NE(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTFotaManager, st_fota_set_result)
@@ -123,10 +123,10 @@ TEST_F(TestSTFotaManager, st_fota_set_result)
     // Given
 
     // When
-    int ret = st_fota_set_result(FOTA_RESULT_SUCCESS);
+    st_error_t ret = st_fota_set_result(FOTA_RESULT_SUCCESS);
 
     // Then
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTFotaManager, st_register_fota_cmd_handler)
