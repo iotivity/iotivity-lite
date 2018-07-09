@@ -22,6 +22,30 @@
       "revId": "fd3ed4a1fa3bf2923bad59fd3035497df77cf7e1",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a595f441",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 6
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T01:05:02Z",
+      "side": 1,
+      "message": "never mind.",
+      "parentUuid": "da33351e_65ac8ca1",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 0
+      },
+      "revId": "fd3ed4a1fa3bf2923bad59fd3035497df77cf7e1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
