@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+/**
+  @brief FOTA Manager API for firmware update.
+  @file
+*/
+
 #ifndef ST_FOTA_MANAGER_H
 #define ST_FOTA_MANAGER_H
 
@@ -29,8 +34,26 @@
 */
 typedef bool (*st_fota_cmd_cb_t)(fota_cmd_t cmd);
 
+/**
+  @brief Function for set the state of fota progress.
+  @param state Current state of the fota.
+  @return Returns 0 if successful, or -1 otherwise.
+*/
 int st_fota_set_state(fota_state_t state);
+
+/**
+  @brief Function for set the firmware information.
+  @param ver The version of firmware.
+  @param uri An address of firmware for download.
+  @return Returns 0 if successful, or -1 otherwise.
+*/
 int st_fota_set_fw_info(const char *ver, const char *uri);
+
+/**
+  @brief Function for set the result of the fota.
+  @param result Current result of the fota.
+  @return Returns 0 if successful, or -1 otherwise.
+*/
 int st_fota_set_result(fota_result_t result);
 
 /**
