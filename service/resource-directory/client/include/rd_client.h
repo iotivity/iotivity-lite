@@ -16,13 +16,13 @@
  *
  ****************************************************************************/
 
-#ifndef RD_CLIENT_H
-#define RD_CLIENT_H
-
 /**
   @brief Resource Directory API of IoTivity-constrained for client.
   @file
 */
+
+#ifndef RD_CLIENT_H
+#define RD_CLIENT_H
 
 #include "oc_client_state.h"
 #include "oc_ri.h"
