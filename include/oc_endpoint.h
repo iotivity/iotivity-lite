@@ -40,20 +40,22 @@ typedef struct
   uint8_t address[6];
 } oc_le_addr_t;
 
+enum transport_flags
+{
+  DISCOVERY = 1 << 0,
+  SECURED = 1 << 1,
+  IPV4 = 1 << 2,
+  IPV6 = 1 << 3,
+  TCP = 1 << 4,
+  GATT = 1 << 5,
+  MULTICAST = 1 << 6
+};
+
 typedef struct oc_endpoint_t
 {
   struct oc_endpoint_t *next;
   int device;
-  enum transport_flags
-  {
-    DISCOVERY = 1 << 0,
-    SECURED = 1 << 1,
-    IPV4 = 1 << 2,
-    IPV6 = 1 << 3,
-    TCP = 1 << 4,
-    GATT = 1 << 5,
-    MULTICAST = 1 << 6
-  } flags;
+  enum transport_flags flags;
 
   union dev_addr
   {

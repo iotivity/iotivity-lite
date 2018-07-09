@@ -172,10 +172,10 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
   int device = request->resource->device;
   oc_rep_start_root_object();
 
-  char di[37], piid[37];
-  oc_uuid_to_str(&oc_device_info[device].di, di, 37);
+  char di[OC_UUID_LEN], piid[OC_UUID_LEN];
+  oc_uuid_to_str(&oc_device_info[device].di, di, OC_UUID_LEN);
   if (request->origin && request->origin->version != OIC_VER_1_1_0) {
-    oc_uuid_to_str(&oc_device_info[device].piid, piid, 37);
+    oc_uuid_to_str(&oc_device_info[device].piid, piid, OC_UUID_LEN);
   }
 
   switch (interface) {
@@ -382,8 +382,8 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
   (void)data;
   oc_rep_start_root_object();
 
-  char pi[37];
-  oc_uuid_to_str(&oc_platform_info.pi, pi, 37);
+  char pi[OC_UUID_LEN];
+  oc_uuid_to_str(&oc_platform_info.pi, pi, OC_UUID_LEN);
 
   switch (interface) {
   case OC_IF_BASELINE:
@@ -445,14 +445,16 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 void
 oc_core_populate_resource(int core_resource, int device_index, const char *uri,
                           oc_interface_mask_t interfaces,
-                          oc_interface_mask_t default_interface,
-                          oc_resource_properties_t properties,
+                          oc_interface_mask_t default_interface, int properties,
                           oc_request_callback_t get, oc_request_callback_t put,
                           oc_request_callback_t post,
                           oc_request_callback_t delete, int num_resource_types,
                           ...)
 {
   oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
+  if (!r) {
+    return;
+  }
   r->device = device_index;
   oc_store_uri(uri, &r->uri);
   r->properties = properties;
