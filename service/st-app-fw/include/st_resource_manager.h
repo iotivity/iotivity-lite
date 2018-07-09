@@ -17,7 +17,7 @@
  ****************************************************************************/
 
 /**
-  @brief Resource manager API for resource control & managements.
+  @brief Resource manager APIs for resource control & management.
   @file
 */
 
@@ -25,6 +25,7 @@
 #define ST_RECOURCE_MGR_H
 
 #include "oc_rep.h"
+#include "st_types.h"
 #include <stdbool.h>
 
 /**
@@ -55,16 +56,16 @@ typedef bool (*st_resource_handler)(st_request_t *request);
      GET request is comming.
   @param get_handler callback handler when called in case
      POST request is comming.
-  @return 0 if register success or -1.
+  @return if success, it returns ST_ERROR_NONE or return regarding errors.
 */
-int st_register_resource_handler(st_resource_handler get_handler,
-                                 st_resource_handler set_handler);
+st_error_t st_register_resource_handler(st_resource_handler get_handler,
+                                        st_resource_handler set_handler);
 
 /**
   @brief A function to notify observed clients regarding uri.
   @param uri The uri of the resource that need to notify.
-  @return if success, count of observing clients(0<=) or -1.
+  @return if success, it returns ST_ERROR_NONE or return regarding errors.
 */
-int st_notify_back(const char *uri);
+st_error_t st_notify_back(const char *uri);
 
 #endif /* ST_RECOURCE_MGR_H */

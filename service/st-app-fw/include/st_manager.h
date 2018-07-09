@@ -17,7 +17,7 @@
  ****************************************************************************/
 
 /**
-  @brief ST application framework manager API for managing st-app-fw module.
+  @brief ST application framework manager APIs for managing st-app-fw module.
   @file
 */
 
@@ -96,28 +96,30 @@ st_error_t st_manager_stop(void);
 st_error_t st_manager_deinitialize(void);
 
 /**
-  @brief A function for register registration of the user
+  @brief A function for registration of the user
      confirm handler for OCF OTM(Ownership Transfer Method).
   @param cb Callback function to require OTM confirm.
-  @return Returns true if success.
+  @return if success, it returns ST_ERROR_NONE, or return regarding errors.
 */
-bool st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
+st_error_t st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
 
 /**
-  @brief A function for unregister OTM confirm handler
+  @brief A function for unregistering OTM confirm handler
+  @return if success, it returns ST_ERROR_NONE, or return regarding errors.
 */
-void st_unregister_otm_confirm_handler(void);
+st_error_t st_unregister_otm_confirm_handler(void);
 
 /**
-  @brief A function for register ST application framework status handler
+  @brief A function for registering ST application framework status handler
   @param cb Callback function to return the ST application framework status.
-  @return Returns true if success.
+  @return if success, it returns ST_ERROR_NONE, or return regarding errors.
 */
-bool st_register_status_handler(st_status_cb_t cb);
+st_error_t st_register_status_handler(st_status_cb_t cb);
 
 /**
   @brief A function for unregister ST application framework status handler
+  @return if success, it returns ST_ERROR_NONE, or return regarding errors.
 */
-void st_unregister_status_handler(void);
+st_error_t st_unregister_status_handler(void);
 
 #endif /* ST_MANAGER_H */

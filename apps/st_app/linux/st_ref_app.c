@@ -180,20 +180,20 @@ st_fota_cmd_handler(fota_cmd_t cmd)
   printf("[ST_APP] FOTA Command: %d\n", cmd);
   switch (cmd) {
   case FOTA_CMD_INIT:
-    if (st_fota_set_state(FOTA_STATE_IDLE) != 0) {
+    if (st_fota_set_state(FOTA_STATE_IDLE) != ST_ERROR_NONE) {
       printf("[ST_APP] st_fota_set_state failed.\n");
     }
     break;
   case FOTA_CMD_CHECK: {
     char *ver = "1.0";
     char *uri = "http://www.samsung.com";
-    if (st_fota_set_fw_info(ver, uri) != 0) {
+    if (st_fota_set_fw_info(ver, uri) != ST_ERROR_NONE) {
       printf("[ST_APP] st_fota_set_fw_info failed.\n");
     }
     break;
   }
   case FOTA_CMD_DOWNLOAD:
-    if (st_fota_set_result(FOTA_RESULT_NO_MEMORY) != 0) {
+    if (st_fota_set_result(FOTA_RESULT_NO_MEMORY) != ST_ERROR_NONE) {
       printf("[ST_APP] st_fota_set_result failed.\n");
     }
     break;
@@ -269,7 +269,7 @@ user_input_loop(void *data)
         printf("[ST_APP] power on\n");
         strncpy(power, "on\0", 3);
       }
-      if (st_notify_back(switch_rsc_uri) != 0) {
+      if (st_notify_back(switch_rsc_uri) != ST_ERROR_NONE) {
         printf("[ST_APP] st_notify_back failed.\n");
       }
       break;
@@ -320,7 +320,7 @@ main(void)
   }
 
   if (st_register_resource_handler(get_resource_handler,
-                                   set_resource_handler) != 0) {
+                                   set_resource_handler) != ST_ERROR_NONE) {
     printf("[ST_APP] st_register_resource_handler failed.\n");
     return -1;
   }
