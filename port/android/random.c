@@ -14,24 +14,36 @@
 // limitations under the License.
 */
 
-#ifndef OC_UUID_H
-#define OC_UUID_H
+#include "port/oc_random.h"
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <stdint.h>
+static int urandom_fd;
 
-#define OC_UUID_LEN (37)
-
-typedef struct
+void
+oc_random_init(void)
 {
-  uint8_t id[16];
-} oc_uuid_t;
+  urandom_fd = open("/dev/urandom", O_RDONLY);
+}
 
-void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
-void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
-void oc_gen_uuid(oc_uuid_t *uuid);
-#if defined(OC_SPEC_VER_OIC)
-void oc_gen_uuid_from_mac(oc_uuid_t *uuid);
-#endif //OC_SPEC_VER_OIC
+unsigned int
+oc_random_value(void)
+{
+  unsigned int rand = 0;
+  int ret = read(urandom_fd, &rand, sizeof(rand));
+  assert(ret != -1);
+#ifndef DEBUG
+  (void)ret;
+#endif
+  return rand;
+}
 
-
-#endif /* OC_UUID_H */
+void
+oc_random_destroy(void)
+{
+  close(urandom_fd);
+}
