@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e077ea00",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T23:22:05Z",
+      "side": 1,
+      "message": "app return bool type?",
+      "range": {
+        "startLine": 53,
+        "startChar": 8,
+        "endLine": 53,
+        "endChar": 12
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_806a5e18",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T23:22:05Z",
+      "side": 1,
+      "message": "How to get error during unregister callback? And if return the error code then app what to do?",
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2061d239",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T23:22:05Z",
+      "side": 1,
+      "message": "please check oc_notify_observers return value",
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
