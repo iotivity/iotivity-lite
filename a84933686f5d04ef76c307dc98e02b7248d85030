@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e5209cf9",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T06:23:54Z",
+      "side": 1,
+      "message": "How about add\n/**\n  @brief ST Manager API of ...\n  @file\n*/",
+      "revId": "a84933686f5d04ef76c307dc98e02b7248d85030",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c51d98bf",
+        "filename": "service/st-app-fw/include/st_resource_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T06:23:54Z",
+      "side": 1,
+      "message": "How about add\n/**\n  @brief API...\n  @file\n*/",
+      "revId": "a84933686f5d04ef76c307dc98e02b7248d85030",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_257a84f1",
+        "filename": "service/st-app-fw/include/st_resource_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-09T06:23:54Z",
+      "side": 1,
+      "message": "some strange.. 0 or more?",
+      "range": {
+        "startLine": 48,
+        "startChar": 49,
+        "endLine": 48,
+        "endChar": 52
+      },
+      "revId": "a84933686f5d04ef76c307dc98e02b7248d85030",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
