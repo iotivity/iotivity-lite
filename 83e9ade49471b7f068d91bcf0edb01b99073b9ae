@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_405e96e7",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-09T11:12:37Z",
+      "side": 1,
+      "message": "make a sync with provisioninginfo resource.\nMove this into st_resource_manager:st_register_resources() or\nmove init_provisioning_info_resource into here.",
+      "range": {
+        "startLine": 143,
+        "startChar": 2,
+        "endLine": 143,
+        "endChar": 32
+      },
+      "revId": "83e9ade49471b7f068d91bcf0edb01b99073b9ae",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
