@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a58974cc",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_65a00c44",
+      "range": {
+        "startLine": 47,
+        "startChar": 41,
+        "endLine": 47,
+        "endChar": 44
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_259604f1",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-09T07:39:46Z",
       "side": 1,
       "message": "ST application framework",
+      "range": {
+        "startLine": 53,
+        "startChar": 45,
+        "endLine": 53,
+        "endChar": 55
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8586f0b7",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_259604f1",
       "range": {
         "startLine": 53,
         "startChar": 45,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e5937cf8",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_65d2ccd3",
+      "range": {
+        "startLine": 65,
+        "startChar": 29,
+        "endLine": 65,
+        "endChar": 45
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_05cdc031",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2018-07-09T07:39:46Z",
       "side": 1,
       "message": "Easy-setup and cloud registration steps.",
+      "range": {
+        "startLine": 67,
+        "startChar": 50,
+        "endLine": 68,
+        "endChar": 35
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c590f8ee",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_05cdc031",
       "range": {
         "startLine": 67,
         "startChar": 50,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_25bd6469",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_45d7c8c1",
+      "range": {
+        "startLine": 75,
+        "startChar": 29,
+        "endLine": 75,
+        "endChar": 45
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a5db34ec",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_05c2e0e8",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a5db34ec",
+      "range": {
+        "startLine": 76,
+        "startChar": 45,
+        "endLine": 76,
+        "endChar": 52
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_85d8b0f0",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -151,6 +295,30 @@
       "writtenOn": "2018-07-09T07:39:46Z",
       "side": 1,
       "message": "ST application framework",
+      "range": {
+        "startLine": 77,
+        "startChar": 20,
+        "endLine": 77,
+        "endChar": 29
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_65b76c87",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_85d8b0f0",
       "range": {
         "startLine": 77,
         "startChar": 20,
@@ -209,6 +377,54 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a5b0548c",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e5e53ca9",
+      "range": {
+        "startLine": 83,
+        "startChar": 23,
+        "endLine": 83,
+        "endChar": 28
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_45bce869",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c5e2b89e",
+      "range": {
+        "startLine": 83,
+        "startChar": 29,
+        "endLine": 83,
+        "endChar": 45
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_05f4a059",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -248,6 +464,54 @@
         "startChar": 24,
         "endLine": 84,
         "endChar": 29
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e5aa5c18",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_25ef2489",
+      "range": {
+        "startLine": 84,
+        "startChar": 24,
+        "endLine": 84,
+        "endChar": 29
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_85ad5034",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_05f4a059",
+      "range": {
+        "startLine": 84,
+        "startChar": 36,
+        "endLine": 84,
+        "endChar": 43
       },
       "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
@@ -301,6 +565,54 @@
     },
     {
       "key": {
+        "uuid": "da33351e_c5a7584e",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_45eea889",
+      "range": {
+        "startLine": 85,
+        "startChar": 47,
+        "endLine": 86,
+        "endChar": 35
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_25644421",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a502143c",
+      "range": {
+        "startLine": 86,
+        "startChar": 39,
+        "endLine": 86,
+        "endChar": 41
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_85ff1034",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -312,6 +624,30 @@
       "writtenOn": "2018-07-09T07:39:46Z",
       "side": 1,
       "message": "registration of the user confirm handler for OCF OTM(Onwership Transfer Method).",
+      "range": {
+        "startLine": 98,
+        "startChar": 33,
+        "endLine": 98,
+        "endChar": 52
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a577b4d3",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_85ff1034",
       "range": {
         "startLine": 98,
         "startChar": 33,
@@ -347,6 +683,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_857430d0",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e5fc1c41",
+      "range": {
+        "startLine": 110,
+        "startChar": 33,
+        "endLine": 110,
+        "endChar": 35
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c5f9184f",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 3
@@ -358,6 +718,30 @@
       "writtenOn": "2018-07-09T07:39:46Z",
       "side": 1,
       "message": "ST application framework",
+      "range": {
+        "startLine": 117,
+        "startChar": 35,
+        "endLine": 117,
+        "endChar": 37
+      },
+      "revId": "8b3eee65820b404d38c9f8140ca54d76b4112bb8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e581bc90",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-09T07:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c5f9184f",
       "range": {
         "startLine": 117,
         "startChar": 35,
