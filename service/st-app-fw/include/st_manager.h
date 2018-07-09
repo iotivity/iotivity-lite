@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+/**
+  @brief st-app-fw manager API for managing st-app-fw module.
+  @file
+*/
+
 #ifndef ST_MANAGER_H
 #define ST_MANAGER_H
 
@@ -50,33 +55,66 @@ typedef bool (*st_otm_confirm_cb_t)(void);
 */
 typedef void (*st_status_cb_t)(st_status_t status);
 
+/**
+  @brief A function to initialize st_app_fw module.
+  @return ST_ERROR_NONE if initilaize success or return regarding errors.
+*/
 st_error_t st_manager_initialize(void);
+
+/**
+  @brief A function to start st_app_fw module. This function will
+     start iotivity-lite stack which include network thread and
+     resources registration. Also it will process Easy Setup pro-
+     cedure and cloud access logics. This function will loop until
+     st_status is ST_STATUS_QUIT.
+  @return ST_ERROR_NONE if start success or return regarding errors.
+*/
 st_error_t st_manager_start(void);
+
+/**
+  @brief A function to reset st_app_fw module. This function will
+     reset all db files such as security and st_info. After finish
+     this function, st-app-fw will return to ST_STATUS_INIT status.
+  @return ST_ERROR_NONE if reset success or return regarding errors.
+*/
 st_error_t st_manager_reset(void);
+
+/**
+  @brief A function to start st_app_fw module. This function will
+     stop iotivity-lite stack which include network thread and
+     resources registration. Also it will stop Easy Setup pro-
+     cedure and cloud access logics if it is progressing.
+  @return ST_ERROR_NONE if stop success or return regarding errors.
+*/
 st_error_t st_manager_stop(void);
+
+/**
+  @brief A function to deinitialize st_app_fw module.
+  @return ST_ERROR_NONE if de-initialize success or return regarding errors.
+*/
 st_error_t st_manager_deinitialize(void);
 
 /**
-  @brief Function for register otm confirm handler
+  @brief A function for register otm confirm handler
   @param cb Callback function to require otm confirm.
   @return Returns true if success.
 */
 bool st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
 
 /**
-  @brief Function for unregister otm confirm handler
+  @brief A function for unregister otm confirm handler
 */
 void st_unregister_otm_confirm_handler(void);
 
 /**
-  @brief Function for register st status handler
+  @brief A function for register st status handler
   @param cb Callback function to return the st manager status.
   @return Returns true if success.
 */
 bool st_register_status_handler(st_status_cb_t cb);
 
 /**
-  @brief Function for unregister st status handler
+  @brief A function for unregister st status handler
 */
 void st_unregister_status_handler(void);
 
