@@ -29,6 +29,7 @@ extern "C"{
     #include "st_port.h"
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
+    int st_register_resources(int device);
 }
 
 static int device_index = 0;

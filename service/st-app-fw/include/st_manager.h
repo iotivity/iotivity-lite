@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+/**
+  @brief ST application framework manager API for managing st-app-fw module.
+  @file
+*/
+
 #ifndef ST_MANAGER_H
 #define ST_MANAGER_H
 
@@ -39,44 +44,79 @@ typedef enum {
 } st_status_t;
 
 /**
-  @brief A function pointer for handling otm confirm function.
-  @return true if otm confirm by user or false.
+  @brief A function pointer for handling OTM(Ownership Transfer
+     Method) confirm function.
+  @return true if OTM confirm by user or false.
 */
 typedef bool (*st_otm_confirm_cb_t)(void);
 
 /**
-  @brief A function pointer for handling the st manager status.
-  @param status Current status of the st manager.
+  @brief A function pointer for handling the ST application framework status.
+  @param status Current status of the ST application framework.
 */
 typedef void (*st_status_cb_t)(st_status_t status);
 
+/**
+  @brief A function to initialize ST application framework.
+  @return ST_ERROR_NONE if initilaize success or return regarding errors.
+*/
 st_error_t st_manager_initialize(void);
+
+/**
+  @brief A function to start ST application framework. This function will
+     start iotivity-lite stack which include network thread and resources
+     registration. Also it will process Easy Setup and Cloud registration
+     steps. This function will loop until st_status is ST_STATUS_QUIT.
+  @return ST_ERROR_NONE if start success or return regarding errors.
+*/
 st_error_t st_manager_start(void);
+
+/**
+  @brief A function to reset ST application framework. This function will
+     reset all db files such as security and change into user language
+     instead of internal type. After finish this function, ST application
+     framework will return to ST_STATUS_INIT status.
+  @return ST_ERROR_NONE if reset success or return regarding errors.
+*/
 st_error_t st_manager_reset(void);
+
+/**
+  @brief A function to stop ST application framework. This function will
+     stop iotivity-lite stack internally which includes network thread and
+     resources registration. Also it will stop Easy Setup and Cloud registration
+     steps also. if they are under progress.
+  @return ST_ERROR_NONE if stop success or return regarding errors.
+*/
 st_error_t st_manager_stop(void);
+
+/**
+  @brief A function to deinitialize ST application framework.
+  @return ST_ERROR_NONE if de-initialize success or return regarding errors.
+*/
 st_error_t st_manager_deinitialize(void);
 
 /**
-  @brief Function for register otm confirm handler
-  @param cb Callback function to require otm confirm.
+  @brief A function for register registration of the user
+     confirm handler for OCF OTM(Ownership Transfer Method).
+  @param cb Callback function to require OTM confirm.
   @return Returns true if success.
 */
 bool st_register_otm_confirm_handler(st_otm_confirm_cb_t cb);
 
 /**
-  @brief Function for unregister otm confirm handler
+  @brief A function for unregister OTM confirm handler
 */
 void st_unregister_otm_confirm_handler(void);
 
 /**
-  @brief Function for register st status handler
-  @param cb Callback function to return the st manager status.
+  @brief A function for register ST application framework status handler
+  @param cb Callback function to return the ST application framework status.
   @return Returns true if success.
 */
 bool st_register_status_handler(st_status_cb_t cb);
 
 /**
-  @brief Function for unregister st status handler
+  @brief A function for unregister ST application framework status handler
 */
 void st_unregister_status_handler(void);
 
