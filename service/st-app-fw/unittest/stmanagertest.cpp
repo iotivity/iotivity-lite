@@ -200,15 +200,15 @@ TEST_F(TestSTManager, st_manager_deinitialize_fail_dueto_callingtwice)
 #ifdef OC_SECURITY
 TEST_F(TestSTManager, st_register_otm_confirm_handler)
 {
-    bool ret = st_register_otm_confirm_handler(otm_confirm_handler_test);
-    EXPECT_TRUE(ret);
+    st_error_t ret = st_register_otm_confirm_handler(otm_confirm_handler_test);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
     st_unregister_otm_confirm_handler();
 }
 #endif
 
 TEST_F(TestSTManager, st_register_status_handler)
 {
-    bool ret = st_register_status_handler(st_status_handler_test);
-    EXPECT_TRUE(ret);
+    st_error_t ret = st_register_status_handler(st_status_handler_test);
+    EXPECT_EQ(ST_ERROR_NONE,ret);
     st_unregister_status_handler();
 }
