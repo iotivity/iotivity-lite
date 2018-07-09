@@ -1233,6 +1233,8 @@ TEST(Security, TlsInitConnection)
 {
   oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
   EXPECT_TRUE(message);
+  memcpy(&message->endpoint, oc_connectivity_get_endpoints(dev),
+         sizeof(oc_endpoint_t));
   oc_tls_init_connection(message);
 }
 TEST(Security, TlsConnected)
