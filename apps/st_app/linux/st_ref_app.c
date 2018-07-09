@@ -152,7 +152,7 @@ set_resource_handler(oc_request_t *request)
 static bool
 otm_confirm_handler(void)
 {
-  printf("[ST_APP] OTM request is comming. Will you confirm?[y/n]\n");
+  printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
   char ret[10];
   if (!scanf("%s", ret))
     printf("[ST_APP] scanf failed.\n");
