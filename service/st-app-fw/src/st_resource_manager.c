@@ -182,26 +182,27 @@ st_register_resources(int device)
   return (ret == ES_OK) ? 0 : -1;
 }
 
-int
+st_error_t
 st_register_resource_handler(st_resource_handler get_handler,
                              st_resource_handler set_handler)
 {
   if (!get_handler || !set_handler) {
     st_print_log("[St_rsc_mgr] invalid parameter.\n");
-    return -1;
+    return ST_ERROR_INVALID_PARAMETER;
   }
 
   g_resource_get_handler = get_handler;
   g_resource_set_handler = set_handler;
-  return 0;
+  return ST_ERROR_NONE;
 }
 
-int
+st_error_t
 st_notify_back(const char *uri)
 {
+  int ret = 0;
   if (!uri) {
     st_print_log("[St_rsc_mgr] invalid parameter.\n");
-    return -1;
+    return ST_ERROR_INVALID_PARAMETER;
   }
 
   st_process_app_sync_lock();
@@ -209,12 +210,13 @@ st_notify_back(const char *uri)
     oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
   if (!resource) {
     st_print_log("[St_rsc_mgr] %s is not registered resource.\n", uri);
-    return -1;
+    st_process_app_sync_unlock();
+    return ST_ERROR_OPERATION_FAILED;
   }
 
-  int ret = oc_notify_observers(resource);
+  ret = oc_notify_observers(resource);
   st_process_app_sync_unlock();
   _oc_signal_event_loop();
 
-  return ret;
+  return (ret > 0) ? ST_ERROR_NONE : ST_ERROR_OPERATION_FAILED;
 }
