@@ -40,6 +40,7 @@
 #define SOFT_AP_CHANNEL (6)
 #define AP_CONNECT_RETRY_LIMIT (20)
 
+extern int st_register_resources(int device);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 

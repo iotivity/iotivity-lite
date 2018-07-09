@@ -42,7 +42,7 @@ st_resource_get_handler(oc_request_t *request, oc_interface_mask_t interface,
                oc_string(request->resource->uri));
 
   if (!g_resource_get_handler) {
-    st_print_log("[St_rsc_mgr] please initialize valid handler first");
+    st_print_log("[St_rsc_mgr] please initialize valid handler first\n");
     oc_send_response(request, OC_STATUS_NOT_IMPLEMENTED);
     return;
   }
@@ -70,7 +70,7 @@ st_resource_post_handler(oc_request_t *request, oc_interface_mask_t interface,
                oc_string(request->resource->uri));
 
   if (!g_resource_set_handler) {
-    st_print_log("[St_rsc_mgr] please initialize valid handler first");
+    st_print_log("[St_rsc_mgr] please initialize valid handler first\n");
     oc_send_response(request, OC_STATUS_NOT_IMPLEMENTED);
     return;
   }
@@ -151,13 +151,13 @@ st_register_resources(int device)
 {
   st_resource_info_t *resources = st_data_mgr_get_resource_info();
   if (!resources) {
-    st_print_log("[St_rsc_mgr] resource list not exist");
+    st_print_log("[St_rsc_mgr] resource list not exist\n");
     return -1;
   }
 
   while (resources) {
     if (st_register_resource(resources) != 0) {
-      st_print_log("[St_rsc_mgr] st_register_resource failed");
+      st_print_log("[St_rsc_mgr] st_register_resource failed\n");
       return -1;
     }
     resources = resources->next;
@@ -174,7 +174,7 @@ st_register_resource_handler(st_resource_handler get_handler,
                              st_resource_handler set_handler)
 {
   if (!get_handler || !set_handler) {
-    st_print_log("[St_rsc_mgr] invalid parameter.");
+    st_print_log("[St_rsc_mgr] invalid parameter.\n");
     return -1;
   }
 
@@ -187,17 +187,21 @@ int
 st_notify_back(const char *uri)
 {
   if (!uri) {
-    st_print_log("[St_rsc_mgr] invalid parameter.");
+    st_print_log("[St_rsc_mgr] invalid parameter.\n");
     return -1;
   }
 
   st_process_app_sync_lock();
   oc_resource_t *resource =
     oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+  if (!resource) {
+    st_print_log("[St_rsc_mgr] %s is not registered resource.\n", uri);
+    return -1;
+  }
 
   int ret = oc_notify_observers(resource);
   st_process_app_sync_unlock();
   _oc_signal_event_loop();
 
-  return (ret > 0) ? 0 : -1;
+  return ret;
 }
