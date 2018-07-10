@@ -730,6 +730,20 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
   return false;
 }
 
+bool
+oc_sec_ace_update_conn_anon_clear(const char *uri, int aceid,
+                                  uint16_t permission, int device)
+{
+  oc_resource_t *resource =
+    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device);
+  if (!resource)
+    return false;
+  oc_ace_subject_t anon_clear = { .conn = OC_CONN_ANON_CLEAR };
+  return oc_sec_ace_update_res(OC_SUBJECT_CONN, &anon_clear, aceid, permission,
+                               oc_string(resource->uri), -1, &resource->types,
+                               resource->interfaces, device);
+}
+
 static void
 oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
 {
