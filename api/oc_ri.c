@@ -927,11 +927,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (observe == 0) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint) == 0) {
-#else     /* OC_BLOCK_WISE */
-        if (coap_observe_handler(request, response, cur_resource, endpoint) ==
+                                 endpoint) >= 0) {
+#else  /* OC_BLOCK_WISE */
+        if (coap_observe_handler(request, response, cur_resource, endpoint) >=
             0) {
-#endif    /* !OC_BLOCK_WISE */
+#endif /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
            * notifications being sent). If so, add the resource to a list of
