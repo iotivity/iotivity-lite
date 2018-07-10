@@ -730,6 +730,20 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
   return false;
 }
 
+bool
+oc_sec_ace_update_conn_anon_clear(const char *uri, int aceid,
+                                  uint16_t permission, int device)
+{
+  oc_resource_t *resource =
+    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device);
+  if (!resource)
+    return false;
+  oc_ace_subject_t anon_clear = { .conn = OC_CONN_ANON_CLEAR };
+  return oc_sec_ace_update_res(OC_SUBJECT_CONN, &anon_clear, aceid, permission,
+                               oc_string(resource->uri), OC_ACE_NO_WC, &resource->types,
+                               resource->interfaces, device);
+}
+
 static void
 oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
 {
@@ -844,16 +858,14 @@ oc_sec_acl_default(int device)
   }
 
 #if defined(OC_SERVER) && defined(OC_SPEC_VER_OIC)
-  const char *sec_prov_info = "/sec/provisioninginfo";
-  resource =
-    oc_ri_get_app_resource_by_uri(sec_prov_info, strlen(sec_prov_info), device);
-  if (resource)
-  success &= oc_sec_ace_update_res(
-    OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
-    &resource->types, resource->interfaces, device);
+  success &= oc_sec_ace_update_conn_anon_clear("/sec/provisioninginfo", 2, 14, device);
 #endif
+
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
+
+  if (!success)
+    OC_WRN("%s",__func__);
 }
 
 void
