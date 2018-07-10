@@ -25,6 +25,8 @@ extern "C"
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#define OC_SPEC_VER_OIC
+
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -120,7 +122,7 @@ requests_entry(void)
   FUNC_NAME;
 }
 
-TEST(Security, Init)
+TEST(Security_V2, Init)
 {
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
@@ -174,7 +176,7 @@ get_aces()
   return (oc_sec_ace_t *)oc_list_head(a->subjects);
 }
 
-TEST(Security, AclInit)
+TEST(Security_V2, AclInit)
 {
   sec_init();
   oc_ace_subject_t subject;
@@ -200,20 +202,20 @@ TEST(Security, AclInit)
   dump_acl(dev);
 #endif
 }
-TEST(Security, AclGet)
+TEST(Security_V2, AclGet)
 {
   oc_sec_acl_t *acl = oc_sec_get_acl(dev);
   EXPECT_TRUE(acl != NULL);
 }
-TEST(Security, AclUniq)
+TEST(Security_V2, AclUniq)
 {
   EXPECT_TRUE(unique_aceid(0, dev));
 }
-TEST(Security, AclNewAceId)
+TEST(Security_V2, AclNewAceId)
 {
   EXPECT_TRUE(get_new_aceid(dev) != 0);
 }
-TEST(Security, AclFindResource)
+TEST(Security_V2, AclFindResource)
 {
   oc_string_array_t rt;
   oc_new_string_array(&rt, 3);
@@ -225,7 +227,7 @@ TEST(Security, AclFindResource)
                                                OC_IF_BASELINE, OC_ACE_NO_WC);
   EXPECT_FALSE(res != NULL);
 }
-TEST(Security, AclFindSubject)
+TEST(Security_V2, AclFindSubject)
 {
   oc_ace_subject_t subject;
   oc_new_string(&subject.role.role, "god", 4);
@@ -236,7 +238,7 @@ TEST(Security, AclFindSubject)
                                               -1, permission, dev);
   EXPECT_TRUE(ace != NULL);
 }
-TEST(Security, AclGetPermission)
+TEST(Security_V2, AclGetPermission)
 {
   oc_sec_ace_t *ace = get_aces();
   EXPECT_TRUE(ace);
@@ -256,7 +258,7 @@ TEST(Security, AclGetPermission)
     NULL, ace, oc_string(res1->uri), &res1->types, res1->interfaces, wc);
   EXPECT_FALSE(rs);
 }
-TEST(Security, AclCheck)
+TEST(Security_V2, AclCheck)
 {
   oc_endpoint_t *endpoint = oc_connectivity_get_endpoints(dev);
   oc_resource_t *resource = oc_ri_get_app_resources();
@@ -264,17 +266,17 @@ TEST(Security, AclCheck)
   EXPECT_FALSE(oc_sec_check_acl(OC_POST, resource, endpoint));
   EXPECT_FALSE(oc_sec_check_acl(OC_PUT, resource, endpoint));
 }
-TEST(Security, AclSetPostOtm)
+TEST(Security_V2, AclSetPostOtm)
 {
   oc_sec_set_post_otm_acl(dev);
 }
-TEST(Security, AclSetAceConnAnonClear)
+TEST(Security_V2, AclSetAceConnAnonClear)
 {
   EXPECT_TRUE(oc_sec_ace_update_conn_anon_clear("/a/light", 2, 14, dev));
   EXPECT_FALSE(
     oc_sec_ace_update_conn_anon_clear("/oic/provisioninginfo", 200, 14, dev));
 }
-TEST(Security, AclPost)
+TEST(Security_V2, AclPost)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -330,25 +332,25 @@ TEST(Security, AclPost)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
-TEST(Security, AclEncodeV1)
+TEST(Security_V2, AclEncodeV1)
 {
   EXPECT_TRUE(oc_sec_encode_acl(dev));
 }
-TEST(Security, AclFreeResources)
+TEST(Security_V2, AclFreeResources)
 {
   oc_sec_acl_default(dev);
   oc_sec_ace_t *ace = get_aces();
   oc_ace_free_resources(dev, &ace, "/oic/p");
 }
-TEST(Security, AclRemoveAce)
+TEST(Security_V2, AclRemoveAce)
 {
   oc_acl_remove_ace(dev, 0);
 }
-TEST(Security, AclClear)
+TEST(Security_V2, AclClear)
 {
   oc_sec_clear_acl(dev);
 }
-TEST(Security, AclFree)
+TEST(Security_V2, AclFree)
 {
   sec_free();
 }
@@ -359,27 +361,27 @@ change_owner_cb(void)
   return true;
 }
 
-TEST(Security, DoxmInit)
+TEST(Security_V2, DoxmInit)
 {
   sec_init();
 }
-TEST(Security, DoxmDefault)
+TEST(Security_V2, DoxmDefault)
 {
   oc_sec_doxm_free();
   oc_sec_doxm_init();
   oc_sec_doxm(dev, OC_DOXM_JW);
   oc_sec_dump_doxm(dev);
 }
-TEST(Security, DoxmEncode)
+TEST(Security_V2, DoxmEncode)
 {
   oc_sec_encode_doxm(dev);
 }
-TEST(Security, DoxmSecGet)
+TEST(Security_V2, DoxmSecGet)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(dev);
   EXPECT_TRUE(doxm != NULL);
 }
-TEST(Security, DoxmGet)
+TEST(Security_V2, DoxmGet)
 {
   // removed by Kishen request(26013), use white box testing
   //  get_doxm(NULL, OC_IF_BASELINE, NULL);
@@ -410,7 +412,7 @@ TEST(Security, DoxmGet)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
-TEST(Security, DoxmDecode)
+TEST(Security_V2, DoxmDecode)
 {
 
   EXPECT_TRUE(oc_sec_decode_doxm(NULL, 0, -1));
@@ -437,7 +439,7 @@ TEST(Security, DoxmDecode)
   }
   oc_mem_free(buf);
 }
-TEST(Security, DoxmPost)
+TEST(Security_V2, DoxmPost)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -487,7 +489,7 @@ TEST(Security, DoxmPost)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
-TEST(Security, DoxmDeInit)
+TEST(Security_V2, DoxmDeInit)
 {
   sec_free();
 }
@@ -567,7 +569,7 @@ add_cred3(const char *suuid)
   return true;
 }
 
-TEST(Security, CredInit)
+TEST(Security_V2, CredInit)
 {
   sec_init();
 
@@ -582,7 +584,7 @@ TEST(Security, CredInit)
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
 }
-TEST(Security, CredDecode3)
+TEST(Security_V2, CredDecode3)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
@@ -615,7 +617,7 @@ TEST(Security, CredDecode3)
   oc_free_rep(rep);
   oc_mem_free(buf);
 }
-TEST(Security, CredDecode2)
+TEST(Security_V2, CredDecode2)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
@@ -648,7 +650,7 @@ TEST(Security, CredDecode2)
   oc_free_rep(rep);
   oc_mem_free(buf);
 }
-TEST(Security, CredDecode1)
+TEST(Security_V2, CredDecode1)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
@@ -681,7 +683,7 @@ TEST(Security, CredDecode1)
   oc_free_rep(rep);
   oc_mem_free(buf);
 }
-TEST(Security, CredDecode)
+TEST(Security_V2, CredDecode)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
@@ -753,7 +755,7 @@ add_cred(bool mfg)
   oc_new_string(&c->role.authority, "god", 4);
   return c;
 }
-TEST(Security, CredDefault)
+TEST(Security_V2, CredDefault)
 {
   EXPECT_EQ(oc_list_length(devices[dev].creds), 1);
   oc_list_add(devices[dev].creds, add_cred(false));
@@ -764,7 +766,7 @@ TEST(Security, CredDefault)
   oc_sec_cred_default(dev);
   EXPECT_GE(oc_list_length(devices[dev].creds), 0);
 }
-TEST(Security, CredFind)
+TEST(Security_V2, CredFind)
 {
   oc_uuid_t *uuid = (oc_uuid_t *)oc_mem_malloc(sizeof(oc_uuid_t));
   oc_gen_uuid(uuid);
@@ -778,14 +780,14 @@ TEST(Security, CredFind)
   c = oc_sec_find_cred(uuid, dev);
   EXPECT_TRUE(c != NULL);
 }
-TEST(Security, CredRemove)
+TEST(Security_V2, CredRemove)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   char suuid[37];
   oc_uuid_to_str(uuid, suuid, 37);
   EXPECT_TRUE(oc_cred_remove_subject(suuid, dev));
 }
-TEST(Security, CredGet)
+TEST(Security_V2, CredGet)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -841,14 +843,14 @@ TEST(Security, CredGet)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
-TEST(Security, CredSecGetCred)
+TEST(Security_V2, CredSecGetCred)
 {
   oc_uuid_t uuid = { 0 };
   oc_str_to_uuid("00000001-0001-0001-0001-000000000001", &uuid);
   oc_sec_cred_t *c = oc_sec_get_cred(&uuid, dev);
   EXPECT_TRUE(c != NULL);
 }
-TEST(Security, CredFree)
+TEST(Security_V2, CredFree)
 {
   oc_list_add(devices[dev].creds, add_cred(false));
   oc_list_add(devices[dev].creds, add_cred(true));
@@ -861,18 +863,18 @@ TEST(Security, CredFree)
   sec_free();
 }
 //------------------------------------------PSTAT------------------------------------
-TEST(Security, PstatInit)
+TEST(Security_V2, PstatInit)
 {
   sec_init();
 }
-TEST(Security, PstatNullUuid)
+TEST(Security_V2, PstatNullUuid)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_FALSE(nil_uuid(uuid));
   oc_str_to_uuid("00000000-0000-0000-0000-000000000000", uuid);
   EXPECT_TRUE(nil_uuid(uuid));
 }
-TEST(Security, PstatValidTransition)
+TEST(Security_V2, PstatValidTransition)
 {
   pstat[dev].s = OC_DOS_RESET;
   EXPECT_TRUE(valid_transition(dev, OC_DOS_RESET));
@@ -911,7 +913,7 @@ oc_sec_otm_err_cb(oc_sec_otm_err_code_t c)
 {
   EXPECT_EQ(OC_SEC_ERR_ACL, c);
 }
-TEST(Security, OtmErr)
+TEST(Security_V2, OtmErr)
 {
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(dev);
   pstat->s = OC_DOS_RFNOP;
@@ -922,7 +924,7 @@ TEST(Security, OtmErr)
   oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
   oc_sec_otm_set_err_cb(otm_err_cb);
 }
-TEST(Security, Pstat)
+TEST(Security_V2, Pstat)
 {
   oc_sec_pstat_t *ps = (oc_sec_pstat_t *)oc_mem_malloc(sizeof(oc_sec_pstat_t));
   ps->s = OC_DOS_RESET;
@@ -938,15 +940,15 @@ TEST(Security, Pstat)
   ps->s = (oc_dostype_t)10;
   EXPECT_FALSE(oc_pstat_handle_state(ps, dev));
 }
-TEST(Security, PstatIsOp)
+TEST(Security_V2, PstatIsOp)
 {
   EXPECT_FALSE(oc_sec_is_operational(dev));
 }
-TEST(Security, PstatDumpAclPostOtm)
+TEST(Security_V2, PstatDumpAclPostOtm)
 {
   EXPECT_TRUE(dump_acl_post_otm(0) == OC_EVENT_DONE);
 }
-TEST(Security, PstatDecode)
+TEST(Security_V2, PstatDecode)
 {
   char suuid[37];
   oc_rep_t *rep;
@@ -992,7 +994,7 @@ TEST(Security, PstatDecode)
   oc_mem_free(buf);
 }
 
-TEST(Security, PstatSecReset)
+TEST(Security_V2, PstatSecReset)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -1044,53 +1046,53 @@ TEST(Security, PstatSecReset)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
-TEST(Security, PstatOcSecReset)
+TEST(Security_V2, PstatOcSecReset)
 {
   oc_sec_reset();
 }
-TEST(Security, PstatFree)
+TEST(Security_V2, PstatFree)
 {
   sec_free();
 }
 //------------------------------------------STORE------------------------------------
-TEST(Security, StoreInit)
+TEST(Security_V2, StoreInit)
 {
   sec_init();
 }
-TEST(Security, StoreGenSvrTag)
+TEST(Security_V2, StoreGenSvrTag)
 {
   char *svr_tag = (char *)oc_mem_malloc(SVR_TAG_MAX);
   gen_svr_tag("doxm", dev, svr_tag);
   EXPECT_STREQ("doxm_0", svr_tag);
   oc_mem_free(svr_tag);
 }
-TEST(Security, StoreLoadDoxm)
+TEST(Security_V2, StoreLoadDoxm)
 {
   oc_sec_load_doxm(dev);
 }
-TEST(Security, StoreLoadUniqueIds)
+TEST(Security_V2, StoreLoadUniqueIds)
 {
   oc_sec_load_unique_ids(dev);
 }
-TEST(Security, StoreLoadPstat)
+TEST(Security_V2, StoreLoadPstat)
 {
   oc_sec_load_pstat(dev);
 }
 //------------------------------------------OTHER------------------------------------
-TEST(Security, SvrCreate)
+TEST(Security_V2, SvrCreate)
 {
   oc_sec_create_svr();
 }
 //------------------------------------------TLS------------------------------------
 #if defined(OC_TCP)
 #endif // defined(OC_TLS)
-TEST(Security, TlsIsPeerActive)
+TEST(Security_V2, TlsIsPeerActive)
 {
   EXPECT_FALSE(is_peer_active(NULL));
   oc_tls_peer_t *p = (oc_tls_peer_t *)oc_list_head(tls_peers);
   EXPECT_TRUE(is_peer_active(p));
 }
-TEST(Security, TlsFreePeer)
+TEST(Security_V2, TlsFreePeer)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
@@ -1119,13 +1121,13 @@ TEST(Security, TlsFreePeer)
   oc_tls_free_peer(peer, false);
   EXPECT_TRUE(peer);
 }
-TEST(Security, TlsRemovePeer)
+TEST(Security_V2, TlsRemovePeer)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep);
   oc_tls_remove_peer(ep);
 }
-TEST(Security, TlsHandleSchdReadWrite)
+TEST(Security_V2, TlsHandleSchdReadWrite)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
@@ -1133,7 +1135,7 @@ TEST(Security, TlsHandleSchdReadWrite)
   oc_tls_handler_schedule_read(peer);
   oc_tls_handler_schedule_write(peer);
 }
-TEST(Security, TlsInactive)
+TEST(Security_V2, TlsInactive)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
@@ -1153,13 +1155,13 @@ TEST(Security, TlsInactive)
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
   oc_tls_inactive(peer);
 }
-TEST(Security, TlsCloseConnection)
+TEST(Security_V2, TlsCloseConnection)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
   oc_tls_close_connection(ep);
 }
-TEST(Security, TlsSslRecv)
+TEST(Security_V2, TlsSslRecv)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
@@ -1174,7 +1176,7 @@ TEST(Security, TlsSslRecv)
   EXPECT_EQ(ssl_recv(peer, buf, len), 0);
   oc_mem_free(buf);
 }
-TEST(Security, TlsSslSend)
+TEST(Security_V2, TlsSslSend)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
@@ -1186,7 +1188,7 @@ TEST(Security, TlsSslSend)
   EXPECT_EQ(ssl_send(peer, buf, len), len);
   oc_mem_free(buf);
 }
-TEST(Security, TlsCheckRetsTimers)
+TEST(Security_V2, TlsCheckRetsTimers)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
@@ -1194,7 +1196,7 @@ TEST(Security, TlsCheckRetsTimers)
 
   check_retr_timers();
 }
-TEST(Security, TlsSetTimers)
+TEST(Security_V2, TlsSetTimers)
 {
   oc_tls_retr_timer_t *timer =
     (oc_tls_retr_timer_t *)oc_mem_malloc(sizeof(oc_tls_retr_timer_t));
@@ -1202,7 +1204,7 @@ TEST(Security, TlsSetTimers)
   timer->fin_timer.timer.interval = 1;
   ssl_set_timer(timer, 100, 102);
 }
-TEST(Security, TlsGetPskCb)
+TEST(Security_V2, TlsGetPskCb)
 {
   oc_uuid_t uuid;
   oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &uuid);
@@ -1210,13 +1212,13 @@ TEST(Security, TlsGetPskCb)
   EXPECT_EQ(get_psk_cb(0, &peer->ssl_ctx, (const unsigned char *)&uuid, 16),
             -1);
 }
-TEST(Security, TlsPrf)
+TEST(Security_V2, TlsPrf)
 {
   uint8_t secret[48];
   uint8_t output[48];
   EXPECT_EQ(oc_tls_prf(secret, sizeof(secret), output, sizeof(output), 0), 48);
 }
-TEST(Security, TlsSecDeriveOwnerPsk)
+TEST(Security_V2, TlsSecDeriveOwnerPsk)
 {
   uint8_t key[16];
   uint8_t oxm[16];
@@ -1240,7 +1242,7 @@ TEST(Security, TlsSecDeriveOwnerPsk)
     ep, oxm, sizeof(oxm), (const uint8_t *)&server_uuid, 16,
     (const uint8_t *)&obt_uuid, 16, key, sizeof(key)));
 }
-TEST(Security, TlsSendMessage)
+TEST(Security_V2, TlsSendMessage)
 {
   oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
   EXPECT_TRUE(message);
@@ -1248,7 +1250,7 @@ TEST(Security, TlsSendMessage)
          sizeof(oc_endpoint_t));
   EXPECT_EQ(oc_tls_send_message(message), 0);
 }
-TEST(Security, TlsWriteAppData)
+TEST(Security_V2, TlsWriteAppData)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   EXPECT_TRUE(peer);
@@ -1260,12 +1262,12 @@ TEST(Security, TlsWriteAppData)
 
   write_application_data(peer);
 }
-TEST(Security, TlsElevateAnon)
+TEST(Security_V2, TlsElevateAnon)
 {
   oc_tls_elevate_anon_ciphersuite();
   oc_tls_demote_anon_ciphersuite();
 }
-TEST(Security, TlsInitConnection)
+TEST(Security_V2, TlsInitConnection)
 {
   oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
   EXPECT_TRUE(message);
@@ -1273,13 +1275,13 @@ TEST(Security, TlsInitConnection)
          sizeof(oc_endpoint_t));
   oc_tls_init_connection(message);
 }
-TEST(Security, TlsConnected)
+TEST(Security_V2, TlsConnected)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep);
   EXPECT_FALSE(oc_tls_connected(ep));
 }
-TEST(Security, TlsReadApplicationData)
+TEST(Security_V2, TlsReadApplicationData)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
@@ -1336,7 +1338,7 @@ get_own_key(uint8_t *priv_key, int *priv_key_len, uint8_t *pub_key,
   *pub_key_len = 32;
   return;
 }
-TEST(Security, TlsGenMasterKey)
+TEST(Security_V2, TlsGenMasterKey)
 {
   uint8_t master[32];
   int len = 0;
@@ -1347,7 +1349,7 @@ TEST(Security, TlsGenMasterKey)
   EXPECT_TRUE(gen_master_key(master, &len));
   EXPECT_EQ(32, len);
 }
-TEST(Security, TlsGetRptPsk)
+TEST(Security_V2, TlsGetRptPsk)
 {
   unsigned char psk[16] = { 0x0 };
   int psk_len = 0;
@@ -1357,11 +1359,11 @@ TEST(Security, TlsGetRptPsk)
     EXPECT_NE(0, psk[i]);
   }
 }
-TEST(Security, TlsShutdown)
+TEST(Security_V2, TlsShutdown)
 {
   oc_tls_shutdown();
 }
-TEST(Security, Clear)
+TEST(Security_V2, Clear)
 {
   unlink("unittest_creds/acl_0");
   unlink("unittest_creds/cred_0");
