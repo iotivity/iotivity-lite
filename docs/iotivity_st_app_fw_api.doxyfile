@@ -756,8 +756,10 @@ WARN_LOGFILE           = ./doxygen.log
 
 INPUT                  = ../service/st-app-fw/include/st_manager.h \
                          ../service/st-app-fw/include/st_resource_manager.h \
-                         ./service/st-app-fw/include/st_fota_manager.h \
-                         .../include/oc_rep.h
+                         ../service/st-app-fw/include/st_fota_manager.h \
+                         ../service/fota/include/fota_types.h \
+                         ../service/st-app-fw/include/st_types.h \
+                         ../include/oc_rep.h
 
 
 # This tag can be used to specify the character encoding of the source files
