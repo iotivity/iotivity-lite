@@ -25,27 +25,27 @@ extern "C"
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "util/oc_mem.h"
-#include "oc_endpoint.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
+#include "oc_endpoint.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
+#include "util/oc_mem.h"
 
-#define SECURED     1 << 1
-#define TCP         1 << 4
+#define SECURED 1 << 1
+#define TCP 1 << 4
 
 #include "oc_acl.c"
 #include "oc_cred.c"
 #include "oc_doxm.c"
+#include "oc_otm_state.c"
+#include "oc_pstat.c"
 #include "oc_store.c"
 #include "oc_svr.c"
-#include "oc_pstat.c"
 #include "oc_tls.c"
-#include "oc_otm_state.c"
 }
 
 static int dev = 0;
@@ -257,6 +257,12 @@ TEST(Security, AclCheck)
 TEST(Security, AclSetPostOtm)
 {
   oc_sec_set_post_otm_acl(dev);
+}
+TEST(Security, AclSetAceConnAnonClear)
+{
+  EXPECT_TRUE(oc_sec_ace_update_conn_anon_clear("/a/light", 2, 14, dev));
+  EXPECT_FALSE(
+    oc_sec_ace_update_conn_anon_clear("/oic/provisioninginfo", 200, 14, dev));
 }
 TEST(Security, AclPost)
 {
