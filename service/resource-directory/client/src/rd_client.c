@@ -64,6 +64,8 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
 {
   char uuid[MAX_UUID_LENGTH] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+  if (!device_info)
+    return false;
   oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
 
   bool status = false;
@@ -149,6 +151,8 @@ rd_publish_all(oc_endpoint_t *endpoint, int device_index,
                    user_data)) {
     char uuid[MAX_UUID_LENGTH] = { 0 };
     oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+    if (!device_info)
+      return false;
     oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
 
     oc_rep_start_root_object();
@@ -186,7 +190,10 @@ rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   char uuid[MAX_UUID_LENGTH] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+  oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+  if (!device_info)
+    return false;
+  oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
 
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
