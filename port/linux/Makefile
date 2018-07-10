@@ -59,12 +59,22 @@ EASYSETUP_TEST_OBJ_DIR = $(EASYSETUP_TEST_DIR)/obj
 EASYSETUP_TEST_SRC_FILES := $(wildcard $(EASYSETUP_TEST_DIR)/*.cpp)
 EASYSETUP_TEST_OBJ_FILES := $(patsubst $(EASYSETUP_TEST_DIR)/%.cpp,$(EASYSETUP_TEST_OBJ_DIR)/%.o,$(EASYSETUP_TEST_SRC_FILES))
 
+CA_TEST_DIR = $(ROOT_DIR)/service/cloud-access/unittest
+CA_TEST_OBJ_DIR = $(CA_TEST_DIR)/obj
+CA_TEST_SRC_FILES := $(wildcard $(CA_TEST_DIR)/*.cpp)
+CA_TEST_OBJ_FILES := $(patsubst $(CA_TEST_DIR)/%.cpp,$(CA_TEST_OBJ_DIR)/%.o,$(CA_TEST_SRC_FILES))
+
+RD_CLIENT_TEST_DIR = $(ROOT_DIR)/service/resource-directory/client/unittest
+RD_CLIENT_TEST_OBJ_DIR = $(RD_CLIENT_TEST_DIR)/obj
+RD_CLIENT_TEST_SRC_FILES := $(wildcard $(RD_CLIENT_TEST_DIR)/*.cpp)
+RD_CLIENT_TEST_OBJ_FILES := $(patsubst $(RD_CLIENT_TEST_DIR)/%.cpp,$(RD_CLIENT_TEST_OBJ_DIR)/%.o,$(RD_CLIENT_TEST_SRC_FILES))
+
 FOTA_TEST_DIR = $(ROOT_DIR)/service/fota/unittest
 FOTA_TEST_OBJ_DIR = $(FOTA_TEST_DIR)/obj
 FOTA_TEST_SRC_FILES := $(wildcard $(FOTA_TEST_DIR)/*.cpp)
 FOTA_TEST_OBJ_FILES := $(patsubst $(FOTA_TEST_DIR)/%.cpp,$(FOTA_TEST_OBJ_DIR)/%.o,$(FOTA_TEST_SRC_FILES))
 
-UNIT_TESTS = apitest platformtest messagingtest fotatest
+UNIT_TESTS = apitest platformtest messagingtest cloudaccesstest rdclienttest fotatest
 
 ifeq ($(EASYSETUP),1)
 UNIT_TESTS += easysetuptest
@@ -315,6 +325,20 @@ easysetuptest: $(EASYSETUP_TEST_OBJ_FILES) libiotivity-constrained-easysetup.a l
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(CFLAGS_ES) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -liotivity-constrained-easysetup -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 endif
 
+$(CA_TEST_OBJ_DIR)/%.o: $(CA_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_CA) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+cloudaccesstest: $(CA_TEST_OBJ_FILES) libiotivity-constrained-cloudaccess.a libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_CA) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(RD_CLIENT_TEST_OBJ_DIR)/%.o: $(RD_CLIENT_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_RD_CLIENT) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+rdclienttest: $(RD_CLIENT_TEST_OBJ_FILES) libiotivity-constrained-rd-client.a libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_RD_CLIENT) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
 $(FOTA_TEST_OBJ_DIR)/%.o: $(FOTA_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(HEADER_DIR) $(CFLAGS_FOTA) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
@@ -558,7 +582,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(FOTA_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(CA_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES) $(FOTA_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
