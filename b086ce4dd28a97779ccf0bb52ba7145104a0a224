@@ -2,6 +2,236 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_80225eb7",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 38,
+        "startChar": 18,
+        "endLine": 38,
+        "endChar": 21
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_60459a6f",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "Desired",
+      "range": {
+        "startLine": 39,
+        "startChar": 15,
+        "endLine": 39,
+        "endChar": 22
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_00500e31",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "state change is not allowed",
+      "range": {
+        "startLine": 42,
+        "startChar": 39,
+        "endLine": 42,
+        "endChar": 63
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a025e2c3",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 47,
+        "startChar": 18,
+        "endLine": 47,
+        "endChar": 21
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_404a1681",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "firmware download",
+      "range": {
+        "startLine": 49,
+        "startChar": 27,
+        "endLine": 49,
+        "endChar": 48
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e0588a58",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "operation. This is usually used in the callback handler st_fota_cmd_cb_t to return the result of each fota operation request.",
+      "range": {
+        "startLine": 57,
+        "startChar": 48,
+        "endLine": 57,
+        "endChar": 49
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c02c66ae",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 57,
+        "startChar": 18,
+        "endLine": 57,
+        "endChar": 21
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_40417659",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 66,
+        "startChar": 18,
+        "endLine": 66,
+        "endChar": 21
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e02fea9f",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "command request",
+      "range": {
+        "startLine": 67,
+        "startChar": 49,
+        "endLine": 67,
+        "endChar": 56
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_603c7ae3",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:47:19Z",
+      "side": 1,
+      "message": "Does current logic override or return false in case of already set?",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 77
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e077ea00",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 4
