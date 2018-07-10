@@ -152,6 +152,9 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 int
 oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
+  if (!endpoint || !endpoint_str)
+    return -1;
+
   if (endpoint->flags & IPV6) {
     oc_ipv6_endpoint_to_string(endpoint, endpoint_str);
   }
@@ -316,6 +319,9 @@ static int
 oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                          oc_string_t *uri)
 {
+  if (!endpoint_str || !endpoint)
+    return -1;
+
   endpoint->flags = 0;
 #ifdef OC_TCP
   if (memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
@@ -348,6 +354,33 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     const char *address = memchr(oc_string(*endpoint_str), '/', len);
     address += 2;
     int address_len = (p - address - 1);
+
+#ifdef OC_DNS_LOOKUP
+    oc_string_t ipaddress;
+    memset(&ipaddress, 0, sizeof(oc_string_t));
+#endif /* OC_DNS_LOOKUP */
+    if (('A' <= address[address_len - 1] && 'Z' >= address[address_len - 1]) ||
+        ('a' <= address[address_len - 1] && 'z' >= address[address_len - 1])) {
+#ifdef OC_DNS_LOOKUP
+      char domain[address_len + 1];
+      strncpy(domain, address, address_len);
+      domain[address_len] = '\0';
+#ifdef OC_DNS_LOOKUP_IPV6
+      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
+#endif /* OC_DNS_LOOKUP_IPV6 */
+        if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
+          return -1;
+        }
+#ifdef OC_DNS_LOOKUP_IPV6
+      }
+#endif /* OC_DNS_LOOKUP_IPV6 */
+      address = oc_string(ipaddress);
+      address_len = oc_string_len(ipaddress);
+#else  /* OC_DNS_LOOKUP */
+      return -1;
+#endif /* !OC_DNS_LOOKUP */
+    }
+
     if (address[0] == '[' && address[address_len - 1] == ']') {
       endpoint->flags |= IPV6;
       endpoint->addr.ipv6.port = port;
@@ -355,28 +388,23 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     }
 #ifdef OC_IPV4
     else {
-      if ('A' <= address[address_len - 1] && 'z' >= address[address_len - 1]) {
-        char domain[address_len + 1];
-        strncpy(domain, address, address_len);
-        domain[address_len] = '\0';
-
-        oc_string_t ip;
-        if (!oc_domain_to_ip(domain, &ip)) {
-          return -1;
-        }
-        oc_parse_ipv4_address(oc_string(ip), oc_string_len(ip), endpoint);
-        oc_free_string(&ip);
-      } else {
-        oc_parse_ipv4_address(address, address_len, endpoint);
-      }
       endpoint->flags |= IPV4;
       endpoint->addr.ipv4.port = port;
+      oc_parse_ipv4_address(address, address_len, endpoint);
     }
-#else  /* OC_IPV4 */
+#else /* OC_IPV4 */
     else {
+#ifdef OC_DNS_LOOKUP
+      if (oc_string_len(ipaddress) > 0)
+        oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
       return -1;
     }
 #endif /* !OC_IPV4 */
+#ifdef OC_DNS_LOOKUP
+    if (oc_string_len(ipaddress) > 0)
+      oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
     return 0;
   }
   return -1;
@@ -392,7 +420,7 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int
 oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 {
-  if (!(endpoint->flags & IPV6)) {
+  if (!endpoint || !(endpoint->flags & IPV6)) {
     return -1;
   }
   if (endpoint->addr.ipv6.address[0] == 0xfe &&
@@ -405,6 +433,9 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 int
 oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 {
+  if (!ep1 || !ep2)
+    return -1;
+
   if ((ep1->flags & ep2->flags) & IPV6) {
     if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0) {
       return 0;
@@ -426,6 +457,9 @@ oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
 int
 oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
+  if (!ep1 || !ep2)
+    return -1;
+
   if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
       ep1->device != ep2->device) {
     return -1;

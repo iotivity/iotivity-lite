@@ -1168,7 +1168,7 @@ coap_set_header_uri_path(void *packet, const char *path, int path_len)
   }
 
   coap_pkt->uri_path = path;
-  coap_pkt->uri_path_len = path_len;
+  coap_pkt->uri_path_len = (size_t)path_len;
 
   SET_OPTION(coap_pkt, COAP_OPTION_URI_PATH);
   return coap_pkt->uri_path_len;
