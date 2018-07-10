@@ -48,6 +48,11 @@ extern "C"
 #include "oc_tls.c"
 }
 
+#define FUNC_NAME                                                              \
+  do {                                                                         \
+    PRINT("[          ] %s\n", __func__);                                      \
+  } while (0)
+
 static int dev = 0;
 
 static int
@@ -66,7 +71,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
   (void)interface;
   (void)user_data;
   (void)request;
-  PRINT("%s\n", __func__);
+  FUNC_NAME;
 }
 
 static void
@@ -75,7 +80,7 @@ put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   (void)interface;
   (void)user_data;
   (void)request;
-  PRINT("%s\n", __func__);
+  FUNC_NAME;
 }
 
 static void
@@ -84,7 +89,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   (void)interface;
   (void)user_data;
   (void)request;
-  PRINT("%s\n", __func__);
+  FUNC_NAME;
 }
 
 static void
@@ -106,13 +111,13 @@ register_resources(void)
 static void
 signal_event_loop(void)
 {
-  PRINT("%s\n", __func__);
+  FUNC_NAME;
 }
 
 void
 requests_entry(void)
 {
-  PRINT("%s\n", __func__);
+  FUNC_NAME;
 }
 
 TEST(Security, Init)
@@ -143,7 +148,11 @@ sec_free()
   oc_sec_pstat_free();
   oc_sec_cred_free();
 }
-
+void
+otm_err_cb(oc_sec_otm_err_code_t c)
+{
+  PRINT("[          ] %s %d\n", __func__, c);
+}
 void
 sec_init()
 {
@@ -154,6 +163,7 @@ sec_init()
 
   oc_sec_pstat_default(dev);
   oc_core_regen_unique_ids(0);
+  oc_sec_otm_set_err_cb(otm_err_cb);
 }
 
 //-------------------------------------------------ACL---------------------------------------------
@@ -319,6 +329,10 @@ TEST(Security, AclPost)
   oc_mem_free(request->response);
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
+}
+TEST(Security, AclEncodeV1)
+{
+  EXPECT_TRUE(oc_sec_encode_acl(dev));
 }
 TEST(Security, AclFreeResources)
 {
@@ -892,6 +906,22 @@ TEST(Security, PstatValidTransition)
   EXPECT_TRUE(valid_transition(dev, OC_DOS_SRESET));
   pstat[dev].s = OC_DOS_RFNOP;
 }
+void
+oc_sec_otm_err_cb(oc_sec_otm_err_code_t c)
+{
+  EXPECT_EQ(OC_SEC_ERR_ACL, c);
+}
+TEST(Security, OtmErr)
+{
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(dev);
+  pstat->s = OC_DOS_RFNOP;
+  oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
+  oc_sec_otm_err(dev, OC_SEC_ERR_CRED);
+  pstat->s = OC_DOS_RFOTM;
+  oc_sec_otm_err(dev, OC_SEC_ERR_ACL);
+  oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
+  oc_sec_otm_set_err_cb(otm_err_cb);
+}
 TEST(Security, Pstat)
 {
   oc_sec_pstat_t *ps = (oc_sec_pstat_t *)oc_mem_malloc(sizeof(oc_sec_pstat_t));
@@ -957,7 +987,7 @@ TEST(Security, PstatDecode)
   oc_parse_rep(buf, size, &rep);
   EXPECT_FALSE(oc_sec_decode_pstat(rep, false, dev));
   EXPECT_TRUE(oc_sec_decode_pstat(rep, true, dev));
-  //  oc_sec_load_certs(dev);
+  oc_sec_load_certs(dev);
   oc_free_rep(rep);
   oc_mem_free(buf);
 }
@@ -1261,7 +1291,71 @@ TEST(Security, TlsReadApplicationData)
   mbedtls_ssl_session_init(peer->ssl_ctx.session);
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
+  peer->ssl_ctx.state = MBEDTLS_SSL_HANDSHAKE_OVER;
   read_application_data(peer);
+}
+void
+get_cpubkey_and_token(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token,
+                      int *token_len)
+{
+  if (!cpubkey || !cpubkey_len || !token || !token_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t key[32] = { 0x41, 0x97, 0x77, 0x33, 0x6e, 0xea, 0x62, 0x6c,
+                      0x5d, 0x89, 0x2e, 0x50, 0x21, 0x94, 0x74, 0xcc,
+                      0x50, 0x24, 0x00, 0x84, 0x42, 0x24, 0x13, 0xeb,
+                      0x64, 0xab, 0x2e, 0xe7, 0x53, 0x28, 0x71, 0x40 };
+  uint8_t tkn[8] = "12345678";
+  memcpy(cpubkey, key, 32);
+  memcpy(token, tkn, 8);
+  *cpubkey_len = 32;
+  *token_len = 8;
+  return;
+}
+
+void
+get_own_key(uint8_t *priv_key, int *priv_key_len, uint8_t *pub_key,
+            int *pub_key_len)
+{
+  if (!priv_key || !priv_key_len) {
+    PRINT("get_rpk: NULL param");
+    return;
+  }
+  uint8_t prv[32] = { 0x46, 0x70, 0x85, 0x56, 0xf4, 0x54, 0xdc, 0x63,
+                      0xaa, 0xb9, 0x20, 0xfc, 0x8a, 0xc7, 0x59, 0xf4,
+                      0xf4, 0x6e, 0x37, 0x64, 0xcc, 0x8e, 0xa2, 0xb5,
+                      0x39, 0xe9, 0xe9, 0xb2, 0x69, 0xcd, 0x91, 0x28 };
+  uint8_t pub[32] = { 0x67, 0x32, 0x94, 0x85, 0xcf, 0x46, 0x0f, 0x92,
+                      0x4c, 0x77, 0x18, 0x05, 0xbb, 0xda, 0x7a, 0x50,
+                      0x17, 0xfe, 0xfa, 0x72, 0xc4, 0x51, 0x42, 0x89,
+                      0xa7, 0x3c, 0xc1, 0xcd, 0x23, 0x43, 0x54, 0xed };
+  memcpy(priv_key, prv, 32);
+  memcpy(pub_key, pub, 32);
+  *priv_key_len = 32;
+  *pub_key_len = 32;
+  return;
+}
+TEST(Security, TlsGenMasterKey)
+{
+  uint8_t master[32];
+  int len = 0;
+  EXPECT_FALSE(gen_master_key(master, &len));
+  EXPECT_EQ(0, len);
+  oc_sec_set_cpubkey_and_token_load(get_cpubkey_and_token);
+  oc_sec_set_own_key_load(get_own_key);
+  EXPECT_TRUE(gen_master_key(master, &len));
+  EXPECT_EQ(32, len);
+}
+TEST(Security, TlsGetRptPsk)
+{
+  unsigned char psk[16] = { 0x0 };
+  int psk_len = 0;
+  EXPECT_TRUE(oc_sec_get_rpk_psk(dev, psk, &psk_len));
+  EXPECT_EQ(16, psk_len);
+  for (int i = 0; i < psk_len; i++) {
+    EXPECT_NE(0, psk[i]);
+  }
 }
 TEST(Security, TlsShutdown)
 {
