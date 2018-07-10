@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_80fffe33",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-10T00:51:44Z",
+      "side": 1,
+      "message": "How about print error code to know what error occur in that function? (any other error return function also)",
+      "range": {
+        "startLine": 183,
+        "startChar": 7,
+        "endLine": 183,
+        "endChar": 42
+      },
+      "revId": "68e76cd540dc470ce0a667ae9e4deb9e51383e1a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_40ee9689",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-10T00:51:44Z",
+      "side": 1,
+      "message": "If we don\u0027t have observing clients, then oc_notify_observers() return 0.\nDo you think that is error?\nI think 0 return means just ignore.",
+      "range": {
+        "startLine": 221,
+        "startChar": 9,
+        "endLine": 221,
+        "endChar": 18
+      },
+      "revId": "68e76cd540dc470ce0a667ae9e4deb9e51383e1a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
