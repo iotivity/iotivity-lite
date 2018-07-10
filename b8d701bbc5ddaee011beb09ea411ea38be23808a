@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_c07e26ae",
+        "filename": "security/oc_rpk.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:29:15Z",
+      "side": 1,
+      "message": "Did you get agreement with MCD who uses this library?",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 90
+      },
+      "revId": "b8d701bbc5ddaee011beb09ea411ea38be23808a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
