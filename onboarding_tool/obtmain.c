@@ -117,7 +117,6 @@ ocf_event_thread(void *data)
 
 /* Handles to lists of oc_device_t objects, one each for
    every discovered device.
-   These lists are voided after every oc_obt..() call.
 */
 static oc_device_t *unowned_devices, *my_devices;
 
@@ -217,7 +216,6 @@ take_ownership_of_device(void)
   } else {
     PRINT("\nERROR issuing request to perform ownership transfer\n");
   }
-  unowned_devices = NULL;
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
@@ -321,7 +319,6 @@ provision_credentials(void)
   } else {
     PRINT("\nERROR issuing request to provision credentials\n");
   }
-  my_devices = NULL;
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
@@ -364,7 +361,6 @@ provision_ace2(void)
 
   if (i == 0) {
     PRINT("\nNo devices to provision.. Please Re-Discover owned devices.\n");
-    my_devices = NULL;
     return;
   }
 
@@ -372,7 +368,6 @@ provision_ace2(void)
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     PRINT("ERROR: Invalid selection\n");
-    my_devices = NULL;
     return;
   }
 
@@ -393,7 +388,6 @@ provision_ace2(void)
 
   if (sub >= (i + 2)) {
     PRINT("ERROR: Invalid selection\n");
-    my_devices = NULL;
     return;
   }
 
@@ -410,7 +404,6 @@ provision_ace2(void)
 
   if (!ace) {
     PRINT("\nERROR: Could not create ACE\n");
-    my_devices = NULL;
     return;
   }
 
@@ -431,7 +424,6 @@ provision_ace2(void)
     if (!res) {
       PRINT("\nERROR: Could not allocate new resource for ACE\n");
       oc_obt_free_ace(ace);
-      my_devices = NULL;
       return;
     }
 
@@ -552,14 +544,14 @@ provision_ace2(void)
     oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
   }
 
+  pthread_mutex_lock(&app_sync_lock);
   int ret = oc_obt_provision_ace(devices[dev], ace, provision_ace2_cb, NULL);
+  pthread_mutex_unlock(&app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision ACE\n");
   } else {
     PRINT("\nERROR issuing request to provision ACE\n");
   }
-
-  my_devices = NULL;
 }
 
 int
