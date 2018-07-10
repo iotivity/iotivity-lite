@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_00cdae31",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-10T00:33:08Z",
+      "side": 1,
+      "message": "yes. it returns result of the confirmation of otm function",
+      "parentUuid": "da33351e_e077ea00",
+      "range": {
+        "startLine": 53,
+        "startChar": 8,
+        "endLine": 53,
+        "endChar": 12
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_806a5e18",
         "filename": "service/st-app-fw/include/st_manager.h",
         "patchSetId": 4
@@ -36,6 +60,24 @@
       "writtenOn": "2018-07-09T23:22:05Z",
       "side": 1,
       "message": "How to get error during unregister callback? And if return the error code then app what to do?",
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_40d7b6c1",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-10T00:33:08Z",
+      "side": 1,
+      "message": "I\u0027m thinking about the error case when it is called in running like \"ST_STATUS_DONE\"\n\nif above case is applied,   App developers may make st_app_fw stopped when they meet the error",
+      "parentUuid": "da33351e_806a5e18",
       "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
