@@ -565,7 +565,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_request_callback_t callback,
                                      void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
-void oc_delete_resource(oc_resource_t *resource);
+bool oc_delete_resource(oc_resource_t *resource);
 
 /**
   @brief Callback for change notifications from the oic.wk.con resource.
