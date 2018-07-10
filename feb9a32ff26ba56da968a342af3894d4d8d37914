@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_00692ef9",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T02:35:14Z",
+      "side": 1,
+      "message": "It will better to define error code simple with bool/void for register/unregister function for clean app code when considering effectiveness.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 10
+      },
+      "revId": "feb9a32ff26ba56da968a342af3894d4d8d37914",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
