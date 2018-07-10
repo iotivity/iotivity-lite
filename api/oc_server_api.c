@@ -431,10 +431,10 @@ oc_add_resource(oc_resource_t *resource)
   return oc_ri_add_resource(resource);
 }
 
-void
+bool
 oc_delete_resource(oc_resource_t *resource)
 {
-  oc_ri_delete_resource(resource);
+  return oc_ri_delete_resource(resource);
 }
 
 void

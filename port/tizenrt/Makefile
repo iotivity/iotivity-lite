@@ -97,6 +97,7 @@ endif
 	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
 endif
 
+CFLAGS+=-D__TIZENRT__=1
 CFLAGS+=-I${tinyara_dir}/include/
 CFLAGS+=-I${topdir}
 CFLAGS+=-I${topdir}/include/
