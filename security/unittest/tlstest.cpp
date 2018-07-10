@@ -17,6 +17,7 @@
  * limitations under the License.
  *
  ******************************************************************/
+#if defined(OC_TCP) && defined(OC_SECURITY)
 
 #include <cstdlib>
 #include "gtest/gtest.h"
@@ -64,7 +65,6 @@ class TestTlsConnection: public testing::Test
         }
 };
 
-#if defined(OC_TCP) && defined(OC_SECURITY)
 TEST_F(TestTlsConnection, InitTlsTest_P)
 {
 

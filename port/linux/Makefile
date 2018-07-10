@@ -43,6 +43,11 @@ SECURITY_TEST_OBJ_DIR = $(SECURITY_TEST_DIR)/obj
 SECURITY_TEST_SRC_FILES := $(wildcard $(SECURITY_TEST_DIR)/*.cpp)
 SECURITY_TEST_OBJ_FILES := $(patsubst $(SECURITY_TEST_DIR)/%.cpp,$(SECURITY_TEST_OBJ_DIR)/%.o,$(SECURITY_TEST_SRC_FILES))
 
+SECURITY_V2_TEST_DIR = $(ROOT_DIR)/security/unittest_v2
+SECURITY_V2_TEST_OBJ_DIR = $(SECURITY_V2_TEST_DIR)/obj
+SECURITY_V2_TEST_SRC_FILES := $(wildcard $(SECURITY_V2_TEST_DIR)/*.cpp)
+SECURITY_V2_TEST_OBJ_FILES := $(patsubst $(SECURITY_V2_TEST_DIR)/%.cpp,$(SECURITY_V2_TEST_OBJ_DIR)/%.o,$(SECURITY_V2_TEST_SRC_FILES))
+
 PLATFORM_TEST_DIR = $(ROOT_DIR)/port/unittest
 PLATFORM_TEST_OBJ_DIR = $(PLATFORM_TEST_DIR)/obj
 PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
@@ -163,7 +168,7 @@ endif
 else
 CFLAGS += -DOC_SKIP_CERT
 endif
-UNIT_TESTS += securitytest
+UNIT_TESTS += securitytest securitytest_v2
 endif
 
 OBT = onboarding_tool
@@ -292,6 +297,13 @@ $(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -c $< -o $@
 
 securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+$(SECURITY_V2_TEST_OBJ_DIR)/%.o: $(SECURITY_V2_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -DOC_SPEC_VER_OIC -c $< -o $@
+
+securitytest_v2: $(SECURITY_V2_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
@@ -582,7 +594,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(CA_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES) $(FOTA_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(ST_APP_TEST_OBJ_FILES) $(EASYSETUP_TEST_OBJ_FILES) $(CA_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES) $(FOTA_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(shell find ../../ -name obj) securitytest_v2 securitytest easysetuptest rpk_server stapptest
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) $(ST_DEVICE_DEF) $(ST_DEVICE_DEF_HEADER)
