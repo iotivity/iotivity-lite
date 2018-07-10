@@ -232,7 +232,8 @@ oc_tls_inactive(void *data)
   if (is_peer_active(peer)) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
-    if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
+    if (time < (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT *
+                 (oc_clock_time_t)OC_CLOCK_SECOND) {
       OC_DBG("oc_tls: Resetting DTLS inactivity callback");
       return OC_EVENT_CONTINUE;
     }
@@ -469,8 +470,8 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       if (!(endpoint->flags & TCP)) {
         mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
                                  ssl_get_timer);
-        oc_ri_add_timed_event_callback_seconds(peer, oc_tls_inactive,
-                                               OC_DTLS_INACTIVITY_TIMEOUT);
+        oc_ri_add_timed_event_callback_seconds(
+          peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
       }
     } else {
       OC_WRN("TLS peers exhausted");
@@ -1460,8 +1461,8 @@ oc_tls_recv_message(oc_message_t *message)
 
   if (peer) {
 #ifdef OC_DEBUG
-    char u[37];
-    oc_uuid_to_str(&peer->uuid, u, 37);
+    char u[OC_UUID_LEN];
+    oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
     OC_DBG("oc_tls: Received message from device %s", u);
 #endif /* OC_DEBUG */
 

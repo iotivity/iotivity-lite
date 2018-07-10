@@ -389,9 +389,9 @@ oc_sec_dump_unique_ids(int device)
   oc_device_info_t *device_info = oc_core_get_device_info(device);
   oc_platform_info_t *platform_info = oc_core_get_platform_info();
 
-  char pi[37], piid[37];
-  oc_uuid_to_str(&device_info->piid, piid, 37);
-  oc_uuid_to_str(&platform_info->pi, pi, 37);
+  char pi[OC_UUID_LEN], piid[OC_UUID_LEN];
+  oc_uuid_to_str(&device_info->piid, piid, OC_UUID_LEN);
+  oc_uuid_to_str(&platform_info->pi, pi, OC_UUID_LEN);
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
