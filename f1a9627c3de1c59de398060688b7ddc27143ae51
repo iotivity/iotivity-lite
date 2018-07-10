@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_94dd8373",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-10T07:57:04Z",
+      "side": 1,
+      "message": "Why do not return -1 directly?",
+      "revId": "f1a9627c3de1c59de398060688b7ddc27143ae51",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
