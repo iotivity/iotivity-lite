@@ -287,3 +287,13 @@ TEST(TestUnicastRequest, SendGetRequestTwice_P)
     result = "";
     EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
 }
+
+TEST(TestUnicastRequest, ResourceMakePublic_P)
+{
+    oc_resource_t *pResource;
+    pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
+    oc_resource_make_public(pResource);
+    EXPECT_EQ(0, pResource->properties);
+    oc_delete_resource(pResource);
+}
+
