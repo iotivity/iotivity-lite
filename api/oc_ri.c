@@ -451,7 +451,7 @@ periodic_observe_handler(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
 
-  if (coap_notify_observers(resource, NULL, NULL)) {
+  if (coap_notify_observers(resource, NULL, NULL) > 0) {
     return OC_EVENT_CONTINUE;
   }
 
