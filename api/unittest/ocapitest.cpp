@@ -25,6 +25,12 @@
 extern "C" {
     #include "oc_api.h"
     #include "port/oc_clock.h"
+    #include "oc_ri.h"
+    #include "oc_collection.h"
+    #include "oc_client_state.h"
+    #include "util/oc_list.h"
+    #include "oc_endpoint.h"
+    #include "util/oc_memb.h"
 }
 
 #define MAX_WAIT_TIME 10
@@ -37,6 +43,7 @@ extern "C" {
 #define DEVICE_NAME "Table Lamp"
 #define OCF_SPEC_VERSION "ocf.1.0.0"
 #define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
+#define DEVICE 0
 
 static int appInit(void)
 {
@@ -287,3 +294,68 @@ TEST(TestUnicastRequest, SendGetRequestTwice_P)
     result = "";
     EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
 }
+
+TEST(TestUnicastRequest, ResourceMakePublic_P)
+{
+    oc_resource_t *pResource;
+    pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
+    oc_resource_make_public(pResource);
+    EXPECT_EQ(0, pResource->properties);
+    oc_delete_resource(pResource);
+}
+
+TEST(TestUnicastRequest, RiGetAppResource_P)
+{
+    oc_resource_t *res;
+    res = oc_ri_get_app_resources();
+    EXPECT_EQ(0, res);
+}
+
+TEST(TestUnicastRequest, RiAllocResource_P)
+{
+    oc_resource_t *res;
+    res = oc_ri_alloc_resource();
+    EXPECT_NE(0, res);
+}
+
+TEST(TestUnicastRequest, CheckCollectionTest_P)
+{
+    oc_resource_t *pResource; 
+    bool collection;
+    pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
+    collection = oc_check_if_collection(pResource);
+    ASSERT_FALSE(collection);
+}
+
+TEST(TestUnicastRequest, AllocateCollectionTest_P)
+{
+    oc_collection_t *collection;
+    collection = oc_collection_alloc();
+    EXPECT_NE(NULL, collection);
+}
+
+TEST(TestUnicastRequest, GetCollectionByUriTest_P)
+{
+    oc_collection_t *collection;
+    collection = oc_get_collection_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), DEVICE);
+    EXPECT_NE(NULL, collection);
+    oc_collection_free(collection);
+}
+
+TEST(TestUnicastRequest, CollectionGetAllTest_P)
+{
+    oc_collection_t *collection;
+    collection = oc_collection_get_all();
+    EXPECT_EQ(NULL, collection);
+}
+
+TEST(TestUnicastRequest, NewEndPointTest_P)
+{
+    oc_endpoint_t *endpoint;
+    endpoint = oc_new_endpoint();
+    EXPECT_NE(NULL, endpoint);
+}
+
+
+
+
