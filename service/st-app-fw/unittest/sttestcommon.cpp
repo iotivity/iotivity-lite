@@ -58,8 +58,8 @@ reset_storage(void)
 int
 test_wait_until(st_mutex_t mutex, st_cond_t cv, int wait_seconds)
 {
-    oc_clock_time_t wait_time = oc_clock_time() + wait_seconds * OC_CLOCK_SECOND;
     st_mutex_lock(mutex);
+    oc_clock_time_t wait_time = oc_clock_time() + wait_seconds * OC_CLOCK_SECOND;
     int ret = st_cond_timedwait(cv, mutex, wait_time);
     st_mutex_unlock(mutex);
     return ret;

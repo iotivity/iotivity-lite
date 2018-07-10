@@ -372,26 +372,34 @@ TEST_F(TestSTEasySetup_cb, easy_setup_otm_fail_test)
 #endif /* OC_SECURITY */
 
 static bool g_isCallbackReceived;
+static st_mutex_t access_mutex = NULL;
+static st_cond_t access_cv = NULL;
 
 static void get_response(oc_client_response_t *data)
 {
     g_isCallbackReceived = true;
 
     if (data->code == OC_STATUS_OK) {
-        st_mutex_lock(mutex);
-        st_cond_signal(cv);
-        st_mutex_unlock(mutex);
+        st_mutex_lock(access_mutex);
+        st_cond_signal(access_cv);
+        st_mutex_unlock(access_mutex);
     }
 }
 
 TEST_F(TestSTEasySetup_cb, easy_setup_sec_accesslist_test)
 {
+    access_mutex = st_mutex_init();
+    access_cv = st_cond_init();
     g_isCallbackReceived = false;
     oc_endpoint_t *ep = get_endpoint();
     oc_do_get("/sec/accesspointlist", ep, NULL, get_response, LOW_QOS, NULL);
 
-    int ret = test_wait_until(mutex, cv, 5);
+    int ret = test_wait_until(access_mutex, access_cv, 5);
     EXPECT_EQ(0, ret);
 
     EXPECT_EQ(true, g_isCallbackReceived);
+    st_cond_destroy(access_cv);
+    st_mutex_destroy(access_mutex);
+    access_cv = NULL;
+    access_mutex = NULL;
 }
