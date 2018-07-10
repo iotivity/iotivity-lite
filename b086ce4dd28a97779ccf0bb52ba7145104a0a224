@@ -314,6 +314,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_001e4e70",
+        "filename": "service/st-app-fw/include/st_resource_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-10T03:51:08Z",
+      "side": 1,
+      "message": "invalid uri is better to considering this function should handle uri is not valid resource\u0027s one later.",
+      "range": {
+        "startLine": 72,
+        "startChar": 40,
+        "endLine": 72,
+        "endChar": 63
+      },
+      "revId": "b086ce4dd28a97779ccf0bb52ba7145104a0a224",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_2061d239",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 4
