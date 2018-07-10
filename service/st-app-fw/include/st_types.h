@@ -16,18 +16,23 @@
  *
  ****************************************************************************/
 
+/**
+  @brief Enumeration of possible outcomes from ST App Framework APIs
+  @file
+*/
+
 #ifndef ST_TYPES_H
 #define ST_TYPES_H
 
 typedef enum {
-  ST_ERROR_NONE,              // Successful
-  ST_ERROR_INVALID_PARAMETER, // Invalid parameter (If parameter is null or
-                              // empty)
-  ST_ERROR_OPERATION_FAILED,          // Operation Failed
-  ST_ERROR_STACK_NOT_INITIALIZED,     // Stack is not yet initialized
-  ST_ERROR_STACK_ALREADY_INITIALIZED, // Stack is already initialized
-  ST_ERROR_STACK_NOT_STARTED,         // Stack is not yet started
-  ST_ERROR_STACK_RUNNING              // Stack is currently running
+  ST_ERROR_NONE = 0,                  /**< Successful*/
+  ST_ERROR_INVALID_PARAMETER,         /**<Invalid parameter
+                                        (If parameter is null or empty)*/
+  ST_ERROR_OPERATION_FAILED,          /**< Operation Failed*/
+  ST_ERROR_STACK_NOT_INITIALIZED,     /**< Stack is not yet initialized*/
+  ST_ERROR_STACK_ALREADY_INITIALIZED, /**< Stack is already initialized*/
+  ST_ERROR_STACK_NOT_STARTED,         /**< Stack is not yet started*/
+  ST_ERROR_STACK_RUNNING              /**< Stack is currently running*/
 } st_error_t;
 
 #endif
