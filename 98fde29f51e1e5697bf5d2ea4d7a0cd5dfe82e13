@@ -22,6 +22,99 @@
       "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f7ee9121",
+        "filename": "README.rst",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-11T19:46:43Z",
+      "side": 1,
+      "message": "You could say \"exclude\".",
+      "parentUuid": "da33351e_7793a1a3",
+      "range": {
+        "startLine": 170,
+        "startChar": 20,
+        "endLine": 170,
+        "endChar": 27
+      },
+      "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_37f919ea",
+        "filename": "README.rst",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-11T19:46:43Z",
+      "side": 1,
+      "message": "support",
+      "range": {
+        "startLine": 175,
+        "startChar": 25,
+        "endLine": 175,
+        "endChar": 33
+      },
+      "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_97dd8573",
+        "filename": "README.rst",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-11T19:46:43Z",
+      "side": 1,
+      "message": "TCP endpoints and CoAP over TCP (RFC 8323).",
+      "range": {
+        "startLine": 175,
+        "startChar": 38,
+        "endLine": 175,
+        "endChar": 46
+      },
+      "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_57f49df1",
+        "filename": "README.rst",
+        "patchSetId": 2
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-11T19:46:43Z",
+      "side": 1,
+      "message": "IPV4\u003d1",
+      "range": {
+        "startLine": 177,
+        "startChar": 63,
+        "endLine": 177,
+        "endChar": 71
+      },
+      "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
