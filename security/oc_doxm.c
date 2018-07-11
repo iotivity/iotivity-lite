@@ -105,11 +105,15 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
     if (ql > 0 &&
         ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
          (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
-      oc_ignore_request(request);
+      if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+        request->response->response_buffer->code =
+          oc_status_code(OC_STATUS_BAD_REQUEST);
+      } else {
+        oc_ignore_request(request);
+      }
     } else {
       oc_sec_encode_doxm(device);
       oc_send_response(request, OC_STATUS_OK);
-      return;
     }
   } break;
   default:

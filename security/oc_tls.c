@@ -252,6 +252,7 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
+  peer->timestamp = oc_clock_time();
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
   message.data = malloc(OC_PDU_SIZE);
@@ -662,6 +663,7 @@ oc_tls_close_connection(oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    oc_tls_free_peer(peer, false);
   }
 }
 
@@ -991,7 +993,7 @@ read_application_data(oc_tls_peer_t *peer)
           OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         }
-        if (peer->role != MBEDTLS_SSL_IS_CLIENT) {
+        if (peer->role == MBEDTLS_SSL_IS_SERVER) {
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
         oc_tls_free_peer(peer, false);

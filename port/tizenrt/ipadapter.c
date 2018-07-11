@@ -154,3 +154,18 @@ oc_connectivity_shutdown(int device)
   (void) device;
   oc_abort(__func__);
 }
+
+#ifdef OC_DNS_LOOKUP
+int
+oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+{
+  if (!domain || !addr || !flags) {
+    OC_ERR("Error of input parameters");
+    return -1;
+  }
+
+  oc_abort(__func__);
+
+  return 0;
+}
+#endif /* OC_DNS_LOOKUP */
