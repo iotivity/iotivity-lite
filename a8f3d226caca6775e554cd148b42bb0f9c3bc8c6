@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_94dbc3ec",
+        "filename": "service/st-app-fw/unittest/sttestcommon.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T06:26:53Z",
+      "side": 1,
+      "message": "acl, cred, doxm.. and pstat  are  used in security  like line 74\n( . I am not sure whether st_info is needed by security or not.. however st_info is only required by security setting, it is also checked with OC_SECURITY ..)\n\nwell..if it works well under NONSECURE test mode, you could check it..   next time",
+      "revId": "a8f3d226caca6775e554cd148b42bb0f9c3bc8c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
