@@ -21,6 +21,7 @@
 #include <net/lwip/dhcp.h>
 #include <net/lwip/netif.h>
 
+#define DHCP_BOUND 10
 static int g_wifi_state;
 static struct netif *gnet_if;
 
@@ -256,31 +257,6 @@ dhcpc_start(void)
     printf("slsi_start_dhcp dhcp_start result %d\n", res);
     return -1;
   }
-
-  printf("slsi_start_dhcp start success state %d result %d\n",
-         gnet_if->dhcp->state, res);
-
-  int32_t timeleft = 5000000;
-
-  while (gnet_if->dhcp->state != DHCP_BOUND) {
-    usleep(10000);
-    timeleft -= 10000;
-    if (timeleft <= 0)
-      break;
-  }
-  if (gnet_if->dhcp->state == DHCP_BOUND) {
-    printf("DHCP Client - got IP address %u.%u.%u.%u\n",
-           (unsigned char)((htonl(gnet_if->ip_addr.addr) >> 24) & 0xff),
-           (unsigned char)((htonl(gnet_if->ip_addr.addr) >> 16) & 0xff),
-           (unsigned char)((htonl(gnet_if->ip_addr.addr) >> 8) & 0xff),
-           (unsigned char)((htonl(gnet_if->ip_addr.addr) >> 0) & 0xff));
-  } else {
-    if (timeleft <= 0) {
-      printf("DHCP Client - Timeout fail to get ip address\n");
-      return -1;
-    }
-  }
-
   printf("dhcpc_start out\n");
   return 0;
 }
