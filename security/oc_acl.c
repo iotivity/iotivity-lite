@@ -730,6 +730,7 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
   return false;
 }
 
+#if defined(OC_SERVER)
 bool
 oc_sec_ace_update_conn_anon_clear(const char *uri, int aceid,
                                   uint16_t permission, int device)
@@ -743,7 +744,7 @@ oc_sec_ace_update_conn_anon_clear(const char *uri, int aceid,
                                oc_string(resource->uri), OC_ACE_NO_WC, &resource->types,
                                resource->interfaces, device);
 }
-
+#endif // OC_SERVER
 static void
 oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
 {
