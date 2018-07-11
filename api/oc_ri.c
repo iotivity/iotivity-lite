@@ -1218,6 +1218,27 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
   } else {
     cb->observe_seq = client_response.observe_option;
+
+    // Drop old observe callback and keep the last one.
+    if (cb->observe_seq == 0) {
+      oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      unsigned int uri_len = oc_string_len(cb->uri);
+
+      while (dup_cb != NULL) {
+        if (dup_cb != cb &&
+            oc_string_len(dup_cb->uri) == uri_len &&
+            strncmp(oc_string(dup_cb->uri), oc_string(cb->uri),
+                    uri_len) == 0 &&
+            oc_endpoint_compare(dup_cb->endpoint, endpoint) == 0) {
+          OC_DBG("Freeing cb %s, token 0x%02X%02X",
+                 oc_string(dup_cb->uri), dup_cb->token[0], dup_cb->token[1]);
+          oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
+          free_client_cb(dup_cb);
+          break;
+        }
+        dup_cb = dup_cb->next;
+      }
+    }
   }
 
   return true;
