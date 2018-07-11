@@ -25,16 +25,18 @@ extern "C"{
     #include "st_process.h"
     #include "st_manager.h"
     #include "st_easy_setup.h"
+    #include "st_data_manager.h"
 }
 
 #define SOFT_AP_PWD "1111122222"
 #define SOFT_AP_CHANNEL (6)
-static const char *device_name = "Samsung";
-static const char *manufacturer = "xxxx";
-static const char *sid = "000";
+static const char *device_name;
+static const char *manufacturer;
+static const char *sid;
 
 st_cond_t cv = NULL;
 st_mutex_t st_mutex = NULL;
+st_specification_t *spec_info = NULL;
 
 static void *thread_test(void *data){
     (void)data;
@@ -51,12 +53,16 @@ class TestSTPort: public testing::Test
     protected:
         virtual void SetUp()
         {
-
+            st_data_mgr_info_load();
+            spec_info = st_data_mgr_get_spec_info();
+            device_name = oc_string(spec_info->device.device_name);
+            manufacturer = oc_string(spec_info->platform.manufacturer_name);
+            sid = oc_string(spec_info->platform.model_number);
         }
 
         virtual void TearDown()
         {
-
+            st_data_mgr_info_free();
         }
 };
 
