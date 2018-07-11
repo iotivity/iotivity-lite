@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f44faf90",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-11T09:45:32Z",
+      "side": 1,
+      "message": "why this is added here? already model number is loaded from the json.",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 42
+      },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_144b3388",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-11T09:45:32Z",
+      "side": 1,
+      "message": "this block should receive cv from line 249. please use sttestcommon.h for cv wait logic.",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 235,
+        "endChar": 13
+      },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d481cb90",
+        "filename": "service/st-app-fw/unittest/stporttest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-11T09:45:32Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 264,
+        "endChar": 4
+      },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3473d7ea",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-11T09:45:32Z",
+      "side": 1,
+      "message": "use define for easy understand",
+      "range": {
+        "startLine": 178,
+        "startChar": 22,
+        "endLine": 178,
+        "endChar": 23
+      },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_74743fcf",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-11T09:45:32Z",
+      "side": 1,
+      "message": "Do you have any reason not to use condition variable?\nOtherwise, please change this.",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 13
+      },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
