@@ -163,7 +163,8 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
                                                seconds)                        \
   do {                                                                         \
     oc_ri_add_timed_event_callback_ticks(                                      \
-      cb_data, event_callback, (oc_clock_time_t)(seconds * OC_CLOCK_SECOND));  \
+      cb_data, event_callback,                                                 \
+      (oc_clock_time_t)seconds *(oc_clock_time_t)OC_CLOCK_SECOND);             \
   } while (0)
 
 void oc_ri_remove_timed_event_callback(void *cb_data,
@@ -179,7 +180,7 @@ oc_resource_t *oc_ri_get_app_resources(void);
 #ifdef OC_SERVER
 oc_resource_t *oc_ri_alloc_resource(void);
 bool oc_ri_add_resource(oc_resource_t *resource);
-void oc_ri_delete_resource(oc_resource_t *resource);
+bool oc_ri_delete_resource(oc_resource_t *resource);
 
 #ifdef OC_MAX_NUM_COLLECTIONS
 #define OC_COLLECTIONS
