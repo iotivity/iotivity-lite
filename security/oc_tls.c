@@ -816,6 +816,8 @@ gen_master_key(uint8_t *master, int *master_len)
   mbedtls_ecdh_init(&ecdh_ctx);
   int priv_len = 0, pub_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
   uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[64] = {0};
+  uint8_t priv_rev[32] = {0}, pub_rev[32] = {0}, peer_rev[32] = {0};
+  int i = 0;
 
   if (!master || !master_len) {
     OC_ERR("%s: NULL params", __func__);
@@ -827,19 +829,24 @@ gen_master_key(uint8_t *master, int *master_len)
   }
   g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
   g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
+  for (i = 31; i>=0; i--) {
+    priv_rev[31-i] = priv[i];
+    pub_rev[31-i] = pub[i];
+    peer_rev[31-i] = peer[i];
+  }
   if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
     OC_ERR("%s: load CURVE25519", __func__);
     return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv_rev, priv_len) != 0) {
     OC_ERR("%s: load private key", __func__);
     return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub_rev, pub_len) != 0) {
     OC_ERR("%s: load own public key", __func__);
     return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer_rev, peer_len) != 0) {
     OC_ERR("%s: set peer's public key X", __func__);
     return false;
   }
@@ -864,6 +871,18 @@ gen_master_key(uint8_t *master, int *master_len)
     return false;
   }
   *master_len = 32;
+  OC_DBG("oc_tls: token:");
+  OC_LOGbytes(token, token_len);
+  OC_DBG("oc_tls: own private key:");
+  OC_LOGbytes(priv_rev, priv_len);
+  OC_DBG("oc_tls: own public key:");
+  OC_LOGbytes(pub_rev, pub_len);
+  OC_DBG("oc_tls: cpubkey:");
+  OC_LOGbytes(peer_rev, peer_len);
+  OC_DBG("oc_tls: shared secret:");
+  OC_LOGbytes(shared, 32);
+  OC_DBG("oc_tls: master key:");
+  OC_LOGbytes(master, *master_len);
   mbedtls_ecdh_free(&ecdh_ctx);
   return true;
 }
