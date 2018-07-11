@@ -864,6 +864,18 @@ gen_master_key(uint8_t *master, int *master_len)
     return false;
   }
   *master_len = 32;
+  OC_DBG("oc_tls: token:");
+  OC_LOGbytes(token, token_len);
+  OC_DBG("oc_tls: own private key:");
+  OC_LOGbytes(priv, priv_len);
+  OC_DBG("oc_tls: own public key:");
+  OC_LOGbytes(pub, pub_len);
+  OC_DBG("oc_tls: cpubkey:");
+  OC_LOGbytes(peer, peer_len);
+  OC_DBG("oc_tls: shared secret:");
+  OC_LOGbytes(shared, 32);
+  OC_DBG("oc_tls: master key:");
+  OC_LOGbytes(master, *master_len);
   mbedtls_ecdh_free(&ecdh_ctx);
   return true;
 }
