@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_948903cd",
+        "filename": "security/oc_acl.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-11T07:09:28Z",
+      "side": 1,
+      "message": "Okay I\u0027ll do this in separate patch as this patch is for only /sec/accesspointlist",
+      "parentUuid": "da33351e_d4fc2b41",
+      "range": {
+        "startLine": 860,
+        "startChar": 0,
+        "endLine": 863,
+        "endChar": 6
+      },
+      "revId": "82e2675a7b3f953e749bcbb71a8269022e18d67a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_74ff1f35",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-11T07:00:00Z",
       "side": 1,
       "message": "use define for easy understanding.",
+      "range": {
+        "startLine": 119,
+        "startChar": 60,
+        "endLine": 119,
+        "endChar": 65
+      },
+      "revId": "82e2675a7b3f953e749bcbb71a8269022e18d67a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7486ffba",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-11T07:09:28Z",
+      "side": 1,
+      "message": "Okay.",
+      "parentUuid": "da33351e_74ff1f35",
       "range": {
         "startLine": 119,
         "startChar": 60,
