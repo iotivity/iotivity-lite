@@ -189,7 +189,7 @@ cache_device_if_not_known(oc_list_t list, oc_uuid_t *uuid,
     device = device->next;
   }
   if (!device) {
-    oc_device_t *device = oc_memb_alloc(&oc_devices_s);
+    device = oc_memb_alloc(&oc_devices_s);
     if (!device) {
       return NULL;
     }
@@ -254,7 +254,7 @@ oc_obt_load_state(void)
   if (ret > 0) {
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
     oc_rep_set_pool(&rep_objects);
-    uint16_t err = oc_parse_rep(buf, ret, &rep);
+    int err = oc_parse_rep(buf, ret, &rep);
     head = rep;
     if (err == 0) {
       while (rep != NULL) {
