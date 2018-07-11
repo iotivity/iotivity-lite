@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_545bfb86",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T05:58:31Z",
+      "side": 1,
+      "message": "minor report: this def. isn\u0027t needed because OC_SECURITY is defined at line 84",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 1
+      },
+      "revId": "3655e9d5ce580eb702eb0de6c5521dec59775c91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
