@@ -27,6 +27,7 @@ extern "C"{
     #include "oc_ri.h"
     #include "oc_rep.h"
     #include "st_port.h"
+    #include "st_types.h"
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
     int st_register_resources(int device);
@@ -73,14 +74,14 @@ TEST_F(TestSTResourceManager, st_register_resources_fail)
 
 TEST_F(TestSTResourceManager, st_register_resource_handler)
 {
-    st_register_resource_handler(resource_handler, resource_handler);
-    // EXPECT_EQ(0, ret);
+    st_error_t ret = st_register_resource_handler(resource_handler, resource_handler);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTResourceManager, st_register_resource_handler_fail)
 {
-    st_register_resource_handler(NULL, NULL);
-    // EXPECT_EQ(-1, ret);
+    st_error_t ret = st_register_resource_handler(NULL, NULL);
+    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back)
@@ -105,10 +106,10 @@ TEST_F(TestSTResourceManager, st_notify_back_fail_null)
     char *uri = NULL;
 
     // When
-    st_notify_back(uri);
+    st_error_t ret = st_notify_back(uri);
 
     // Then
-    // EXPECT_EQ(-1, ret);
+    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back_fail)
@@ -120,7 +121,7 @@ TEST_F(TestSTResourceManager, st_notify_back_fail)
     st_error_t ret = st_notify_back(uri);
 
     // Then
-    EXPECT_NE(ST_ERROR_NONE, ret);
+    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 }
 
 #define MAX_WAIT_TIME 10
@@ -174,7 +175,7 @@ class TestSTResourceManagerHandler: public testing::Test
 
         static void onPostResponse(oc_client_response_t *data)
         {
-            EXPECT_EQ(OC_STATUS_CHANGED, data->code);
+            EXPECT_EQ(2, data->code);
             isCallbackReceived = true;
         }
 
@@ -202,7 +203,7 @@ class TestSTResourceManagerHandler: public testing::Test
         {
             oc_clock_time_t next_event;
             (void)next_event;
-            while (waitTime && !isCallbackReceived)
+            while (waitTime && !isCallbackReceived && !isResourceDiscovered)
             {
                 PRINT("Waiting for callback....\n");
                 next_event = oc_main_poll();
@@ -273,6 +274,7 @@ TEST_F(TestSTResourceManagerHandler, Get_Request)
 {
     bool isSuccess = false;
     isCallbackReceived = false;
+    isResourceDiscovered = false;
 
     isSuccess = oc_do_get(RESOURCE_URI, LightEndpoint, NULL, onGetResponse, HIGH_QOS, NULL);
 
@@ -286,6 +288,7 @@ TEST_F(TestSTResourceManagerHandler, Post_Request)
 {
     bool init_success, post_success = false;
     isCallbackReceived = false;
+    isResourceDiscovered = false;
 
     init_success = oc_init_post(RESOURCE_URI, LightEndpoint, NULL, onPostResponse, LOW_QOS, NULL);
     oc_rep_start_root_object();
