@@ -868,55 +868,77 @@ gen_master_key(uint8_t *master, int *master_len)
 {
   mbedtls_ecdh_context ecdh_ctx;
   int priv_len = 0, pub_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
-  uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[64] = {0};
-  mbedtls_ecdh_init(&ecdh_ctx);
+  uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[32+32] = {0};
+  uint8_t peer_rev[32] = {0}, shared_rev[32] = {0}, priv_rev[32] = {0}, pub_rev[32] = {0};
+  int i = 0;
+
   if (!master || !master_len) {
-    OC_ERR("%s: NULL params", __func__);
-    goto master_key_error;
+    OC_ERR("NULL params");
+    return false;
   }
   if (!g_oc_sec_get_own_key || !g_oc_sec_get_cpubkey_and_token) {
-    OC_ERR("%s: callbacks not set", __func__);
-    goto master_key_error;
+    OC_ERR("callbacks not set");
+    return false;
   }
   g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
   g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
+  for (i = 31; i>=0; i--) {
+    peer_rev[31-i] = peer[i];
+    priv_rev[31-i] = priv[i];
+    pub_rev[31-i] = pub[i];
+  }
   if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
-    OC_ERR("%s: load CURVE25519", __func__);
-    goto master_key_error;
+    OC_ERR("load CURVE25519");
+    return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
-    OC_ERR("%s: load private key", __func__);
-    goto master_key_error;
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv_rev, priv_len) != 0) {
+    OC_ERR("load private key");
+    return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
-    OC_ERR("%s: load own public key", __func__);
-    goto master_key_error;
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub_rev, pub_len) != 0) {
+    OC_ERR("load own public key");
+    return false;
   }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
-    OC_ERR("%s: set peer's public key X", __func__);
-    goto master_key_error;
+  if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer_rev, peer_len) != 0) {
+    OC_ERR("set peer's public key X");
+    return false;
   }
   if (mbedtls_mpi_lset(&ecdh_ctx.Qp.Z, 1) != 0) {
-    OC_ERR("%s: set peer's public key Z", __func__);
-    goto master_key_error;
+    OC_ERR("set peer's public key Z");
+    return false;
   }
   if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
       &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
-    OC_ERR("%s: compute shared key", __func__);
-    goto master_key_error;
+    OC_ERR("compute shared key");
+    return false;
   }
   if (mbedtls_mpi_write_binary(&ecdh_ctx.z, shared, 32) != 0) {
-    OC_ERR("%s: write shared key", __func__);
-    goto master_key_error;
+    OC_ERR("write shared key");
+    return false;
   }
   tmp_len = token_len+32;
-  memcpy(tmp, shared, 32);
+  for (i = 31; i>=0; i--) {
+    shared_rev[31-i] = shared[i];
+  }
+  memcpy(tmp, shared_rev, 32);
   memcpy(tmp+32, token, token_len);
   if (mbedtls_sha256_ret(tmp, tmp_len, master, 0) != 0) {
-    OC_ERR("%s: sha256 hash", __func__);
+    OC_ERR("sha256 hash");
     return false;
   }
   *master_len = 32;
+  OC_DBG("oc_tls: token:");
+  OC_LOGbytes(token, token_len);
+  OC_DBG("oc_tls: own private key:");
+  OC_LOGbytes(priv_rev, priv_len);
+  OC_DBG("oc_tls: own public key:");
+  OC_LOGbytes(pub_rev, pub_len);
+  OC_DBG("oc_tls: cpubkey:");
+  OC_LOGbytes(peer_rev, peer_len);
+  OC_DBG("oc_tls: shared secret:");
+  OC_LOGbytes(shared_rev, 32);
+  OC_DBG("oc_tls: master key:");
+  OC_LOGbytes(master, *master_len);
   mbedtls_ecdh_free(&ecdh_ctx);
   return true;
 master_key_error:
