@@ -159,15 +159,28 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
+
+# AUTH_OPTION = 0   - root ca check is disabled for any TLS connection
+# AUTH_OPTION = 1   - preload manufacturer certificate chain to TLS context & and remove it after OTM
+# AUTH_OPTION = 2   - remove all certificates from TLS context after OTM
+#
+# default: AUTH_OPTION = 1
+
+ifndef AUTH_OPTION
+AUTH_OPTION=1
+endif
 ifneq ($(AUTH_OPTION),0)
-SAMPLES += rpk_server
-CFLAGS += -DOC_LOAD_CA
+#preload hardcoded certchain to TLS context
+CFLAGS += -DOC_LOAD_CA   
 ifeq ($(AUTH_OPTION),1)
+#remove all certchains from TLS context after OTM
 CFLAGS += -DOC_UNLOAD_CERT
 endif
 else
+#enable mbedtls patch to skip cert verification
 CFLAGS += -DOC_SKIP_CERT
 endif
+SAMPLES += rpk_server
 UNIT_TESTS += securitytest securitytest_v2
 endif
 
