@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1405f379",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T00:43:34Z",
+      "side": 1,
+      "message": "It seems that it isn\u0027t meaningful to do following process if ret is false.\nhow about using ASSERT_TRUE(ret) instead of EXPECT?\notherwise, just skipping following process would be possbile when it is false",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f4096f96",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T00:43:34Z",
+      "side": 1,
+      "message": "if ret is false. I think the following process doesn\u0027t need to be tested",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_54ff7b67",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T00:43:34Z",
+      "side": 1,
+      "message": "same to above comment",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3404777a",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-11T00:43:34Z",
+      "side": 1,
+      "message": "is it meaningful to check is_st_app_ready if ret isn\u0027t 0?",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
