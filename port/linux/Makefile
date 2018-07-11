@@ -154,6 +154,9 @@ SAMPLES += st_things
 endif
 
 ifeq ($(SECURE),1)
+ifndef AUTH_OPTION
+AUTH_OPTION=1
+endif
 ifneq ($(AUTH_OPTION),0)
 SAMPLES += rpk_server
 CFLAGS += -DOC_LOAD_CA
