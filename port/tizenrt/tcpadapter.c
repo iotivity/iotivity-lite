@@ -28,6 +28,7 @@
 #include "oc_session_events.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -62,6 +63,10 @@
 
 #define DEFAULT_RECEIVE_SIZE                                                   \
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
+#define LIMIT_RETRY_CONNECT 5
+
+#define TCP_CONNECT_TIMEOUT 5
 
 typedef struct tcp_session
 {
