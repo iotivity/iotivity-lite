@@ -19,6 +19,8 @@
 #ifndef IPCONTEXT_H
 #define IPCONTEXT_H
 
+#include "oc_endpoint.h"
+#include <pthread.h>
 #include <stdint.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -54,6 +56,7 @@ typedef struct tcp_context_t {
 
 typedef struct ip_context_t {
   struct ip_context_t *next;
+  OC_LIST_STRUCT(eps);
 #ifdef OC_IPV6
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;

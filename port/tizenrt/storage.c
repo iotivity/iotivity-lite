@@ -36,6 +36,7 @@ oc_storage_config(const char *store)
     return -ENOENT;
 
   strncpy(store_path, store, store_path_len);
+  store_path[store_path_len] = '\0';
   path_set = true;
 
   return 0;
