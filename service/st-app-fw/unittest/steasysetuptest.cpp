@@ -25,6 +25,7 @@ extern "C"{
     #include "sc_easysetup.h"
     #include "st_store.h"
     #include "easysetup.h"
+    #include "st_data_manager.h"
     #include "st_port.h"
     #include "sttestcommon.h"
     #include "messaging/coap/engine.h"
@@ -37,10 +38,10 @@ extern "C"{
 #define MAX_SSID_LEN (32)
 #define EASYSETUP_TAG "E1"
 
-static const char *device_name = "Samsung";
-static const char *manufacturer = "xxxx";
-static const char *sid = "000";
-static const char *modelNumber = "Model Number";
+static const char *device_name;
+static const char *manufacturer;
+static const char *sid;
+static st_specification_t *spec_info = NULL;
 
 void easy_setup_handler_test(st_easy_setup_status_t status)
 {
@@ -63,6 +64,12 @@ class TestSTEasySetup: public testing::Test
     protected:
         virtual void SetUp()
         {
+            st_data_mgr_info_load();
+            spec_info = st_data_mgr_get_spec_info();
+            device_name = oc_string(spec_info->device.device_name);
+            manufacturer = oc_string(spec_info->platform.manufacturer_name);
+            sid = oc_string(spec_info->platform.model_number);
+            st_data_mgr_info_free();
             s_handler.init = appInit;
             int initResult = oc_main_init(&s_handler);
             ASSERT_TRUE((initResult == 0));
@@ -106,7 +113,7 @@ TEST_F(TestSTEasySetup, st_easy_setup_stop_reset_sc_properties)
     sc_properties g_scprop;
     sc_properties *g_scprop_ptr = NULL;
     memset(&g_scprop, 0, sizeof(sc_properties));
-    oc_new_string(&g_scprop.model, modelNumber, strlen(modelNumber));
+    oc_new_string(&g_scprop.model, sid, strlen(sid));
     set_sc_properties(&g_scprop);
     st_easy_setup_stop();
     g_scprop_ptr = get_sc_properties();
@@ -274,7 +281,6 @@ class TestSTEasySetup_cb: public testing::Test
         {
             st_manager_stop();
             st_thread_destroy(t);
-            st_manager_stop();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
