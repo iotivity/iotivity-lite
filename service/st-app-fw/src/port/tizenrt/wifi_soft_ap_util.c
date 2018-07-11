@@ -21,6 +21,7 @@
 #include <net/lwip/dhcp.h>
 #include <net/lwip/netif.h>
 
+#define DHCP_BOUND 10
 static int g_wifi_state;
 static struct netif *gnet_if;
 
