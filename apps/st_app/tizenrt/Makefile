@@ -42,6 +42,7 @@ CFLAGS += -I$(IOTCON_BASE_DIR)/service/easy-setup/enrollee/include
 CFLAGS += -I$(IOTCON_BASE_DIR)/service/easy-setup/enrollee/include/samsung
 CFLAGS += -I$(IOTCON_BASE_DIR)/service/cloud-access/include
 CFLAGS += -I$(IOTCON_BASE_DIR)/service/resource-directory/client/include
+CFLAGS += -I$(IOTCON_BASE_DIR)/service/st-app-fw/include
 
 CFLAGS += -D__TIZENRT__ -DOC_SECURITY -DOC_CLIENT -DOC_IPV4 -DOC_DEBUG -DOC_SERVER -DOC_DYNAMIC_ALLOCATION -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
 
@@ -49,7 +50,7 @@ CFLAGS += -D__TIZENRT__ -DOC_SECURITY -DOC_CLIENT -DOC_IPV4 -DOC_DEBUG -DOC_SERV
 ASRCS =
 CSRCS =
 
-MAINSRC = tizenrt/st_ref_app_tizenrt.c st_manager.c st_easy_setup.c st_cloud_manager.c st_store.c st_resource_manager.c tizenrt/st_port.c tizenrt/st_process.c tizenrt/wifi_soft_ap_util.c
+MAINSRC = tizenrt/st_ref_app_tizenrt.c tizenrt/port_tinyara.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
