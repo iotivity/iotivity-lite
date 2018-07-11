@@ -1,13 +1,24 @@
 Getting Started
 ---------------
 
-IoTivity-Constrained is a lightweight implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT).
+IoTivity-Constrained is a lightweight implementation of the
+`Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards
+for the Internet of Things (IoT).
 
-It was designed to build secure and interoperable IoT applications in full compliance with the `OCF specifications <https://openconnectivity.org/developer/specifications>`_ with a minimal footprint not exceeding the needs of the specifications. The stack architecture lends itself to be ported rapidly to any chosen hardware/OS environment.
+It was designed to build secure and interoperable IoT applications in full
+compliance with the
+`OCF specifications <https://openconnectivity.org/developer/specifications>`_
+with a minimal footprint not exceeding the needs of the specifications. The
+stack architecture lends itself to be ported rapidly to any chosen hardware/OS
+environment.
 
-IoT applications may be built for a wide variety of rich and resource-constrained devices across the IoT landscape. As a general guideline, it should be feasible to deploy applications on class 2 constrained devices (>256KB Flash, >50KB RAM), or better.
+IoT applications may be built for a wide variety of rich and resource-constrained
+devices across the IoT landscape. As a general guideline, it should be feasible
+to deploy applications on class 2 constrained devices (>256KB Flash, >50KB RAM),
+or better.
 
-The project is open-source, and its code is distributed under the commercial-friendly Apache v2 license.
+The project is open-source, and its code is distributed under the
+commercial-friendly Apache v2 license.
 
 Contents
 --------
@@ -75,7 +86,8 @@ api/*
   contains the implementations of client/server APIs, the resource model,
   utility and helper functions to encode/decode
   to/from OCF’s data model, module for encoding and interpreting type 4
-  UUIDs, base64 strings, OCF endpoints, and handlers for the discovery, platform and device resources.
+  UUIDs, base64 strings, OCF endpoints, and handlers for the discovery, platform
+  and device resources.
 
 messaging/coap/*
   contains a tailored CoAP implementation.
@@ -146,21 +158,34 @@ Apply mbedTLS patches into deps/mbedtls using:
 Building sample applications on Linux
 -------------------------------------
 
-The entire build is specified in ``port/linux/Makefile``. The output of the build consists of all static and dynamic libraries, and sample application binaries which are stored under ``port/linux``.
+The entire build is specified in ``port/linux/Makefile``. The output of the
+build consists of all static and dynamic libraries, and sample application
+binaries which are stored under ``port/linux``.
 
-Run ``make`` for a release mode build without debug output, security support or support for dynamic memory allocation.
+Run ``make`` for a release mode build without debug output, or support for
+dynamic memory allocation.
 
 Add ``DYNAMIC=1`` to support dynamic memory allocation.
 
-Add ``SECURE=1`` to include the OCF security layer and mbedTLS.
+Add ``SECURE=0`` to exclude the OCF security layer and mbedTLS. The security
+layer is built by default.
 
 Add ``DEBUG=1`` for a debug mode build with verbose debug output.
 
-Note: The Linux port is the only adaptation layer that is actively maintained as of this writing (Jan 2018). The other ports will be updated imminently. Please watch for further updates on this matter.
+Add ``TCP=1`` to include support for TCP endpoints and CoAP over TCP (RFC 8323).
+
+Add ``IPV4=1`` to include IPv4 support in the build. Excluding ``IPV4=1``
+produces an IPv6-only build.
+
+Note: The Linux, Windows, and native Android ports are the only adaptation layers
+that are actively maintained as of this writing (July 2018). The other ports
+will be updated imminently. Please watch for further updates on this matter.
 
 Framework configuration
 -----------------------
 
-Build-time configuration options for an application are set in ``config.h``. This needs to be present in one of the include paths.
+Build-time configuration options for an application are set in ``config.h``.
+This needs to be present in one of the include paths.
 
-Pre-populated (sample) configurations for the sample applications for all targets are present in ``port/<OS>/config.h``.
+Pre-populated (sample) configurations for the sample applications for all
+targets are present in ``port/<OS>/config.h``.
