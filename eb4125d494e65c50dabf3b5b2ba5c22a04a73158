@@ -68,6 +68,30 @@
       "revId": "eb4125d494e65c50dabf3b5b2ba5c22a04a73158",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_97c46593",
+        "filename": "README.rst",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-11T20:35:24Z",
+      "side": 1,
+      "message": "fixing..\n\n(side question)\nI have actually been working on the windows port a little. I see that the VS project files are only setup for the debug build. I could update them and submit updated VS proj files and add documentation but I think that will be part of a different commit. For this I only wanted to update the Linux documentation.\n\nKishen, are we limiting the VS project files to a particular version of VS? I have VS2015 installed on my windows computer. If I should be working with a different version of VS it would be nice to know.",
+      "parentUuid": "da33351e_b7e4093c",
+      "range": {
+        "startLine": 180,
+        "startChar": 10,
+        "endLine": 180,
+        "endChar": 23
+      },
+      "revId": "eb4125d494e65c50dabf3b5b2ba5c22a04a73158",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
