@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define STACKSIZE 4096
+
 #define SYSTEM_RET_CHECK(ret)                                                  \
   do {                                                                         \
     if (system_ret_check(ret) != 0) {                                          \
@@ -186,6 +188,12 @@ st_thread_t
 st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
                  void *user_data)
 {
+  int status;
+  pthread_attr_t attr;
+
+  status = pthread_attr_init(&attr);
+  status = pthread_attr_setstacksize(&attr, STACKSIZE);
+
   if (!handler || stack_size < 0)
     return NULL;
 
@@ -193,7 +201,8 @@ st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
   if (!thread)
     oc_abort("alloc failed");
 
-  pthread_create((pthread_t *)thread, NULL, handler, user_data);
+  pthread_create((pthread_t *)thread, &attr, handler, user_data);
+
   pthread_setname_np(*(pthread_t *)thread, name);
 
   return thread;
@@ -356,13 +365,13 @@ st_connect_wifi(const char *ssid, const char *pwd)
 void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
-  oc_abort(__func__);
+//  oc_abort(__func__);
 }
 
 void
 st_wifi_set_cache(st_wifi_ap_t *scanlist)
 {
-  oc_abort(__func__);
+//  oc_abort(__func__);
 }
 
 st_wifi_ap_t*

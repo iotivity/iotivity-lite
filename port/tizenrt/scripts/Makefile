@@ -22,6 +22,9 @@
 IOTCONS_ROOT_DIR = $(TOPDIR)/../external/iotivity-constrained/iotivity-constrained
 
 MBEDTLS_DIR := $(IOTCONS_ROOT_DIR)/deps/mbedtls
+OS_HEADER  := $(TOPDIR)/include
+WIFI_HEADER := $(TOPDIR)/../framework/include
+SLSI_HEADER := $(TOPDIR)/../external/include
 
 DTLS_TAG ?= mbedtls-2.7.0
 DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    \
@@ -37,21 +40,22 @@ DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    
 	ssl_cache.c ssl_ciphersuites.c      ssl_cli.c   ssl_cookie.c            \
 	ssl_srv.c   ssl_ticket.c    ssl_tls.c   rsa_internal.c
 
-DTLSFLAGS=-I$(MBEDTLS_DIR)/include -D__OC_RANDOM
+DTLSFLAGS=-I $(MBEDTLS_DIR)/include/ -D__OC_RANDOM
 
 ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(CONFIG_IOTLITE_SECURE),y)
-	CSRCS   += $(addprefix $(IOTCONS_ROOT_DIR)/security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	CSRCS   += $(addprefix $(IOTCONS_ROOT_DIR)/security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_otm_state.c)
 	OSRCS_C += $(IOTCONS_ROOT_DIR)/security/oc_acl.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_cred.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_doxm.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_pstat.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_tls.o) \
 			+= $(IOTCONS_ROOT_DIR)/security/oc_svr.o) \
-			+= $(IOTCONS_ROOT_DIR)/security/oc_store.o)
+			+= $(IOTCONS_ROOT_DIR)/security/oc_store.o) \
+			+= $(IOTCONS_ROOT_DIR)/security/oc_otm_state.o)
 
 	CSRCS	+= $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
@@ -62,9 +66,9 @@ else
 	CSRCS += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 	OSRCS_C += $(MBEDTLS_DIR)/library/memory_buffer_alloc.o
 endif
-	CFLAGS += ${DTLSFLAGS}
+#	CFLAGS += ${DTLSFLAGS}
 	OSRCS_C += $(wildcard $(MBEDTLS_DIR)/library/*.o)
-	EXTRA_CFLAGS += -DOC_SECURITY
+	EXTRA_CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
 
 	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
 endif
@@ -76,7 +80,7 @@ ifeq ($(CONFIG_IOTLITE_RD),y)
 	CSRCS += iotivity-constrained/service/resource-directory/client/src/rd_client.c
 	OSRCS_C += iotivity-constrained/service/resource-directory/client/src/rd_client.o
 endif
-	CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
+	EXTRA_CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
 			   -Iiotivity-constrained/service/resource-directory/client/include
 endif
 
@@ -88,16 +92,6 @@ CSRCS		+= iotivity-constrained/deps/tinycbor/src/cborencoder.c \
 			   $(wildcard iotivity-constrained/api/*.c) \
 			   $(wildcard iotivity-constrained/port/tizenrt/*.c)
 
-ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
-CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c) \
-			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c)
-OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o) \
-			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o)
-CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
-		    -Iiotivity-constrained/service/easy-setup/enrollee \
-		    -Iiotivity-constrained/service/easy-setup/enrollee/include
-endif
-
 OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   iotivity-constrained/deps/tinycbor/src/cborencoder_close_container_checked.o \
 			   iotivity-constrained/deps/tinycbor/src/cborparser.o \
@@ -105,6 +99,40 @@ OSRCS_C		+= iotivity-constrained/deps/tinycbor/src/cborencoder.o \
 			   $(wildcard iotivity-constrained/messaging/coap/*.o) \
 			   $(wildcard iotivity-constrained/api/*.o) \
 			   $(wildcard iotivity-constrained/port/tizenrt/*.o)
+
+ifeq ($(CONFIG_IOTLITE_EASYSETUP), y)
+CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c) \
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c)
+OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o) \
+			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o)
+EXTRA_CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
+		    -Iiotivity-constrained/service/easy-setup/enrollee \
+		    -Iiotivity-constrained/service/easy-setup/enrollee/include
+endif
+
+ifeq ($(CONFIG_IOTLITE_ST_APP_FW),y)
+CSRCS       += $(wildcard iotivity-constrained/service/st-app-fw/src/*.c) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.c)
+OSRCS_C     += $(wildcard iotivity-constrained/service/st-app-fw/src/*.o) \
+			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.o)
+EXTRA_CFLAGS      += -Iiotivity-constrained/service/st-app-fw/include
+ST_DEVICE_DEF= $(IOTCONS_ROOT_DIR)/service/st-app-fw/json/st_device_def
+ST_JSON_FILE := $(wildcard $(IOTCONS_ROOT_DIR)/service/st-app-fw/json/*.json)
+ST_DEVICE_DEF_HEADER=$(IOTCONS_ROOT_DIR)/service/st-app-fw/include/st_device_def.h
+ifeq ($(CONFIG_IOTLITE_ARCH), x86_64)
+JSON_TO_CBOR=$(IOTCONS_ROOT_DIR)/service/st-app-fw/json/json2cbor
+else
+JSON_TO_CBOR=$(IOTCONS_ROOT_DIR)/service/st-app-fw/json/json2cbor_32
+endif
+endif
+
+ifeq ($(CONFIG_IOTLITE_FOTA),y)
+CSRCS       += $(wildcard iotivity-constrained/service/fota/src/*.c)
+OSRCS_C     += $(wildcard iotivity-constrained/service/fota/src/*.o)
+CFLAGS=-Iiotivity-constrained/service/fota/include
+endif
+
+CFLAGS += -DST_APP_FW
 
 ifeq ($(CONFIG_IOTLITE_IPV4),y)
 	EXTRA_CFLAGS += -DOC_IPV4
@@ -122,9 +150,28 @@ ifeq ($(CONFIG_WIFI_MANAGER),y)
 	EXTRA_CFLAGS += -DTIZEN_RT_WIFI_MANAGER
 endif
 
+ifeq ($(CONFIG_IOTLITE_SECURE),y)
+ifneq ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+CFLAGS += -DOC_LOAD_CA
+ifeq ($(CONFIG_IOTLITE_AUTH_OPTION),y)
+CFLAGS += -DOC_UNLOAD_CERT
+endif
+else
+CFLAGS += -DOC_SKIP_CERT
+endif
+endif
+
+ifeq ($(CONFIG_IOTLITE_OPTIMIZE),y)
+	CFLAGS += -DST_APP_OPTIMIZATION
+endif
+
+
+EXTRA_CFLAGS += -I$(WIFI_HEADER)
+EXTRA_CFLAGS += -I$(SLSI_HEADER)
 CFLAGS:=$(filter-out -Wshadow,$(CFLAGS))
 CFLAGS:=$(filter-out -Wundef,$(CFLAGS))
 CFLAGS += -D__TIZENRT__ -DOC_SPEC_VER_OIC -DOC_CLIENT -DOC_SERVER -DOC_PROCESS_CONF_NO_OC_PROCESS_NAMES=0 -DOC_PROCESS_CONF_STATS=0 -std=gnu99
+EXTRA_CFLAGS += -I$(OS_HEADER)
 CFLAGS += $(EXTRA_CFLAGS)
 CFLAGS		+= -Itinycbor/src/ \
 			   -Iiotivity-constrained/ \
@@ -175,13 +222,30 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 	echo "Patches applied in $^" > ${@F}
 endif
 
+prep_st_app_fw:
+ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
+else
+ifneq ("$(wildcard $(ST_JSON_FILE))", "")
+else
+	$(error please use proper json file in service/st-app-fw/json)
+endif
+ifneq ($(words $(ST_JSON_FILE)), 1)
+	$(error please use 1 json file in service/st-app-fw/json)
+else
+	$(info make new st_device_def file using $(ST_JSON_FILE))
+	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
+	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
+	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
+endif
+endif
+
 all: .built
 .PHONY: depend clean distclean
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS): %$(OBJEXT): %.c
+$(COBJS): %$(OBJEXT): %.c prep_st_app_fw
 	$(call COMPILE, $<, $@)
 
 .built: $(OBJS)
