@@ -23,10 +23,12 @@
 extern "C"{
     #include "st_data_manager.h"
     #include "st_resource_manager.h"
+    #include "st_manager.h"
     #include "oc_api.h"
     #include "oc_ri.h"
     #include "oc_rep.h"
     #include "st_port.h"
+    #include "st_types.h"
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
     int st_register_resources(int device);
@@ -73,14 +75,14 @@ TEST_F(TestSTResourceManager, st_register_resources_fail)
 
 TEST_F(TestSTResourceManager, st_register_resource_handler)
 {
-    st_register_resource_handler(resource_handler, resource_handler);
-    // EXPECT_EQ(0, ret);
+    st_error_t ret = st_register_resource_handler(resource_handler, resource_handler);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 TEST_F(TestSTResourceManager, st_register_resource_handler_fail)
 {
-    st_register_resource_handler(NULL, NULL);
-    // EXPECT_EQ(-1, ret);
+    st_error_t ret = st_register_resource_handler(NULL, NULL);
+    EXPECT_EQ(ST_ERROR_INVALID_PARAMETER, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back)
@@ -105,10 +107,10 @@ TEST_F(TestSTResourceManager, st_notify_back_fail_null)
     char *uri = NULL;
 
     // When
-    st_notify_back(uri);
+    st_error_t ret = st_notify_back(uri);
 
     // Then
-    // EXPECT_EQ(-1, ret);
+    EXPECT_EQ(ST_ERROR_INVALID_PARAMETER, ret);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back_fail)
@@ -120,174 +122,129 @@ TEST_F(TestSTResourceManager, st_notify_back_fail)
     st_error_t ret = st_notify_back(uri);
 
     // Then
-    EXPECT_NE(ST_ERROR_NONE, ret);
+    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 }
 
-#define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/capability/switch/main/0"
-#define DEVICE_URI "/oic/d"
-#define DEVICE_TYPE "oic.d.light"
-#define MANUFACTURER_NAME "Samsung"
-#define DEVICE_NAME "Table Lamp"
-#define DEVICE_NUM 0
-#define OCF_SPEC_VERSION "core.1.1.0"
-#define OCF_DATA_MODEL_VERSION "res.1.1.0"
+
+static st_mutex_t mutex, g_mutex, p_mutex;
+static st_cond_t cv, g_cv, p_cv;
+static bool isCallbackReceived;
+static oc_endpoint_t *ep;
+static oc_status_t status;
+static st_thread_t t = NULL;
 
 class TestSTResourceManagerHandler: public testing::Test
 {
     public:
-        static oc_handler_t handler;
-        static pthread_mutex_t mutex;
-        static pthread_cond_t cv;
-        static bool isServerStarted;
-        static bool isResourceDiscovered;
-        static bool isCallbackReceived;
-        static oc_endpoint_t *LightEndpoint;
 
-        static oc_discovery_flags_t onResourceDiscovered(const char *di, const char *uri,
-                oc_string_array_t types, oc_interface_mask_t interfaces,
-                oc_endpoint_t *endpoint, oc_resource_properties_t bm, void *user_data)
+        static void
+        st_status_handler(st_status_t status)
         {
-            (void)di;
-            (void)types;
-            (void)interfaces;
-            (void)bm;
-            (void)user_data;
-            std::string discoveredResourceUri = std::string(uri);
-            if (discoveredResourceUri.compare(RESOURCE_URI) == 0)
-            {
-                PRINT("Switch Resource Discovered...\n");
-                LightEndpoint = endpoint;
-                isResourceDiscovered = true;
-                return OC_STOP_DISCOVERY;
+            if (status == ST_STATUS_EASY_SETUP_PROGRESSING ||
+                status == ST_STATUS_EASY_SETUP_DONE) {
+                st_mutex_lock(mutex);
+                st_cond_signal(cv);
+                st_mutex_unlock(mutex);
+            }
+        }
+
+        static
+        void *st_manager_func(void *data)
+        {
+            (void)data;
+            st_error_t ret = st_manager_start();
+            EXPECT_EQ(ST_ERROR_NONE, ret);
+
+            return NULL;
+        }
+
+        static oc_endpoint_t *
+        get_endpoint(void)
+        {
+            oc_endpoint_t *eps = oc_connectivity_get_endpoints(0);
+
+            while (eps && ((eps->flags & oc_endpoint_t::transport_flags::TCP) ||
+                        (eps->flags & oc_endpoint_t::transport_flags::IPV6))) {
+                eps = eps->next;
             }
 
-            oc_free_server_endpoints(endpoint);
-            return OC_CONTINUE_DISCOVERY;
+            EXPECT_NE(NULL, eps);
+
+            return eps;
         }
 
         static void onGetResponse(oc_client_response_t *data)
         {
-            (void)data;
             isCallbackReceived = true;
+            st_mutex_lock(g_mutex);
+            st_cond_signal(g_cv);
+            st_mutex_unlock(g_mutex);
         }
 
         static void onPostResponse(oc_client_response_t *data)
         {
             EXPECT_EQ(OC_STATUS_CHANGED, data->code);
             isCallbackReceived = true;
-        }
-
-        static int appInit(void)
-        {
-            int result = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
-            result |= oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
-                                    OCF_SPEC_VERSION, OCF_DATA_MODEL_VERSION, NULL, NULL);
-            return result;
-        }
-
-        static void signalEventLoop(void)
-        {
-            pthread_mutex_lock(&mutex);
-            pthread_cond_signal(&cv);
-            pthread_mutex_unlock(&mutex);
-        }
-
-        static void registerResources(void)
-        {
-            st_register_resources(DEVICE_NUM);
-        }
-
-        static void waitForEvent(int waitTime)
-        {
-            oc_clock_time_t next_event;
-            (void)next_event;
-            while (waitTime && !isCallbackReceived)
-            {
-                PRINT("Waiting for callback....\n");
-                next_event = oc_main_poll();
-                sleep(1);
-                waitTime--;
-            }
+            st_mutex_lock(p_mutex);
+            st_cond_signal(p_cv);
+            st_mutex_unlock(p_mutex);
         }
 
     protected:
         virtual void SetUp()
         {
-
+            mutex = st_mutex_init();
+            cv = st_cond_init();
+            st_manager_initialize();
+            st_register_status_handler(st_status_handler);
+            t = st_thread_create(st_manager_func, "TEST", 0, NULL);
+            test_wait_until(mutex, cv, 5);
+#ifdef OC_SECURITY
+            oc_storage_config("./st_things_creds");
+#endif /* OC_SECURITY */
+            reset_storage();
+            get_wildcard_acl_policy();
+            ep = get_endpoint();
         }
 
         virtual void TearDown()
         {
-            deinit_provisioning_info_resource();
-        }
-
-        static void SetUpTestCase()
-        {
-            handler.init = appInit;
-            handler.signal_event_loop = signalEventLoop;
-            handler.register_resources = registerResources;
-#ifdef OC_SECURITY
-            oc_storage_config("./st_things_creds");
-#endif /* OC_SECURITY */
-            st_data_mgr_info_load();
-
-            int initResult = oc_main_init(&handler);
-            if ( initResult < 0)
-            {
-                FAIL() << "Initialization of main server failed";
-                isServerStarted = false;
-            }
-            else
-            {
-                isServerStarted = true;
-            }
-
-            get_wildcard_acl_policy();
-
-            ASSERT_TRUE(oc_do_ip_discovery(NULL, onResourceDiscovered, NULL)) << "oc_do_ip_discovery() returned failure.";
-
-            waitForEvent(MAX_WAIT_TIME);
-            ASSERT_TRUE(isResourceDiscovered) << " Unable to discover Switch Resource";
-        }
-
-        static void TearDownTestCase()
-        {
-            if (isServerStarted)
-                oc_main_shutdown();
-
-            st_data_mgr_info_free();
+            st_manager_stop();
+            st_thread_destroy(t);
+            st_manager_deinitialize();
             reset_storage();
+            st_cond_destroy(cv);
+            st_mutex_destroy(mutex);
         }
 };
-
-bool TestSTResourceManagerHandler::isServerStarted = false;
-bool TestSTResourceManagerHandler::isCallbackReceived = false;
-bool TestSTResourceManagerHandler::isResourceDiscovered = false;
-oc_endpoint_t *TestSTResourceManagerHandler::LightEndpoint = nullptr;
-oc_handler_t TestSTResourceManagerHandler::handler;
-pthread_mutex_t TestSTResourceManagerHandler::mutex;
-pthread_cond_t TestSTResourceManagerHandler::cv;
 
 TEST_F(TestSTResourceManagerHandler, Get_Request)
 {
     bool isSuccess = false;
     isCallbackReceived = false;
-
-    isSuccess = oc_do_get(RESOURCE_URI, LightEndpoint, NULL, onGetResponse, HIGH_QOS, NULL);
+    g_mutex = st_mutex_init();
+    g_cv = st_cond_init();
+    isSuccess = oc_do_get(RESOURCE_URI, ep, NULL, onGetResponse, HIGH_QOS, NULL);
 
     EXPECT_TRUE(isSuccess);
-
-    waitForEvent(MAX_WAIT_TIME);
+    test_wait_until(g_mutex, g_cv, 5);
     EXPECT_TRUE(isCallbackReceived);
+
+    st_mutex_destroy(g_mutex);
+    st_cond_destroy(g_cv);
+    g_cv = NULL;
+    g_mutex = NULL;
 }
 
 TEST_F(TestSTResourceManagerHandler, Post_Request)
 {
     bool init_success, post_success = false;
     isCallbackReceived = false;
+    p_mutex = st_mutex_init();
+    p_cv = st_cond_init();
 
-    init_success = oc_init_post(RESOURCE_URI, LightEndpoint, NULL, onPostResponse, LOW_QOS, NULL);
+    init_success = oc_init_post(RESOURCE_URI, ep, NULL, onPostResponse, LOW_QOS, NULL);
     oc_rep_start_root_object();
     oc_rep_set_int(root, power, 105);
     oc_rep_end_root_object();
@@ -296,6 +253,10 @@ TEST_F(TestSTResourceManagerHandler, Post_Request)
     EXPECT_TRUE(init_success);
     EXPECT_TRUE(post_success);
 
-    waitForEvent(MAX_WAIT_TIME);
+    test_wait_until(p_mutex, p_cv, 5);
     EXPECT_TRUE(isCallbackReceived);
+    st_cond_destroy(p_cv);
+    st_mutex_destroy(p_mutex);
+    p_cv = NULL;
+    p_mutex = NULL;
 }
