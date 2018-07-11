@@ -9,7 +9,7 @@ set GIT_CMD=git
 @rem Get location of Git. ~p drops the executable name and keeps
 @rem the path only
 for /f "tokens=*" %%i in ('where %GIT_CMD%') do set GIT_LOCATION=%%~pi
-set PATCH_CMD=%GIT_LOCATION%..\usr\bin\patch.exe
+set PATCH_CMD=%GIT_LOCATION%..\..\usr\bin\patch.exe
 
 @rem current working directory for recovery
 set OLD_CWD=%CD%
