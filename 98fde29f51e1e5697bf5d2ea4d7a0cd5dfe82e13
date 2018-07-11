@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7793a1a3",
+        "filename": "README.rst",
+        "patchSetId": 2
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-11T18:51:05Z",
+      "side": 1,
+      "message": "should this say exclude instead of disable?",
+      "range": {
+        "startLine": 170,
+        "startChar": 20,
+        "endLine": 170,
+        "endChar": 27
+      },
+      "revId": "98fde29f51e1e5697bf5d2ea4d7a0cd5dfe82e13",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
