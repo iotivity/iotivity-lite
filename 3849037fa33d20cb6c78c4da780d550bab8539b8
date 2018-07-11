@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b41d27c0",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-11T05:44:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_1405f379",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f4096f96",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-07-11T00:43:34Z",
       "side": 1,
       "message": "if ret is false. I think the following process doesn\u0027t need to be tested",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f47e8fe3",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-11T05:44:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_f4096f96",
       "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_54849bd3",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-11T05:44:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_54ff7b67",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3404777a",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-07-11T00:43:34Z",
       "side": 1,
       "message": "is it meaningful to check is_st_app_ready if ret isn\u0027t 0?",
+      "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_147a13f1",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-11T05:44:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3404777a",
       "revId": "3849037fa33d20cb6c78c4da780d550bab8539b8",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
