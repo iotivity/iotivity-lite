@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b79c096b",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-12T05:51:25Z",
+      "side": 1,
+      "message": "Also describe what each flag (OC_LOAD_CA, OC_UNLOAD_CERT, OC_SKIP_CERT) means.",
+      "parentUuid": "da33351e_57ac9da0",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 13
+      },
+      "revId": "6b72c798efb1d74121a95564b8b484cecfca288f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_17a215ae",
         "filename": "port/linux/Makefile",
         "patchSetId": 1
