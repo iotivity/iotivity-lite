@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f717b1a1",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-12T08:53:29Z",
+      "side": 1,
+      "message": "please add code comments explaining that we need to set stacksize for tizen rt. As we had to spent lot of time debugging crash issues which were fixed after setting stack size, it should be known to any developer checking this code for future reference.",
+      "revId": "88beaad758eb8d459c0c4fa4a5f2f312a5c43c19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
