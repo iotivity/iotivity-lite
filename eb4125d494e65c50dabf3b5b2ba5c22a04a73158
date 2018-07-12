@@ -116,6 +116,30 @@
       "revId": "eb4125d494e65c50dabf3b5b2ba5c22a04a73158",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_77ce015c",
+        "filename": "README.rst",
+        "patchSetId": 3
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 12373
+      },
+      "writtenOn": "2018-07-12T07:30:23Z",
+      "side": 1,
+      "message": "Hi George, we at Lynx are probably one of the few using Lite on Windows. We are also using VS2015. Hence, a +1 from us for improving the sample project files using that version (in a separate commit). Thanks! Andreas",
+      "parentUuid": "da33351e_97c46593",
+      "range": {
+        "startLine": 180,
+        "startChar": 10,
+        "endLine": 180,
+        "endChar": 23
+      },
+      "revId": "eb4125d494e65c50dabf3b5b2ba5c22a04a73158",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
