@@ -22,14 +22,15 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-    #include "transactions.h"
-    #include "oc_api.h"
-    #include "oc_endpoint.h"
-    #include "oc_signal_event_loop.h"
-    #define delete pseudo_delete
-    #include "oc_core_res.h"
-    #undef delete
+#include "transactions.h"
+#include "oc_api.h"
+#include "oc_endpoint.h"
+#include "oc_signal_event_loop.h"
+#define delete pseudo_delete
+#include "oc_core_res.h"
+#undef delete
 }
+
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"
@@ -52,7 +53,7 @@ class TestCoapTransaction: public testing::Test
             oc_core_init();
             oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
             oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
-                        OCF_SPEC_VERSION, OCF_DATA_MODEL_VERSION, NULL, NULL);
+                          OCF_SPEC_VERSION, OCF_DATA_MODEL_VERSION, NULL, NULL);
         }
 
         virtual void TearDown()
@@ -67,7 +68,7 @@ class TestCoapTransaction: public testing::Test
 TEST_F(TestCoapTransaction, CreateTransactionTest_P)
 {
     oc_endpoint_t *endpoint = oc_new_endpoint();
-    uint16_t mid = 1234;
+    uint16_t mid = coap_get_mid();;
     coap_transaction_t *transaction = NULL;
     transaction = coap_new_transaction(mid, endpoint);
     EXPECT_TRUE(NULL != transaction) << "Failed to create transaction";
@@ -77,8 +78,24 @@ TEST_F(TestCoapTransaction, GetTransactionTest_P)
 {
 
     oc_endpoint_t *endpoint = oc_new_endpoint();
-    uint16_t mid = 12345;
+    uint16_t mid = coap_get_mid();;
     coap_transaction_t *transaction = coap_new_transaction(mid, endpoint);
     coap_transaction_t *retrievedTransaction = coap_get_transaction_by_mid(mid);
     EXPECT_EQ(retrievedTransaction, transaction) << "Failed to get transaction";
+}
+
+TEST_F(TestCoapTransaction, SendClearTransactionTest_P)
+{
+
+    oc_endpoint_t *endpoint = oc_new_endpoint();
+    uint16_t mid = coap_get_mid();;
+    coap_transaction_t *transaction = coap_new_transaction(mid, endpoint);
+    coap_send_transaction(transaction);
+    coap_clear_transaction(transaction);
+}
+
+TEST_F(TestCoapTransaction, FreeAllTransactionTest_P)
+{
+
+    coap_free_all_transactions();
 }
