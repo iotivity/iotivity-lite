@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_d749cdd1",
+        "filename": "apps/st_app/tizenrt/port_tinyara.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-12T08:48:24Z",
+      "side": 1,
+      "message": "2018",
+      "revId": "d55bc98e57e848a6d6da39900f969a0c5203dbbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b746c9bd",
+        "filename": "apps/st_app/tizenrt/port_tinyara.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-12T08:48:24Z",
+      "side": 1,
+      "message": "why do we need to include this file as part of app code ?\n\ncan\u0027t we move it as part of lite stack library ?",
+      "range": {
+        "startLine": 3,
+        "startChar": 1,
+        "endLine": 130,
+        "endChar": 1
+      },
+      "revId": "d55bc98e57e848a6d6da39900f969a0c5203dbbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_773c4130",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-12T08:48:24Z",
+      "side": 1,
+      "message": "tabs need to be removed and replaced with spaces",
+      "revId": "d55bc98e57e848a6d6da39900f969a0c5203dbbb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
