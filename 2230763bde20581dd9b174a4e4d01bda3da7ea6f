@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f7bb31c2",
+        "filename": "security/unittest/resources_test.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 3073
+      },
+      "writtenOn": "2018-07-12T06:41:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_17bb35e6",
+      "range": {
+        "startLine": 1297,
+        "startChar": 0,
+        "endLine": 1359,
+        "endChar": 1
+      },
+      "revId": "2230763bde20581dd9b174a4e4d01bda3da7ea6f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_37bab9de",
         "filename": "security/unittest_v2/resources_test.cpp",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-12T01:13:18Z",
       "side": 1,
       "message": "What does this intend?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 42
+      },
+      "revId": "2230763bde20581dd9b174a4e4d01bda3da7ea6f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_37b639da",
+        "filename": "security/unittest_v2/resources_test.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 3073
+      },
+      "writtenOn": "2018-07-12T06:41:36Z",
+      "side": 1,
+      "message": "That link used for build unit tests with OC_SPEC_VER_OIC flag",
+      "parentUuid": "da33351e_37bab9de",
       "range": {
         "startLine": 1,
         "startChar": 0,
