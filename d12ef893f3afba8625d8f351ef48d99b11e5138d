@@ -48,6 +48,74 @@
     },
     {
       "key": {
+        "uuid": "da33351e_17d4d51e",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "how about setting isResourceDiscovered to false where SetupTestcase starts like line 274?\n\n if you think other place is better to init isResourceDiscovered, it would be good..",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b717e9ec",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "would you please let us know why isResourceDiscovered is set here?\nIt seems that this test doesn\u0027t use it.",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f73171a3",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "It seems that it isn\u0027t meaningful to check post_success if init_success  is false",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_57277d64",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "I think checking isCallbackReceived doesn\u0027t make sense when post_success is false",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_d481cb90",
         "filename": "service/st-app-fw/unittest/stporttest.cpp",
         "patchSetId": 3
@@ -111,6 +179,74 @@
         "endLine": 212,
         "endChar": 13
       },
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_771d610f",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "I am curious whether isResourceDiscovered is supposed to be set in order to test or not.\nif isResourceDiscovered  is not needed, would you please remove it? \notherwise, please let us know why it should be set to false",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_372c7947",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "if isSuccess is false, it isn\u0027t meaningful to  check isCallbackReceived",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d71a6d16",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "I am curious whether isResourceDiscovered is supposed to be set in order to test or not. if isResourceDiscovered is not needed, would you please remove it? otherwise, please let us know why it should be set to false",
+      "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9720e54a",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-12T00:55:42Z",
+      "side": 1,
+      "message": "when init_success is false, you\u0027d better skip testing post_success",
       "revId": "d12ef893f3afba8625d8f351ef48d99b11e5138d",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
