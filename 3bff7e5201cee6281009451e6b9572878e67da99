@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7723a105",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "For readability better add one empty line after declarations ...do for all tests..",
+      "range": {
+        "startLine": 300,
+        "startChar": 28,
+        "endLine": 300,
+        "endChar": 29
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d720adf9",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "please check EQ or NE??",
+      "range": {
+        "startLine": 311,
+        "startChar": 20,
+        "endLine": 311,
+        "endChar": 22
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_57849dd3",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "please keep naming as uniform ",
+      "range": {
+        "startLine": 321,
+        "startChar": 25,
+        "endLine": 321,
+        "endChar": 46
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b71d29c0",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 323,
+        "startChar": 29,
+        "endLine": 323,
+        "endChar": 30
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d7770d01",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "check name in all cases",
+      "range": {
+        "startLine": 330,
+        "startChar": 25,
+        "endLine": 330,
+        "endChar": 49
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b77409fe",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-12T10:30:35Z",
+      "side": 1,
+      "message": "Please check all belongs to UnicastRequest ?",
+      "range": {
+        "startLine": 337,
+        "startChar": 5,
+        "endLine": 337,
+        "endChar": 23
+      },
+      "revId": "3bff7e5201cee6281009451e6b9572878e67da99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
