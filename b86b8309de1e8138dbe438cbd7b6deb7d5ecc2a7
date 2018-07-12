@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7709e130",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-12T23:18:30Z",
+      "side": 1,
+      "message": "I went back to the commit before my change and the simpleservce and simpleclient also always fail with a securyt failure in the same way.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 35
+      },
+      "revId": "b86b8309de1e8138dbe438cbd7b6deb7d5ecc2a7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
