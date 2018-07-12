@@ -1628,12 +1628,13 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   int ret = getaddrinfo(domain, NULL, &hints, &result);
 
   if (ret == 0) {
-    char address[NI_MAXHOST];
-    ret = getnameinfo(result->ai_addr, result->ai_addrlen, address,
-                      sizeof(address), NULL, 0, 0);
-    if (ret == 0) {
+    struct sockaddr_in *s_addr = (struct sockaddr_in *)result->ai_addr;
+    char *address = inet_ntoa(s_addr->sin_addr);
+    if (address) {
       OC_DBG("%s address is %s", domain, address);
       oc_new_string(addr, address, strlen(address));
+    } else {
+      ret = -1;
     }
   }
 
