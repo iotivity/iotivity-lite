@@ -20,11 +20,14 @@
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_otm_state.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
-#include "oc_otm_state.h"
 #include <stddef.h>
 #include <string.h>
+#ifndef _WIN32
+#include <strings.h>
+#endif
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -79,7 +82,7 @@ void
 oc_sec_encode_doxm(int device)
 {
   int oxms[1] = { doxm[device].oxmsel };
-  char uuid[37];
+  char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
@@ -87,11 +90,11 @@ oc_sec_encode_doxm(int device)
   oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);
   oc_rep_set_int(root, sct, doxm[device].sct);
   oc_rep_set_boolean(root, owned, doxm[device].owned);
-  oc_uuid_to_str(&doxm[device].devowneruuid, uuid, 37);
+  oc_uuid_to_str(&doxm[device].devowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, devowneruuid, uuid);
-  oc_uuid_to_str(&doxm[device].deviceuuid, uuid, 37);
+  oc_uuid_to_str(&doxm[device].deviceuuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, deviceuuid, uuid);
-  oc_uuid_to_str(&doxm[device].rowneruuid, uuid, 37);
+  oc_uuid_to_str(&doxm[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 }
@@ -114,7 +117,12 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
     if (ql > 0 &&
         ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
          (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
-      oc_ignore_request(request);
+      if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+        request->response->response_buffer->code =
+          oc_status_code(OC_STATUS_BAD_REQUEST);
+      } else {
+        oc_ignore_request(request);
+      }
     } else {
       oc_sec_encode_doxm(device);
       oc_send_response(request, OC_STATUS_OK);

@@ -34,8 +34,8 @@ _oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
                    user_data)) {
-    char uuid[MAX_UUID_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+    char uuid[OC_UUID_LEN] = { 0 };
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, di, uuid);
@@ -90,8 +90,8 @@ oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {
-    char uuid[MAX_UUID_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+    char uuid[OC_UUID_LEN] = { 0 };
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
     if (is_sign_in)
@@ -142,8 +142,8 @@ oc_set_device_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
     int device = 0;
     for (; device < oc_core_get_num_devices(); device++) {
       oc_device_info_t *device_info = oc_core_get_device_info(device);
-      char uuid[MAX_UUID_LENGTH] = { 0 };
-      oc_uuid_to_str(&device_info->di, uuid, MAX_UUID_LENGTH);
+      char uuid[OC_UUID_LEN] = { 0 };
+      oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
 
       oc_rep_object_array_start_item(devices);
       oc_rep_set_text_string(devices, di, uuid);
@@ -183,8 +183,8 @@ oc_delete_device(oc_endpoint_t *endpoint, const char *uid, int device_index,
     return false;
   }
 
-  char uuid[MAX_UUID_LENGTH] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
 
   size_t len = strlen(uuid) + strlen(uid) + 9;
   char query[len];
@@ -207,8 +207,8 @@ oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {
-    char uuid[MAX_UUID_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+    char uuid[OC_UUID_LEN] = { 0 };
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, uid, uid);

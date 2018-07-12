@@ -60,6 +60,8 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
 int
 oc_get_query_value(oc_request_t *request, const char *key, char **value)
 {
+  if (!request)
+    return -1;
   return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
@@ -315,10 +317,10 @@ oc_add_resource(oc_resource_t *resource)
   return oc_ri_add_resource(resource);
 }
 
-void
+bool
 oc_delete_resource(oc_resource_t *resource)
 {
-  oc_ri_delete_resource(resource);
+  return oc_ri_delete_resource(resource);
 }
 
 #ifndef ST_APP_OPTIMIZATION

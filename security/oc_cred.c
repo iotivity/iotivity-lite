@@ -192,7 +192,7 @@ void
 oc_sec_encode_cred(bool persist, int device)
 {
   oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
-  char uuid[37];
+  char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_CRED, device));
@@ -201,7 +201,7 @@ oc_sec_encode_cred(bool persist, int device)
     oc_rep_object_array_start_item(creds);
     oc_rep_set_int(creds, credid, cr->credid);
     oc_rep_set_int(creds, credtype, cr->credtype);
-    oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
+    oc_uuid_to_str(&cr->subjectuuid, uuid, OC_UUID_LEN);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
     if (oc_string_len(cr->role.role) > 0) {
       oc_rep_set_object(creds, roleid);
@@ -224,7 +224,7 @@ oc_sec_encode_cred(bool persist, int device)
     cr = cr->next;
   }
   oc_rep_close_array(root, creds);
-  oc_uuid_to_str(&devices[device].rowneruuid, uuid, 37);
+  oc_uuid_to_str(&devices[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 }

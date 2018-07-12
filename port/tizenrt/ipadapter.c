@@ -1346,12 +1346,13 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 }
 #endif /* OC_TCP */
 
-bool
-oc_domain_to_ip(const char *domain, oc_string_t *ip)
+#ifdef OC_DNS_LOOKUP
+int
+oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 {
-  if (!domain || !ip) {
+  if (!domain || !addr || !flags) {
     OC_ERR("Error of input parameters");
-    return false;
+    return -1;
   }
 
   OC_DBG("domain [%s]", domain);
@@ -1379,13 +1380,14 @@ oc_domain_to_ip(const char *domain, oc_string_t *ip)
   snprintf(ipaddress, sizeof(ipaddress), "%s", "52.202.177.174");
 #endif
   OC_DBG("%s's ip is %s", domain, ipaddress);
-  oc_new_string(ip, ipaddress, strlen(ipaddress));
+  oc_new_string(addr, ipaddress, strlen(ipaddress));
 
-  return true;
+  return 0;
 }
+#endif /* OC_DNS_LOOKUP */
 
 bool
-oc_get_mac_addr(unsigned char* mac)
+oc_get_mac_addr(unsigned char *mac)
 {
     //WiFiGetMac(mac);
     mac[0] = 0x28;
@@ -1399,4 +1401,3 @@ oc_get_mac_addr(unsigned char* mac)
            mac[4], mac[5]);
     return true;
 }
-

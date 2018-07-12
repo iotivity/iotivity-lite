@@ -36,6 +36,9 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum wait time for select function */
 #define SELECT_TIMEOUT_SEC (1)
 
+/* Add support for dns lookup to the endpoint */
+#define OC_DNS_LOOKUP
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
