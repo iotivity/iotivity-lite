@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_17905542",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-12T05:52:48Z",
+      "side": 1,
+      "message": "please add shutdown aldo",
+      "range": {
+        "startLine": 72,
+        "startChar": 21,
+        "endLine": 72,
+        "endChar": 29
+      },
+      "revId": "12220d29b5e715ad71040844ed664c8f71467f66",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
