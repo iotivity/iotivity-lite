@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f77e91e3",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1632,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-12T10:22:52Z",
+      "side": 1,
+      "message": "How about handle IPv6 also? like below.\n\nchar *address \u003d NULL;\nif (flags \u0026 IPV6) {\n  struct sockaddr_in6 *s_addr \u003d (struct sockaddr_in6 *)result-\u003eai_addr;\n  address \u003d inet_ntoa(s_addr-\u003esin6_addr);\n}\n#ifdef OC_IPV4\nelse if {\n  struct sockaddr_in *s_addr \u003d (struct sockaddr_in *)result-\u003eai_addr;\n  address \u003d inet_ntoa(s_addr-\u003esin_addr);\n}\n#endif /* OC_IPV4 */",
+      "range": {
+        "startLine": 1631,
+        "startChar": 4,
+        "endLine": 1632,
+        "endChar": 48
+      },
+      "revId": "f58e813bd23e3414ac47f0412c007815b9d1704e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
