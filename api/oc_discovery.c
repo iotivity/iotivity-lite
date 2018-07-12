@@ -55,20 +55,6 @@ get_cache_entry_for_endpoint(oc_endpoint_t *endpoint)
   return -1;
 }
 
-static int
-get_cache_entry_for_address(oc_endpoint_t *endpoint)
-{
-  if (endpoint) {
-    int loop;
-    for (loop = 0; loop < next_free_item; ++loop) {
-      if (oc_endpoint_compare_address(endpoint, &endpoint_cache[loop].ep) == 0) {
-        return loop;
-      }
-    }
-  }
-  return -1;
-}
-
 static bool
 add_cache_entry(oc_endpoint_t *endpoint, uint8_t device)
 {
@@ -135,7 +121,7 @@ oc_discovery_add_eps_to_cache(oc_endpoint_t *source, oc_endpoint_t *eps)
 uint8_t
 oc_discovery_get_device(oc_endpoint_t *endpoint)
 {
-  int entry = get_cache_entry_for_address(endpoint);
+  int entry = get_cache_entry_for_endpoint(endpoint);
   if (entry >= 0) {
 #ifdef OC_DEBUG
     PRINT("Found match ");
@@ -776,11 +762,14 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
 
-    if (eps_list) {
+    bool is_oic_p = strcmp(oc_string(*uri), "/oic/p") == 0;
+    if (eps_list && !is_oic_p) {
       oc_discovery_add_eps_to_cache(endpoint, eps_list);
     }
     if (unmatched_eps_list) {
-      oc_discovery_add_eps_to_cache(endpoint, unmatched_eps_list);
+      if (!is_oic_p) {
+        oc_discovery_add_eps_to_cache(endpoint, unmatched_eps_list);
+      }
       if (!eps_list) {
         eps_list = unmatched_eps_list;
       }
