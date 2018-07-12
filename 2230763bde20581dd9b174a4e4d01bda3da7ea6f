@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_17bb35e6",
+        "filename": "security/unittest/resources_test.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-12T01:12:16Z",
+      "side": 1,
+      "message": "brace them with OC_RPK flag",
+      "range": {
+        "startLine": 1297,
+        "startChar": 0,
+        "endLine": 1359,
+        "endChar": 1
+      },
+      "revId": "2230763bde20581dd9b174a4e4d01bda3da7ea6f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
