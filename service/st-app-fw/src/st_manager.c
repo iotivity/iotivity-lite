@@ -435,22 +435,28 @@ st_manager_start(void)
   while (quit != 1) {
     switch (g_main_status) {
     case ST_STATUS_INIT:
+      st_process_app_sync_lock();
       if (st_manager_stack_init() < 0) {
+        st_process_app_sync_unlock();
         EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
       store_info = NULL;
-      set_main_status_sync(ST_STATUS_EASY_SETUP_START);
+      set_st_manager_status(ST_STATUS_EASY_SETUP_START);
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_EASY_SETUP_START:
+      st_process_app_sync_lock();
       if (st_is_easy_setup_finish() == 0) {
-        set_main_status_sync(ST_STATUS_EASY_SETUP_DONE);
+        set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
       } else {
         if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
           st_print_log("[ST_MGR] Failed to start easy setup!\n");
+          st_process_app_sync_unlock();
           EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
         }
-        set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
+        set_st_manager_status(ST_STATUS_EASY_SETUP_PROGRESSING);
       }
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_EASY_SETUP_PROGRESSING:
     case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
@@ -460,23 +466,31 @@ st_manager_start(void)
       break;
     case ST_STATUS_EASY_SETUP_DONE:
       st_print_log("\n");
+      st_process_app_sync_lock();
       st_easy_setup_stop();
       store_info = st_store_get_info();
       if (!store_info || !store_info->status) {
         st_print_log("[ST_MGR] could not get cloud informations.\n");
+        st_process_app_sync_unlock();
         EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
-      set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
+      set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_WIFI_CONNECTING:
+      st_process_app_sync_lock();
       st_turn_off_soft_AP();
       st_connect_wifi(oc_string(store_info->accesspoint.ssid),
                       oc_string(store_info->accesspoint.pwd));
-      set_main_status_sync(ST_STATUS_WIFI_CONNECTION_CHECKING);
+      set_st_manager_status(ST_STATUS_WIFI_CONNECTION_CHECKING);
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_WIFI_CONNECTION_CHECKING:
-      if (st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server) !=
-          0) {
+      st_process_app_sync_lock();
+      int ret =
+        st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server);
+      st_process_app_sync_unlock();
+      if (ret != 0) {
         st_print_log("[ST_MGR] AP is not connected.\n");
         conn_cnt++;
         if (conn_cnt > AP_CONNECT_RETRY_LIMIT) {
@@ -492,12 +506,15 @@ st_manager_start(void)
       }
       break;
     case ST_STATUS_CLOUD_MANAGER_START:
+      st_process_app_sync_lock();
       if (st_cloud_manager_start(store_info, device_index,
                                  cloud_manager_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start cloud manager!\n");
+        st_process_app_sync_unlock();
         EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
-      set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
+      set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_CLOUD_MANAGER_DONE:
       st_print_log("\n");
@@ -507,8 +524,10 @@ st_manager_start(void)
       st_sleep(1);
       break;
     case ST_STATUS_RESET:
+      st_process_app_sync_lock();
       st_manager_evt_reset_handler();
-      set_main_status_sync(ST_STATUS_INIT);
+      set_st_manager_status(ST_STATUS_INIT);
+      st_process_app_sync_unlock();
       break;
     case ST_STATUS_STOP:
       quit = 1;
