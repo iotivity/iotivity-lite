@@ -53,7 +53,7 @@ static sec_provisioning_info g_prov_resource;
 
 static int device_index = 0;
 
-int quit = 0;
+static bool g_start_fail = false;
 
 static void set_st_manager_status(st_status_t status);
 
@@ -160,6 +160,7 @@ easy_setup_handler(st_easy_setup_status_t status)
     set_st_manager_status(ST_STATUS_RESET);
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("[ST_MGR] Easy setup failed!!!\n");
+    g_start_fail = true;
     set_st_manager_status(ST_STATUS_QUIT);
   }
 }
@@ -172,6 +173,7 @@ cloud_manager_handler(st_cloud_manager_status_t status)
     set_st_manager_status(ST_STATUS_CLOUD_MANAGER_DONE);
   } else if (status == CLOUD_MANAGER_FAIL) {
     st_print_log("[ST_MGR] Cloud manager failed!!!\n");
+    g_start_fail = true;
     set_st_manager_status(ST_STATUS_QUIT);
   } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
     st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
@@ -327,8 +329,6 @@ st_manager_initialize(void)
   st_unregister_status_handler();
   set_main_status_sync(ST_STATUS_INIT);
 
-  quit = 0;
-
   return ST_ERROR_NONE;
 }
 
@@ -421,7 +421,10 @@ st_manager_start(void)
   }
 
   st_store_t *store_info = NULL;
+  st_error_t st_err_ret = ST_ERROR_NONE;
   int conn_cnt = 0;
+  int quit = 0;
+  g_start_fail = false;
 
   while (quit != 1) {
     switch (g_main_status) {
@@ -505,6 +508,9 @@ st_manager_start(void)
       break;
     case ST_STATUS_QUIT:
       quit = 1;
+      if (g_start_fail) {
+        st_err_ret = ST_ERROR_OPERATION_FAILED;
+      }
       break;
     default:
       st_print_log("[ST_MGR] un-supported main step.\n");
@@ -512,7 +518,7 @@ st_manager_start(void)
     }
   }
 
-  return ST_ERROR_NONE;
+  return st_err_ret;
 }
 
 st_error_t
