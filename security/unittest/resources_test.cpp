@@ -785,6 +785,7 @@ TEST(Security, CredRemove)
   oc_uuid_to_str(uuid, suuid, 37);
   EXPECT_TRUE(oc_cred_remove_subject(suuid, dev));
 }
+#if !defined(OC_SPEC_VER_OIC)
 TEST(Security, CredGet)
 {
   long ret = 0;
@@ -841,6 +842,7 @@ TEST(Security, CredGet)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
+#endif // OC_SPEC_VER_OIC
 TEST(Security, CredSecGetCred)
 {
   oc_uuid_t uuid = { 0 };
