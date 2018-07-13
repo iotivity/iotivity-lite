@@ -42,7 +42,7 @@ typedef enum {
   ST_STATUS_CLOUD_MANAGER_DONE,
   ST_STATUS_DONE,
   ST_STATUS_RESET,
-  ST_STATUS_QUIT
+  ST_STATUS_STOP
 } st_status_t;
 
 /**
@@ -75,7 +75,7 @@ st_error_t st_manager_initialize(void);
   @brief A function to start ST application framework. This function will
     start iotivity-lite stack which include network thread and resources
     registration. Also it will process Easy Setup and Cloud registration
-    steps. This function will loop until st_status is ST_STATUS_QUIT.
+    steps. This function will loop until st_status is ST_STATUS_STOP.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful by st_manager_stop() call.
   @retval ST_ERROR_STACK_NOT_INITIALIZED
@@ -102,9 +102,11 @@ st_error_t st_manager_reset(void);
 
 /**
   @brief A function to stop ST application framework. This function will
-    stop iotivity-lite stack internally which includes network thread and
-    resources registration. Also it will stop Easy Setup and Cloud registration
-    steps, if they are under progress.
+    change st_manager's status to ST_STATUS_STOP to stop st_manager. This
+    will make st_manager_start out of loop and stop iotivity-lite stack
+    internally which includes network thread and resources registration.
+    Also it will stop Easy Setup and Cloud registration steps, if they
+    are under progress.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful.
   @retval ST_ERROR_STACK_NOT_INITIALIZED

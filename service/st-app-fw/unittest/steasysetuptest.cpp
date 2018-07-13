@@ -32,7 +32,6 @@ extern "C"{
 #ifdef OC_SECURITY
     #include "security/oc_otm_state.h"
 #endif /* OC_SECURITY */
-    void st_manager_quit(void);
 }
 
 #define MAX_SSID_LEN (32)
@@ -273,7 +272,7 @@ class TestSTEasySetup_cb: public testing::Test
 
         virtual void TearDown()
         {
-            st_manager_quit();
+            st_manager_stop();
             st_thread_destroy(t);
             st_manager_stop();
             st_manager_deinitialize();

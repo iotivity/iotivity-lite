@@ -27,7 +27,6 @@ extern "C"{
     #include "st_port.h"
     #include "sttestcommon.h"
     #include "es_common.h"
-    void st_manager_quit(void);
 }
 
 static int device_index = 0;
@@ -350,7 +349,7 @@ class TestSTCloudManager_cb: public testing::Test
 
         virtual void TearDown()
         {
-            st_manager_quit();
+            st_manager_stop();
             st_thread_destroy(t);
             st_manager_stop();
             st_manager_deinitialize();
