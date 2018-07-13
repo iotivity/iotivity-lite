@@ -34,6 +34,7 @@
 #include "st_port.h"
 #include "st_process.h"
 #include "st_resource_manager.h"
+#include "st_status_queue.h"
 #include "st_store.h"
 
 #define EXIT_WITH_ERROR(err)                                                   \
@@ -49,6 +50,8 @@
 extern int st_register_resources(int device);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
+
+OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
 
 static st_status_t g_main_status = ST_STATUS_IDLE;
 static st_status_cb_t g_st_status_cb = NULL;
@@ -79,25 +82,28 @@ typedef struct
 
 static platform_cb_data_t platform_cb_data;
 
-static void free_platform_cb_data(void)
+static void
+free_platform_cb_data(void)
 {
-  if(oc_string(platform_cb_data.model_number))
+  if (oc_string(platform_cb_data.model_number))
     oc_free_string(&platform_cb_data.model_number);
-  if(oc_string(platform_cb_data.platform_version))
+  if (oc_string(platform_cb_data.platform_version))
     oc_free_string(&platform_cb_data.platform_version);
-  if(oc_string(platform_cb_data.os_version))
+  if (oc_string(platform_cb_data.os_version))
     oc_free_string(&platform_cb_data.os_version);
-  if(oc_string(platform_cb_data.hardware_version))
+  if (oc_string(platform_cb_data.hardware_version))
     oc_free_string(&platform_cb_data.hardware_version);
-  if(oc_string(platform_cb_data.firmware_version))
+  if (oc_string(platform_cb_data.firmware_version))
     oc_free_string(&platform_cb_data.firmware_version);
-  if(oc_string(platform_cb_data.vendor_id))
+  if (oc_string(platform_cb_data.vendor_id))
     oc_free_string(&platform_cb_data.vendor_id);
 }
 
-static platform_cb_data_t* clone_platform_cb_data(st_specification_t *spec)
+static platform_cb_data_t *
+clone_platform_cb_data(st_specification_t *spec)
 {
-  if(!spec) return NULL;
+  if (!spec)
+    return NULL;
   free_platform_cb_data();
   oc_new_string(&platform_cb_data.model_number,
                 oc_string(spec->platform.model_number),
@@ -123,7 +129,8 @@ static platform_cb_data_t* clone_platform_cb_data(st_specification_t *spec)
 static void
 init_platform_cb(void *data)
 {
-  if(!data) return;
+  if (!data)
+    return;
   platform_cb_data_t *platform = data;
   oc_set_custom_platform_property(mnmo, oc_string(platform->model_number));
   oc_set_custom_platform_property(mnpv, oc_string(platform->platform_version));
@@ -176,7 +183,7 @@ cloud_manager_handler(st_cloud_manager_status_t status)
 {
   if (status == CLOUD_MANAGER_FINISH) {
     st_print_log("[ST_MGR] Cloud manager succeed!!!\n");
-    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_DONE);
+    set_st_manager_status(ST_STATUS_DONE);
   } else if (status == CLOUD_MANAGER_FAIL) {
     st_print_log("[ST_MGR] Cloud manager failed!!!\n");
     g_start_fail = true;
@@ -246,12 +253,14 @@ st_vendor_props_initialize(void)
   memset(&st_vendor_props, 0, sizeof(sc_properties));
   st_specification_t  *specification = st_data_mgr_get_spec_info();
   if (!specification) {
-    st_print_log("[ST_MGR] specification list not exist");
+    st_print_log("[ST_MGR] specification list not exist\n");
     return;
   }
 
-  st_print_log("[ST_MGR] specification model no %s",oc_string(specification->platform.model_number));
-  oc_new_string(&st_vendor_props.model, oc_string(specification->platform.model_number),
+  st_print_log("[ST_MGR] specification model no %s\n",
+               oc_string(specification->platform.model_number));
+  oc_new_string(&st_vendor_props.model,
+                oc_string(specification->platform.model_number),
                 oc_string_len(specification->platform.model_number));
 }
 
@@ -276,18 +285,28 @@ st_main_reset(void)
 static oc_event_callback_retval_t
 status_callback(void *data)
 {
-  (void)data;
-  if (g_st_status_cb)
-    g_st_status_cb(g_main_status);
+  if (!data)
+    return OC_EVENT_DONE;
 
+  st_status_item_t *status = (st_status_item_t *)data;
+
+  if (g_st_status_cb)
+    g_st_status_cb(status->status);
+
+  oc_memb_free(&st_status_item_s, data);
   return OC_EVENT_DONE;
 }
 
 static void
 set_st_manager_status(st_status_t status)
 {
-  g_main_status = status;
-  oc_set_delayed_callback(NULL, status_callback, 0);
+  if (st_status_queue_add(status) != 0) {
+    st_print_log("[ST_MGR] st_status_queue_add failed\n");
+  }
+
+  st_status_item_t *cb_item = oc_memb_alloc(&st_status_item_s);
+  cb_item->status = status;
+  oc_set_delayed_callback(cb_item, status_callback, 0);
   _oc_signal_event_loop();
 }
 
@@ -302,7 +321,6 @@ set_main_status_sync(st_status_t status)
 st_error_t
 st_manager_initialize(void)
 {
-
   if (g_main_status != ST_STATUS_IDLE) {
     if (g_main_status == ST_STATUS_INIT) {
       return ST_ERROR_STACK_ALREADY_INITIALIZED;
@@ -325,15 +343,22 @@ st_manager_initialize(void)
   }
 
   if (st_port_specific_init() != 0) {
-    st_print_log("[ST_MGR] st_port_specific_init failed!");
+    st_print_log("[ST_MGR] st_port_specific_init failed!\n");
     st_process_destroy();
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  if (st_status_queue_initialize() != 0) {
+    st_print_log("[ST_MGR] st_status_queue_initialize failed!\n");
+    st_process_destroy();
+    st_port_specific_destroy();
     return ST_ERROR_OPERATION_FAILED;
   }
 
   oc_set_max_app_data_size(3072);
 
   st_unregister_status_handler();
-  set_main_status_sync(ST_STATUS_INIT);
+  g_main_status = ST_STATUS_INIT;
 
   return ST_ERROR_NONE;
 }
@@ -420,10 +445,19 @@ st_manager_stack_init(void)
 st_error_t
 st_manager_start(void)
 {
+  st_status_item_t *item = st_status_queue_get_head();
+  if (item) {
+    st_status_queue_remove_all_items();
+  }
+
   if (g_main_status == ST_STATUS_IDLE) {
     return ST_ERROR_STACK_NOT_INITIALIZED;
   } else if (g_main_status != ST_STATUS_INIT) {
     return ST_ERROR_STACK_RUNNING;
+  }
+
+  if (st_status_queue_add(ST_STATUS_INIT) != 0) {
+    return ST_ERROR_OPERATION_FAILED;
   }
 
   st_store_t *store_info = NULL;
@@ -433,6 +467,16 @@ st_manager_start(void)
   g_start_fail = false;
 
   while (quit != 1) {
+    item = st_status_queue_pop();
+    if (!item && quit != 1) {
+      if (st_status_queue_wait_signal() != 0) {
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+      }
+      continue;
+    }
+    g_main_status = item->status;
+    st_status_queue_free_item(item);
+
     switch (g_main_status) {
     case ST_STATUS_INIT:
       st_process_app_sync_lock();
@@ -460,12 +504,9 @@ st_manager_start(void)
       break;
     case ST_STATUS_EASY_SETUP_PROGRESSING:
     case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
-      st_sleep(1);
-      st_print_log(".");
-      fflush(stdout);
+      st_print_log("[ST_MGR] Progressing...\n");
       break;
     case ST_STATUS_EASY_SETUP_DONE:
-      st_print_log("\n");
       st_process_app_sync_lock();
       st_easy_setup_stop();
       store_info = st_store_get_info();
@@ -498,8 +539,12 @@ st_manager_start(void)
           set_main_status_sync(ST_STATUS_RESET);
         } else if (conn_cnt == (AP_CONNECT_RETRY_LIMIT >> 1)) {
           set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
+        } else {
+          st_sleep(3);
+          if (st_status_queue_add(ST_STATUS_WIFI_CONNECTION_CHECKING) != 0) {
+            EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+          }
         }
-        st_sleep(3);
       } else {
         conn_cnt = 0;
         set_main_status_sync(ST_STATUS_CLOUD_MANAGER_START);
@@ -516,12 +561,8 @@ st_manager_start(void)
       set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       st_process_app_sync_unlock();
       break;
-    case ST_STATUS_CLOUD_MANAGER_DONE:
-      st_print_log("\n");
-      set_main_status_sync(ST_STATUS_DONE);
-      break;
     case ST_STATUS_DONE:
-      st_sleep(1);
+      st_print_log("[ST_MGR] Ready to Control ST-Things\n");
       break;
     case ST_STATUS_RESET:
       st_process_stop();
@@ -591,10 +632,11 @@ st_manager_deinitialize(void)
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
+  st_status_queue_deinitialize();
   st_port_specific_destroy();
   st_process_destroy();
 
-  set_main_status_sync(ST_STATUS_IDLE);
+  g_main_status = ST_STATUS_IDLE;
   return ST_ERROR_NONE;
 }
 
@@ -602,7 +644,7 @@ bool
 st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
 {
   if (!cb) {
-    st_print_log("Failed to register otm confirm handler\n");
+    st_print_log("[ST_MGR] Failed to register otm confirm handler\n");
     return false;
   }
 
@@ -610,7 +652,7 @@ st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
   oc_sec_set_owner_cb((oc_sec_change_owner_cb_t)cb);
   return true;
 #else
-  st_print_log("Un-secured build can't handle otm confirm\n");
+  st_print_log("[ST_MGR] Un-secured build can't handle otm confirm\n");
   return false;
 #endif
 }
@@ -621,7 +663,7 @@ st_unregister_otm_confirm_handler(void)
 #ifdef OC_SECURITY
   oc_sec_set_owner_cb(NULL);
 #else
-  st_print_log("Un-secured build can't handle otm confirm\n");
+  st_print_log("[ST_MGR] Un-secured build can't handle otm confirm\n");
 #endif
 }
 
@@ -629,11 +671,12 @@ bool
 st_register_status_handler(st_status_cb_t cb)
 {
   if (!cb) {
-    st_print_log("Failed to register status - invalid parameter\n");
+    st_print_log("[ST_MGR] Failed to register status - invalid parameter\n");
     return false;
   }
   if (g_st_status_cb) {
-    st_print_log("Failed to register status handler - already registered\n");
+    st_print_log(
+      "[ST_MGR] Failed to register status handler - already registered\n");
     return false;
   }
 
@@ -668,6 +711,8 @@ st_manager_evt_stop_handler(void)
   oc_main_shutdown();
 
   free_platform_cb_data();
+
+  st_status_queue_remove_all_items();
 }
 
 static void
