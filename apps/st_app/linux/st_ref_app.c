@@ -49,7 +49,6 @@ static int ct_range[2] = { 0, 100 };
 #ifdef USER_INPUT
 static pthread_t g_user_input_thread;
 static int g_user_input_shutdown_pipe[2];
-extern void st_manager_quit(void);
 #endif /* USER_INPUT */
 
 static void
@@ -238,7 +237,7 @@ user_input_loop(void *data)
 
     if (n == -1) {
       printf("[ST_APP] user input failed!!!!\n");
-      st_manager_quit();
+      st_manager_stop();
       goto exit;
     }
 
@@ -274,8 +273,7 @@ user_input_loop(void *data)
       }
       break;
     case '0':
-      st_manager_quit();
-      goto exit;
+      st_manager_stop();
     default:
       printf("[ST_APP] unsupported command.\n");
       break;
@@ -336,16 +334,20 @@ main(void)
   }
 #endif /* USER_INPUT */
 
-  if (st_manager_start() != ST_ERROR_NONE) {
-    printf("[ST_APP] st_manager_start failed.\n");
-  }
+  st_error_t ret = ST_ERROR_NONE;
+  do {
+    ret = st_manager_start();
+    if (ret != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
+      sleep(6000);
+    }
+  } while (ret != ST_ERROR_NONE);
 
 #ifdef USER_INPUT
   user_input_thread_destroy();
 #endif /* USER_INPUT */
 
   st_unregister_status_handler();
-  st_manager_stop();
   st_manager_deinitialize();
   return 0;
 }
