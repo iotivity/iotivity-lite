@@ -1096,11 +1096,11 @@ TEST(Security, TlsFreePeer)
   EXPECT_TRUE(peer);
   mbedtls_ssl_init(&peer->ssl_ctx);
   OC_LIST_STRUCT_INIT(peer, send_q);
-  oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
   oc_list_push(peer->send_q, message);
   OC_LIST_STRUCT_INIT(peer, recv_q);
-  oc_message_t *message1 = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message1 = oc_allocate_message();
   EXPECT_TRUE(message1);
   oc_list_push(peer->recv_q, message1);
   oc_tls_free_peer(peer, true);
@@ -1109,11 +1109,12 @@ TEST(Security, TlsFreePeer)
   EXPECT_TRUE(peer);
   mbedtls_ssl_init(&peer->ssl_ctx);
   OC_LIST_STRUCT_INIT(peer, send_q);
-  message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  message = oc_allocate_message();
   EXPECT_TRUE(message);
   oc_list_push(peer->send_q, message);
   OC_LIST_STRUCT_INIT(peer, recv_q);
-  message1 = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  EXPECT_TRUE(message);
+  message1 = oc_allocate_message();
   EXPECT_TRUE(message1);
   oc_list_push(peer->recv_q, message1);
   oc_tls_free_peer(peer, false);
@@ -1166,7 +1167,7 @@ TEST(Security, TlsSslRecv)
   mbedtls_ssl_init(&peer->ssl_ctx);
   OC_LIST_STRUCT_INIT(peer, send_q);
   OC_LIST_STRUCT_INIT(peer, recv_q);
-  oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
   oc_list_push(peer->recv_q, message);
   size_t len = 512;
@@ -1242,7 +1243,7 @@ TEST(Security, TlsSecDeriveOwnerPsk)
 }
 TEST(Security, TlsSendMessage)
 {
-  oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
   memcpy(&message->endpoint, oc_connectivity_get_endpoints(dev),
          sizeof(oc_endpoint_t));
@@ -1254,7 +1255,7 @@ TEST(Security, TlsWriteAppData)
   EXPECT_TRUE(peer);
   mbedtls_ssl_init(&peer->ssl_ctx);
   OC_LIST_STRUCT_INIT(peer, send_q);
-  oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
   oc_list_push(peer->send_q, message);
 
@@ -1267,7 +1268,7 @@ TEST(Security, TlsElevateAnon)
 }
 TEST(Security, TlsInitConnection)
 {
-  oc_message_t *message = (oc_message_t *)oc_mem_malloc(sizeof(oc_message_t));
+  oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
   memcpy(&message->endpoint, oc_connectivity_get_endpoints(dev),
          sizeof(oc_endpoint_t));
@@ -1358,7 +1359,7 @@ TEST(Security, TlsGetRptPsk)
     EXPECT_NE(0, psk[i]);
   }
 }
-#endif //OC_RPK
+#endif // OC_RPK
 TEST(Security, TlsShutdown)
 {
   oc_tls_shutdown();
