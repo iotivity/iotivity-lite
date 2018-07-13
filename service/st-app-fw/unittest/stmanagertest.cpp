@@ -24,7 +24,6 @@ extern "C"{
     #include "st_process.h"
     #include "st_port.h"
     #include "sttestcommon.h"
-    void st_manager_quit(void);
 }
 
 static st_mutex_t mutex = NULL;
@@ -107,7 +106,7 @@ TEST_F(TestSTManager, st_manager_start)
 
     int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
-    st_manager_quit();
+    st_manager_stop();
     st_thread_destroy(t);
     st_manager_stop();
     st_manager_deinitialize();
@@ -128,7 +127,7 @@ TEST_F(TestSTManager, st_manager_reset)
     st_manager_reset();
     ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
-    st_manager_quit();
+    st_manager_stop();
     st_thread_destroy(t);
     st_manager_stop();
     st_manager_deinitialize();
@@ -159,7 +158,7 @@ TEST_F(TestSTManager, st_manager_stop_fail_dueto_callingtwice)
 
     test_wait_until(mutex, cv, 5);
 
-    st_manager_quit();
+    st_manager_stop();
     st_thread_destroy(t);
     st_manager_stop();
     st_error_ret=st_manager_stop();
