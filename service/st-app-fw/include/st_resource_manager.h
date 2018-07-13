@@ -54,7 +54,7 @@ typedef bool (*st_resource_handler)(st_request_t *request);
      get/set requests.
   @param get_handler callback handler when called in case
      GET request is comming.
-  @param get_handler callback handler when called in case
+  @param set_handler callback handler when called in case
      POST request is comming.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful.
