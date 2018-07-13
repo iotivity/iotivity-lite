@@ -77,13 +77,14 @@ st_error_t st_manager_initialize(void);
     registration. Also it will process Easy Setup and Cloud registration
     steps. This function will loop until st_status is ST_STATUS_QUIT.
   @return st_error_t An enumeration of possible outcomes.
-  @retval ST_ERROR_NONE if successful.
+  @retval ST_ERROR_NONE if successful by st_manager_stop() call.
   @retval ST_ERROR_STACK_NOT_INITIALIZED
     st_manager_initialize() isn't executed.
     this function is supposed to be called right after st_manager_initialize().
   @retval ST_ERROR_STACK_RUNNING st_manager_start() is already called.
   @retval ST_ERROR_OPERATION_FAILED
-    if there is an internal failure while excuting this function.
+    if there is an internal failure while excuting this function
+    such as cloud connection broken and invalid cloud connection.
 */
 st_error_t st_manager_start(void);
 
