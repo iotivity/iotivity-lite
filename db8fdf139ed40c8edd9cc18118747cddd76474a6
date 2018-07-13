@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ca55a0c7",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-13T06:53:13Z",
+      "side": 1,
+      "message": "separate this into different file.",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 1
+      },
+      "revId": "db8fdf139ed40c8edd9cc18118747cddd76474a6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
