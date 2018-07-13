@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_aae49c3b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-13T06:37:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_eaeea421",
+      "range": {
+        "startLine": 513,
+        "startChar": 9,
+        "endLine": 513,
+        "endChar": 23
+      },
+      "revId": "3603cc50a1e39821f13fd587888985b8f3856765",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_0aeae80e",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-13T06:26:43Z",
       "side": 1,
       "message": "STOP looks better with new define in st_status_t",
+      "range": {
+        "startLine": 552,
+        "startChar": 23,
+        "endLine": 552,
+        "endChar": 37
+      },
+      "revId": "3603cc50a1e39821f13fd587888985b8f3856765",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0ad14857",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-13T06:37:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_0aeae80e",
       "range": {
         "startLine": 552,
         "startChar": 23,
