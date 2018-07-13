@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_4a423011",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-13T06:46:50Z",
+      "side": 1,
+      "message": "From ST test environment, what is the minimum value for successful test?",
+      "range": {
+        "startLine": 32,
+        "startChar": 18,
+        "endLine": 32,
+        "endChar": 22
+      },
+      "revId": "88beaad758eb8d459c0c4fa4a5f2f312a5c43c19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f717b1a1",
         "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
         "patchSetId": 2
