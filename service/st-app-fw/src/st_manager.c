@@ -36,6 +36,12 @@
 #include "st_resource_manager.h"
 #include "st_store.h"
 
+#define EXIT_WITH_ERROR(err)                                                   \
+  do {                                                                         \
+    st_err_ret = err;                                                          \
+    goto exit;                                                                 \
+  } while (0);
+
 #define SOFT_AP_PWD "1111122222"
 #define SOFT_AP_CHANNEL (6)
 #define AP_CONNECT_RETRY_LIMIT (20)
@@ -161,7 +167,7 @@ easy_setup_handler(st_easy_setup_status_t status)
   } else if (status == EASY_SETUP_FAIL) {
     st_print_log("[ST_MGR] Easy setup failed!!!\n");
     g_start_fail = true;
-    set_st_manager_status(ST_STATUS_QUIT);
+    set_st_manager_status(ST_STATUS_STOP);
   }
 }
 
@@ -174,7 +180,7 @@ cloud_manager_handler(st_cloud_manager_status_t status)
   } else if (status == CLOUD_MANAGER_FAIL) {
     st_print_log("[ST_MGR] Cloud manager failed!!!\n");
     g_start_fail = true;
-    set_st_manager_status(ST_STATUS_QUIT);
+    set_st_manager_status(ST_STATUS_STOP);
   } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
     st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
     set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
@@ -430,7 +436,7 @@ st_manager_start(void)
     switch (g_main_status) {
     case ST_STATUS_INIT:
       if (st_manager_stack_init() < 0) {
-        return ST_ERROR_OPERATION_FAILED;
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
       store_info = NULL;
       set_main_status_sync(ST_STATUS_EASY_SETUP_START);
@@ -441,7 +447,7 @@ st_manager_start(void)
       } else {
         if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
           st_print_log("[ST_MGR] Failed to start easy setup!\n");
-          return ST_ERROR_OPERATION_FAILED;
+          EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
         }
         set_main_status_sync(ST_STATUS_EASY_SETUP_PROGRESSING);
       }
@@ -458,7 +464,7 @@ st_manager_start(void)
       store_info = st_store_get_info();
       if (!store_info || !store_info->status) {
         st_print_log("[ST_MGR] could not get cloud informations.\n");
-        return ST_ERROR_OPERATION_FAILED;
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
       set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
       break;
@@ -489,7 +495,7 @@ st_manager_start(void)
       if (st_cloud_manager_start(store_info, device_index,
                                  cloud_manager_handler) != 0) {
         st_print_log("[ST_MGR] Failed to start cloud manager!\n");
-        return ST_ERROR_OPERATION_FAILED;
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
       set_main_status_sync(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
       break;
@@ -501,15 +507,13 @@ st_manager_start(void)
       st_sleep(1);
       break;
     case ST_STATUS_RESET:
-      st_main_reset();
-      st_manager_evt_stop_handler();
-      st_print_log("[ST_MGR] reset finished\n");
+      st_manager_evt_reset_handler();
       set_main_status_sync(ST_STATUS_INIT);
       break;
-    case ST_STATUS_QUIT:
+    case ST_STATUS_STOP:
       quit = 1;
       if (g_start_fail) {
-        st_err_ret = ST_ERROR_OPERATION_FAILED;
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
       break;
     default:
@@ -518,6 +522,9 @@ st_manager_start(void)
     }
   }
 
+exit:
+  st_manager_evt_stop_handler();
+  g_main_status = ST_STATUS_INIT;
   return st_err_ret;
 }
 
@@ -534,12 +541,6 @@ st_manager_reset(void)
   return ST_ERROR_NONE;
 }
 
-void
-st_manager_quit(void)
-{
-  set_main_status_sync(ST_STATUS_QUIT);
-}
-
 st_error_t
 st_manager_stop(void)
 {
@@ -548,8 +549,7 @@ st_manager_stop(void)
   } else if (g_main_status == ST_STATUS_INIT) {
     return ST_ERROR_STACK_NOT_STARTED;
   }
-  st_manager_evt_stop_handler();
-  set_main_status_sync(ST_STATUS_INIT);
+  set_main_status_sync(ST_STATUS_STOP);
   return ST_ERROR_NONE;
 }
 
