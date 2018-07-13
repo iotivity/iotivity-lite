@@ -17,6 +17,11 @@
 #ifndef OC_REP_H
 #define OC_REP_H
 
+/**
+  @brief OC Representation object setters & getters stored as (key,value) pairs.
+  @file
+*/
+
 #include "deps/tinycbor/src/cbor.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"
@@ -27,8 +32,22 @@
 extern CborEncoder g_encoder, root_map, links_array;
 extern int g_err;
 
+/**
+  @brief A function to initialize payload CBOR buffer.
+  @param[in] payload CBOR buffer to be used by CBOR encoder.
+  @param[in] size Size of the payload CBOR buffer.
+*/
 void oc_rep_new(uint8_t *payload, int size);
+
+/**
+  @brief A function to reset CBOR buffer and reset CBOR error code.
+*/
 void oc_rep_reset(void);
+
+/**
+  @brief A function to finalize the encoded CBOR buffer.
+  @return int Size of encoded CBOR buffer.
+*/
 int oc_rep_finalize(void);
 
 #define oc_rep_object(name) &name##_map
@@ -198,21 +217,24 @@ int oc_rep_finalize(void);
 
 CborError oc_rep_get_cbor_errno(void);
 
+/**
+  @brief An enumeration which defines the value types in OC Representation.
+*/
 typedef enum {
-  OC_REP_NIL = 0,
-  OC_REP_INT = 0x01,
-  OC_REP_DOUBLE = 0x02,
-  OC_REP_BOOL = 0x03,
-  OC_REP_BYTE_STRING = 0x04,
-  OC_REP_STRING = 0x05,
-  OC_REP_OBJECT = 0x06,
-  OC_REP_ARRAY = 0x08,
-  OC_REP_INT_ARRAY = 0x09,
-  OC_REP_DOUBLE_ARRAY = 0x0A,
-  OC_REP_BOOL_ARRAY = 0x0B,
-  OC_REP_BYTE_STRING_ARRAY = 0x0C,
-  OC_REP_STRING_ARRAY = 0x0D,
-  OC_REP_OBJECT_ARRAY = 0x0E
+  OC_REP_NIL = 0,                     /*!< Default value type */
+  OC_REP_INT = 0x01,                  /*!< Integer value type */
+  OC_REP_DOUBLE = 0x02,               /*!< Double value type */
+  OC_REP_BOOL = 0x03,                 /*!< Boolean value type */
+  OC_REP_BYTE_STRING = 0x04,          /*!< Byte String value type */
+  OC_REP_STRING = 0x05,               /*!< String value type */
+  OC_REP_OBJECT = 0x06,               /*!< OC Representation Object value type */
+  OC_REP_ARRAY = 0x08,                /*!< Array value type */
+  OC_REP_INT_ARRAY = 0x09,            /*!< Integer Array value type */
+  OC_REP_DOUBLE_ARRAY = 0x0A,         /*!< Double Array value type */
+  OC_REP_BOOL_ARRAY = 0x0B,           /*!< Boolean Array value type */
+  OC_REP_BYTE_STRING_ARRAY = 0x0C,    /*!< Byte String Array value type */
+  OC_REP_STRING_ARRAY = 0x0D,         /*!< String Array value type */
+  OC_REP_OBJECT_ARRAY = 0x0E          /*!< OC Representation Object Array value type */
 } oc_rep_value_type_t;
 
 typedef struct oc_rep_s
@@ -234,22 +256,174 @@ typedef struct oc_rep_s
 
 void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 
+/**
+  @brief A function parse a CBOR payload and store in OC Representation.
+  @param[in] payload The CBOR payload data.
+  @param[in] payload_size The CBOR payload data size.
+  @param[out] value_list The output value list returned.
+  @return int Result of parsing operation.
+  @retval CborNoError if CBOR parsing is successful.
+  @retval CborErrorOutOfMemory if we run out of memory during parsing.
+  @retval CborError* if CBOR parsing is unsuccessful.
+*/
 int oc_parse_rep(const uint8_t *payload, int payload_size,
                  oc_rep_t **value_list);
 
+/**
+  @brief A function to free the OC Representation.
+  @param[in] rep The OC Representation needs to be freed.
+*/
 void oc_free_rep(oc_rep_t *rep);
 
+/**
+  @brief A function to get the int value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_int(oc_rep_t *rep, const char *key, int *value);
+
+/**
+  @brief A function to get the bool value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
+
+/**
+  @brief A function to get the double value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
+
+/**
+  @brief A function to get the byte string value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *size);
+
+/**
+  @brief A function to get the string value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size);
+
+/**
+  @brief A function to get the int array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size);
+
+/**
+  @brief A function to get the bool array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *size);
+
+/**
+  @brief A function to get the double array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int *size);
+
+/**
+  @brief A function to get the byte string array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size);
+
+/**
+  @brief A function to get the string array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @param[out] size The size of the value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size);
+
+/**
+  @brief A function to get the object value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
+
+/**
+  @brief A function to get the object array value from OC Representation.
+  @param[in] rep The OC Representation where data is stored.
+  @param[in] key The string which is used to store the value.
+  @param[out] value The output value returned.
+  @return bool Result of get operation.
+  @retval true if get is successful.
+  @retval false if any input parameter is NULL,
+                or the rep doesn't have the key.
+*/
 bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
 
 #endif /* OC_REP_H */
