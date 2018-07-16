@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_eac184e5",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-16T07:53:01Z",
+      "side": 1,
+      "message": "st_status_handler is proper place for this value set.",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 38
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0abdc868",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-16T07:53:01Z",
+      "side": 1,
+      "message": "The usage of this call has been updated.",
+      "range": {
+        "startLine": 253,
+        "startChar": 12,
+        "endLine": 253,
+        "endChar": 30
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4ab7d086",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-16T07:53:01Z",
+      "side": 1,
+      "message": "usage has been updated.",
+      "range": {
+        "startLine": 213,
+        "startChar": 12,
+        "endLine": 213,
+        "endChar": 29
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
