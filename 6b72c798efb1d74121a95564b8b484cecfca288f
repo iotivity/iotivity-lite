@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ca2f60a0",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-07-16T10:23:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b79c096b",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 13
+      },
+      "revId": "6b72c798efb1d74121a95564b8b484cecfca288f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_17a215ae",
         "filename": "port/linux/Makefile",
         "patchSetId": 1
@@ -60,6 +84,30 @@
       "writtenOn": "2018-07-12T05:14:07Z",
       "side": 1,
       "message": "this sample has the MFG, RPK and JW options according to build option. sample file name is strange as a result.\nCan you change this as next patch?",
+      "range": {
+        "startLine": 161,
+        "startChar": 11,
+        "endLine": 161,
+        "endChar": 21
+      },
+      "revId": "6b72c798efb1d74121a95564b8b484cecfca288f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6a2294ba",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-07-16T10:23:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_17a215ae",
       "range": {
         "startLine": 161,
         "startChar": 11,
