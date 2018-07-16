@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cafc8041",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-16T05:54:27Z",
+      "side": 1,
+      "message": "please remove tab and fix formatting",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 2
+      },
+      "revId": "93d3db3f65de6526fa2311cbc564c47ac795ca88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6aff3435",
+        "filename": "service/st-app-fw/json/ref_st_device_def.json",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-16T05:54:27Z",
+      "side": 1,
+      "message": "don\u0027t change this file ..",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 37
+      },
+      "revId": "93d3db3f65de6526fa2311cbc564c47ac795ca88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
