@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_aaa77c4e",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-16T08:28:20Z",
+      "side": 1,
+      "message": "Sorry typo, st_fota_cmd_cb is the place to be done.",
+      "parentUuid": "da33351e_eac184e5",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 38
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_0abdc868",
         "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
         "patchSetId": 8
