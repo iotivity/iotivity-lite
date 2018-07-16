@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2ad7ecc2",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-16T04:26:33Z",
+      "side": 1,
+      "message": "why remove extern?",
+      "revId": "691447d3cdad8e94be001420ba3c46635c2cc520",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4ad230d3",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-16T04:26:33Z",
+      "side": 1,
+      "message": "remove it",
+      "revId": "691447d3cdad8e94be001420ba3c46635c2cc520",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8adb98ec",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-16T04:26:33Z",
+      "side": 1,
+      "message": "remove it",
+      "revId": "691447d3cdad8e94be001420ba3c46635c2cc520",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
