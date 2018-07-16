@@ -762,7 +762,22 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       link = link->next;
     }
 
-    bool is_oic_p = strcmp(oc_string(*uri), "/oic/p") == 0;
+    /*
+      OCF devices use same socket for sending and receiving and hence
+      the ports match the endpoints.
+      For bridged devices or multiple virtual devices on a physical
+      device the IP addresses are identical but the ports are different.
+      Hence, endpoints (including ports) are different per virtual device.
+      Exception: /oic/p has same endpoints as there is one platform for all
+      virtual devices. But /oic/p is returned per virtual device.
+      Ie., /oic/p is returned for each virtual device on the origin endpoint
+      matching that device, but the eps listed in /oic/p is identical.
+      As we include the source address in the endpoint cache, we need to
+      exclude /oic/p, as otherwise all virtual devices would be collected
+      into a single pseudo device (see device in endpoint_cache_item_t).
+    */
+    bool is_oic_p = (oc_string_len(*uri) == 6 &&
+                     memcmp(oc_string(*uri), "/oic/p", 6) == 0);
     if (eps_list && !is_oic_p) {
       oc_discovery_add_eps_to_cache(endpoint, eps_list);
     }
