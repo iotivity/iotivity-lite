@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ade4b63b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-16T23:15:58Z",
+      "side": 1,
+      "message": "Did you try running the on-boarding tool? Were you able to discover the two apps as \"un-owned\"? Did ownership transfer fail?\n\nNote: Unlike IoTivity, Lite samples do not ship with pre-provisioned credentials. So, you have to run the sample OBT and go through the steps.",
+      "parentUuid": "da33351e_6d93cea3",
+      "revId": "ab2dfa422d494f837afb7d3ab91af72745e79991",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_6a10d44e",
         "filename": "port/windows/patch-mbedtls.bat",
         "patchSetId": 4
