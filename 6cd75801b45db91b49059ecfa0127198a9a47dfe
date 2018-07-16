@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_4dcb6aa5",
+        "filename": "service/st-app-fw/unittest/stfotamanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-16T23:38:42Z",
+      "side": 1,
+      "message": "Same as reply with resource manager TC.",
+      "parentUuid": "da33351e_0abdc868",
+      "range": {
+        "startLine": 253,
+        "startChar": 12,
+        "endLine": 253,
+        "endChar": 30
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4ab7d086",
         "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
         "patchSetId": 8
@@ -83,6 +107,30 @@
       "writtenOn": "2018-07-16T07:53:01Z",
       "side": 1,
       "message": "usage has been updated.",
+      "range": {
+        "startLine": 213,
+        "startChar": 12,
+        "endLine": 213,
+        "endChar": 29
+      },
+      "revId": "6cd75801b45db91b49059ecfa0127198a9a47dfe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_edd51e44",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-16T23:38:42Z",
+      "side": 1,
+      "message": "This TC will not go on to next step if I remove stop logic.",
+      "parentUuid": "da33351e_4ab7d086",
       "range": {
         "startLine": 213,
         "startChar": 12,
