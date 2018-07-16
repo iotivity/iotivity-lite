@@ -177,7 +177,12 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
           OC_ERR("oc_doxm: Can set rowneruuid property only in RFOTM");
           return false;
         }
-      } else {
+#ifdef OC_SPEC_VER_OIC
+      } else if (len == 18 &&
+		   memcmp(oc_string(t->name), "x.org.iotivity.mom", 18) == 0) {
+	      OC_WRN("oc_doxm: skip x.org.iotivity.mom");
+#endif
+	  }else {
         OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
       }
