@@ -866,9 +866,9 @@ gen_master_key(uint8_t *master, int *master_len)
 {
   mbedtls_ecdh_context ecdh_ctx;
   mbedtls_ecdh_init(&ecdh_ctx);
-  int priv_len = 0, pub_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
-  uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[32+32] = {0};
-  uint8_t peer_rev[32] = {0}, shared_rev[32] = {0}, priv_rev[32] = {0}, pub_rev[32] = {0};
+  int priv_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
+  uint8_t priv[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[32+32] = {0};
+  uint8_t peer_rev[32] = {0}, shared_rev[32] = {0}, priv_rev[32] = {0};
   int i = 0;
 
   if (!master || !master_len) {
@@ -879,12 +879,11 @@ gen_master_key(uint8_t *master, int *master_len)
     OC_ERR("callbacks not set");
     return false;
   }
-  g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
+  g_oc_sec_get_own_key(priv, &priv_len);
   g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
   for (i = 31; i>=0; i--) {
     peer_rev[31-i] = peer[i];
     priv_rev[31-i] = priv[i];
-    pub_rev[31-i] = pub[i];
   }
   if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
     OC_ERR("load CURVE25519");
@@ -892,10 +891,6 @@ gen_master_key(uint8_t *master, int *master_len)
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv_rev, priv_len) != 0) {
     OC_ERR("load private key");
-    return false;
-  }
-  if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub_rev, pub_len) != 0) {
-    OC_ERR("load own public key");
     return false;
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer_rev, peer_len) != 0) {
@@ -930,8 +925,6 @@ gen_master_key(uint8_t *master, int *master_len)
   OC_LOGbytes(token, token_len);
   OC_DBG("oc_tls: own private key:");
   OC_LOGbytes(priv_rev, priv_len);
-  OC_DBG("oc_tls: own public key:");
-  OC_LOGbytes(pub_rev, pub_len);
   OC_DBG("oc_tls: cpubkey:");
   OC_LOGbytes(peer_rev, peer_len);
   OC_DBG("oc_tls: shared secret:");
