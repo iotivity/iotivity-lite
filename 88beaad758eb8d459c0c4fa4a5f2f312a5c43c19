@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ad1af66b",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-16T10:59:06Z",
+      "side": 1,
+      "message": "st_thread_create( .. ) function actually accepts stack_size but its passed as 0 from st_app code. For separate setting for each thread, it needs to be handled from st_app code to pass desired value as per the expected \"load\" on the thread.",
+      "parentUuid": "da33351e_ed04fe16",
+      "range": {
+        "startLine": 32,
+        "startChar": 18,
+        "endLine": 32,
+        "endChar": 22
+      },
+      "revId": "88beaad758eb8d459c0c4fa4a5f2f312a5c43c19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f717b1a1",
         "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
         "patchSetId": 2
@@ -150,6 +174,23 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "da33351e_f717b1a1",
+      "revId": "88beaad758eb8d459c0c4fa4a5f2f312a5c43c19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6d374ee4",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-07-16T10:59:06Z",
+      "side": 1,
+      "message": "please modify the logic to set the size only when input parameter stack_size is 0.\n\ne.g. \nthread_stack_size \u003d (stack_size \u003d\u003d 0) ? STACKSIZE : stack_size;\n\npthread_attr_setstacksize(\u0026attr, thread_stack_size);",
       "revId": "88beaad758eb8d459c0c4fa4a5f2f312a5c43c19",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
