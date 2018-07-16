@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_6d93cea3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-16T17:25:17Z",
+      "side": 1,
+      "message": "I am going to remove the comment on the security because this is due to not on-boarding the samples.",
+      "parentUuid": "da33351e_8a13985b",
+      "revId": "ab2dfa422d494f837afb7d3ab91af72745e79991",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_6a10d44e",
         "filename": "port/windows/patch-mbedtls.bat",
         "patchSetId": 4
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "For my setup the git location is:\n\\Program Files\\Git\\cmd\\\nSo with your solution I am even getting out of the Git directory and patch.exe is not found. I try to find some batch magic how to resolve this.",
       "parentUuid": "da33351e_6a10d44e",
+      "revId": "ab2dfa422d494f837afb7d3ab91af72745e79991",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2d82664f",
+        "filename": "port/windows/patch-mbedtls.bat",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-16T17:25:17Z",
+      "side": 1,
+      "message": "I was worried that this could be a problem. I will remove this change from the commit.",
+      "parentUuid": "da33351e_0d75e297",
       "revId": "ab2dfa422d494f837afb7d3ab91af72745e79991",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
