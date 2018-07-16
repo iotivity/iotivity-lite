@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4d21aa9e",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-16T10:57:40Z",
+      "side": 1,
+      "message": "Please us ifeq only, ifneq which will loose easy-understand.",
+      "range": {
+        "startLine": 172,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 5
+      },
+      "revId": "efecb119d37ab9f1567ef5a0f0bb0d4766c56357",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
