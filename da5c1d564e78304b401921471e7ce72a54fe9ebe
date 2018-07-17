@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cdc49a42",
+        "filename": "port/windows/patch-mbedtls.bat",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-17T17:01:51Z",
+      "side": 1,
+      "message": "What are the white space rules for bat scripts?\n\nshould these be space?",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 1
+      },
+      "revId": "da5c1d564e78304b401921471e7ce72a54fe9ebe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
