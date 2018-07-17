@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2d5ee6e6",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:29:11Z",
+      "side": 1,
+      "message": "please remove it",
+      "range": {
+        "startLine": 26,
+        "startChar": 21,
+        "endLine": 26,
+        "endChar": 22
+      },
+      "revId": "5cd05d2b69e41ea181600a0e63668d404526ea96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8d72927a",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:29:11Z",
+      "side": 1,
+      "message": "remove space, add empty line after declaration for readability",
+      "range": {
+        "startLine": 38,
+        "startChar": 17,
+        "endLine": 38,
+        "endChar": 19
+      },
+      "revId": "5cd05d2b69e41ea181600a0e63668d404526ea96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6d6f4e93",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:29:11Z",
+      "side": 1,
+      "message": "These cases are related to dynamic memory allocation. Please add a comment",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 1
+      },
+      "revId": "5cd05d2b69e41ea181600a0e63668d404526ea96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd6c9a9f",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:29:11Z",
+      "side": 1,
+      "message": "we are doing this as TEST_F, so please maintain same...across all files...remove Test at end...",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 4
+      },
+      "revId": "5cd05d2b69e41ea181600a0e63668d404526ea96",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
