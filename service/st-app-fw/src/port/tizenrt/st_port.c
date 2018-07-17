@@ -368,22 +368,292 @@ st_connect_wifi(const char *ssid, const char *pwd)
   return 0;
 }
 
+static void wm_start();
+static void wm_scan();
+static void wm_stop();
+//callbacks
+static void wm_scan_done(wifi_manager_scan_info_s **scan_result,wifi_manager_scan_result_e res);
+static void wm_sta_connected(wifi_manager_result_e);
+static void wm_sta_disconnected(void);
+static void wm_softap_sta_join(void);
+static void wm_softap_sta_leave(void);
+
+static wifi_manager_cb_s wifi_callbacks = {
+    wm_sta_connected,
+    wm_sta_disconnected,
+    wm_softap_sta_join,
+    wm_softap_sta_leave,
+    wm_scan_done,
+};
+
+static wifi_manager_cb_s wifi_null_callbacks = {
+    NULL,NULL,NULL,NULL,NULL,
+};
+
+static pthread_mutex_t g_wm_mutex = PTHREAD_MUTEX_INITIALIZER;;
+static pthread_cond_t g_wm_cond;
+static pthread_mutex_t g_wm_func_mutex = PTHREAD_MUTEX_INITIALIZER;;
+static pthread_cond_t g_wm_func_cond;
+static int g_mode = 0;
+
+#define WM_TEST_FUNC_WAIT                                                           \
+    do{                                                                             \
+        pthread_mutex_lock(&g_wm_func_mutex);                                       \
+        st_print_log( "wait func signal\n" );                                       \
+        pthread_cond_wait(&g_wm_func_cond,&g_wm_func_mutex);                        \
+        pthread_mutex_unlock(&g_wm_func_mutex);                                     \
+    }while(0)
+
+#define WM_TEST_WAIT                                                                \
+    do{                                                                             \
+        pthread_mutex_lock(&g_wm_mutex);                                            \
+        st_print_log("wait signal\n");                                              \
+        pthread_cond_wait(&g_wm_cond,&g_wm_mutex);                                  \
+        pthread_mutex_unlock(&g_wm_mutex);                                          \
+    }while(0)
+
+#define WM_TEST_LOG_START                                                           \
+    do{                                                                             \
+        st_print_log("%s\n",__FUNCTION__);                                          \
+    }while(0)
+
+#define WM_TEST_LOG_END                                                             \
+    do{                                                                             \
+        st_print_log("%s\n",__FUNCTION__);                                          \
+    }while(0)
+
+#define WM_TEST_SIGNAL                                                              \
+    do{                                                                             \
+        pthread_mutex_lock(&g_wm_mutex);                                            \
+        printf("%d send signal\n",getpid());                                        \
+        pthread_cond_signal(&g_wm_cond);                                            \
+        pthread_mutex_unlock(&g_wm_mutex);                                          \
+    }while(0)
+
+//global variable
+wifi_manager_scan_info_s *g_store_result = NULL;
+
+//callback
+void wm_sta_connected(wifi_manager_result_e res){
+    printf("res (%d)\n",res);
+    WM_TEST_SIGNAL;
+}
+void wm_sta_disconnected(void){
+    sleep(2);
+    printf("%s\n",__FUNCTION__);
+    WM_TEST_SIGNAL;
+}
+void wm_softap_sta_join(void){
+    printf("%s\n",__FUNCTION__);
+    WM_TEST_SIGNAL;
+}
+void wm_softap_sta_leave(void){
+    printf("%s\n",__FUNCTION__);
+    WM_TEST_SIGNAL;
+}
+
+int ws_signal_init(void){
+    if(g_mode != 0){
+        printf("Program is already running\n");
+        return -1;
+    }
+    g_mode = 1;
+    int res = pthread_mutex_init(&g_wm_func_mutex,NULL);
+    if(res != 0){
+        printf("Pthread mutex func init fail(%d)\n",res);
+        return -1;
+    }
+    res = pthread_cond_init(&g_wm_func_cond,NULL);
+    if(res != 0){
+        printf("Conditional mutex func init fail\n");
+        return -1;
+    }
+    res = pthread_mutex_init(&g_wm_mutex,NULL);
+    if(res != 0){
+        printf("Pthread mutex init failed\n");
+        return -1;
+    }
+    res = pthread_cond_init(&g_wm_cond,NULL);
+    if(res != 0){
+        printf("Conditional mutex init failed\n");
+        return -1;
+    }
+    return 0;
+}
+
+void ws_signal_deinit(){
+    pthread_mutex_destroy(&g_wm_func_mutex);
+    pthread_cond_destroy(&g_wm_func_cond);
+    pthread_mutex_destroy(&g_wm_mutex);
+    pthread_cond_destroy(&g_wm_cond);
+    g_mode = 0;
+}
+void wm_start(){
+    wifi_manager_result_e res = WIFI_MANAGER_SUCCESS;
+    res = wifi_manager_init(&wifi_callbacks);
+    if(res != WIFI_MANAGER_SUCCESS){
+        printf("wifi manager init failed\n");
+    }
+}
+void wm_scan_done(wifi_manager_scan_info_s **scan_result,wifi_manager_scan_result_e res){
+    printf("%d->%d\n",getpid(),__FUNCTION__);
+    if(scan_result == NULL){
+        WM_TEST_SIGNAL;
+        return;
+    }
+    wifi_manager_scan_info_s *cur = NULL, *prev = NULL;
+    wifi_manager_scan_info_s *scan_iter = *scan_result;
+    while(scan_iter != NULL){
+        wifi_manager_scan_info_s *temp = (wifi_manager_scan_info_s *)calloc(1,sizeof(wifi_manager_scan_info_s));
+        temp->next = NULL;
+
+        temp->rssi = scan_iter->rssi;
+        temp->channel = scan_iter->channel;
+        temp->phy_mode = scan_iter->phy_mode;
+        strncpy(temp->ssid,(char *)scan_iter->ssid,32);
+        strncpy(temp->bssid,(char *)scan_iter->bssid,17);
+        if(cur == NULL){
+            cur = temp;
+            prev = temp;
+        }
+        else{
+            prev->next = temp;
+            prev = temp;
+        }
+        scan_iter = scan_iter->next;
+    }
+    g_store_result = cur;
+    WM_TEST_SIGNAL;
+}
+void wm_scan(){
+    WM_TEST_LOG_START;
+    wifi_manager_result_e res = WIFI_MANAGER_SUCCESS;
+
+    res = wifi_manager_scan_ap();
+    if(res != WIFI_MANAGER_SUCCESS){
+        printf("scan failed\n");
+        return;
+    }
+    WM_TEST_WAIT;
+    WM_TEST_LOG_END;
+}
+void wm_stop(){
+    WM_TEST_LOG_START;
+    wifi_manager_result_e res = wifi_manager_deinit();
+    if(res != WIFI_MANAGER_SUCCESS){
+        printf("Wifi manager failed to stop\n");
+    }
+    WM_TEST_LOG_END;
+}
+void st_scan_wifi(){
+    int res = ws_signal_init();
+    if(res < 0){
+        return;
+    }
+    wm_start();
+    wm_scan();
+    wm_stop();
+
+    wifi_manager_scan_info_s *iter = g_store_result;
+    while(iter != NULL){
+        printf("BSSID = %-20s, SSID = %-20s,Rssi : %d\n",iter->bssid,iter->ssid,iter->rssi);
+        iter = iter->next;
+    }
+    ws_signal_deinit();
+    return;
+}
+
 void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
-//  oc_abort(__func__);
+    if(!ap_list){
+        return;
+    }
+    st_scan_wifi();
+    wifi_manager_scan_info_s *res = g_store_result;
+    st_wifi_ap_t *tail = NULL;
+    *ap_list = NULL;
+    int cnt = 0;
+    while(res && cnt < 10){
+        st_wifi_ap_t *ap = (st_wifi_ap_t*)calloc(1,sizeof(st_wifi_ap_t));
+
+        //ssid
+        int len = strlen(res->ssid);
+        ap->ssid = (char*) calloc(len+1,sizeof(char));
+        strncpy(ap->ssid,res->ssid,len);
+
+        //mac address
+        len = strlen(res->bssid);
+        ap->mac_addr = (char*)calloc(len+1,sizeof(char));
+        strncpy(ap->mac_addr,res->bssid,len);
+
+        //channel
+        ap->channel = (char*) calloc(4,sizeof(char));
+        snprintf(ap->channel,4,"%d",res->channel);
+
+        //rssi
+        ap->rssi = (char*) calloc(4,sizeof(char));
+        snprintf(ap->rssi,4,"%d",res->rssi);
+
+        //enc type
+        const char *sec_type = "WPA2";
+        ap->sec_type = (char*) calloc(strlen(sec_type)+1,sizeof(char));
+        strncpy(ap->sec_type,sec_type,strlen(sec_type));
+
+
+        //sec type
+        const char * enc_type = "AES";
+        ap->enc_type = (char*) calloc(strlen(enc_type)+1,sizeof(char));
+        strncpy(ap->enc_type,enc_type,strlen(enc_type));
+
+        if(!*ap_list){
+            *ap_list = ap;
+        }else{
+            tail->next = ap;
+        }
+        tail = ap;
+        res = res->next;
+        cnt++;
+    }
+    printf("[St Port] Found %d neighbouring access points\n",cnt);
 }
+
+void
+st_wifi_free_scan_list(st_wifi_ap_t *ap_list){
+    while(ap_list){
+        st_wifi_ap_t *del = ap_list;
+        ap_list = ap_list->next;
+
+        free(del->ssid);
+        free(del->mac_addr);
+        free(del->channel);
+        free(del->rssi);
+        free(del->max_bitrate);
+        free(del->enc_type);
+        free(del->sec_type);
+        free(del);
+    }
+}
+
+static st_wifi_ap_t *g_ap_scan_list = NULL;
 
 void
 st_wifi_set_cache(st_wifi_ap_t *scanlist)
 {
-//  oc_abort(__func__);
+    st_wifi_clear_cache();
+    g_ap_scan_list = scanlist;
 }
 
 st_wifi_ap_t*
 st_wifi_get_cache(void)
 {
-  oc_abort(__func__);
+  return g_ap_scan_list;
+}
+
+void
+st_wifi_clear_cache(void){
+    st_wifi_free_scan_list(g_ap_scan_list);
+    g_ap_scan_list = NULL;
 }
 
 static void *
