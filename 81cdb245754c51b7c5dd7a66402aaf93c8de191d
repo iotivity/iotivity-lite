@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_cdf2da99",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T23:23:06Z",
+      "side": 1,
+      "message": "Can take this out.",
+      "revId": "81cdb245754c51b7c5dd7a66402aaf93c8de191d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_adef96af",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T23:23:06Z",
+      "side": 1,
+      "message": "RetroIntrospection?\n\nri stands for ResourceIntrospection.\n\nBut you could probably just rename this to \"TestOcRi\"",
+      "range": {
+        "startLine": 37,
+        "startChar": 6,
+        "endLine": 37,
+        "endChar": 28
+      },
+      "revId": "81cdb245754c51b7c5dd7a66402aaf93c8de191d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8df8d27d",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T23:23:06Z",
+      "side": 1,
+      "message": "Add oc_ri_shutdown() here.",
+      "revId": "81cdb245754c51b7c5dd7a66402aaf93c8de191d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6df58e82",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T23:23:06Z",
+      "side": 1,
+      "message": "Can take this out. Its not being set or used.",
+      "revId": "81cdb245754c51b7c5dd7a66402aaf93c8de191d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
