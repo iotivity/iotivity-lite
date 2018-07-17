@@ -756,6 +756,7 @@ WARN_LOGFILE           = ./doxygen.log
 
 INPUT                  = ../include \
                          ../service/easy-setup/enrollee/include \
+                         ../service/easy-setup/enrollee/include/samsung \
                          ../service/resource-directory/client/include \
                          ../service/cloud-access/include \
                          ../service/fota/include \
