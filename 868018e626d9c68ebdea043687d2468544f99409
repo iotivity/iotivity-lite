@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ad52f6da",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:15:29Z",
+      "side": 1,
+      "message": "For better redability, please add an empty line",
+      "revId": "868018e626d9c68ebdea043687d2468544f99409",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ed635eaf",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T05:15:29Z",
+      "side": 1,
+      "message": "please add positive test case also...check OC_SERVER dependency",
+      "range": {
+        "startLine": 44,
+        "startChar": 31,
+        "endLine": 44,
+        "endChar": 49
+      },
+      "revId": "868018e626d9c68ebdea043687d2468544f99409",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
