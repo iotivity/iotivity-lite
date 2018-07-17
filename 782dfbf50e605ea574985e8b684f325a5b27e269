@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_6df62ed9",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "if any one of header file is redundant, please remove",
+      "range": {
+        "startLine": 27,
+        "startChar": 24,
+        "endLine": 27,
+        "endChar": 25
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8df9f2ca",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "please maintain uniformity across files...remove Test",
+      "range": {
+        "startLine": 50,
+        "startChar": 23,
+        "endLine": 50,
+        "endChar": 44
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ed319ea3",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "please add negative case also....even test case fails not an issue...just note down",
+      "range": {
+        "startLine": 56,
+        "startChar": 49,
+        "endLine": 56,
+        "endChar": 51
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ad0036ab",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "I think we use expect all, why assert  is used here...",
+      "range": {
+        "startLine": 57,
+        "startChar": 17,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd03fab6",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "rename properly",
+      "range": {
+        "startLine": 60,
+        "startChar": 23,
+        "endLine": 60,
+        "endChar": 47
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4d27ea64",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-17T06:29:55Z",
+      "side": 1,
+      "message": "Add positive case also here.",
+      "range": {
+        "startLine": 86,
+        "startChar": 45,
+        "endLine": 86,
+        "endChar": 46
+      },
+      "revId": "782dfbf50e605ea574985e8b684f325a5b27e269",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
