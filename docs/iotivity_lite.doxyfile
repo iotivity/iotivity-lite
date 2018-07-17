@@ -749,13 +749,14 @@ WARN_LOGFILE           = ./doxygen.log
 #---------------------------------------------------------------------------
 
 # The INPUT tag is used to specify the files and/or directories that contain
-# documented source files. You may enter file names like myfile.cpp or
+# documented source files. You may enter file names like myfile.cpp orI 
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../include \
                          ../service/easy-setup/enrollee/include \
+						 ../service/easy-setup/enrollee/include/samsung \
                          ../service/resource-directory/client/include \
                          ../service/cloud-access/include \
                          ../service/fota/include \
