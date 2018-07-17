@@ -7,15 +7,28 @@
 set GIT_CMD=git
 
 @rem Get location of Git. ~p drops the executable name and keeps
-@rem the path only
-for /f "tokens=*" %%i in ('where %GIT_CMD%') do set GIT_LOCATION=%%~pi
-set PATCH_CMD=%GIT_LOCATION%..\usr\bin\patch.exe
+@rem drive letter and path only. The output path has a trailing \.
+for /f "tokens=*" %%i in ('where %GIT_CMD%') do set GIT_INSTALL_DIR=%%~dpi
+
+@rem Now iterate up to find the Git top-level directory.
+:redo
+@rem Drop the trailing slash
+set GIT_INSTALL_DIR=%GIT_INSTALL_DIR:~0,-1%
+@rem Get parent directory
+for /f "tokens=*" %%i in ("%GIT_INSTALL_DIR%") do set GIT_INSTALL_DIR=%%~dpi
+@rem Get the directory name (last folder)
+for /f "tokens=*" %%i in ("%GIT_INSTALL_DIR:~0,-1%") do set LAST_DIR=%%~ni
+if "%LAST_DIR%" == "" goto error
+if NOT %LAST_DIR% == Git goto redo
+
+@rem Now search for the patch tool starting from the Git top-level directory
+for /f "tokens=*" %%i in ('where /R "%GIT_INSTALL_DIR:~0,-1%" patch.exe') do set PATCH_CMD=%%~fi
 
 @rem current working directory for recovery
 set OLD_CWD=%CD%
 
-if exist %~dp0..\..\deps\mbedtls\ (
-	cd %~dp0..\..\deps\mbedtls || goto error
+if exist "%~dp0..\..\deps\mbedtls\" (
+	cd "%~dp0..\..\deps\mbedtls" || goto error
 	"%GIT_CMD%" clean -xdf .  || goto error
 	"%GIT_CMD%" reset --hard  || goto error
 	cd "%OLD_CWD%" || goto error
@@ -42,4 +55,3 @@ exit /b 0
 :error
 cd "%OLD_CWD%"
 exit /b 1
-
