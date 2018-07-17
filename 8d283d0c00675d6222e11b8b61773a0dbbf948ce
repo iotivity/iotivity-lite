@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_add8361e",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T22:56:46Z",
+      "side": 1,
+      "message": "Should add oc_core_init() here.",
+      "revId": "8d283d0c00675d6222e11b8b61773a0dbbf948ce",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0d05e279",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-17T22:56:46Z",
+      "side": 1,
+      "message": "Should change this to oc_core_shutdown().",
+      "revId": "8d283d0c00675d6222e11b8b61773a0dbbf948ce",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
