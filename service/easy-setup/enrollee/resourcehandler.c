@@ -401,7 +401,7 @@ set_callback_for_userdata(es_read_userdata_cb readcb,
                           es_free_userdata free_userdata)
 {
   if (!g_enrollee) {
-    OC_ERR("Enrollee is not initialized!");
+    OC_ERR("Enrollee is not initialized! set_callback_for_userdata");
     return ES_ERROR;
   }
 
@@ -882,7 +882,7 @@ es_result_e
 set_device_property(es_device_property *device_property)
 {
   if (!g_enrollee) {
-    OC_ERR("Enrollee is not initialized!");
+    OC_ERR("Enrollee is not initialized! -set_device_property");
     return ES_ERROR;
   }
 
@@ -913,7 +913,7 @@ es_result_e
 set_enrollee_state(es_enrollee_state es_state)
 {
   if (!g_enrollee) {
-    OC_ERR("Enrollee is not initialized!");
+    OC_ERR("Enrollee is not initialized! set_enrollee_state");
     return ES_ERROR;
   }
 
@@ -933,7 +933,7 @@ es_result_e
 set_enrollee_err_code(es_error_code es_err_code)
 {
   if (!g_enrollee) {
-    OC_ERR("Enrollee is not initialized!");
+    OC_ERR("Enrollee is not initialized! set_enrollee_err_code");
     return ES_ERROR;
   }
 

@@ -150,17 +150,22 @@ static bool
 otm_confirm_handler(void)
 {
   printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
-  char ret[10];
-  if (!scanf("%s", ret))
-    printf("[ST_APP] scanf failed.\n");
 
-  if (ret[0] == 'y' || ret[0] == 'Y') {
-    printf("[ST_APP] CONFIRMED.\n");
-    return true;
-  } else {
-    printf("[ST_APP] DENIED.\n");
-    return false;
-  }
+  return true;
+  /*
+    char ret[10];
+    if (!scanf("%s", ret))
+      printf("[ST_APP] scanf failed.\n");
+
+    if (ret[0] == 'y' || ret[0] == 'Y') {
+      printf("[ST_APP] CONFIRMED.\n");
+      return true;
+    } else {
+      printf("[ST_APP] DENIED.\n");
+      return false;
+    }
+
+    */
 }
 
 static void
@@ -206,6 +211,7 @@ st_fota_cmd_handler(fota_cmd_t cmd)
 }
 
 #ifdef USER_INPUT
+
 static void
 print_menu(void)
 {
@@ -310,7 +316,7 @@ user_input_thread_destroy(void)
 #endif /* USER_INPUT */
 
 int
-main(void)
+main1(void)
 {
   if (st_manager_initialize() != ST_ERROR_NONE) {
     printf("[ST_APP] st_manager_initialize failed.\n");
@@ -349,5 +355,141 @@ main(void)
 
   st_unregister_status_handler();
   st_manager_deinitialize();
+  return 0;
+}
+
+extern st_error_t temp_st_manager_initialize(void);
+extern st_error_t temp_st_manager_start(void);
+extern st_error_t temp_st_manager_stop(void);
+extern st_error_t temp_st_manager_deinitialize(void);
+
+bool myquit = false;
+
+static void *
+temp_user_input_loop(void *data)
+{
+  (void)data;
+  char key[10];
+  fd_set readfds, setfds;
+  int stdin_fd = fileno(stdin);
+
+  FD_ZERO(&readfds);
+  FD_SET(stdin_fd, &readfds);
+  FD_SET(g_user_input_shutdown_pipe[0], &readfds);
+
+  myquit = false;
+  while (1) {
+    print_menu();
+    fflush(stdin);
+
+    setfds = readfds;
+    int n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
+
+    if (n == -1) {
+      printf("[ST_APP] user input failed!!!!\n");
+      st_manager_stop();
+      goto exit;
+    }
+
+    if (FD_ISSET(g_user_input_shutdown_pipe[0], &setfds)) {
+      char buf;
+      int count = read(g_user_input_shutdown_pipe[0], &buf, 1);
+      (void)count;
+      goto exit;
+    }
+
+    if (FD_ISSET(stdin_fd, &setfds)) {
+      int count = read(stdin_fd, key, 10);
+      if (count < 0) {
+        goto exit;
+      }
+      FD_CLR(stdin_fd, &setfds);
+    }
+
+    switch (key[0]) {
+    case '1':
+      // st_manager_reset();
+      printf("[ST_APP] reset\n");
+      break;
+    case '2':
+      printf("[ST_APP] notifty switch resource\n");
+      // if (strncmp(power, "on", 2) == 0) {
+      //   printf("[ST_APP] power off\n");
+      //   strncpy(power, "off\0", 4);
+      // } else {
+      //   printf("[ST_APP] power on\n");
+      //   strncpy(power, "on\0", 3);
+      // }
+      // if (st_notify_back(switch_rsc_uri) != ST_ERROR_NONE) {
+      //   printf("[ST_APP] st_notify_back failed.\n");
+      // }
+      break;
+    case '0':
+      // st_manager_stop();
+      printf("[ST_APP] quit\n");
+      myquit = true;
+      goto exit;
+    default:
+      printf("[ST_APP] unsupported command.\n");
+      break;
+    }
+  }
+exit:
+  printf("[ST_APP] temp_user_input_loop quit.\n");
+  pthread_exit(NULL);
+}
+
+static int
+temp_user_input_thread_init(void)
+{
+  if (pipe(g_user_input_shutdown_pipe) < 0) {
+    printf("shutdown pipe error\n");
+    return -1;
+  }
+
+  pthread_create(&g_user_input_thread, NULL, temp_user_input_loop, NULL);
+  return 0;
+}
+
+int
+main(void)
+{
+  if (temp_st_manager_initialize() != ST_ERROR_NONE) {
+    printf("[ST_APP] temp_st_manager_initialize failed.\n");
+    return -1;
+  }
+
+  printf("[ST_APP] temp_st_manager_initialize OK.\n");
+
+  if (st_register_resource_handler(get_resource_handler,
+                                   set_resource_handler) != ST_ERROR_NONE) {
+    printf("[ST_APP] st_register_resource_handler failed.\n");
+    return -1;
+  }
+
+  st_register_otm_confirm_handler(otm_confirm_handler);
+  st_register_status_handler(st_status_handler);
+  st_register_fota_cmd_handler(st_fota_cmd_handler);
+
+#ifdef USER_INPUT
+  if (temp_user_input_thread_init() != 0) {
+    printf("[ST_APP] user_input_thread_init failed.\n");
+    return -1;
+  }
+#endif /* USER_INPUT */
+  st_error_t ret = ST_ERROR_NONE;
+
+  ret = temp_st_manager_start();
+
+  if (ret == ST_ERROR_NONE) {
+    do {
+
+      if (ret != ST_ERROR_NONE) {
+        sleep(1);
+        printf("[ST_APP] running\n", ret);
+      }
+    } while (!myquit);
+  }
+  printf("[ST_APP] DONE\n", ret);
   return 0;
 }

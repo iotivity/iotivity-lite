@@ -652,3 +652,386 @@ st_manager_evt_reset_handler(void)
   st_manager_evt_stop_handler();
   st_print_log("[ST_MGR] reset finished\n");
 }
+
+//===================================================
+
+//=============================================================================
+
+//=======================================================================================
+
+typedef enum {
+  ST_EVT_INIT = 0,
+  ST_EVT_START,
+  ST_EVT_STOP,
+  ST_EVT_DEINIT,
+  ST_EVT_RUN,
+  ST_EVT_START_EASYSETUP,
+  ST_EVT_START_WIFI_CONNECT,
+  ST_EVT_START_CLOUDMANAGER,
+  ST_EVT_FOTA
+} st_evt;
+
+typedef enum {
+  ST_STATE_IDLE,
+  ST_STATE_INITIALIZED,
+  ST_STATE_STARTED,
+  ST_STATE_RUNNING,
+  ST_STATE_STOPPED,
+  ST_STATE_EASYSETUP_PROCESSING,
+  ST_STATE_WIFI_CONNECTING,
+  ST_STATE_CLOUDMANAGER_PROCESSING,
+  ST_STATE_MAX // indicate num of state &  no change
+} st_state;
+
+typedef st_error_t (*st_state_handler)(st_evt evt);
+
+static st_error_t handle_request(st_evt evt);
+static st_error_t handler_on_state_idle(st_evt evt);
+static st_error_t handler_on_state_initialized(st_evt evt);
+static st_error_t handler_on_state_started(st_evt evt);
+static st_error_t handler_on_state_running(st_evt evt);
+static st_error_t handler_on_state_stopped(st_evt evt);
+static st_error_t handler_on_state_easysetup_processing(st_evt evt);
+static st_error_t handler_on_state_wifi_connecting(st_evt evt);
+static st_error_t handler_on_state_cloudmanager_processing(st_evt evt);
+
+// same order of st_state
+const st_state_handler g_handler[ST_STATE_MAX] = {
+  handler_on_state_idle,
+  handler_on_state_initialized,
+  handler_on_state_started,
+  handler_on_state_running,
+  handler_on_state_stopped,
+  handler_on_state_easysetup_processing,
+  handler_on_state_wifi_connecting,
+  handler_on_state_cloudmanager_processing
+};
+
+st_state g_current_state = ST_STATE_IDLE;
+
+// st_store_t *store_info = NULL;  // need to be checked
+
+static st_state
+get_current_state(void)
+{
+  return g_current_state;
+}
+
+static void
+set_current_state(st_state state)
+{
+  if (state != ST_STATE_MAX) {
+    g_current_state = state;
+  }
+}
+
+void
+temp_easy_setup_handler(st_easy_setup_status_t status)
+{
+
+  st_store_t *store_info = NULL;
+  if (status == EASY_SETUP_FINISH) {
+    st_print_log("[ST_MGR] Easy setup succeed!!!\n");
+    // set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
+
+    st_print_log("\n");
+    st_easy_setup_stop();
+    store_info = st_store_get_info();
+    if (!store_info || !store_info->status) {
+      st_print_log("[ST_MGR] could not get cloud informations.\n");
+      // error
+    }
+
+    set_current_state(ST_STATE_WIFI_CONNECTING);
+    handle_request(ST_EVT_START_WIFI_CONNECT);
+
+  } else if (status == EASY_SETUP_RESET) {
+    st_print_log("[ST_MGR] Easy setup reset!!!\n");
+    //    set_st_manager_status(ST_STATUS_RESET);
+  } else if (status == EASY_SETUP_FAIL) {
+    st_print_log("[ST_MGR] Easy setup failed!!!\n");
+    g_start_fail = true;
+    //    set_st_manager_status(ST_STATUS_STOP);
+  }
+}
+
+void
+temp_cloud_manager_handler(st_cloud_manager_status_t status)
+{
+  if (status == CLOUD_MANAGER_FINISH) {
+    st_print_log("[ST_MGR] Cloud manager succeed!!!\n");
+    set_current_state(ST_STATE_RUNNING);
+
+  } else if (status == CLOUD_MANAGER_FAIL) {
+    st_print_log("[ST_MGR] Cloud manager failed!!!\n");
+    //    g_start_fail = true;
+    //    set_st_manager_status(ST_STATUS_STOP);
+  } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
+    st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
+    //    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
+  } else if (status == CLOUD_MANAGER_RESET) {
+    st_print_log("[ST_MGR] Cloud manager reset!!!\n");
+    //    set_st_manager_status(ST_STATUS_RESET);
+  }
+}
+
+static st_error_t
+handle_request(st_evt evt)
+{
+  st_error_t result;
+  result = g_handler[get_current_state()](evt);
+  return result;
+}
+
+static st_error_t
+handler_on_state_idle(st_evt evt)
+{
+
+  if (evt != ST_EVT_INIT) {
+    return ST_ERROR_NONE;
+  }
+
+#ifdef OC_SECURITY
+#ifdef __TIZENRT__
+  oc_storage_config("/mnt/st_things_creds");
+#else
+  oc_storage_config("./st_things_creds");
+#endif
+#endif /* OC_SECURITY */
+
+  if (st_process_init() != 0) {
+    st_print_log("[ST_MGR] st_process_init failed.\n");
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  if (st_port_specific_init() != 0) {
+    st_print_log("[ST_MGR] st_port_specific_init failed!");
+    st_process_destroy();
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  oc_set_max_app_data_size(3072);
+
+  st_unregister_status_handler();
+
+  set_current_state(ST_STATE_INITIALIZED);
+
+  return ST_ERROR_NONE;
+}
+
+static st_error_t
+handler_on_state_initialized(st_evt evt)
+{
+
+  if (evt != ST_EVT_START) {
+    return ST_ERROR_NONE;
+  }
+
+  if (st_manager_stack_init() < 0) {
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  // store_info = NULL;
+
+  set_current_state(ST_STATE_STARTED);
+  return handle_request(ST_EVT_START); // need to be checked
+}
+
+static st_error_t
+handler_on_state_started(st_evt evt)
+{
+
+  if (evt != ST_EVT_START) {
+    return ST_ERROR_NONE;
+  }
+
+  if (st_is_easy_setup_finish() == 0) { // DONE
+
+    set_current_state(ST_STATE_CLOUDMANAGER_PROCESSING);
+    return handle_request(ST_EVT_START_CLOUDMANAGER);
+
+  } else {
+    set_current_state(ST_STATE_EASYSETUP_PROCESSING);
+    return handle_request(ST_EVT_START_EASYSETUP);
+  }
+}
+
+static st_error_t
+handler_on_state_easysetup_processing(st_evt evt)
+{
+  if (evt != ST_EVT_START_EASYSETUP) {
+    return ST_ERROR_NONE;
+  }
+
+  if (st_easy_setup_start(&st_vendor_props, temp_easy_setup_handler) != 0) {
+    st_print_log("[ST_MGR] Failed to start easy setup!\n");
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  // thread;
+  return ST_ERROR_NONE;
+}
+
+static st_error_t
+handler_on_state_wifi_connecting(st_evt evt)
+{
+  if (evt != ST_EVT_START_WIFI_CONNECT) {
+    return ST_ERROR_NONE;
+  }
+
+  int conn_cnt = 0;
+
+  st_store_t *store_info = NULL;
+  store_info = st_store_get_info();
+  st_turn_off_soft_AP();
+  st_connect_wifi(oc_string(store_info->accesspoint.ssid),
+                  oc_string(store_info->accesspoint.pwd));
+
+  //?? #define AP_CONNECT_RETRY_LIMIT (20)
+  while ((st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server) !=
+          0) &&
+         conn_cnt <= AP_CONNECT_RETRY_LIMIT) {
+    st_print_log("[ST_MGR] AP is not connected.\n");
+    conn_cnt++;
+
+    st_sleep(3);
+  }
+
+  if (conn_cnt <= AP_CONNECT_RETRY_LIMIT) {
+    set_current_state(ST_STATE_CLOUDMANAGER_PROCESSING);
+    return handle_request(ST_EVT_START_CLOUDMANAGER);
+
+  } else { // error !!!!
+    ;
+    ;
+  }
+
+  return ST_ERROR_OPERATION_FAILED;
+}
+
+static st_error_t
+handler_on_state_cloudmanager_processing(st_evt evt)
+{
+  if (evt != ST_EVT_START_CLOUDMANAGER)
+    return ST_ERROR_NONE;
+
+  st_store_t *store_info = NULL;
+  store_info = st_store_get_info();
+
+  if (st_cloud_manager_start(store_info, device_index,
+                             temp_cloud_manager_handler) != 0) {
+    st_print_log("[ST_MGR] Failed to start cloud manager!\n");
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  return ST_ERROR_NONE;
+}
+
+static st_error_t
+handler_on_state_running(st_evt evt)
+{
+
+  if (evt != ST_EVT_STOP) {
+    return ST_ERROR_NONE;
+  }
+  // currently evt != ST_EVT_STOP
+
+  unset_sc_prov_info();
+  st_process_stop();
+
+  st_easy_setup_stop();
+  st_print_log("[ST_MGR] easy setup stop done\n");
+
+  st_cloud_manager_stop(device_index);
+  st_print_log("[ST_MGR] cloud manager stop done\n");
+
+  st_fota_manager_stop();
+  st_print_log("[ST_MGR] fota manager stop done\n");
+
+  st_store_info_initialize();
+
+  deinit_provisioning_info_resource();
+
+  oc_main_shutdown();
+
+  free_platform_cb_data();
+
+  set_current_state(ST_STATE_STOPPED);
+
+  return ST_ERROR_NONE;
+}
+
+static st_error_t
+handler_on_state_stopped(st_evt evt)
+{
+  if (evt != ST_EVT_DEINIT)
+    return ST_ERROR_NONE;
+
+  st_unregister_status_handler();
+  st_turn_off_soft_AP();
+  st_vendor_props_shutdown();
+  st_port_specific_destroy();
+  st_process_destroy();
+  set_current_state(ST_STATE_IDLE);
+
+  return ST_ERROR_NONE;
+}
+
+st_error_t
+temp_st_manager_initialize(void)
+{
+
+  st_state current_state = get_current_state();
+
+  if (current_state != ST_STATE_IDLE) {
+    if (current_state == ST_STATE_INITIALIZED) {
+      return ST_ERROR_STACK_ALREADY_INITIALIZED;
+    } else {
+      return ST_ERROR_STACK_RUNNING;
+    }
+  }
+
+  return handle_request(ST_EVT_INIT);
+}
+
+st_error_t
+temp_st_manager_start(void)
+{
+
+  st_state current_state = get_current_state();
+
+  if (current_state == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (current_state != ST_STATUS_INIT) {
+    return ST_ERROR_STACK_RUNNING;
+  }
+
+  return handle_request(ST_EVT_START);
+}
+
+st_error_t
+temp_st_manager_stop(void)
+{
+  st_state current_state = get_current_state();
+
+  if (current_state == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (current_state == ST_STATUS_INIT) {
+    return ST_ERROR_STACK_NOT_STARTED;
+  }
+  return handle_request(ST_EVT_STOP);
+}
+
+st_error_t
+temp_st_manager_deinitialize(void)
+{
+  st_state current_state = get_current_state();
+
+  if (g_main_status == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (g_main_status != ST_STATUS_INIT) {
+    return ST_ERROR_STACK_RUNNING;
+  }
+
+  return handle_request(ST_EVT_DEINIT);
+}

@@ -578,7 +578,8 @@ soft_ap_process_routine(void *data)
 
   /** Turn On Wi-Fi interface */
   st_print_log("[St_Port] Turn on the wifi interface\n");
-  SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce05a49 10.0.0.2/24 up"));
+  //  SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce05a49 10.0.0.2/24 up"));
+  SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce049cd 10.0.0.2/24 up"));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
   st_print_log("[St_Port] $ sudo service dnsmasq restart\n");

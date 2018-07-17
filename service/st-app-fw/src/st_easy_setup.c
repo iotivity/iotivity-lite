@@ -126,6 +126,10 @@ st_easy_setup_stop(void)
 {
   st_print_log("[Easy_Setup] st_easy_setup_stop in\n");
 
+  //===========+
+  es_set_state(ES_STATE_INIT); // memfree
+  //===========+
+
   if (es_terminate_enrollee() == ES_ERROR) {
     st_print_log("es_terminate_enrollee failed!\n");
     return;
@@ -143,7 +147,7 @@ st_easy_setup_stop(void)
   g_callback = NULL;
   g_easy_setup_status = EASY_SETUP_INITIALIZE;
   g_prov_step_check = 0;
-  es_set_state(ES_STATE_INIT);
+  //  es_set_state(ES_STATE_INIT);
 
   st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
 }
