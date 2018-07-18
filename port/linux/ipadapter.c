@@ -1663,24 +1663,35 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   }
 
   struct addrinfo hints, *result = NULL;
-
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = (flags & IPV6) ? AF_INET6 : AF_INET;
   hints.ai_socktype = (flags & TCP) ? SOCK_STREAM : SOCK_DGRAM;
   int ret = getaddrinfo(domain, NULL, &hints, &result);
 
   if (ret == 0) {
-    char address[NI_MAXHOST];
-    ret = getnameinfo(result->ai_addr, result->ai_addrlen, address,
-                      sizeof(address), NULL, 0, 0);
-    if (ret == 0) {
+    char address[INET6_ADDRSTRLEN];
+    const char *dest = NULL;
+    if (flags & IPV6) {
+      struct sockaddr_in6 *s_addr = (struct sockaddr_in6 *)result->ai_addr;
+      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address,
+                       INET6_ADDRSTRLEN);
+    }
+#ifdef OC_IPV4
+    else {
+      struct sockaddr_in *s_addr = (struct sockaddr_in *)result->ai_addr;
+      dest =
+        inet_ntop(AF_INET, (void *)&s_addr->sin_addr, address, INET_ADDRSTRLEN);
+    }
+#endif /* OC_IPV4 */
+    if (dest) {
       OC_DBG("%s address is %s", domain, address);
       oc_new_string(addr, address, strlen(address));
+    } else {
+      ret = -1;
     }
   }
 
   freeaddrinfo(result);
-
   return ret;
 }
 #endif /* OC_DNS_LOOKUP */
