@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,17 @@
 // limitations under the License.
 */
 
-#ifndef OC_UUID_H
-#define OC_UUID_H
+#include "port/oc_assert.h"
+#include <stdlib.h>
 
-#include <stdint.h>
-
-#define OC_UUID_LEN (37)
-
-typedef struct
+void
+abort_impl(void)
 {
-  uint8_t id[16];
-} oc_uuid_t;
+  abort();
+}
 
-void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
-void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
-void oc_gen_uuid(oc_uuid_t *uuid);
-#if defined(OC_SPEC_VER_OIC)
-void oc_gen_uuid_from_mac(oc_uuid_t *uuid);
-#endif //OC_SPEC_VER_OIC
-
-
-#endif /* OC_UUID_H */
+void
+exit_impl(int status)
+{
+  exit(status);
+}

@@ -30,9 +30,11 @@ typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 typedef struct
 {
   oc_rep_t *payload;
+  oc_endpoint_t *endpoint;
+  void *client_cb;
+  void *user_data;
   oc_status_t code;
   int observe_option;
-  void *user_data;
 } oc_client_response_t;
 
 typedef enum {
@@ -56,18 +58,20 @@ typedef struct oc_client_cb_s
 {
   struct oc_client_cb_s *next;
   oc_string_t uri;
-  uint8_t token[COAP_TOKEN_LEN];
-  uint8_t token_len;
-  uint16_t mid;
   oc_string_t query;
   oc_endpoint_t *endpoint;
   oc_client_handler_t handler;
   void *user_data;
-  bool discovery;
   int32_t observe_seq;
   oc_clock_time_t timestamp;
   oc_qos_t qos;
   oc_method_t method;
+  uint16_t mid;
+  uint8_t token[COAP_TOKEN_LEN];
+  uint8_t token_len;
+  bool discovery;
+  bool multicast;
+  bool stop_multicast_receive;
 } oc_client_cb_t;
 
 #ifdef OC_BLOCK_WISE
@@ -92,7 +96,7 @@ oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
 
 oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
-void oc_ri_remove_client_cb_by_mid(uint16_t mid);
+bool oc_ri_remove_client_cb_by_mid(uint16_t mid);
 
 oc_discovery_flags_t oc_ri_process_discovery_payload(
   uint8_t *payload, int len, oc_discovery_handler_t handler,

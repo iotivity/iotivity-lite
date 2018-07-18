@@ -31,9 +31,13 @@ port/linux/tests/*
 port/linux/obj/
 port/linux/onboarding_tool_creds/
 port/linux/smart_lock
-port/windows/.vs/
-port/windows/Debug/
-port/windows/simpleserver_creds/
+port/windows/vs2015/.vs/
+port/windows/vs2015/Debug/
+port/windows/vs2015/Release/
+port/windows/vs2015/simpleserver_creds/
+port/windows/vs2015/*.VC.opendb
+port/windows/vs2015/*.VC.db
+port/windows/vs2015/*.vcxproj.user
 port/zephyr/outdir/
 port/contiki/*.a
 port/contiki/*.map

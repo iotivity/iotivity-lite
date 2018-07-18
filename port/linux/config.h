@@ -23,6 +23,10 @@ typedef uint64_t oc_clock_time_t;
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
 
+/* Add support for dns lookup to the endpoint */
+#define OC_DNS_LOOKUP
+#define OC_DNS_LOOKUP_IPV6
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS

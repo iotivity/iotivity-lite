@@ -248,7 +248,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_request_callback_t callback,
                                      void *user_data);
 bool oc_add_resource(oc_resource_t *resource);
-void oc_delete_resource(oc_resource_t *resource);
+bool oc_delete_resource(oc_resource_t *resource);
 
 /**
   @brief Callback for change notifications from the oic.wk.con resource.
@@ -345,6 +345,11 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    void *user_data);
 
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
+
+bool oc_do_ip_multicast(const char *uri, const char *query,
+                        oc_response_handler_t handler, void *user_data);
+
+void oc_stop_multicast(oc_client_response_t *response);
 
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 

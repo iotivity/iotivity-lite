@@ -353,7 +353,81 @@ oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb,
 
   return status;
 }
-#endif
+
+static bool
+oc_do_ipv4_multicast(oc_client_cb_t *ipv6_cb, oc_response_handler_t handler,
+                     void *user_data)
+{
+  oc_client_handler_t client_handler;
+  client_handler.response = handler;
+
+  oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
+
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
+    oc_string(ipv6_cb->uri), &mcast4, OC_GET, oc_string(ipv6_cb->query),
+    client_handler, LOW_QOS, user_data);
+
+  if (!cb) {
+    return false;
+  }
+
+  cb->mid = ipv6_cb->mid;
+  memcpy(cb->token, ipv6_cb->token, cb->token_len);
+
+  cb->multicast = true;
+
+  bool status = prepare_coap_request(cb);
+
+  if (status)
+    status = dispatch_coap_request();
+
+  return status;
+}
+#endif /* OC_IPV4 */
+
+void
+oc_stop_multicast(oc_client_response_t *response)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)response->client_cb;
+  cb->stop_multicast_receive = true;
+}
+
+bool
+oc_do_ip_multicast(const char *uri, const char *query,
+                   oc_response_handler_t handler, void *user_data)
+{
+  if (!uri || !handler) {
+    return false;
+  }
+
+  oc_make_ipv6_endpoint(mcast, IPV6 | DISCOVERY, 5683, 0xff, 0x02, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58);
+  mcast.addr.ipv6.scope = 0;
+
+  oc_client_handler_t client_handler;
+  client_handler.response = handler;
+
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
+    uri, &mcast, OC_GET, query, client_handler, LOW_QOS, user_data);
+
+  if (!cb) {
+    return false;
+  }
+
+  cb->multicast = true;
+
+  bool status = prepare_coap_request(cb);
+
+  if (status)
+    status = dispatch_coap_request();
+
+#ifdef OC_IPV4
+  if (status)
+    status = oc_do_ipv4_multicast(cb, handler, user_data);
+#endif /* OC_IPV4 */
+
+  return status;
+}
 
 static oc_client_cb_t *
 dispatch_ip_discovery(const char *rt, oc_discovery_handler_t handler,
