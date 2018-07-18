@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_edc19ee5",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-18T07:20:18Z",
+      "side": 1,
+      "message": "remove it if not required anymore.",
+      "range": {
+        "startLine": 416,
+        "startChar": 16,
+        "endLine": 416,
+        "endChar": 92
+      },
+      "revId": "4e5aea464a7d2776e839fb4a419e93e8bdf9d99f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4db7ea86",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-18T07:20:18Z",
+      "side": 1,
+      "message": "set dependency with st_app build\nrefer to https://gerrit.iotivity.org/gerrit/#/c/26205/",
+      "range": {
+        "startLine": 416,
+        "startChar": 77,
+        "endLine": 416,
+        "endChar": 92
+      },
+      "revId": "4e5aea464a7d2776e839fb4a419e93e8bdf9d99f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0dbde268",
+        "filename": "service/st-app-fw/include/st_device_profile.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-18T07:20:18Z",
+      "side": 1,
+      "message": "better to merge into single haeder file into st_manager.h",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 35
+      },
+      "revId": "4e5aea464a7d2776e839fb4a419e93e8bdf9d99f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
