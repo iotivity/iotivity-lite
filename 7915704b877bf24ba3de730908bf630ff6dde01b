@@ -367,6 +367,30 @@
       "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_209c32c0",
+        "filename": "api/unittest/coreres.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-18T06:56:17Z",
+      "side": 1,
+      "message": "Negative ttes",
+      "parentUuid": "da33351e_7aad4b31",
+      "range": {
+        "startLine": 81,
+        "startChar": 30,
+        "endLine": 81,
+        "endChar": 32
+      },
+      "revId": "7915704b877bf24ba3de730908bf630ff6dde01b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
