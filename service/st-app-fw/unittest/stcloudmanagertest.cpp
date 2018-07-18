@@ -361,6 +361,7 @@ class TestSTCloudManager_cb: public testing::Test
         }
 };
 
+#ifndef JENKINS_BLOCK
 #ifdef OC_SECURITY
 TEST_F(TestSTCloudManager_cb, cloud_manager_normal_test)
 {
@@ -371,3 +372,4 @@ TEST_F(TestSTCloudManager_cb, cloud_manager_normal_test)
     EXPECT_TRUE(is_st_app_ready);
 }
 #endif /* OC_SECURITY */
+#endif /* JENKINS_BLOCK */
