@@ -259,6 +259,10 @@ else
 	IWLIB = -liw
 endif
 
+ifeq ($(JENKINS_BLOCK), 1)
+	TEST_CXXFLAGS += -DJENKINS_BLOCK
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
