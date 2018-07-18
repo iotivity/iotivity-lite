@@ -644,6 +644,9 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-constrained/deps/tinycbor/src
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
+ifneq ($(SECURE),1)
+	rm $(includedir)/iotivity-constrained/oc_security.h
+endif
 # Installing the samples
 	$(INSTALL) -d ${install_bin_dir}
 	$(INSTALL) $(SAMPLES) ${install_bin_dir}
