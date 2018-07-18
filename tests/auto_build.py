@@ -69,6 +69,7 @@ def build_linux(flag, extra_option_str):
 
 def build_linux_test(flag, extra_option_str):
     print ("*********** Build for linux ************")
+    extra_option_str += ' JENKINS_BLOCK=1';
     build_linux("true", "test" + extra_option_str)
 
 
@@ -80,6 +81,7 @@ def build_linux_unsecured(flag, extra_option_str):
 
 def build_linux_unsecured_test(flag, extra_option_str):
     print ("*********** Build for linux ************")
+    extra_option_str += ' JENKINS_BLOCK=1';
     build_linux_unsecured("true", "test" + extra_option_str)
 
 def build_tizenrt(flag, extra_option_str):
