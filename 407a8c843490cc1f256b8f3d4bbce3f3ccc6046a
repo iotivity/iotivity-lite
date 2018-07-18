@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4dd24ad3",
+        "filename": "api/unittest/coreresourcetest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:19:37Z",
+      "side": 1,
+      "message": "please remove space",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 4
+      },
+      "revId": "407a8c843490cc1f256b8f3d4bbce3f3ccc6046a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
