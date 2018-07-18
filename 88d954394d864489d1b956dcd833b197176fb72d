@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e82b4c80",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-18T10:07:33Z",
+      "side": 1,
+      "message": "These are dependent not st_app_fw but on st_things.",
+      "range": {
+        "startLine": 204,
+        "startChar": 0,
+        "endLine": 210,
+        "endChar": 49
+      },
+      "revId": "88d954394d864489d1b956dcd833b197176fb72d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
