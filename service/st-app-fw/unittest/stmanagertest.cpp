@@ -24,6 +24,9 @@ extern "C"{
     #include "st_process.h"
     #include "st_port.h"
     #include "sttestcommon.h"
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 static st_mutex_t mutex = NULL;
@@ -62,6 +65,7 @@ class TestSTManager: public testing::Test
             mutex = st_mutex_init();
             cv = st_cond_init();
             reset_storage();
+            st_set_device_profile(st_device_def, st_device_def_len);
         }
 
         virtual void TearDown()

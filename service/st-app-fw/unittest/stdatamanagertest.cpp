@@ -21,6 +21,10 @@
 
 extern "C"{
     #include "st_data_manager.h"
+    #include "st_manager.h"
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 class TestSTDataManager: public testing::Test
@@ -39,6 +43,7 @@ class TestSTDataManager: public testing::Test
 
 TEST_F(TestSTDataManager, st_data_mgr_info_load)
 {
+    st_set_device_profile(st_device_def, st_device_def_len);
     int ret = st_data_mgr_info_load();
     EXPECT_EQ(0, ret);
     st_data_mgr_info_free();
@@ -46,6 +51,7 @@ TEST_F(TestSTDataManager, st_data_mgr_info_load)
 
 TEST_F(TestSTDataManager, st_data_mgr_get_spec_info)
 {
+    st_set_device_profile(st_device_def, st_device_def_len);
     st_data_mgr_info_load();
     st_specification_t *ret;
     ret = st_data_mgr_get_spec_info();
@@ -62,6 +68,7 @@ TEST_F(TestSTDataManager, st_data_mgr_get_spec_info_fail)
 
 TEST_F(TestSTDataManager, st_data_mgr_get_resource_info)
 {
+     st_set_device_profile(st_device_def, st_device_def_len);
     st_data_mgr_info_load();
     st_resource_info_t *ret;
     ret = st_data_mgr_get_resource_info();
@@ -78,6 +85,7 @@ TEST_F(TestSTDataManager, st_data_mgr_get_resource_info_fail)
 
 TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info)
 {
+    st_set_device_profile(st_device_def, st_device_def_len);
     st_data_mgr_info_load();
     st_resource_type_t *ret;
     ret = st_data_mgr_get_rsc_type_info("x.com.st.powerswitch");
@@ -90,4 +98,27 @@ TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info_fail)
     st_resource_type_t *ret;
     ret = st_data_mgr_get_rsc_type_info("x.com.st.powerswitch");
     EXPECT_EQ(NULL, ret);
+}
+
+TEST_F(TestSTDataManager, st_set_device_profile_fail_dueto_NULL)
+{
+    bool ret=false;
+    ret = st_set_device_profile(NULL, 10);
+    EXPECT_FALSE(ret);
+}
+
+TEST_F(TestSTDataManager, st_set_device_profile_fail_dueto_length)
+{
+    bool ret=false;
+    unsigned char test[10]={0,1,2,3,4,5,6,7,8,9};
+    ret = st_set_device_profile(test, 0);
+    EXPECT_FALSE(ret);
+}
+
+TEST_F(TestSTDataManager, st_set_device_profile_ok)
+{
+    bool ret=false;
+    unsigned char test[10]={0,1,2,3,4,5,6,7,8,9};
+    ret = st_set_device_profile(test, 10);
+    EXPECT_TRUE(ret);
 }
