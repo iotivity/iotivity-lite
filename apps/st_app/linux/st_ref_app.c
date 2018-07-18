@@ -16,6 +16,8 @@
  *
  ****************************************************************************/
 
+#include "st_device_def.h"
+#include "st_device_profile.h"
 #include "st_fota_manager.h"
 #include "st_manager.h"
 #include "st_resource_manager.h"
@@ -326,6 +328,7 @@ main(void)
   st_register_otm_confirm_handler(otm_confirm_handler);
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
+  st_set_device_profile(st_device_def, st_device_def_len);
 
 #ifdef USER_INPUT
   if (user_input_thread_init() != 0) {
@@ -347,6 +350,7 @@ main(void)
   user_input_thread_destroy();
 #endif /* USER_INPUT */
 
+  st_unset_device_profile();
   st_unregister_status_handler();
   st_manager_deinitialize();
   return 0;
