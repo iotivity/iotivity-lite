@@ -27,6 +27,9 @@ extern "C"{
     #include "st_port.h"
     #include "sttestcommon.h"
     #include "es_common.h"
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 static int device_index = 0;
@@ -340,6 +343,7 @@ class TestSTCloudManager_cb: public testing::Test
             reset_storage();
             st_manager_initialize();
             st_register_status_handler(st_status_handler);
+            st_set_device_profile(st_device_def, st_device_def_len);
             set_st_store_info();
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
@@ -352,6 +356,7 @@ class TestSTCloudManager_cb: public testing::Test
             st_manager_stop();
             st_thread_destroy(t);
             st_manager_stop();
+            st_unset_device_profile();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
