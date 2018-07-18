@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ade2f69c",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "Please maintain uniformity across files regarding naming.\nWe decided to have like \"TEST_F(TestModulename, Name of function without oc followed by _P or _N\" \nIn this example i recommend TEST_F(TestRi, GetAppResourceByUri_P)",
+      "range": {
+        "startLine": 56,
+        "startChar": 17,
+        "endLine": 56,
+        "endChar": 42
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_edf35e71",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "i think res1 may not be needed. Please check and modify",
+      "range": {
+        "startLine": 59,
+        "startChar": 23,
+        "endLine": 59,
+        "endChar": 24
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4de9aa7f",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please check res1 is needed?",
+      "range": {
+        "startLine": 85,
+        "startChar": 23,
+        "endLine": 85,
+        "endChar": 24
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8d02923c",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please make sure we need to call oc_delete_resource or oc_ri_delete_resource",
+      "range": {
+        "startLine": 95,
+        "startChar": 30,
+        "endLine": 95,
+        "endChar": 32
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cdfc9a41",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please maintain uniformity...\nI think you used expect in all...",
+      "range": {
+        "startLine": 123,
+        "startChar": 25,
+        "endLine": 123,
+        "endChar": 27
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_adf9564f",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please add a space for readability",
+      "range": {
+        "startLine": 132,
+        "startChar": 16,
+        "endLine": 132,
+        "endChar": 29
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0d9682f0",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please modify",
+      "range": {
+        "startLine": 145,
+        "startChar": 16,
+        "endLine": 145,
+        "endChar": 25
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ed9a3e13",
+        "filename": "api/unittest/RITest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-18T06:51:05Z",
+      "side": 1,
+      "message": "please cross verify",
+      "range": {
+        "startLine": 146,
+        "startChar": 29,
+        "endLine": 146,
+        "endChar": 31
+      },
+      "revId": "bf97efed10467b8f56ea2a6cc7cc165f0e59e4b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
