@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0d4b2288",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-18T07:52:52Z",
+      "side": 1,
+      "message": "TEST_CXXFLAGS looks right place. Any opinion?",
+      "range": {
+        "startLine": 263,
+        "startChar": 1,
+        "endLine": 263,
+        "endChar": 13
+      },
+      "revId": "b775216b7329f093e15d9724b3d111b7aa8c82d8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
