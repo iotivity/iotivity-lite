@@ -31,7 +31,11 @@ extern "C"{
     #include "st_types.h"
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
+    #include "st_device_profile.h"
     int st_register_resources(int device);
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 static int device_index = 0;
@@ -47,12 +51,12 @@ class TestSTResourceManager: public testing::Test
     protected:
         virtual void SetUp()
         {
-
+            st_set_device_profile(st_device_def, st_device_def_len);
         }
 
         virtual void TearDown()
         {
-
+            st_unset_device_profile();
         }
 };
 
@@ -197,6 +201,7 @@ class TestSTResourceManagerHandler: public testing::Test
             mutex = st_mutex_init();
             cv = st_cond_init();
             st_manager_initialize();
+            st_set_device_profile(st_device_def, st_device_def_len);
             st_register_status_handler(st_status_handler);
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
@@ -212,6 +217,7 @@ class TestSTResourceManagerHandler: public testing::Test
         {
             st_manager_stop();
             st_thread_destroy(t);
+            st_unset_device_profile();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
