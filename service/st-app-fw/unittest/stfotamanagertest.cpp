@@ -28,6 +28,9 @@ extern "C"{
     #include "sttestcommon.h"
     int st_fota_manager_start(void);
     void st_fota_manager_stop(void);
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 #define device_index 0
@@ -251,6 +254,7 @@ class TestSTFotaManagerHandler: public testing::Test
             mutex = st_mutex_init();
             cv = st_cond_init();
             st_manager_initialize();
+            st_set_device_profile(st_device_def, st_device_def_len);
             st_register_status_handler(st_status_handler);
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
