@@ -20,7 +20,7 @@
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "port/oc_storage.h"
-#include "st_device_def.h"
+#include "st_device_profile.h"
 #include "st_port.h"
 #include "util/oc_mem.h"
 
@@ -88,13 +88,21 @@ OC_MEMB(st_resource_type_s, st_resource_type_t,
 
 static int st_decode_device_data_info(oc_rep_t *rep);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static unsigned char *g_device_def = NULL;
+static unsigned int g_device_def_len = 0;
+#else
+static unsigned char g_device_def[ST_MAX_DATA_SIZE];
+static unsigned int g_device_def_len = 0;
+#endif
+
 int
 st_data_mgr_info_load(void)
 {
   int ret = 0;
   oc_rep_t *rep;
 
-  if (st_device_def_len > 0) {
+  if (g_device_def_len > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
     char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
     oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -107,7 +115,7 @@ st_data_mgr_info_load(void)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(st_device_def, (uint16_t)st_device_def_len, &rep);
+    oc_parse_rep(g_device_def, (uint16_t)g_device_def_len, &rep);
     ret = st_decode_device_data_info(rep);
     oc_free_rep(rep);
   } else {
@@ -535,4 +543,51 @@ st_decode_device_data_info(oc_rep_t *rep)
   }
 
   return 0;
+}
+
+bool
+st_set_device_profile(unsigned char *device_def, unsigned int device_def_len)
+{
+  if (!device_def) {
+    st_print_log("[ST_DATA_MGR] device_def is NULL \n");
+    return false;
+  }
+  if (!device_def_len) {
+    st_print_log("[ST_DATA_MGR] device_def_len is zero \n");
+    return false;
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_device_def) {
+    oc_mem_free(g_device_def);
+    g_device_def = NULL;
+  }
+
+  g_device_def_len = device_def_len;
+  g_device_def = oc_mem_calloc(g_device_def_len, sizeof(unsigned char));
+
+#else
+  if (device_def_len >= ST_MAX_DATA_SIZE) {
+    st_print_log("[ST_DATA_MGR] device_def_size should be less than %d bytes\n",
+                 ST_MAX_DATA_SIZE);
+    return false;
+  }
+  g_device_def_len = device_def_len;
+  memset(g_device_def, 0, sizeof(unsigned char) * ST_MAX_DATA_SIZE);
+#endif
+
+  memcpy(g_device_def, device_def, g_device_def_len);
+
+  return true;
+}
+
+void
+st_unset_device_profile(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_device_def) {
+    oc_mem_free(g_device_def);
+    g_device_def = NULL;
+  }
+#endif
+  g_device_def_len = 0;
 }

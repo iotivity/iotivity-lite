@@ -201,9 +201,9 @@ ifeq ($(ST_APP_FW),1)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
-	ST_DEVICE_DEF=../../service/st-app-fw/json/st_device_def
-	ST_JSON_FILE := $(wildcard ../../service/st-app-fw/json/*.json)
-	ST_DEVICE_DEF_HEADER=../../service/st-app-fw/include/st_device_def.h
+	ST_DEVICE_DEF=../../apps/st_app/json/st_device_def
+	ST_JSON_FILE := $(wildcard ../../apps/st_app/json/*.json)
+	ST_DEVICE_DEF_HEADER=../../apps/st_app/$(OS)/st_device_def.h  # linux should be changed
 ifeq ($(ARCH), x86_64)
 	JSON_TO_CBOR=../../service/st-app-fw/json/json2cbor
 else
@@ -213,6 +213,8 @@ endif
 	ST_APP_TEST_OBJ_DIR = $(ST_APP_TEST_DIR)/obj
 	ST_APP_TEST_SRC_FILES := $(wildcard $(ST_APP_TEST_DIR)/*.cpp)
 	ST_APP_TEST_OBJ_FILES := $(patsubst $(ST_APP_TEST_DIR)/%.cpp,$(ST_APP_TEST_OBJ_DIR)/%.o,$(ST_APP_TEST_SRC_FILES))
+
+	HEADER_DIR +=-I$(ROOT_DIR)/apps/st_app/$(OS)
 	UNIT_TESTS += stapptest
 endif
 
@@ -546,10 +548,10 @@ ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
 else
 ifneq ("$(wildcard $(ST_JSON_FILE))", "")
 else
-	$(error please use proper json file in service/st-app-fw/json)
+	$(error please use proper json file in apps/st_app/json)
 endif
 ifneq ($(words $(ST_JSON_FILE)), 1)
-	$(error please use 1 json file in service/st-app-fw/json)
+	$(error please use 1 json file in apps/st_app/json)
 endif
 endif
 
