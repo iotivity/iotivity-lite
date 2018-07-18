@@ -867,48 +867,47 @@ static bool
 gen_master_key(uint8_t *master, int *master_len)
 {
   mbedtls_ecdh_context ecdh_ctx;
-  mbedtls_ecdh_init(&ecdh_ctx);
   int priv_len = 0, pub_len = 0, peer_len = 0, token_len = 0, tmp_len = 0;
   uint8_t priv[32] = {0}, pub[32] = {0}, peer[32] = {0}, token[32] = {0}, shared[32] = {0}, tmp[64] = {0};
-
+  mbedtls_ecdh_init(&ecdh_ctx);
   if (!master || !master_len) {
     OC_ERR("%s: NULL params", __func__);
-    return false;
+    goto master_key_error;
   }
   if (!g_oc_sec_get_own_key || !g_oc_sec_get_cpubkey_and_token) {
     OC_ERR("%s: callbacks not set", __func__);
-    return false;
+    goto master_key_error;
   }
   g_oc_sec_get_own_key(priv, &priv_len, pub, &pub_len);
   g_oc_sec_get_cpubkey_and_token(peer, &peer_len, token, &token_len);
   if (mbedtls_ecp_group_load(&ecdh_ctx.grp, MBEDTLS_ECP_DP_CURVE25519) != 0) {
     OC_ERR("%s: load CURVE25519", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.d, priv, priv_len) != 0) {
     OC_ERR("%s: load private key", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.Q.X, pub, pub_len) != 0) {
     OC_ERR("%s: load own public key", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_mpi_read_binary(&ecdh_ctx.Qp.X, peer, peer_len) != 0) {
     OC_ERR("%s: set peer's public key X", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_mpi_lset(&ecdh_ctx.Qp.Z, 1) != 0) {
     OC_ERR("%s: set peer's public key Z", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
       &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
     OC_ERR("%s: compute shared key", __func__);
-    return false;
+    goto master_key_error;
   }
   if (mbedtls_mpi_write_binary(&ecdh_ctx.z, shared, 32) != 0) {
     OC_ERR("%s: write shared key", __func__);
-    return false;
+    goto master_key_error;
   }
   tmp_len = token_len+32;
   memcpy(tmp, shared, 32);
@@ -920,6 +919,9 @@ gen_master_key(uint8_t *master, int *master_len)
   *master_len = 32;
   mbedtls_ecdh_free(&ecdh_ctx);
   return true;
+master_key_error:
+  mbedtls_ecdh_free(&ecdh_ctx);
+  return false;
 }
 
 bool
