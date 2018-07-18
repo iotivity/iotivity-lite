@@ -132,9 +132,9 @@ find_tcp_endpoint(void)
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(0);
     while (ep) {
         oc_string_t ep_str;
-        if (!(ep->flags & oc_endpoint_t::transport_flags::SECURED) &&
-            (ep->flags & oc_endpoint_t::transport_flags::TCP) &&
-            (ep->flags & oc_endpoint_t::transport_flags::IPV4) &&
+        if (!(ep->flags & transport_flags::SECURED) &&
+            (ep->flags & transport_flags::TCP) &&
+            (ep->flags & transport_flags::IPV4) &&
             oc_endpoint_to_string(ep, &ep_str) == 0) {
             st_store_t *st_info = st_store_get_info();
             if (oc_string(st_info->cloudinfo.ci_server)) {

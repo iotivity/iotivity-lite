@@ -927,6 +927,47 @@ get_WSASendMsg(void)
   return 0;
 }
 
+static bool
+check_if_address_unset(uint8_t *address, int size)
+{
+  int i = 0;
+  for (i = 0; i < size; i++) {
+    if (address[i] != 0) {
+      break;
+    }
+  }
+  if (i < size) {
+    return false;
+  }
+  return true;
+}
+
+static void
+set_source_address_for_interface(ADDRESS_FAMILY family, uint8_t *address,
+                                 int address_size, int interface_index)
+{
+  if (!check_if_address_unset(address, address_size)) {
+    return;
+  }
+  ifaddr_t *ifaddr_list = get_network_addresses(), *addr;
+  for (addr = ifaddr_list; addr != NULL; addr = addr->next) {
+    if (addr->addr.ss_family == family &&
+        (int)addr->if_index == interface_index) {
+      if (family == AF_INET6) {
+        struct sockaddr_in6 *a = (struct sockaddr_in6 *)&addr->addr;
+        memcpy(address, a->sin6_addr.u.Byte, 16);
+      }
+#ifdef OC_IPV4
+      else if (family == AF_INET) {
+        struct sockaddr_in *a = (struct sockaddr_in *)&addr->addr;
+        memcpy(address, &a->sin_addr.S_un.S_addr, 4);
+      }
+#endif /* OC_IPV4 */
+    }
+  }
+  free_network_addresses(ifaddr_list);
+}
+
 int
 send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
@@ -980,6 +1021,10 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
     /* Set the source address of this message using the address
     * from the endpoint's addr_local attribute.
     */
+    set_source_address_for_interface(AF_INET6,
+                                     message->endpoint.addr_local.ipv6.address,
+                                     16, message->endpoint.interface_index);
+
     memcpy(&pktinfo->ipi6_addr, message->endpoint.addr_local.ipv6.address, 16);
   }
 #ifdef OC_IPV4
@@ -1000,6 +1045,10 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
     struct in_pktinfo *pktinfo = (struct in_pktinfo *)WSA_CMSG_DATA(MsgHdr);
 
     pktinfo->ipi_ifindex = message->endpoint.interface_index;
+
+    set_source_address_for_interface(AF_INET,
+                                     message->endpoint.addr_local.ipv4.address,
+                                     4, message->endpoint.interface_index);
 
     memcpy(&pktinfo->ipi_addr.S_un.S_addr,
            message->endpoint.addr_local.ipv4.address, 4);

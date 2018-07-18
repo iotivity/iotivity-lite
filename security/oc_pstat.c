@@ -375,7 +375,7 @@ oc_sec_encode_pstat(int device)
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
 #endif /* OC_DEBUG */
-  char uuid[37];
+  char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
@@ -388,7 +388,7 @@ oc_sec_encode_pstat(int device)
   oc_rep_set_int(root, om, pstat[device].om);
   oc_rep_set_int(root, sm, pstat[device].sm);
   oc_rep_set_boolean(root, isop, pstat[device].isop);
-  oc_uuid_to_str(&pstat[device].rowneruuid, uuid, 37);
+  oc_uuid_to_str(&pstat[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 }

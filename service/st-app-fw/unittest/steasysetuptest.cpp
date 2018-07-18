@@ -295,8 +295,8 @@ get_endpoint(void)
 {
     oc_endpoint_t *eps = oc_connectivity_get_endpoints(0);
 
-    while (eps && ((eps->flags & oc_endpoint_t::transport_flags::TCP) ||
-                   (eps->flags & oc_endpoint_t::transport_flags::IPV6))) {
+    while (eps && ((eps->flags & transport_flags::TCP) ||
+                   (eps->flags & transport_flags::IPV6))) {
         eps = eps->next;
     }
 

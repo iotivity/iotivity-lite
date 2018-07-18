@@ -195,7 +195,7 @@ set_sc_prov_info(void)
 {
   // Set prov info properties
   int target_size = 1;
-  char uuid[MAX_UUID_LENGTH];
+  char uuid[OC_UUID_LEN];
   int i = 0;
 
   g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
@@ -207,7 +207,7 @@ set_sc_prov_info(void)
 
   st_specification_t *spec = st_data_mgr_get_spec_info();
   for (i = 0; i < target_size; i++) {
-    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
     oc_new_string(&g_prov_resource.targets[i].target_di, uuid, strlen(uuid));
     oc_new_string(&g_prov_resource.targets[i].target_rt,
                   oc_string(spec->device.device_type),
@@ -216,7 +216,7 @@ set_sc_prov_info(void)
   }
   g_prov_resource.targets_size = target_size;
   g_prov_resource.owned = false;
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, MAX_UUID_LENGTH);
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
   oc_new_string(&g_prov_resource.easysetup_di, uuid, strlen(uuid));
 
   if (set_sec_prov_info(&g_prov_resource) == ES_ERROR)
@@ -385,8 +385,8 @@ st_manager_stack_init(void)
     return -1;
   }
 
-  char uuid[MAX_UUID_LENGTH] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(0), uuid, MAX_UUID_LENGTH);
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(0), uuid, OC_UUID_LEN);
   st_print_log("[ST_MGR] uuid : %s\n", uuid);
 
   set_sc_prov_info();

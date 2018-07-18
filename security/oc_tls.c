@@ -232,7 +232,8 @@ oc_tls_inactive(void *data)
   if (is_peer_active(peer)) {
     oc_clock_time_t time = oc_clock_time();
     time -= peer->timestamp;
-    if (time < OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND) {
+    if (time < (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT *
+                 (oc_clock_time_t)OC_CLOCK_SECOND) {
       OC_DBG("oc_tls: Resetting DTLS inactivity callback");
       return OC_EVENT_CONTINUE;
     }
@@ -277,6 +278,7 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
+  peer->timestamp = oc_clock_time();
   oc_message_t message;
 #ifdef OC_DYNAMIC_ALLOCATION
   message.data = oc_mem_malloc(OC_PDU_SIZE);
@@ -469,8 +471,8 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       if (!(endpoint->flags & TCP)) {
         mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
                                  ssl_get_timer);
-        oc_ri_add_timed_event_callback_seconds(peer, oc_tls_inactive,
-                                               OC_DTLS_INACTIVITY_TIMEOUT);
+        oc_ri_add_timed_event_callback_seconds(
+          peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
       }
     } else {
       OC_WRN("TLS peers exhausted");
@@ -1025,6 +1027,7 @@ oc_tls_close_connection(oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    oc_tls_free_peer(peer, false);
   }
 }
 
@@ -1480,7 +1483,7 @@ read_application_data(oc_tls_peer_t *peer)
           OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG */
         }
-        if (peer->role != MBEDTLS_SSL_IS_CLIENT) {
+        if (peer->role == MBEDTLS_SSL_IS_SERVER) {
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
         oc_tls_free_peer(peer, false);
@@ -1501,8 +1504,8 @@ oc_tls_recv_message(oc_message_t *message)
 
   if (peer) {
 #ifdef OC_DEBUG
-    char u[37];
-    oc_uuid_to_str(&peer->uuid, u, 37);
+    char u[OC_UUID_LEN];
+    oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
     OC_DBG("oc_tls: Received message from device %s", u);
 #endif /* OC_DEBUG */
 

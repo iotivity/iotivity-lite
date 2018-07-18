@@ -110,7 +110,7 @@ get_interface_index(int sock)
   }
 
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!interface->ifa_flags & IFF_UP || interface->ifa_flags & IFF_LOOPBACK)
+    if (!(interface->ifa_flags & IFF_UP) || interface->ifa_flags & IFF_LOOPBACK)
       continue;
     if (addr.ss_family == interface->ifa_addr->sa_family) {
       if (addr.ss_family == AF_INET6) {
