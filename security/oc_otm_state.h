@@ -16,23 +16,11 @@
  *
  ****************************************************************************/
 
-#ifndef OC_SEC_ERROR_H
-#define OC_SEC_ERROR_H
+#ifndef OC_OTM_STATE_H
+#define OC_OTM_STATE_H
 
-typedef enum {
-  OC_SEC_ERR_ACL,
-  OC_SEC_ERR_CRED,
-  OC_SEC_ERR_DOXM,
-  OC_SEC_ERR_PSTAT,
-  OC_SEC_OTM_INIT,
-  OC_SEC_OTM_START,
-  OC_SEC_OTM_FINISH
-} oc_sec_otm_err_code_t;
-
-typedef void (*oc_sec_otm_err_cb_t)(oc_sec_otm_err_code_t);
-
-void oc_sec_otm_set_err_cb(oc_sec_otm_err_cb_t cb);
+#include "oc_security.h"
 
 void oc_sec_otm_err(int device, oc_sec_otm_err_code_t code);
 
-#endif /* OC_SEC_ERROR_H */
+#endif /* OC_OTM_STATE_H */

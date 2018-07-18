@@ -18,6 +18,7 @@
 #define OC_DOXM_H
 
 #include "oc_uuid.h"
+#include "oc_security.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -36,13 +37,6 @@ typedef struct
 } oc_sec_doxm_t;
 
 typedef bool (*oc_sec_change_owner_cb_t)(void);
-
-typedef enum
-{
-  OC_DOXM_JW = 0,
-  OC_DOXM_MFG = 1,
-  OC_DOXM_RPK = 0xFF03
-} oc_doxm_method_t;
 
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
