@@ -26,6 +26,7 @@ extern "C"{
     #include "st_manager.h"
     #include "st_easy_setup.h"
     #include "st_data_manager.h"
+    #include "st_device_def.h"
 }
 
 #define SOFT_AP_PWD "1111122222"
@@ -53,6 +54,7 @@ class TestSTPort: public testing::Test
     protected:
         virtual void SetUp()
         {
+            st_set_device_profile(st_device_def, st_device_def_len);
             st_data_mgr_info_load();
             spec_info = st_data_mgr_get_spec_info();
             device_name = oc_string(spec_info->device.device_name);
@@ -63,6 +65,7 @@ class TestSTPort: public testing::Test
         virtual void TearDown()
         {
             st_data_mgr_info_free();
+            st_unset_device_profile();
         }
 };
 
