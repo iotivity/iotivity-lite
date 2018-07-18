@@ -33,6 +33,9 @@ extern "C"{
 #ifdef OC_SECURITY
     #include "security/oc_otm_state.h"
 #endif /* OC_SECURITY */
+
+    extern unsigned char st_device_def[];
+    extern unsigned int st_device_def_len;
 }
 
 #define MAX_SSID_LEN (32)
@@ -64,6 +67,7 @@ class TestSTEasySetup: public testing::Test
     protected:
         virtual void SetUp()
         {
+            st_set_device_profile(st_device_def, st_device_def_len);
             st_data_mgr_info_load();
             spec_info = st_data_mgr_get_spec_info();
             device_name = oc_string(spec_info->device.device_name);
@@ -272,6 +276,7 @@ class TestSTEasySetup_cb: public testing::Test
             reset_storage();
             st_manager_initialize();
             st_register_status_handler(st_status_handler);
+            st_set_device_profile(st_device_def, st_device_def_len);
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
             get_wildcard_acl_policy();
