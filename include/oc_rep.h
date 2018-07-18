@@ -94,8 +94,10 @@ int oc_rep_finalize(void);
 */
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
-    g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
-    g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));     \
+    if (value != NULL) {                                                       \
+      g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
+      g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
+    }                                                                          \
   } while (0)
 
 /**
@@ -153,12 +155,14 @@ int oc_rep_finalize(void);
   @brief A macro to add byte string value for parent object.
 */
 #define oc_rep_add_byte_string(parent, value)                                  \
+  if (value != NULL)                                                           \
   g_err |= cbor_encode_byte_string(&parent##_array, value, strlen(value))
 
 /**
   @brief A macro to add string value for parent object.
 */
 #define oc_rep_add_text_string(parent, value)                                  \
+  if (value != NULL)                                                           \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 /**
@@ -183,6 +187,7 @@ int oc_rep_finalize(void);
   @brief A macro to set key for parent object.
 */
 #define oc_rep_set_key(parent, key)                                            \
+  if (key != NULL)                                                             \
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
 
 /**
