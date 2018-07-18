@@ -29,22 +29,6 @@
 #include "st_types.h"
 #include <stdbool.h>
 
-typedef enum {
-  ST_STATUS_IDLE,
-  ST_STATUS_INIT,
-  ST_STATUS_EASY_SETUP_START,
-  ST_STATUS_EASY_SETUP_PROGRESSING,
-  ST_STATUS_EASY_SETUP_DONE,
-  ST_STATUS_WIFI_CONNECTING,
-  ST_STATUS_WIFI_CONNECTION_CHECKING,
-  ST_STATUS_CLOUD_MANAGER_START,
-  ST_STATUS_CLOUD_MANAGER_PROGRESSING,
-  ST_STATUS_CLOUD_MANAGER_DONE,
-  ST_STATUS_DONE,
-  ST_STATUS_RESET,
-  ST_STATUS_STOP
-} st_status_t;
-
 /**
   @brief A function pointer for handling OTM(Ownership Transfer
      Method) confirm function.
@@ -162,5 +146,16 @@ bool st_register_status_handler(st_status_cb_t cb);
   @brief A function for unregister ST application framework status handler
 */
 void st_unregister_status_handler(void);
+
+/**
+  @brief A function set device profile.
+  @param device_def Unsigned char array showing CBOR info.
+  @param device_def_len Total length of device def
+  @return bool Description of result.
+  @retval true if successful.
+  @retval false if params are invalid.
+*/
+bool st_set_device_profile(unsigned char *device_def,
+                           unsigned int device_def_len);
 
 #endif /* ST_MANAGER_H */

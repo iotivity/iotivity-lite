@@ -581,6 +581,7 @@ st_manager_deinitialize(void)
     return ST_ERROR_STACK_RUNNING;
   }
 
+  st_free_device_profile();
   st_unregister_status_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();

@@ -100,6 +100,7 @@ typedef struct st_resource_type
 
 int st_data_mgr_info_load(void);
 void st_data_mgr_info_free(void);
+void st_free_device_profile(void);
 
 st_specification_t *st_data_mgr_get_spec_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
