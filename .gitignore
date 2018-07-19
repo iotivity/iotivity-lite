@@ -59,6 +59,8 @@ port/linux/fotatest
 port/linux/stapptest
 port/linux/securitytest
 port/linux/storage_test
+port/linux/messagingtest
+port/linux/securitytest_v2
 prebuilt
 
 #creds files
