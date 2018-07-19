@@ -327,6 +327,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a8c14430",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-19T08:09:52Z",
+      "side": 1,
+      "message": "If developer do not use unset, what happen?\nThere is no issue that deinit clean up what iotivity used, I think.",
+      "parentUuid": "da33351e_68e45c0d",
+      "range": {
+        "startLine": 582,
+        "startChar": 0,
+        "endLine": 592,
+        "endChar": 1
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_285ed4e6",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 11
