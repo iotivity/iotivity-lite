@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_c876483e",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-07-19T07:07:15Z",
+      "side": 1,
+      "message": "please test and then push the patch..",
+      "range": {
+        "startLine": 59,
+        "startChar": 4,
+        "endLine": 59,
+        "endChar": 15
+      },
+      "revId": "76075b95bbbd226c0cc7c0d33c76eb98c3f1c0f1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
