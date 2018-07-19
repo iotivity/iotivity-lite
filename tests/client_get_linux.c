@@ -80,7 +80,7 @@ check_resource_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
-             oc_interface_mask_t interfaces, oc_server_handle_t *server,
+             oc_interface_mask_t interfaces, oc_endpoint_t *server,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;
@@ -217,10 +217,10 @@ register_resources(void)
     oc_resource_t *res;
 
     r = snprintf(name, sizeof(name), "/test/%d", i);
-    if (r < 0 || r >= sizeof(name))
+    if (r < 0 || r >= (int)sizeof(name))
       exit(EXIT_FAILURE);
 
-    res = oc_new_resource(name, 1, 0);
+    res = oc_new_resource(NULL,name, 1, 0);
     oc_resource_bind_resource_type(res, "constrained.r.test");
     oc_resource_bind_resource_interface(res, OC_IF_RW);
     oc_resource_set_default_interface(res, OC_IF_RW);
