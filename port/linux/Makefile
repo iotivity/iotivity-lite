@@ -263,6 +263,10 @@ ifeq ($(JENKINS_BLOCK), 1)
 	TEST_CXXFLAGS += -DJENKINS_BLOCK
 endif
 
+ifeq ($(STATE), 1)
+	CFLAGS += -DSTATE
+endif
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \

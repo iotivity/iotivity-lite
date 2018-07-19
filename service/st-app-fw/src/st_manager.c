@@ -79,7 +79,9 @@ typedef struct
 
 static platform_cb_data_t platform_cb_data;
 
-static void free_platform_cb_data(void)
+#ifndef STATE
+static void
+free_platform_cb_data(void)
 {
   if(oc_string(platform_cb_data.model_number))
     oc_free_string(&platform_cb_data.model_number);
@@ -671,3 +673,149 @@ st_manager_evt_reset_handler(void)
   st_manager_evt_stop_handler();
   st_print_log("[ST_MGR] reset finished\n");
 }
+#else  /* STATE */
+static void
+free_platform_cb_data(void)
+{
+}
+
+static platform_cb_data_t *
+clone_platform_cb_data(st_specification_t *spec)
+{
+}
+
+static void
+init_platform_cb(void *data)
+{
+}
+
+static int
+app_init(void)
+{
+  return 0;
+}
+
+static void
+register_resources(void)
+{
+}
+
+void
+easy_setup_handler(st_easy_setup_status_t status)
+{
+}
+
+void
+cloud_manager_handler(st_cloud_manager_status_t status)
+{
+}
+
+static void
+set_sc_prov_info(void)
+{
+}
+
+static void
+unset_sc_prov_info(void)
+{
+}
+
+static void
+st_vendor_props_initialize(void)
+{
+}
+
+static void
+st_vendor_props_shutdown(void)
+{
+}
+
+static void
+st_main_reset(void)
+{
+}
+
+static oc_event_callback_retval_t
+status_callback(void *data)
+{
+  return OC_EVENT_DONE;
+}
+
+static void
+set_st_manager_status(st_status_t status)
+{
+}
+
+static void
+set_main_status_sync(st_status_t status)
+{
+}
+
+st_error_t
+st_manager_initialize(void)
+{
+  return ST_ERROR_NONE;
+}
+
+static int
+st_manager_stack_init(void)
+{
+  return 0;
+}
+
+st_error_t
+st_manager_start(void)
+{
+  return ST_ERROR_NONE;
+}
+
+st_error_t
+st_manager_reset(void)
+{
+  return ST_ERROR_NONE;
+}
+
+st_error_t
+st_manager_stop(void)
+{
+  return ST_ERROR_NONE;
+}
+
+st_error_t
+st_manager_deinitialize(void)
+{
+  return ST_ERROR_NONE;
+}
+
+bool
+st_register_otm_confirm_handler(st_otm_confirm_cb_t cb)
+{
+  return true;
+}
+
+void
+st_unregister_otm_confirm_handler(void)
+{
+}
+
+bool
+st_register_status_handler(st_status_cb_t cb)
+{
+  return true;
+}
+
+void
+st_unregister_status_handler(void)
+{
+}
+
+static void
+st_manager_evt_stop_handler(void)
+{
+}
+
+static void
+st_manager_evt_reset_handler(void)
+{
+}
+#endif /* STATE */
