@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_681d7c0f",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-19T04:54:19Z",
+      "side": 1,
+      "message": "unset call looks additional action to developer.\nHow about move this logic into deinit()",
+      "range": {
+        "startLine": 356,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 28
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_48423811",
         "filename": "port/linux/Makefile",
         "patchSetId": 11
@@ -203,6 +226,52 @@
         "startChar": 17,
         "endLine": 565,
         "endChar": 72
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8820c04a",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-19T04:54:19Z",
+      "side": 1,
+      "message": "separate the build option with DEV_RROF_RAM_OPT with direct referencing and mem copy.",
+      "range": {
+        "startLine": 559,
+        "startChar": 0,
+        "endLine": 565,
+        "endChar": 72
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_282c1447",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-19T04:54:19Z",
+      "side": 1,
+      "message": "This API is not required practically.\nPlease move this logic into deinitialize() and remove it.",
+      "range": {
+        "startLine": 582,
+        "startChar": 0,
+        "endLine": 592,
+        "endChar": 1
       },
       "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
