@@ -524,6 +524,7 @@ st_manager_start(void)
       st_sleep(1);
       break;
     case ST_STATUS_RESET:
+      st_process_stop();
       st_process_app_sync_lock();
       st_manager_evt_reset_handler();
       set_st_manager_status(ST_STATUS_INIT);
@@ -542,8 +543,11 @@ st_manager_start(void)
   }
 
 exit:
+  st_process_stop();
+  st_process_app_sync_lock();
   st_manager_evt_stop_handler();
   g_main_status = ST_STATUS_INIT;
+  st_process_app_sync_unlock();
   return st_err_ret;
 }
 
@@ -553,6 +557,7 @@ st_manager_reset(void)
   if (g_main_status == ST_STATUS_IDLE)
     return ST_ERROR_STACK_NOT_INITIALIZED;
 
+  st_process_stop();
   st_process_app_sync_lock();
   st_manager_evt_reset_handler();
   set_st_manager_status(ST_STATUS_INIT);
@@ -644,7 +649,6 @@ static void
 st_manager_evt_stop_handler(void)
 {
   unset_sc_prov_info();
-  st_process_stop();
 
   st_easy_setup_stop();
   st_print_log("[ST_MGR] easy setup stop done\n");
