@@ -29,7 +29,7 @@ static void
 _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
                       char *ins)
 {
-  if (!parent || !resource) {
+  if (!parent || !resource || !oc_string(resource->uri)) {
     OC_ERR("Error of input parameters");
     return;
   }

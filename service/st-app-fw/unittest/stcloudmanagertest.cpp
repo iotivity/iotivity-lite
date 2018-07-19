@@ -29,9 +29,18 @@ extern "C"{
     #include "es_common.h"
 }
 
+typedef enum {
+  CM_NO_ERROR,
+  CM_REFRESH,
+  CM_RESET,
+  CM_RETRY,
+  CM_FAIL
+} cm_test_case_t;
+
 static int device_index = 0;
 st_store_t *store_info = NULL;
-void cloud_manager_handler_test(st_cloud_manager_status_t status){
+void cloud_manager_handler_test(st_cloud_manager_status_t status)
+{
     (void) status;
 }
 
@@ -84,6 +93,9 @@ static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
 static st_thread_t t = NULL;
 static bool is_st_app_ready = false;
+static bool is_reset_handled = false;
+static bool is_stop_handled = false;
+static cm_test_case_t test_case_type = CM_NO_ERROR;
 
 /*
 {
@@ -158,6 +170,16 @@ st_status_handler(st_status_t status)
         st_mutex_lock(mutex);
         st_cond_signal(cv);
         st_mutex_unlock(mutex);
+    } else if (status == ST_STATUS_RESET) {
+        is_reset_handled = true;
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
+    } else if (status == ST_STATUS_STOP) {
+        is_stop_handled = true;
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
     } else if (status == ST_STATUS_DONE) {
         is_st_app_ready = true;
         st_mutex_lock(mutex);
@@ -171,7 +193,10 @@ void *st_manager_func(void *data)
 {
     (void)data;
     st_error_t ret = st_manager_start();
-    EXPECT_EQ(ST_ERROR_NONE, ret);
+    if(test_case_type == CM_FAIL)
+        EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
+    else
+        EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
 }
@@ -236,6 +261,61 @@ sign_in_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     ASSERT_TRUE(ret);
     EXPECT_TRUE(is_login);
 
+    switch(test_case_type){
+    case CM_NO_ERROR:
+        oc_rep_start_root_object();
+        oc_rep_set_int(root, code, 2);
+        oc_rep_end_root_object();
+        oc_send_response(request, OC_STATUS_CHANGED);
+        break;
+    case CM_REFRESH:
+        test_case_type = CM_NO_ERROR;
+        oc_rep_start_root_object();
+        oc_rep_set_int(root, code, 4);
+        oc_rep_end_root_object();
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        break;
+    case CM_RESET:
+        test_case_type = CM_NO_ERROR;
+        oc_rep_start_root_object();
+        oc_rep_set_int(root, code, 200);
+        oc_rep_end_root_object();
+        oc_send_response(request, OC_STATUS_NOT_FOUND);
+        break;
+    case CM_RETRY:
+        test_case_type = CM_NO_ERROR;
+        oc_rep_start_root_object();
+        oc_rep_set_int(root, code, 0);
+        oc_rep_end_root_object();
+        oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+        break;
+    case CM_FAIL:
+        oc_rep_start_root_object();
+        oc_rep_set_int(root, code, 5);
+        oc_rep_end_root_object();
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        break;
+    }
+}
+
+static void
+refresh_token_post_handler(oc_request_t *request, oc_interface_mask_t interface,
+                            void *user_data)
+{
+    (void)interface;
+    (void)user_data;
+    oc_rep_t *rep = request->request_payload;
+    int len = 0;
+    char *refresh_token = NULL;
+    bool ret = oc_rep_get_string(rep, "refreshtoken", &refresh_token, &len);
+    ASSERT_TRUE(ret);
+
+    st_store_t *st_info = st_store_get_info();
+    oc_rep_start_root_object();
+    oc_rep_set_int(root, code, 2);
+    oc_rep_set_text_string(root, accesstoken, oc_string(st_info->cloudinfo.access_token));
+    oc_rep_set_text_string(root, refreshtoken, refresh_token);
+    oc_rep_end_root_object();
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -307,6 +387,13 @@ void register_cloud_resources(void)
     oc_resource_set_request_handler(res, OC_POST, sign_in_post_handler, NULL);
     oc_add_resource(res);
 
+    res = oc_new_resource(NULL, "/oic/account/tokenrefresh", 1, 0);
+    oc_resource_bind_resource_interface(res, OC_IF_BASELINE);
+    oc_resource_set_discoverable(res, true);
+    oc_resource_set_observable(res, true);
+    oc_resource_set_request_handler(res, OC_POST, refresh_token_post_handler, NULL);
+    oc_add_resource(res);
+
     res = oc_new_resource(NULL, "/oic/account/profile/device", 1, 0);
     oc_resource_bind_resource_interface(res, OC_IF_BASELINE);
     oc_resource_set_discoverable(res, true);
@@ -351,7 +438,6 @@ class TestSTCloudManager_cb: public testing::Test
         {
             st_manager_stop();
             st_thread_destroy(t);
-            st_manager_stop();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
@@ -370,6 +456,46 @@ TEST_F(TestSTCloudManager_cb, cloud_manager_normal_test)
     ASSERT_EQ(0, ret);
 
     EXPECT_TRUE(is_st_app_ready);
+}
+
+TEST_F(TestSTCloudManager_cb, cloud_manager_token_expired)
+{
+    is_st_app_ready = false;
+    test_case_type = CM_REFRESH;
+    int ret = test_wait_until(mutex, cv, 30);
+    ASSERT_EQ(0, ret);
+
+    EXPECT_TRUE(is_st_app_ready);
+}
+
+TEST_F(TestSTCloudManager_cb, cloud_manager_device_not_found)
+{
+    is_reset_handled = false;
+    test_case_type = CM_RESET;
+    int ret = test_wait_until(mutex, cv, 30);
+    ASSERT_EQ(0, ret);
+
+    EXPECT_TRUE(is_reset_handled);
+}
+
+TEST_F(TestSTCloudManager_cb, cloud_manager_internal_server_error)
+{
+    is_st_app_ready = false;
+    test_case_type = CM_RETRY;
+    int ret = test_wait_until(mutex, cv, 80);
+    ASSERT_EQ(0, ret);
+
+    EXPECT_TRUE(is_st_app_ready);
+}
+
+TEST_F(TestSTCloudManager_cb, cloud_manager_authorization_fail)
+{
+    is_stop_handled = false;
+    test_case_type = CM_FAIL;
+    int ret = test_wait_until(mutex, cv, 20);
+    ASSERT_EQ(0, ret);
+
+    EXPECT_TRUE(is_stop_handled);
 }
 #endif /* OC_SECURITY */
 #endif /* JENKINS_BLOCK */
