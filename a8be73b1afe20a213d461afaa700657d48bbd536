@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_48423811",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "please remove.",
+      "range": {
+        "startLine": 280,
+        "startChar": 67,
+        "endLine": 280,
+        "endChar": 68
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2847f420",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "add space in front of libst-app-framework.a",
+      "range": {
+        "startLine": 288,
+        "startChar": 20,
+        "endLine": 288,
+        "endChar": 22
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6848dc2d",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "don\u0027t need to check,\nstapptest is added only in case ST_APP_FW is 1.",
+      "range": {
+        "startLine": 357,
+        "startChar": 0,
+        "endLine": 357,
+        "endChar": 21
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_085f90e6",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "why stapptestlocal is required?\nCan\u0027t it make together with stapptest?",
+      "range": {
+        "startLine": 364,
+        "startChar": 0,
+        "endLine": 364,
+        "endChar": 15
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_884ba02a",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "don\u0027t need to check",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 434,
+        "endChar": 21
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c855a8c7",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "don\u0027t need to check.",
+      "range": {
+        "startLine": 479,
+        "startChar": 0,
+        "endLine": 479,
+        "endChar": 21
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a852e4da",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 11
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "don\u0027t need to check.",
+      "range": {
+        "startLine": 565,
+        "startChar": 0,
+        "endLine": 565,
+        "endChar": 21
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e8634caf",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "Should we alloc?\nHow about just referencing pointer in st_device_def.h?",
+      "range": {
+        "startLine": 565,
+        "startChar": 17,
+        "endLine": 565,
+        "endChar": 72
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_285ed4e6",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-19T00:18:19Z",
+      "side": 1,
+      "message": "Isn\u0027t it work if we include st_device_def.h?\nother files also.",
+      "range": {
+        "startLine": 31,
+        "startChar": 4,
+        "endLine": 32,
+        "endChar": 42
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
