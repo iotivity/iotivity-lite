@@ -22,6 +22,30 @@
       "revId": "be2093c4559e41fd2f8ada52c16ddc437b219591",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_68c73c46",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-19T07:47:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e8bb4cc2",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 31
+      },
+      "revId": "be2093c4559e41fd2f8ada52c16ddc437b219591",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
