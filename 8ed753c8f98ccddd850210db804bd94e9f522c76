@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e88d0c33",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-07-19T09:41:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e8d86c55",
+      "range": {
+        "startLine": 56,
+        "startChar": 30,
+        "endLine": 56,
+        "endChar": 31
+      },
+      "revId": "8ed753c8f98ccddd850210db804bd94e9f522c76",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_48deb840",
         "filename": "api/unittest/collectiontest.cpp",
         "patchSetId": 4
