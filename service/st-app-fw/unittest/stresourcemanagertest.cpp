@@ -138,6 +138,7 @@ class TestSTResourceManagerHandler: public testing::Test
     public:
         static oc_handler_t handler;
         static pthread_mutex_t mutex;
+        static pthread_mutex_t waitingMutex;
         static pthread_cond_t cv;
         static bool isServerStarted;
         static bool isResourceDiscovered;
@@ -198,16 +199,24 @@ class TestSTResourceManagerHandler: public testing::Test
             st_register_resources(DEVICE_NUM);
         }
 
-        static void waitForEvent(int waitTime)
+        static void waitForEvent()
         {
-            oc_clock_time_t next_event;
-            (void)next_event;
-            while (waitTime && !isCallbackReceived)
-            {
-                PRINT("Waiting for callback....\n");
-                next_event = oc_main_poll();
-                sleep(1);
-                waitTime--;
+            struct timespec ts;
+            oc_clock_time_t nextEvent;
+
+            PRINT("Waiting for callback....\n");
+            while (!s_isCallbackReceived) {
+                pthread_mutex_lock(&waitingMutex);
+                nextEvent = oc_main_poll();
+                pthread_mutex_unlock(&waitingMutex);
+                pthread_mutex_lock(&mutex);
+                if (nextEvent == 0) {
+                    pthread_cond_wait(&cv, &mutex);
+                } else {
+                    ts.tv_sec = (nextEvent / OC_CLOCK_SECOND );
+                    pthread_cond_timedwait(&cv, &mutex, &ts);
+                }
+                pthread_mutex_unlock(&s_mutex);
             }
         }
 
@@ -232,6 +241,17 @@ class TestSTResourceManagerHandler: public testing::Test
 #endif /* OC_SECURITY */
             st_data_mgr_info_load();
 
+            if (pthread_mutex_init(&s_mutex, NULL) < 0) {
+                printf("pthread_mutex_init failed!\n");
+                return ;
+            }
+
+            if (pthread_mutex_init(&s_waitingMutex, NULL) < 0) {
+                printf("pthread_mutex_init failed!\n");
+                pthread_mutex_destroy(&s_mutex);
+                return ;
+            }
+
             int initResult = oc_main_init(&handler);
             if ( initResult < 0)
             {
@@ -247,7 +267,7 @@ class TestSTResourceManagerHandler: public testing::Test
 
             ASSERT_TRUE(oc_do_ip_discovery(NULL, onResourceDiscovered, NULL)) << "oc_do_ip_discovery() returned failure.";
 
-            waitForEvent(MAX_WAIT_TIME);
+            waitForEvent();
             ASSERT_TRUE(isResourceDiscovered) << " Unable to discover Switch Resource";
         }
 
@@ -258,6 +278,9 @@ class TestSTResourceManagerHandler: public testing::Test
 
             st_data_mgr_info_free();
             reset_storage();
+
+            pthread_mutex_destroy(&s_mutex);
+            pthread_mutex_destroy(&s_waitingMutex);
         }
 };
 
@@ -278,7 +301,7 @@ TEST_F(TestSTResourceManagerHandler, Get_Request)
 
     EXPECT_TRUE(isSuccess);
 
-    waitForEvent(MAX_WAIT_TIME);
+    waitForEvent();
     EXPECT_TRUE(isCallbackReceived);
 }
 
@@ -296,6 +319,6 @@ TEST_F(TestSTResourceManagerHandler, Post_Request)
     EXPECT_TRUE(init_success);
     EXPECT_TRUE(post_success);
 
-    waitForEvent(MAX_WAIT_TIME);
+    waitForEvent();
     EXPECT_TRUE(isCallbackReceived);
 }

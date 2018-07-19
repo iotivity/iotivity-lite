@@ -78,6 +78,7 @@ class TestUnicastRequest: public testing::Test
         static bool s_isCallbackReceived;
         static oc_resource_t *s_pResource;
         static pthread_mutex_t s_mutex;
+        static pthread_mutex_t s_waitingMutex;
         static pthread_cond_t s_cv;
         static oc_endpoint_t *s_pLightEndpoint;
 
@@ -212,22 +213,32 @@ class TestUnicastRequest: public testing::Test
             PRINT("requestsEntry....\n");
         }
 
-        static void waitForEvent(int waitTime)
+        static void waitForEvent()
         {
-            oc_clock_time_t next_event;
-            (void) next_event;
-            while (waitTime && !s_isCallbackReceived)
-            {
-                PRINT("Waiting for callback....\n");
-                next_event = oc_main_poll();
-                sleep(1);
-                waitTime--;
+            struct timespec ts;
+            oc_clock_time_t nextEvent;
+
+            PRINT("Waiting for callback....\n");
+            while (!s_isCallbackReceived) {
+                pthread_mutex_lock(&s_waitingMutex);
+                nextEvent = oc_main_poll();
+                pthread_mutex_unlock(&s_waitingMutex);
+                pthread_mutex_lock(&s_mutex);
+                if (nextEvent == 0) {
+                    pthread_cond_wait(&s_cv, &s_mutex);
+                } else {
+                    ts.tv_sec = (nextEvent / OC_CLOCK_SECOND );
+                    pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
+                }
+                pthread_mutex_unlock(&s_mutex);
             }
+
         }
 
     protected:
         virtual void SetUp()
         {
+            s_isCallbackReceived = false;
         }
 
         virtual void TearDown()
@@ -256,6 +267,16 @@ class TestUnicastRequest: public testing::Test
             }
 
             s_isResourceDiscovered = false;
+            if (pthread_mutex_init(&s_mutex, NULL) < 0) {
+                printf("pthread_mutex_init failed!\n");
+                return ;
+            }
+
+            if (pthread_mutex_init(&s_waitingMutex, NULL) < 0) {
+                printf("pthread_mutex_init failed!\n");
+                pthread_mutex_destroy(&s_mutex);
+                return ;
+            }
         }
 
         static void TearDownTestCase()
@@ -269,6 +290,9 @@ class TestUnicastRequest: public testing::Test
             {
                 oc_main_shutdown();
             }
+
+            pthread_mutex_destroy(&s_mutex);
+            pthread_mutex_destroy(&s_waitingMutex);
         }
 };
 
@@ -279,6 +303,7 @@ oc_resource_t *TestUnicastRequest::s_pResource = nullptr;
 oc_endpoint_t *TestUnicastRequest::s_pLightEndpoint = nullptr;
 oc_handler_t TestUnicastRequest::s_handler;
 pthread_mutex_t TestUnicastRequest::s_mutex;
+pthread_mutex_t TestUnicastRequest::s_waitingMutex;
 pthread_cond_t TestUnicastRequest::s_cv;
 
 TEST(TestServerClient, ServerStartTest_P)
@@ -312,8 +337,9 @@ TEST_F(TestUnicastRequest, DiscoverResourceTest_P)
 {
     bool isSuccess = false;
     isSuccess = oc_do_ip_discovery(NULL, onResourceDiscovered, NULL);
-    EXPECT_TRUE(isSuccess) << "Failed to discover resource";
-    waitForEvent(MAX_WAIT_TIME);
+    EXPECT_TRUE(isSuccess) << "Resource discovery failed!!";
+    waitForEvent();
+    EXPECT_TRUE(s_isResourceDiscovered) << "Failed to discover light resource";
 }
 
 TEST_F(TestUnicastRequest, IPDiscoverResourceTest_P)
