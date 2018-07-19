@@ -95,6 +95,7 @@ TEST_F(TestSTCloudManager, st_cloud_manager_check_connection_fail)
 static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
 static st_thread_t t = NULL;
+static bool is_stack_ready = false;
 static bool is_st_app_ready = false;
 static bool is_reset_handled = false;
 static bool is_stop_handled = false;
@@ -168,14 +169,19 @@ find_tcp_endpoint(void)
 static void
 st_status_handler(st_status_t status)
 {
-    if (status <= ST_STATUS_WIFI_CONNECTING) {
+    if (status <= ST_STATUS_WIFI_CONNECTING && !is_stack_ready) {
         ASSERT_TRUE(find_tcp_endpoint());
-    } else if (status == ST_STATUS_RESET) {
-        is_reset_handled = true;
-    } else if (status == ST_STATUS_STOP) {
-        is_stop_handled = true;
-    } else if (status == ST_STATUS_DONE) {
-        is_st_app_ready = true;
+        is_stack_ready = true;
+    } else {
+        if (status == ST_STATUS_RESET) {
+            is_reset_handled = true;
+        } else if (status == ST_STATUS_STOP) {
+            is_stop_handled = true;
+        } else if (status == ST_STATUS_DONE) {
+            is_st_app_ready = true;
+        } else {
+            return;
+        }
     }
     st_mutex_lock(mutex);
     st_cond_signal(cv);
@@ -412,6 +418,7 @@ class TestSTCloudManager_cb: public testing::Test
     protected:
         virtual void SetUp()
         {
+            is_stack_ready = false;
             mutex = st_mutex_init();
             cv = st_cond_init();
             reset_storage();
