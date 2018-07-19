@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e8bfccce",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-19T05:52:24Z",
+      "side": 1,
+      "message": "not good practice to name 2 function more or less same st_wifi_scan and st_scan_wifi. Please change internal function name to something else.",
+      "range": {
+        "startLine": 572,
+        "startChar": 4,
+        "endLine": 572,
+        "endChar": 16
+      },
+      "revId": "6a0c27494cdaa57f33b2372cce1d60dc0e3692e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_28ba54de",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-19T05:52:24Z",
+      "side": 1,
+      "message": "don\u0027t we get encryption type and security type for the scanned AP from platform ?",
+      "range": {
+        "startLine": 598,
+        "startChar": 0,
+        "endLine": 607,
+        "endChar": 56
+      },
+      "revId": "6a0c27494cdaa57f33b2372cce1d60dc0e3692e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c8c80877",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-19T05:52:24Z",
+      "side": 1,
+      "message": "this is not needed if TizenRT supports wifi scan in soft-ap mode.",
+      "range": {
+        "startLine": 638,
+        "startChar": 0,
+        "endLine": 638,
+        "endChar": 43
+      },
+      "revId": "6a0c27494cdaa57f33b2372cce1d60dc0e3692e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_88ce0082",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-07-19T05:52:24Z",
+      "side": 1,
+      "message": "define under #ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED. These methods required only when platform does not support scanning wifi APs in soft-ap mode.",
+      "range": {
+        "startLine": 640,
+        "startChar": 0,
+        "endLine": 657,
+        "endChar": 1
+      },
+      "revId": "6a0c27494cdaa57f33b2372cce1d60dc0e3692e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
