@@ -256,6 +256,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_08bb10e6",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-19T05:46:34Z",
+      "side": 1,
+      "message": "In this case, using build option is not good idea because of one calloc.\n\nI am also in charge of RAM usage, Therefore I will take care when it would be critical issue",
+      "parentUuid": "da33351e_8820c04a",
+      "range": {
+        "startLine": 559,
+        "startChar": 0,
+        "endLine": 565,
+        "endChar": 72
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_282c1447",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 11
@@ -267,6 +291,30 @@
       "writtenOn": "2018-07-19T04:54:19Z",
       "side": 1,
       "message": "This API is not required practically.\nPlease move this logic into deinitialize() and remove it.",
+      "range": {
+        "startLine": 582,
+        "startChar": 0,
+        "endLine": 592,
+        "endChar": 1
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_68e45c0d",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-19T05:46:34Z",
+      "side": 1,
+      "message": "applying different level is not good.\n\n-set_device_profile is used outside and\n-unset_device_profile is used inside\n\nif it is called in deinit,  set_device_profile would be called  in st_manager_init. adding params into st_manager_init() would be one method.\n\nmoreover \nif you think unset would be removed, other functions like unregister.. would be applied same.",
+      "parentUuid": "da33351e_282c1447",
       "range": {
         "startLine": 582,
         "startChar": 0,
