@@ -186,6 +186,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_686f3c93",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-19T00:20:30Z",
+      "side": 1,
+      "message": "This topic needs offline discussion.",
+      "parentUuid": "da33351e_e8634caf",
+      "range": {
+        "startLine": 565,
+        "startChar": 17,
+        "endLine": 565,
+        "endChar": 72
+      },
+      "revId": "a8be73b1afe20a213d461afaa700657d48bbd536",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_285ed4e6",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 11
