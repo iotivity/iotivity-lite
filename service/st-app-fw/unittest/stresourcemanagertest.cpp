@@ -131,7 +131,6 @@ static st_mutex_t mutex, g_mutex, p_mutex;
 static st_cond_t cv, g_cv, p_cv;
 static bool isCallbackReceived;
 static oc_endpoint_t *ep;
-static oc_status_t status;
 static st_thread_t t = NULL;
 
 class TestSTResourceManagerHandler: public testing::Test
@@ -176,6 +175,7 @@ class TestSTResourceManagerHandler: public testing::Test
 
         static void onGetResponse(oc_client_response_t *data)
         {
+            (void) data;
             isCallbackReceived = true;
             st_mutex_lock(g_mutex);
             st_cond_signal(g_cv);
@@ -184,6 +184,7 @@ class TestSTResourceManagerHandler: public testing::Test
 
         static void onPostResponse(oc_client_response_t *data)
         {
+            (void) data;
             EXPECT_EQ(OC_STATUS_CHANGED, data->code);
             isCallbackReceived = true;
             st_mutex_lock(p_mutex);
