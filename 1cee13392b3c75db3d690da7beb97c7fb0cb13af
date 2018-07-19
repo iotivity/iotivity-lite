@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_489a3864",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-19T07:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e8a6acc0",
+      "range": {
+        "startLine": 266,
+        "startChar": 0,
+        "endLine": 268,
+        "endChar": 33
+      },
+      "revId": "1cee13392b3c75db3d690da7beb97c7fb0cb13af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_88956042",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 1
@@ -65,6 +89,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e894ec38",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-19T07:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_88956042",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 34
+      },
+      "revId": "1cee13392b3c75db3d690da7beb97c7fb0cb13af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c89f685e",
         "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
         "patchSetId": 1
@@ -76,6 +124,30 @@
       "writtenOn": "2018-07-19T06:19:55Z",
       "side": 1,
       "message": "Why use same res?\nHow about add separate resource?\noc_resource_t *res1, res2...",
+      "range": {
+        "startLine": 390,
+        "startChar": 4,
+        "endLine": 390,
+        "endChar": 7
+      },
+      "revId": "1cee13392b3c75db3d690da7beb97c7fb0cb13af",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_289ff453",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 14245
+      },
+      "writtenOn": "2018-07-19T07:28:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c89f685e",
       "range": {
         "startLine": 390,
         "startChar": 4,
