@@ -223,6 +223,9 @@ oc_main_poll(void)
 void
 oc_main_shutdown(void)
 {
+  if (initialized == false)
+    return 0;
+
   oc_ri_shutdown();
 
 #ifdef OC_SECURITY
