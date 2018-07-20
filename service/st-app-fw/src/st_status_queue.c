@@ -138,6 +138,23 @@ st_status_queue_remove_all_items(void)
 }
 
 void
+st_status_queue_remove_all_items_without_stop(void)
+{
+  st_status_item_t *item = NULL;
+  bool stop_flag = false;
+
+  while ((item = (st_status_item_t *)st_status_queue_pop()) != NULL) {
+    if (!stop_flag && item->status == ST_STATUS_STOP) {
+      stop_flag = true;
+    }
+    st_status_queue_free_item(item);
+  }
+  if (stop_flag) {
+    st_status_queue_add(ST_STATUS_STOP);
+  }
+}
+
+void
 st_status_queue_deinitialize(void)
 {
   if (!status_queue_mutex || !status_queue_cv) {

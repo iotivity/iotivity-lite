@@ -74,6 +74,11 @@ st_process_start(void)
 int
 st_process_stop(void)
 {
+  if (g_process_data.quit == 1) {
+    st_print_log("[St_Proc] st_process already stop.\n");
+    return 0;
+  }
+
   g_process_data.quit = 1;
   st_process_signal();
   if (st_thread_destroy(g_process_data.thread) != 0) {

@@ -64,13 +64,13 @@ TEST_F(TestSTProcess, st_process_stop)
     st_process_destroy();
 }
 
-TEST_F(TestSTProcess, st_process_stop_fail)
+TEST_F(TestSTProcess, st_process_already_stopped)
 {
     st_process_init();
     st_process_start();
     st_process_stop();
     int ret = st_process_stop();
-    EXPECT_EQ(-1, ret);
+    EXPECT_EQ(0, ret);
     st_process_destroy();
 }
 
