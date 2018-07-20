@@ -48,8 +48,10 @@ static int ct = 50;
 static int ct_range[2] = { 0, 100 };
 
 #ifdef USER_INPUT
+#ifndef STATE
 static pthread_t g_user_input_thread;
 static int g_user_input_shutdown_pipe[2];
+#endif
 #endif /* USER_INPUT */
 
 static void
@@ -214,6 +216,13 @@ print_menu(void)
   printf("[ST_APP] 1. Reset device\n");
   printf("[ST_APP] 2. notify switch resource\n");
   printf("[ST_APP] 0. Quit\n");
+
+#ifdef STATE
+  printf("[ST_APP] -------------------------------------\n");
+  printf("[ST_APP] 5. Start\n");
+  printf("[ST_APP] 6. Stop\n");
+  printf("[ST_APP] 7. Deinit (exit program if success)\n");
+#endif
   printf("[ST_APP] =====================================\n");
 }
 
@@ -222,15 +231,22 @@ user_input_loop(void *data)
 {
   (void)data;
   char key[10];
+#ifndef STATE
   fd_set readfds, setfds;
   int stdin_fd = fileno(stdin);
 
   FD_ZERO(&readfds);
   FD_SET(stdin_fd, &readfds);
   FD_SET(g_user_input_shutdown_pipe[0], &readfds);
-
+#endif
   while (1) {
     print_menu();
+
+#ifdef STATE
+    if (!(scanf("%s", key)))
+      return NULL;
+#else
+
     fflush(stdin);
 
     setfds = readfds;
@@ -256,7 +272,7 @@ user_input_loop(void *data)
       }
       FD_CLR(stdin_fd, &setfds);
     }
-
+#endif
     switch (key[0]) {
     case '1':
       st_manager_reset();
@@ -273,20 +289,42 @@ user_input_loop(void *data)
         printf("[ST_APP] st_notify_back failed.\n");
       }
       break;
+#ifdef STATE
+    case '5':
+      printf("[ST_APP] start()\n");
+      printf("[ST_APP] result: %d \n", st_manager_start());
+      break;
+    case '6':
+      printf("[ST_APP] stop()\n");
+      printf("[ST_APP] result: %d \n", st_manager_stop());
+      break;
+    case '7':
+      printf("[ST_APP] deinit()\n");
+      st_error_t result = st_manager_deinitialize();
+      printf("[ST_APP] result: %d \n", result);
+      if (result == ST_ERROR_NONE)
+        goto exit;
+      break;
+
+#endif
+
     case '0':
-      st_manager_stop();
+      goto exit;
+    // st_manager_stop();
     default:
       printf("[ST_APP] unsupported command.\n");
       break;
     }
   }
 exit:
+#ifndef STATE
   pthread_exit(NULL);
+#else
+  return NULL;
+#endif
 }
-
-static int
-user_input_thread_init(void)
-{
+#ifndef STATE
+static int user_input_thread_init(void) {
   if (pipe(g_user_input_shutdown_pipe) < 0) {
     printf("shutdown pipe error\n");
     return -1;
@@ -308,6 +346,7 @@ user_input_thread_destroy(void)
   close(g_user_input_shutdown_pipe[1]);
   return;
 }
+#endif /* !STATE */
 #endif /* USER_INPUT */
 
 int
@@ -334,6 +373,15 @@ main(void)
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
 
+#ifdef STATE
+  st_manager_start();
+
+#ifdef USER_INPUT
+  user_input_loop(NULL);
+#endif
+
+#else
+
 #ifdef USER_INPUT
   if (user_input_thread_init() != 0) {
     printf("[ST_APP] user_input_thread_init failed.\n");
@@ -344,6 +392,7 @@ main(void)
   st_error_t ret = ST_ERROR_NONE;
   do {
     ret = st_manager_start();
+
     if (ret != ST_ERROR_NONE) {
       printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
       sleep(6000);
@@ -355,5 +404,8 @@ main(void)
 #endif /* USER_INPUT */
   st_unregister_status_handler();
   st_manager_deinitialize();
+
+#endif
+
   return 0;
 }

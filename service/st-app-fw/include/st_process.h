@@ -29,4 +29,10 @@ int st_process_destroy(void);
 void st_process_signal(void);
 void st_process_app_sync_lock(void);
 void st_process_app_sync_unlock(void);
+
+#if STATE
+void st_process_state_sync_lock(void);
+void st_process_state_sync_unlock(void);
+#endif
+
 #endif /* ST_PROCESS_H */
