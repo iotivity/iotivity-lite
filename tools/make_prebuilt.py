@@ -75,6 +75,7 @@ def make_prebuilt(port):
         "mkdir -p prebuilt/include/deps/tinycbor/src && " \
         "mkdir -p prebuilt/include/util && " \
         "mkdir -p prebuilt/lib && " \
+        "mkdir -p prebuilt/json && " \
         "cp port/%(port)s/config.h include/oc_helpers.h include/oc_rep.h " \
         "service/st-app-fw/include/st_manager.h service/st-app-fw/include/st_types.h " \
         "service/st-app-fw/include/st_resource_manager.h prebuilt/include && " \
@@ -82,7 +83,9 @@ def make_prebuilt(port):
         "cp deps/tinycbor/src/cbor.h deps/tinycbor/src/tinycbor-version.h prebuilt/include/deps/tinycbor/src && " \
         "cp util/oc_list.h util/oc_memb.h util/oc_mmem.h prebuilt/include/util && " \
         "cp port/%(port)s/libst-app-framework.a prebuilt/lib && " \
-        "cp apps/st_app/%(port)s/* prebuilt/"
+        "cp apps/st_app/json/* prebuilt/json && " \
+        "cp apps/st_app/%(port)s/st_device_def.h prebuilt/include && " \
+        "cp apps/st_app/%(port)s/st_ref_app.c apps/st_app/%(port)s/Makefile prebuilt/"
     execute_cmd(cmd_line % {'port': port})
 
 def build_st_app():
