@@ -238,13 +238,19 @@ unset_sc_prov_info(void)
   // Come from  target_size in set_sc_prov_info
   int target_size = 1, i = 0;
 
-  oc_free_string(&g_prov_resource.easysetup_di);
-  for (i = 0; i < target_size; i++) {
-    oc_free_string(&g_prov_resource.targets[i].target_di);
-    oc_free_string(&g_prov_resource.targets[i].target_rt);
-  }
+  if (oc_string(g_prov_resource.easysetup_di))
+    oc_free_string(&g_prov_resource.easysetup_di);
 
-  free(g_prov_resource.targets);
+  if (g_prov_resource.targets) {
+    for (i = 0; i < target_size; i++) {
+      if (oc_string(g_prov_resource.targets[i].target_di))
+        oc_free_string(&g_prov_resource.targets[i].target_di);
+      if (oc_string(g_prov_resource.targets[i].target_rt))
+        oc_free_string(&g_prov_resource.targets[i].target_rt);
+    }
+    free(g_prov_resource.targets);
+    g_prov_resource.targets = NULL;
+  }
 }
 
 static void
@@ -267,7 +273,8 @@ st_vendor_props_initialize(void)
 static void
 st_vendor_props_shutdown(void)
 {
-  oc_free_string(&st_vendor_props.model);
+  if (oc_string(st_vendor_props.model))
+    oc_free_string(&st_vendor_props.model);
 }
 
 static void
@@ -568,7 +575,6 @@ st_manager_start(void)
       st_process_stop();
       st_process_app_sync_lock();
       st_manager_evt_reset_handler();
-      set_st_manager_status(ST_STATUS_INIT);
       st_process_app_sync_unlock();
       break;
     case ST_STATUS_STOP:
@@ -587,6 +593,7 @@ exit:
   st_process_stop();
   st_process_app_sync_lock();
   st_manager_evt_stop_handler();
+  st_status_queue_remove_all_items();
   g_main_status = ST_STATUS_INIT;
   st_process_app_sync_unlock();
   return st_err_ret;
@@ -601,7 +608,6 @@ st_manager_reset(void)
   st_process_stop();
   st_process_app_sync_lock();
   st_manager_evt_reset_handler();
-  set_st_manager_status(ST_STATUS_INIT);
   st_process_app_sync_unlock();
   return ST_ERROR_NONE;
 }
@@ -711,8 +717,6 @@ st_manager_evt_stop_handler(void)
   oc_main_shutdown();
 
   free_platform_cb_data();
-
-  st_status_queue_remove_all_items();
 }
 
 static void
@@ -720,5 +724,7 @@ st_manager_evt_reset_handler(void)
 {
   st_main_reset();
   st_manager_evt_stop_handler();
+  st_status_queue_remove_all_items_without_stop();
+  set_st_manager_status(ST_STATUS_INIT);
   st_print_log("[ST_MGR] reset finished\n");
 }
