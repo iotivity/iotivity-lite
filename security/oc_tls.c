@@ -223,7 +223,7 @@ ssl_recv(void *ctx, unsigned char *buf, size_t len)
       oc_list_remove(peer->recv_q, message);
       oc_message_unref(message);
     }
-    return recv_len;
+    return (int)recv_len;
   }
   return MBEDTLS_ERR_SSL_WANT_READ;
 }
@@ -659,9 +659,8 @@ oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
     }                                                                          \
   } while (0)
   uint8_t A[MBEDTLS_MD_MAX_SIZE], buf[MBEDTLS_MD_MAX_SIZE];
-  size_t i;
-  int msg_len,
-    gen_output = 0, copy_len,
+  size_t i, msg_len;
+  int gen_output = 0, copy_len,
     hash_len =
       mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
   mbedtls_md_context_t hmacA, hmacA_next;
@@ -771,10 +770,10 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   return true;
 }
 
-int
+size_t
 oc_tls_send_message(oc_message_t *message)
 {
-  int length = 0;
+  size_t length = 0;
   oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
   if (peer) {
     int ret = mbedtls_ssl_write(&peer->ssl_ctx, (unsigned char *)message->data,
