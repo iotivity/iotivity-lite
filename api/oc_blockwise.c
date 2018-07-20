@@ -31,7 +31,7 @@ OC_LIST(oc_blockwise_requests);
 OC_LIST(oc_blockwise_responses);
 
 static oc_blockwise_state_t *
-oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, int href_len,
+oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, size_t href_len,
                          oc_endpoint_t *endpoint, oc_method_t method,
                          oc_blockwise_role_t role)
 {
@@ -103,7 +103,7 @@ oc_blockwise_response_timeout(void *data)
 }
 
 oc_blockwise_state_t *
-oc_blockwise_alloc_request_buffer(const char *href, int href_len,
+oc_blockwise_alloc_request_buffer(const char *href, size_t href_len,
                                   oc_endpoint_t *endpoint, oc_method_t method,
                                   oc_blockwise_role_t role)
 {
@@ -119,7 +119,7 @@ oc_blockwise_alloc_request_buffer(const char *href, int href_len,
 }
 
 oc_blockwise_state_t *
-oc_blockwise_alloc_response_buffer(const char *href, int href_len,
+oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
                                    oc_endpoint_t *endpoint, oc_method_t method,
                                    oc_blockwise_role_t role)
 {

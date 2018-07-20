@@ -48,14 +48,14 @@ oc_rep_get_cbor_errno(void)
 int
 oc_rep_finalize(void)
 {
-  int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
-  if (size < 0 && g_err == CborErrorOutOfMemory) {
+  size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
+  if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
            "accomodate a larger payload");
   }
   if (g_err != CborNoError)
     return -1;
-  return size;
+  return (int)size;
 }
 
 static oc_rep_t *

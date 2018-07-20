@@ -246,7 +246,7 @@ coap_receive(oc_message_t *msg)
       if (transaction) {
 #ifdef OC_BLOCK_WISE
         const char *href;
-        int href_len = coap_get_header_uri_path(message, &href);
+        size_t href_len = coap_get_header_uri_path(message, &href);
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
             (uint32_t)coap_get_payload(message, &incoming_block);
