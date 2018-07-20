@@ -578,7 +578,26 @@ soft_ap_process_routine(void *data)
 
   /** Turn On Wi-Fi interface */
   st_print_log("[St_Port] Turn on the wifi interface\n");
-  SYSTEM_RET_CHECK(system("sudo ifconfig wlx00259ce05a49 10.0.0.2/24 up"));
+
+  char interface[100];
+  FILE *p = popen("iw dev | awk '$1==\"Interface\"{printf $2}'", "r");
+  if (!p) {
+    st_print_log("[St_Port] popen failed.\n");
+    goto exit;
+  }
+  while (fgets(interface, sizeof(interface), p) != NULL)
+    ;
+  int interface_len = strlen(interface);
+  if (interface_len <= 0) {
+    st_print_log("[St_Port] Can't find wifi interface.\n");
+    goto exit;
+  }
+
+  int len = 30 + interface_len;
+  char nmcli_command[200];
+  snprintf(nmcli_command, len, "sudo ifconfig %s 10.0.0.2/24 up", interface);
+  st_print_log("[St_Port] $ %s\n", nmcli_command);
+  SYSTEM_RET_CHECK(system(nmcli_command));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
   st_print_log("[St_Port] $ sudo service dnsmasq restart\n");
@@ -600,6 +619,9 @@ soft_ap_process_routine(void *data)
   st_print_log("[St_Port] $ Soft ap is off\n");
 
 exit:
+  st_mutex_lock(soft_ap->mutex);
+  st_cond_signal(soft_ap->cv);
+  st_mutex_unlock(soft_ap->mutex);
   st_thread_exit(NULL);
   return NULL;
 }
