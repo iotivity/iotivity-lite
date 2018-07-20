@@ -22,6 +22,30 @@
       "revId": "cd0e840cb4ead2dd14fcfed6f25dd3964913d231",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a3b6873b",
+        "filename": "include/oc_security.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-07-20T10:34:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_0832f00f",
+      "range": {
+        "startLine": 96,
+        "startChar": 16,
+        "endLine": 96,
+        "endChar": 17
+      },
+      "revId": "cd0e840cb4ead2dd14fcfed6f25dd3964913d231",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
