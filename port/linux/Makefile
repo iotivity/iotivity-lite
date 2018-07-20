@@ -21,12 +21,12 @@ pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
 
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
-GTEST_DIR = $(ROOT_DIR)/deps/gtest
+GTEST_DIR = $(ROOT_DIR)/deps/googletest/googletest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 GTEST = gtest_build
 GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
-TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT -fprofile-arcs -ftest-coverage
+TEST_CXXFLAGS += -g -Wall -Wextra -ftest-coverage -fprofile-arcs -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT -fprofile-arcs -ftest-coverage
 HEADER_DIR = -I$(ROOT_DIR)/include \
              -I$(ROOT_DIR) \
              -I$(OUT_DIR)
@@ -127,7 +127,7 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
-CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../ -I../../ -I../../include/ -std=gnu99 -Wall -Wextra #-Wl,-Map,client.map
+CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../ -I../../ -I../../include/ -std=gnu99 -Wall -Wextra -ftest-coverage -fprofile-arcs #-Wl,-Map,client.map
 CFLAGS_CA=-I../../service/cloud-access/include
 CFLAGS_RD_CLIENT=-I../../service/resource-directory/client/include
 CFLAGS_FOTA=-I../../service/fota/include
