@@ -859,7 +859,7 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
       common:
 #ifdef OC_DEBUG
-        PRINT("Incoming message of size %d bytes from ", message->length);
+        PRINT("Incoming message of size %zd bytes from ", message->length);
         PRINTipaddr(message->endpoint);
         PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -1084,7 +1084,7 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %d bytes to ", message->length);
+  PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n");
 #endif /* OC_DEBUG */

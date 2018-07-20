@@ -74,7 +74,7 @@ _oc_mmem_alloc(
     return 0;
   }
 
-  unsigned int bytes_allocated = 0;
+  size_t bytes_allocated = 0;
 
   switch (pool_type) {
   case BYTE_POOL:

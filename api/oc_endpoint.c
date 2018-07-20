@@ -262,7 +262,8 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
-  int str_idx = 0, addr_idx = 0, split = -1, seg_len = 0;
+  int str_idx = 0, addr_idx = 0, split = -1;
+  size_t seg_len = 0;
   while (addr_idx < OC_IPV6_ADDRLEN - 1 && str_idx < (int)len) {
     if (split == -1 && strncmp(&address[str_idx], "::", 2) == 0) {
       split = addr_idx;
@@ -341,7 +342,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   } else {
     return -1;
   }
-  int len = oc_string_len(*endpoint_str);
+  int len = (int)oc_string_len(*endpoint_str);
   const char *p = strrchr(oc_string(*endpoint_str), ':');
   char *u = 0;
   if (p) {
@@ -353,7 +354,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 
     const char *address = memchr(oc_string(*endpoint_str), '/', len);
     address += 2;
-    int address_len = (p - address - 1);
+    size_t address_len = (p - address - 1);
 
 #ifdef OC_DNS_LOOKUP
     oc_string_t ipaddress;

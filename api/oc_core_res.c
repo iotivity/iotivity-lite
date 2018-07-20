@@ -560,10 +560,10 @@ oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
       int i;
       for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
            i++) {
-        int size = oc_string_array_get_item_size(resource->types, i);
+        size_t size = oc_string_array_get_item_size(resource->types, i);
         const char *t =
           (const char *)oc_string_array_get_item(resource->types, i);
-        if (rt_len == size && strncmp(rt, t, rt_len) == 0) {
+        if (rt_len == (int)size && strncmp(rt, t, rt_len) == 0) {
           return true;
         }
       }

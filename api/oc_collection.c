@@ -123,7 +123,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, int device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
