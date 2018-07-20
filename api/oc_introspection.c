@@ -81,7 +81,7 @@ IDD_storage_size(const char *store)
   return filesize;
 }
 
-long
+size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
@@ -116,7 +116,7 @@ IDD_storage_size(const char *store)
   return introspection_data_size;
 }
 
-long
+size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   (void)store;

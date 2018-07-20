@@ -48,14 +48,14 @@ oc_rep_get_cbor_errno(void)
 int
 oc_rep_finalize(void)
 {
-  int size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
-  if (size < 0 && g_err == CborErrorOutOfMemory) {
+  size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
+  if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
            "accomodate a larger payload");
   }
   if (g_err != CborNoError)
     return -1;
-  return size;
+  return (int)size;
 }
 
 static oc_rep_t *
@@ -354,7 +354,7 @@ oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
 
 static bool
 oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
-                 void **value, int *size)
+                 void **value, size_t *size)
 {
   if (!rep || !key || !value) {
     OC_ERR("Error of input parameters");
@@ -423,7 +423,7 @@ oc_rep_get_int(oc_rep_t *rep, const char *key, int *value)
 {
   if (!value)
     return false;
-  return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value, NULL);
+  return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
@@ -431,7 +431,7 @@ oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
 {
   if (!value)
     return false;
-  return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value, NULL);
+  return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
@@ -439,11 +439,11 @@ oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
 {
   if (!value)
     return false;
-  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value, NULL);
+  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
-oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *size)
+oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
 {
   if (!size)
     return false;
@@ -451,7 +451,7 @@ oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *size)
 }
 
 bool
-oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size)
+oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
 {
   if (!size)
     return false;
@@ -459,7 +459,7 @@ oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size)
 }
 
 bool
-oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size)
+oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, size_t *size)
 {
   if (!size)
     return false;
@@ -467,7 +467,7 @@ oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size)
 }
 
 bool
-oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *size)
+oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size)
 {
   if (!size)
     return false;
@@ -475,7 +475,7 @@ oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *size)
 }
 
 bool
-oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int *size)
+oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size)
 {
   if (!size)
     return false;
@@ -483,7 +483,7 @@ oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int *siz
 }
 
 bool
-oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size)
+oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
 {
   if (!value || !size)
     return false;
@@ -491,7 +491,7 @@ oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *
 }
 
 bool
-oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size)
+oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
 {
   if (!value || !size)
     return false;

@@ -224,7 +224,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
-  int len = 0;
+  size_t len = 0;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -302,7 +302,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   } else if (oc_string_len(data->name) == 4 &&
                              memcmp(oc_string(data->name), "data", 4) == 0) {
                     uint8_t *p = oc_cast(data->value.string, uint8_t);
-                    int size = oc_string_len(data->value.string);
+                    size_t size = oc_string_len(data->value.string);
                     if (size == 0)
                       goto next_item;
                     if (size != 24) {
@@ -315,7 +315,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 } break;
                 case OC_REP_BYTE_STRING: {
                   uint8_t *p = oc_cast(data->value.string, uint8_t);
-                  int size = oc_string_len(data->value.string);
+                  size_t size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
                   if (size != 16) {
