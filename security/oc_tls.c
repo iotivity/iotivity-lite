@@ -551,6 +551,10 @@ oc_tls_shutdown(void)
 int
 oc_tls_init_context(void)
 {
+#ifdef OC_CLIENT
+	oc_uuid_t *device_id = oc_core_get_device_id(0);
+#endif
+
   if (oc_core_get_num_devices() < 1) {
     goto dtls_init_err;
   }
@@ -651,7 +655,7 @@ oc_tls_init_context(void)
                                   MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
     goto dtls_init_err;
   }
-  oc_uuid_t *device_id = oc_core_get_device_id(0);
+  //oc_uuid_t *device_id = oc_core_get_device_id(0);
   if (mbedtls_ssl_conf_psk(&client_conf[0], device_id->id, 1, device_id->id,
                            16) != 0) {
     goto dtls_init_err;
