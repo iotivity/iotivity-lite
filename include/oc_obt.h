@@ -17,6 +17,11 @@
 #ifndef OC_OBT_H
 #define OC_OBT_H
 
+/**
+  @brief Onboarding API
+  @file
+*/
+
 #include "oc_api.h"
 #include "security/oc_acl.h"
 
@@ -38,6 +43,24 @@ void oc_obt_init(void);
 /* Device discovery */
 int oc_obt_discover_unowned_devices(oc_obt_devicelist_cb_t cb, void *data);
 int oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data);
+
+/**
+  @brief Verifies that the ownership was successfully transfered.
+
+  Once \c oc_obt_perform_just_works_otm() has notified the successful transfer
+  of ownership, this function can be used to directly contact the according
+  device. The function verifies that transfer was successful and updates
+  the list of endpoints.
+
+  If successful, the callback is invoked with all known secure devices.
+  If device fails to respond, then the callback will be invoked with NULL.
+  @param ep known endpoint of device, must not be NULL
+  @param cb callback to be invoked after verification, must not be NULL
+  @param data data to be provided to the callback, may be NULL
+  @return 0 if verification is scheduled, -1 if out of memory
+*/
+int oc_obt_verify_owned_device(oc_endpoint_t *ep,
+                               oc_obt_devicelist_cb_t cb, void *data);
 
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
