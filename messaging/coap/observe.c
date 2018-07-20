@@ -101,20 +101,20 @@ static int
 #ifdef OC_BLOCK_WISE
 add_observer(oc_resource_t *resource, uint16_t block2_size,
              oc_endpoint_t *endpoint, const uint8_t *token, size_t token_len,
-             const char *uri, int uri_len)
+             const char *uri, size_t uri_len)
 #else  /* OC_BLOCK_WISE */
 add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
              const uint8_t *token, size_t token_len, const char *uri,
-             int uri_len)
+             size_t uri_len)
 #endif /* !OC_BLOCK_WISE */
 {
   /* Remove existing observe relationship, if any. */
-  int dup = coap_remove_observer_handle_by_uri(endpoint, uri, uri_len);
+  int dup = coap_remove_observer_handle_by_uri(endpoint, uri, (int)uri_len);
 
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
   if (o) {
-    int max = sizeof(o->url) - 1;
+    size_t max = sizeof(o->url) - 1;
     if (max > uri_len) {
       max = uri_len;
     }

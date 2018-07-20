@@ -25,7 +25,7 @@
 #define STORE_PATH_SIZE 64
 
 static char store_path[STORE_PATH_SIZE];
-static int store_path_len;
+static size_t store_path_len;
 static bool path_set = false;
 
 int
@@ -67,7 +67,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 
   size = fread(buf, 1, size, fp);
   fclose(fp);
-  return size;
+  return (long)size;
 }
 
 long
@@ -87,6 +87,6 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
 
   size = fwrite(buf, 1, size, fp);
   fclose(fp);
-  return size;
+  return (long)size;
 }
 #endif /* OC_SECURITY */

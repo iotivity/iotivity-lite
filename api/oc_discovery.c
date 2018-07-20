@@ -53,7 +53,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
        i++) {
-    int size = oc_string_array_get_item_size(resource->types, i);
+    size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
       oc_rep_add_text_string(rt, t);
@@ -201,7 +201,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
   int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
        i++) {
-    int size = oc_string_array_get_item_size(resource->types, i);
+    size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
       oc_rep_add_text_string(rt, t);
@@ -538,14 +538,14 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
         }
       } break;
       case OC_REP_STRING_ARRAY: {
-        int i;
+        size_t i;
         if (oc_string_len(link->name) == 2 &&
             strncmp(oc_string(link->name), "rt", 2) == 0) {
           types = &link->value.array;
         } else {
           interfaces = 0;
           for (i = 0;
-               i < (int)oc_string_array_get_allocated_size(link->value.array);
+               i < oc_string_array_get_allocated_size(link->value.array);
                i++) {
             interfaces |= oc_ri_get_interface_mask(
               oc_string_array_get_item(link->value.array, i),
