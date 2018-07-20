@@ -62,19 +62,19 @@ OC_LIST(doubles_list);
 #endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
 
-int
+size_t
 _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  struct oc_mmem *m, unsigned int size, pool pool_type)
+  struct oc_mmem *m, size_t size, pool pool_type)
 {
   if (!m) {
     OC_ERR("oc_mmem is NULL");
     return 0;
   }
 
-  unsigned int bytes_allocated = 0;
+  size_t bytes_allocated = 0;
 
   switch (pool_type) {
   case BYTE_POOL:
@@ -133,7 +133,7 @@ _oc_mmem_alloc(
   oc_mem_trace_add_pace(func, bytes_allocated, MEM_TRACE_ALLOC, m->ptr);
 #endif
 
-  return bytes_allocated;
+  return (int) bytes_allocated;
 }
 
 void
