@@ -40,7 +40,7 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              uint8_t *key, const size_t key_len);
 
 void oc_tls_remove_peer(oc_endpoint_t *endpoint);
-int oc_tls_send_message(oc_message_t *message);
+size_t oc_tls_send_message(oc_message_t *message);
 oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
 bool oc_tls_connected(oc_endpoint_t *endpoint);
 

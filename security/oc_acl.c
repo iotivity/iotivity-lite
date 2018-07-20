@@ -794,7 +794,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
-  int len = 0;
+  size_t len = 0;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
