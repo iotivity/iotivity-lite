@@ -17,10 +17,10 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_security.h"
 #include "port/oc_clock.h"
 #include "security/oc_doxm.h"
 #include "security/oc_tls.h"
-#include "security/oc_rpk.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -217,13 +217,13 @@ main(void)
 
 #ifdef OC_SECURITY
 #ifdef OC_MFG
-  oc_sec_doxm(0, OC_DOXM_MFG);
+  oc_set_doxm(OC_DOXM_MFG);
 #elif defined(OC_RPK)
-  oc_sec_doxm(0, OC_DOXM_RPK);
+  oc_set_doxm(OC_DOXM_RPK);
   oc_sec_set_cpubkey_and_token_load(get_cpubkey_and_token);
   oc_sec_set_own_key_load(get_own_key);
 #else
-  oc_sec_doxm(0, OC_DOXM_JW);
+  oc_set_doxm(OC_DOXM_JW);
 #endif /* OC_MFG */
 #endif /* OC_SECURITY */
 
