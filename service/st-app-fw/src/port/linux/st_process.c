@@ -23,6 +23,9 @@ typedef struct
 {
   st_mutex_t mutex;
   st_mutex_t app_mutex;
+#ifdef STATE
+  st_mutex_t state_mutex;
+#endif
   st_cond_t cv;
   st_thread_t thread;
   int quit;
@@ -48,11 +51,24 @@ st_process_init(void)
     return -1;
   }
 
+#ifdef STATE
+  g_process_data.state_mutex = st_mutex_init();
+  if (!g_process_data.state_mutex) {
+    st_print_log("[St_Proc] st_mutex_init failed!\n");
+    st_mutex_destroy(g_process_data.mutex);
+    st_mutex_destroy(g_process_data.app_mutex);
+    return -1;
+  }
+#endif
+
   g_process_data.cv = st_cond_init();
   if (!g_process_data.cv) {
     st_print_log("[ST_PROC] st_cond_init failed!\n");
     st_mutex_destroy(g_process_data.mutex);
     st_mutex_destroy(g_process_data.app_mutex);
+#ifdef STATE
+    st_mutex_destroy(g_process_data.state_mutex);
+#endif
     return -1;
   }
   return 0;
@@ -102,6 +118,14 @@ st_process_destroy(void)
     st_cond_destroy(g_process_data.cv);
     g_process_data.cv = NULL;
   }
+
+#ifdef STATE
+  if (g_process_data.state_mutex) {
+    st_mutex_destroy(g_process_data.state_mutex);
+    g_process_data.state_mutex = NULL;
+  }
+#endif
+
   if (g_process_data.app_mutex) {
     st_mutex_destroy(g_process_data.app_mutex);
     g_process_data.app_mutex = NULL;
@@ -159,3 +183,17 @@ st_process_app_sync_unlock(void)
 {
   st_mutex_unlock(g_process_data.app_mutex);
 }
+
+#ifdef STATE
+void
+st_process_state_sync_lock(void)
+{
+  st_mutex_lock(g_process_data.state_mutex);
+}
+
+void
+st_process_state_sync_unlock(void)
+{
+  st_mutex_unlock(g_process_data.state_mutex);
+}
+#endif
