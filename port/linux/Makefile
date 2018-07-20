@@ -278,7 +278,7 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
            libiotivity-constrained-easysetup.a \
 		   libiotivity-constrained-cloudaccess.a libiotivity-constrained-cloudaccess.so \
 		   libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so \
-		   libiotivity-constrained-fota.a libiotivity-constrained-fota.so 
+		   libiotivity-constrained-fota.a libiotivity-constrained-fota.so
 
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
@@ -286,7 +286,7 @@ PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
 
 ifeq ($(ST_APP_FW),1)
 
-	CONSTRAINED_LIBS +=libst-app-framework.a libst-app-framework.so
+	CONSTRAINED_LIBS += libst-app-framework.a libst-app-framework.so
 
 	ST_DEVICE_DEF=../../apps/st_app/json/st_device_def
 	ST_JSON_FILE := $(wildcard ../../apps/st_app/json/*.json)
@@ -355,17 +355,13 @@ $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
-ifeq ($(ST_APP_FW),1)
-$(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp
+$(ST_APP_TEST_OBJ_DIR)/%.o: $(ST_APP_TEST_DIR)/%.cpp prep_st_app_fw_json_present prep_st_app_fw_create_device_def 
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) $(CFLAGS_FOTA) -I$(ROOT_DIR) -I$(OUT_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c -lpthread $< -o $@
 
-stapptest: prep_st_app_fw_json_present prep_st_app_fw_create_device_def stapptestlocal
-
-stapptestlocal: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
+stapptest: $(ST_APP_TEST_OBJ_FILES) libst-app-framework.a | $(GTEST)
 	@mkdir -p st_things_creds
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) $(CFLAGS_FOTA) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o stapptest
-endif
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_ST) $(CFLAGS_ES) $(CFLAGS_FOTA) -l:gtest_main.a -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 ifeq ($(EASYSETUP),1)
 $(EASYSETUP_TEST_OBJ_DIR)/%.o: $(EASYSETUP_TEST_DIR)/%.cpp
@@ -432,11 +428,9 @@ obj/fota/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_FOTA}
 
-ifeq ($(ST_APP_FW),1)
 obj/st/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_ES} ${CFLAGS_CA} ${CFLAGS_RD_CLIENT} ${CFLAGS_FOTA} ${CFLAGS_ST} -DOC_CLIENT -DOC_SERVER
-endif
 
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
@@ -477,13 +471,11 @@ libiotivity-constrained-fota.a: $(OBJ_FOTA)
 libiotivity-constrained-fota.so: $(OBJ_FOTA)
 	$(CC) -shared -o $@ $(OBJ_FOTA) $(LIBS)
 
-ifeq ($(ST_APP_FW),1)
 libst-app-framework.a: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(AR) -rcs $@  $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 
 libst-app-framework.so: $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_ST) $(OBJ_ES) $(OBJ_CA) $(OBJ_RD_CLIENT) $(OBJ_FOTA) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
-endif
 
 server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
@@ -563,7 +555,6 @@ client_multithread_linux: libiotivity-constrained-client.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-ifeq ($(ST_APP_FW),1)
 st_things: prep_st_app_fw_json_present prep_st_app_fw_create_device_def $(ST_JSON_FILE) libst-app-framework.a
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/st_app/linux/st_ref_app.c  \
@@ -586,8 +577,6 @@ prep_st_app_fw_create_device_def:
 	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
 	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
 	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
-
-endif
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
