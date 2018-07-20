@@ -344,6 +344,12 @@ main(void)
   st_error_t ret = ST_ERROR_NONE;
   do {
     ret = st_manager_start();
+
+#ifdef STATE
+    while (1) {
+      sleep(10);
+    }
+#endif
     if (ret != ST_ERROR_NONE) {
       printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
       sleep(6000);
