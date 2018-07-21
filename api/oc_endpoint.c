@@ -365,15 +365,20 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
       char domain[address_len + 1];
       strncpy(domain, address, address_len);
       domain[address_len] = '\0';
+#ifdef OC_IPV4
+      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
+#endif
 #ifdef OC_DNS_LOOKUP_IPV6
-      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
+        if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
 #endif /* OC_DNS_LOOKUP_IPV6 */
-        if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
           return -1;
-        }
 #ifdef OC_DNS_LOOKUP_IPV6
-      }
+        }
 #endif /* OC_DNS_LOOKUP_IPV6 */
+#ifdef OC_IPV4
+      }
+#endif
+
       address = oc_string(ipaddress);
       address_len = oc_string_len(ipaddress);
 #else  /* OC_DNS_LOOKUP */
