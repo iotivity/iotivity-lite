@@ -76,16 +76,6 @@ TEST_F(TestSTCloudManager, st_cloud_manager_start)
     EXPECT_EQ(0, ret);
 }
 
-TEST_F(TestSTCloudManager, st_cloud_manager_check_connection)
-{
-    char url[28] = "coap://www.samsung.com:5683";
-    oc_string_t ci_server;
-    oc_new_string(&ci_server, url, strlen(url));
-    int ret = st_cloud_manager_check_connection(&ci_server);
-    oc_free_string(&ci_server);
-    EXPECT_EQ(0, ret);
-}
-
 TEST_F(TestSTCloudManager, st_cloud_manager_check_connection_fail)
 {
     int ret = st_cloud_manager_check_connection(NULL);
