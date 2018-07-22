@@ -73,7 +73,6 @@ class TestSTEasySetup: public testing::Test
             device_name = oc_string(spec_info->device.device_name);
             manufacturer = oc_string(spec_info->platform.manufacturer_name);
             sid = oc_string(spec_info->platform.model_number);
-            st_data_mgr_info_free();
             s_handler.init = appInit;
             int initResult = oc_main_init(&s_handler);
             ASSERT_TRUE((initResult == 0));
@@ -81,6 +80,7 @@ class TestSTEasySetup: public testing::Test
 
         virtual void TearDown()
         {
+            st_data_mgr_info_free();
             st_store_info_initialize();
             oc_main_shutdown();
         }
