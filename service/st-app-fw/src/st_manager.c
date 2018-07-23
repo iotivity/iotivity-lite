@@ -25,6 +25,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
+#include "security/oc_rpk.h"
 #endif
 #include "st_cloud_manager.h"
 #include "st_data_manager.h"
@@ -370,6 +371,17 @@ st_manager_initialize(void)
   return ST_ERROR_NONE;
 }
 
+#ifdef OC_SECURITY
+static void
+set_otm_method(void)
+{
+  st_configuration_t *conf = st_data_mgr_get_config_info();
+
+  oc_doxm_method_t otm_method = conf->easy_setup.ownership_transfer_method;
+  oc_sec_doxm(device_index, otm_method);
+}
+#endif /* OC_SECURITY */
+
 static int
 st_manager_stack_init(void)
 {
@@ -416,6 +428,10 @@ st_manager_stack_init(void)
     st_print_log("[ST_MGR] oc_main_init failed!\n");
     return -1;
   }
+
+#ifdef OC_SECURITY
+  set_otm_method();
+#endif /* OC_SECURITY */
 
   char uuid[OC_UUID_LEN] = { 0 };
   oc_uuid_to_str(oc_core_get_device_id(0), uuid, OC_UUID_LEN);
@@ -694,6 +710,32 @@ void
 st_unregister_status_handler(void)
 {
   g_st_status_cb = NULL;
+}
+
+bool
+st_register_rpk_handler(st_rpk_handle_cpubkey_and_token_cb_t pubkey_cb,
+                        st_rpk_handle_priv_key_cb_t privkey_cb)
+{
+  if (!pubkey_cb || !privkey_cb) {
+    st_print_log(
+      "[ST_MGR] Failed to register RPK handler - invalid parameter\n");
+    return false;
+  }
+
+#ifdef OC_SECURITY
+  oc_sec_set_cpubkey_and_token_load((oc_sec_get_cpubkey_and_token)pubkey_cb);
+  oc_sec_set_own_key_load((oc_sec_get_own_key)privkey_cb);
+  return true;
+#else  /* OC_SECURITY */
+  st_print_log("[ST_MGR] Un-secured build can't handle RPK\n");
+  return false;
+#endif /* !OC_SECURITY */
+}
+
+void
+st_unregister_rpk_handler(void)
+{
+  // TODO: security unset api need.
 }
 
 static void
