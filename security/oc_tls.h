@@ -29,7 +29,9 @@
 OC_PROCESS_NAME(oc_tls_handler);
 
 int oc_tls_init_context(void);
+#ifdef OC_MFG
 bool oc_sec_load_certs(int device);
+#endif /* OC_MFG */
 bool oc_sec_load_ca_cert(const unsigned char *ca_cert_buf,
                          size_t ca_cet_buf_len);
 #ifdef OC_UNLOAD_CERT
