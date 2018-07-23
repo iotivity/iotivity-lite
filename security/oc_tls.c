@@ -47,7 +47,7 @@
 #include "oc_svr.h"
 #include "oc_tls.h"
 #include "oc_doxm.h"
-#include "oc_rpk.h"
+#include "oc_security.h"
 
 #define PBKDF_ITERATIONS 1000
 
