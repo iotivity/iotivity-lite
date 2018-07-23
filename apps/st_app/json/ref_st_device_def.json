@@ -121,7 +121,7 @@
           "artik": false
         }
       },
-      "ownershipTransferMethod": 2
+      "ownershipTransferMethod": 0
     },
     "wifi": {
       "interfaces": 15,

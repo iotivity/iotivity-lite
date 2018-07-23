@@ -93,6 +93,15 @@ TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info)
     st_data_mgr_info_free();
 }
 
+TEST_F(TestSTDataManager, st_data_mgr_get_config_info)
+{
+    st_set_device_profile(st_device_def, st_device_def_len);
+    st_data_mgr_info_load();
+    st_configuration_t *conf = st_data_mgr_get_config_info();
+    EXPECT_NE(NULL, conf);
+    st_data_mgr_info_free();
+}
+
 TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info_fail)
 {
     st_resource_type_t *ret;
