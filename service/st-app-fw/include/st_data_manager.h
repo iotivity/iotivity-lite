@@ -105,5 +105,6 @@ void st_free_device_profile(void);
 st_specification_t *st_data_mgr_get_spec_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
 st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);
+int st_data_mgr_get_otm_method_info(void);
 
 #endif /* ST_DATA_MANAGER_H */

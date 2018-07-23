@@ -93,6 +93,15 @@ TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info)
     st_data_mgr_info_free();
 }
 
+TEST_F(TestSTDataManager, st_data_mgr_get_otm_method_info)
+{
+    st_set_device_profile(st_device_def, st_device_def_len);
+    st_data_mgr_info_load();
+    int otm_method = st_data_mgr_get_otm_method_info();
+    EXPECT_EQ(0, otm_method);
+    st_data_mgr_info_free();
+}
+
 TEST_F(TestSTDataManager, st_data_mgr_get_rsc_type_info_fail)
 {
     st_resource_type_t *ret;

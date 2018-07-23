@@ -370,6 +370,17 @@ st_manager_initialize(void)
   return ST_ERROR_NONE;
 }
 
+#ifdef OC_SECURITY
+static void
+set_otm_method(void)
+{
+  oc_doxm_method_t otm_method =
+    (oc_doxm_method_t)st_data_mgr_get_otm_method_info();
+
+  oc_sec_doxm(device_index, otm_method);
+}
+#endif /* OC_SECURITY */
+
 static int
 st_manager_stack_init(void)
 {
@@ -416,6 +427,10 @@ st_manager_stack_init(void)
     st_print_log("[ST_MGR] oc_main_init failed!\n");
     return -1;
   }
+
+#ifdef OC_SECURITY
+  set_otm_method();
+#endif /* OC_SECURITY */
 
   char uuid[OC_UUID_LEN] = { 0 };
   oc_uuid_to_str(oc_core_get_device_id(0), uuid, OC_UUID_LEN);

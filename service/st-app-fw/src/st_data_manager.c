@@ -22,6 +22,9 @@
 #include "port/oc_storage.h"
 #include "st_port.h"
 #include "util/oc_mem.h"
+#ifdef OC_SECURITY
+#include "security/oc_doxm.h"
+#endif /*OC_SECURITY */
 
 #define ST_MAX_DATA_SIZE (2048)
 #define ST_MAX_STR_LEN (100)
@@ -62,6 +65,11 @@
 #define ST_PROPS_MANDATORY_KEY "mandatory"
 #define ST_PROPS_RW_KEY "rw"
 
+#define ST_CONF_KEY "configuration"
+
+#define ST_CONF_ES_KEY "easySetup"
+#define ST_CONF_ES_OTM_KEY "ownershipTransferMethod"
+
 #define st_rep_set_string_with_chk(object, key, value)                         \
   if (value)                                                                   \
     oc_rep_set_text_string(object, key, value);
@@ -84,6 +92,8 @@ OC_MEMB(st_resource_s, st_resource_info_t,
 OC_LIST(st_resource_type_list);
 OC_MEMB(st_resource_type_s, st_resource_type_t,
         MAX_NUM_PROPERTIES *OC_MAX_APP_RESOURCES *OC_MAX_NUM_DEVICES);
+
+static int g_st_otm_method = 0;
 
 static int st_decode_device_data_info(oc_rep_t *rep);
 
@@ -164,6 +174,12 @@ st_data_mgr_get_rsc_type_info(const char *rt)
 
   st_print_log("[ST_DATA_MGR] find %s resource type info\n", rt);
   return rt_info;
+}
+
+int
+st_data_mgr_get_otm_method_info(void)
+{
+  return g_st_otm_method;
 }
 
 static void
@@ -255,6 +271,7 @@ st_data_mgr_info_free(void)
   free_specifications();
   free_resources();
   free_resource_types();
+  g_st_otm_method = 0;
 }
 
 static int
@@ -506,6 +523,46 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
   return 0;
 }
 
+#ifdef OC_SECURITY
+static bool
+check_valid_otm_method(int otm_method)
+{
+  if ((oc_doxm_method_t)otm_method == OC_DOXM_JW ||
+      (oc_doxm_method_t)otm_method == OC_DOXM_MFG ||
+      (oc_doxm_method_t)otm_method == OC_DOXM_RPK)
+    return true;
+
+  return false;
+}
+#endif /*OC_SECURITY */
+
+static int
+st_decode_configaration(oc_rep_t *conf_rep)
+{
+  oc_rep_t *conf_es_rep = NULL;
+  if (!oc_rep_get_object(conf_rep, ST_CONF_ES_KEY, &conf_es_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get easy setup data\n");
+    return -1;
+  }
+
+  int otm_method;
+  if (!oc_rep_get_int(conf_es_rep, ST_CONF_ES_OTM_KEY, &otm_method)) {
+    st_print_log("[ST_DATA_MGR] can't get ownership transfer method data\n");
+    return -1;
+  }
+
+#ifdef OC_SECURITY
+  if (!check_valid_otm_method(otm_method)) {
+    st_print_log("[ST_DATA_MGR] Invalid otm method data(%d)\n", otm_method);
+    return -1;
+  }
+#endif /*OC_SECURITY */
+
+  g_st_otm_method = otm_method;
+  st_print_log("[ST_DATA_MGR] OTM Method: %d\n", g_st_otm_method);
+  return 0;
+}
+
 static int
 st_decode_device_data_info(oc_rep_t *rep)
 {
@@ -538,6 +595,17 @@ st_decode_device_data_info(oc_rep_t *rep)
     }
   } else {
     st_print_log("[ST_DATA_MGR] can't get resource type data\n");
+    return -1;
+  }
+
+  oc_rep_t *conf_rep = NULL;
+  if (oc_rep_get_object(rep, ST_CONF_KEY, &conf_rep)) {
+    if (st_decode_configaration(conf_rep) != 0) {
+      st_print_log("[ST_DATA_MGR] can't decode configuration data\n");
+      return -1;
+    }
+  } else {
+    st_print_log("[ST_DATA_MGR] can't get configuration data\n");
     return -1;
   }
 
