@@ -37,7 +37,19 @@ static bool otm_confirm_handler_test(void)
 {
     return true;
 }
+static void
+rpk_cpubkey_and_token_handler(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token,
+                              int *token_len)
+{
+    return;
+}
+static void
+rpk_priv_key_handler(uint8_t *priv_key, int *priv_key_len)
+{
+    return;
+}
 #endif
+
 static void st_status_handler_test(st_status_t status)
 {
     if (status == ST_STATUS_EASY_SETUP_DONE ||
@@ -215,3 +227,13 @@ TEST_F(TestSTManager, st_register_status_handler)
     EXPECT_TRUE(ret);
     st_unregister_status_handler();
 }
+
+#ifdef OC_SECURITY
+TEST_F(TestSTManager, st_register_rpk_handler)
+{
+    bool ret = st_register_rpk_handler(rpk_cpubkey_and_token_handler,
+                                       rpk_priv_key_handler);
+    EXPECT_TRUE(ret);
+    st_unregister_rpk_handler();
+}
+#endif

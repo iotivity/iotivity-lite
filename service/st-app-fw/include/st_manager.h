@@ -28,6 +28,7 @@
 
 #include "st_types.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
   @brief A function pointer for handling OTM(Ownership Transfer
@@ -41,6 +42,26 @@ typedef bool (*st_otm_confirm_cb_t)(void);
   @param status Current status of the ST application framework.
 */
 typedef void (*st_status_cb_t)(st_status_t status);
+
+/**
+  @brief A function pointer for handling the RPK client public key & token.
+  @param cpub_key uint8_t pointer to be copied client public key.
+  @param cpub_key_len int pointer to be copied client public key length.
+  @param token uint8_t pointer to be copied token.
+  @param token_len int pointer to be copied token length.
+*/
+typedef void (*st_rpk_handle_cpubkey_and_token_cb_t)(uint8_t *cpub_key,
+                                                     int *cpub_key_len,
+                                                     uint8_t *token,
+                                                     int *token_len);
+
+/**
+  @brief A function pointer for handling the RPK private key.
+  @param priv_key uint8_t pointer to be copied private key.
+  @param priv_key_len int pointer to be copied private key length.
+*/
+typedef void (*st_rpk_handle_priv_key_cb_t)(uint8_t *priv_key,
+                                            int *priv_key_len);
 
 /**
   @brief A function to initialize ST application framework.
@@ -146,6 +167,23 @@ bool st_register_status_handler(st_status_cb_t cb);
   @brief A function for unregister ST application framework status handler
 */
 void st_unregister_status_handler(void);
+
+/**
+  @brief A function for registering RPK handler
+  @param pubkey_cb Callback function to handle the RPK client public key &
+  token.
+  @param privkey_cb Callback function to handle the RPK private key.
+  @return bool Description of result.
+  @retval true if successful.
+  @retval false Input parameter is NULL or it is already registered.
+*/
+bool st_register_rpk_handler(st_rpk_handle_cpubkey_and_token_cb_t pubkey_cb,
+                             st_rpk_handle_priv_key_cb_t privkey_cb);
+
+/**
+  @brief A function for unregister RPK handler
+*/
+void st_unregister_rpk_handler(void);
 
 /**
   @brief A function set device profile.

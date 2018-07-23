@@ -98,6 +98,45 @@ typedef struct st_resource_type
 #endif /* !OC_DYNAMIC_ALLOCATION */
 } st_resource_type_t;
 
+/**
+   If you want to enable other configuration feature,
+   please remove this comments to define ST_CONF_ENABLED
+ */
+// #define ST_CONF_ENABLED
+
+typedef struct
+{
+  struct st_easy_setup_info_t
+  {
+#ifdef ST_CONF_ENABLED
+    struct st_conn_info_t
+    {
+      int type;
+      struct st_soft_ap_info_t
+      {
+        oc_string_t setup_id;
+        bool artik;
+      } soft_ap;
+    } connectivity;
+#endif /* ST_CONF_ENABLED */
+    int ownership_transfer_method;
+  } easy_setup;
+#ifdef ST_CONF_ENABLED
+  struct st_wifi_info_t
+  {
+    int interfaces;
+    int frequency;
+  } wifi;
+  struct st_file_path_info_t
+  {
+    oc_string_t svrdb;
+    oc_string_t provisioning;
+    oc_string_t certificate;
+    oc_string_t private_key;
+  } file_path;
+#endif /* ST_CONF_ENABLED */
+} st_configuration_t;
+
 int st_data_mgr_info_load(void);
 void st_data_mgr_info_free(void);
 void st_free_device_profile(void);
@@ -105,5 +144,6 @@ void st_free_device_profile(void);
 st_specification_t *st_data_mgr_get_spec_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
 st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);
+st_configuration_t *st_data_mgr_get_config_info(void);
 
 #endif /* ST_DATA_MANAGER_H */
