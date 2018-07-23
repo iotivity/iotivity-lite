@@ -1,21 +1,23 @@
-From fd4c06793ba187cc27c1200c1c2a49788ffa07ad Mon Sep 17 00:00:00 2001
-From: "v.riznyk" <v.riznyk@samsung.com>
-Date: Thu, 21 Jun 2018 17:23:54 +0300
-Subject: [PATCH] mbedtls reduce
+From 365d3eb05c64e9da4f323525cd6454e39860437b Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Mon, 23 Jul 2018 13:48:35 +0300
+Subject: [PATCH] Reduce MbedTLS
 
-Signed-off-by: v.riznyk <v.riznyk@samsung.com>
+Reduce MbedTLS routines due memory optimization
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 16 ++++++++++--
- library/asn1parse.c      | 23 +++++++++++++++++
- library/bignum.c         | 54 +++++++++++++++++++++++++++++++++++++---
- library/ecdsa.c          | 20 +++++++++++++++
- library/pk.c             | 20 +++++++++++++++
- library/pkparse.c        | 20 +++++++++++++++
- library/ssl_cli.c        | 15 +++++++++++
- 7 files changed, 163 insertions(+), 5 deletions(-)
+ include/mbedtls/config.h | 16 ++++++++++++++--
+ library/asn1parse.c      | 23 +++++++++++++++++++++++
+ library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++++++---
+ library/ecdsa.c          | 20 ++++++++++++++++++++
+ library/pk.c             | 20 ++++++++++++++++++++
+ library/pkparse.c        | 20 ++++++++++++++++++++
+ library/ssl_cli.c        | 15 +++++++++++++++
+ 7 files changed, 153 insertions(+), 5 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5d..0d52cae8 100644
+index 45143a5..0d52cae 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -58,8 +58,17 @@
@@ -63,7 +65,7 @@ index 45143a5d..0d52cae8 100644
  #define MBEDTLS_CIPHER_MODE_CBC
  
 diff --git a/library/asn1parse.c b/library/asn1parse.c
-index 4dd65c03..18d6b833 100644
+index 4dd65c0..18d6b83 100644
 --- a/library/asn1parse.c
 +++ b/library/asn1parse.c
 @@ -243,6 +243,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
@@ -152,31 +154,18 @@ index 4dd65c03..18d6b833 100644
  
  #endif /* MBEDTLS_ASN1_PARSE_C */
 diff --git a/library/bignum.c b/library/bignum.c
-index 6fdf3177..d4d1af93 100644
+index 6fdf317..19435ea 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
-@@ -260,6 +260,7 @@ cleanup:
-  */
- int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char swap )
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret, s;
-     size_t i;
-     mbedtls_mpi_uint tmp;
-@@ -286,7 +287,12 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
+@@ -286,6 +286,7 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
      }
  
  cleanup:
 +
      return( ret );
-+#else
-+    oc_abort("ST_APP Skipped for optimization");
-+    return( 0 );
-+#endif /* ST_MBEDTLS_OPT */
  }
  
- /*
-@@ -419,7 +425,6 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
+@@ -419,7 +420,6 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
  
      if( *d >= (mbedtls_mpi_uint) radix )
          return( MBEDTLS_ERR_MPI_INVALID_CHARACTER );
@@ -184,26 +173,7 @@ index 6fdf3177..d4d1af93 100644
      return( 0 );
  }
  
-@@ -428,6 +433,7 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
-  */
- int mbedtls_mpi_read_string( mbedtls_mpi *X, int radix, const char *s )
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret;
-     size_t i, j, slen, n;
-     mbedtls_mpi_uint d;
-@@ -493,6 +499,10 @@ cleanup:
-     mbedtls_mpi_free( &T );
- 
-     return( ret );
-+#else
-+    oc_abort("ST_APP Skipped for optimization");
-+    return( 0 );
-+#endif /* ST_MBEDTLS_OPT */
- }
- 
- /*
-@@ -500,6 +510,7 @@ cleanup:
+@@ -500,6 +500,7 @@ cleanup:
   */
  static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
  {
@@ -211,7 +181,7 @@ index 6fdf3177..d4d1af93 100644
      int ret;
      mbedtls_mpi_uint r;
  
-@@ -520,6 +531,10 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
+@@ -520,6 +521,10 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
  cleanup:
  
      return( ret );
@@ -222,7 +192,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  /*
-@@ -528,6 +543,7 @@ cleanup:
+@@ -528,6 +533,7 @@ cleanup:
  int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
                                char *buf, size_t buflen, size_t *olen )
  {
@@ -230,7 +200,7 @@ index 6fdf3177..d4d1af93 100644
      int ret = 0;
      size_t n;
      char *p;
-@@ -596,6 +612,10 @@ cleanup:
+@@ -596,6 +602,10 @@ cleanup:
      mbedtls_mpi_free( &T );
  
      return( ret );
@@ -241,7 +211,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  #if defined(MBEDTLS_FS_IO)
-@@ -1077,6 +1097,7 @@ cleanup:
+@@ -1077,6 +1087,7 @@ cleanup:
   */
  int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -249,7 +219,7 @@ index 6fdf3177..d4d1af93 100644
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
  
-@@ -1086,6 +1107,10 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
+@@ -1086,6 +1097,10 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
      _B.p = p;
  
      return( mbedtls_mpi_add_mpi( X, A, &_B ) );
@@ -260,7 +230,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  /*
-@@ -1445,6 +1470,7 @@ cleanup:
+@@ -1445,6 +1460,7 @@ cleanup:
   */
  int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -268,7 +238,7 @@ index 6fdf3177..d4d1af93 100644
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
  
-@@ -1454,6 +1480,10 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
+@@ -1454,6 +1470,10 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
      _B.p = p;
  
      return( mbedtls_mpi_div_mpi( Q, R, A, &_B ) );
@@ -279,7 +249,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  /*
-@@ -1484,6 +1514,7 @@ cleanup:
+@@ -1484,6 +1504,7 @@ cleanup:
   */
  int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_sint b )
  {
@@ -287,7 +257,7 @@ index 6fdf3177..d4d1af93 100644
      size_t i;
      mbedtls_mpi_uint x, y, z;
  
-@@ -1532,7 +1563,8 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+@@ -1532,7 +1553,8 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
          y = b - y;
  
      *r = y;
@@ -297,7 +267,7 @@ index 6fdf3177..d4d1af93 100644
      return( 0 );
  }
  
-@@ -1541,6 +1573,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
+@@ -1541,6 +1563,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
   */
  static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  {
@@ -305,7 +275,7 @@ index 6fdf3177..d4d1af93 100644
      mbedtls_mpi_uint x, m0 = N->p[0];
      unsigned int i;
  
-@@ -1551,6 +1584,9 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+@@ -1551,6 +1574,9 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
          x *= ( 2 - ( m0 * x ) );
  
      *mm = ~x + 1;
@@ -315,7 +285,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  /*
-@@ -1559,6 +1595,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
+@@ -1559,6 +1585,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
                           const mbedtls_mpi *T )
  {
@@ -323,7 +293,7 @@ index 6fdf3177..d4d1af93 100644
      size_t i, n, m;
      mbedtls_mpi_uint u0, u1, *d;
  
-@@ -1592,7 +1629,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1592,7 +1619,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      else
          /* prevent timing attacks */
          mpi_sub_hlp( n, A->p, T->p );
@@ -333,7 +303,7 @@ index 6fdf3177..d4d1af93 100644
      return( 0 );
  }
  
-@@ -1601,6 +1639,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1601,6 +1629,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
   */
  static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
  {
@@ -341,7 +311,7 @@ index 6fdf3177..d4d1af93 100644
      mbedtls_mpi_uint z = 1;
      mbedtls_mpi U;
  
-@@ -1608,6 +1647,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1608,6 +1637,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
      U.p = &z;
  
      return( mpi_montmul( A, &U, N, mm, T ) );
@@ -352,7 +322,7 @@ index 6fdf3177..d4d1af93 100644
  }
  
  /*
-@@ -1615,6 +1658,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1615,6 +1648,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
   */
  int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR )
  {
@@ -360,7 +330,7 @@ index 6fdf3177..d4d1af93 100644
      int ret;
      size_t wbits, wsize, one = 1;
      size_t i, j, nblimbs;
-@@ -1816,6 +1860,10 @@ cleanup:
+@@ -1816,6 +1850,10 @@ cleanup:
          mbedtls_mpi_free( &RR );
  
      return( ret );
@@ -372,7 +342,7 @@ index 6fdf3177..d4d1af93 100644
  
  /*
 diff --git a/library/ecdsa.c b/library/ecdsa.c
-index 826fefe5..617ae7ab 100644
+index 826fefe..617ae7a 100644
 --- a/library/ecdsa.c
 +++ b/library/ecdsa.c
 @@ -74,6 +74,7 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
@@ -447,7 +417,7 @@ index 826fefe5..617ae7ab 100644
  #endif /* MBEDTLS_ECDSA_GENKEY_ALT */
  
 diff --git a/library/pk.c b/library/pk.c
-index b52c73fb..1985e7b7 100644
+index b52c73f..1985e7b 100644
 --- a/library/pk.c
 +++ b/library/pk.c
 @@ -258,6 +258,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
@@ -527,7 +497,7 @@ index b52c73fb..1985e7b7 100644
  
      return( prv->pk_info->check_pair_func( pub->pk_ctx, prv->pk_ctx ) );
 diff --git a/library/pkparse.c b/library/pkparse.c
-index e19511ee..5cb5e390 100644
+index e19511e..5cb5e39 100644
 --- a/library/pkparse.c
 +++ b/library/pkparse.c
 @@ -179,6 +179,7 @@ int mbedtls_pk_parse_public_keyfile( mbedtls_pk_context *ctx, const char *path )
@@ -607,7 +577,7 @@ index e19511ee..5cb5e390 100644
  
  #endif /* MBEDTLS_PK_PARSE_C */
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index e9b0d82e..b9289e26 100644
+index e9b0d82..b9289e2 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
 @@ -1132,6 +1132,7 @@ static int ssl_parse_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -668,5 +638,5 @@ index e9b0d82e..b9289e26 100644
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
  
 -- 
-2.17.1
+1.9.1
 
