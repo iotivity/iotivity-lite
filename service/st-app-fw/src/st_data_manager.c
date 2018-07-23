@@ -22,6 +22,9 @@
 #include "port/oc_storage.h"
 #include "st_port.h"
 #include "util/oc_mem.h"
+#ifdef OC_SECURITY
+#include "security/oc_doxm.h"
+#endif /*OC_SECURITY */
 
 #define ST_MAX_DATA_SIZE (2048)
 #define ST_MAX_STR_LEN (100)
@@ -62,6 +65,26 @@
 #define ST_PROPS_MANDATORY_KEY "mandatory"
 #define ST_PROPS_RW_KEY "rw"
 
+#define ST_CONF_KEY "configuration"
+
+#define ST_CONF_ES_KEY "easySetup"
+#define ST_CONF_ES_CONN_KEY "connectivity"
+#define ST_CONF_CONN_TYPE_KEY "type"
+#define ST_CONF_CONN_SOFTAP_KEY "softAP"
+#define ST_CONF_SOFTAP_SETUPID_KEY "setupId"
+#define ST_CONF_SOFTAP_ARTIK_KEY "artik"
+#define ST_CONF_ES_OTM_KEY "ownershipTransferMethod"
+
+#define ST_CONF_WIFI_KEY "wifi"
+#define ST_CONF_WIFI_IFS_KEY "interfaces"
+#define ST_CONF_WIFI_FREQ_KEY "frequency"
+
+#define ST_CONF_FILE_PATH_KEY "filePath"
+#define ST_CONF_FILE_SVRDB_KEY "svrdb"
+#define ST_CONF_FILE_PROV_KEY "provisioning"
+#define ST_CONF_FILE_CERT_KEY "certificate"
+#define ST_CONF_FILE_PRIVATE_KEY "privateKey"
+
 #define st_rep_set_string_with_chk(object, key, value)                         \
   if (value)                                                                   \
     oc_rep_set_text_string(object, key, value);
@@ -84,6 +107,9 @@ OC_MEMB(st_resource_s, st_resource_info_t,
 OC_LIST(st_resource_type_list);
 OC_MEMB(st_resource_type_s, st_resource_type_t,
         MAX_NUM_PROPERTIES *OC_MAX_APP_RESOURCES *OC_MAX_NUM_DEVICES);
+
+static st_configuration_t *g_st_configuration = NULL;
+OC_MEMB(st_configuration_s, st_configuration_t, 1);
 
 static int st_decode_device_data_info(oc_rep_t *rep);
 
@@ -164,6 +190,12 @@ st_data_mgr_get_rsc_type_info(const char *rt)
 
   st_print_log("[ST_DATA_MGR] find %s resource type info\n", rt);
   return rt_info;
+}
+
+st_configuration_t *
+st_data_mgr_get_config_info(void)
+{
+  return g_st_configuration;
 }
 
 static void
@@ -249,12 +281,35 @@ free_resource_types(void)
   }
 }
 
+static void
+free_configuration_items(st_configuration_t *conf)
+{
+  if (conf) {
+    st_string_check_free(&conf->easy_setup.connectivity.soft_ap.setup_id);
+    st_string_check_free(&conf->file_path.svrdb);
+    st_string_check_free(&conf->file_path.provisioning);
+    st_string_check_free(&conf->file_path.certificate);
+    st_string_check_free(&conf->file_path.private_key);
+  }
+}
+
+static void
+free_configuration(void)
+{
+  if (g_st_configuration) {
+    free_configuration_items(g_st_configuration);
+    oc_memb_free(&st_configuration_s, g_st_configuration);
+    g_st_configuration = NULL;
+  }
+}
+
 void
 st_data_mgr_info_free(void)
 {
   free_specifications();
   free_resources();
   free_resource_types();
+  free_configuration();
 }
 
 static int
@@ -506,6 +561,110 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
   return 0;
 }
 
+#ifdef OC_SECURITY
+static bool
+check_valid_otm_method(int otm_method)
+{
+  if ((oc_doxm_method_t)otm_method == OC_DOXM_JW ||
+      (oc_doxm_method_t)otm_method == OC_DOXM_MFG ||
+      (oc_doxm_method_t)otm_method == OC_DOXM_RPK)
+    return true;
+
+  return false;
+}
+#endif /*OC_SECURITY */
+
+static int
+st_decode_configuration(oc_rep_t *conf_rep)
+{
+  st_configuration_t *conf = oc_memb_alloc(&st_configuration_s);
+  if (!conf) {
+    st_print_log("[ST_DATA_MGR] alloc failed\n");
+    return -1;
+  }
+
+  oc_rep_t *conf_es_rep = NULL, *conn_rep = NULL, *softap_rep = NULL;
+  char *str_value = NULL;
+  int size = 0, int_value = 0;
+  bool bool_value;
+  if (!oc_rep_get_object(conf_rep, ST_CONF_ES_KEY, &conf_es_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get easy setup data\n");
+    goto error;
+  }
+  if (!oc_rep_get_object(conf_es_rep, ST_CONF_ES_CONN_KEY, &conn_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get connectivity data\n");
+    goto error;
+  }
+  if (oc_rep_get_int(conn_rep, ST_CONF_CONN_TYPE_KEY, &int_value)) {
+    conf->easy_setup.connectivity.type = int_value;
+  }
+  if (!oc_rep_get_object(conn_rep, ST_CONF_CONN_SOFTAP_KEY, &softap_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get softAP data\n");
+    goto error;
+  }
+  if (oc_rep_get_string(softap_rep, ST_CONF_SOFTAP_SETUPID_KEY, &str_value,
+                        &size)) {
+    st_string_check_new(&conf->easy_setup.connectivity.soft_ap.setup_id,
+                        str_value, size);
+  }
+  if (oc_rep_get_bool(softap_rep, ST_CONF_SOFTAP_ARTIK_KEY, &bool_value)) {
+    conf->easy_setup.connectivity.soft_ap.artik = bool_value;
+  }
+  if (oc_rep_get_int(conf_es_rep, ST_CONF_ES_OTM_KEY, &int_value)) {
+#ifdef OC_SECURITY
+    if (!check_valid_otm_method(int_value)) {
+      st_print_log("[ST_DATA_MGR] Invalid otm method data(%d)\n", int_value);
+      goto error;
+    }
+#endif /*OC_SECURITY */
+    conf->easy_setup.ownership_transfer_method = int_value;
+    st_print_log("[ST_DATA_MGR] OTM Method: %d\n",
+                 conf->easy_setup.ownership_transfer_method);
+  }
+
+  oc_rep_t *conf_wifi_rep = NULL;
+  if (!oc_rep_get_object(conf_rep, ST_CONF_WIFI_KEY, &conf_wifi_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get wifi data\n");
+    goto error;
+  }
+  if (oc_rep_get_int(conf_wifi_rep, ST_CONF_WIFI_IFS_KEY, &int_value)) {
+    conf->wifi.interfaces = int_value;
+  }
+  if (oc_rep_get_int(conf_wifi_rep, ST_CONF_WIFI_FREQ_KEY, &int_value)) {
+    conf->wifi.frequency = int_value;
+  }
+
+  oc_rep_t *conf_file_rep = NULL;
+  if (!oc_rep_get_object(conf_rep, ST_CONF_FILE_PATH_KEY, &conf_file_rep)) {
+    st_print_log("[ST_DATA_MGR] can't get file path data\n");
+    goto error;
+  }
+  if (oc_rep_get_string(conf_file_rep, ST_CONF_FILE_SVRDB_KEY, &str_value,
+                        &size)) {
+    st_string_check_new(&conf->file_path.svrdb, str_value, size);
+  }
+  if (oc_rep_get_string(conf_file_rep, ST_CONF_FILE_PROV_KEY, &str_value,
+                        &size)) {
+    st_string_check_new(&conf->file_path.provisioning, str_value, size);
+  }
+  if (oc_rep_get_string(conf_file_rep, ST_CONF_FILE_CERT_KEY, &str_value,
+                        &size)) {
+    st_string_check_new(&conf->file_path.certificate, str_value, size);
+  }
+  if (oc_rep_get_string(conf_file_rep, ST_CONF_FILE_PRIVATE_KEY, &str_value,
+                        &size)) {
+    st_string_check_new(&conf->file_path.private_key, str_value, size);
+  }
+
+  g_st_configuration = conf;
+  return 0;
+
+error:
+  free_configuration_items(conf);
+  oc_memb_free(&st_configuration_s, conf);
+  return -1;
+}
+
 static int
 st_decode_device_data_info(oc_rep_t *rep)
 {
@@ -538,6 +697,17 @@ st_decode_device_data_info(oc_rep_t *rep)
     }
   } else {
     st_print_log("[ST_DATA_MGR] can't get resource type data\n");
+    return -1;
+  }
+
+  oc_rep_t *conf_rep = NULL;
+  if (oc_rep_get_object(rep, ST_CONF_KEY, &conf_rep)) {
+    if (st_decode_configuration(conf_rep) != 0) {
+      st_print_log("[ST_DATA_MGR] can't decode configuration data\n");
+      return -1;
+    }
+  } else {
+    st_print_log("[ST_DATA_MGR] can't get configuration data\n");
     return -1;
   }
 
