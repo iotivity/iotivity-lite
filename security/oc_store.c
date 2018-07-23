@@ -162,7 +162,9 @@ oc_sec_load_cred(int device)
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
     oc_sec_decode_cred(rep, NULL, true, device);
+#ifdef OC_MFG
     oc_sec_load_certs(device);
+#endif /* OC_MFG */
     oc_free_rep(rep);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
