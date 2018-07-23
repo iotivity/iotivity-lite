@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_43acdba0",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-23T03:27:02Z",
+      "side": 1,
+      "message": "This is too complex.\nHow about make a logic to wait for cv from signal call in callback function?",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 13
+      },
+      "revId": "e9f339746aa43bd57a052648dfd6e5f64cc7a7c1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
