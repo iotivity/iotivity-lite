@@ -52,13 +52,13 @@ PATH:=${toolchain_bin}:${PATH}
 export PATH
 
 prep_files+=${CC}
+prep_files+=${tizenrt_dir}/tmp/done.log
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.Kconfig.tmp
 prep_files+=${tizenrt_dir}/external/iotivity-constrained.mk.tmp
 prep_files+=${top_dir}/deps/tinycbor/LICENSE
 prep_files+=${top_dir}/deps/tinycbor/tmp/done.log
 
 all?=prep configure build
-
 
 ${tizenrt_dir}:
 	git clone --depth 1 --recursive -b "${os_branch}" "${os_url}" "$@"
@@ -96,19 +96,32 @@ export IOTIVITY_CONSTRAINED_BASE_DIR
 #${tizenrt_dir}/external/iotivity-constrained:
 #	ls $@ || ln -fs ${CURDIR}/../.. $@
 
-build: ${os_dir}/.config
-	${MAKE} -C "${<D}"
+build: ${tizenrt_dir}/build/output/bin/tinyara_head.bin
+	ls $<
 
-${configure_file}: ${tizenrt_dir} prep
+${tizenrt_dir}/build/output/bin/tinyara_head.bin: ${os_dir}/.config
+	${MAKE} -C "${<D}"
+	ls -l $@
+
+${configure_file}: ${tizenrt_dir} ${CC}
 	ls "$@" || ${MAKE} rule/configure
 
 configure: ${configure_file}
 	ls "$<"
 
-rule/configure: ${tizenrt_dir}/os/tools
+rule/configure: ${tizenrt_dir}/os/Make.defs
+	ls "$<"
+
+${tizenrt_dir}/os/Make.defs: ${tizenrt_dir}/os/tools ${CC}
 	cd "$<" && ./configure.sh ${os_machine}/${os_image_type}
 	echo "CONFIG_ENABLE_IOTIVITY_CONSTRAINED=y" >> ${configure_file}
 	echo "CONFIG_IOTLITE_EASYSETUP=y" >> ${configure_file}
+
+${tizenrt_dir}/tmp/done.log: ${tizenrt_dir}/os/Make.defs $(wildcard ${tizenrt_dir}/build/configs/*/*/Make.defs)
+	sed -e 's/-Werror//g' -i $^
+	mkdir -p ${@D}
+	echo "Patches applied in $^" > "$@"
+	echo "TODO: Enable Werror again on next TizenRT update"
 
 prep: ${prep_files}
 	ls $^
