@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2360b731",
+        "filename": "service/st-app-fw/include/st_data_manager.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-23T10:27:43Z",
+      "side": 1,
+      "message": "st_data_mgr_get_config_info",
+      "range": {
+        "startLine": 108,
+        "startChar": 4,
+        "endLine": 108,
+        "endChar": 35
+      },
+      "revId": "1b29a85c41084de4c6cbcde80adb9458f3376996",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_435b3b87",
+        "filename": "service/st-app-fw/include/st_data_manager.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-23T10:27:43Z",
+      "side": 1,
+      "message": "define st_configuration for further extension.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 3
+      },
+      "revId": "1b29a85c41084de4c6cbcde80adb9458f3376996",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
