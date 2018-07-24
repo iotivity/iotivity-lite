@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9eaaba6e",
+        "filename": "util/oc_mem.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-24T22:46:36Z",
+      "side": 1,
+      "message": "In my Opinion these would be easier to read if written as follows:\n\n  #ifdef OC_MEMORY_TRACE\n  void *_oc_mem_malloc(const char *func, size_t size);\n  #else\n  void *_oc_mem_malloc(size_t size)\n  #endif /* OC_MEMORY_TRACE */\n\nThis would avoid splitting the function declaration across multiple lines making it easier to read and understand. It does have the down side of repeating the function name and parameter which risks introducing typos.\n\nWe could then have a block of all the functions with the func parameter and a block without.  Similar to what is done at lines 48 to 58",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 15
+      },
+      "revId": "a276b2fd0a8c3c4f43bff663a8bc55d62e210d4a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
