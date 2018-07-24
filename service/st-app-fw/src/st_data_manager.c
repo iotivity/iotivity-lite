@@ -118,7 +118,7 @@ st_data_mgr_info_load(void)
     ret = st_decode_device_data_info(rep);
     oc_free_rep(rep);
   } else {
-    st_print_log("[ST_DATA_MGR] can't read device info\n");
+    st_print_log("[ST_DM] can't read device info\n");
     return -1;
   }
 
@@ -158,11 +158,11 @@ st_data_mgr_get_rsc_type_info(const char *rt)
   }
 
   if (!rt_info) {
-    st_print_log("[ST_DATA_MGR] can't find %s resource type info\n", rt);
+    st_print_log("[ST_DM] can't find %s resource type info\n", rt);
     return NULL;
   }
 
-  st_print_log("[ST_DATA_MGR] find %s resource type info\n", rt);
+  st_print_log("[ST_DM] find %s resource type info\n", rt);
   return rt_info;
 }
 
@@ -262,7 +262,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
 {
   st_specification_t *spec_info = oc_memb_alloc(&st_specification_s);
   if (!spec_info) {
-    st_print_log("[ST_DATA_MGR] alloc failed\n");
+    st_print_log("[ST_DM] alloc failed\n");
     return -1;
   }
   spec_info->device_idx = device_index;
@@ -288,7 +288,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
       st_string_check_new(&spec_info->device.data_model_version, value, size);
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get specification device data\n");
+    st_print_log("[ST_DM] can't get specification device data\n");
     return -1;
   }
 
@@ -331,7 +331,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
       st_string_check_new(&spec_info->platform.vendor_id, value, size);
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get specification platform data\n");
+    st_print_log("[ST_DM] can't get specification platform data\n");
     return -1;
   }
 
@@ -350,7 +350,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
       oc_rep_t *item = iter->value.object;
       st_resource_info_t *resource_info = oc_memb_alloc(&st_resource_s);
       if (!resource_info) {
-        st_print_log("[ST_DATA_MGR] alloc failed\n");
+        st_print_log("[ST_DM] alloc failed\n");
         return -1;
       }
       resource_info->device_idx = device_index;
@@ -397,7 +397,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
       iter = iter->next;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] don't have exist resources\n");
+    st_print_log("[ST_DM] don't have exist resources\n");
     return -1;
   }
 
@@ -410,22 +410,22 @@ st_decode_device(int device_idx, oc_rep_t *device_rep)
   oc_rep_t *spec_rep = NULL;
   if (oc_rep_get_object(device_rep, ST_SPECIFICATION_KEY, &spec_rep)) {
     if (st_decode_spec(device_idx, spec_rep) != 0) {
-      st_print_log("[ST_DATA_MGR] st_decode_spec failed\n");
+      st_print_log("[ST_DM] st_decode_spec failed\n");
       return -1;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get specification data\n");
+    st_print_log("[ST_DM] can't get specification data\n");
     return -1;
   }
 
   oc_rep_t *resources_rep = NULL;
   if (oc_rep_get_object(device_rep, ST_RESOURCES_KEY, &resources_rep)) {
     if (st_decode_resources(device_idx, resources_rep) != 0) {
-      st_print_log("[ST_DATA_MGR] st_decode_resources failed\n");
+      st_print_log("[ST_DM] st_decode_resources failed\n");
       return -1;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get resources data\n");
+    st_print_log("[ST_DM] can't get resources data\n");
     return -1;
   }
 
@@ -437,7 +437,7 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
 {
   st_resource_type_t *rt = oc_memb_alloc(&st_resource_type_s);
   if (!rt) {
-    st_print_log("[ST_DATA_MGR] alloc failed\n");
+    st_print_log("[ST_DM] alloc failed\n");
     return -1;
   }
 
@@ -461,12 +461,12 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
 #ifdef OC_DYNAMIC_ALLOCATION
       st_property_t *property = oc_mem_malloc(sizeof(st_property_t));
       if (!property) {
-        st_print_log("[ST_DATA_MGR] alloc failed\n");
+        st_print_log("[ST_DM] alloc failed\n");
         return -1;
       }
 #else  /* OC_DYNAMIC_ALLOCATION */
       if (rt->properties_cnt >= MAX_NUM_PROPERTIES) {
-        st_print_log("[ST_DATA_MGR] properties overflow\n");
+        st_print_log("[ST_DM] properties overflow\n");
         return -1;
       }
       st_property_t *property = rt->properties[rt->properties_cnt];
@@ -497,7 +497,7 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
       iter = iter->next;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get resource type data\n");
+    st_print_log("[ST_DM] can't get resource type data\n");
     return -1;
   }
 
@@ -516,12 +516,12 @@ st_decode_device_data_info(oc_rep_t *rep)
     for (i = 0; iter != NULL; iter = iter->next, i++) {
       oc_rep_t *item = iter->value.object;
       if (st_decode_device(i, item) != 0) {
-        st_print_log("[ST_DATA_MGR] can't decode device(%d) data\n", i);
+        st_print_log("[ST_DM] can't decode device(%d) data\n", i);
         return -1;
       }
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get device data\n");
+    st_print_log("[ST_DM] can't get device data\n");
     return -1;
   }
 
@@ -531,13 +531,13 @@ st_decode_device_data_info(oc_rep_t *rep)
     while (iter) {
       oc_rep_t *item = iter->value.object;
       if (st_decode_resource_types(item) != 0) {
-        st_print_log("[ST_DATA_MGR] can't decode resource type data\n");
+        st_print_log("[ST_DM] can't decode resource type data\n");
         return -1;
       }
       iter = iter->next;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get resource type data\n");
+    st_print_log("[ST_DM] can't get resource type data\n");
     return -1;
   }
 
@@ -548,11 +548,11 @@ bool
 st_set_device_profile(unsigned char *device_def, unsigned int device_def_len)
 {
   if (!device_def) {
-    st_print_log("[ST_DATA_MGR] device_def is NULL \n");
+    st_print_log("[ST_DM] device_def is NULL \n");
     return false;
   }
   if (!device_def_len) {
-    st_print_log("[ST_DATA_MGR] device_def_len is zero \n");
+    st_print_log("[ST_DM] device_def_len is zero \n");
     return false;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -566,7 +566,7 @@ st_set_device_profile(unsigned char *device_def, unsigned int device_def_len)
 
 #else
   if (device_def_len >= ST_MAX_DATA_SIZE) {
-    st_print_log("[ST_DATA_MGR] device_def_size should be less than %d bytes\n",
+    st_print_log("[ST_DM] device_def_size should be less than %d bytes\n",
                  ST_MAX_DATA_SIZE);
     return false;
   }

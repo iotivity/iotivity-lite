@@ -247,11 +247,11 @@ void
 st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 {
   if (g_soft_ap.is_soft_ap_on) {
-    st_print_log("[St_Port] Soft AP is already turned on\n");
+    st_print_log("[ST_PORT] Soft AP is already turned on\n");
     return;
   }
 
-  st_print_log("[St_Port] st_turn_on_soft_AP\n");
+  st_print_log("[ST_PORT] st_turn_on_soft_AP\n");
 
   if (oc_string(g_soft_ap.ssid)) {
     oc_free_string(&g_soft_ap.ssid);
@@ -274,14 +274,14 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
   st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);
   st_mutex_unlock(g_soft_ap.mutex);
 
-  st_print_log("[St_Port] st_turn_on_soft_AP success\n");
+  st_print_log("[ST_PORT] st_turn_on_soft_AP success\n");
 }
 
 static int
 system_ret_check(int ret)
 {
   if (ret == -1 || ret == 127) {
-    st_print_log("[St_Port] system() invoke error(%d).\n", ret);
+    st_print_log("[ST_PORT] system() invoke error(%d).\n", ret);
     return -1;
   }
   return 0;
@@ -291,17 +291,17 @@ void
 st_turn_off_soft_AP(void)
 {
   if (!g_soft_ap.is_soft_ap_on) {
-    st_print_log("[St_Port] soft AP is already turned off\n");
+    st_print_log("[ST_PORT] soft AP is already turned off\n");
   }
 
-  st_print_log("[St_Port] st_turn_off_soft_AP\n");
+  st_print_log("[ST_PORT] st_turn_off_soft_AP\n");
   st_mutex_lock(g_soft_ap.mutex);
   if (g_soft_ap.is_soft_ap_on) {
     SYSTEM_RET_CHECK(system("sudo pkill hostapd"));
     st_thread_cancel(g_soft_ap.thread);
     g_soft_ap.is_soft_ap_on = 0;
   }
-  st_print_log("[St_Port] st_turn_off_soft_AP success.\n");
+  st_print_log("[ST_PORT] st_turn_off_soft_AP success.\n");
 
 exit:
   st_thread_destroy(g_soft_ap.thread);
@@ -325,43 +325,43 @@ int
 st_connect_wifi(const char *ssid, const char *pwd)
 {
   if (!ssid) {
-    st_print_log("[St_Port] st_connect_wifi failed\n");
+    st_print_log("[ST_PORT] st_connect_wifi failed\n");
     return -1;
   }
-  st_print_log("[St_Port] st_connect_wifi in\n");
+  st_print_log("[ST_PORT] st_connect_wifi in\n");
 
   /** sleep to allow response sending from post_callback thread before turning
    * Off Soft AP. */
   st_sleep(1);
 
-  st_print_log("[St_Port] target ap ssid: %s\n", ssid);
-  st_print_log("[St_Port] password: %s\n", pwd);
+  st_print_log("[ST_PORT] target ap ssid: %s\n", ssid);
+  st_print_log("[ST_PORT] password: %s\n", pwd);
 
   /** Stop Soft AP */
-  st_print_log("[St_Port] Stopping Soft AP\n");
+  st_print_log("[ST_PORT] Stopping Soft AP\n");
   SYSTEM_RET_CHECK(system("sudo service hostapd stop"));
 
   /** Turn On Wi-Fi */
-  st_print_log("[St_Port] Turn on the AP\n");
+  st_print_log("[ST_PORT] Turn on the AP\n");
   SYSTEM_RET_CHECK(system("sudo nmcli radio wifi on"));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
   st_sleep(1);
 
   /** Connect to Target Wi-Fi AP */
-  st_print_log("[St_Port] connect to %s AP.\n", ssid);
+  st_print_log("[ST_PORT] connect to %s AP.\n", ssid);
   int len = 32 + strlen(ssid) + strlen(pwd);
   char nmcli_command[200];
   snprintf(nmcli_command, len, "nmcli d wifi connect %s password %s", ssid,
            pwd);
-  st_print_log("[St_Port] $ %s\n", nmcli_command);
+  st_print_log("[ST_PORT] $ %s\n", nmcli_command);
   SYSTEM_RET_CHECK(system(nmcli_command));
 
-  st_print_log("[St_Port] st_connect_wifi out\n");
+  st_print_log("[ST_PORT] st_connect_wifi out\n");
   return 0;
 
 exit:
-  st_print_log("[St_Port] st_connect_wifi error occur\n");
+  st_print_log("[ST_PORT] st_connect_wifi error occur\n");
   return -1;
 }
 
@@ -375,7 +375,7 @@ exit:
 void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
-  st_print_log("[St_Port] Mock wifi scan...\n");
+  st_print_log("[ST_PORT] Mock wifi scan...\n");
 
   st_wifi_ap_t *list_tail = NULL;
   *ap_list = NULL;
@@ -437,20 +437,20 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
   int sock;
   char *wiface = "wlp2s0";  // NOTE: Replace wlp2s0 with proper interface name.
 
-  st_print_log("[St_Port] Scanning for neighbour wifi accesspoints\n");
+  st_print_log("[ST_PORT] Scanning for neighbour wifi accesspoints\n");
 
   /* Open socket to kernel */
   sock = iw_sockets_open();
 
   /* Get some metadata to use for scanning */
   if (iw_get_range_info(sock, wiface, &range) < 0) {
-    st_print_log("[St_Port] failed to get range info\n");
+    st_print_log("[ST_PORT] failed to get range info\n");
     return;
   }
 
   /* Perform the scan */
   if (iw_scan(sock, wiface, range.we_version_compiled, &head) < 0) {
-    st_print_log("[St_Port] scan failed!\n");
+    st_print_log("[ST_PORT] scan failed!\n");
     return;
   }
 
@@ -516,7 +516,7 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
     cnt++;
   }
 
-  st_print_log("[St_Port] Found %d neighbor wifi access points\n", cnt);
+  st_print_log("[ST_PORT] Found %d neighbor wifi access points\n", cnt);
 }
 #endif
 
@@ -569,54 +569,54 @@ soft_ap_process_routine(void *data)
 
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
-  st_print_log("[St_Port] soft_ap_handler in\n");
+  st_print_log("[ST_PORT] soft_ap_handler in\n");
 
   /** Stop AP */
-  st_print_log("[St_Port] Stopping AP\n");
+  st_print_log("[ST_PORT] Stopping AP\n");
   SYSTEM_RET_CHECK(system("sudo nmcli radio wifi off"));
   SYSTEM_RET_CHECK(system("sudo rfkill unblock wlan"));
 
   /** Turn On Wi-Fi interface */
-  st_print_log("[St_Port] Turn on the wifi interface\n");
+  st_print_log("[ST_PORT] Turn on the wifi interface\n");
 
   char interface[100];
   FILE *p = popen("iw dev | awk '$1==\"Interface\"{printf $2}'", "r");
   if (!p) {
-    st_print_log("[St_Port] popen failed.\n");
+    st_print_log("[ST_PORT] popen failed.\n");
     goto exit;
   }
   while (fgets(interface, sizeof(interface), p) != NULL)
     ;
   int interface_len = strlen(interface);
   if (interface_len <= 0) {
-    st_print_log("[St_Port] Can't find wifi interface.\n");
+    st_print_log("[ST_PORT] Can't find wifi interface.\n");
     goto exit;
   }
 
   int len = 30 + interface_len;
   char nmcli_command[200];
   snprintf(nmcli_command, len, "sudo ifconfig %s 10.0.0.2/24 up", interface);
-  st_print_log("[St_Port] $ %s\n", nmcli_command);
+  st_print_log("[ST_PORT] $ %s\n", nmcli_command);
   SYSTEM_RET_CHECK(system(nmcli_command));
 
   /** On some systems it may take time for Wi-Fi to turn ON. */
-  st_print_log("[St_Port] $ sudo service dnsmasq restart\n");
+  st_print_log("[ST_PORT] $ sudo service dnsmasq restart\n");
   SYSTEM_RET_CHECK(system("sudo service dnsmasq restart"));
 
-  st_print_log("[St_Port] $ sudo service radvd restart\n");
+  st_print_log("[ST_PORT] $ sudo service radvd restart\n");
   SYSTEM_RET_CHECK(system("sudo service radvd restart"));
 
-  st_print_log("[St_Port] $ sudo service hostapd start\n");
+  st_print_log("[ST_PORT] $ sudo service hostapd start\n");
   SYSTEM_RET_CHECK(system("sudo service hostapd start"));
 
   st_mutex_lock(soft_ap->mutex);
   st_cond_signal(soft_ap->cv);
   st_mutex_unlock(soft_ap->mutex);
 
-  st_print_log("[St_Port] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
+  st_print_log("[ST_PORT] $ sudo hostapd /etc/hostapd/hostapd.conf\n");
   SYSTEM_RET_CHECK(system("sudo hostapd /etc/hostapd/hostapd.conf"));
 
-  st_print_log("[St_Port] $ Soft ap is off\n");
+  st_print_log("[ST_PORT] $ Soft ap is off\n");
   goto exit_normal;
 
 exit:

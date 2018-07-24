@@ -37,20 +37,20 @@ st_process_init(void)
 {
   g_process_data.mutex = st_mutex_init();
   if (!g_process_data.mutex) {
-    st_print_log("[St_Proc] st_mutex_init failed!\n");
+    st_print_log("[ST_PROC] st_mutex_init failed!\n");
     return -1;
   }
 
   g_process_data.app_mutex = st_mutex_init();
   if (!g_process_data.app_mutex) {
-    st_print_log("[St_Proc] st_mutex_init failed!\n");
+    st_print_log("[ST_PROC] st_mutex_init failed!\n");
     st_mutex_destroy(g_process_data.mutex);
     return -1;
   }
 
   g_process_data.cv = st_cond_init();
   if (!g_process_data.cv) {
-    st_print_log("[St_Proc] st_cond_init failed!\n");
+    st_print_log("[ST_PROC] st_cond_init failed!\n");
     st_mutex_destroy(g_process_data.mutex);
     st_mutex_destroy(g_process_data.app_mutex);
     return -1;
@@ -65,7 +65,7 @@ st_process_start(void)
   g_process_data.thread =
     st_thread_create(st_process_func, "MAIN", 0, &g_process_data);
   if (!g_process_data.thread) {
-    st_print_log("[St_Proc] Failed to create main thread\n");
+    st_print_log("[ST_PROC] Failed to create main thread\n");
     return -1;
   }
   return 0;
@@ -75,18 +75,18 @@ int
 st_process_stop(void)
 {
   if (g_process_data.quit == 1) {
-    st_print_log("[St_Proc] st_process already stop.\n");
+    st_print_log("[ST_PROC] st_process already stop.\n");
     return 0;
   }
 
   g_process_data.quit = 1;
   st_process_signal();
   if (st_thread_destroy(g_process_data.thread) != 0) {
-    st_print_log("[St_Proc] st_thread_destroy failed!\n");
+    st_print_log("[ST_PROC] st_thread_destroy failed!\n");
     return -1;
   }
   g_process_data.thread = NULL;
-  st_print_log("[St_Proc] st_thread_destroy finish!\n");
+  st_print_log("[ST_PROC] st_thread_destroy finish!\n");
   return 0;
 }
 
@@ -94,7 +94,7 @@ int
 st_process_destroy(void)
 {
   if (g_process_data.quit != 1) {
-    st_print_log("[St_Proc] please stop process first.\n");
+    st_print_log("[ST_PROC] please stop process first.\n");
     return -1;
   }
 

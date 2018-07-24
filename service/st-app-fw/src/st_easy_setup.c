@@ -79,7 +79,7 @@ st_is_easy_setup_finish(void)
 int
 st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 {
-  st_print_log("[Easy_Setup] st_easy_setup_start in\n");
+  st_print_log("[ST_ES] st_easy_setup_start in\n");
 
   if (!cb) {
     return -1;
@@ -89,16 +89,16 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   es_connect_type resourcemMask =
     ES_WIFICONF_RESOURCE | ES_COAPCLOUDCONF_RESOURCE | ES_DEVCONF_RESOURCE;
   if (es_init_enrollee(g_is_secured, resourcemMask, g_callbacks) != ES_OK) {
-    st_print_log("[Easy_Setup] es_init_enrollee error!\n");
+    st_print_log("[ST_ES] es_init_enrollee error!\n");
     return -1;
   }
 
   g_easy_setup_status = EASY_SETUP_PROGRESSING;
-  st_print_log("[Easy_Setup] es_init_enrollee Success\n");
+  st_print_log("[ST_ES] es_init_enrollee Success\n");
 
   if (vendor_props) {
     if (set_sc_properties(vendor_props) == ES_ERROR) {
-      st_print_log("SetSCProperties Error\n");
+      st_print_log("[ST_ES] SetSCProperties Error\n");
       return -1;
     }
   }
@@ -118,17 +118,17 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   oc_sec_ace_update_conn_anon_clear("/sec/accesspointlist", 2, 14, 0);
 #endif
 
-  st_print_log("[Easy_Setup] st_easy_setup_start out\n");
+  st_print_log("[ST_ES] st_easy_setup_start out\n");
   return 0;
 }
 
 void
 st_easy_setup_stop(void)
 {
-  st_print_log("[Easy_Setup] st_easy_setup_stop in\n");
+  st_print_log("[ST_ES] st_easy_setup_stop in\n");
 
   if (es_terminate_enrollee() == ES_ERROR) {
-    st_print_log("es_terminate_enrollee failed!\n");
+    st_print_log("[ST_ES] es_terminate_enrollee failed!\n");
     return;
   }
 
@@ -146,7 +146,7 @@ st_easy_setup_stop(void)
   g_prov_step_check = 0;
   es_set_state(ES_STATE_INIT);
 
-  st_print_log("[Easy_Setup] st_easy_setup_stop out\n");
+  st_print_log("[ST_ES] st_easy_setup_stop out\n");
 }
 
 int
@@ -156,7 +156,7 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
   unsigned char mac[6] = { 0 };
 
   if (!oc_get_mac_addr(mac)) {
-    st_print_log("[St_app] oc_get_mac_addr failed!\n");
+    st_print_log("[ST_ES] oc_get_mac_addr failed!\n");
     return -1;
   }
 
@@ -164,7 +164,7 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
            EASYSETUP_TAG, mnid, sid, 0, mac[4], mac[5]);
   ssid[strlen(ssid)] = '\0';
 
-  st_print_log("[St_app] ssid : %s\n", ssid);
+  st_print_log("[ST_ES] ssid : %s\n", ssid);
   return 0;
 }
 
@@ -189,7 +189,7 @@ easy_setup_finish_handler(void *data)
     st_store_t *store_info = st_store_get_info();
     store_info->status = true;
     if (st_store_dump() <= 0) {
-      st_print_log("[Easy_Setup] st_store_dump failed\n");
+      st_print_log("[ST_ES] st_store_dump failed\n");
       g_easy_setup_status = EASY_SETUP_RESET;
     }
     oc_set_delayed_callback(NULL, callback_handler, 0);
@@ -201,7 +201,7 @@ static oc_event_callback_retval_t
 easy_setup_timeout_handler(void *data)
 {
   (void)data;
-  st_print_log("[Easy_Setup] Timeout easy-setup procedure.\n");
+  st_print_log("[ST_ES] Timeout easy-setup procedure.\n");
   g_easy_setup_status = EASY_SETUP_RESET;
   oc_set_delayed_callback(NULL, callback_handler, 0);
   return OC_EVENT_DONE;
@@ -212,15 +212,15 @@ static void
 st_otm_state_handler(oc_sec_otm_err_code_t state)
 {
   if (state == OC_SEC_OTM_START) {
-    st_print_log("[Easy_Setup] OTM provisioning started.\n");
+    st_print_log("[ST_ES] OTM provisioning started.\n");
     // Set timeout for easy setup procedure.
     oc_set_delayed_callback(NULL, easy_setup_timeout_handler,
                             EASYSETUP_TIMEOUT);
   } else if (state == OC_SEC_OTM_FINISH) {
-    st_print_log("[Easy_Setup] OTM provisioning done.\n");
+    st_print_log("[ST_ES] OTM provisioning done.\n");
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
   } else if (state <= OC_SEC_ERR_PSTAT) {
-    st_print_log("[Easy_Setup] OTM provisioning failed with %d.\n", state);
+    st_print_log("[ST_ES] OTM provisioning failed with %d.\n", state);
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
     oc_set_delayed_callback(NULL, easy_setup_timeout_handler, 0);
   }
@@ -247,29 +247,29 @@ wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
   if (g_prov_step_check & ST_EASY_SETUP_WIFI_PROV)
     return;
 
-  st_print_log("[Easy_Setup] wifi_prov_cb in\n");
+  st_print_log("[ST_ES] wifi_prov_cb in\n");
 
   es_set_state(ES_STATE_CONNECTING_TO_ENROLLER);
 
   if (wifi_prov_data == NULL) {
-    st_print_log("[Easy_Setup] es_wifi_conf_data is NULL\n");
+    st_print_log("[ST_ES] es_wifi_conf_data is NULL\n");
     g_easy_setup_status = EASY_SETUP_FAIL;
     oc_set_delayed_callback(NULL, callback_handler, 0);
     return;
   }
 
-  st_print_log("[Easy_Setup] SSID : %s\n", oc_string(wifi_prov_data->ssid));
-  st_print_log("[Easy_Setup] Password : %s\n", oc_string(wifi_prov_data->pwd));
-  st_print_log("[Easy_Setup] AuthType : %d\n", wifi_prov_data->authtype);
-  st_print_log("[Easy_Setup] EncType : %d\n", wifi_prov_data->enctype);
+  st_print_log("[ST_ES] SSID : %s\n", oc_string(wifi_prov_data->ssid));
+  st_print_log("[ST_ES] Password : %s\n", oc_string(wifi_prov_data->pwd));
+  st_print_log("[ST_ES] AuthType : %d\n", wifi_prov_data->authtype);
+  st_print_log("[ST_ES] EncType : %d\n", wifi_prov_data->enctype);
 
   if (wifi_prov_data->userdata) {
     sc_wifi_conf_properties *data = wifi_prov_data->userdata;
-    st_print_log("[Easy_Setup] DiscoveryChannel : %d\n", data->disc_channel);
+    st_print_log("[ST_ES] DiscoveryChannel : %d\n", data->disc_channel);
   }
 
   if (!oc_string(wifi_prov_data->ssid) || !oc_string(wifi_prov_data->pwd)) {
-    st_print_log("[Easy_Setup] wifi provision info is not enough!");
+    st_print_log("[ST_ES] wifi provision info is not enough!");
     return;
   }
 
@@ -281,7 +281,7 @@ wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
   if (is_easy_setup_step_done()) {
     oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
   }
-  st_print_log("[Easy_Setup] wifi_prov_cb out\n");
+  st_print_log("[ST_ES] wifi_prov_cb out\n");
 }
 
 static void
@@ -290,10 +290,10 @@ dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
   if (g_prov_step_check & ST_EASY_SETUP_DEV_PROV)
     return;
 
-  st_print_log("[Easy_Setup] dev_conf_prov_cb in\n");
+  st_print_log("[ST_ES] dev_conf_prov_cb in\n");
 
   if (dev_prov_data == NULL) {
-    st_print_log("[Easy_Setup] es_dev_conf_data is NULL\n");
+    st_print_log("[ST_ES] es_dev_conf_data is NULL\n");
     return;
   }
 
@@ -305,39 +305,39 @@ dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
 
     for (uint8_t i = 0; i < oc_string_array_get_allocated_size(data->location);
          ++i) {
-      st_print_log("[Easy_Setup] Location : %s\n",
+      st_print_log("[ST_ES] Location : %s\n",
                    oc_string_array_get_item(data->location, i));
     }
 
     if (oc_string(data->reg_mobile_dev))
-      st_print_log("[Easy_Setup] Register Mobile Device : %s\n",
+      st_print_log("[ST_ES] Register Mobile Device : %s\n",
                    oc_string(data->reg_mobile_dev));
     if (oc_string(data->country))
-      st_print_log("[Easy_Setup] Country : %s\n", oc_string(data->country));
+      st_print_log("[ST_ES] Country : %s\n", oc_string(data->country));
     if (oc_string(data->language))
-      st_print_log("[Easy_Setup] Language : %s\n", oc_string(data->language));
+      st_print_log("[ST_ES] Language : %s\n", oc_string(data->language));
 
     if (oc_string(data->gps_location))
-      st_print_log("[Easy_Setup] GPS Location : %s\n",
+      st_print_log("[ST_ES] GPS Location : %s\n",
                    oc_string(data->gps_location));
 
     if (oc_string(data->utc_date_time))
-      st_print_log("[Easy_Setup] UTC Date time : %s\n",
+      st_print_log("[ST_ES] UTC Date time : %s\n",
                    oc_string(data->utc_date_time));
 
     if (oc_string(data->regional_date_time))
-      st_print_log("[Easy_Setup] Regional time : %s\n",
+      st_print_log("[ST_ES] Regional time : %s\n",
                    oc_string(data->regional_date_time));
 
     if (oc_string(data->sso_list))
-      printf("[Easy_Setup] SSO List : %s\n", oc_string(data->sso_list));
+      printf("[ST_ES] SSO List : %s\n", oc_string(data->sso_list));
   }
 
   g_prov_step_check |= ST_EASY_SETUP_DEV_PROV;
   if (is_easy_setup_step_done()) {
     oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
   }
-  st_print_log("[Easy_Setup] dev_conf_prov_cb out\n");
+  st_print_log("[ST_ES] dev_conf_prov_cb out\n");
 }
 
 static void
@@ -346,40 +346,40 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
   if (g_prov_step_check & ST_EASY_SETUP_CLOUD_PROV)
     return;
 
-  st_print_log("[Easy_Setup] cloud_conf_prov_cb in\n");
+  st_print_log("[ST_ES] cloud_conf_prov_cb in\n");
 
   if (cloud_prov_data == NULL || cloud_prov_data->userdata == NULL) {
-    st_print_log("es_coap_cloud_conf_data is NULL\n");
+    st_print_log("[ST_ES] es_coap_cloud_conf_data is NULL\n");
     g_easy_setup_status = EASY_SETUP_FAIL;
     oc_set_delayed_callback(NULL, callback_handler, 0);
     return;
   }
 
   if (oc_string(cloud_prov_data->auth_code)) {
-    st_print_log("[Easy_Setup] AuthCode : %s\n",
+    st_print_log("[ST_ES] AuthCode : %s\n",
                  oc_string(cloud_prov_data->auth_code));
   }
 
   if (oc_string(cloud_prov_data->access_token)) {
-    st_print_log("[Easy_Setup] Access Token : %s\n",
+    st_print_log("[ST_ES] Access Token : %s\n",
                  oc_string(cloud_prov_data->access_token));
   }
 
   if (oc_string(cloud_prov_data->auth_provider)) {
-    st_print_log("[Easy_Setup] AuthProvider : %s\n",
+    st_print_log("[ST_ES] AuthProvider : %s\n",
                  oc_string(cloud_prov_data->auth_provider));
   }
 
   if (oc_string(cloud_prov_data->ci_server)) {
-    st_print_log("[Easy_Setup] CI Server : %s\n",
+    st_print_log("[ST_ES] CI Server : %s\n",
                  oc_string(cloud_prov_data->ci_server));
   }
 
   sc_cloud_server_conf_properties *data = cloud_prov_data->userdata;
   if (data) {
-    st_print_log("[Easy_Setup] ClientID : %s\n", oc_string(data->client_id));
-    st_print_log("[Easy_Setup] uid : %s\n", oc_string(data->uid));
-    st_print_log("[Easy_Setup] Refresh Token : %s\n",
+    st_print_log("[ST_ES] ClientID : %s\n", oc_string(data->client_id));
+    st_print_log("[ST_ES] uid : %s\n", oc_string(data->uid));
+    st_print_log("[ST_ES] Refresh Token : %s\n",
                  oc_string(data->refresh_token));
   }
 
@@ -387,7 +387,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
       !oc_string(cloud_prov_data->auth_provider) ||
       !oc_string(cloud_prov_data->ci_server) ||
       !oc_string(data->refresh_token) || !oc_string(data->uid)) {
-    st_print_log("[Easy_Setup] cloud provision info is not enough!");
+    st_print_log("[ST_ES] cloud provision info is not enough!");
     return;
   }
 
@@ -404,7 +404,7 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
   if (is_easy_setup_step_done()) {
     oc_set_delayed_callback(NULL, easy_setup_finish_handler, 0);
   }
-  st_print_log("[Easy_Setup] cloud_conf_prov_cb out\n");
+  st_print_log("[ST_ES] cloud_conf_prov_cb out\n");
 }
 
 static void
@@ -412,7 +412,7 @@ get_ap_list(sec_accesspoint **ap_list) {
   st_wifi_ap_t *scanlist = NULL;
   sec_accesspoint *list_tail = NULL;
 
-  st_print_log("[Easy_Setup] WiFi scan list -> \n");
+  st_print_log("[ST_ES] WiFi scan list -> \n");
 #ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
   st_wifi_scan(&scanlist);
 #else
@@ -438,7 +438,7 @@ get_ap_list(sec_accesspoint **ap_list) {
     if (cur->sec_type)
       oc_new_string(&(ap->security_type), cur->sec_type, strlen(cur->sec_type));
 
-    st_print_log("[Easy_Setup] ssid=%s mac=%s\n", cur->ssid, cur->mac_addr);
+    st_print_log("[ST_ES] ssid=%s mac=%s\n", cur->ssid, cur->mac_addr);
     if (!*ap_list) {
       *ap_list = ap;
     } else {

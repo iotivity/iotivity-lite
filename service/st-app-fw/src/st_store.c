@@ -44,7 +44,7 @@ st_store_load(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
   if (!buf) {
-    st_print_log("[ST_Store] alloc failed!");
+    st_print_log("[ST_STORE] alloc failed!");
     return -1;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */

@@ -252,11 +252,11 @@ void
 st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
 {
   if (g_soft_ap.is_soft_ap_on) {
-    st_print_log("[St_Port] Soft AP is already turned on\n");
+    st_print_log("[ST_PORT] Soft AP is already turned on\n");
     return;
   }
 
-  st_print_log("[St_Port] st_turn_on_soft_AP\n");
+  st_print_log("[ST_PORT] st_turn_on_soft_AP\n");
 
   if (oc_string(g_soft_ap.ssid)) {
     oc_free_string(&g_soft_ap.ssid);
@@ -279,14 +279,14 @@ st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel)
   st_cond_wait(g_soft_ap.cv, g_soft_ap.mutex);
   st_mutex_unlock(g_soft_ap.mutex);
 
-  st_print_log("[St_Port] st_turn_on_soft_AP success\n");
+  st_print_log("[ST_PORT] st_turn_on_soft_AP success\n");
 }
 
 static int
 system_ret_check(int ret)
 {
   if (ret == -1 || ret == 127) {
-    st_print_log("[St_Port] system() invoke error(%d).\n", ret);
+    st_print_log("[ST_PORT] system() invoke error(%d).\n", ret);
     return -1;
   }
   return 0;
@@ -296,10 +296,10 @@ void
 st_turn_off_soft_AP(void)
 {
   if (!g_soft_ap.is_soft_ap_on) {
-    st_print_log("[St_Port] soft AP is already turned off\n");
+    st_print_log("[ST_PORT] soft AP is already turned off\n");
   }
 
-  st_print_log("[St_Port] st_turn_off_soft_AP\n");
+  st_print_log("[ST_PORT] st_turn_off_soft_AP\n");
   st_mutex_lock(g_soft_ap.mutex);
   if (g_soft_ap.is_soft_ap_on) {
     // Platform specific funtion for stopping Soft AP
@@ -307,7 +307,7 @@ st_turn_off_soft_AP(void)
     st_thread_cancel(g_soft_ap.thread);
     g_soft_ap.is_soft_ap_on = 0;
   }
-  st_print_log("[St_Port] st_turn_off_soft_AP success.\n");
+  st_print_log("[ST_PORT] st_turn_off_soft_AP success.\n");
 
 exit:
   st_thread_destroy(g_soft_ap.thread);
@@ -330,7 +330,7 @@ exit:
 int
 st_connect_wifi(const char *ssid, const char *pwd)
 {
-  st_print_log("[St_Port] st_connect_wifi in\n");
+  st_print_log("[ST_PORT] st_connect_wifi in\n");
 
   st_sleep(5);
 
@@ -339,32 +339,32 @@ st_connect_wifi(const char *ssid, const char *pwd)
   // char enc_type[20] = "aes";
 
   if (wifi_start_station() < 0) {
-    st_print_log("start station error! \n");
+    st_print_log("[ST_PORT] start station error! \n");
     return -1;
   }
 
   int retry;
   for (retry = 0; retry < 5; ++retry) {
     if (0 == wifi_join(ssid, auth_type, pwd)) {
-      st_print_log("wifi_join success\n");
+      st_print_log("[ST_PORT] wifi_join success\n");
       break;
     } else {
-      st_print_log("wifi_join failed\n");
+      st_print_log("[ST_PORT] wifi_join failed\n");
     }
   }
 
-  st_print_log("AP join done\n");
+  st_print_log("[ST_PORT] AP join done\n");
 
   for (retry = 0; retry < 5; ++retry) {
     if (0 == dhcpc_start()) {
-      st_print_log("dhcpc_start success\n");
+      st_print_log("[ST_PORT] dhcpc_start success\n");
       break;
     } else {
-      st_print_log("Get IP address failed\n");
+      st_print_log("[ST_PORT] Get IP address failed\n");
     }
   }
 
-  st_print_log("[St_Port] st_connect_wifi out\n");
+  st_print_log("[ST_PORT] st_connect_wifi out\n");
   return 0;
 }
 
@@ -393,10 +393,10 @@ soft_ap_process_routine(void *data)
 
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
-  st_print_log("[St_Port] soft_ap_handler in\n");
+  st_print_log("[ST_PORT] soft_ap_handler in\n");
 
   if (es_create_softap() == -1) {
-    st_print_log("Soft AP mode failed!!\n");
+    st_print_log("[ST_PORT] Soft AP mode failed!!\n");
     st_mutex_lock(soft_ap->mutex);
     soft_ap->is_soft_ap_on = 0;
     st_mutex_unlock(soft_ap->mutex);
@@ -409,7 +409,7 @@ soft_ap_process_routine(void *data)
   st_cond_signal(soft_ap->cv);
   st_mutex_unlock(soft_ap->mutex);
 
-  st_print_log("[St_Port] soft_ap_handler out\n");
+  st_print_log("[ST_PORT] soft_ap_handler out\n");
   st_thread_exit(NULL);
   return NULL;
 }
