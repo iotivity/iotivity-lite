@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5e3e72b9",
+        "filename": "messaging/coap/unittest/coaptest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-24T04:28:42Z",
+      "side": 1,
+      "message": "Build failed..please refer below page.\nhttps://jenkins.iotivity.org/job/iotivity-constrained-verify-linux_test/2014/console",
+      "revId": "4eaef8975bff6b13b7017901d3ecf9c8277f77fc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
