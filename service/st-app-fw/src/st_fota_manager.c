@@ -70,11 +70,11 @@ bool
 st_register_fota_cmd_handler(st_fota_cmd_cb_t cb)
 {
   if (!cb) {
-    st_print_log("Failed to register fota cmd handler - invalid parameter\n");
+    st_print_log("[ST_FM] Invalid parameter\n");
     return false;
   }
   if (g_st_fota_cmd_cb) {
-    st_print_log("Failed to register fota cmd handler - already registered\n");
+    st_print_log("[ST_FM] Already registered\n");
     return false;
   }
 

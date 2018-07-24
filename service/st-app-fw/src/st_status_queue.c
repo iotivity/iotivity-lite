@@ -31,19 +31,19 @@ int
 st_status_queue_initialize(void)
 {
   if (status_queue_mutex || status_queue_cv) {
-    st_print_log("[STASUT_Q] status queue already initialized!\n");
+    st_print_log("[ST_Q] status queue already initialized!\n");
     return -1;
   }
 
   status_queue_mutex = st_mutex_init();
   if (!status_queue_mutex) {
-    st_print_log("[STASUT_Q] st_mutex_init failed!\n");
+    st_print_log("[ST_Q] st_mutex_init failed!\n");
     return -1;
   }
 
   status_queue_cv = st_cond_init();
   if (!status_queue_cv) {
-    st_print_log("[STASUT_Q] st_cond_init failed!\n");
+    st_print_log("[ST_Q] st_cond_init failed!\n");
     st_mutex_destroy(status_queue_mutex);
     return -1;
   }
@@ -55,7 +55,7 @@ static void
 status_queue_send_signal(void)
 {
   if (!status_queue_mutex || !status_queue_cv) {
-    st_print_log("[STASUT_Q] status queue not initialized!\n");
+    st_print_log("[ST_Q] status queue not initialized!\n");
     return;
   }
 
@@ -78,13 +78,13 @@ int
 st_status_queue_add(st_status_t status)
 {
   if (!status_queue_mutex || !status_queue_cv) {
-    st_print_log("[STASUT_Q] status queue not initialized!\n");
+    st_print_log("[ST_Q] status queue not initialized!\n");
     return -1;
   }
 
   st_status_item_t *queue_item = oc_memb_alloc(&st_status_item_s);
   if (!queue_item) {
-    st_print_log("[STASUT_Q] oc_memb_alloc failed!\n");
+    st_print_log("[ST_Q] oc_memb_alloc failed!\n");
     return -1;
   }
 
@@ -101,7 +101,7 @@ st_status_item_t *
 st_status_queue_pop(void)
 {
   if (!status_queue_mutex || !status_queue_cv) {
-    st_print_log("[STASUT_Q] status queue not initialized!\n");
+    st_print_log("[ST_Q] status queue not initialized!\n");
     return NULL;
   }
 
@@ -158,7 +158,7 @@ void
 st_status_queue_deinitialize(void)
 {
   if (!status_queue_mutex || !status_queue_cv) {
-    st_print_log("[STASUT_Q] status queue not initialized!\n");
+    st_print_log("[ST_Q] status queue not initialized!\n");
     return;
   }
 
