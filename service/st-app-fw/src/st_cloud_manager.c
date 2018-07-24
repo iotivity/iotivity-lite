@@ -70,7 +70,6 @@ static oc_event_callback_retval_t send_ping(void *data);
 
 static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 10 };
 static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
-static uint8_t g_sign_in_count = 0;
 static uint16_t g_ping_interval = 1;
 
 static oc_event_callback_retval_t
@@ -125,7 +124,6 @@ st_cloud_manager_start(st_store_t *store_info, int device_index,
   context->device_index = device_index;
   context->cloud_manager_status =
     (st_cloud_manager_status_t)store_info->cloudinfo.status;
-  g_sign_in_count = 0;
 
   if (!cloud_start_process(context)) {
     goto errors;
@@ -188,9 +186,11 @@ is_retry_over(st_cloud_context_t *context)
   if (context->retry_count < MAX_RETRY_COUNT)
     return false;
 
-  context->cloud_manager_status = CLOUD_MANAGER_FAIL;
-  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-  oc_set_delayed_callback(context, callback_handler, 0);
+#ifdef OC_TCP
+  oc_connectivity_end_session(&context->cloud_ep);
+#endif
+  context->retry_count = 0;
+  cloud_start_process(context);
   return true;
 }
 
@@ -227,45 +227,41 @@ error_handler(oc_client_response_t *data, oc_trigger_t callback)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
 
   int code;
-  if (oc_rep_get_int(data->payload, "code", &code)) {
-    code = get_ci_error_code(data->code, code);
-    char *message = NULL;
-    int size;
-    if (oc_rep_get_string(data->payload, "message", &message, &size))
-      st_print_log("[ST_CM] ci message : %s (%d)\n", message, code);
-
-    switch (code) {
-    case CI_TOKEN_EXPIRED:
-      oc_remove_delayed_callback(context, callback);
-      if (context->cloud_manager_status != CLOUD_MANAGER_RE_CONNECTING)
-        context->retry_count = 0;
-      context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
-      oc_set_delayed_callback(context, refresh_token,
-                              session_timeout[context->retry_count]);
-      return;
-    case CI_DEVICE_NOT_FOUND:
-      oc_remove_delayed_callback(context, callback);
-      context->cloud_manager_status = CLOUD_MANAGER_RESET;
-      oc_set_delayed_callback(context, callback_handler, 0);
-      return;
-    case CI_INTERNAL_SERVER_ERROR:
-      break;
-    case CI_AUTHORIZATION_FAILED:
-    case CI_CERTIFICATE_FAILED:
-    case CI_UNAUTHORIZED_TOKEN:
-    case CI_FORBIDDEN:
-      context->retry_count = MAX_RETRY_COUNT;
-      break;
-    }
-  }
-
-  if (context->retry_count < MAX_RETRY_COUNT - 1)
+  if (!oc_rep_get_int(data->payload, "code", &code))
     return;
 
-  oc_remove_delayed_callback(context, callback);
-  context->cloud_manager_status = CLOUD_MANAGER_FAIL;
-  es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
-  oc_set_delayed_callback(context, callback_handler, 0);
+  code = get_ci_error_code(data->code, code);
+  char *message = NULL;
+  int size;
+  if (oc_rep_get_string(data->payload, "message", &message, &size))
+    st_print_log("[ST_CM] ci message : %s (%d)\n", message, code);
+
+  switch (code) {
+  case CI_TOKEN_EXPIRED:
+    oc_remove_delayed_callback(context, callback);
+    if (context->cloud_manager_status != CLOUD_MANAGER_RE_CONNECTING)
+      context->retry_count = 0;
+    context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
+    oc_set_delayed_callback(context, refresh_token,
+                            session_timeout[context->retry_count]);
+    break;
+  case CI_DEVICE_NOT_FOUND:
+    oc_remove_delayed_callback(context, callback);
+    context->cloud_manager_status = CLOUD_MANAGER_RESET;
+    oc_set_delayed_callback(context, callback_handler, 0);
+    break;
+  case CI_INTERNAL_SERVER_ERROR:
+    break;
+  case CI_AUTHORIZATION_FAILED:
+  case CI_CERTIFICATE_FAILED:
+  case CI_UNAUTHORIZED_TOKEN:
+  case CI_FORBIDDEN:
+    oc_remove_delayed_callback(context, callback);
+    context->cloud_manager_status = CLOUD_MANAGER_FAIL;
+    es_set_state(ES_STATE_FAILED_TO_REGISTER_TO_CLOUD);
+    oc_set_delayed_callback(context, callback_handler, 0);
+    break;
+  }
 }
 
 static bool
@@ -353,9 +349,9 @@ sign_in_handler(oc_client_response_t *data)
 
   oc_remove_delayed_callback(context, sign_in);
   context->retry_count = 0;
-  g_sign_in_count = 0;
 
-  if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP) {
+  if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP ||
+      context->cloud_manager_status == CLOUD_MANAGER_SIGNED_IN) {
     es_set_state(ES_STATE_PUBLISHING_RESOURCES_TO_CLOUD);
     oc_set_delayed_callback(context, set_dev_profile,
                             message_timeout[context->retry_count]);
@@ -376,9 +372,6 @@ sign_in(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[ST_CM] try sign in(%d)\n", context->retry_count++);
-
-  if (g_sign_in_count++ > MAX_RETRY_COUNT)
-    context->retry_count = MAX_RETRY_COUNT;
 
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
@@ -537,6 +530,8 @@ find_ping_handler(oc_client_response_t *data)
     goto error;
 
   oc_remove_delayed_callback(context, find_ping);
+  if (context->cloud_manager_status == CLOUD_MANAGER_FINISH)
+    return;
   context->retry_count = 0;
   context->cloud_manager_status = CLOUD_MANAGER_FINISH;
 
