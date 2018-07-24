@@ -1,6 +1,6 @@
-From 365d3eb05c64e9da4f323525cd6454e39860437b Mon Sep 17 00:00:00 2001
+From c2b60ba7ed864e8a95f61f25c9833fd15238a1f7 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 23 Jul 2018 13:48:35 +0300
+Date: Tue, 24 Jul 2018 15:39:45 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -417,7 +417,7 @@ index 826fefe..617ae7a 100644
  #endif /* MBEDTLS_ECDSA_GENKEY_ALT */
 
 diff --git a/library/pk.c b/library/pk.c
-index b52c73f..1985e7b 100644
+index b52c73f..c0d9fe7 100644
 --- a/library/pk.c
 +++ b/library/pk.c
 @@ -258,6 +258,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
@@ -481,21 +481,21 @@ index b52c73f..1985e7b 100644
   */
  int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_context *prv )
  {
-+#ifndef STP_MBEDTLS_OPT
++#ifndef ST_MBEDTLS_OPT
      if( pub == NULL || pub->pk_info == NULL ||
          prv == NULL || prv->pk_info == NULL ||
          prv->pk_info->check_pair_func == NULL )
-@@ -326,6 +342,10 @@ int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_conte
-     {
-         if( pub->pk_info != prv->pk_info )
-             return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
+@@ -329,6 +345,10 @@ int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_conte
+     }
+
+     return( prv->pk_info->check_pair_func( pub->pk_ctx, prv->pk_ctx ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
-     }
+ }
 
-     return( prv->pk_info->check_pair_func( pub->pk_ctx, prv->pk_ctx ) );
+ /*
 diff --git a/library/pkparse.c b/library/pkparse.c
 index e19511e..5cb5e39 100644
 --- a/library/pkparse.c
@@ -616,7 +616,7 @@ index e9b0d82..b9289e2 100644
 +  return (0);
 +#endif /* ST_MBEDTLS_OPT */
  }
- #endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C ||
+ #endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
            MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 @@ -2075,6 +2085,7 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
                                        unsigned char **p,
@@ -637,6 +637,6 @@ index e9b0d82..b9289e2 100644
  }
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
 
---
+-- 
 1.9.1
 
