@@ -18,7 +18,7 @@ make clean
 echo ${build_command}
 ${build_command}
 mkdir ${iotivity}/coverage_report
-lcov -c -d ../../ -o ${iotivity}/coverage_report/new_coverage.info && lcov --remove ${iotivity}/coverage_report/new_coverage.info 'port/unittest/*' 'deps/*' '/usr/include/*' 'api/unittest/*' 'messaging/coap/unittest/*' 'security/unittest/*' 'service/easy-setup/unittest/' 'service/cloud-access/unittest/*' 'service/resource-directory/client/unittest/*' 'service/fota/unittest/*' 'service/st-app-fw/unittest/*' -o ${iotivity}/coverage_report/main_coverage.info
+lcov -c -d ../../ -o ${iotivity}/coverage_report/new_coverage.info && lcov --remove ${iotivity}/coverage_report/new_coverage.info 'port/unittest/*' 'deps/*' '/usr/include/*' 'api/unittest/*' 'messaging/coap/unittest/*' 'security/unittest/*' 'service/easy-setup/unittest/*' 'service/cloud-access/unittest/*' 'service/resource-directory/client/unittest/*' 'service/fota/unittest/*' 'service/st-app-fw/unittest/*' -o ${iotivity}/coverage_report/main_coverage.info
 
 genhtml ${iotivity}/coverage_report/main_coverage.info --output-directory ${iotivity}/coverage_report/
 
