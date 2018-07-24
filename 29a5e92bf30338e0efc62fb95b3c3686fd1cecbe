@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9e1aba6c",
+        "filename": "include/oc_security.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-24T03:40:07Z",
+      "side": 1,
+      "message": "These rpk related APIs are also defined in oc_rpk.h duplicatedly.\nmacro with #OC_RPK is required to be braced I think.",
+      "range": {
+        "startLine": 46,
+        "startChar": 5,
+        "endLine": 46,
+        "endChar": 38
+      },
+      "revId": "29a5e92bf30338e0efc62fb95b3c3686fd1cecbe",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
