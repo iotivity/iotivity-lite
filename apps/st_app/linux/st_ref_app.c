@@ -99,7 +99,7 @@ switch_resource_change(oc_rep_t *rep)
   if (oc_rep_get_string(rep, power_prop_key, &m_power, &len)) {
     strncpy(power, m_power, len);
     power[len] = '\0';
-    printf("[ST_APP]  %s : %s\n", oc_string(rep->name), power);
+    printf("[ST_APP]  %s : %s\n", power_prop_key, power);
 
     // TODO: device specific behavior.
   }
@@ -109,7 +109,7 @@ static void
 switchlevel_resource_change(oc_rep_t *rep)
 {
   if (oc_rep_get_int(rep, dimming_prop_key, &dimmingSetting)) {
-    printf("[ST_APP]  %s : %d\n", oc_string(rep->name), dimmingSetting);
+    printf("[ST_APP]  %s : %d\n", dimming_prop_key, dimmingSetting);
 
     // TODO: device specific behavior.
   }
@@ -119,7 +119,7 @@ static void
 color_temp_resource_change(oc_rep_t *rep)
 {
   if (oc_rep_get_int(rep, ct_prop_key, &ct)) {
-    printf("[ST_APP]  %s : %d\n", oc_string(rep->name), ct);
+    printf("[ST_APP]  %s : %d\n", ct_prop_key, ct);
 
     // TODO: device specific behavior.
   }
