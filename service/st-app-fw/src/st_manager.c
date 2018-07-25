@@ -23,9 +23,9 @@
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
 #ifdef OC_SECURITY
+#include "oc_security.h"
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
-#include "security/oc_rpk.h"
 #endif
 #include "st_cloud_manager.h"
 #include "st_data_manager.h"

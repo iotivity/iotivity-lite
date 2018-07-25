@@ -30,7 +30,7 @@ extern "C" {
     #define delete pseudo_delete
     #include "oc_core_res.h"
     #undef delete
-    #include "oc_rpk.h"
+    #include "oc_security.h"
 }
 
 #define MAX_WAIT_TIME 10
