@@ -137,6 +137,8 @@ typedef struct
 #endif /* ST_CONF_ENABLED */
 } st_configuration_t;
 
+typedef enum { ST_OTM_JW = 0, ST_OTM_MFG = 2, ST_OTM_RPK = 3 } st_otm_method_t;
+
 int st_data_mgr_info_load(void);
 void st_data_mgr_info_free(void);
 void st_free_device_profile(void);

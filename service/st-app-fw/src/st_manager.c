@@ -376,8 +376,17 @@ static void
 set_otm_method(void)
 {
   st_configuration_t *conf = st_data_mgr_get_config_info();
+  int method = conf->easy_setup.ownership_transfer_method;
 
-  oc_doxm_method_t otm_method = conf->easy_setup.ownership_transfer_method;
+  oc_doxm_method_t otm_method = 0;
+  if ((st_otm_method_t)method == ST_OTM_JW) {
+    otm_method = OC_DOXM_JW;
+  } else if ((st_otm_method_t)method == ST_OTM_MFG) {
+    otm_method = OC_DOXM_MFG;
+  } else if ((st_otm_method_t)method == ST_OTM_RPK &&
+             (oc_doxm_method_t)method == OC_DOXM_RPK) {
+    otm_method = OC_DOXM_RPK;
+  }
   oc_sec_doxm(device_index, otm_method);
 }
 #endif /* OC_SECURITY */

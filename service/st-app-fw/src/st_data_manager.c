@@ -567,8 +567,9 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
 static bool
 check_valid_otm_method(int otm_method)
 {
-  if ((oc_doxm_method_t)otm_method == OC_DOXM_JW ||
-      (oc_doxm_method_t)otm_method == OC_DOXM_MFG ||
+  if ((st_otm_method_t)otm_method == ST_OTM_JW ||
+      (st_otm_method_t)otm_method == ST_OTM_MFG ||
+      (st_otm_method_t)otm_method == ST_OTM_RPK ||
       (oc_doxm_method_t)otm_method == OC_DOXM_RPK)
     return true;
 
