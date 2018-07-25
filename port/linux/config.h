@@ -27,6 +27,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_DNS_LOOKUP
 #define OC_DNS_LOOKUP_IPV6
 
+/* Maximum number of concurrent incoming requests */
+#define OC_MAX_NUM_CONCURRENT_INCOMING_REQUESTS (2)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS

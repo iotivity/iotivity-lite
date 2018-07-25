@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "config.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include <arpa/inet.h>
@@ -64,6 +65,8 @@ static pthread_mutex_t mutex;
 struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
 bool ifchange_initialized;
+static pthread_mutex_t msg_buffer_avail_mutex;
+static pthread_cond_t msg_buffer_avail_cv;
 
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
@@ -753,10 +756,25 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   return ret;
 }
 
+static void
+message_avail_cb(int num_messages)
+{
+  (void)num_messages;
+  pthread_mutex_lock(&msg_buffer_avail_mutex);
+  OC_DBG("IP message buffer available, signalling...");
+  pthread_cond_signal(&msg_buffer_avail_cv);
+  pthread_mutex_unlock(&msg_buffer_avail_mutex);
+}
+
 static void *
 network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
+
+  /* Declare exclusive fixed-size pool to throttle incoming traffic */
+  OC_MEMB_FIXED(incoming_messages, oc_message_t, OC_MAX_NUM_CONCURRENT_INCOMING_REQUESTS);
+  oc_memb_init(&incoming_messages);
+  oc_memb_set_buffers_avail_cb(&incoming_messages, message_avail_cb);
 
   fd_set setfds;
   FD_ZERO(&dev->rfds);
@@ -814,10 +832,14 @@ network_event_thread(void *data)
         }
       }
 
-      oc_message_t *message = oc_allocate_message();
-
-      if (!message) {
-        break;
+      oc_message_t *message = oc_allocate_message_from_pool(&incoming_messages);
+      while (!message) {
+        OC_DBG("No more free IP message buffer, enter waiting state...");
+        pthread_mutex_lock(&msg_buffer_avail_mutex);
+        pthread_cond_wait(&msg_buffer_avail_cv, &msg_buffer_avail_mutex);
+        pthread_mutex_unlock(&msg_buffer_avail_mutex);
+        OC_DBG("Got free IP message buffer signal...");
+        message = oc_allocate_message_from_pool(&incoming_messages);
       }
 
       message->endpoint.device = dev->device;

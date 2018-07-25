@@ -55,6 +55,10 @@ OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
 OC_LIST(tls_peers);
 
+OC_MEMB_FIXED(in_decrypt_msgs, oc_message_t, OC_MAX_NUM_CONCURRENT_INCOMING_REQUESTS);
+static pthread_mutex_t msg_buffer_avail_mutex;
+static pthread_cond_t msg_buffer_avail_cv;
+
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
@@ -121,6 +125,16 @@ static const int anon_ciphers[12] = {
   0
 };
 #endif /* OC_CLIENT */
+
+static void
+message_avail_cb(int num_messages)
+{
+  (void)num_messages;
+  pthread_mutex_lock(&msg_buffer_avail_mutex);
+  OC_DBG("Decrypt message buffer available, signalling...");
+  pthread_cond_signal(&msg_buffer_avail_cv);
+  pthread_mutex_unlock(&msg_buffer_avail_mutex);
+}
 
 #ifdef OC_DEBUG
 static void
@@ -683,6 +697,9 @@ oc_tls_init_context(void)
 
   mbedtls_ssl_conf_handshake_timeout(&client_conf[0], 2500, 20000);
 #endif /* OC_CLIENT */
+
+  oc_memb_init(&in_decrypt_msgs);
+  oc_memb_set_buffers_avail_cb(&in_decrypt_msgs, message_avail_cb);
   return 0;
 dtls_init_err:
   OC_ERR("oc_tls: TLS initialization error");
@@ -1514,7 +1531,16 @@ read_application_data(oc_tls_peer_t *peer)
     }
 #endif /* OC_CLIENT */
   } else {
-    oc_message_t *message = oc_allocate_message();
+    oc_message_t *message = oc_allocate_message_from_pool(&in_decrypt_msgs);
+    while (!message) {
+      OC_DBG("No more free decrypt message buffer, enter waiting state...");
+      pthread_mutex_lock(&msg_buffer_avail_mutex);
+      pthread_cond_wait(&msg_buffer_avail_cv, &msg_buffer_avail_mutex);
+      pthread_mutex_unlock(&msg_buffer_avail_mutex);
+      OC_DBG("Got free decrypt message buffer signal...");
+      message = oc_allocate_message_from_pool(&in_decrypt_msgs);
+    }
+
     if (message) {
       memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
