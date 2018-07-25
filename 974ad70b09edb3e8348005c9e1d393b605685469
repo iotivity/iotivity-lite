@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9e4bdaaf",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-25T08:14:07Z",
+      "side": 1,
+      "message": "Why added number one?",
+      "range": {
+        "startLine": 259,
+        "startChar": 72,
+        "endLine": 259,
+        "endChar": 75
+      },
+      "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_be4e9ebf",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-25T08:14:07Z",
+      "side": 1,
+      "message": "why not use direct that obs-\u003enext",
+      "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
