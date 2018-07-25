@@ -316,6 +316,9 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
+  if (resource->num_observers > 0) {
+    coap_remove_observer_by_resource(resource);
+  }
   oc_list_remove(app_resources, resource);
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
