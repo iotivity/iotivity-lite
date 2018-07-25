@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_decc4238",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-07-25T08:21:23Z",
+      "side": 1,
+      "message": "How about change to ST_DM?",
+      "range": {
+        "startLine": 584,
+        "startChar": 19,
+        "endLine": 584,
+        "endChar": 30
+      },
+      "revId": "dc0e649004f69e3bedc9cd236a33ffa8095986e3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
