@@ -17,9 +17,12 @@
  ****************************************************************************/
 
 #include "st_status_queue.h"
+#include "oc_clock.h"
 #include "oc_helpers.h"
 #include "st_port.h"
 #include "util/oc_memb.h"
+
+#define MAX_WAIT_WIME (1)
 
 OC_LIST(g_main_status_queue);
 OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
@@ -68,7 +71,8 @@ int
 st_status_queue_wait_signal(void)
 {
   st_mutex_lock(status_queue_mutex);
-  int ret = st_cond_wait(status_queue_cv, status_queue_mutex);
+  oc_clock_time_t wait_time = oc_clock_time() + MAX_WAIT_WIME * OC_CLOCK_SECOND;
+  int ret = st_cond_timedwait(status_queue_cv, status_queue_mutex, wait_time);
   st_mutex_unlock(status_queue_mutex);
 
   return ret;

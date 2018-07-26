@@ -492,9 +492,7 @@ st_manager_start(void)
   while (quit != 1) {
     item = st_status_queue_pop();
     if (!item && quit != 1) {
-      if (st_status_queue_wait_signal() != 0) {
-        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-      }
+      st_status_queue_wait_signal();
       continue;
     }
     g_main_status = item->status;
