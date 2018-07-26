@@ -712,6 +712,7 @@ oc_sec_load_certs(int device)
           OC_ERR(
             " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n",
             -ret);
+          oc_mem_free(cacert);
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgtrustca loaded ");
@@ -740,6 +741,7 @@ oc_sec_load_certs(int device)
                                    c->mfgkeylen, NULL, 0);
         if (ret < 0) {
           OC_ERR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret);
+          oc_mem_free(pkey);
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgkey loaded ");
@@ -749,6 +751,9 @@ oc_sec_load_certs(int device)
       c = c->next;
     }
     c = (oc_sec_cred_t *)oc_list_head(creds->creds);
+    if (c == NULL && pkey) {
+      oc_mem_free(pkey);
+    }
     while (c != NULL) {
       for (j = 0; j < c->ownchainlen; j++) {
         if (c->mfgowncertlen != 0) {
@@ -765,6 +770,10 @@ oc_sec_load_certs(int device)
             OC_ERR(
               " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n",
               -ret);
+            oc_mem_free(owncert);
+            if (pkey) {
+              oc_mem_free(pkey);
+            }
             goto tls_certs_load_err;
           } else {
             OC_DBG("oc_tls: mfgowncert loaded ");

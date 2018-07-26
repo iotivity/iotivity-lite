@@ -28,6 +28,7 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#include "util/oc_mem.h"
 #include "oc_otm_state.h"
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
@@ -335,7 +336,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       goto next_item;
                     if (size != 24) {
                       OC_ERR("oc_cred: Invalid key");
-                      return false;
+                      goto error_exit;
                     }
                     got_key = true;
                     memcpy(key, p, size);
@@ -349,16 +350,20 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   if (mfgcert_flag) {
 #ifdef OC_DYNAMIC_ALLOCATION
                     mfgkey = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
-#else
-                    oc_abort("alloc failed");
-#endif
+                    if (mfgkey == NULL) {
+                      OC_ERR("memory alloc");
+                      goto error_exit;
+                    }
                     memcpy(mfgkey, p, size);
                     mfgkeylen = size;
                     mfgkey_flag = true;
+#else
+                    oc_abort("alloc failed");
+#endif
                   } else {
                     if (size != 16) {
                       OC_ERR("oc_cred: Invalid key");
-                      return false;
+                      goto error_exit;
                     }
                     memcpy(key, p, 16);
                     got_key = true;
@@ -389,18 +394,25 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                        memcmp(oc_string(cred->name), "publicdata", 10) == 0) {
               while (data != NULL) {
                 len = oc_string_len(data->name);
-                if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
-                  uint8_t *p = oc_cast(data->value.string, uint8_t);
-                  int size = oc_string_len(data->value.string);
-                  if (size == 0)
-                    goto next_item;
+                if ((len == 4) &&
+                    memcmp(oc_string(data->name), "data", 4) == 0) {
 #ifdef OC_DYNAMIC_ALLOCATION
-                  cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
+                  if (mfgcert_flag || mfgtrustca_flag) {
+                    uint8_t *p = oc_cast(data->value.string, uint8_t);
+                    int size = oc_string_len(data->value.string);
+                    if (size == 0)
+                      goto next_item;
+                    cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
+                    if (cert == NULL) {
+                      OC_ERR("memory alloc");
+                      goto error_exit;
+                    }
+                    memcpy(cert, p, size);
+                    certlen = size;
+                  }
 #else
                   oc_abort("alloc failed");
 #endif
-                  memcpy(cert, p, size);
-                  certlen = size;
                 }
                 data = data->next;
               }
@@ -414,7 +426,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
         if (non_empty) {
           oc_uuid_t subject;
           if (!subjectuuid) {
-            return false;
+            OC_ERR("invalid subject uuid");
+            goto error_exit;
           }
           oc_str_to_uuid(oc_string(*subjectuuid), &subject);
           if (!unique_credid(credid, device)) {
@@ -425,7 +438,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           }
           oc_sec_cred_t *credobj = oc_sec_get_cred(&subject, device);
           if (!credobj) {
-            return false;
+            OC_ERR("get cred");
+            goto error_exit;
           }
           credobj->credid = credid;
           credobj->credtype = credtype;
@@ -457,23 +471,34 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             credobj->mfgowncertlen = (int *)oc_mem_realloc(
               credobj->mfgowncertlen, sizeof(int) * (credobj->ownchainlen + 1));
             if (credobj->mfgowncertlen == NULL) {
-              return false;
+              OC_ERR("memory alloc");
+              goto error_exit;
             }
 #else
             oc_abort("alloc failed");
 #endif
             credobj->mfgowncertlen[credobj->ownchainlen] = certlen;
             credobj->ownchainlen += 1;
+
+            if (mfgkey_flag) {
+              credobj->mfgkey = mfgkey;
+              credobj->mfgkeylen = mfgkeylen;
+            }
           } else if (mfgtrustca_flag) {
             credobj->mfgtrustca = cert;
             credobj->mfgtrustcalen = certlen;
           }
-          if (mfgkey_flag) {
-            credobj->mfgkey = mfgkey;
-            credobj->mfgkeylen = mfgkeylen;
-          }
         }
         creds_array = creds_array->next;
+        continue;
+      error_exit:
+        if (cert) {
+          oc_mem_free(cert);
+        }
+        if (mfgkey) {
+          oc_mem_free(mfgkey);
+        }
+        return false;
       }
     } break;
     default:
