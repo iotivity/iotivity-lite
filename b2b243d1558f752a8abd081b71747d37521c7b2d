@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_19ed24c4",
+        "filename": "include/oc_base64.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-26T23:51:40Z",
+      "side": 1,
+      "message": "Most likely too much too late:\n\nthe declaration of this encoder seemed a little odd to me.\n\nThe whole point of doing base64 encoding is to create a string that represents a byte array. So to me this should have been.\n\n  ssize_t oc_base_encode(const uint8_t *input, size_t input_len, char*output_buffer, size_t output_buffer_len);\n\nthe output_buffer is a char* since it represents a string.\n\nThis however causes issues in the oc_base64_decode since we are doing in place decoding. The problem decoding is place is the different data types. The input should be `char*` and the output `uint8_t`.\n\nSince it is easy to cast from uint8_t* to char* and vice versa I left the output_buffer and `uint8_t`. not sure if it would have made more since to makeoc_base64_decode look ass follows.\n\n  ssize_t oc_base64_decode(const char *input_str, size_t input_len, uint8_t *output_buffer, size_t output_buffer_len );\n\nThen if you want to decode in place you just pass the buffer to both input and output.\n\n  base64_encoded_string; //already encoded using oc_base_encode\n  oc_base64_decode(base64_encoded_string, strlen(base64_encoded_string), base64_encoded_string, strlen(base64_encoded_string))\n\nJust my thought after working with the code.",
+      "revId": "b2b243d1558f752a8abd081b71747d37521c7b2d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
