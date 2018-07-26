@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_b99fd85e",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-26T17:42:39Z",
+      "side": 1,
+      "message": "This should probably be oc_string_len(obs-\u003eurl) or (oc_string_len(resc-\u003euri) - 1).",
+      "range": {
+        "startLine": 260,
+        "startChar": 42,
+        "endLine": 260,
+        "endChar": 65
+      },
+      "revId": "70c44e00a9fa145318f2222f2ab79e561f885c83",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_999c946b",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-07-26T17:42:39Z",
+      "side": 1,
+      "message": "Why do we need to check these conditions if the 1st one passes? I believe all observer objects would point to their oc_resource_t anyway.",
+      "range": {
+        "startLine": 258,
+        "startChar": 31,
+        "endLine": 260,
+        "endChar": 72
+      },
+      "revId": "70c44e00a9fa145318f2222f2ab79e561f885c83",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
