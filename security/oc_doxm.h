@@ -40,7 +40,9 @@ typedef bool (*oc_sec_change_owner_cb_t)(void);
 typedef enum
 {
   OC_DOXM_JW = 0,
+#ifdef OC_MFG
   OC_DOXM_MFG = 1,
+#endif /* OC_MFG */
   OC_DOXM_RPK = 0xFF03
 } oc_doxm_method_t;
 
