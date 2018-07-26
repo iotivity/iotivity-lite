@@ -47,7 +47,7 @@
 #include "oc_svr.h"
 #include "oc_tls.h"
 #include "oc_doxm.h"
-#include "oc_rpk.h"
+#include "oc_security.h"
 
 #define PBKDF_ITERATIONS 1000
 
@@ -854,6 +854,12 @@ oc_sec_set_cpubkey_and_token_load(oc_sec_get_cpubkey_and_token cpubkey_and_token
 }
 
 void
+oc_sec_unset_cpubkey_and_token_load()
+{
+  g_oc_sec_get_cpubkey_and_token = NULL;
+}
+
+void
 oc_sec_set_own_key_load(oc_sec_get_own_key own_key_cb)
 {
   if(NULL == own_key_cb) {
@@ -861,6 +867,12 @@ oc_sec_set_own_key_load(oc_sec_get_own_key own_key_cb)
     return;
   }
   g_oc_sec_get_own_key = own_key_cb;
+}
+
+void
+oc_sec_unset_own_key_load()
+{
+  g_oc_sec_get_own_key = NULL;
 }
 
 static bool

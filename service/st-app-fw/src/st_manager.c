@@ -378,7 +378,7 @@ set_otm_method(void)
   st_configuration_t *conf = st_data_mgr_get_config_info();
 
   oc_doxm_method_t otm_method = conf->easy_setup.ownership_transfer_method;
-  oc_sec_doxm(device_index, otm_method);
+  oc_set_doxm(otm_method);
 }
 #endif /* OC_SECURITY */
 
@@ -735,7 +735,12 @@ st_register_rpk_handler(st_rpk_handle_cpubkey_and_token_cb_t pubkey_cb,
 void
 st_unregister_rpk_handler(void)
 {
-  // TODO: security unset api need.
+#ifdef OC_SECURITY
+  oc_sec_unset_cpubkey_and_token_load();
+  oc_sec_unset_own_key_load();
+#else  /* OC_SECURITY */
+  st_print_log("[ST_MGR] Un-secured build can't handle RPK\n");
+#endif /* !OC_SECURITY */
 }
 
 static void
