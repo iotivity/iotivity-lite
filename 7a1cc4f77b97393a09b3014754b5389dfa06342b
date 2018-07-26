@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_59c16c7f",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-07-26T10:43:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_190fe431",
+      "range": {
+        "startLine": 381,
+        "startChar": 2,
+        "endLine": 381,
+        "endChar": 40
+      },
+      "revId": "7a1cc4f77b97393a09b3014754b5389dfa06342b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_7913905c",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2018-07-26T00:40:18Z",
       "side": 1,
       "message": "Can you add unset api for rpk handler?",
+      "range": {
+        "startLine": 738,
+        "startChar": 2,
+        "endLine": 738,
+        "endChar": 35
+      },
+      "revId": "7a1cc4f77b97393a09b3014754b5389dfa06342b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b9beb8fd",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-07-26T10:43:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7913905c",
       "range": {
         "startLine": 738,
         "startChar": 2,
