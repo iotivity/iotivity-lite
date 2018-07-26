@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f9b680db",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-26T21:39:05Z",
+      "side": 0,
+      "message": "I thought that I had accidentally added this as a copy paste error. It was causing error because the linker was complaining about multiple defines of values.\n\nThis probably worked due to the error that I actually fixed by moving the location of the object files.\n\nNote I reference this stackoverflow question when fixing this error:\n\nhttps://stackoverflow.com/questions/12272864/linker-error-on-linux-undefined-reference-to",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 103
+      },
+      "revId": "24b0e16fcf42453310f1883bfa9e13e38bcf283d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}

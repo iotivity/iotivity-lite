@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_d9bbbcc2",
+        "filename": "include/oc_base64.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-07-26T21:39:05Z",
+      "side": 1,
+      "message": "added to pull in the `size_t`.",
+      "revId": "e38d7862aba3cb371c2fb4fc25be3ae09f0b92e3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
