@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9e03da0e",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-07-26T00:05:41Z",
+      "side": 1,
+      "message": "setting  enum vlaue would be better instead of \u00270\u0027",
+      "revId": "badf6820b2e8c736e52f5833c0fd8e5e98165394",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
