@@ -994,6 +994,7 @@ TEST(Security, PstatDecode)
   oc_mem_free(buf);
 }
 
+#if !defined(OC_SPEC_VER_OIC)
 TEST(Security, PstatSecReset)
 {
   long ret = 0;
@@ -1013,12 +1014,12 @@ TEST(Security, PstatSecReset)
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
   }
-  oc_mem_free(buf);
 
+  oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_request_t *request = (oc_request_t *)oc_mem_malloc(sizeof(oc_request_t));
   request->resource = (oc_resource_t *)oc_mem_malloc(sizeof(oc_resource_t));
   request->resource->device = dev;
-  oc_new_string(&request->resource->name, "patst", 5);
+  oc_new_string(&request->resource->name, "pstat", 5);
   request->response = (oc_response_t *)oc_mem_malloc(sizeof(oc_response_t));
   request->response->response_buffer =
     (oc_response_buffer_t *)oc_mem_malloc(sizeof(oc_response_buffer_t));
@@ -1039,6 +1040,7 @@ TEST(Security, PstatSecReset)
                                 "coaps://127.0.0.1:2048/oic/sec/pstat");
   post_pstat(request, OC_IF_BASELINE, NULL);
   post_pstat(request, OC_IF_S, NULL);
+  oc_mem_free(buf);
   oc_free_rep(request->request_payload);
   oc_mem_free(request->response->response_buffer->buffer);
   oc_mem_free(request->response->response_buffer);
@@ -1046,6 +1048,7 @@ TEST(Security, PstatSecReset)
   oc_mem_free((void *)request->query);
   oc_mem_free(request);
 }
+#endif // !defined(OC_SPEC_VER_OIC)
 TEST(Security, PstatOcSecReset)
 {
   oc_sec_reset();
