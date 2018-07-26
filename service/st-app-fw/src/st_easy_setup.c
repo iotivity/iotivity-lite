@@ -20,8 +20,8 @@
 #include "oc_helpers.h"
 #include "oc_network_monitor.h"
 #ifdef OC_SECURITY
+#include "oc_security.h"
 #include "security/oc_acl.h"
-#include "security/oc_otm_state.h"
 #endif
 #include "st_port.h"
 #include "st_store.h"

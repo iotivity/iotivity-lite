@@ -18,12 +18,12 @@
 #define OC_DOXM_H
 
 #include "oc_uuid.h"
+#include "oc_security.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 
 #include "oc_ri.h"
-#include <stdbool.h>
 
 typedef struct
 {
@@ -35,15 +35,6 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
-typedef bool (*oc_sec_change_owner_cb_t)(void);
-
-typedef enum
-{
-  OC_DOXM_JW = 0,
-  OC_DOXM_MFG = 1,
-  OC_DOXM_RPK = 0xFF03
-} oc_doxm_method_t;
-
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device);
@@ -53,5 +44,4 @@ void oc_sec_doxm(int device, oc_doxm_method_t oxmsel);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
-void oc_sec_set_owner_cb(oc_sec_change_owner_cb_t cb);
 #endif /* OC_DOXM_H */
