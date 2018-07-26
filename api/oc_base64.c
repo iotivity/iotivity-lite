@@ -21,8 +21,8 @@
  */
 
 int
-oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
-                 int output_buffer_len)
+oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
+                 size_t output_buffer_len)
 {
   /* The Base64 alphabet. This table provides a mapping from 6-bit binary
    * values to Base64 characters.
@@ -35,13 +35,14 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
                            'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
                            '8', '9', '+', '/', '=' };
   uint8_t val = 0;
-  int i, j = 0;
+  size_t i;
+  int j = 0;
 
   /* Calculate the length of the Base64 encoded output.
    * Every sequence of 3 bytes (with padding, if necessary)
    * is represented as 4 bytes (characters) in Base64.
    */
-  int output_len = (input_len / 3) * 4;
+  size_t output_len = (input_len / 3) * 4;
   if (input_len % 3 != 0) {
     output_len += 4;
   }
@@ -50,6 +51,10 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
   if (output_buffer_len < output_len)
     return -1;
 
+  /* handle the case that an empty input is provided */
+  if (input_len == 0) {
+    output_buffer[0] = '\0';
+  }
   /* Process every byte of input by keeping state across 3 byte blocks
    * to capture 4 6-bit binary blocks that each map to a Base64 character.
    */
@@ -104,7 +109,7 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
   /* Any leftover space in the encoded string is padded with the
    * = character.
    */
-  while (j < output_len) {
+  while (j < (int)output_len) {
     output_buffer[j++] = '=';
   }
 
@@ -112,10 +117,16 @@ oc_base64_encode(const uint8_t *input, int input_len, uint8_t *output_buffer,
 }
 
 int
-oc_base64_decode(uint8_t *str, int len)
+oc_base64_decode(uint8_t *str, size_t len)
 {
+  // All valid Base64 encoded strings will be multiples of 4
+  if (0 != (len % 4))
+  {
+    return -1;
+  }
   /* The Base64 input string is decoded in-place. */
-  int i = 0, j = 0;
+  size_t i = 0;
+  int j = 0;
   unsigned char val_c = 0, val_s = 0;
 
   /* Process every input character */
@@ -139,7 +150,18 @@ oc_base64_decode(uint8_t *str, int len)
      * The input buffer str now contains the fully decoded string.
      */
     else if (val_s == '=')
+    {
+      // Padding character "=" can only show up as last 2 characters
+      if (i < len - 2)
+      {
+        return -1;
+      }
+      if (i == len - 2 && '=' != str[i+1])
+      {
+        return -1;
+      }
       break;
+    }
     /* Return an error if we encounter a character that is outside
      * of the Base64 alphabet.
      */
@@ -174,6 +196,7 @@ oc_base64_decode(uint8_t *str, int len)
     }
   }
 
+  /* zero out the remaining bytes */
   for (i = j; i < len; i++) {
     str[i] = 0;
   }

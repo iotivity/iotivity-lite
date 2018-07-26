@@ -17,10 +17,11 @@
 #ifndef OC_BASE64_H
 #define OC_BASE64_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-int oc_base64_encode(const uint8_t *input, int input_len,
-                     uint8_t *output_buffer, int output_buffer_len);
-int oc_base64_decode(uint8_t *str, int len);
+int oc_base64_encode(const uint8_t *input, size_t input_len,
+                     uint8_t *output_buffer, size_t output_buffer_len);
+int oc_base64_decode(uint8_t *str, size_t len);
 
 #endif /* OC_BASE64_H */
