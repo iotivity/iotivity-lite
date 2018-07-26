@@ -81,6 +81,7 @@ callback_handler(void *data)
   return OC_EVENT_DONE;
 }
 
+#ifdef OC_SESSION_EVENTS
 static void
 session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
@@ -106,6 +107,32 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     cloud_start_process(context);
   }
 }
+#endif /* OC_SESSION_EVENTS */
+
+#ifdef OC_NETWORK_MONITOR
+static void
+interface_event_handler(oc_interface_event_t event)
+{
+  st_print_log("[ST_CM] network interface (%s)\n", (event) ? "UP" : "DOWN");
+  st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
+  if (!context)
+    return;
+
+  if (event == NETWORK_INTERFACE_DOWN &&
+      context->cloud_manager_status == CLOUD_MANAGER_FINISH) {
+    oc_remove_delayed_callback(context, send_ping);
+    context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
+    oc_set_delayed_callback(context, callback_handler, 0);
+#ifdef OC_TCP
+    oc_connectivity_end_session(&context->cloud_ep);
+#endif
+  } else if (event == NETWORK_INTERFACE_UP &&
+             context->cloud_manager_status == CLOUD_MANAGER_RE_CONNECTING) {
+    context->retry_count = 0;
+    cloud_start_process(context);
+  }
+}
+#endif /* OC_NETWORK_MONITOR */
 
 int
 st_cloud_manager_start(st_store_t *store_info, int device_index,
@@ -128,9 +155,13 @@ st_cloud_manager_start(st_store_t *store_info, int device_index,
   if (!cloud_start_process(context)) {
     goto errors;
   }
-
   if (oc_list_length(st_cloud_context_list) == 0) {
+#ifdef OC_SESSION_EVENTS
     oc_add_session_event_callback(session_event_handler);
+#endif /* OC_SESSION_EVENTS */
+#ifdef OC_NETWORK_MONITOR
+    oc_add_network_interface_event_callback(interface_event_handler);
+#endif /* OC_NETWORK_MONITOR */
   }
 
   oc_list_add(st_cloud_context_list, context);
@@ -162,9 +193,13 @@ st_cloud_manager_stop(int device_index)
 
   oc_list_remove(st_cloud_context_list, context);
   oc_memb_free(&st_cloud_context_s, context);
-
   if (oc_list_length(st_cloud_context_list) == 0) {
+#ifdef OC_SESSION_EVENTS
     oc_remove_session_event_callback(session_event_handler);
+#endif /* OC_SESSION_EVENTS */
+#ifdef OC_NETWORK_MONITOR
+    oc_remove_network_interface_event_callback(interface_event_handler);
+#endif /* OC_NETWORK_MONITOR */
   }
 }
 
