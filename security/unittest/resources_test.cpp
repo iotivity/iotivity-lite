@@ -989,7 +989,9 @@ TEST(Security, PstatDecode)
   oc_parse_rep(buf, size, &rep);
   EXPECT_FALSE(oc_sec_decode_pstat(rep, false, dev));
   EXPECT_TRUE(oc_sec_decode_pstat(rep, true, dev));
+#ifdef OC_MFG
   oc_sec_load_certs(dev);
+#endif /* OC_MFG */
   oc_free_rep(rep);
   oc_mem_free(buf);
 }

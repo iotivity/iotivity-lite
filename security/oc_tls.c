@@ -690,6 +690,7 @@ dtls_init_err:
   return -1;
 }
 
+#ifdef OC_MFG
 bool
 oc_sec_load_certs(int device)
 {
@@ -803,6 +804,7 @@ tls_certs_load_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
 }
+#endif /* OC_MFG */
 
 static int
 derive_crypto_key_from_password(const unsigned char *passwd, size_t pLen,
