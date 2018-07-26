@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_1ed7cac2",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-26T06:12:42Z",
+      "side": 1,
+      "message": "When obdserver is added, uri is came from coap packet which don\u0027t have \u0027/\u0027 at the front of uri. So +1 can make resource\u0027s uri is compared from second value.",
+      "parentUuid": "da33351e_9e4bdaaf",
+      "range": {
+        "startLine": 259,
+        "startChar": 72,
+        "endLine": 259,
+        "endChar": 75
+      },
+      "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_b91d1869",
         "filename": "messaging/coap/observe.c",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b9b99830",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-26T06:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_b91d1869",
+      "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_be4e9ebf",
         "filename": "messaging/coap/observe.c",
         "patchSetId": 2
@@ -53,6 +95,24 @@
       "writtenOn": "2018-07-25T08:14:07Z",
       "side": 1,
       "message": "why not use direct that obs-\u003enext",
+      "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7e02563f",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-07-26T06:12:42Z",
+      "side": 1,
+      "message": "In case obs is removed, obs-\u003enext can\u0027t use.",
+      "parentUuid": "da33351e_be4e9ebf",
       "revId": "974ad70b09edb3e8348005c9e1d393b605685469",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
