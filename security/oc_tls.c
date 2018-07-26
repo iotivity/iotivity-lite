@@ -712,6 +712,7 @@ oc_sec_load_certs(int device)
           OC_ERR(
             " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n",
             -ret);
+          oc_mem_free(cacert);
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgtrustca loaded ");
@@ -740,6 +741,7 @@ oc_sec_load_certs(int device)
                                    c->mfgkeylen, NULL, 0);
         if (ret < 0) {
           OC_ERR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret);
+          oc_mem_free(pkey);
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgkey loaded ");
@@ -749,6 +751,9 @@ oc_sec_load_certs(int device)
       c = c->next;
     }
     c = (oc_sec_cred_t *)oc_list_head(creds->creds);
+    if (c == NULL && pkey) {
+      oc_mem_free(pkey);
+    }
     while (c != NULL) {
       for (j = 0; j < c->ownchainlen; j++) {
         if (c->mfgowncertlen != 0) {
@@ -765,6 +770,10 @@ oc_sec_load_certs(int device)
             OC_ERR(
               " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n",
               -ret);
+            oc_mem_free(owncert);
+            if (pkey) {
+              oc_mem_free(pkey);
+            }
             goto tls_certs_load_err;
           } else {
             OC_DBG("oc_tls: mfgowncert loaded ");
@@ -970,7 +979,7 @@ oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len)
     OC_ERR("%s: NULL params", __func__);
     return false;
   }
-  int master_key_len = 0;
+  int ret, master_key_len = 0;
   uint8_t master_key[32];
   uint8_t session_master[48];
   mbedtls_md_context_t ctx;
@@ -983,16 +992,24 @@ oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len)
     OC_ERR("%s: unable to get peer", __func__);
     return false;
   }
-  if (&(peer->ssl_ctx) == NULL || peer->ssl_ctx.session->master == NULL) {
-    OC_ERR("%s: unable to get master", __func__);
-    return false;
-  }
   memcpy(session_master, peer->ssl_ctx.session->master, 48);
   mbedtls_md_init(&ctx);
-  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-  mbedtls_md_hmac_starts(&ctx, session_master, 48);
-  mbedtls_md_hmac_update(&ctx, (const unsigned char *) master_key, master_key_len);
-  mbedtls_md_hmac_finish(&ctx, hmac);
+  if ((ret = mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1)) != 0) {
+    OC_ERR("mbedtls_md_setup: %d", ret);
+    return false;
+  }
+  if ((ret = mbedtls_md_hmac_starts(&ctx, session_master, 48)) != 0) {
+    OC_ERR("mbedtls_md_hmac_starts: %d", ret);
+    return false;
+  }
+  if ((ret = mbedtls_md_hmac_update(&ctx, (const unsigned char *) master_key, master_key_len)) != 0) {
+    OC_ERR("mbedtls_md_hmac_update: %d", ret);
+    return false;
+  }
+  if ((ret = mbedtls_md_hmac_finish(&ctx, hmac)) != 0) {
+    OC_ERR("mbedtls_md_hmac_finish: %d", ret);
+    return false;
+  }
   mbedtls_md_free(&ctx);
   *hmac_len = 32;
   return true;
