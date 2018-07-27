@@ -32,8 +32,7 @@
 #define SC_RSRVD_ES_RES_TYPE_ACCESSPOINT_LIST "x.com.samsung.acesspointlist"
 #define SC_RSRVD_ES_RES_NAME_ACCESSPOINT_LIST "x.network.wifi.ap"
 
-#define SC_RSRVD_ES_ATTR_NAME_PREFIX "x.com.samsung."
-#define SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN 14
+#define SC_RSRVD_ES_ATTR_NAME_PREFIX "x.com.samsung"
 
 #ifndef SC_ES_OPT
 #define SC_RSRVD_ES_VENDOR_DEVICE_TYPE "dt"
@@ -102,12 +101,10 @@ sec_provisioning_res_t *g_sec_prov;
 sec_accesspoints_res_t *g_sec_aplist;
 
 static void
-construct_attribute_name(char res[], char *attr)
+construct_vnd_attr_name(char *vnd_attr, int vnd_attr_size, char *attr_name)
 {
-  int attr_len = strlen(attr);
-  memcpy(res, SC_RSRVD_ES_ATTR_NAME_PREFIX, SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN);
-  memcpy(res + SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN, attr, attr_len);
-  res[SC_RSRVD_ES_ATTR_NAME_PREFIX_LEN + attr_len] = '\0';
+  snprintf(vnd_attr, vnd_attr_size, "%s.%s",
+           SC_RSRVD_ES_ATTR_NAME_PREFIX, attr_name);
 }
 
 sc_properties *
@@ -143,7 +140,7 @@ read_sc_string_prop_from_payload(oc_rep_t *payload, char *prop_key,
   int str_len = 0;
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
-  construct_attribute_name(attr_name, prop_key);
+  construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN, prop_key);
   if (oc_rep_get_string(payload, attr_name, &str_val, &str_len)) {
     es_new_string(prop_value, str_val);
     return true;
@@ -159,7 +156,7 @@ read_sc_int_prop_from_payload(oc_rep_t *payload, char *prop_key,
   int int_val = 0;
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
-  construct_attribute_name(attr_name, prop_key);
+  construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN, prop_key);
   if (oc_rep_get_int(payload, attr_name, &int_val)) {
     *prop_value = int_val;
     return true;
@@ -173,7 +170,7 @@ write_sc_string_prop_to_payload(char *prop_key, oc_string_t *prop_value)
 {
   if (prop_value && oc_string_len(*prop_value) > 0) {
     char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
-    construct_attribute_name(attr_name, prop_key);
+    construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN, prop_key);
     es_rep_set_text_string_with_keystr(root, attr_name, oc_string(*prop_value));
   }
 }
@@ -182,7 +179,7 @@ static void
 write_sc_int_prop_to_payload(char *prop_key, int prop_value)
 {
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
-  construct_attribute_name(attr_name, prop_key);
+  construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN, prop_key);
   es_rep_set_int_with_keystr(root, attr_name, prop_value);
 }
 
@@ -254,7 +251,8 @@ read_dev_conf_data(oc_rep_t *payload, void **user_data)
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
   oc_string_array_t str_arr;
   int str_arr_len;
-  construct_attribute_name(attr_name, SC_RSRVD_ES_VENDOR_LOCATION);
+  construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN,
+                           SC_RSRVD_ES_VENDOR_LOCATION);
   if (oc_rep_get_string_array(payload, attr_name, &str_arr, &str_arr_len)) {
     oc_new_string_array(&dev_prop->location, str_arr_len);
     if (oc_string_array_get_allocated_size(g_scprop->location) > 0)
@@ -474,32 +472,37 @@ construct_response_of_sec_provisioning(void)
 
   oc_rep_start_root_object();
 
-  construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_TARGETS);
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                           SC_RSRVD_ES_PROVISIONING_INFO_TARGETS);
   oc_rep_set_key(root_map, key_name);
 
   oc_rep_start_array(root_map, provisioning_targets);
   for (int i = 0; i < info->targets_size; i++) {
     oc_rep_object_array_start_item(provisioning_targets);
 
-    construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI);
     es_rep_set_text_string_with_keystr(provisioning_targets, key_name,
                                        oc_string(info->targets[i].target_di));
 
-    construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT);
     es_rep_set_text_string_with_keystr(provisioning_targets, key_name,
                                        oc_string(info->targets[i].target_rt));
 
-    construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED);
     es_rep_set_boolean_with_keystr(provisioning_targets, key_name,
                                    info->targets[i].published);
     oc_rep_object_array_end_item(provisioning_targets);
   }
   oc_rep_close_array(root, provisioning_targets);
 
-  construct_attribute_name(key_name, SC_RSRVD_ES_PROVISIONING_INFO_OWNED);
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                           SC_RSRVD_ES_PROVISIONING_INFO_OWNED);
   es_rep_set_boolean_with_keystr(root, key_name, info->owned);
 
-  construct_attribute_name(key_name,
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
                            SC_RSRVD_ES_PROVISIONING_INFO_EASY_SETUP_DI);
   es_rep_set_text_string_with_keystr(root, key_name,
                                      oc_string(info->easysetup_di));
@@ -616,44 +619,52 @@ construct_response_of_sec_aplist(sec_accesspoint *ap_list)
   char key_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
   oc_rep_start_root_object();
-  construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS);
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                           SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS);
   oc_rep_set_key(root_map, key_name);
   oc_rep_start_array(root_map, ap_items);
   while (wifi_ap) {
     oc_rep_object_array_start_item(ap_items);
 
     OC_DBG("Channel - %s", oc_string(wifi_ap->channel));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->channel));
 
     OC_DBG("Encryption Type - %s", oc_string(wifi_ap->enc_type));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_ENCRYPTION_TYPE);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_ENCRYPTION_TYPE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->enc_type));
 
     OC_DBG("Mac address - %s", oc_string(wifi_ap->mac_address));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->mac_address));
 
     OC_DBG("Max rate - %s", oc_string(wifi_ap->max_rate));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->max_rate));
 
     OC_DBG("RSSI - %s", oc_string(wifi_ap->rssi));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_RSSI);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_RSSI);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->rssi));
 
     OC_DBG("Security type - %s", oc_string(wifi_ap->security_type));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->security_type));
 
     OC_DBG("SSID - %s", oc_string(wifi_ap->ssid));
-    construct_attribute_name(key_name, SC_RSRVD_ES_ACCESSPOINT_LIST_SSID);
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_SSID);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->ssid));
 

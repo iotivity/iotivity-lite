@@ -661,7 +661,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             bm = policy->value.integer;
           }
 
-          if (endpoint && endpoint->version == OIC_VER_1_1_0) {
+          if (endpoint->version == OIC_VER_1_1_0) {
             eps_list = create_endpoints_1_1(policy->next, endpoint);
           }
         }
@@ -688,4 +688,4 @@ done:
   return ret;
 }
 #endif /* OC_CLIENT */
-#endif /*.ST_APP_OPTIMIZATION */
+#endif /* ST_APP_OPTIMIZATION */
