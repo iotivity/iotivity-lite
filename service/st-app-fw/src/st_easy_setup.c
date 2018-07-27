@@ -162,7 +162,6 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
 
   snprintf(ssid, MAX_SSID_LEN, "%s_%s%s%s%d%02X%02X", device_name,
            EASYSETUP_TAG, mnid, sid, 0, mac[4], mac[5]);
-  ssid[strlen(ssid)] = '\0';
 
   st_print_log("[ST_ES] ssid : %s\n", ssid);
   return 0;
@@ -412,6 +411,12 @@ get_ap_list(sec_accesspoint **ap_list) {
   st_wifi_ap_t *scanlist = NULL;
   sec_accesspoint *list_tail = NULL;
 
+  if (!ap_list) {
+    return;
+  }
+
+  *ap_list = NULL;
+
   st_print_log("[ST_ES] WiFi scan list -> \n");
 #ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
   st_wifi_scan(&scanlist);
@@ -423,6 +428,10 @@ get_ap_list(sec_accesspoint **ap_list) {
   int cnt = 0;
   while(cur) {
     sec_accesspoint *ap = (sec_accesspoint *) calloc(1, sizeof(sec_accesspoint));
+    if (!ap) {
+      goto exit;
+    }
+
     if (cur->ssid)
       oc_new_string(&(ap->ssid), cur->ssid, strlen(cur->ssid));
     if (cur->channel)
@@ -449,6 +458,7 @@ get_ap_list(sec_accesspoint **ap_list) {
     cnt++;
   }
 
+exit:
 #ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
   st_wifi_free_scan_list(scanlist);
 #endif

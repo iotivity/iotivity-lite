@@ -372,6 +372,22 @@ exit:
  * system.
  */
 #ifdef MOCK_WIFI_SCAN
+static char*
+str_dup(char *str)
+{
+  if (!str) {
+    return NULL;
+  }
+
+  int len = strlen(str);
+  char *dup_str = (char*) calloc(sizeof(char)*(len+1));
+  if (!dup_str) {
+    return NULL;
+  }
+  strncpy(dup_str, str, len);
+  return dup_str;
+}
+
 void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
@@ -382,39 +398,21 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
   int cnt=3;
   while (cnt--) {
     st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
+    if (!ap) {
+      return;
+    }
 
     // ssid
     char name[15];
-    sprintf(name, "iot_home_%d", cnt);
-    int len = strlen(name);
-    ap->ssid = (char*) calloc(len+1, sizeof(char));
-    strncpy(ap->ssid, name, len);
+    snprintf(name, 15, "iot_home_%d", cnt);
+    ap->ssid = str_dup(name);
 
-    // Mac
-    ap->mac_addr = (char*) calloc(18, sizeof(char));
-    strncpy(ap->mac_addr, "00:11:22:33:44:55", strlen("00:11:22:33:44:55"));
-
-    // Channel
-    ap->channel = (char*)calloc(4, sizeof(char));
-    strncpy(ap->channel, "15", strlen("15"));
-
-    // Max-bitrate
-    ap->max_bitrate = (char*)calloc(5, sizeof(char));
-    strncpy(ap->max_bitrate, "38", strlen("38"));
-
-    // rssi
-    ap->rssi = (char*)calloc(5, sizeof(char));
-    strncpy(ap->rssi, "-10", strlen("-10"));
-
-    // security type
-    const char *sec_type = "WPA2";
-    ap->sec_type = (char*) calloc(strlen(sec_type)+1, sizeof(char));
-    strncpy(ap->sec_type, sec_type, strlen(sec_type));
-
-    // encryption type
-    const char *enc_type = "AES";
-    ap->enc_type = (char*) calloc(strlen(enc_type)+1, sizeof(char));
-    strncpy(ap->enc_type, enc_type, strlen(enc_type));
+    ap->mac_addr = str_dup("00:11:22:33:44:55");
+    ap->channel = str_dup("15");
+    ap->max_bitrate = str_dup("38");
+    ap->rssi = str_dup("-10");
+    ap->sec_type = str_dup("WPA2");
+    ap->enc_type = str_dup("AES");
 
     if (!*ap_list) {
       *ap_list = ap;
