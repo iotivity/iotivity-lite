@@ -22,6 +22,30 @@
       "revId": "e9f339746aa43bd57a052648dfd6e5f64cc7a7c1",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f9604037",
+        "filename": "api/unittest/ocapitest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-07-27T12:33:28Z",
+      "side": 1,
+      "message": "yes, it is possible, but it seems using it the above way is more aligned to iotivity_constrained design.\nWe are already providing the system with a conditional signal through signalEventLoop(), so waiting for it seems more logical.",
+      "parentUuid": "da33351e_43acdba0",
+      "range": {
+        "startLine": 223,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 13
+      },
+      "revId": "e9f339746aa43bd57a052648dfd6e5f64cc7a7c1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
