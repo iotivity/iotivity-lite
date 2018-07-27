@@ -31,6 +31,7 @@ extern "C"{
 
 static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
+static bool is_started = false;
 
 #ifdef OC_SECURITY
 static bool otm_confirm_handler_test(void)
@@ -58,9 +59,10 @@ rpk_priv_key_handler(uint8_t *priv_key, int *priv_key_len)
 
 static void st_status_handler_test(st_status_t status)
 {
-    if (status == ST_STATUS_EASY_SETUP_DONE ||
-        status == ST_STATUS_EASY_SETUP_PROGRESSING) {
+    if (status == ST_STATUS_WIFI_CONNECTING ||
+        status == ST_STATUS_EASY_SETUP_START) {
         st_mutex_lock(mutex);
+        is_started = true;
         st_cond_signal(cv);
         st_mutex_unlock(mutex);
     }
@@ -69,7 +71,7 @@ static
 void *st_manager_func(void *data)
 {
     (void)data;
-    st_error_t ret = st_manager_start();
+    st_error_t ret = st_manager_run_loop();
     EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
@@ -80,6 +82,7 @@ class TestSTManager: public testing::Test
     protected:
         virtual void SetUp()
         {
+            is_started = false;
             mutex = st_mutex_init();
             cv = st_cond_init();
             reset_storage();
@@ -124,10 +127,14 @@ TEST_F(TestSTManager, st_manager_start)
     EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
+    st_error_ret = st_manager_start();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
 
-    int ret = test_wait_until(mutex, cv, 5);
-    EXPECT_EQ(0, ret);
+    if (!is_started) {
+        int ret = test_wait_until(mutex, cv, 5);
+        EXPECT_EQ(0, ret);
+    }
     st_manager_stop();
     st_thread_destroy(t);
     st_manager_stop();
@@ -140,15 +147,23 @@ TEST_F(TestSTManager, st_manager_reset)
     EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
+    st_error_ret = st_manager_start();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
-    int ret = test_wait_until(mutex, cv, 5);
-    EXPECT_EQ(0, ret);
+    if (!is_started) {
+        int ret = test_wait_until(mutex, cv, 5);
+        EXPECT_EQ(0, ret);
+    }
 
     st_sleep(1);
+    is_started = false;
 
-    st_manager_reset();
-    ret = test_wait_until(mutex, cv, 5);
-    EXPECT_EQ(0, ret);
+    st_error_ret = st_manager_reset();
+    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
+    if (!is_started) {
+        int ret = test_wait_until(mutex, cv, 5);
+        EXPECT_EQ(0, ret);
+    }
     st_manager_stop();
     st_thread_destroy(t);
     st_manager_stop();
@@ -176,13 +191,15 @@ TEST_F(TestSTManager, st_manager_stop_fail_dueto_callingtwice)
 
     st_manager_initialize();
     st_register_status_handler(st_status_handler_test);
+    st_manager_start();
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
 
-    test_wait_until(mutex, cv, 5);
+    if (!is_started) {
+        test_wait_until(mutex, cv, 5);
+    }
 
     st_manager_stop();
     st_thread_destroy(t);
-    st_manager_stop();
     st_error_ret=st_manager_stop();
     EXPECT_EQ(ST_ERROR_STACK_NOT_STARTED, st_error_ret);
     st_manager_deinitialize();

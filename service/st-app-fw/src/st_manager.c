@@ -46,13 +46,18 @@
 
 #define SOFT_AP_PWD "1111122222"
 #define SOFT_AP_CHANNEL (6)
-#define AP_CONNECT_RETRY_LIMIT (20)
+#define AP_CONNECT_RETRY_LIMIT (10)
+#define CONN_CHECK_WAIT_TIME (3)
 
 extern int st_register_resources(int device);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 
-OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
+typedef struct
+{
+  int conn_cnt;
+  bool retry_connect;
+} st_connect_check_t;
 
 static st_status_t g_main_status = ST_STATUS_IDLE;
 static st_status_cb_t g_st_status_cb = NULL;
@@ -65,11 +70,13 @@ static int device_index = 0;
 
 static bool g_start_fail = false;
 
+static bool g_retry_connect = false;
+
 static void set_st_manager_status(st_status_t status);
 
 static void st_manager_evt_stop_handler(void);
 
-static void st_manager_evt_reset_handler(void);
+static int st_manager_evt_reset_handler(void);
 
 typedef struct
 {
@@ -168,7 +175,7 @@ easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
     st_print_log("[ST_MGR] Easy setup succeed!!!\n");
-    set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
+    set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
   } else if (status == EASY_SETUP_RESET) {
     st_print_log("[ST_MGR] Easy setup reset!!!\n");
     set_st_manager_status(ST_STATUS_RESET);
@@ -191,11 +198,131 @@ cloud_manager_handler(st_cloud_manager_status_t status)
     set_st_manager_status(ST_STATUS_STOP);
   } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
     st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
-    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
+    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_RE_CONNECTING);
   } else if (status == CLOUD_MANAGER_RESET) {
     st_print_log("[ST_MGR] Cloud manager reset!!!\n");
     set_st_manager_status(ST_STATUS_RESET);
   }
+}
+
+static oc_event_callback_retval_t
+connection_check_handler(void *data)
+{
+  if (!data)
+    return OC_EVENT_DONE;
+
+  st_store_t *store_info = st_store_get_info();
+  st_connect_check_t *item = (st_connect_check_t *)data;
+  int ret = st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server);
+  if (ret != 0) {
+    st_print_log("[ST_MGR] AP is not connected.\n");
+    item->conn_cnt++;
+    if (item->conn_cnt > AP_CONNECT_RETRY_LIMIT) {
+      if (item->retry_connect) {
+        g_retry_connect = false;
+        set_st_manager_status(ST_STATUS_RESET);
+      } else {
+        g_retry_connect = true;
+        set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
+      }
+      free(item);
+    } else {
+      oc_set_delayed_callback(item, connection_check_handler,
+                              CONN_CHECK_WAIT_TIME);
+    }
+  } else {
+    free(item);
+    set_st_manager_status(ST_STATUS_CLOUD_MANAGER_START);
+  }
+
+  return OC_EVENT_DONE;
+}
+
+oc_define_interrupt_handler(st_manager)
+{
+  st_error_t st_err_ret = ST_ERROR_NONE;
+  st_status_item_t *item = NULL;
+  while ((item = st_status_queue_pop())) {
+    if (g_st_status_cb)
+      g_st_status_cb(item->status);
+
+    g_main_status = item->status;
+    st_status_queue_free_item(item);
+
+    switch (g_main_status) {
+    case ST_STATUS_EASY_SETUP_START:
+      if (st_is_easy_setup_finish() == 0) {
+        set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
+      } else {
+        if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
+          st_print_log("[ST_MGR] Failed to start easy setup!\n");
+          EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+        }
+      }
+      break;
+    case ST_STATUS_WIFI_CONNECTING: {
+      st_turn_off_soft_AP();
+      st_store_t *store_info = st_store_get_info();
+      if (!store_info || !store_info->status) {
+        st_print_log("[ST_MGR] could not get cloud informations.\n");
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+      }
+      st_connect_wifi(oc_string(store_info->accesspoint.ssid),
+                      oc_string(store_info->accesspoint.pwd));
+      set_st_manager_status(ST_STATUS_WIFI_CONNECTION_CHECKING);
+      break;
+    }
+    case ST_STATUS_WIFI_CONNECTION_CHECKING: {
+      st_connect_check_t *item =
+        (st_connect_check_t *)malloc(sizeof(st_connect_check_t));
+      item->conn_cnt = 0;
+      item->retry_connect = g_retry_connect;
+      oc_set_delayed_callback(item, connection_check_handler, 0);
+      break;
+    }
+    case ST_STATUS_CLOUD_MANAGER_START: {
+      st_store_t *store_info = st_store_get_info();
+      if (st_cloud_manager_start(store_info, device_index,
+                                 cloud_manager_handler) != 0) {
+        st_print_log("[ST_MGR] Failed to start cloud manager!\n");
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+      }
+      break;
+    }
+    case ST_STATUS_CLOUD_MANAGER_RE_CONNECTING:
+      st_print_log("[ST_MGR] Re-connecting...\n");
+      break;
+    case ST_STATUS_DONE:
+      st_print_log("[ST_MGR] Ready to Control ST-Things\n");
+      break;
+    case ST_STATUS_RESET:
+      if (st_manager_evt_reset_handler() != 0) {
+        st_print_log("[ST_MGR] st_manager_evt_reset_handler failed!\n");
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+      }
+      break;
+    case ST_STATUS_STOP:
+      if (g_start_fail) {
+        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
+      } else {
+        EXIT_WITH_ERROR(ST_ERROR_NONE);
+      }
+      break;
+    default:
+      st_print_log("[ST_MGR] un-supported main step.\n");
+      break;
+    }
+  }
+  return;
+
+exit:
+  if (st_err_ret != ST_ERROR_NONE) {
+    g_start_fail = true;
+  }
+  st_process_stop();
+  st_manager_evt_stop_handler();
+  st_status_queue_remove_all_items();
+  g_main_status = ST_STATUS_INIT;
 }
 
 static void
@@ -290,21 +417,6 @@ st_main_reset(void)
   }
 }
 
-static oc_event_callback_retval_t
-status_callback(void *data)
-{
-  if (!data)
-    return OC_EVENT_DONE;
-
-  st_status_item_t *status = (st_status_item_t *)data;
-
-  if (g_st_status_cb)
-    g_st_status_cb(status->status);
-
-  oc_memb_free(&st_status_item_s, data);
-  return OC_EVENT_DONE;
-}
-
 static void
 set_st_manager_status(st_status_t status)
 {
@@ -312,10 +424,7 @@ set_st_manager_status(st_status_t status)
     st_print_log("[ST_MGR] st_status_queue_add failed\n");
   }
 
-  st_status_item_t *cb_item = oc_memb_alloc(&st_status_item_s);
-  cb_item->status = status;
-  oc_set_delayed_callback(cb_item, status_callback, 0);
-  _oc_signal_event_loop();
+  oc_signal_interrupt_handler(st_manager);
 }
 
 static void
@@ -457,10 +566,7 @@ st_manager_stack_init(void)
     }
   }
 
-  if (st_process_start() != 0) {
-    st_print_log("[ST_MGR] st_process_start failed.\n");
-    return -1;
-  }
+  oc_activate_interrupt_handler(st_manager);
 
   return 0;
 }
@@ -479,138 +585,37 @@ st_manager_start(void)
     return ST_ERROR_STACK_RUNNING;
   }
 
-  if (st_status_queue_add(ST_STATUS_INIT) != 0) {
+  if (st_manager_stack_init() < 0) {
+    st_manager_evt_stop_handler();
+    st_status_queue_remove_all_items();
+    g_main_status = ST_STATUS_INIT;
     return ST_ERROR_OPERATION_FAILED;
   }
 
-  st_store_t *store_info = NULL;
-  st_error_t st_err_ret = ST_ERROR_NONE;
-  int conn_cnt = 0;
-  int quit = 0;
   g_start_fail = false;
+  g_main_status = ST_STATUS_STARTED;
+  set_st_manager_status(ST_STATUS_EASY_SETUP_START);
 
-  while (quit != 1) {
-    item = st_status_queue_pop();
-    if (!item && quit != 1) {
-      st_status_queue_wait_signal();
-      continue;
-    }
-    g_main_status = item->status;
-    st_status_queue_free_item(item);
+  return ST_ERROR_NONE;
+}
 
-    switch (g_main_status) {
-    case ST_STATUS_INIT:
-      st_process_app_sync_lock();
-      if (st_manager_stack_init() < 0) {
-        st_process_app_sync_unlock();
-        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-      }
-      store_info = NULL;
-      set_st_manager_status(ST_STATUS_EASY_SETUP_START);
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_EASY_SETUP_START:
-      st_process_app_sync_lock();
-      if (st_is_easy_setup_finish() == 0) {
-        set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
-      } else {
-        if (st_easy_setup_start(&st_vendor_props, easy_setup_handler) != 0) {
-          st_print_log("[ST_MGR] Failed to start easy setup!\n");
-          st_process_app_sync_unlock();
-          EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-        }
-        set_st_manager_status(ST_STATUS_EASY_SETUP_PROGRESSING);
-      }
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_EASY_SETUP_PROGRESSING:
-    case ST_STATUS_CLOUD_MANAGER_PROGRESSING:
-      st_print_log("[ST_MGR] Progressing...\n");
-      break;
-    case ST_STATUS_EASY_SETUP_DONE:
-      st_process_app_sync_lock();
-      st_easy_setup_stop();
-      store_info = st_store_get_info();
-      if (!store_info || !store_info->status) {
-        st_print_log("[ST_MGR] could not get cloud informations.\n");
-        st_process_app_sync_unlock();
-        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-      }
-      set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_WIFI_CONNECTING:
-      st_process_app_sync_lock();
-      st_turn_off_soft_AP();
-      st_connect_wifi(oc_string(store_info->accesspoint.ssid),
-                      oc_string(store_info->accesspoint.pwd));
-      set_st_manager_status(ST_STATUS_WIFI_CONNECTION_CHECKING);
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_WIFI_CONNECTION_CHECKING:
-      st_process_app_sync_lock();
-      int ret =
-        st_cloud_manager_check_connection(&store_info->cloudinfo.ci_server);
-      st_process_app_sync_unlock();
-      if (ret != 0) {
-        st_print_log("[ST_MGR] AP is not connected.\n");
-        conn_cnt++;
-        if (conn_cnt > AP_CONNECT_RETRY_LIMIT) {
-          conn_cnt = 0;
-          set_main_status_sync(ST_STATUS_RESET);
-        } else if (conn_cnt == (AP_CONNECT_RETRY_LIMIT >> 1)) {
-          set_main_status_sync(ST_STATUS_WIFI_CONNECTING);
-        } else {
-          st_sleep(3);
-          if (st_status_queue_add(ST_STATUS_WIFI_CONNECTION_CHECKING) != 0) {
-            EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-          }
-        }
-      } else {
-        conn_cnt = 0;
-        set_main_status_sync(ST_STATUS_CLOUD_MANAGER_START);
-      }
-      break;
-    case ST_STATUS_CLOUD_MANAGER_START:
-      st_process_app_sync_lock();
-      if (st_cloud_manager_start(store_info, device_index,
-                                 cloud_manager_handler) != 0) {
-        st_print_log("[ST_MGR] Failed to start cloud manager!\n");
-        st_process_app_sync_unlock();
-        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-      }
-      set_st_manager_status(ST_STATUS_CLOUD_MANAGER_PROGRESSING);
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_DONE:
-      st_print_log("[ST_MGR] Ready to Control ST-Things\n");
-      break;
-    case ST_STATUS_RESET:
-      st_process_stop();
-      st_process_app_sync_lock();
-      st_manager_evt_reset_handler();
-      st_process_app_sync_unlock();
-      break;
-    case ST_STATUS_STOP:
-      quit = 1;
-      if (g_start_fail) {
-        EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
-      }
-      break;
-    default:
-      st_print_log("[ST_MGR] un-supported main step.\n");
-      break;
-    }
+st_error_t
+st_manager_run_loop(void)
+{
+  if (g_main_status == ST_STATUS_IDLE) {
+    return ST_ERROR_STACK_NOT_INITIALIZED;
+  } else if (g_main_status != ST_STATUS_STARTED) {
+    return ST_ERROR_STACK_NOT_STARTED;
   }
 
-exit:
-  st_process_stop();
-  st_process_app_sync_lock();
-  st_manager_evt_stop_handler();
-  st_status_queue_remove_all_items();
-  g_main_status = ST_STATUS_INIT;
-  st_process_app_sync_unlock();
-  return st_err_ret;
+  if (st_process_start() != 0) {
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
+  if (g_start_fail) {
+    return ST_ERROR_OPERATION_FAILED;
+  }
+  return ST_ERROR_NONE;
 }
 
 st_error_t
@@ -619,7 +624,6 @@ st_manager_reset(void)
   if (g_main_status == ST_STATUS_IDLE)
     return ST_ERROR_STACK_NOT_INITIALIZED;
 
-  st_process_stop();
   st_process_app_sync_lock();
   st_manager_evt_reset_handler();
   st_process_app_sync_unlock();
@@ -764,12 +768,18 @@ st_manager_evt_stop_handler(void)
   free_platform_cb_data();
 }
 
-static void
+static int
 st_manager_evt_reset_handler(void)
 {
   st_main_reset();
   st_manager_evt_stop_handler();
   st_status_queue_remove_all_items_without_stop();
-  set_st_manager_status(ST_STATUS_INIT);
+
+  if (st_manager_stack_init() < 0) {
+    return -1;
+  }
+
+  set_st_manager_status(ST_STATUS_EASY_SETUP_START);
   st_print_log("[ST_MGR] reset finished\n");
+  return 0;
 }
