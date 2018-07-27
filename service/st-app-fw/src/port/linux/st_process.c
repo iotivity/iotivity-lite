@@ -30,8 +30,6 @@ typedef struct
 
 static st_process_data_t g_process_data;
 
-static void *st_process_func(void *data);
-
 int
 st_process_init(void)
 {
@@ -55,19 +53,35 @@ st_process_init(void)
     st_mutex_destroy(g_process_data.app_mutex);
     return -1;
   }
+
+  g_process_data.quit = 0;
   return 0;
 }
 
 int
 st_process_start(void)
 {
-  g_process_data.quit = 0;
-  g_process_data.thread =
-    st_thread_create(st_process_func, "MAIN", 0, &g_process_data);
-  if (!g_process_data.thread) {
-    st_print_log("[ST_PROC] Failed to create main thread\n");
-    return -1;
+  oc_clock_time_t next_event;
+  st_print_log("[ST_PROC] st_process_start IN\n");
+
+  while (g_process_data.quit != 1) {
+    st_mutex_lock(g_process_data.app_mutex);
+    next_event = oc_main_poll();
+    st_mutex_unlock(g_process_data.app_mutex);
+
+    if (g_process_data.quit == 1)
+      break;
+
+    st_mutex_lock(g_process_data.mutex);
+    if (next_event == 0) {
+      st_cond_wait(g_process_data.cv, g_process_data.mutex);
+    } else {
+      st_cond_timedwait(g_process_data.cv, g_process_data.mutex, next_event);
+    }
+    st_mutex_unlock(g_process_data.mutex);
   }
+
+  st_print_log("[ST_PROC] st_process_start OUT\n");
   return 0;
 }
 
@@ -81,12 +95,6 @@ st_process_stop(void)
 
   g_process_data.quit = 1;
   st_process_signal();
-  if (st_thread_destroy(g_process_data.thread) != 0) {
-    st_print_log("[ST_PROC] st_thread_destroy failed!\n");
-    return -1;
-  }
-  g_process_data.thread = NULL;
-  st_print_log("[ST_PROC] st_thread_destroy finish!\n");
   return 0;
 }
 
@@ -111,33 +119,6 @@ st_process_destroy(void)
     g_process_data.mutex = NULL;
   }
   return 0;
-}
-
-static void *
-st_process_func(void *data)
-{
-  st_process_data_t *process_data = (st_process_data_t *)data;
-  oc_clock_time_t next_event;
-
-  while (process_data->quit != 1) {
-    st_mutex_lock(process_data->app_mutex);
-    next_event = oc_main_poll();
-    st_mutex_unlock(process_data->app_mutex);
-
-    if (process_data->quit == 1)
-      break;
-
-    st_mutex_lock(process_data->mutex);
-    if (next_event == 0) {
-      st_cond_wait(process_data->cv, process_data->mutex);
-    } else {
-      st_cond_timedwait(process_data->cv, process_data->mutex, next_event);
-    }
-    st_mutex_unlock(process_data->mutex);
-  }
-
-  st_thread_exit(NULL);
-  return NULL;
 }
 
 void
