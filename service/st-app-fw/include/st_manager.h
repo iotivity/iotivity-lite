@@ -79,8 +79,7 @@ st_error_t st_manager_initialize(void);
 /**
   @brief A function to start ST application framework. This function will
     start iotivity-lite stack which include network thread and resources
-    registration. Also it will process Easy Setup and Cloud registration
-    steps. This function will loop until st_status is ST_STATUS_STOP.
+    registration.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful by st_manager_stop() call.
   @retval ST_ERROR_STACK_NOT_INITIALIZED
@@ -88,10 +87,26 @@ st_error_t st_manager_initialize(void);
     this function is supposed to be called right after st_manager_initialize().
   @retval ST_ERROR_STACK_RUNNING st_manager_start() is already called.
   @retval ST_ERROR_OPERATION_FAILED
+    if there is an internal failure while excuting this function.
+*/
+st_error_t st_manager_start(void);
+
+/**
+  @brief A function to process ST application framework. This function will
+    polling iotivity-lite stack events and will process Easy Setup and
+    Cloud registration steps. This function will loop until st_status is
+    ST_STATUS_STOP.
+  @return st_error_t An enumeration of possible outcomes.
+  @retval ST_ERROR_NONE if successful by st_manager_stop() call.
+  @retval ST_ERROR_STACK_NOT_INITIALIZED
+    st_manager_initialize() isn't executed.
+    this function is supposed to be called right after st_manager_start().
+  @retval ST_ERROR_STACK_NOT_STARTED st_manager_start() is not called.
+  @retval ST_ERROR_OPERATION_FAILED
     if there is an internal failure while excuting this function
     such as cloud connection broken and invalid cloud connection.
 */
-st_error_t st_manager_start(void);
+st_error_t st_manager_run_loop(void);
 
 /**
   @brief A function to reset ST application framework. This function will
