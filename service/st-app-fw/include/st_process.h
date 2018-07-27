@@ -25,6 +25,8 @@ int st_process_init(void);
 int st_process_start(void);
 int st_process_stop(void);
 int st_process_destroy(void);
+void st_process_run(void);
+void st_process_quit(void);
 
 void st_process_signal(void);
 void st_process_app_sync_lock(void);

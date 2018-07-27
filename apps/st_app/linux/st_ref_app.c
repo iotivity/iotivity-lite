@@ -341,14 +341,8 @@ main(void)
   }
 #endif /* USER_INPUT */
 
-  st_error_t ret = ST_ERROR_NONE;
-  do {
-    ret = st_manager_start();
-    if (ret != ST_ERROR_NONE) {
-      printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
-      sleep(6000);
-    }
-  } while (ret != ST_ERROR_NONE);
+  st_manager_start();
+  st_manager_run_loop();
 
 #ifdef USER_INPUT
   user_input_thread_destroy();

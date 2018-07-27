@@ -93,6 +93,8 @@ st_error_t st_manager_initialize(void);
 */
 st_error_t st_manager_start(void);
 
+st_error_t st_manager_run_loop(void);
+
 /**
   @brief A function to reset ST application framework. This function will
     reset all db files such as security and change into user language

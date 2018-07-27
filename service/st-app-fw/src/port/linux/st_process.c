@@ -55,6 +55,8 @@ st_process_init(void)
     st_mutex_destroy(g_process_data.app_mutex);
     return -1;
   }
+
+  g_process_data.quit = 0;
   return 0;
 }
 
@@ -138,6 +140,38 @@ st_process_func(void *data)
 
   st_thread_exit(NULL);
   return NULL;
+}
+
+void
+st_process_run(void)
+{
+  oc_clock_time_t next_event;
+
+  while (g_process_data.quit != 1) {
+    st_mutex_lock(g_process_data.app_mutex);
+    next_event = oc_main_poll();
+    st_mutex_unlock(g_process_data.app_mutex);
+
+    if (g_process_data.quit == 1)
+      break;
+
+    st_mutex_lock(g_process_data.mutex);
+    if (next_event == 0) {
+      st_cond_wait(g_process_data.cv, g_process_data.mutex);
+    } else {
+      st_cond_timedwait(g_process_data.cv, g_process_data.mutex, next_event);
+    }
+    st_mutex_unlock(g_process_data.mutex);
+  }
+
+  st_print_log("[ST_PROC] st_process_run out\n");
+}
+
+void
+st_process_quit(void)
+{
+  g_process_data.quit = 1;
+  st_process_signal();
 }
 
 void

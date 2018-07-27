@@ -182,11 +182,12 @@ static
 void *st_manager_func(void *data)
 {
     (void)data;
-    st_error_t ret = st_manager_start();
-    if(test_case_type == CM_FAIL)
-        EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
-    else
-        EXPECT_EQ(ST_ERROR_NONE, ret);
+    st_manager_run_loop();
+    // st_error_t ret = st_manager_start();
+    // if(test_case_type == CM_FAIL)
+    //     EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
+    // else
+    //     EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
 }
@@ -416,6 +417,7 @@ class TestSTCloudManager_cb: public testing::Test
             st_register_status_handler(st_status_handler);
             st_set_device_profile(st_device_def, st_device_def_len);
             set_st_store_info();
+            st_manager_start();
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
             get_wildcard_acl_policy();

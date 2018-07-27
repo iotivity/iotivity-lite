@@ -52,8 +52,8 @@ rpk_priv_key_handler(uint8_t *priv_key, int *priv_key_len)
 
 static void st_status_handler_test(st_status_t status)
 {
-    if (status == ST_STATUS_EASY_SETUP_DONE ||
-        status == ST_STATUS_EASY_SETUP_PROGRESSING) {
+    if (status == ST_STATUS_WIFI_CONNECTING ||
+        status == ST_STATUS_EASY_SETUP_START) {
         st_mutex_lock(mutex);
         st_cond_signal(cv);
         st_mutex_unlock(mutex);
@@ -63,8 +63,9 @@ static
 void *st_manager_func(void *data)
 {
     (void)data;
-    st_error_t ret = st_manager_start();
-    EXPECT_EQ(ST_ERROR_NONE, ret);
+    st_manager_run_loop();
+    // st_error_t ret = st_manager_start();
+    // EXPECT_EQ(ST_ERROR_NONE, ret);
 
     return NULL;
 }
@@ -118,6 +119,7 @@ TEST_F(TestSTManager, st_manager_start)
     EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
+    st_manager_start();
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
 
     int ret = test_wait_until(mutex, cv, 5);
@@ -134,6 +136,7 @@ TEST_F(TestSTManager, st_manager_reset)
     EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
+    st_manager_start();
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
     int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
