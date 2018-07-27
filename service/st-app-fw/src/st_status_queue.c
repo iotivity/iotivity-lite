@@ -24,56 +24,92 @@
 
 #define MAX_WAIT_WIME (1)
 
+// signaling is disabled due to some environment doesn't work.
+#define STATUS_Q_SIGNAL_DISABLE
+
 OC_LIST(g_main_status_queue);
 OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
 
 static st_mutex_t status_queue_mutex = NULL;
+#ifndef STATUS_Q_SIGNAL_DISABLE
 static st_cond_t status_queue_cv = NULL;
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 
 int
 st_status_queue_initialize(void)
 {
-  if (status_queue_mutex || status_queue_cv) {
-    st_print_log("[ST_Q] status queue already initialized!\n");
+  if (status_queue_mutex) {
+    st_print_log("[ST_Q] status_queue_mutex already initialized!\n");
     return -1;
   }
+
+#ifndef STATUS_Q_SIGNAL_DISABLE
+  if (status_queue_cv) {
+    st_print_log("[ST_Q] status_queue_cv already initialized!\n");
+    return -1;
+  }
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 
   status_queue_mutex = st_mutex_init();
   if (!status_queue_mutex) {
     st_print_log("[ST_Q] st_mutex_init failed!\n");
     return -1;
   }
-
+#ifndef STATUS_Q_SIGNAL_DISABLE
   status_queue_cv = st_cond_init();
   if (!status_queue_cv) {
     st_print_log("[ST_Q] st_cond_init failed!\n");
     st_mutex_destroy(status_queue_mutex);
     return -1;
   }
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 
   return 0;
+}
+
+static bool
+is_initialized(void)
+{
+  if (!status_queue_mutex) {
+    st_print_log("[ST_Q] status queue not initialized!\n");
+    return false;
+  }
+#ifndef STATUS_Q_SIGNAL_DISABLE
+  if (!status_queue_mutex) {
+    st_print_log("[ST_Q] status queue not initialized!\n");
+    return false;
+  }
+#endif /* STATUS_Q_SIGNAL_DISABLE */
+  return true;
 }
 
 static void
 status_queue_send_signal(void)
 {
-  if (!status_queue_mutex || !status_queue_cv) {
+  if (!is_initialized()) {
     st_print_log("[ST_Q] status queue not initialized!\n");
     return;
   }
 
+#ifndef STATUS_Q_SIGNAL_DISABLE
   st_mutex_lock(status_queue_mutex);
   st_cond_signal(status_queue_cv);
   st_mutex_unlock(status_queue_mutex);
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 }
 
 int
 st_status_queue_wait_signal(void)
 {
+  int ret = 0;
+#ifdef STATUS_Q_SIGNAL_DISABLE
+  st_sleep(MAX_WAIT_WIME);
+#else  /* STATUS_Q_SIGNAL_DISABLE */
   st_mutex_lock(status_queue_mutex);
   oc_clock_time_t wait_time = oc_clock_time() + MAX_WAIT_WIME * OC_CLOCK_SECOND;
-  int ret = st_cond_timedwait(status_queue_cv, status_queue_mutex, wait_time);
+  ret = st_cond_timedwait(status_queue_cv, status_queue_mutex, wait_time);
   st_mutex_unlock(status_queue_mutex);
+#endif /* !STATUS_Q_SIGNAL_DISABLE */
 
   return ret;
 }
@@ -81,7 +117,7 @@ st_status_queue_wait_signal(void)
 int
 st_status_queue_add(st_status_t status)
 {
-  if (!status_queue_mutex || !status_queue_cv) {
+  if (!is_initialized()) {
     st_print_log("[ST_Q] status queue not initialized!\n");
     return -1;
   }
@@ -96,7 +132,9 @@ st_status_queue_add(st_status_t status)
   st_mutex_lock(status_queue_mutex);
   oc_list_add(g_main_status_queue, queue_item);
   st_mutex_unlock(status_queue_mutex);
+#ifndef STATUS_Q_SIGNAL_DISABLE
   status_queue_send_signal();
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 
   return 0;
 }
@@ -104,7 +142,7 @@ st_status_queue_add(st_status_t status)
 st_status_item_t *
 st_status_queue_pop(void)
 {
-  if (!status_queue_mutex || !status_queue_cv) {
+  if (!is_initialized()) {
     st_print_log("[ST_Q] status queue not initialized!\n");
     return NULL;
   }
@@ -161,14 +199,18 @@ st_status_queue_remove_all_items_without_stop(void)
 void
 st_status_queue_deinitialize(void)
 {
-  if (!status_queue_mutex || !status_queue_cv) {
+  if (!is_initialized()) {
     st_print_log("[ST_Q] status queue not initialized!\n");
     return;
   }
 
+#ifndef STATUS_Q_SIGNAL_DISABLE
   status_queue_send_signal();
+#endif /* STATUS_Q_SIGNAL_DISABLE */
   st_mutex_destroy(status_queue_mutex);
-  st_cond_destroy(status_queue_cv);
   status_queue_mutex = NULL;
+#ifndef STATUS_Q_SIGNAL_DISABLE
+  st_cond_destroy(status_queue_cv);
   status_queue_cv = NULL;
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 }
