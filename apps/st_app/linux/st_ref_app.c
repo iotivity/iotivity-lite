@@ -396,8 +396,9 @@ user_input_deinit(void)
 int
 main(void)
 {
-  if (st_manager_initialize() != ST_ERROR_NONE) {
-    printf("[ST_APP] st_manager_initialize failed.\n");
+  st_error_t ret = st_manager_initialize();
+  if (ret != ST_ERROR_NONE) {
+    printf("[ST_APP] st_manager_initialize failed[%d].\n", ret);
     return -1;
   }
 
@@ -417,7 +418,6 @@ main(void)
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
 
-  st_error_t ret = ST_ERROR_NONE;
 #ifdef STATE_MODEL
   gstop_flag = false;
   do {
@@ -432,6 +432,7 @@ main(void)
 #ifdef USER_INPUT
   if (user_input_init() != 0) {
     printf("[ST_APP] user_input_init failed.\n");
+    st_manager_deinitialize();
     return -1;
   }
 #endif /* USER_INPUT */
@@ -440,7 +441,14 @@ main(void)
   do {
     ret = st_manager_start();
     if (ret != ST_ERROR_NONE) {
-      printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
+      printf("[ST_APP] st_manager_start failed[%d].\n", ret);
+      st_manager_deinitialize();
+      return -1;
+    }
+
+    ret = st_manager_run_loop();
+    if (ret != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_run_loop failed[%d].\n", ret);
       sleep(6000);
     }
   } while (ret != ST_ERROR_NONE);
