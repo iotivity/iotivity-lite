@@ -313,8 +313,9 @@ user_input_thread_destroy(void)
 int
 main(void)
 {
-  if (st_manager_initialize() != ST_ERROR_NONE) {
-    printf("[ST_APP] st_manager_initialize failed.\n");
+  st_error_t ret = ST_ERROR_NONE;
+  if ((ret = st_manager_initialize()) != ST_ERROR_NONE) {
+    printf("[ST_APP] st_manager_initialize failed[%d].\n", ret);
     return -1;
   }
 
@@ -337,18 +338,22 @@ main(void)
 #ifdef USER_INPUT
   if (user_input_thread_init() != 0) {
     printf("[ST_APP] user_input_thread_init failed.\n");
+    st_manager_deinitialize();
     return -1;
   }
 #endif /* USER_INPUT */
 
-  st_error_t ret = ST_ERROR_NONE;
   do {
-    ret = st_manager_start();
-    if (ret != ST_ERROR_NONE) {
-      printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
-      sleep(6000);
+    if ((ret = st_manager_start()) != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_start failed[%d].\n", ret);
+      st_manager_deinitialize();
+      return -1;
     }
-  } while (ret != ST_ERROR_NONE);
+
+    if ((ret = st_manager_run_loop()) != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_run_loop failed[%d].\n", ret);
+    }
+  } while (ret == ST_ERROR_OPERATION_FAILED);
 
 #ifdef USER_INPUT
   user_input_thread_destroy();
