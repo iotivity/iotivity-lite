@@ -179,8 +179,8 @@ class TestSTResourceManagerHandler: public testing::Test
         static void
         st_status_handler(st_status_t status)
         {
-            if (status == ST_STATUS_EASY_SETUP_PROGRESSING ||
-                status == ST_STATUS_EASY_SETUP_DONE) {
+            if (status == ST_STATUS_EASY_SETUP_START ||
+                status == ST_STATUS_WIFI_CONNECTING) {
                 st_mutex_lock(mutex);
                 st_cond_signal(cv);
                 st_mutex_unlock(mutex);
@@ -191,7 +191,7 @@ class TestSTResourceManagerHandler: public testing::Test
         void *st_manager_func(void *data)
         {
             (void)data;
-            st_error_t ret = st_manager_start();
+            st_error_t ret = st_manager_run_loop();
             EXPECT_EQ(ST_ERROR_NONE, ret);
 
             return NULL;
@@ -239,6 +239,7 @@ class TestSTResourceManagerHandler: public testing::Test
             st_manager_initialize();
             st_set_device_profile(st_device_def, st_device_def_len);
             st_register_status_handler(st_status_handler);
+            st_manager_start();
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
 #ifdef OC_SECURITY
