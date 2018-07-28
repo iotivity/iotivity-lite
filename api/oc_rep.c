@@ -55,7 +55,7 @@ oc_rep_finalize(void)
   }
   if (g_err != CborNoError)
     return -1;
-  return (int)size;
+  return size;
 }
 
 static oc_rep_t *

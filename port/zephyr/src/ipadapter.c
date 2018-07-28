@@ -198,7 +198,7 @@ free_endpoints(void)
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   (void)device;
   if (!eps) {
@@ -229,7 +229,7 @@ oc_connectivity_get_endpoints(int device)
 }
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   (void)device;
   int ret;
@@ -353,7 +353,7 @@ error:
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   (void)device;
 #ifdef OC_SECURITY

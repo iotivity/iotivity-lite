@@ -3,6 +3,7 @@
 
 /* Time resolution */
 #include <stdint.h>
+
 typedef uint64_t oc_clock_time_t;
 #define strncasecmp _strnicmp
 /* Sets one clock tick to 1 ms */

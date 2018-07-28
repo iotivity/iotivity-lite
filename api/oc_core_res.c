@@ -42,7 +42,7 @@ static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 static oc_platform_info_t oc_platform_info;
 
 static bool announce_con_res = true;
-static int device_count = 0;
+static size_t device_count = 0;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
@@ -84,7 +84,7 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 void
 oc_core_shutdown(void)
 {
-  int i;
+  size_t i;
   if (oc_string_len(oc_platform_info.mfg_name))
     oc_free_string(&(oc_platform_info.mfg_name));
 
@@ -146,7 +146,7 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 
 #ifdef OC_SECURITY
 void
-oc_core_regen_unique_ids(int device)
+oc_core_regen_unique_ids(size_t device)
 {
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   oc_device_info_t *d = &oc_device_info[device];
@@ -164,7 +164,7 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
                        void *data)
 {
   (void)data;
-  int device = request->resource->device;
+  size_t device = request->resource->device;
   oc_rep_start_root_object();
 
   char di[OC_UUID_LEN], piid[OC_UUID_LEN];
@@ -202,7 +202,7 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
                         void *data)
 {
   (void)data;
-  int device = request->resource->device;
+  size_t device = request->resource->device;
   oc_rep_start_root_object();
 
   switch (interface) {
@@ -229,7 +229,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
   (void)interface;
   oc_rep_t *rep = request->request_payload;
   bool changed = false;
-  int device = request->resource->device;
+  size_t device = request->resource->device;
 
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "n") == 0) {
@@ -267,7 +267,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
   }
 }
 
-int
+size_t
 oc_core_get_num_devices(void)
 {
   return device_count;
@@ -434,7 +434,7 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 }
 
 void
-oc_core_populate_resource(int core_resource, int device_index, const char *uri,
+oc_core_populate_resource(int core_resource, size_t device_index, const char *uri,
                           oc_interface_mask_t interfaces,
                           oc_interface_mask_t default_interface,
                           int properties,
@@ -467,7 +467,7 @@ oc_core_populate_resource(int core_resource, int device_index, const char *uri,
 }
 
 oc_uuid_t *
-oc_core_get_device_id(int device)
+oc_core_get_device_id(size_t device)
 {
   if (device >= device_count) {
     return NULL;
@@ -476,7 +476,7 @@ oc_core_get_device_id(int device)
 }
 
 oc_device_info_t *
-oc_core_get_device_info(int device)
+oc_core_get_device_info(size_t device)
 {
   if (device >= device_count) {
     return NULL;
@@ -491,7 +491,7 @@ oc_core_get_platform_info(void)
 }
 
 oc_resource_t *
-oc_core_get_resource_by_index(int type, int device)
+oc_core_get_resource_by_index(int type, size_t device)
 {
   if (type == OCF_P) {
     return &core_resources[0];
@@ -500,7 +500,7 @@ oc_core_get_resource_by_index(int type, int device)
 }
 
 oc_resource_t *
-oc_core_get_resource_by_uri(const char *uri, int device)
+oc_core_get_resource_by_uri(const char *uri, size_t device)
 {
   int skip = 0, type = 0;
   if (uri[0] != '/')
