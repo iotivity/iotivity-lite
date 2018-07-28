@@ -80,7 +80,7 @@ receive(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   (void)device;
   if (!eps) {
@@ -175,7 +175,7 @@ oc_send_buffer(oc_message_t *message)
 }
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   (void)device;
   process_start(&ip_adapter_process, NULL);
@@ -183,7 +183,7 @@ oc_connectivity_init(int device)
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   (void)device;
   free_endpoints();

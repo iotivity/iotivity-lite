@@ -32,7 +32,7 @@ int oc_tls_init_context(void);
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);
 
-int oc_tls_update_psk_identity(int device);
+int oc_tls_update_psk_identity(size_t device);
 bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t oxm_len, const uint8_t *server_uuid,
                              const size_t server_uuid_len,
