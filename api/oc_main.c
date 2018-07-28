@@ -47,12 +47,12 @@ static const oc_handler_t *app_callbacks;
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
-static long _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
-static long _OC_MAX_APP_DATA_SIZE = 8192;
-static long _OC_BLOCK_SIZE = 1024;
+static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
+static size_t _OC_MAX_APP_DATA_SIZE = 8192;
+static size_t _OC_BLOCK_SIZE = 1024;
 
-int
-oc_set_mtu_size(long mtu_size)
+ssize_t
+oc_set_mtu_size(size_t mtu_size)
 {
   (void)mtu_size;
 #ifdef OC_BLOCK_WISE
@@ -68,14 +68,14 @@ oc_set_mtu_size(long mtu_size)
   return 0;
 }
 
-long
+ssize_t
 oc_get_mtu_size(void)
 {
   return _OC_MTU_SIZE;
 }
 
 void
-oc_set_max_app_data_size(long size)
+oc_set_max_app_data_size(size_t size)
 {
   _OC_MAX_APP_DATA_SIZE = size;
 #ifndef OC_BLOCK_WISE
@@ -84,19 +84,19 @@ oc_set_max_app_data_size(long size)
 #endif /* !OC_BLOCK_WISE */
 }
 
-long
+ssize_t
 oc_get_max_app_data_size(void)
 {
   return _OC_MAX_APP_DATA_SIZE;
 }
 
-long
+ssize_t
 oc_get_block_size(void)
 {
   return _OC_BLOCK_SIZE;
 }
 #else
-int
+ssize_t
 oc_set_mtu_size(long mtu_size)
 {
   (void)mtu_size;
@@ -104,7 +104,7 @@ oc_set_mtu_size(long mtu_size)
   return -1;
 }
 
-long
+ssize_t
 oc_get_mtu_size(void)
 {
   OC_WRN("Dynamic memory not available");
@@ -112,20 +112,20 @@ oc_get_mtu_size(void)
 }
 
 void
-oc_set_max_app_data_size(long size)
+oc_set_max_app_data_size(size_t size)
 {
   (void)size;
   OC_WRN("Dynamic memory not available");
 }
 
-long
+ssize_t
 oc_get_max_app_data_size(void)
 {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
-long
+ssize_t
 oc_get_block_size(void)
 {
   OC_WRN("Dynamic memory not available");
@@ -171,7 +171,7 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #ifdef OC_SECURITY
-  int device;
+  size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_load_pstat(device);
     oc_sec_load_doxm(device);
@@ -219,7 +219,7 @@ oc_main_shutdown(void)
   oc_tls_shutdown();
 #endif /* OC_SECURITY */
 
-  int device;
+  size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
   }

@@ -254,7 +254,7 @@ coap_receive(oc_message_t *msg)
           OC_DBG("processing block1 option");
           request_buffer = oc_blockwise_find_request_buffer(
             href, href_len, &msg->endpoint, message->code, message->uri_query,
-            (int)message->uri_query_len, OC_BLOCKWISE_SERVER);
+            message->uri_query_len, OC_BLOCKWISE_SERVER);
 
           if (!request_buffer && block1_num == 0) {
             OC_DBG("creating new block-wise request buffer");
@@ -336,7 +336,7 @@ coap_receive(oc_message_t *msg)
               if (incoming_block_len > 0) {
                 request_buffer = oc_blockwise_find_request_buffer(
                   href, href_len, &msg->endpoint, message->code,
-                  message->uri_query, (int)message->uri_query_len,
+                  message->uri_query, message->uri_query_len,
                   OC_BLOCKWISE_SERVER);
                 if (!request_buffer) {
                   request_buffer = oc_blockwise_alloc_request_buffer(
