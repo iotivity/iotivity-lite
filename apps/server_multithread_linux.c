@@ -288,8 +288,8 @@ main(void)
     goto exit;
   }
 
-  int device_num = oc_core_get_num_devices();
-  int i;
+  size_t device_num = oc_core_get_num_devices();
+  size_t i;
   for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
     printf("=== device(%d) endpoint info. ===\n", i);

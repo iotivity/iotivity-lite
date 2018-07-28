@@ -29,7 +29,7 @@
 
 #include "oc_core_res.h"
 
-static int query_iterator;
+static size_t query_iterator;
 
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
@@ -51,18 +51,18 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
   return 0;
 }
 
-int
+ssize_t
 oc_get_query_value(oc_request_t *request, const char *key, char **value)
 {
   if (!request)
     return -1;
-  return oc_ri_get_query_value(request->query, (int)request->query_len, key, value);
+  return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
-static int
+static ssize_t
 response_length(void)
 {
-  int size = oc_rep_finalize();
+  ssize_t size = oc_rep_finalize();
   return (size <= 2) ? 0 : size;
 }
 
@@ -108,26 +108,27 @@ oc_init_query_iterator(void)
   query_iterator = 0;
 }
 
-int
-oc_iterate_query(oc_request_t *request, char **key, int *key_len, char **value,
-                 int *value_len)
+ssize_t
+oc_iterate_query(oc_request_t *request, char **key, size_t *key_len, char **value,
+                 size_t *value_len)
 {
   query_iterator++;
-  return oc_ri_get_query_nth_key_value(request->query, (int)request->query_len, key,
+  return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
                                        key_len, value, value_len,
                                        query_iterator);
 }
 
 bool
 oc_iterate_query_get_values(oc_request_t *request, const char *key,
-                            char **value, int *value_len)
+                            char **value, ssize_t *value_len)
 {
   char *current_key = 0;
-  int key_len = 0, pos = 0;
+  size_t key_len = 0;
+  ssize_t pos = 0;
 
   do {
-    pos = oc_iterate_query(request, &current_key, &key_len, value, value_len);
-    if (pos != -1 && strlen(key) == (size_t)key_len &&
+    pos = oc_iterate_query(request, &current_key, &key_len, value, (size_t *)value_len);
+    if (pos != -1 && strlen(key) == key_len &&
         memcmp(key, current_key, key_len) == 0) {
       goto more_or_done;
     }
@@ -136,7 +137,7 @@ oc_iterate_query_get_values(oc_request_t *request, const char *key,
   *value_len = -1;
 
 more_or_done:
-  if (pos == -1 || pos >= (int)request->query_len) {
+  if (pos == -1 || (size_t)pos >= request->query_len) {
     return false;
   }
   return true;
@@ -147,7 +148,7 @@ more_or_done:
 static void
 oc_populate_resource_object(oc_resource_t *resource, const char *name,
                             const char *uri, uint8_t num_resource_types,
-                            int device)
+                            size_t device)
 {
   if (name) {
     oc_new_string(&resource->name, name, strlen(name));
@@ -166,7 +167,7 @@ oc_populate_resource_object(oc_resource_t *resource, const char *name,
 
 oc_resource_t *
 oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
-                int device)
+                size_t device)
 {
   oc_resource_t *resource = oc_ri_alloc_resource();
   if (resource) {
@@ -183,7 +184,7 @@ oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
 #if defined(OC_COLLECTIONS)
 oc_resource_t *
 oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
-                  int device)
+                  size_t device)
 {
   oc_collection_t *collection = oc_collection_alloc();
   if (collection) {
@@ -296,7 +297,7 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
-  int i;
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
     if (res) {

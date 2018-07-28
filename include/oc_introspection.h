@@ -46,7 +46,7 @@
   @param device index of the device to which the resource is to be created
   @param filename filename of the IDD file in cbor.
 */
-void oc_set_introspection_file(int device, const char* filename);
+void oc_set_introspection_file(size_t device, const char* filename);
 
 
 /**
@@ -54,7 +54,7 @@ void oc_set_introspection_file(int device, const char* filename);
 
   @param device index of the device to which the resource is to be created
 */
-void oc_create_introspection_resource(int device);
+void oc_create_introspection_resource(size_t device);
 
 
 #endif /* OC_INTROSPECTION_H */

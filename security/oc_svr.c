@@ -34,7 +34,7 @@ oc_sec_create_svr(void)
   oc_sec_cred_init();
   oc_sec_acl_init();
 
-  int i;
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_core_populate_resource(OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_BASELINE,
                               OC_IF_BASELINE, OC_DISCOVERABLE, get_doxm, 0,

@@ -201,7 +201,7 @@ free_endpoints(void)
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   (void)device;
   if (!eps) {
@@ -224,7 +224,7 @@ oc_connectivity_get_endpoints(int device)
 }
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   (void)device;
   kernel_pid_t interfaces[GNRC_NETIF_NUMOF];
@@ -251,7 +251,7 @@ oc_connectivity_init(int device)
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   (void)device;
   terminate = true;
