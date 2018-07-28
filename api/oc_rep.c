@@ -45,7 +45,7 @@ oc_rep_get_cbor_errno(void)
   return g_err;
 }
 
-int
+ssize_t
 oc_rep_finalize(void)
 {
   size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
@@ -55,7 +55,7 @@ oc_rep_finalize(void)
   }
   if (g_err != CborNoError)
     return -1;
-  return (int)size;
+  return size;
 }
 
 static oc_rep_t *

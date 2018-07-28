@@ -3,6 +3,9 @@
 
 /* Time resolution */
 #include <stdint.h>
+/*basetsd contains SSIZE_T*/
+#include <basetsd.h>
+
 typedef uint64_t oc_clock_time_t;
 #define strncasecmp _strnicmp
 /* Sets one clock tick to 1 ms */
@@ -21,5 +24,7 @@ typedef uint64_t oc_clock_time_t;
 #if !defined(OC_BLOCK_WISE)
 #define OC_BLOCK_WISE
 #endif /* OC_BLOCK_WISE */
+
+typedef SSIZE_T ssize_t;
 
 #endif /* CONFIG_H */

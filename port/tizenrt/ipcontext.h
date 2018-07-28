@@ -71,7 +71,7 @@ typedef struct ip_context_t {
   tcp_context_t tcp;
 #endif
   int terminate;
-  int device;
+  size_t device;
   int shutdown_pipe[2];
 } ip_context_t;
 #endif /* IPCONTEXT_H */

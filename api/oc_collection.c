@@ -123,7 +123,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, int device)
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, size_t device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -339,7 +339,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               oc_rep_set_key(*oc_rep_object(links), "rep");
               memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
 
-              int size_before = oc_rep_finalize();
+              ssize_t size_before = oc_rep_finalize();
               rest_request.resource = link->resource;
               response_buffer.code = 0;
               response_buffer.response_length = 0;
@@ -389,7 +389,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               } else {
                 if (code < oc_status_code(OC_STATUS_BAD_REQUEST))
                   code = response_buffer.code;
-                int size_after = oc_rep_finalize();
+                ssize_t size_after = oc_rep_finalize();
                 if (size_before == size_after) {
                   oc_rep_start_root_object();
                   oc_rep_end_root_object();
@@ -423,7 +423,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     break;
   }
 
-  int size = oc_rep_finalize();
+  ssize_t size = oc_rep_finalize();
   size = (size <= 2) ? 0 : size;
 
   request->response->response_buffer->response_length = (uint16_t)size;

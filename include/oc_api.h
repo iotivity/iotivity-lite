@@ -88,7 +88,7 @@ void oc_set_con_res_announced(bool announce);
 
 /** Server side */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
-                               uint8_t num_resource_types, int device);
+                               uint8_t num_resource_types, size_t device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
                                          uint8_t interface);
 void oc_resource_set_default_interface(oc_resource_t *resource,
@@ -127,7 +127,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   @see oc_collection_add_link
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types, int device);
+                                 uint8_t num_resource_types, size_t device);
 
 /**
   @brief Deletes the specified collection.
@@ -270,7 +270,7 @@ bool oc_delete_resource(oc_resource_t *resource);
    applied, 0 is the first device
   @param rep list of properties and their new values
 */
-typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
+typedef void(*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
 
 /**
   @brief Sets the callback to receive change notifications for
@@ -287,11 +287,11 @@ typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
 void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
 void oc_init_query_iterator(void);
-int oc_iterate_query(oc_request_t *request, char **key, int *key_len,
-                     char **value, int *value_len);
+ssize_t oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
+                     char **value, size_t *value_len);
 bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
-                                 char **value, int *value_len);
-int oc_get_query_value(oc_request_t *request, const char *key, char **value);
+                                 char **value, ssize_t *value_len);
+ssize_t oc_get_query_value(oc_request_t *request, const char *key, char **value);
 
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
 void oc_ignore_request(oc_request_t *request);

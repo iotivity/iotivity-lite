@@ -31,7 +31,7 @@ struct oc_link_s
 struct oc_collection_s
 {
   struct oc_collection_s *next;
-  int device;
+  size_t device;
   oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
@@ -51,7 +51,7 @@ oc_collection_t *oc_collection_alloc(void);
 void oc_collection_free(oc_collection_t *collection);
 
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
-                                          size_t uri_path_len, int device);
+                                          size_t uri_path_len, size_t device);
 oc_collection_t *oc_collection_get_all(void);
 oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len);
 

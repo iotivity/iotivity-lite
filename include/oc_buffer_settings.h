@@ -17,9 +17,9 @@
 #ifndef OC_BUFFER_SETTINGS_H
 #define OC_BUFFER_SETTINGS_H
 
-int oc_set_mtu_size(long mtu_size);
-long oc_get_mtu_size(void);
-void oc_set_max_app_data_size(long size);
-long oc_get_max_app_data_size(void);
-long oc_get_block_size(void);
+ssize_t oc_set_mtu_size(size_t mtu_size);
+ssize_t oc_get_mtu_size(void);
+void oc_set_max_app_data_size(size_t size);
+ssize_t oc_get_max_app_data_size(void);
+ssize_t oc_get_block_size(void);
 #endif /* OC_BUFFER_SETTINGS_H */
