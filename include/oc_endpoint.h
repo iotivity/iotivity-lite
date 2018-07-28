@@ -54,7 +54,7 @@ enum transport_flags
 typedef struct oc_endpoint_t
 {
   struct oc_endpoint_t *next;
-  int device;
+  size_t device;
   enum transport_flags flags;
 
   union dev_addr
