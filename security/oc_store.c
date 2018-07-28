@@ -31,7 +31,7 @@
 
 #define SVR_TAG_MAX (32)
 static void
-gen_svr_tag(const char *name, int device_index, char *svr_tag)
+gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
 {
   int svr_tag_len = snprintf(svr_tag, SVR_TAG_MAX, "%s_%d", name, device_index);
   svr_tag_len = (svr_tag_len < SVR_TAG_MAX) ? svr_tag_len + 1 : SVR_TAG_MAX;
@@ -39,7 +39,7 @@ gen_svr_tag(const char *name, int device_index, char *svr_tag)
 }
 
 void
-oc_sec_load_doxm(int device)
+oc_sec_load_doxm(size_t device)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -84,7 +84,7 @@ oc_sec_load_doxm(int device)
 }
 
 void
-oc_sec_load_pstat(int device)
+oc_sec_load_pstat(size_t device)
 {
   long ret = 0;
   oc_rep_t *rep = 0;
@@ -130,7 +130,7 @@ oc_sec_load_pstat(int device)
 }
 
 void
-oc_sec_load_cred(int device)
+oc_sec_load_cred(size_t device)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -170,7 +170,7 @@ oc_sec_load_cred(int device)
 }
 
 void
-oc_sec_load_acl(int device)
+oc_sec_load_acl(size_t device)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -211,7 +211,7 @@ oc_sec_load_acl(int device)
 }
 
 void
-oc_sec_dump_pstat(int device)
+oc_sec_dump_pstat(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -237,7 +237,7 @@ oc_sec_dump_pstat(int device)
 }
 
 void
-oc_sec_dump_cred(int device)
+oc_sec_dump_cred(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -263,7 +263,7 @@ oc_sec_dump_cred(int device)
 }
 
 void
-oc_sec_dump_doxm(int device)
+oc_sec_dump_doxm(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -290,7 +290,7 @@ oc_sec_dump_doxm(int device)
 }
 
 void
-oc_sec_dump_acl(int device)
+oc_sec_dump_acl(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -316,7 +316,7 @@ oc_sec_dump_acl(int device)
 }
 
 void
-oc_sec_load_unique_ids(int device)
+oc_sec_load_unique_ids(size_t device)
 {
   long ret = 0;
   oc_rep_t *rep;
@@ -375,7 +375,7 @@ oc_sec_load_unique_ids(int device)
 }
 
 void
-oc_sec_dump_unique_ids(int device)
+oc_sec_dump_unique_ids(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);

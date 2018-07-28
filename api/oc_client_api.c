@@ -35,7 +35,7 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 static bool
 dispatch_coap_request(void)
 {
-  int payload_size = oc_rep_finalize();
+  ssize_t payload_size = oc_rep_finalize();
 
   if ((client_cb->method == OC_PUT || client_cb->method == OC_POST) &&
       payload_size > 0) {

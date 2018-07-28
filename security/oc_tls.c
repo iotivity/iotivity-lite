@@ -440,7 +440,7 @@ oc_tls_shutdown(void)
 #endif /* OC_TCP */
   }
 #endif /* OC_CLIENT */
-  int device;
+  size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     mbedtls_ssl_config_free(&server_conf[device]);
 #ifdef OC_TCP
@@ -605,7 +605,7 @@ dtls_init_err:
 }
 
 int
-oc_tls_update_psk_identity(int device)
+oc_tls_update_psk_identity(size_t device)
 {
   oc_uuid_t *device_id = oc_core_get_device_id(device);
   if (!device_id) {
