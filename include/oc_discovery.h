@@ -17,6 +17,6 @@
 #ifndef OC_DISCOVERY_H
 #define OC_DISCOVERY_H
 
-void oc_create_discovery_resource(int resource_idx, int device);
+void oc_create_discovery_resource(int resource_idx, size_t device);
 
 #endif /* OC_DISCOVERY_H */

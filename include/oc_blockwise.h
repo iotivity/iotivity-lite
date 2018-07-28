@@ -77,7 +77,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
 
 oc_blockwise_state_t *oc_blockwise_find_request_buffer(
   const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  const char *query, int query_len, oc_blockwise_role_t role);
+  const char *query, size_t query_len, oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer(
   const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,

@@ -59,7 +59,7 @@ oc_sec_doxm_init(void)
 }
 
 void
-oc_sec_doxm_default(int device)
+oc_sec_doxm_default(size_t device)
 {
   doxm[device].oxmsel = 0;
   doxm[device].sct = 1;
@@ -70,7 +70,7 @@ oc_sec_doxm_default(int device)
 }
 
 void
-oc_sec_encode_doxm(int device)
+oc_sec_encode_doxm(size_t device)
 {
   int oxms[1] = { 0 };
   char uuid[OC_UUID_LEN];
@@ -91,7 +91,7 @@ oc_sec_encode_doxm(int device)
 }
 
 oc_sec_doxm_t *
-oc_sec_get_doxm(int device)
+oc_sec_get_doxm(size_t device)
 {
   return &doxm[device];
 }
@@ -104,7 +104,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
-    int device = request->resource->device;
+    size_t device = request->resource->device;
     if (ql > 0 &&
         ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
          (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
@@ -125,7 +125,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 bool
-oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, int device)
+oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;

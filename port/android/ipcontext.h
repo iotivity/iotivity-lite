@@ -80,7 +80,7 @@ typedef struct ip_context_t {
 #endif
   pthread_t event_thread;
   int terminate;
-  int device;
+  size_t device;
   fd_set rfds;
   int shutdown_pipe[2];
 } ip_context_t;

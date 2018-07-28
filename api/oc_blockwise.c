@@ -284,7 +284,7 @@ oc_blockwise_find_buffer(oc_list_t list, const char *href, size_t href_len,
 oc_blockwise_state_t *
 oc_blockwise_find_request_buffer(const char *href, size_t href_len,
                                  oc_endpoint_t *endpoint, oc_method_t method,
-                                 const char *query, int query_len,
+                                 const char *query, size_t query_len,
                                  oc_blockwise_role_t role)
 {
   return oc_blockwise_find_buffer(oc_blockwise_requests, href, href_len,
