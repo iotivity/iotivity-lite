@@ -1,6 +1,6 @@
-From c2b60ba7ed864e8a95f61f25c9833fd15238a1f7 Mon Sep 17 00:00:00 2001
+From 5f4a89ea42a50d3211b006a52fdfc7586e3fd412 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Tue, 24 Jul 2018 15:39:45 +0300
+Date: Mon, 30 Jul 2018 13:38:45 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -17,7 +17,7 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  7 files changed, 153 insertions(+), 5 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..0d52cae 100644
+index 45143a5..aa476c3 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -58,8 +58,17 @@
@@ -32,7 +32,7 @@ index 45143a5..0d52cae 100644
 +#define MBEDTLS_PKCS5_C
 +
  /* Save RAM at the expense of ROM */
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_AES_ROM_TABLES
 +#endif
 
@@ -42,7 +42,7 @@ index 45143a5..0d52cae 100644
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 -#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
  #define MBEDTLS_RSA_C
@@ -58,7 +58,7 @@ index 45143a5..0d52cae 100644
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_CCM_C
 +#endif
 
