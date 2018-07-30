@@ -505,3 +505,169 @@ TEST(TestRep, OCRepGetCborErrorNoTest_P)
     ASSERT_FALSE(err);
 }
 
+TEST(TestRep, OCRepMacroSetDouble)
+{
+    char key[] = "speed";
+    double value = 1.000;
+    oc_rep_set_double(root, key, value);
+}
+
+TEST(TestRep, OCRepMacroSetUIntTest_p)
+{
+    char key[] = "speed";
+    unsigned int value = 1;
+    oc_rep_set_uint(root, key, value);
+}
+
+TEST(TestRep, OCRepMacroSetIntTest_P)
+{
+    char key[] = "speed";
+    int value = 1;
+    oc_rep_set_int(root, key, value);
+}
+
+TEST(TestRep, OCRepMacroSetBoolTest_P)
+{
+    char key[] = "speed";
+    bool value = true;
+    oc_rep_set_boolean(root, key, value);
+}
+
+TEST(TestRep, OCRepMacroSetTextStringTest_P)
+{
+    char key[] = "speed";
+    char value[] = "Hello Text";
+    oc_rep_set_text_string(root, key, value);
+}
+
+TEST(TestRep, OCRepMacroSetByteStringTest_P)
+{
+    char key[] = "speed";
+    char value[] = "Hello Text";
+    oc_rep_set_byte_string(root, key, value, strlen(value));
+}
+
+TEST(TestRep, OCRepMacroStartArrayTest_P)
+{
+    char key[] = "speed";
+    oc_rep_start_array(g_encoder, key);
+    oc_rep_end_array(g_encoder, key);
+}
+
+TEST(TestRep, OCRepMacroStartEndLinkArrayTest_P)
+{
+    oc_rep_start_links_array();
+    oc_rep_end_links_array();
+}
+
+TEST(TestRep, OCRepMacroStartEndRootObjectTest_P)
+{
+    oc_rep_start_root_object();
+    oc_rep_end_root_object();
+}
+
+TEST(TestRep, OCRepMacroAddByteStringTest_P)
+{
+    oc_rep_set_key(g_encoder, "if");
+    oc_rep_start_array(g_encoder, if);
+    oc_rep_add_byte_string(if, "oic.if.baseline");
+    oc_rep_end_array(g_encoder, if);
+}
+
+TEST(TestRep, OCRepMacroAddTextStringTest_P)
+{
+    oc_rep_set_key(g_encoder, "if");
+    oc_rep_start_array(g_encoder, if);
+    oc_rep_add_text_string(if, "oic.if.baseline");
+    oc_rep_end_array(g_encoder, if);
+}
+
+TEST(TestRep, OCRepMacroAddeDoubleTest_P)
+{
+    oc_rep_set_key(g_encoder, "if");
+    oc_rep_start_array(g_encoder, if);
+    oc_rep_add_double(if, 1.0000);
+    oc_rep_end_array(g_encoder, if);
+}
+
+TEST(TestRep, OCRepMacroAddeIntTest_P)
+{
+    oc_rep_set_key(g_encoder, "if");
+    oc_rep_start_array(g_encoder, if);
+    oc_rep_add_int(if, 1);
+    oc_rep_end_array(g_encoder, if);
+}
+
+TEST(TestRep, OCRepMacroAddeBooleanTest_P)
+{
+    oc_rep_set_key(g_encoder, "if");
+    oc_rep_start_array(g_encoder, if);
+    oc_rep_add_boolean(if, true);
+    oc_rep_end_array(g_encoder, if);
+}
+
+TEST(TestRep, OCRepMacroSetKeyTest_P)
+{
+    oc_rep_set_key(g_encoder, "abcdefg");
+}
+
+TEST(TestRep, OCRepMacroSetArrayTest_P)
+{
+    char key[] = "speed";
+    oc_rep_set_array(root, key);
+    oc_rep_close_array(root, key);
+}
+
+TEST(TestRep, OCRepMacroStartEndObjectTest_P)
+{
+    char key[] = "speed";
+    oc_rep_start_object(g_encoder, key);
+    oc_rep_end_object(g_encoder, key);
+}
+
+TEST(TestRep, OCRepMacroStartEndObjectItemTest_P)
+{
+    char key[] = "speed";
+    oc_rep_set_array(root, key);
+    oc_rep_object_array_start_item (key);
+    oc_rep_object_array_end_item(key);
+    oc_rep_close_array(root, key);
+}
+
+TEST(TestRep, OCRepMacroSetCloseObjectItemTest_P)
+{
+    char key[] = "speed";
+    oc_rep_set_object(root, key);
+    oc_rep_close_object(root, key);
+}
+
+TEST(TestRep, OCRepMacroSetInitObjectItemTest_P)
+{
+    char key[] = "speed";
+    int arr[2] = {0, 1};
+    oc_rep_set_int_array(root, key, arr, 2);
+}
+
+TEST(TestRep, OCRepMacroSetBoolObjectItemTest_P)
+{
+    char key[] = "speed";
+    bool arr[2] = {false, true};
+    oc_rep_set_bool_array(root, key, arr, 2);
+}
+
+TEST(TestRep, OCRepMacroSetDoubleObjectItemTest_P)
+{
+    char key[] = "speed";
+    double arr[2] = {false, true};
+    oc_rep_set_double_array(root, key, arr, 2);
+}
+
+TEST(TestRep, OCRepMacroSetStringObjectItemTest_P)
+{
+    char key[] = "speed";
+    oc_string_array_t byte_string_value;
+    byte_string_value.ptr = "test";
+    byte_string_value.size = 4;
+    byte_string_value.next = NULL;
+    oc_rep_set_string_array(root, key, byte_string_value);
+}
