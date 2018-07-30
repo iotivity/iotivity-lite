@@ -1227,6 +1227,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         oc_response_handler_t handler =
           (oc_response_handler_t)cb->handler.response;
         handler(&client_response);
+      } else {
+        OC_WRN("Error parsing payload!");
       }
       oc_free_rep(client_response.payload);
     }
