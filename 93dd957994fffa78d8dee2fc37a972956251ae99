@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_395627d3",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-07-30T12:56:16Z",
+      "side": 1,
+      "message": "How about Try ASSERT with g_err value.",
+      "range": {
+        "startLine": 512,
+        "startChar": 4,
+        "endLine": 512,
+        "endChar": 21
+      },
+      "revId": "93dd957994fffa78d8dee2fc37a972956251ae99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
