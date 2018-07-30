@@ -94,7 +94,6 @@ class TestTlsConnection: public testing::Test
         virtual void TearDown()
         {
            oc_ri_shutdown();
-           oc_tls_shutdown();
            oc_connectivity_shutdown(0);
            oc_core_shutdown();
         }
@@ -105,6 +104,7 @@ TEST_F(TestTlsConnection, InitTlsTest_P)
 
     int errorCode = oc_tls_init_context();
     EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
+    oc_tls_shutdown();
 }
 
 TEST_F(TestTlsConnection, InitTlsTestTwice_P)
@@ -112,8 +112,10 @@ TEST_F(TestTlsConnection, InitTlsTestTwice_P)
 
     int errorCode = oc_tls_init_context();
     ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
+    oc_tls_shutdown();
     errorCode = oc_tls_init_context();
     EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
+    oc_tls_shutdown();
 }
 
 TEST_F(TestTlsConnection, LoadCertTest_P)
@@ -123,7 +125,7 @@ TEST_F(TestTlsConnection, LoadCertTest_P)
     ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
     errorCode = oc_tls_update_psk_identity(0);
     EXPECT_EQ(0, errorCode) << "Failed to update";
-
+    oc_tls_shutdown();
 }
 
 TEST_F(TestTlsConnection, TlsConnectionTest_N)
@@ -134,12 +136,12 @@ TEST_F(TestTlsConnection, TlsConnectionTest_N)
     oc_endpoint_t *endpoint = oc_new_endpoint();
     bool isConnected = oc_tls_connected(endpoint);
     EXPECT_FALSE(isConnected ) << "Failed to update";
-
+    oc_free_endpoint(endpoint);
+    oc_tls_shutdown();
 }
 
 TEST_F(TestTlsConnection, TlsRawPublicKeyHmacTest_N)
 {
-
     int errorCode = oc_tls_init_context();
     ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
     oc_endpoint_t *endpoint = oc_new_endpoint();
@@ -147,6 +149,8 @@ TEST_F(TestTlsConnection, TlsRawPublicKeyHmacTest_N)
     int hmac_len = 0;
     bool result = oc_sec_get_rpk_hmac(endpoint, hmac, &hmac_len);
     EXPECT_FALSE(result) << "Rpk hmac calculated but TLS session doesn't exists";
+    oc_free_endpoint(endpoint);
+    oc_tls_shutdown();
 }
 
 TEST_F(TestTlsConnection, TlsRawPublicKeyPskTest_N)
@@ -159,8 +163,7 @@ TEST_F(TestTlsConnection, TlsRawPublicKeyPskTest_N)
     int psk_len = 0;
     bool result = oc_sec_get_rpk_psk(0, psk, &psk_len);
     EXPECT_TRUE(result) << "Failed to calculate rpk PSK";
+    oc_free_endpoint(endpoint);
+    oc_tls_shutdown();
 }
-
-
-
 #endif
