@@ -1,0 +1,221 @@
+From 8ae4ff45abd265bf2f2eb3856aee958040978192 Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Fri, 27 Jul 2018 18:44:43 +0300
+Subject: [PATCH] mbedtls reduce more
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h |  2 +-
+ library/oid.c            |  5 +++++
+ library/pkcs5.c          | 10 ++++++++++
+ library/ssl_tls.c        |  5 +++++
+ library/x509_crt.c       | 30 ++++++++++++++++++++++++++++++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
+
+diff --git a/library/oid.c b/library/oid.c
+index f13826e..29173c2 100644
+--- a/library/oid.c
++++ b/library/oid.c
+@@ -670,6 +670,7 @@ FN_OID_GET_ATTR2(mbedtls_oid_get_pkcs12_pbe_alg, oid_pkcs12_pbe_alg_t, pkcs12_pb
+ int mbedtls_oid_get_numeric_string( char *buf, size_t size,
+                             const mbedtls_asn1_buf *oid )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     size_t i, n;
+     unsigned int value;
+@@ -705,6 +706,10 @@ int mbedtls_oid_get_numeric_string( char *buf, size_t size,
+     }
+ 
+     return( (int) ( size - n ) );
++#else
++    oc_abort("mbedtls_oid_get_numeric_string: cut out due optimization");
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ #endif /* MBEDTLS_OID_C */
+diff --git a/library/pkcs5.c b/library/pkcs5.c
+index 7405fc3..c074c9a 100644
+--- a/library/pkcs5.c
++++ b/library/pkcs5.c
+@@ -55,6 +55,7 @@ static int pkcs5_parse_pbkdf2_params( const mbedtls_asn1_buf *params,
+                                       mbedtls_asn1_buf *salt, int *iterations,
+                                       int *keylen, mbedtls_md_type_t *md_type )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     mbedtls_asn1_buf prf_alg_oid;
+     unsigned char *p = params->p;
+@@ -106,6 +107,10 @@ static int pkcs5_parse_pbkdf2_params( const mbedtls_asn1_buf *params,
+                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
+ 
+     return( 0 );
++#else
++    oc_abort("pkcs5_parse_pbkdf2_params: cut out due optimization");
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ int mbedtls_pkcs5_pbes2( const mbedtls_asn1_buf *pbe_params, int mode,
+@@ -113,6 +118,7 @@ int mbedtls_pkcs5_pbes2( const mbedtls_asn1_buf *pbe_params, int mode,
+                  const unsigned char *data, size_t datalen,
+                  unsigned char *output )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret, iterations = 0, keylen = 0;
+     unsigned char *p, *end;
+     mbedtls_asn1_buf kdf_alg_oid, enc_scheme_oid, kdf_alg_params, enc_scheme_params;
+@@ -212,6 +218,10 @@ exit:
+     mbedtls_cipher_free( &cipher_ctx );
+ 
+     return( ret );
++#else
++    oc_abort("mbedtls_pkcs5_pbes2: cut out due optimization");
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ int mbedtls_pkcs5_pbkdf2_hmac( mbedtls_md_context_t *ctx, const unsigned char *password,
+diff --git a/library/ssl_tls.c b/library/ssl_tls.c
+index d51230d..81cebfe 100644
+--- a/library/ssl_tls.c
++++ b/library/ssl_tls.c
+@@ -8436,6 +8436,7 @@ int mbedtls_ssl_get_key_exchange_md_tls1_2( mbedtls_ssl_context *ssl,
+                                        unsigned char *data, size_t data_len,
+                                        mbedtls_md_type_t md_alg )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret = 0;
+     mbedtls_md_context_t ctx;
+     const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type( md_alg );
+@@ -8483,6 +8484,10 @@ exit:
+                                         MBEDTLS_SSL_ALERT_MSG_INTERNAL_ERROR );
+ 
+     return( ret );
++#else
++    oc_abort("mbedtls_ssl_get_key_exchange_md_tls1_2: cut out due optimization");
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ #endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
+           MBEDTLS_SSL_PROTO_TLS1_2 */
+diff --git a/library/x509_crt.c b/library/x509_crt.c
+index 3597480..852494c 100644
+--- a/library/x509_crt.c
++++ b/library/x509_crt.c
+@@ -1386,6 +1386,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+ static int x509_info_subject_alt_name( char **buf, size_t *size,
+                                        const mbedtls_x509_sequence *subject_alt_name )
+ {
++#ifndef ST_MBEDTLS_OPT
+     size_t i;
+     size_t n = *size;
+     char *p = *buf;
+@@ -1419,6 +1420,10 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+     *buf = p;
+ 
+     return( 0 );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ #endif
+ 
+@@ -1436,6 +1441,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+ static int x509_info_cert_type( char **buf, size_t *size,
+                                 unsigned char ns_cert_type )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     size_t n = *size;
+     char *p = *buf;
+@@ -1454,6 +1460,10 @@ static int x509_info_cert_type( char **buf, size_t *size,
+     *buf = p;
+ 
+     return( 0 );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ #define KEY_USAGE(code,name)    \
+@@ -1463,6 +1473,7 @@ static int x509_info_cert_type( char **buf, size_t *size,
+ static int x509_info_key_usage( char **buf, size_t *size,
+                                 unsigned int key_usage )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     size_t n = *size;
+     char *p = *buf;
+@@ -1482,11 +1493,16 @@ static int x509_info_key_usage( char **buf, size_t *size,
+     *buf = p;
+ 
+     return( 0 );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ static int x509_info_ext_key_usage( char **buf, size_t *size,
+                                     const mbedtls_x509_sequence *extended_key_usage )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     const char *desc;
+     size_t n = *size;
+@@ -1511,6 +1527,10 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
+     *buf = p;
+ 
+     return( 0 );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ /*
+@@ -1521,6 +1541,7 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
+ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
+                    const mbedtls_x509_crt *crt )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     size_t n;
+     char *p;
+@@ -1648,6 +1669,10 @@ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
+     MBEDTLS_X509_SAFE_SNPRINTF;
+ 
+     return( (int) ( size - n ) );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ struct x509_crt_verify_string {
+@@ -1682,6 +1707,7 @@ static const struct x509_crt_verify_string x509_crt_verify_strings[] = {
+ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
+                           uint32_t flags )
+ {
++#ifndef ST_MBEDTLS_OPT
+     int ret;
+     const struct x509_crt_verify_string *cur;
+     char *p = buf;
+@@ -1705,6 +1731,10 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
+     }
+ 
+     return( (int) ( size - n ) );
++#else
++    oc_abort(__func__);
++    return( 0 );
++#endif  /* ST_MBEDTLS_OPT */
+ }
+ 
+ #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
+-- 
+1.9.1
+
