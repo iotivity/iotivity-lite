@@ -1,6 +1,6 @@
-From c2b60ba7ed864e8a95f61f25c9833fd15238a1f7 Mon Sep 17 00:00:00 2001
+From 5f4a89ea42a50d3211b006a52fdfc7586e3fd412 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Tue, 24 Jul 2018 15:39:45 +0300
+Date: Mon, 30 Jul 2018 13:38:45 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -17,13 +17,13 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  7 files changed, 153 insertions(+), 5 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..0d52cae 100644
+index 45143a5..aa476c3 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -58,8 +58,17 @@
  #define MBEDTLS_SSL_SRV_C
  #define MBEDTLS_SSL_TLS_C
-
+ 
 +/* Raw Public Key*/
 +#define MBEDTLS_ECDH_C
 +#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
@@ -32,17 +32,17 @@ index 45143a5..0d52cae 100644
 +#define MBEDTLS_PKCS5_C
 +
  /* Save RAM at the expense of ROM */
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_AES_ROM_TABLES
 +#endif
-
+ 
  /* Save some RAM by adjusting to your exact needs */
  #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
 @@ -82,12 +91,13 @@
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
 -#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
  #define MBEDTLS_RSA_C
@@ -52,18 +52,18 @@ index 45143a5..0d52cae 100644
  #define MBEDTLS_X509_CRT_PARSE_C
 -
  #define MBEDTLS_X509_USE_C
-
+ 
  #define MBEDTLS_ASN1_PARSE_C
 @@ -98,7 +108,9 @@
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-+#ifndef ST_APP_OPTIMIZATION
++#ifndef ST_MBEDTLS_OPT
  #define MBEDTLS_CCM_C
 +#endif
-
+ 
  #define MBEDTLS_CIPHER_MODE_CBC
-
+ 
 diff --git a/library/asn1parse.c b/library/asn1parse.c
 index 4dd65c0..18d6b83 100644
 --- a/library/asn1parse.c
@@ -78,14 +78,14 @@ index 4dd65c0..18d6b83 100644
      mbedtls_asn1_buf *buf;
 @@ -286,6 +287,10 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
          return( MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  int mbedtls_asn1_get_alg( unsigned char **p,
 @@ -336,6 +341,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
                         const unsigned char *end,
@@ -94,37 +94,37 @@ index 4dd65c0..18d6b83 100644
 +#ifndef ST_MBEDTLS_OPT
      int ret;
      mbedtls_asn1_buf params;
-
+ 
 @@ -348,10 +354,15 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
          return( MBEDTLS_ERR_ASN1_INVALID_DATA );
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
  {
 +#ifndef ST_MBEDTLS_OPT
      if( cur == NULL )
          return;
-
+ 
 @@ -359,10 +370,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
      mbedtls_free( cur->val.p );
-
+ 
      mbedtls_zeroize( cur, sizeof( mbedtls_asn1_named_data ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
  {
 +#ifndef ST_MBEDTLS_OPT
      mbedtls_asn1_named_data *cur;
-
+ 
      while( ( cur = *head ) != NULL )
 @@ -371,11 +386,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
          mbedtls_asn1_free_named_data( cur );
@@ -134,7 +134,7 @@ index 4dd65c0..18d6b83 100644
 +    oc_abort("ST_APP Skipped for optimization");
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *list,
                                         const char *oid, size_t len )
  {
@@ -144,14 +144,14 @@ index 4dd65c0..18d6b83 100644
          if( list->oid.len == len &&
 @@ -388,6 +407,10 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
      }
-
+ 
      return( list );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  #endif /* MBEDTLS_ASN1_PARSE_C */
 diff --git a/library/bignum.c b/library/bignum.c
 index 6fdf317..19435ea 100644
@@ -159,20 +159,20 @@ index 6fdf317..19435ea 100644
 +++ b/library/bignum.c
 @@ -286,6 +286,7 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
      }
-
+ 
  cleanup:
 +
      return( ret );
  }
-
+ 
 @@ -419,7 +420,6 @@ static int mpi_get_digit( mbedtls_mpi_uint *d, int radix, char c )
-
+ 
      if( *d >= (mbedtls_mpi_uint) radix )
          return( MBEDTLS_ERR_MPI_INVALID_CHARACTER );
 -
      return( 0 );
  }
-
+ 
 @@ -500,6 +500,7 @@ cleanup:
   */
  static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
@@ -180,17 +180,17 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      int ret;
      mbedtls_mpi_uint r;
-
+ 
 @@ -520,6 +521,10 @@ static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
  cleanup:
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -528,6 +533,7 @@ cleanup:
  int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
@@ -202,14 +202,14 @@ index 6fdf317..19435ea 100644
      char *p;
 @@ -596,6 +602,10 @@ cleanup:
      mbedtls_mpi_free( &T );
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  #if defined(MBEDTLS_FS_IO)
 @@ -1077,6 +1087,7 @@ cleanup:
   */
@@ -218,17 +218,17 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
-
+ 
 @@ -1086,6 +1097,10 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A, mbedtls_mpi_sint
      _B.p = p;
-
+ 
      return( mbedtls_mpi_add_mpi( X, A, &_B ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -1445,6 +1460,7 @@ cleanup:
   */
@@ -237,17 +237,17 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      mbedtls_mpi _B;
      mbedtls_mpi_uint p[1];
-
+ 
 @@ -1454,6 +1470,10 @@ int mbedtls_mpi_div_int( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A, m
      _B.p = p;
-
+ 
      return( mbedtls_mpi_div_mpi( Q, R, A, &_B ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -1484,6 +1504,7 @@ cleanup:
   */
@@ -256,17 +256,17 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      size_t i;
      mbedtls_mpi_uint x, y, z;
-
+ 
 @@ -1532,7 +1553,8 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
          y = b - y;
-
+ 
      *r = y;
 -
 +#endif
 +    oc_abort("ST_APP Skipped for optimization");
      return( 0 );
  }
-
+ 
 @@ -1541,6 +1563,7 @@ int mbedtls_mpi_mod_int( mbedtls_mpi_uint *r, const mbedtls_mpi *A, mbedtls_mpi_
   */
  static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
@@ -274,16 +274,16 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      mbedtls_mpi_uint x, m0 = N->p[0];
      unsigned int i;
-
+ 
 @@ -1551,6 +1574,9 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
          x *= ( 2 - ( m0 * x ) );
-
+ 
      *mm = ~x + 1;
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -1559,6 +1585,7 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
  static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
@@ -292,7 +292,7 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      size_t i, n, m;
      mbedtls_mpi_uint u0, u1, *d;
-
+ 
 @@ -1592,7 +1619,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      else
          /* prevent timing attacks */
@@ -302,7 +302,7 @@ index 6fdf317..19435ea 100644
 +    oc_abort("ST_APP Skipped for optimization");
      return( 0 );
  }
-
+ 
 @@ -1601,6 +1629,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
   */
  static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
@@ -310,17 +310,17 @@ index 6fdf317..19435ea 100644
 +#ifndef ST_MBEDTLS_OPT
      mbedtls_mpi_uint z = 1;
      mbedtls_mpi U;
-
+ 
 @@ -1608,6 +1637,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
      U.p = &z;
-
+ 
      return( mpi_montmul( A, &U, N, mm, T ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -1615,6 +1648,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
   */
@@ -332,14 +332,14 @@ index 6fdf317..19435ea 100644
      size_t i, j, nblimbs;
 @@ -1816,6 +1850,10 @@ cleanup:
          mbedtls_mpi_free( &RR );
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 diff --git a/library/ecdsa.c b/library/ecdsa.c
 index 826fefe..617ae7a 100644
@@ -355,7 +355,7 @@ index 826fefe..617ae7a 100644
      mbedtls_mpi k, e, t;
 @@ -157,6 +158,10 @@ cleanup:
      mbedtls_mpi_free( &k ); mbedtls_mpi_free( &e ); mbedtls_mpi_free( &t );
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
@@ -363,7 +363,7 @@ index 826fefe..617ae7a 100644
 +#endif /* ST_MBEDTLS_OPT*/
  }
  #endif /* MBEDTLS_ECDSA_SIGN_ALT */
-
+ 
 @@ -292,6 +297,7 @@ cleanup:
  static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
                                      unsigned char *sig, size_t *slen )
@@ -374,14 +374,14 @@ index 826fefe..617ae7a 100644
      unsigned char *p = buf + sizeof( buf );
 @@ -308,6 +314,10 @@ static int ecdsa_signature_to_asn1( const mbedtls_mpi *r, const mbedtls_mpi *s,
      *slen = len;
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -319,6 +329,7 @@ int mbedtls_ecdsa_write_signature( mbedtls_ecdsa_context *ctx, mbedtls_md_type_t
                             int (*f_rng)(void *, unsigned char *, size_t),
@@ -390,17 +390,17 @@ index 826fefe..617ae7a 100644
 +#ifndef ST_MBEDTLS_OPT
      int ret;
      mbedtls_mpi r, s;
-
+ 
 @@ -345,6 +356,10 @@ cleanup:
      mbedtls_mpi_free( &s );
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  #if ! defined(MBEDTLS_DEPRECATED_REMOVED) && \
 @@ -417,8 +432,13 @@ cleanup:
  int mbedtls_ecdsa_genkey( mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id gid,
@@ -415,7 +415,7 @@ index 826fefe..617ae7a 100644
 +#endif /* ST_MBEDTLS_OPT */
  }
  #endif /* MBEDTLS_ECDSA_GENKEY_ALT */
-
+ 
 diff --git a/library/pk.c b/library/pk.c
 index b52c73f..c0d9fe7 100644
 --- a/library/pk.c
@@ -429,7 +429,7 @@ index b52c73f..c0d9fe7 100644
          pk_hashlen_helper( md_alg, &hash_len ) != 0 )
          return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 @@ -267,6 +268,10 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
-
+ 
      return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                       sig, sig_len, f_rng, p_rng ) );
 +#else
@@ -437,7 +437,7 @@ index b52c73f..c0d9fe7 100644
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -277,6 +282,7 @@ int mbedtls_pk_decrypt( mbedtls_pk_context *ctx,
                  unsigned char *output, size_t *olen, size_t osize,
@@ -446,9 +446,9 @@ index b52c73f..c0d9fe7 100644
 +#ifndef ST_MBEDTLS_OPT
      if( ctx == NULL || ctx->pk_info == NULL )
          return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
+ 
 @@ -285,6 +291,10 @@ int mbedtls_pk_decrypt( mbedtls_pk_context *ctx,
-
+ 
      return( ctx->pk_info->decrypt_func( ctx->pk_ctx, input, ilen,
                  output, olen, osize, f_rng, p_rng ) );
 +#else
@@ -456,7 +456,7 @@ index b52c73f..c0d9fe7 100644
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -295,6 +305,7 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
                  unsigned char *output, size_t *olen, size_t osize,
@@ -465,9 +465,9 @@ index b52c73f..c0d9fe7 100644
 +#ifndef ST_MBEDTLS_OPT
      if( ctx == NULL || ctx->pk_info == NULL )
          return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
-
+ 
 @@ -303,6 +314,10 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
-
+ 
      return( ctx->pk_info->encrypt_func( ctx->pk_ctx, input, ilen,
                  output, olen, osize, f_rng, p_rng ) );
 +#else
@@ -475,7 +475,7 @@ index b52c73f..c0d9fe7 100644
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -310,6 +325,7 @@ int mbedtls_pk_encrypt( mbedtls_pk_context *ctx,
   */
@@ -487,14 +487,14 @@ index b52c73f..c0d9fe7 100644
          prv->pk_info->check_pair_func == NULL )
 @@ -329,6 +345,10 @@ int mbedtls_pk_check_pair( const mbedtls_pk_context *pub, const mbedtls_pk_conte
      }
-
+ 
      return( prv->pk_info->check_pair_func( pub->pk_ctx, prv->pk_ctx ) );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif
  }
-
+ 
  /*
 diff --git a/library/pkparse.c b/library/pkparse.c
 index e19511e..5cb5e39 100644
@@ -506,18 +506,18 @@ index e19511e..5cb5e39 100644
  {
 +#ifndef ST_MBEDTLS_OPT
      int ret;
-
+ 
      /* Tag may be either OID or SEQUENCE */
 @@ -206,6 +207,10 @@ static int pk_get_ecparams( unsigned char **p, const unsigned char *end,
                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
-
+ 
  #if defined(MBEDTLS_PK_PARSE_EC_EXTENDED)
 @@ -793,6 +798,7 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
                                    const unsigned char *key,
@@ -529,7 +529,7 @@ index e19511e..5cb5e39 100644
      size_t len;
 @@ -911,6 +917,10 @@ static int pk_parse_key_sec1_der( mbedtls_ecp_keypair *eck,
      }
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
@@ -537,7 +537,7 @@ index e19511e..5cb5e39 100644
 +#endif /* ST_MBEDTLS_OPT */
  }
  #endif /* MBEDTLS_ECP_C */
-
+ 
 @@ -932,6 +942,7 @@ static int pk_parse_key_pkcs8_unencrypted_der(
                                      const unsigned char* key,
                                      size_t keylen )
@@ -548,14 +548,14 @@ index e19511e..5cb5e39 100644
      mbedtls_asn1_buf params;
 @@ -1010,6 +1021,10 @@ static int pk_parse_key_pkcs8_unencrypted_der(
          return( MBEDTLS_ERR_PK_UNKNOWN_PK_ALG );
-
+ 
      return( 0 );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  /*
 @@ -1349,6 +1364,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
  int mbedtls_pk_parse_public_key( mbedtls_pk_context *ctx,
@@ -567,14 +567,14 @@ index e19511e..5cb5e39 100644
  #if defined(MBEDTLS_PEM_PARSE_C)
 @@ -1389,6 +1405,10 @@ int mbedtls_pk_parse_public_key( mbedtls_pk_context *ctx,
  #endif
-
+ 
      return( ret );
 +#else
 +    oc_abort("ST_APP Skipped for optimization");
 +    return( 0 );
 +#endif /* ST_MBEDTLS_OPT */
  }
-
+ 
  #endif /* MBEDTLS_PK_PARSE_C */
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
 index e9b0d82..b9289e2 100644
@@ -590,7 +590,7 @@ index e9b0d82..b9289e2 100644
       * and if so the server's value should match ours (and len is always 1)
 @@ -1147,6 +1148,10 @@ static int ssl_parse_max_fragment_length_ext( mbedtls_ssl_context *ssl,
      }
-
+ 
      return( 0 );
 +#else
 +  oc_abort("ST_APP Skipped for optimization");
@@ -598,7 +598,7 @@ index e9b0d82..b9289e2 100644
 +#endif /* ST_MBEDTLS_OPT */
  }
  #endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
-
+ 
 @@ -1246,6 +1251,7 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
                                                    const unsigned char *buf,
                                                    size_t len )
@@ -606,7 +606,7 @@ index e9b0d82..b9289e2 100644
 +#ifndef ST_MBEDTLS_OPT
      size_t list_size;
      const unsigned char *p;
-
+ 
 @@ -1282,6 +1288,10 @@ static int ssl_parse_supported_point_formats_ext( mbedtls_ssl_context *ssl,
      mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                      MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE );
@@ -625,10 +625,10 @@ index e9b0d82..b9289e2 100644
 +#ifndef ST_MBEDTLS_OPT
      int ret = 0;
      size_t n;
-
+ 
 @@ -2141,6 +2152,10 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
      *p += n;
-
+ 
      return( 0 );
 +#else
 +  oc_abort("ST_APP Skipped for optimization");
@@ -636,7 +636,7 @@ index e9b0d82..b9289e2 100644
 +#endif /* ST_MBEDTLS_OPT */
  }
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
-
+ 
 -- 
 1.9.1
 
