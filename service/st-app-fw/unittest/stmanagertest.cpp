@@ -128,6 +128,7 @@ TEST_F(TestSTManager, st_manager_start)
     st_manager_deinitialize();
 }
 
+#ifndef STATE
 TEST_F(TestSTManager, st_manager_reset)
 {
     int st_error_ret = st_manager_initialize();
@@ -148,6 +149,7 @@ TEST_F(TestSTManager, st_manager_reset)
     st_manager_stop();
     st_manager_deinitialize();
 }
+#endif /* STATE */
 
 TEST_F(TestSTManager, st_manager_stop_fail_dueto_excluding_init)
 {
