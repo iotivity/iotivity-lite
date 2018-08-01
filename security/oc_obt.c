@@ -856,15 +856,12 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
   return -1;
 }
 
-static oc_event_callback_retval_t
-trigger_owned_device_cb(void *data);
-
 static void
-trigger_owned_device_failure(void *data)
+trigger_get_ownership(oc_device_t *device, void *data)
 {
   if (data) {
     oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)data;
-    c->cb(NULL, c->data);
+    c->cb(device, c->data);
     oc_memb_free(&oc_devicelist_s, c);
   }
 }
@@ -877,7 +874,7 @@ get_endpoints(oc_client_response_t *data)
   oc_device_t *device = (oc_device_t *)data->user_data;
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    trigger_owned_device_failure(device->ctx);
+    trigger_get_ownership(NULL, device->ctx);
     device->ctx = NULL;
     return;
   }
@@ -942,7 +939,7 @@ get_endpoints(oc_client_response_t *data)
 
   if (device->ctx) {
     // See oc_obt_rediscover_owned_device() and obt_check_owned().
-    trigger_owned_device_cb(device->ctx);
+    trigger_get_ownership(device, device->ctx);
     device->ctx = NULL;
   }
 }
@@ -955,7 +952,7 @@ obt_check_owned(oc_client_response_t *data)
   oc_devicelist_cb_t *cb = (oc_devicelist_cb_t *)(data->user_data);
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    trigger_owned_device_failure(cb);
+    trigger_get_ownership(NULL, cb);
     return;
   }
 
@@ -984,13 +981,13 @@ obt_check_owned(oc_client_response_t *data)
   }
 
   if (owned == -1) {
-    trigger_owned_device_failure(cb);
+    trigger_get_ownership(NULL, cb);
     return;
   }
 
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
-    trigger_owned_device_failure(cb);
+    trigger_get_ownership(NULL, cb);
     return;
   }
 
@@ -1001,7 +998,7 @@ obt_check_owned(oc_client_response_t *data)
   } else {
     /* Device is owned by somebody else */
     if (!owned_device(&uuid)) {
-      trigger_owned_device_failure(cb);
+      trigger_get_ownership(NULL, cb);
       return;
     } else {
       new_device = cache_device_if_not_known(oc_devices, &uuid, data->endpoint);
@@ -1009,15 +1006,10 @@ obt_check_owned(oc_client_response_t *data)
   }
 
   if (new_device) {
-    if (owned != 0) {
-      new_device->ctx = data->user_data;
-    }
+    new_device->ctx = data->user_data;
+    new_device->owned = (owned > 0);
     oc_do_get("/oic/res", new_device->endpoint, "rt=oic.r.doxm", &get_endpoints,
               HIGH_QOS, new_device);
-    if (owned == 0) {
-      // Taking ownership failed as it is still unowned, notify failure.
-      trigger_owned_device_failure(cb);
-    }
   }
 }
 
@@ -1084,7 +1076,7 @@ oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data)
 }
 
 int
-oc_obt_verify_owned_device(oc_endpoint_t *ep,
+oc_obt_get_ownership(oc_endpoint_t *ep,
                            oc_obt_devicelist_cb_t cb, void *data)
 {
   oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)oc_memb_alloc(&oc_devicelist_s);
