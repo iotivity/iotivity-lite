@@ -31,6 +31,7 @@ typedef struct oc_device_t
   oc_endpoint_t *endpoint;
   oc_uuid_t uuid;
   void *ctx;
+  bool owned;
 } oc_device_t;
 
 typedef void (*oc_obt_devicelist_cb_t)(oc_device_t *, void *);
@@ -59,8 +60,8 @@ int oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data);
   @param data data to be provided to the callback, may be NULL
   @return 0 if verification is scheduled, -1 if out of memory
 */
-int oc_obt_verify_owned_device(oc_endpoint_t *ep,
-                               oc_obt_devicelist_cb_t cb, void *data);
+int oc_obt_get_ownership(oc_endpoint_t *ep,
+                         oc_obt_devicelist_cb_t cb, void *data);
 
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
