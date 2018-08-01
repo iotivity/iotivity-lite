@@ -46,7 +46,7 @@ class EasySetupIntegrationTest: public ::testing::Test
  * @procedure     1. call es_init_enrollee
  * @post_condition 1. unregister resource
  * 2. oc_main_shutdown()
- * @expected api should return true
+ * @expected api should return ES_OK
  */
 TEST(EasySetupIntegrationTest, easysetup_init_enrollee_return_check_P)
 {
@@ -77,7 +77,7 @@ TEST(EasySetupIntegrationTest, easysetup_init_enrollee_resource_mark_null_check_
     EasySetupHelper *m_pEasySetupHelper = EasySetupHelper::getInstance();
     m_pEasySetupHelper->createResource();
 
-    EXPECT_TRUE(m_pEasySetupHelper->easySetupInitEnrollee(false, true, false));
+    EXPECT_FALSE(m_pEasySetupHelper->easySetupInitEnrollee(false, true, false));
 
     m_pEasySetupHelper->unRegisterResources();
     m_pEasySetupHelper->shutDown();
@@ -101,7 +101,7 @@ TEST(EasySetupIntegrationTest, easysetup_init_enrollee_handler_null_check_N)
     EasySetupHelper *m_pEasySetupHelper = EasySetupHelper::getInstance();
     m_pEasySetupHelper->createResource();
 
-    EXPECT_TRUE(m_pEasySetupHelper->easySetupInitEnrollee(false, false, true));
+    EXPECT_FALSE(m_pEasySetupHelper->easySetupInitEnrollee(false, false, true));
 
     m_pEasySetupHelper->unRegisterResources();
     m_pEasySetupHelper->shutDown();
@@ -153,7 +153,7 @@ TEST(EasySetupIntegrationTest, easysetup_set_callback_null_check_N)
     m_pEasySetupHelper->createResource();
 
     m_pEasySetupHelper->easySetupInitEnrollee(false, false, false);
-    EXPECT_TRUE(m_pEasySetupHelper->easySetupCallbackforUserData(true));
+    EXPECT_FALSE(m_pEasySetupHelper->easySetupCallbackforUserData(true));
 
     m_pEasySetupHelper->unRegisterResources();
     m_pEasySetupHelper->shutDown();
@@ -207,7 +207,7 @@ TEST(EasySetupIntegrationTest, easysetup_set_device_info_null_check_N)
 
     m_pEasySetupHelper->easySetupInitEnrollee(false, false, false);
     m_pEasySetupHelper->easySetupCallbackforUserData(false);
-    EXPECT_TRUE(m_pEasySetupHelper->setDeviceInfo(true));
+    EXPECT_FALSE(m_pEasySetupHelper->setDeviceInfo(true));
 
     m_pEasySetupHelper->unRegisterResources();
     m_pEasySetupHelper->shutDown();
@@ -226,7 +226,7 @@ TEST(EasySetupIntegrationTest, easysetup_set_device_info_null_check_N)
  * @procedure     1. es_terminate_enrollee
  * @post_condition 1. unregister resource
  * 2. oc_main_shutdown()
- * @expected api will not return ES_OK
+ * @expected api will return ES_OK
  */
 TEST(EasySetupIntegrationTest, easysetup_stop_return_check_P)
 {
