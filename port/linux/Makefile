@@ -186,6 +186,10 @@ obj/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
+obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
+obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
@@ -204,65 +208,65 @@ libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
 
-server: libiotivity-constrained-server.a
+server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client: libiotivity-constrained-client.a
+client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-smart_lock: libiotivity-constrained-client.a
+smart_lock: libiotivity-constrained-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-temp_sensor: libiotivity-constrained-client.a
+temp_sensor: libiotivity-constrained-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-simpleserver: libiotivity-constrained-server.a
+simpleserver: libiotivity-constrained-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleclient: libiotivity-constrained-client.a
+simpleclient: libiotivity-constrained-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-client_collections_linux: libiotivity-constrained-client.a
+client_collections_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_collections_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_collections_linux: libiotivity-constrained-server.a
+server_collections_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_collections_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_block_linux: libiotivity-constrained-client.a
+client_block_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_block_linux.c
 	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_block_linux: libiotivity-constrained-server.a
+server_block_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-constrained-server.a
+smart_home_server_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_server: libiotivity-constrained-server.a
+multi_device_server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_client: libiotivity-constrained-client.a
+multi_device_client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/multi_device_client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-${OBT}: libiotivity-constrained-client.a
+${OBT}: libiotivity-constrained-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_multithread_linux: libiotivity-constrained-server.a
+server_multithread_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_multithread_linux: libiotivity-constrained-client.a
+client_multithread_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
