@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_dc6d699b",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-08-01T07:56:36Z",
+      "side": 1,
+      "message": "only one \u003d is needed in bash",
+      "range": {
+        "startLine": 144,
+        "startChar": 21,
+        "endLine": 144,
+        "endChar": 23
+      },
+      "revId": "5cb51f5a937e542753a39d86557de8d0a0467e9e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
