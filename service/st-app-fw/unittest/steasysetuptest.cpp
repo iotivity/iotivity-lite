@@ -154,6 +154,7 @@ TEST_F(TestSTEasySetup, st_gen_ssid_compare)
 
     EXPECT_STREQ(expected_ssid, ssid);
 }
+
 /*
 {
     "cd": "wifi_ssid",
@@ -243,13 +244,32 @@ static int cloud_prov_data_len = 282;
 
 static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
+#ifndef STATE
 static st_thread_t t = NULL;
+#endif
 
+
+#ifdef STATE
+static void
+st_status_handler(st_status_t status)
+{
+    printf("easysetup  st_status_handler : status  : %d \n", status);
+    if (status == ST_STATUS_WIFI_CONNECTION_CHECKING)
+    {
+        printf("---> signal \n");
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
+    }
+}
+
+#else
 static void
 st_status_handler(st_status_t status)
 {
     if (status == ST_STATUS_EASY_SETUP_PROGRESSING ||
-        status == ST_STATUS_EASY_SETUP_DONE) {
+        status == ST_STATUS_EASY_SETUP_DONE)
+    {
         st_mutex_lock(mutex);
         st_cond_signal(cv);
         st_mutex_unlock(mutex);
@@ -265,7 +285,7 @@ void *st_manager_func(void *data)
 
     return NULL;
 }
-
+#endif
 class TestSTEasySetup_cb: public testing::Test
 {
     protected:
@@ -277,15 +297,23 @@ class TestSTEasySetup_cb: public testing::Test
             st_manager_initialize();
             st_register_status_handler(st_status_handler);
             st_set_device_profile(st_device_def, st_device_def_len);
+
+#ifdef STATE
+            st_manager_start();
+#else
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
+#endif
             get_wildcard_acl_policy();
         }
 
         virtual void TearDown()
         {
             st_manager_stop();
+#ifndef STATE
             st_thread_destroy(t);
+#endif
+            st_unregister_status_handler();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
@@ -336,7 +364,11 @@ handle_prov_data(uint8_t *data, int len)
     memcpy(message->data, data, len);
     message->length = len;
 
+#ifdef STATE
+    coap_receive_handler(message);
+#else
     oc_set_delayed_callback(message, coap_receive_handler, 0);
+#endif
 
     return 0;
 }
@@ -348,28 +380,47 @@ TEST_F(TestSTEasySetup_cb, easy_setup_prov_response_test)
     ret = handle_prov_data(cloud_prov_data, cloud_prov_data_len);
     EXPECT_EQ(0, ret);
     _oc_signal_event_loop();
-
-    ret = test_wait_until(mutex, cv, 5);
+    ret = test_wait_until(mutex, cv, 15);
     EXPECT_EQ(0, ret);
 }
 
 #ifdef OC_SECURITY
+
+static st_cond_t otm_cv = NULL;
+//static st_cond_t otm_fail_cv = NULL;
+
 static oc_event_callback_retval_t
 otm_test_handler(void *data)
 {
     oc_sec_otm_err_code_t *state = (oc_sec_otm_err_code_t *)data;
+
+    printf("otm_test_handler \n");
     oc_sec_otm_err(0, *state);
+    printf("otm_test_handler-oc_sec_otm_err \n");
     if (*state == OC_SEC_OTM_FINISH) {
         st_mutex_lock(mutex);
-        st_cond_signal(cv);
+        st_cond_signal(otm_cv);
         st_mutex_unlock(mutex);
     }
-    free(state);
+    /*
+    else if(*state == OC_SEC_ERR_PSTAT)
+    {
+        printf(" *state == OC_SEC_ERR_PSTAT \n");
+
+        //_oc_signal_event_loop();
+        //test_wait_until(mutex, cv, 15);
+        sleep(15);
+        st_mutex_lock(mutex);
+        st_cond_signal(otm_fail_cv);
+        st_mutex_unlock(mutex);
+    }
+    */
     return OC_EVENT_DONE;
 }
 
 TEST_F(TestSTEasySetup_cb, easy_setup_otm_start_finish_test)
 {
+    otm_cv = st_cond_init();
     oc_sec_otm_err_code_t *state =
         (oc_sec_otm_err_code_t *)malloc(sizeof(oc_sec_otm_err_code_t));
     *state = OC_SEC_OTM_START;
@@ -379,10 +430,12 @@ TEST_F(TestSTEasySetup_cb, easy_setup_otm_start_finish_test)
     oc_set_delayed_callback(state, otm_test_handler, 0);
     _oc_signal_event_loop();
 
-    int ret = test_wait_until(mutex, cv, 5);
+    int ret = test_wait_until(mutex, otm_cv, 5);
+    st_cond_destroy(otm_cv);
     EXPECT_EQ(0, ret);
 }
 
+#ifndef STATE
 TEST_F(TestSTEasySetup_cb, easy_setup_otm_fail_test)
 {
     oc_sec_otm_err_code_t *state =
@@ -394,6 +447,7 @@ TEST_F(TestSTEasySetup_cb, easy_setup_otm_fail_test)
     int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
 }
+#endif
 #endif /* OC_SECURITY */
 
 static bool g_isCallbackReceived;
@@ -418,10 +472,8 @@ TEST_F(TestSTEasySetup_cb, easy_setup_sec_accesslist_test)
     g_isCallbackReceived = false;
     oc_endpoint_t *ep = get_endpoint();
     oc_do_get("/sec/accesspointlist", ep, NULL, get_response, LOW_QOS, NULL);
-
-    int ret = test_wait_until(access_mutex, access_cv, 5);
+    int ret = test_wait_until(access_mutex, access_cv, 35);
     EXPECT_EQ(0, ret);
-
     EXPECT_EQ(true, g_isCallbackReceived);
     st_cond_destroy(access_cv);
     st_mutex_destroy(access_mutex);
