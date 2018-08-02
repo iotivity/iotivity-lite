@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_5c7dd9e6",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 23
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-08-02T07:57:55Z",
+      "side": 1,
+      "message": "upper lines have spaces between words",
+      "revId": "865a7bf8d05e495dcf806526067f3fb0ce472d09",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bc84e5d4",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 23
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-08-02T07:57:55Z",
+      "side": 1,
+      "message": "you can add:\n\n${TEST_RUNNER} $${test} || exit $${?}\n\nto break on issue",
+      "revId": "865a7bf8d05e495dcf806526067f3fb0ce472d09",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fc6dcd33",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-08-02T07:57:55Z",
+      "side": 1,
+      "message": "could be moved to printUsage ?",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 63
+      },
+      "revId": "865a7bf8d05e495dcf806526067f3fb0ce472d09",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9c8761d7",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 429
+      },
+      "writtenOn": "2018-08-02T07:57:55Z",
+      "side": 1,
+      "message": "most scripts use spaces vs tabs",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 1
+      },
+      "revId": "865a7bf8d05e495dcf806526067f3fb0ce472d09",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
