@@ -22,6 +22,7 @@
 #include "oc_helpers.h"
 #include "oc_log.h"
 #include "oc_rep.h"
+#include "security/oc_acl.h"
 #include "util/oc_mem.h"
 
 #define SC_RSRVD_ES_URI_PROVISIONING_INFO "/sec/provisioninginfo"
@@ -29,7 +30,7 @@
 #define SC_RSRVD_ES_RES_NAME_PROVISIONING_INFO "x.network.provisioning.info"
 
 #define SC_RSRVD_ES_URI_ACCESSPOINT_LIST "/sec/accesspointlist"
-#define SC_RSRVD_ES_RES_TYPE_ACCESSPOINT_LIST "x.com.samsung.acesspointlist"
+#define SC_RSRVD_ES_RES_TYPE_ACCESSPOINT_LIST "x.com.samsung.accesspointlist"
 #define SC_RSRVD_ES_RES_NAME_ACCESSPOINT_LIST "x.network.wifi.ap"
 
 #define SC_RSRVD_ES_ATTR_NAME_PREFIX "x.com.samsung"
@@ -743,6 +744,9 @@ init_accesspointlist_resource(get_ap_scan_list cb)
                                   NULL);
   oc_add_resource(g_sec_aplist->res);
   g_sec_aplist->cb = cb;
+#ifdef OC_SECURITY
+  oc_sec_ace_update_conn_anon_clear(SC_RSRVD_ES_URI_ACCESSPOINT_LIST, 2, 14, 0);
+#endif
   return ES_OK;
 
 exit:
