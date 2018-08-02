@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7c61bd38",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-02T08:39:50Z",
+      "side": 1,
+      "message": "better to name as EVT_DRIVEN or STATE_MODEL",
+      "range": {
+        "startLine": 38,
+        "startChar": 7,
+        "endLine": 38,
+        "endChar": 12
+      },
+      "revId": "47026b5ec49e455c6b6334a9a8f0445213f6cddc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
