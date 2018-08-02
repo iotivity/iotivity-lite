@@ -356,8 +356,9 @@ void wifi_prov_cb_in_app(es_wifi_conf_data *event_data) {
 
   soft_ap_data_t *soft_ap_data =
       (soft_ap_data_t *)malloc(sizeof(soft_ap_data_t));
-  strncpy(soft_ap_data->ssid, oc_string(event_data->ssid), ES_WIFI_SSID_MAX_LEN);
-  strncpy(soft_ap_data->password, oc_string(event_data->pwd), ES_WIFI_PASSWD_MAX_LEN);
+  memset(soft_ap_data, 0, sizeof(soft_ap_data_t));
+  strncpy(soft_ap_data->ssid, oc_string(event_data->ssid), ES_WIFI_SSID_MAX_LEN-1);
+  strncpy(soft_ap_data->password, oc_string(event_data->pwd), ES_WIFI_PASSWD_MAX_LEN-1);
   pthread_create(&wifi_cn_thread, NULL, es_worker_thread_routine,
                  (void *)soft_ap_data);
 #endif // WITH_SOFTAP
