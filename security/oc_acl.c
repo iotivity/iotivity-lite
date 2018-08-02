@@ -858,11 +858,6 @@ oc_sec_acl_default(int device)
     }
   }
 
-#if defined(OC_SERVER) && defined(OC_SPEC_VER_OIC)
-  success &=
-    oc_sec_ace_update_conn_anon_clear("/sec/provisioninginfo", 2, 14, device);
-#endif
-
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 

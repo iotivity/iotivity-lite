@@ -113,9 +113,6 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
 #ifdef OC_SECURITY
   // Set OTM status changed callback.
   oc_sec_otm_set_err_cb(st_otm_state_handler);
-
-  // Add ACL enty to /sec/accesspointlist resource
-  oc_sec_ace_update_conn_anon_clear("/sec/accesspointlist", 2, 14, 0);
 #endif
 
   st_print_log("[ST_ES] st_easy_setup_start out\n");

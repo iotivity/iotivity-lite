@@ -573,6 +573,9 @@ init_provisioning_info_resource(sec_provisioning_info *prov_info)
   oc_resource_set_request_handler(g_sec_prov->res, OC_POST,
                                   post_sec_provisioning, NULL);
   oc_add_resource(g_sec_prov->res);
+#ifdef OC_SECURITY
+  oc_sec_ace_update_conn_anon_clear(SC_RSRVD_ES_URI_PROVISIONING_INFO, 2, 14, 0);
+#endif
 
   g_sec_prov->info = prov_info;
   return ES_OK;
@@ -743,6 +746,9 @@ init_accesspointlist_resource(get_ap_scan_list cb)
                                   NULL);
   oc_add_resource(g_sec_aplist->res);
   g_sec_aplist->cb = cb;
+#ifdef OC_SECURITY
+  oc_sec_ace_update_conn_anon_clear(SC_RSRVD_ES_URI_ACCESSPOINT_LIST, 2, 14, 0);
+#endif
   return ES_OK;
 
 exit:
