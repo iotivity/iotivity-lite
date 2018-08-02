@@ -134,17 +134,24 @@ TEST_F(TestSTManager, st_manager_reset)
     EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
 
     st_register_status_handler(st_status_handler_test);
+
+ #ifdef STATE
+    int ret=0;
+    st_manager_start();
+ #else
     st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
     int ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
-
     st_sleep(1);
+#endif    
 
     st_manager_reset();
     ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
     st_manager_stop();
+#ifndef STATE   
     st_thread_destroy(t);
+#endif
     st_manager_stop();
     st_manager_deinitialize();
 }
