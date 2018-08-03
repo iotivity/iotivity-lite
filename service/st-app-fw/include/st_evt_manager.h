@@ -15,19 +15,30 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#ifndef ST_EVT_MANAGER_H
+#define ST_EVT_MANAGER_H
 
-#ifndef ST_PROCESS_H
-#define ST_PROCESS_H
+#include "st_types.h"
+#include <stdbool.h>
 
-#include "st_port.h"
+typedef enum {
+  ST_EVT_INIT = 0,
+  ST_EVT_START,
+  ST_EVT_STOP,
+  ST_EVT_DEINIT,
+  ST_EVT_RUN,
+  ST_EVT_START_WIFI_CONNECT,
+  ST_EVT_RETRY_WIFI_CONNECT,
+  ST_EVT_START_CLOUDMANAGER,
+  ST_EVT_RESET,
+  ST_EVT_MAX
+} st_evt;
 
-int st_process_init(void);
-int st_process_start(void);
-int st_process_stop(void);
-int st_process_destroy(void);
+void st_evt_init(void);
+void st_evt_deinit(void);
 
-void st_process_signal(void);
-void st_process_app_sync_lock(void);
-void st_process_app_sync_unlock(void);
+bool st_evt_is_in_queue(void);
+st_evt st_evt_pop(void);
+void st_evt_push(st_evt evt);
 
-#endif /* ST_PROCESS_H */
+#endif

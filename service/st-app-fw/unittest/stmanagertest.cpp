@@ -65,6 +65,20 @@ static void st_status_handler_test(st_status_t status)
         st_mutex_unlock(mutex);
     }
 }
+
+#ifdef STATE_MODEL
+static bool bReset=false;
+static void st_status_handler_reset_test(st_status_t status)
+{
+    if (status == ST_STATUS_EASY_SETUP_PROGRESSING) {
+        bReset=true;
+        st_mutex_lock(mutex);
+        st_cond_signal(cv);
+        st_mutex_unlock(mutex);
+    }
+}
+#endif
+
 static
 void *st_manager_func(void *data)
 {
@@ -137,21 +151,42 @@ TEST_F(TestSTManager, st_manager_start)
 TEST_F(TestSTManager, st_manager_reset)
 {
     int st_error_ret = st_manager_initialize();
-    EXPECT_EQ(ST_ERROR_NONE, st_error_ret);
+    ASSERT_EQ(ST_ERROR_NONE, st_error_ret);
 
+    int ret=0;
+#ifdef STATE_MODEL
+    st_register_status_handler(st_status_handler_reset_test);
+    st_manager_start();
+
+    bReset=false;
+    st_manager_reset();
+    if(bReset)
+    {
+        EXPECT_TRUE(bReset);
+    }
+    else{
+        ret = test_wait_until(mutex, cv, 5);
+        EXPECT_EQ(0, ret);
+    }
+#else
     st_register_status_handler(st_status_handler_test);
-    st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
-    int ret = test_wait_until(mutex, cv, 5);
-    EXPECT_EQ(0, ret);
 
+    st_thread_t t = st_thread_create(st_manager_func, "TEST", 0, NULL);
+    ret = test_wait_until(mutex, cv, 5);
+    EXPECT_EQ(0, ret);
     st_sleep(1);
 
     st_manager_reset();
     ret = test_wait_until(mutex, cv, 5);
     EXPECT_EQ(0, ret);
+#endif
+
     st_manager_stop();
+#ifndef STATE_MODEL
     st_thread_destroy(t);
+#endif
     st_manager_stop();
+    st_unregister_status_handler();
     st_manager_deinitialize();
 }
 
