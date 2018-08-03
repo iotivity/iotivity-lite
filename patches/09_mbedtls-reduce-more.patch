@@ -1,6 +1,6 @@
-From ddf4e003547bf3403acc3e0079f3ea924ee77d6e Mon Sep 17 00:00:00 2001
+From 171a118ca0cf0a96584e102b8c037d88c6ae66fb Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Wed, 1 Aug 2018 15:08:23 +0300
+Date: Fri, 3 Aug 2018 12:47:55 +0300
 Subject: [PATCH] mbedtls reduce more
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
@@ -10,8 +10,8 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  library/ssl_cli.c  |  5 +++++
  library/ssl_tls.c  |  5 +++++
  library/x509.c     | 15 +++++++++++++++
- library/x509_crt.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 90 insertions(+)
+ library/x509_crt.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 85 insertions(+)
 
 diff --git a/library/oid.c b/library/oid.c
 index f13826e..252f006 100644
@@ -186,7 +186,7 @@ index 8f77559..0e65856 100644
  
  /*
 diff --git a/library/x509_crt.c b/library/x509_crt.c
-index 3597480..e4fcf69 100644
+index 3597480..f546b79 100644
 --- a/library/x509_crt.c
 +++ b/library/x509_crt.c
 @@ -355,6 +355,7 @@ static int x509_get_ns_cert_type( unsigned char **p,
@@ -208,26 +208,7 @@ index 3597480..e4fcf69 100644
  }
  
  static int x509_get_key_usage( unsigned char **p,
-@@ -404,6 +409,7 @@ static int x509_get_ext_key_usage( unsigned char **p,
-                                const unsigned char *end,
-                                mbedtls_x509_sequence *ext_key_usage)
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret;
- 
-     if( ( ret = mbedtls_asn1_get_sequence_of( p, end, ext_key_usage, MBEDTLS_ASN1_OID ) ) != 0 )
-@@ -415,6 +421,10 @@ static int x509_get_ext_key_usage( unsigned char **p,
-                 MBEDTLS_ERR_ASN1_INVALID_LENGTH );
- 
-     return( 0 );
-+#else
-+    oc_abort(__func__);
-+    return( 0 );
-+#endif  /* ST_MBEDTLS_OPT */
- }
- 
- /*
-@@ -1386,6 +1396,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+@@ -1386,6 +1391,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
  static int x509_info_subject_alt_name( char **buf, size_t *size,
                                         const mbedtls_x509_sequence *subject_alt_name )
  {
@@ -235,7 +216,7 @@ index 3597480..e4fcf69 100644
      size_t i;
      size_t n = *size;
      char *p = *buf;
-@@ -1419,6 +1430,10 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+@@ -1419,6 +1425,10 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
      *buf = p;
  
      return( 0 );
@@ -246,7 +227,7 @@ index 3597480..e4fcf69 100644
  }
  #endif
  
-@@ -1436,6 +1451,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+@@ -1436,6 +1446,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
  static int x509_info_cert_type( char **buf, size_t *size,
                                  unsigned char ns_cert_type )
  {
@@ -254,7 +235,7 @@ index 3597480..e4fcf69 100644
      int ret;
      size_t n = *size;
      char *p = *buf;
-@@ -1454,6 +1470,10 @@ static int x509_info_cert_type( char **buf, size_t *size,
+@@ -1454,6 +1465,10 @@ static int x509_info_cert_type( char **buf, size_t *size,
      *buf = p;
  
      return( 0 );
@@ -265,7 +246,7 @@ index 3597480..e4fcf69 100644
  }
  
  #define KEY_USAGE(code,name)    \
-@@ -1463,6 +1483,7 @@ static int x509_info_cert_type( char **buf, size_t *size,
+@@ -1463,6 +1478,7 @@ static int x509_info_cert_type( char **buf, size_t *size,
  static int x509_info_key_usage( char **buf, size_t *size,
                                  unsigned int key_usage )
  {
@@ -273,7 +254,7 @@ index 3597480..e4fcf69 100644
      int ret;
      size_t n = *size;
      char *p = *buf;
-@@ -1482,11 +1503,16 @@ static int x509_info_key_usage( char **buf, size_t *size,
+@@ -1482,11 +1498,16 @@ static int x509_info_key_usage( char **buf, size_t *size,
      *buf = p;
  
      return( 0 );
@@ -290,7 +271,7 @@ index 3597480..e4fcf69 100644
      int ret;
      const char *desc;
      size_t n = *size;
-@@ -1511,6 +1537,10 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
+@@ -1511,6 +1532,10 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
      *buf = p;
  
      return( 0 );
@@ -301,7 +282,7 @@ index 3597480..e4fcf69 100644
  }
  
  /*
-@@ -1521,6 +1551,7 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
+@@ -1521,6 +1546,7 @@ static int x509_info_ext_key_usage( char **buf, size_t *size,
  int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
                     const mbedtls_x509_crt *crt )
  {
@@ -309,7 +290,7 @@ index 3597480..e4fcf69 100644
      int ret;
      size_t n;
      char *p;
-@@ -1648,6 +1679,10 @@ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
+@@ -1648,6 +1674,10 @@ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
      MBEDTLS_X509_SAFE_SNPRINTF;
  
      return( (int) ( size - n ) );
@@ -320,7 +301,7 @@ index 3597480..e4fcf69 100644
  }
  
  struct x509_crt_verify_string {
-@@ -1682,6 +1717,7 @@ static const struct x509_crt_verify_string x509_crt_verify_strings[] = {
+@@ -1682,6 +1712,7 @@ static const struct x509_crt_verify_string x509_crt_verify_strings[] = {
  int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
                            uint32_t flags )
  {
@@ -328,7 +309,7 @@ index 3597480..e4fcf69 100644
      int ret;
      const struct x509_crt_verify_string *cur;
      char *p = buf;
-@@ -1705,6 +1741,10 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
+@@ -1705,6 +1736,10 @@ int mbedtls_x509_crt_verify_info( char *buf, size_t size, const char *prefix,
      }
  
      return( (int) ( size - n ) );
@@ -339,7 +320,7 @@ index 3597480..e4fcf69 100644
  }
  
  #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
-@@ -1886,6 +1926,7 @@ static int x509_crt_verifycrl( mbedtls_x509_crt *crt, mbedtls_x509_crt *ca,
+@@ -1886,6 +1921,7 @@ static int x509_crt_verifycrl( mbedtls_x509_crt *crt, mbedtls_x509_crt *ca,
   */
  static int x509_memcasecmp( const void *s1, const void *s2, size_t len )
  {
@@ -347,7 +328,7 @@ index 3597480..e4fcf69 100644
      size_t i;
      unsigned char diff;
      const unsigned char *n1 = s1, *n2 = s2;
-@@ -1908,6 +1949,10 @@ static int x509_memcasecmp( const void *s1, const void *s2, size_t len )
+@@ -1908,6 +1944,10 @@ static int x509_memcasecmp( const void *s1, const void *s2, size_t len )
      }
  
      return( 0 );
@@ -358,7 +339,7 @@ index 3597480..e4fcf69 100644
  }
  
  /*
-@@ -1915,6 +1960,7 @@ static int x509_memcasecmp( const void *s1, const void *s2, size_t len )
+@@ -1915,6 +1955,7 @@ static int x509_memcasecmp( const void *s1, const void *s2, size_t len )
   */
  static int x509_check_wildcard( const char *cn, mbedtls_x509_buf *name )
  {
@@ -366,7 +347,7 @@ index 3597480..e4fcf69 100644
      size_t i;
      size_t cn_idx = 0, cn_len = strlen( cn );
  
-@@ -1940,6 +1986,10 @@ static int x509_check_wildcard( const char *cn, mbedtls_x509_buf *name )
+@@ -1940,6 +1981,10 @@ static int x509_check_wildcard( const char *cn, mbedtls_x509_buf *name )
      }
  
      return( -1 );
