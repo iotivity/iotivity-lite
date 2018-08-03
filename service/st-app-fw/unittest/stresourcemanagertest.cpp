@@ -31,6 +31,7 @@ extern "C"{
     #include "st_types.h"
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
+    #include "messaging/coap/observe.h"
     int st_register_resources(int device);
 
     extern unsigned char st_device_def[];
@@ -38,6 +39,8 @@ extern "C"{
 }
 
 static int device_index = 0;
+static bool request_handled;
+
 static bool
 resource_handler(st_request_t *request)
 {
@@ -87,20 +90,54 @@ TEST_F(TestSTResourceManager, st_register_resource_handler_fail)
     EXPECT_EQ(ST_ERROR_INVALID_PARAMETER, ret);
 }
 
+static void onGetRequest(oc_request_t *request,
+                                 oc_interface_mask_t interface, void *user_data)
+{
+    (void) interface;
+    (void) user_data;
+
+    request_handled = true;
+    oc_send_response(request, OC_STATUS_OK);
+}
+
 TEST_F(TestSTResourceManager, st_notify_back)
 {
     // Given
-    char uri[26] = "/capability/switch/main/0";
+    request_handled = false;
+    char uri[26] = "/capability/test/main/0";
     oc_resource_t *resource = oc_new_resource(NULL, uri, 1, 0);
+
     oc_resource_bind_resource_type(resource, "core.light");
+    oc_resource_set_observable(resource, true);
+    oc_resource_set_request_handler(resource, OC_GET, onGetRequest, NULL);
     oc_add_resource(resource);
 
-    // When
-    st_notify_back(uri);
-    oc_delete_resource(resource);
+    oc_endpoint_t *endpoint = oc_new_endpoint();
 
-    // Then
-    // EXPECT_EQ(0, ret);
+    coap_packet_t request;
+    coap_packet_t response;
+    request.code = COAP_GET;
+    request.uri_path = uri;
+    request.uri_path_len = strlen(uri);
+    memset(request.token, 0, COAP_TOKEN_LEN) ;
+    request.token_len = COAP_TOKEN_LEN;
+    SET_OPTION(&request, COAP_OPTION_OBSERVE);
+    request.observe = 0;
+    response.code = COAP_NO_ERROR;
+#ifdef OC_BLOCK_WISE
+    int observe = coap_observe_handler(&request, &response, resource, 10, endpoint);
+#else  /* OC_BLOCK_WISE */
+    int observe = coap_observe_handler(&request, &response, resource, endpoint);
+#endif /* !OC_BLOCK_WISE */
+
+    EXPECT_EQ(0, observe);
+    oc_free_endpoint(endpoint);
+
+    // When
+    st_error_t ret = st_notify_back(uri);
+    EXPECT_EQ(true, request_handled);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
+    oc_delete_resource(resource);
 }
 
 TEST_F(TestSTResourceManager, st_notify_back_fail_null)
