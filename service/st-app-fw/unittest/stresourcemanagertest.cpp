@@ -193,7 +193,9 @@ static st_mutex_t mutex, g_mutex, p_mutex;
 static st_cond_t cv, g_cv, p_cv;
 static bool isCallbackReceived;
 static oc_endpoint_t *ep;
+#ifndef STATE_MODEL
 static st_thread_t t = NULL;
+#endif
 
 class TestSTResourceManagerHandler: public testing::Test
 {
@@ -262,8 +264,13 @@ class TestSTResourceManagerHandler: public testing::Test
             st_manager_initialize();
             st_set_device_profile(st_device_def, st_device_def_len);
             st_register_status_handler(st_status_handler);
+#ifdef STATE_MODEL
+            st_manager_start();
+#else
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
+#endif
+
 #ifdef OC_SECURITY
             oc_storage_config("./st_things_creds");
 #endif /* OC_SECURITY */
@@ -275,7 +282,10 @@ class TestSTResourceManagerHandler: public testing::Test
         virtual void TearDown()
         {
             st_manager_stop();
+#ifndef STATE_MODEL
             st_thread_destroy(t);
+#endif
+            st_unregister_status_handler();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);
