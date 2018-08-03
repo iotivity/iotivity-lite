@@ -19,6 +19,11 @@
 #include "st_process.h"
 #include "oc_api.h"
 
+#ifdef STATE_MODEL
+#include "st_state_util.h"
+extern st_error_t handle_request(st_evt evt);
+#endif
+
 typedef struct
 {
   st_mutex_t mutex;
@@ -35,6 +40,10 @@ static void *st_process_func(void *data);
 int
 st_process_init(void)
 {
+#ifdef STATE_MODEL
+  st_evt_init();
+#endif
+
   g_process_data.mutex = st_mutex_init();
   if (!g_process_data.mutex) {
     st_print_log("[ST_PROC] st_mutex_init failed!\n");
@@ -53,6 +62,7 @@ st_process_init(void)
     st_print_log("[ST_PROC] st_cond_init failed!\n");
     st_mutex_destroy(g_process_data.mutex);
     st_mutex_destroy(g_process_data.app_mutex);
+
     return -1;
   }
   return 0;
@@ -102,6 +112,7 @@ st_process_destroy(void)
     st_cond_destroy(g_process_data.cv);
     g_process_data.cv = NULL;
   }
+
   if (g_process_data.app_mutex) {
     st_mutex_destroy(g_process_data.app_mutex);
     g_process_data.app_mutex = NULL;
@@ -110,6 +121,11 @@ st_process_destroy(void)
     st_mutex_destroy(g_process_data.mutex);
     g_process_data.mutex = NULL;
   }
+
+#ifdef STATE_MODEL
+  st_evt_deinit();
+#endif
+
   return 0;
 }
 
@@ -126,6 +142,16 @@ st_process_func(void *data)
 
     if (process_data->quit == 1)
       break;
+
+#ifdef STATE_MODEL
+    if (st_evt_is_in_queue()) {
+      st_evt evt = st_evt_pop();
+      st_process_app_sync_lock();
+      handle_request(evt);
+      st_process_app_sync_unlock();
+      continue;
+    }
+#endif
 
     st_mutex_lock(process_data->mutex);
     if (next_event == 0) {

@@ -56,9 +56,11 @@ typedef struct
 
 static st_soft_ap_t g_soft_ap;
 
+#ifndef STATE_MODEL
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
 OC_MEMB(st_cond_s, pthread_cond_t, 10);
 OC_MEMB(st_thread_s, pthread_t, 10);
+#endif
 
 static void *soft_ap_process_routine(void *data);
 
@@ -89,7 +91,11 @@ st_print_log(const char *fmt, ...)
 st_mutex_t
 st_mutex_init(void)
 {
+#ifdef STATE_MODEL
+  st_mutex_t mutex = (st_mutex_t)malloc(sizeof(pthread_mutex_t));
+#else
   st_mutex_t mutex = (st_mutex_t)oc_memb_alloc(&st_mutex_s);
+#endif
   if (!mutex)
     oc_abort("alloc failed");
 
@@ -105,8 +111,11 @@ st_mutex_destroy(st_mutex_t mutex)
     return -1;
 
   pthread_mutex_destroy((pthread_mutex_t *)mutex);
-
+#ifdef STATE_MODEL
+  free(mutex);
+#else
   oc_memb_free(&st_mutex_s, mutex);
+#endif
 
   return 0;
 }
@@ -136,7 +145,11 @@ st_mutex_unlock(st_mutex_t mutex)
 st_cond_t
 st_cond_init(void)
 {
+#ifdef STATE_MODEL
+  st_cond_t cv = (st_cond_t)malloc(sizeof(pthread_cond_t));
+#else
   st_cond_t cv = (st_cond_t)oc_memb_alloc(&st_cond_s);
+#endif
   if (!cv)
     oc_abort("alloc failed");
 
@@ -152,8 +165,11 @@ st_cond_destroy(st_cond_t cv)
     return -1;
 
   pthread_cond_destroy((pthread_cond_t *)cv);
-
+#ifdef STATE_MODEL
+  free(cv);
+#else
   oc_memb_free(&st_cond_s, cv);
+#endif
 
   return 0;
 }
@@ -197,8 +213,11 @@ st_thread_create(st_thread_process_t handler, const char *name, int stack_size,
     return NULL;
 
   stack_size = stack_size == 0 ? ST_DEFAULT_STACK_SIZE : stack_size;
-
+#ifdef STATE_MODEL
+  st_thread_t thread = (st_thread_t)malloc(sizeof(pthread_t));
+#else
   st_thread_t thread = (st_thread_t)oc_memb_alloc(&st_thread_s);
+#endif
   if (!thread)
     oc_abort("alloc failed");
 
@@ -216,8 +235,11 @@ st_thread_destroy(st_thread_t thread)
     return -1;
 
   pthread_join(*(pthread_t *)(thread), NULL);
-
+#ifdef STATE_MODEL
+  free(thread);
+#else
   oc_memb_free(&st_thread_s, thread);
+#endif
 
   return 0;
 }
