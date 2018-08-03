@@ -113,10 +113,11 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 {
   /* Remove existing observe relationship, if any. */
   int dup = coap_remove_observer_handle_by_uri(endpoint, uri, uri_len);
-
+  printf("add_observer dup: %d\n", dup);
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
   if (o) {
+    printf("add_observer oooooooooo\n", dup);
     int max = sizeof(o->url) - 1;
     if (max > uri_len) {
       max = uri_len;
