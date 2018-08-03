@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1f47c34c",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-03T11:04:04Z",
+      "side": 1,
+      "message": "please remove printf",
+      "revId": "ce1e13b01ac5c41eab39af87867a7b3c564ee075",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7f752f97",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-03T11:04:04Z",
+      "side": 1,
+      "message": "please whitespace",
+      "revId": "ce1e13b01ac5c41eab39af87867a7b3c564ee075",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5f782b8f",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-03T11:04:04Z",
+      "side": 1,
+      "message": "coap_observe_handler() works different when  OC_BLOCK_WISE is unset",
+      "revId": "ce1e13b01ac5c41eab39af87867a7b3c564ee075",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
