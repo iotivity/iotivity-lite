@@ -48,7 +48,9 @@ static int ct = 50;
 static int ct_range[2] = { 0, 100 };
 
 #ifdef USER_INPUT
+#ifndef STATE_MODEL
 static pthread_t g_user_input_thread;
+#endif
 static int g_user_input_shutdown_pipe[2];
 #endif /* USER_INPUT */
 
@@ -229,6 +231,13 @@ print_menu(void)
   printf("[ST_APP] 1. Reset device\n");
   printf("[ST_APP] 2. notify switch resource\n");
   printf("[ST_APP] 0. Quit\n");
+
+#ifdef STATE_MODEL
+  printf("[ST_APP] -------------------------------------\n");
+  printf("[ST_APP] 5. Start\n");
+  printf("[ST_APP] 6. Stop\n");
+  printf("[ST_APP] 7. Deinit (exit program if success)\n");
+#endif
   printf("[ST_APP] =====================================\n");
 }
 
@@ -288,17 +297,42 @@ user_input_loop(void *data)
         printf("[ST_APP] st_notify_back failed.\n");
       }
       break;
+#ifdef STATE_MODEL
+    case '5':
+      printf("[ST_APP] start()\n");
+      printf("[ST_APP] result: %d \n", st_manager_start());
+      break;
+    case '6':
+      printf("[ST_APP] stop()\n");
+      printf("[ST_APP] result: %d \n", st_manager_stop());
+      break;
+    case '7':
+      printf("[ST_APP] deinit()\n");
+      st_error_t result = st_manager_deinitialize();
+      printf("[ST_APP] result: %d \n", result);
+      if (result == ST_ERROR_NONE)
+        goto exit;
+      break;
+#endif
     case '0':
+#ifdef STATE_MODEL
+      goto exit;
+#else
       st_manager_stop();
+#endif
     default:
       printf("[ST_APP] unsupported command.\n");
       break;
     }
   }
 exit:
+#ifndef STATE_MODEL
   pthread_exit(NULL);
+#else
+  return NULL;
+#endif
 }
-
+#ifndef STATE_MODEL
 static int
 user_input_thread_init(void)
 {
@@ -323,6 +357,7 @@ user_input_thread_destroy(void)
   close(g_user_input_shutdown_pipe[1]);
   return;
 }
+#endif /* !STATE_MODEL */
 #endif /* USER_INPUT */
 
 int
@@ -349,6 +384,19 @@ main(void)
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
 
+#ifdef STATE_MODEL
+  st_manager_start();
+
+#ifdef USER_INPUT
+  if (pipe(g_user_input_shutdown_pipe) < 0) {
+    printf("shutdown pipe error\n");
+    return -1;
+  }
+  user_input_loop(NULL);
+#endif
+
+#else
+
 #ifdef USER_INPUT
   if (user_input_thread_init() != 0) {
     printf("[ST_APP] user_input_thread_init failed.\n");
@@ -370,5 +418,7 @@ main(void)
 #endif /* USER_INPUT */
   st_unregister_status_handler();
   st_manager_deinitialize();
+#endif /* !STATE_MODEL */
+
   return 0;
 }
