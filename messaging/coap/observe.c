@@ -113,7 +113,6 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 {
   /* Remove existing observe relationship, if any. */
   int dup = coap_remove_observer_handle_by_uri(endpoint, uri, uri_len);
-
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
   if (o) {
