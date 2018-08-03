@@ -15,6 +15,7 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#ifndef STATE_MODEL
 
 #include "st_status_queue.h"
 #include "oc_clock.h"
@@ -214,3 +215,4 @@ st_status_queue_deinitialize(void)
   status_queue_cv = NULL;
 #endif /* STATUS_Q_SIGNAL_DISABLE */
 }
+#endif /* !STATE_MODEL */
