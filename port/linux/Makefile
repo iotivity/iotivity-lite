@@ -91,6 +91,9 @@ OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
+ifeq ($(DEBUG_TLS),1)
+	CFLAGS += -DOC_DEBUG_TLS
+endif
 else
 	CFLAGS += -Wl,--gc-sections
 endif
