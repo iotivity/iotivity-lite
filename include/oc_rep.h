@@ -59,8 +59,10 @@ int oc_rep_finalize(void);
 
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
-    g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
-    g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));     \
+    if ((const char *)value != NULL) {                                                       \
+      g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
+      g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
+    }                                                                          \
   } while (0)
 
 #define oc_rep_set_byte_string(object, key, value, length)                     \
@@ -94,9 +96,11 @@ int oc_rep_finalize(void);
   g_err |= cbor_encoder_close_container(&g_encoder, &root_map)
 
 #define oc_rep_add_byte_string(parent, value)                                  \
+  if (value != NULL)                                                           \
   g_err |= cbor_encode_byte_string(&parent##_array, value, strlen(value))
 
 #define oc_rep_add_text_string(parent, value)                                  \
+  if ((const char*)value != NULL)                                                           \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 #define oc_rep_add_double(parent, value)                                       \
@@ -109,6 +113,7 @@ int oc_rep_finalize(void);
   g_err |= cbor_encode_boolean(&parent##_array, value)
 
 #define oc_rep_set_key(parent, key)                                            \
+  if ((const char*)key != NULL)                                                             \
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
 
 #define oc_rep_set_array(object, key)                                          \
