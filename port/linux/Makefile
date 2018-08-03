@@ -237,6 +237,10 @@ ifneq ($(TCP),0)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(STATE_MODEL), 1)
+	EXTRA_CFLAGS += -DSTATE_MODEL
+endif
+
 CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(MEMTRACE),1)
