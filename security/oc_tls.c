@@ -128,8 +128,14 @@ oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
                  const char *str)
 {
   (void)ctx;
+#if defined(OC_DEBUG_TLS)
   (void)level;
-  PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
+#else
+  if (level == 1)
+#endif
+  {
+    PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
+  }
 }
 #endif /* OC_DEBUG */
 
