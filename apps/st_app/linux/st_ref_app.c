@@ -48,17 +48,22 @@ static int ct = 50;
 static int ct_range[2] = { 0, 100 };
 
 #ifdef USER_INPUT
+#ifndef STATE_MODEL
 static pthread_t g_user_input_thread;
+#endif
 static int g_user_input_shutdown_pipe[2];
 #endif /* USER_INPUT */
 
-#define FLUSH_INPUT(var)                \
-  do {                                  \
-    char fin = var;                     \
-    while(fin != '\n' && fin != EOF)    \
-      fin = getchar();                  \
-  }while(0)
+#ifdef STATE_MODEL
+static bool gstop_flag = false;
+#endif
 
+#define FLUSH_INPUT(var)                                                       \
+  do {                                                                         \
+    char fin = var;                                                            \
+    while (fin != '\n' && fin != EOF)                                          \
+      fin = getchar();                                                         \
+  } while (0)
 
 static void
 switch_resource_construct(void)
@@ -184,7 +189,14 @@ st_status_handler(st_status_t status)
 {
   if (status == ST_STATUS_DONE) {
     printf("[ST_APP] ST connected\n");
-  } else {
+  }
+#ifdef STATE_MODEL
+  else if (status == ST_STATUS_STOP) {
+    gstop_flag = true;
+    printf("[ST_APP] ST stopped\n");
+  }
+#endif
+  else {
     printf("[ST_APP] ST connecting(%d)\n", status);
   }
 }
@@ -229,6 +241,13 @@ print_menu(void)
   printf("[ST_APP] 1. Reset device\n");
   printf("[ST_APP] 2. notify switch resource\n");
   printf("[ST_APP] 0. Quit\n");
+
+#ifdef STATE_MODEL
+  printf("[ST_APP] -------------------------------------\n");
+  printf("[ST_APP] 5. Start\n");
+  printf("[ST_APP] 6. Stop\n");
+  printf("[ST_APP] 7. Deinit (exit program if success)\n");
+#endif
   printf("[ST_APP] =====================================\n");
 }
 
@@ -288,17 +307,41 @@ user_input_loop(void *data)
         printf("[ST_APP] st_notify_back failed.\n");
       }
       break;
+#ifdef STATE_MODEL
+    case '5':
+      printf("[ST_APP] start()\n");
+      printf("[ST_APP] result: %d \n", st_manager_start());
+      break;
+    case '6':
+      printf("[ST_APP] stop()\n");
+      printf("[ST_APP] result: %d \n", st_manager_stop());
+      break;
+    case '7':
+      printf("[ST_APP] deinit()\n");
+      st_error_t result = st_manager_deinitialize();
+      printf("[ST_APP] result: %d \n", result);
+      if (result == ST_ERROR_NONE)
+        goto exit;
+      break;
+#endif
     case '0':
       st_manager_stop();
+#ifdef STATE_MODEL
+      goto exit;
+#endif
     default:
       printf("[ST_APP] unsupported command.\n");
       break;
     }
   }
 exit:
+#ifndef STATE_MODEL
   pthread_exit(NULL);
+#endif
+  return NULL;
 }
 
+#ifndef STATE_MODEL
 static int
 user_input_thread_init(void)
 {
@@ -323,6 +366,30 @@ user_input_thread_destroy(void)
   close(g_user_input_shutdown_pipe[1]);
   return;
 }
+#endif
+
+static int
+user_input_init(void)
+{
+#ifdef STATE_MODEL
+  if (pipe(g_user_input_shutdown_pipe) < 0) {
+    printf("shutdown pipe error\n");
+    return -1;
+  }
+  return user_input_loop(NULL) == NULL ? 0 : -1;
+#else
+  return user_input_thread_init();
+#endif
+}
+
+static void
+user_input_deinit(void)
+{
+#ifndef STATE_MODEL
+  user_input_thread_destroy();
+#endif
+}
+
 #endif /* USER_INPUT */
 
 int
@@ -349,14 +416,9 @@ main(void)
   st_register_status_handler(st_status_handler);
   st_register_fota_cmd_handler(st_fota_cmd_handler);
 
-#ifdef USER_INPUT
-  if (user_input_thread_init() != 0) {
-    printf("[ST_APP] user_input_thread_init failed.\n");
-    return -1;
-  }
-#endif /* USER_INPUT */
-
   st_error_t ret = ST_ERROR_NONE;
+#ifdef STATE_MODEL
+  gstop_flag = false;
   do {
     ret = st_manager_start();
     if (ret != ST_ERROR_NONE) {
@@ -364,11 +426,35 @@ main(void)
       sleep(6000);
     }
   } while (ret != ST_ERROR_NONE);
+#endif
 
 #ifdef USER_INPUT
-  user_input_thread_destroy();
+  if (user_input_init() != 0) {
+    printf("[ST_APP] user_input_init failed.\n");
+    return -1;
+  }
 #endif /* USER_INPUT */
+
+#ifndef STATE_MODEL
+  do {
+    ret = st_manager_start();
+    if (ret != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_start error occur.(%d)\n", ret);
+      sleep(6000);
+    }
+  } while (ret != ST_ERROR_NONE);
+#else
+  while (!gstop_flag) {
+    sleep(1);
+  }
+#endif
+
+#ifdef USER_INPUT
+  user_input_deinit();
+#endif
+
   st_unregister_status_handler();
   st_manager_deinitialize();
+
   return 0;
 }
