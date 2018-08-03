@@ -41,11 +41,17 @@ static void
 rpk_cpubkey_and_token_handler(uint8_t *cpubkey, int *cpubkey_len, uint8_t *token,
                               int *token_len)
 {
+    (void)cpubkey;
+    (void)cpubkey_len;
+    (void)token;
+    (void)token_len;
     return;
 }
 static void
 rpk_priv_key_handler(uint8_t *priv_key, int *priv_key_len)
 {
+    (void)priv_key;
+    (void)priv_key_len;
     return;
 }
 #endif
