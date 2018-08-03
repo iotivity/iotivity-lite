@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_7f06cfcf",
+        "filename": "api/unittest/base64test.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-08-03T23:54:04Z",
+      "side": 1,
+      "message": "Interesting I did not catch that the base64 encode does not null terminate. Give that fact the reason this test works is because the test goes from small string to long string. I will update the tests.",
+      "parentUuid": "da33351e_df6d5b9b",
+      "revId": "b2b243d1558f752a8abd081b71747d37521c7b2d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_19ed24c4",
         "filename": "include/oc_base64.h",
         "patchSetId": 2
