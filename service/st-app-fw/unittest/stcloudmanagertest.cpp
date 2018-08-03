@@ -156,6 +156,32 @@ find_tcp_endpoint(void)
     return false;
 }
 
+#ifdef STATE_MODEL
+static void
+st_status_handler(st_status_t status)
+{
+    if (status == ST_STATUS_WIFI_CONNECTION_CHECKING && !is_stack_ready)
+    {
+        ASSERT_TRUE(find_tcp_endpoint());
+        is_stack_ready = true;
+    }
+    else {
+        if (status == ST_STATUS_EASY_SETUP_PROGRESSING && is_stack_ready) {
+            is_reset_handled = true;
+        } else if (status == ST_STATUS_STOP) {
+            is_stop_handled = true;
+        } else if (status == ST_STATUS_DONE) {
+            is_st_app_ready = true;
+        } else {
+            return;
+        }
+    }
+    st_mutex_lock(mutex);
+    st_cond_signal(cv);
+    st_mutex_unlock(mutex);
+}
+
+#else
 static void
 st_status_handler(st_status_t status)
 {
@@ -178,18 +204,20 @@ st_status_handler(st_status_t status)
     st_mutex_unlock(mutex);
 }
 
+
 static
 void *st_manager_func(void *data)
 {
     (void)data;
     st_error_t ret = st_manager_start();
-    if(test_case_type == CM_FAIL)
-        EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
-    else
+    if(test_case_type != CM_FAIL)
         EXPECT_EQ(ST_ERROR_NONE, ret);
+    else
+        EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 
     return NULL;
 }
+#endif
 
 static
 void set_st_store_info(void)
@@ -416,8 +444,12 @@ class TestSTCloudManager_cb: public testing::Test
             st_register_status_handler(st_status_handler);
             st_set_device_profile(st_device_def, st_device_def_len);
             set_st_store_info();
+#ifdef STATE_MODEL
+            st_manager_start();
+#else
             t = st_thread_create(st_manager_func, "TEST", 0, NULL);
             test_wait_until(mutex, cv, 5);
+#endif
             get_wildcard_acl_policy();
             register_cloud_resources();
         }
