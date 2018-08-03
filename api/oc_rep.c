@@ -220,14 +220,22 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_int_array(&cur->value.array, len);
           cur->type = OC_REP_INT | OC_REP_ARRAY;
+        } else if ((cur->type & OC_REP_INT) != OC_REP_INT){
+          *err |= CborErrorIllegalType;
+          return;
         }
+
         *err |= cbor_value_get_int(&array, oc_int_array(cur->value.array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
           oc_new_double_array(&cur->value.array, len);
           cur->type = OC_REP_DOUBLE | OC_REP_ARRAY;
+        } else if ((cur->type & OC_REP_DOUBLE) != OC_REP_DOUBLE){
+          *err |= CborErrorIllegalType;
+          return;
         }
+
         *err |=
           cbor_value_get_double(&array, oc_double_array(cur->value.array) + k);
         break;
@@ -235,7 +243,11 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_bool_array(&cur->value.array, len);
           cur->type = OC_REP_BOOL | OC_REP_ARRAY;
+        } else if ((cur->type & OC_REP_BOOL) != OC_REP_BOOL){
+          *err |= CborErrorIllegalType;
+          return;
         }
+
         *err |=
           cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
         break;
@@ -243,7 +255,11 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_string_array(&cur->value.array, len);
           cur->type = OC_REP_BYTE_STRING | OC_REP_ARRAY;
+        } else if ((cur->type & OC_REP_BYTE_STRING) != OC_REP_BYTE_STRING){
+          *err |= CborErrorIllegalType;
+          return;
         }
+
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
         if (len > STRING_ARRAY_ITEM_MAX_LEN) {
@@ -257,7 +273,11 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_string_array(&cur->value.array, len);
           cur->type = OC_REP_STRING | OC_REP_ARRAY;
+        } else if ((cur->type & OC_REP_STRING) != OC_REP_STRING){
+          *err |= CborErrorIllegalType;
+          return;
         }
+
         *err |= cbor_value_calculate_string_length(&array, &len);
         len++;
         if (len > STRING_ARRAY_ITEM_MAX_LEN) {
@@ -276,6 +296,9 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
             return;
           }
           prev = &cur->value.object_array;
+        } else if ((cur->type & OC_REP_OBJECT) != OC_REP_OBJECT){
+          *err |= CborErrorIllegalType;
+          return;
         } else {
           (*prev)->next = _alloc_rep();
           if ((*prev)->next == NULL) {
