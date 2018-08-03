@@ -176,7 +176,7 @@ ifeq ($(AUTH_OPTION),0)
 CFLAGS += -DOC_SKIP_CERT
 else
 #preload hardcoded certchain to TLS context
-CFLAGS += -DOC_LOAD_CA
+CFLAGS += -DOC_LOAD_CA -DOC_MFG
 
 ifeq ($(AUTH_OPTION),1)
 #remove all certchains from TLS context after OTM
