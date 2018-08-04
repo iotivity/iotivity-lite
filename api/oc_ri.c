@@ -1224,7 +1224,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     // Drop old observe callback and keep the last one.
     if (cb->observe_seq == 0) {
       oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(client_cbs);
-      unsigned int uri_len = oc_string_len(cb->uri);
+      size_t uri_len = oc_string_len(cb->uri);
 
       while (dup_cb != NULL) {
         if (dup_cb != cb &&
