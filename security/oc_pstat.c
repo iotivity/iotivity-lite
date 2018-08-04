@@ -511,6 +511,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   int device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
+    request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
