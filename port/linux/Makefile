@@ -237,15 +237,16 @@ ifneq ($(TCP),0)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifneq ($(OIC),0)
+    EXTRA_CFLAGS += -DOC_SPEC_VER_OIC
+endif
+
 CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(MEMTRACE),1)
 	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
-ifneq ($(OIC),0)
-    CFLAGS += -DOC_SPEC_VER_OIC
-endif
 
 ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DST_APP_OPTIMIZATION
