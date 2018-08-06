@@ -100,13 +100,13 @@ class TestUnicastRequest: public testing::Test
                 PRINT("Light Resource Discovered....\n");
                 s_pLightEndpoint = endpoint;
                 s_isResourceDiscovered = true;
+                pthread_mutex_lock(&s_waitingMutex);
                 pthread_cond_signal(&s_cvDiscovery);
                 pthread_mutex_unlock(&s_waitingMutex);
                 return OC_STOP_DISCOVERY;
             }
 
             oc_free_server_endpoints(endpoint);
-            pthread_mutex_unlock(&s_waitingMutex);
             return OC_CONTINUE_DISCOVERY;
         }
 
@@ -220,12 +220,12 @@ class TestUnicastRequest: public testing::Test
         {
             struct timespec ts;
             PRINT("Waiting for callback....\n");
-            while(waitTime)
+            while(waitTime && !s_isResourceDiscovered)
             {
                 oc_main_poll();
                 pthread_mutex_lock(&s_waitingMutex);
-                ts.tv_sec = time(NULL) + 1;
-                ts.tv_nsec = 0;
+                clock_gettime(CLOCK_REALTIME, &ts);
+                ts.tv_sec += 1;
                 pthread_cond_timedwait(&s_cvDiscovery, &s_waitingMutex, &ts);
                 waitTime--;
                 pthread_mutex_unlock(&s_waitingMutex);
