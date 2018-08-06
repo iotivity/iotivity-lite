@@ -64,7 +64,7 @@ TEST_F(TestCollectionRequest, AddCollectionTest_P)
 
 TEST_F(TestCollectionRequest, DeleteCollectionTest_P)
 {
-    oc_delete_collection(TestCollectionRequest::s_pCol);
+    ASSERT_NO_THROW(oc_delete_collection(TestCollectionRequest::s_pCol));
 }
 
 TEST_F(TestCollectionRequest, AddLinkTest_P)
@@ -85,19 +85,19 @@ TEST_F(TestCollectionRequest, AddLinkTest_P)
 
 TEST_F(TestCollectionRequest, DeleteLinkTest_P)
 {
-    oc_delete_link(s_pLink);
+     ASSERT_NO_THROW(oc_delete_link(s_pLink));
 }
 
 TEST_F(TestCollectionRequest, AddLinkRelationTest_P)
 {
 
     s_pLink = oc_new_link(s_pResource);
-    oc_link_add_rel(s_pLink, RESOURCE_COLLECTION_RELATION);
+    ASSERT_NO_THROW(oc_link_add_rel(s_pLink, RESOURCE_COLLECTION_RELATION));
 }
 
 TEST_F(TestCollectionRequest, SetLinkInstanceTest_P)
 {
-    oc_link_set_ins(s_pLink, RESOURCE_COLLECTION_RELATION);
+    ASSERT_NO_THROW(oc_link_set_ins(s_pLink, RESOURCE_COLLECTION_RELATION));
 }
 
 TEST_F(TestCollectionRequest, AddCollectionLinkTest_P)
@@ -106,14 +106,14 @@ TEST_F(TestCollectionRequest, AddCollectionLinkTest_P)
                                RESOURCE_COLLECTION_TYPE_LIGHT, 1, 0);
     oc_resource_set_discoverable(s_pCol, true);
     s_pLink = oc_new_link(s_pResource);
-    oc_collection_add_link(s_pCol, s_pLink);
+    ASSERT_NO_THROW(oc_collection_add_link(s_pCol, s_pLink));
 }
 
 TEST_F(TestCollectionRequest, RemoveCollectionLinkTest_P)
 {
-    oc_collection_remove_link(s_pCol, s_pLink);
-    oc_delete_link(s_pLink);
-    oc_delete_collection(TestCollectionRequest::s_pCol);
+    ASSERT_NO_THROW(oc_collection_remove_link(s_pCol, s_pLink));
+    ASSERT_NO_THROW(oc_delete_link(s_pLink));
+    ASSERT_NO_THROW(oc_delete_collection(TestCollectionRequest::s_pCol));
 }
 
 TEST_F(TestCollectionRequest, GetCollectionFromLinkTest_P)
