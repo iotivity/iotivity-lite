@@ -157,7 +157,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, int device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -165,7 +165,7 @@ oc_get_collection_by_uri(const char *uri_path, int uri_path_len, int device)
   }
   oc_collection_t *collection = oc_list_head(oc_collections);
   while (collection != NULL) {
-    if ((int)oc_string_len(collection->uri) == (uri_path_len + 1) &&
+    if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
         strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0 &&
         collection->device == device)
       break;

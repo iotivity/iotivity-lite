@@ -548,7 +548,7 @@ get_WSARecvMsg(void)
 }
 
 static int
-recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
+recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
          oc_endpoint_t *endpoint, bool multicast)
 {
   if (!PWSARecvMsg && get_WSARecvMsg() < 0) {
@@ -859,7 +859,7 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
       common:
 #ifdef OC_DEBUG
-        PRINT("Incoming message of size %d bytes from ", message->length);
+        PRINT("Incoming message of size %zd bytes from ", message->length);
         PRINTipaddr(message->endpoint);
         PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -968,7 +968,7 @@ set_source_address_for_interface(ADDRESS_FAMILY family, uint8_t *address,
 }
 
 int
-send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
+send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
   if (!PWSASendMsg && get_WSASendMsg() < 0) {
     return -1;
@@ -1084,7 +1084,7 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %d bytes to ", message->length);
+  PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n");
 #endif /* OC_DEBUG */
