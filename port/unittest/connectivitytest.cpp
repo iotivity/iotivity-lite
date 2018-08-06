@@ -58,6 +58,7 @@ TEST_F(TestConnectivity, oc_connectivity_get_endpoints)
 {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
     EXPECT_NE(NULL, ep);
+    EXPECT_EQ(device, ep->device);
 }
 
 static void interface_event_handler(oc_interface_event_t event)
