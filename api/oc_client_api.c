@@ -41,20 +41,20 @@ dispatch_coap_request(void)
       payload_size > 0) {
 
 #ifdef OC_BLOCK_WISE
-    request_buffer->payload_size = payload_size;
+    request_buffer->payload_size = (uint32_t)payload_size;
     uint32_t block_size;
 #ifdef OC_TCP
     if (!(transaction->message->endpoint.flags & TCP) &&
         payload_size > OC_BLOCK_SIZE) {
 #else /* OC_TCP */
-    if (payload_size > OC_BLOCK_SIZE) {
+    if ((long)payload_size > OC_BLOCK_SIZE) {
 #endif /* !OC_TCP */
       const void *payload = oc_blockwise_dispatch_block(
         request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
         coap_set_payload(request, payload, block_size);
         coap_set_header_block1(request, 0, 1, (uint16_t)block_size);
-        coap_set_header_size1(request, payload_size);
+        coap_set_header_size1(request, (uint32_t)payload_size);
         request->type = COAP_TYPE_CON;
         client_cb->qos = HIGH_QOS;
       }

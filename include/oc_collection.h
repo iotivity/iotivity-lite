@@ -91,7 +91,7 @@ void oc_collection_free(oc_collection_t *collection);
   @internal Internal API.
 */
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
-                                          int uri_path_len, int device);
+                                          size_t uri_path_len, int device);
 
 /**
   @brief Returns a list of collections.

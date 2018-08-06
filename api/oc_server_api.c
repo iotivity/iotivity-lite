@@ -66,7 +66,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 {
   if (!request)
     return -1;
-  return oc_ri_get_query_value(request->query, request->query_len, key, value);
+  return oc_ri_get_query_value(request->query, (int)request->query_len, key, value);
 }
 
 static int
@@ -123,7 +123,7 @@ oc_iterate_query(oc_request_t *request, char **key, int *key_len, char **value,
                  int *value_len)
 {
   query_iterator++;
-  return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
+  return oc_ri_get_query_nth_key_value(request->query, (int)request->query_len, key,
                                        key_len, value, value_len,
                                        query_iterator);
 }
@@ -146,7 +146,7 @@ oc_iterate_query_get_values(oc_request_t *request, const char *key,
   *value_len = -1;
 
 more_or_done:
-  if (pos == -1 || pos >= request->query_len) {
+  if (pos == -1 || pos >= (int)request->query_len) {
     return false;
   }
   return true;

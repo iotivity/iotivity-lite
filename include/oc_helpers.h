@@ -101,7 +101,7 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                     const char str[], int index);
+                                     const char str[], size_t index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[]);
 void oc_join_string_array(oc_string_array_t *ocstringarray,
@@ -122,13 +122,13 @@ void _oc_new_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_t *ocstring, const char *str, int str_len);
+  oc_string_t *ocstring, const char *str, size_t str_len);
 
 void _oc_alloc_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_t *ocstring, int size);
+  oc_string_t *ocstring, size_t size);
 
 void _oc_free_string(
 #ifdef OC_MEMORY_TRACE
@@ -146,12 +146,12 @@ void _oc_new_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, int size, pool type);
+  oc_array_t *ocarray, size_t size, pool type);
 
 void _oc_alloc_string_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_array_t *ocstringarray, int size);
+  oc_string_array_t *ocstringarray, size_t size);
 
 #endif /* OC_HELPERS_H */

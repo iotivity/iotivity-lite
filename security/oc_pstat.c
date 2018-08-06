@@ -382,8 +382,9 @@ oc_sec_encode_pstat(int device)
 static oc_event_callback_retval_t
 dump_acl_post_otm(void *data)
 {
-  oc_sec_dump_acl((long)data);
-  oc_sec_dump_unique_ids((long)data);
+  size_t device = (size_t)data;
+  oc_sec_dump_acl((int)device);
+  oc_sec_dump_unique_ids((int)device);
   return OC_EVENT_DONE;
 }
 
@@ -475,7 +476,8 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       bool transition_success = oc_pstat_handle_state(&ps, device);
       if (transition_success && ps.s == OC_DOS_RFNOP && set_post_otm_acl) {
         oc_sec_set_post_otm_acl(device);
-        oc_ri_add_timed_event_callback_ticks((void *)(long)device,
+        size_t d = (size_t)device;
+        oc_ri_add_timed_event_callback_ticks((void *)d,
                                              &dump_acl_post_otm, 0);
         set_post_otm_acl = false;
       }
@@ -509,6 +511,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   int device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
+    request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);

@@ -168,16 +168,16 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 
   current = memchr(start, '=', end - start);
   if (current != NULL) {
-    *key_len = current - start;
+    *key_len = (int)(current - start);
     *key = start;
     *value = current + 1;
     current = memchr(*value, '&', end - *value);
     if (current == NULL) {
-      *value_len = end - *value;
+      *value_len = (int)(end - *value);
     } else {
-      *value_len = current - *value;
+      *value_len = (int)(current - *value);
     }
-    next_pos = *value + *value_len - query + 1;
+    next_pos = (int)(*value + *value_len - query + 1);
   }
   return next_pos;
 }
@@ -251,14 +251,14 @@ static void stop_processes(void) {
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
+oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, int device)
 {
   int skip = 0;
   if (uri[0] != '/')
     skip = 1;
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if ((int)oc_string_len(res->uri) == (uri_len + skip) &&
+    if (oc_string_len(res->uri) == (uri_len + skip) &&
         strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0 &&
         res->device == device)
       return res;
@@ -549,7 +549,7 @@ free_all_event_timers(void)
 }
 
 oc_interface_mask_t
-oc_ri_get_interface_mask(char *iface, int if_len)
+oc_ri_get_interface_mask(char *iface, size_t if_len)
 {
   oc_interface_mask_t interface = 0;
   if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0)
@@ -678,21 +678,21 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
-  int uri_path_len = coap_get_header_uri_path(request, &uri_path);
+  size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
   /* Obtain query string from CoAP packet. */
   const char *uri_query = 0;
-  int uri_query_len = coap_get_header_uri_query(request, &uri_query);
+  size_t uri_query_len = coap_get_header_uri_query(request, &uri_query);
 
   if (uri_query_len) {
     request_obj.query = uri_query;
-    request_obj.query_len = uri_query_len;
+    request_obj.query_len = (int)uri_query_len;
 
     /* Check if query string includes interface selection. */
     char *iface;
-    int if_len = oc_ri_get_query_value(uri_query, uri_query_len, "if", &iface);
+    int if_len = oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
-      interface |= oc_ri_get_interface_mask(iface, if_len);
+      interface |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
   }
 
@@ -757,7 +757,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int i;
     for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
       resource = oc_core_get_resource_by_index(i, endpoint->device);
-      if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
+      if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
         request_obj.resource = cur_resource = resource;
@@ -1247,7 +1247,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     // Drop old observe callback and keep the last one.
     if (cb->observe_seq == 0) {
       oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(client_cbs);
-      unsigned int uri_len = oc_string_len(cb->uri);
+      size_t uri_len = oc_string_len(cb->uri);
 
       while (dup_cb != NULL) {
         if (dup_cb != cb &&

@@ -112,7 +112,7 @@ typedef struct
   oc_endpoint_t *origin;
   oc_resource_t *resource;
   const char *query;
-  int query_len;
+  size_t query_len;
   oc_rep_t *request_payload;
   oc_response_t *response;
 } oc_request_t;
@@ -188,7 +188,7 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
 
 int oc_status_code(oc_status_t key);
 
-oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len,
+oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
                                              int device);
 
 oc_resource_t *oc_ri_get_app_resources(void);
@@ -215,6 +215,6 @@ int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 int oc_ri_get_query_value(const char *query, int query_len, const char *key,
                           char **value);
 
-oc_interface_mask_t oc_ri_get_interface_mask(char *iface, int if_len);
+oc_interface_mask_t oc_ri_get_interface_mask(char *iface, size_t if_len);
 
 #endif /* OC_RI_H */
