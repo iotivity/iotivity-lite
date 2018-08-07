@@ -21,6 +21,7 @@
 #include "oc_network_monitor.h"
 #ifdef OC_SECURITY
 #include "oc_security.h"
+#include "security/oc_acl.h"
 #endif
 #include "st_port.h"
 #include "st_store.h"
@@ -456,7 +457,8 @@ get_ap_list(sec_accesspoint **ap_list) {
 
 exit:
 #ifdef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
-  st_wifi_free_scan_list(scanlist);
+//TODO
+  //st_wifi_free_scan_list(scanlist);
 #endif
   return;
 }

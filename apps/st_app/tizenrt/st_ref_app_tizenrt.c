@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "st_device_def.h"
 #include "st_manager.h"
 #include "st_resource_manager.h"
 
@@ -143,7 +144,14 @@ stapp_main(void)
   if (st_register_resource_handler(get_resource_handler,
                                    set_resource_handler) != ST_ERROR_NONE) {
     printf("[ST_APP] st_register_resource_handler failed.\n");
+	st_manager_deinitialize();
     return -1;
+  }
+
+  if (!st_set_device_profile(st_device_def, st_device_def_len)) {
+  printf("[ST_APP] st_set_device_profile failed.\n");
+  st_manager_deinitialize();
+  return -1;
   }
 
   // TODO: callback registration. (ex. user confirm cb)
