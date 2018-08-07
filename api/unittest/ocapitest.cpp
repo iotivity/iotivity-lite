@@ -440,15 +440,15 @@ TEST_F(TestUnicastRequest, SendDeleteRequest_P)
 
 TEST_F(TestUnicastRequest, FreeServerEndpoint_P)
 {
-    oc_free_server_endpoints(s_pLightEndpoint);
+    ASSERT_NO_THROW(oc_free_server_endpoints(s_pLightEndpoint));
 }
 
 TEST_F(TestUnicastRequest, FreeServerEndpoint_N)
 {
-    oc_free_server_endpoints(NULL);
+    ASSERT_NO_THROW(oc_free_server_endpoints(NULL));
 }
 
 TEST_F(TestUnicastRequest, CloseSession_P)
 {
-    oc_close_session(s_pLightEndpoint);
+    ASSERT_NO_THROW(oc_close_session(s_pLightEndpoint));
 }
