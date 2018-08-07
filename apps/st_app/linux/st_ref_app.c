@@ -52,6 +52,14 @@ static pthread_t g_user_input_thread;
 static int g_user_input_shutdown_pipe[2];
 #endif /* USER_INPUT */
 
+#define FLUSH_INPUT(var)                \
+  do {                                  \
+    char fin = var;                     \
+    while(fin != '\n' && fin != EOF)    \
+      fin = getchar();                  \
+  }while(0)
+
+
 static void
 switch_resource_construct(void)
 {
@@ -151,17 +159,24 @@ static bool
 otm_confirm_handler(void)
 {
   printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
-  char ret[10];
-  if (!scanf("%s", ret))
-    printf("[ST_APP] scanf failed.\n");
+  bool ret = false;
 
-  if (ret[0] == 'y' || ret[0] == 'Y') {
-    printf("[ST_APP] CONFIRMED.\n");
-    return true;
-  } else {
-    printf("[ST_APP] DENIED.\n");
-    return false;
+  while(1){
+    char in = getchar();
+    FLUSH_INPUT(in);
+    if (in == 'y' || in == 'Y') {
+      printf("[ST_APP] CONFIRMED.\n");
+      ret = true;
+      break;
+    } else if (in == 'n' || in == 'N'){
+      printf("[ST_APP] DENIED.\n");
+      ret = false;
+      break;
+    } else {
+      printf("[ST_APP] Invalid input\n");
+    }
   }
+  return ret;
 }
 
 static void
