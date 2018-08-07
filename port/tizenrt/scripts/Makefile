@@ -40,10 +40,10 @@ DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    
 	ssl_cache.c ssl_ciphersuites.c      ssl_cli.c   ssl_cookie.c            \
 	ssl_srv.c   ssl_ticket.c    ssl_tls.c   rsa_internal.c
 
-DTLSFLAGS=-I $(MBEDTLS_DIR)/include/ -D__OC_RANDOM
+DTLSFLAGS=-I$(MBEDTLS_DIR)/include/ -D__OC_RANDOM
 
 ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
-	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
+	CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(CONFIG_IOTLITE_SECURE),y)
@@ -66,9 +66,9 @@ else
 	CSRCS += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 	OSRCS_C += $(MBEDTLS_DIR)/library/memory_buffer_alloc.o
 endif
-#	CFLAGS += ${DTLSFLAGS}
+	CFLAGS += ${DTLSFLAGS}
 	OSRCS_C += $(wildcard $(MBEDTLS_DIR)/library/*.o)
-	EXTRA_CFLAGS += ${DTLSFLAGS} -DOC_SECURITY
+	CFLAGS += -DOC_SECURITY
 
 	VPATH += $(IOTCONS_ROOT_DIR)/security/:$(MBEDTLS_DIR)/library:
 endif
@@ -80,7 +80,7 @@ ifeq ($(CONFIG_IOTLITE_RD),y)
 	CSRCS += iotivity-constrained/service/resource-directory/client/src/rd_client.c
 	OSRCS_C += iotivity-constrained/service/resource-directory/client/src/rd_client.o
 endif
-	EXTRA_CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
+	CFLAGS  += -Iiotivity-constrained/service/cloud-access/include \
 			   -Iiotivity-constrained/service/resource-directory/client/include
 endif
 
@@ -105,9 +105,10 @@ CSRCS		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.c) \
 			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.c)
 OSRCS_C		+= $(wildcard iotivity-constrained/service/easy-setup/enrollee/*.o) \
 			   $(wildcard iotivity-constrained/service/easy-setup/enrollee/samsung/sc_easysetup.o)
-EXTRA_CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
+CFLAGS		+= -Iiotivity-constrained/service/easy-setup/enrollee/include \
 		    -Iiotivity-constrained/service/easy-setup/enrollee \
-		    -Iiotivity-constrained/service/easy-setup/enrollee/include
+			-Iiotivity-constrained/service/easy-setup/enrollee/samsung
+
 endif
 
 ifeq ($(CONFIG_IOTLITE_ST_APP_FW),y)
@@ -115,24 +116,18 @@ CSRCS       += $(wildcard iotivity-constrained/service/st-app-fw/src/*.c) \
 			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.c)
 OSRCS_C     += $(wildcard iotivity-constrained/service/st-app-fw/src/*.o) \
 			   $(wildcard iotivity-constrained/service/st-app-fw/src/port/tizenrt/*.o)
-EXTRA_CFLAGS      += -Iiotivity-constrained/service/st-app-fw/include
-ST_DEVICE_DEF= $(IOTCONS_ROOT_DIR)/service/st-app-fw/json/st_device_def
-ST_JSON_FILE := $(wildcard $(IOTCONS_ROOT_DIR)/service/st-app-fw/json/*.json)
-ST_DEVICE_DEF_HEADER=$(IOTCONS_ROOT_DIR)/service/st-app-fw/include/st_device_def.h
-ifeq ($(CONFIG_IOTLITE_ARCH), x86_64)
-JSON_TO_CBOR=$(IOTCONS_ROOT_DIR)/service/st-app-fw/json/json2cbor
-else
-JSON_TO_CBOR=$(IOTCONS_ROOT_DIR)/service/st-app-fw/json/json2cbor_32
-endif
+CFLAGS      += -Iiotivity-constrained/service/st-app-fw/include
 endif
 
 ifeq ($(CONFIG_IOTLITE_FOTA),y)
 CSRCS       += $(wildcard iotivity-constrained/service/fota/src/*.c)
 OSRCS_C     += $(wildcard iotivity-constrained/service/fota/src/*.o)
-CFLAGS=-Iiotivity-constrained/service/fota/include
+EXTRA_CFLAGS=-Iiotivity-constrained/service/fota/include
 endif
 
 CFLAGS += -DST_APP_FW
+CFLAGS += -DWIFI_SCAN_IN_SOFT_AP_SUPPORTED
+
 
 ifeq ($(CONFIG_IOTLITE_IPV4),y)
 	EXTRA_CFLAGS += -DOC_IPV4
@@ -150,14 +145,29 @@ ifeq ($(CONFIG_WIFI_MANAGER),y)
 	EXTRA_CFLAGS += -DTIZEN_RT_WIFI_MANAGER
 endif
 
+# AUTH_OPTION = 0   - root ca check is disabled for any TLS connection
+# AUTH_OPTION = 1   - preload manufacturer certificate chain to TLS context & and remove it after OTM
+# AUTH_OPTION = 2   - preload manufacturer certificate chain to TLS context
+#
+# default: AUTH_OPTION = 1
+
+ifndef ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+AUTH_OPTION=1
+endif
+
 ifeq ($(CONFIG_IOTLITE_SECURE),y)
-ifneq ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+ifeq ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+#enable mbedtls patch to skip cert verification
+CFLAGS += -DOC_SKIP_CERT
+else
+#preload hardcoded certchain to TLS context
 CFLAGS += -DOC_LOAD_CA
-ifeq ($(CONFIG_IOTLITE_AUTH_OPTION),y)
+
+ifeq ($(AUTH_OPTION),1)
+#remove all certchains from TLS context after OTM
 CFLAGS += -DOC_UNLOAD_CERT
 endif
-else
-CFLAGS += -DOC_SKIP_CERT
+
 endif
 endif
 
@@ -178,7 +188,8 @@ CFLAGS		+= -Itinycbor/src/ \
 			   -Iiotivity-constrained/include \
 			   -Iiotivity-constrained/security \
 			   -Iiotivity-constrained/port \
-			   -Iiotivity-constrained/port/tizenrt
+			   -Iiotivity-constrained/port/tizenrt \
+			   -Iiotivity-constrained/util
 
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 COBJS		= $(CSRCS:.c=$(OBJEXT))
@@ -202,50 +213,14 @@ DEPPATH	= --dep-path .
 
 VPATH		= $(MBEDTLS_DIR)/library:
 
-ifeq ($(CONFIG_IOTLITE_SECURE),y)
-MBEDTLS_PATCHES ?= $(sort $(wildcard $(IOTCONS_ROOT_DIR)/patches/*.patch))
-${MBEDTLS_DIR}/.git:
-	git submodule update --init ${@D}
 
-$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
-	if [ -d ${MBEDTLS_DIR}  ]; then \
-	cd ${MBEDTLS_DIR} && \
-	git clean -fdx . && \
-	git reset --hard && \
-	git fetch && \
-	git reset --hard ${DTLS_TAG} && \
-	cd -; \
-	fi && \
-	git submodule update --init && \
-	cd ${MBEDTLS_DIR} && \
-	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
-	echo "Patches applied in $^" > ${@F}
-endif
-
-prep_st_app_fw:
-ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
-else
-ifneq ("$(wildcard $(ST_JSON_FILE))", "")
-else
-	$(error please use proper json file in service/st-app-fw/json)
-endif
-ifneq ($(words $(ST_JSON_FILE)), 1)
-	$(error please use 1 json file in service/st-app-fw/json)
-else
-	$(info make new st_device_def file using $(ST_JSON_FILE))
-	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
-	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
-	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
-endif
-endif
-
-all: .built
+all: apply_mbedtls_patches .built
 .PHONY: depend clean distclean
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS): %$(OBJEXT): %.c prep_st_app_fw
+$(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 .built: $(OBJS)
@@ -266,5 +241,31 @@ clean:
 distclean: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+
+ifeq ($(CONFIG_IOTLITE_SECURE),y)
+MBEDTLS_PATCHES ?= $(sort $(wildcard $(IOTCONS_ROOT_DIR)/patches/*.patch))
+ifeq ($(CONFIG_IOTLITE_AUTH_OPTION),n)
+MBEDTLS_PATCHES += $(sort $(wildcard $(IOTCONS_ROOT_DIR)/patches/*.off))
+${MBEDTLS_DIR}/.git:
+	git submodule update --init ${@D}
+endif
+
+$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
+	if [ -d ${MBEDTLS_DIR}  ]; then \
+	cd ${MBEDTLS_DIR} && \
+	git clean -fdx . && \
+	git reset --hard && \
+	git fetch && \
+	git reset --hard ${DTLS_TAG} && \
+	cd ../..; \
+	fi && \
+	git submodule update --init && \
+	cd ${MBEDTLS_DIR} && \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > $(MBEDTLS_PATCH_FILE)
+endif
+
+apply_mbedtls_patches: $(MBEDTLS_PATCH_FILE)
+	echo "Patches applied in mbedtls direcotry"
 
 -include Make.dep
