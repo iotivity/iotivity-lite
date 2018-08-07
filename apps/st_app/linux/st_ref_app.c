@@ -152,7 +152,7 @@ otm_confirm_handler(void)
 {
   printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
   char ret[10];
-  if (!scanf("%s", ret))
+  if (!scanf("%9s", ret))
     printf("[ST_APP] scanf failed.\n");
 
   if (ret[0] == 'y' || ret[0] == 'Y') {
