@@ -150,18 +150,20 @@ set_resource_handler(st_request_t *request)
 static bool
 otm_confirm_handler(void)
 {
-  printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
-  char ret[10];
-  if (!scanf("%s", ret))
+printf("[ST_APP] OTM request is coming. Will you confirm?[y/n]\n");
+  char ret;
+  if((ret = getchar()) == '\n')
     printf("[ST_APP] scanf failed.\n");
 
-  if (ret[0] == 'y' || ret[0] == 'Y') {
+  if (ret == 'y' || ret == 'Y') {
     printf("[ST_APP] CONFIRMED.\n");
     return true;
   } else {
     printf("[ST_APP] DENIED.\n");
     return false;
   }
+
+  while(ret != '\n' && ret != EOF)  ret= getchar();
 }
 
 static void
