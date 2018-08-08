@@ -129,12 +129,12 @@ TEST(Security, Init)
                                         .requests_entry = NULL };
 
   mkdir("unittest_creds", 0770);
-  oc_storage_config("unittest_creds");
-  oc_main_init(&handler);
-  oc_core_regen_unique_ids(0);
+  EXPECT_NO_THROW(oc_storage_config("unittest_creds"));
+  EXPECT_NO_THROW(oc_main_init(&handler));
+  EXPECT_NO_THROW(oc_core_regen_unique_ids(0));
 
   oc_endpoint_t *endpoint = oc_connectivity_get_endpoints(0);
-  oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_SERVER));
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   snprintf((char *)peer->master_secret, 48, "secret");
   snprintf((char *)peer->client_server_random, 48, "random");
@@ -176,26 +176,26 @@ get_aces()
 
 TEST(Security, AclInit)
 {
-  sec_init();
+  EXPECT_NO_THROW(sec_init());
   oc_ace_subject_t subject;
-  oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &subject.uuid);
+  EXPECT_NO_THROW(oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &subject.uuid));
   int aceid = get_new_aceid(dev);
   EXPECT_TRUE(aceid != 0);
   int permission = OC_PERM_CREATE | OC_PERM_RETRIEVE | OC_PERM_UPDATE |
                    OC_PERM_DELETE | OC_PERM_NOTIFY;
   oc_ace_wildcard_t wc = OC_ACE_WC_ALL;
   oc_string_array_t rt;
-  oc_new_string_array(&rt, 3);
-  oc_string_array_add_item(rt, "/oic/d/");
-  oc_string_array_add_item(rt, "/oic/sec/acl");
-  oc_string_array_add_item(rt, "/oic/sec/doxm");
-  oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, aceid, permission, "*", wc,
-                        &rt, OC_IF_BASELINE, 0);
+  EXPECT_NO_THROW(oc_new_string_array(&rt, 3));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/d/"));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/sec/acl"));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/sec/doxm"));
+  EXPECT_NO_THROW(oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, aceid, permission, "*", wc,
+                        &rt, OC_IF_BASELINE, 0));
   oc_ace_subject_t subject1;
-  oc_new_string(&subject1.role.role, "god", 4);
-  oc_new_string(&subject1.role.authority, "god", 4);
-  oc_sec_ace_update_res(OC_SUBJECT_ROLE, &subject1, aceid, permission, "*", wc,
-                        &rt, OC_IF_BASELINE, 0);
+  EXPECT_NO_THROW(oc_new_string(&subject1.role.role, "god", 4));
+  EXPECT_NO_THROW(oc_new_string(&subject1.role.authority, "god", 4));
+  EXPECT_NO_THROW(oc_sec_ace_update_res(OC_SUBJECT_ROLE, &subject1, aceid, permission, "*", wc,
+                        &rt, OC_IF_BASELINE, 0));
 #ifdef OC_DEBUG
   dump_acl(dev);
 #endif
@@ -216,10 +216,10 @@ TEST(Security, AclNewAceId)
 TEST(Security, AclFindResource)
 {
   oc_string_array_t rt;
-  oc_new_string_array(&rt, 3);
-  oc_string_array_add_item(rt, "/oic/d/");
-  oc_string_array_add_item(rt, "/oic/sec/acl");
-  oc_string_array_add_item(rt, "/oic/sec/doxm");
+  EXPECT_NO_THROW(oc_new_string_array(&rt, 3));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/d/"));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/sec/acl"));
+  EXPECT_NO_THROW(oc_string_array_add_item(rt, "/oic/sec/doxm"));
   oc_sec_ace_t *ace = get_aces();
   oc_ace_res_t *res = oc_sec_ace_find_resource(NULL, ace, "/oic/d", &rt,
                                                OC_IF_BASELINE, OC_ACE_NO_WC);
@@ -228,8 +228,8 @@ TEST(Security, AclFindResource)
 TEST(Security, AclFindSubject)
 {
   oc_ace_subject_t subject;
-  oc_new_string(&subject.role.role, "god", 4);
-  oc_new_string(&subject.role.authority, "god", 4);
+  EXPECT_NO_THROW(oc_new_string(&subject.role.role, "god", 4));
+  EXPECT_NO_THROW(oc_new_string(&subject.role.authority, "god", 4));
   uint16_t permission = OC_PERM_CREATE | OC_PERM_RETRIEVE | OC_PERM_UPDATE |
                         OC_PERM_DELETE | OC_PERM_NOTIFY;
   oc_sec_ace_t *ace = oc_sec_acl_find_subject(NULL, OC_SUBJECT_ROLE, &subject,
@@ -266,7 +266,7 @@ TEST(Security, AclCheck)
 }
 TEST(Security, AclSetPostOtm)
 {
-  oc_sec_set_post_otm_acl(dev);
+  EXPECT_NO_THROW(oc_sec_set_post_otm_acl(dev));
 }
 TEST(Security, AclSetAceConnAnonClear)
 {
@@ -290,10 +290,10 @@ TEST(Security, AclPost)
     memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                    (void *)rep_objects_pool, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+    EXPECT_NO_THROW(oc_parse_rep(buf, (uint16_t)ret, &rep));
   }
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 
   oc_request_t *request = (oc_request_t *)oc_mem_malloc(sizeof(oc_request_t));
   request->resource = (oc_resource_t *)oc_mem_malloc(sizeof(oc_resource_t));
@@ -309,26 +309,26 @@ TEST(Security, AclPost)
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/acl");
   request->request_payload = rep;
-  post_acl(request, OC_IF_BASELINE, NULL);
-  get_acl(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_acl(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(get_acl(request, OC_IF_BASELINE, NULL));
   request->query_len =
     snprintf((char *)request->query, 2048,
              "coaps://127.0.0.1:2048/oic/sec/acl?aceid=0&aceid=1");
-  delete_acl(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(delete_acl(request, OC_IF_BASELINE, NULL));
   request->query_len = snprintf((char *)request->query, 2048,
                                 "coaps://127.0.0.1:2048/oic/sec/acl");
-  post_acl(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_acl(request, OC_IF_BASELINE, NULL));
   request->query_len = snprintf((char *)request->query, 2048,
                                 "coaps://127.0.0.1:2048/oic/sec/acl");
-  post_acl(request, OC_IF_BASELINE, NULL);
-  post_acl(request, OC_IF_S, NULL);
-  delete_acl(request, OC_IF_BASELINE, NULL);
-  oc_free_rep(request->request_payload);
-  oc_mem_free(request->response->response_buffer->buffer);
-  oc_mem_free(request->response->response_buffer);
-  oc_mem_free(request->response);
-  oc_mem_free((void *)request->query);
-  oc_mem_free(request);
+  EXPECT_NO_THROW(post_acl(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(post_acl(request, OC_IF_S, NULL));
+  EXPECT_NO_THROW(delete_acl(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(oc_free_rep(request->request_payload));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer->buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response));
+  EXPECT_NO_THROW(oc_mem_free((void *)request->query));
+  EXPECT_NO_THROW(oc_mem_free(request));
 }
 TEST(Security, AclEncodeV1)
 {
@@ -336,21 +336,21 @@ TEST(Security, AclEncodeV1)
 }
 TEST(Security, AclFreeResources)
 {
-  oc_sec_acl_default(dev);
+  EXPECT_NO_THROW(oc_sec_acl_default(dev));
   oc_sec_ace_t *ace = get_aces();
-  oc_ace_free_resources(dev, &ace, "/oic/p");
+  EXPECT_NO_THROW(oc_ace_free_resources(dev, &ace, "/oic/p"));
 }
 TEST(Security, AclRemoveAce)
 {
-  oc_acl_remove_ace(dev, 0);
+  EXPECT_NO_THROW(oc_acl_remove_ace(dev, 0));
 }
 TEST(Security, AclClear)
 {
-  oc_sec_clear_acl(dev);
+  EXPECT_NO_THROW(oc_sec_clear_acl(dev));
 }
 TEST(Security, AclFree)
 {
-  sec_free();
+  EXPECT_NO_THROW(sec_free());
 }
 //-----------------------------------------DOXM-----------------------------------------
 bool
@@ -361,18 +361,18 @@ change_owner_cb(void)
 
 TEST(Security, DoxmInit)
 {
-  sec_init();
+  EXPECT_NO_THROW(sec_init());
 }
 TEST(Security, DoxmDefault)
 {
-  oc_sec_doxm_free();
-  oc_sec_doxm_init();
-  oc_sec_doxm(dev, OC_DOXM_JW);
-  oc_sec_dump_doxm(dev);
+  EXPECT_NO_THROW(oc_sec_doxm_free());
+  EXPECT_NO_THROW(oc_sec_doxm_init());
+  EXPECT_NO_THROW(oc_sec_doxm(dev, OC_DOXM_JW));
+  EXPECT_NO_THROW(oc_sec_dump_doxm(dev));
 }
 TEST(Security, DoxmEncode)
 {
-  oc_sec_encode_doxm(dev);
+  EXPECT_NO_THROW(oc_sec_encode_doxm(dev));
 }
 TEST(Security, DoxmSecGet)
 {
@@ -396,19 +396,19 @@ TEST(Security, DoxmGet)
   request->query = (char *)oc_mem_malloc(request->query_len);
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm?owned=false&owned=true");
-  get_doxm(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(get_doxm(request, OC_IF_BASELINE, NULL));
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm?owned=true&owned=false");
-  get_doxm(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(get_doxm(request, OC_IF_BASELINE, NULL));
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm?owned=ff&owner=me");
-  get_doxm(request, OC_IF_BASELINE, NULL);
-  get_doxm(request, OC_IF_S, NULL);
-  oc_mem_free(request->response->response_buffer->buffer);
-  oc_mem_free(request->response->response_buffer);
-  oc_mem_free(request->response);
-  oc_mem_free((void *)request->query);
-  oc_mem_free(request);
+  EXPECT_NO_THROW(get_doxm(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(get_doxm(request, OC_IF_S, NULL));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer->buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response));
+  EXPECT_NO_THROW(oc_mem_free((void *)request->query));
+  EXPECT_NO_THROW(oc_mem_free(request));
 }
 TEST(Security, DoxmDecode)
 {
@@ -428,14 +428,14 @@ TEST(Security, DoxmDecode)
     memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                    (void *)rep_objects_pool, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+    EXPECT_NO_THROW(oc_parse_rep(buf, (uint16_t)ret, &rep));
     EXPECT_FALSE(oc_sec_decode_doxm(rep, false, -1));
     EXPECT_FALSE(oc_sec_decode_doxm(rep, false, 0));
     EXPECT_TRUE(oc_sec_decode_doxm(rep, true, 0));
-    oc_free_rep(rep);
+    EXPECT_NO_THROW(oc_free_rep(rep));
   }
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, DoxmPost)
 {
@@ -453,10 +453,10 @@ TEST(Security, DoxmPost)
     memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                    (void *)rep_objects_pool, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+    EXPECT_NO_THROW(oc_parse_rep(buf, (uint16_t)ret, &rep));
   }
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 
   oc_request_t *request = (oc_request_t *)oc_mem_malloc(sizeof(oc_request_t));
   request->resource = (oc_resource_t *)oc_mem_malloc(sizeof(oc_resource_t));
@@ -472,24 +472,24 @@ TEST(Security, DoxmPost)
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm");
   request->request_payload = rep;
-  post_doxm(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_doxm(request, OC_IF_BASELINE, NULL));
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm");
-  post_doxm(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_doxm(request, OC_IF_BASELINE, NULL));
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/doxm");
-  post_doxm(request, OC_IF_BASELINE, NULL);
-  post_doxm(request, OC_IF_S, NULL);
-  oc_free_rep(request->request_payload);
-  oc_mem_free(request->response->response_buffer->buffer);
-  oc_mem_free(request->response->response_buffer);
-  oc_mem_free(request->response);
-  oc_mem_free((void *)request->query);
-  oc_mem_free(request);
+  EXPECT_NO_THROW(post_doxm(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(post_doxm(request, OC_IF_S, NULL));
+  EXPECT_NO_THROW(oc_free_rep(request->request_payload));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer->buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response));
+  EXPECT_NO_THROW(oc_mem_free((void *)request->query));
+  EXPECT_NO_THROW(oc_mem_free(request));
 }
 TEST(Security, DoxmDeInit)
 {
-  sec_free();
+  EXPECT_NO_THROW(sec_free());
 }
 //---------------------------------------CRED--------------------------------------------
 static bool
@@ -569,16 +569,16 @@ add_cred3(const char *suuid)
 
 TEST(Security, CredInit)
 {
-  sec_init();
+  EXPECT_NO_THROW(sec_init());
 
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER));
   oc_tls_peer_t *peer = oc_tls_get_peer(ep);
   peer->ssl_ctx.session =
     (mbedtls_ssl_session *)oc_mem_malloc(sizeof(mbedtls_ssl_session));
   ;
-  mbedtls_ssl_session_init(peer->ssl_ctx.session);
+  EXPECT_NO_THROW(mbedtls_ssl_session_init(peer->ssl_ctx.session));
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
 }
@@ -592,9 +592,9 @@ TEST(Security, CredDecode3)
   size_t sz = 32 * OC_MAX_APP_DATA_SIZE;
   uint8_t *buf = (uint8_t *)oc_mem_malloc(sz);
   EXPECT_TRUE(buf);
-  oc_rep_new(buf, sz);
+  EXPECT_NO_THROW(oc_rep_new(buf, sz));
 
-  add_cred3(suuid);
+  EXPECT_NO_THROW(add_cred3(suuid));
 
   int size = oc_rep_finalize();
   EXPECT_GT(size, 0);
@@ -606,28 +606,28 @@ TEST(Security, CredDecode3)
   memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                  (void *)rep_objects_pool, 0 };
-  oc_rep_set_pool(&rep_objects);
-  oc_parse_rep(buf, size, &rep);
+  EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+  EXPECT_NO_THROW(oc_parse_rep(buf, size, &rep));
   oc_sec_cred_t *owner = NULL;
   EXPECT_TRUE(oc_sec_decode_cred(rep, &owner, false, dev));
   EXPECT_TRUE(owner != NULL);
 
-  oc_free_rep(rep);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_free_rep(rep));
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, CredDecode2)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
   char suuid[37];
-  oc_uuid_to_str(uuid, suuid, 37);
+  EXPECT_NO_THROW(oc_uuid_to_str(uuid, suuid, 37));
 
   size_t sz = 32 * OC_MAX_APP_DATA_SIZE;
   uint8_t *buf = (uint8_t *)oc_mem_malloc(sz);
   EXPECT_TRUE(buf);
-  oc_rep_new(buf, sz);
+  EXPECT_NO_THROW(oc_rep_new(buf, sz));
 
-  add_cred2(suuid);
+  EXPECT_NO_THROW(add_cred2(suuid));
 
   int size = oc_rep_finalize();
   EXPECT_GT(size, 0);
@@ -639,14 +639,14 @@ TEST(Security, CredDecode2)
   memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                  (void *)rep_objects_pool, 0 };
-  oc_rep_set_pool(&rep_objects);
-  oc_parse_rep(buf, size, &rep);
+  EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+  EXPECT_NO_THROW(oc_parse_rep(buf, size, &rep));
   oc_sec_cred_t *owner = NULL;
   EXPECT_FALSE(oc_sec_decode_cred(rep, &owner, false, dev));
   EXPECT_FALSE(owner != NULL);
 
-  oc_free_rep(rep);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_free_rep(rep));
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, CredDecode1)
 {
@@ -658,9 +658,9 @@ TEST(Security, CredDecode1)
   size_t sz = 32 * OC_MAX_APP_DATA_SIZE;
   uint8_t *buf = (uint8_t *)oc_mem_malloc(sz);
   EXPECT_TRUE(buf);
-  oc_rep_new(buf, sz);
+  EXPECT_NO_THROW(oc_rep_new(buf, sz));
 
-  add_cred1(suuid);
+  EXPECT_NO_THROW(add_cred1(suuid));
 
   int size = oc_rep_finalize();
   EXPECT_GT(size, 0);
@@ -672,14 +672,14 @@ TEST(Security, CredDecode1)
   memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                  (void *)rep_objects_pool, 0 };
-  oc_rep_set_pool(&rep_objects);
-  oc_parse_rep(buf, size, &rep);
+  EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+  EXPECT_NO_THROW(oc_parse_rep(buf, size, &rep));
   oc_sec_cred_t *owner = NULL;
   EXPECT_FALSE(oc_sec_decode_cred(rep, &owner, false, dev));
   EXPECT_FALSE(owner != NULL);
 
-  oc_free_rep(rep);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_free_rep(rep));
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, CredDecode)
 {
@@ -691,9 +691,9 @@ TEST(Security, CredDecode)
   size_t sz = 32 * OC_MAX_APP_DATA_SIZE;
   uint8_t *buf = (uint8_t *)oc_mem_malloc(sz);
   EXPECT_TRUE(buf);
-  oc_rep_new(buf, sz);
+  EXPECT_NO_THROW(oc_rep_new(buf, sz));
 
-  add_cred(suuid);
+  EXPECT_NO_THROW(add_cred(suuid));
 
   int size = oc_rep_finalize();
   EXPECT_GT(size, 0);
@@ -705,14 +705,14 @@ TEST(Security, CredDecode)
   memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                  (void *)rep_objects_pool, 0 };
-  oc_rep_set_pool(&rep_objects);
-  oc_parse_rep(buf, size, &rep);
+  EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+  EXPECT_NO_THROW(oc_parse_rep(buf, size, &rep));
   oc_sec_cred_t *owner = NULL;
   EXPECT_TRUE(oc_sec_decode_cred(rep, &owner, false, dev));
   EXPECT_TRUE(owner != NULL);
 
-  oc_free_rep(rep);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_free_rep(rep));
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 
 oc_sec_cred_t *
@@ -756,12 +756,12 @@ add_cred(bool mfg)
 TEST(Security, CredDefault)
 {
   EXPECT_EQ(oc_list_length(devices[dev].creds), 1);
-  oc_list_add(devices[dev].creds, add_cred(false));
-  oc_list_add(devices[dev].creds, add_cred(true));
-  oc_list_add(devices[dev].creds, add_cred(false));
-  oc_list_add(devices[dev].creds, add_cred(true));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(false)));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(true)));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(false)));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(true)));
   EXPECT_EQ(oc_list_length(devices[dev].creds), 5);
-  oc_sec_cred_default(dev);
+  EXPECT_NO_THROW(oc_sec_cred_default(dev));
   EXPECT_GE(oc_list_length(devices[dev].creds), 0);
 }
 TEST(Security, CredFind)
@@ -770,9 +770,9 @@ TEST(Security, CredFind)
   oc_gen_uuid(uuid);
   oc_sec_cred_t *c = oc_sec_find_cred(uuid, dev);
   EXPECT_TRUE(c == NULL);
-  oc_mem_free((void *)uuid);
-  oc_list_add(devices[dev].creds, add_cred(false));
-  oc_list_add(devices[dev].creds, add_cred(true));
+  EXPECT_NO_THROW(oc_mem_free((void *)uuid));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(false)));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(true)));
   uuid = oc_core_get_device_id(dev);
   c = NULL;
   c = oc_sec_find_cred(uuid, dev);
@@ -782,7 +782,7 @@ TEST(Security, CredRemove)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   char suuid[37];
-  oc_uuid_to_str(uuid, suuid, 37);
+  EXPECT_NO_THROW(oc_uuid_to_str(uuid, suuid, 37));
   EXPECT_TRUE(oc_cred_remove_subject(suuid, dev));
 }
 #if !defined(OC_SPEC_VER_OIC)
@@ -802,15 +802,15 @@ TEST(Security, CredGet)
     memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                    (void *)rep_objects_pool, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+    EXPECT_NO_THROW(oc_parse_rep(buf, (uint16_t)ret, &rep));
   }
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 
   oc_request_t *request = (oc_request_t *)oc_mem_malloc(sizeof(oc_request_t));
   request->resource = (oc_resource_t *)oc_mem_malloc(sizeof(oc_resource_t));
   request->resource->device = dev;
-  oc_new_string(&request->resource->name, "cred", 5);
+  EXPECT_NO_THROW(oc_new_string(&request->resource->name, "cred", 5));
   request->response = (oc_response_t *)oc_mem_malloc(sizeof(oc_response_t));
   request->response->response_buffer =
     (oc_response_buffer_t *)oc_mem_malloc(sizeof(oc_response_buffer_t));
@@ -822,56 +822,56 @@ TEST(Security, CredGet)
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/cred");
   request->request_payload = rep;
-  get_cred(request, OC_IF_BASELINE, 0);
+  EXPECT_NO_THROW(get_cred(request, OC_IF_BASELINE, 0));
   request->query_len =
     snprintf((char *)request->query, 2048,
              "coaps://127.0.0.1:2048/oic/sec/cred?credid=0&credid=1");
-  delete_cred(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(delete_cred(request, OC_IF_BASELINE, NULL));
   request->query_len = snprintf((char *)request->query, 2048,
                                 "coaps://127.0.0.1:2048/oic/sec/cred");
-  post_cred(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_cred(request, OC_IF_BASELINE, NULL));
   request->query_len = snprintf((char *)request->query, 2048,
                                 "coaps://127.0.0.1:2048/oic/sec/cred");
-  post_cred(request, OC_IF_BASELINE, NULL);
-  post_cred(request, OC_IF_S, NULL);
-  delete_cred(request, OC_IF_BASELINE, NULL);
-  oc_free_rep(request->request_payload);
-  oc_mem_free(request->response->response_buffer->buffer);
-  oc_mem_free(request->response->response_buffer);
-  oc_mem_free(request->response);
-  oc_mem_free((void *)request->query);
-  oc_mem_free(request);
+  EXPECT_NO_THROW(post_cred(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(post_cred(request, OC_IF_S, NULL));
+  EXPECT_NO_THROW(delete_cred(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(oc_free_rep(request->request_payload));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer->buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response));
+  EXPECT_NO_THROW(oc_mem_free((void *)request->query));
+  EXPECT_NO_THROW(oc_mem_free(request));
 }
 #endif // OC_SPEC_VER_OIC
 TEST(Security, CredSecGetCred)
 {
   oc_uuid_t uuid = { 0 };
-  oc_str_to_uuid("00000001-0001-0001-0001-000000000001", &uuid);
+  EXPECT_NO_THROW(oc_str_to_uuid("00000001-0001-0001-0001-000000000001", &uuid));
   oc_sec_cred_t *c = oc_sec_get_cred(&uuid, dev);
   EXPECT_TRUE(c != NULL);
 }
 TEST(Security, CredFree)
 {
-  oc_list_add(devices[dev].creds, add_cred(false));
-  oc_list_add(devices[dev].creds, add_cred(true));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(false)));
+  EXPECT_NO_THROW(oc_list_add(devices[dev].creds, add_cred(true)));
   int num = oc_list_length(devices[dev].creds);
   EXPECT_GT(num, 0);
-  oc_sec_remove_cred_by_credid(100, dev);
+  EXPECT_NO_THROW(oc_sec_remove_cred_by_credid(100, dev));
   EXPECT_EQ(oc_list_length(devices[dev].creds), num);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(devices[dev].creds);
   EXPECT_TRUE(oc_sec_remove_cred_by_credid(c->credid, dev));
-  sec_free();
+  EXPECT_NO_THROW(sec_free());
 }
 //------------------------------------------PSTAT------------------------------------
 TEST(Security, PstatInit)
 {
-  sec_init();
+  EXPECT_NO_THROW(sec_init());
 }
 TEST(Security, PstatNullUuid)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_FALSE(nil_uuid(uuid));
-  oc_str_to_uuid("00000000-0000-0000-0000-000000000000", uuid);
+  EXPECT_NO_THROW(oc_str_to_uuid("00000000-0000-0000-0000-000000000000", uuid));
   EXPECT_TRUE(nil_uuid(uuid));
 }
 TEST(Security, PstatValidTransition)
@@ -917,12 +917,12 @@ TEST(Security, OtmErr)
 {
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(dev);
   pstat->s = OC_DOS_RFNOP;
-  oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
-  oc_sec_otm_err(dev, OC_SEC_ERR_CRED);
+  EXPECT_NO_THROW(oc_sec_otm_set_err_cb(oc_sec_otm_err_cb));
+  EXPECT_NO_THROW(oc_sec_otm_err(dev, OC_SEC_ERR_CRED));
   pstat->s = OC_DOS_RFOTM;
-  oc_sec_otm_err(dev, OC_SEC_ERR_ACL);
-  oc_sec_otm_set_err_cb(oc_sec_otm_err_cb);
-  oc_sec_otm_set_err_cb(otm_err_cb);
+  EXPECT_NO_THROW(oc_sec_otm_err(dev, OC_SEC_ERR_ACL));
+  EXPECT_NO_THROW(oc_sec_otm_set_err_cb(oc_sec_otm_err_cb));
+  EXPECT_NO_THROW(oc_sec_otm_set_err_cb(otm_err_cb));
 }
 TEST(Security, Pstat)
 {
@@ -955,27 +955,27 @@ TEST(Security, PstatDecode)
 
   oc_uuid_t *uuid = oc_core_get_device_id(dev);
   EXPECT_TRUE(uuid);
-  oc_uuid_to_str(uuid, suuid, 37);
+  EXPECT_NO_THROW(oc_uuid_to_str(uuid, suuid, 37));
 
   size_t sz = 32 * OC_MAX_APP_DATA_SIZE;
   uint8_t *buf = (uint8_t *)oc_mem_malloc(sz);
   EXPECT_TRUE(buf);
-  oc_rep_new(buf, sz);
+  EXPECT_NO_THROW(oc_rep_new(buf, sz));
 
-  oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_PSTAT, dev));
+  EXPECT_NO_THROW(oc_rep_start_root_object());
+  oc_process_baseline_interface(    
+                    oc_core_get_resource_by_index(OCF_SEC_PSTAT, dev));
   oc_rep_set_object(root, dos);
-  oc_rep_set_boolean(dos, p, 1);
-  oc_rep_set_int(dos, s, 1);
+  EXPECT_NO_THROW(oc_rep_set_boolean(dos, p, 1));
+  EXPECT_NO_THROW(oc_rep_set_int(dos, s, 1));
   oc_rep_close_object(root, dos);
-  oc_rep_set_int(root, cm, 1);
-  oc_rep_set_int(root, tm, 1);
-  oc_rep_set_int(root, om, 1);
-  oc_rep_set_int(root, sm, 1);
-  oc_rep_set_boolean(root, isop, pstat[dev].isop);
-  oc_rep_set_text_string(root, rowneruuid, suuid);
-  oc_rep_end_root_object();
+  EXPECT_NO_THROW(oc_rep_set_int(root, cm, 1));
+  EXPECT_NO_THROW(oc_rep_set_int(root, tm, 1));
+  EXPECT_NO_THROW(oc_rep_set_int(root, om, 1));
+  EXPECT_NO_THROW(oc_rep_set_int(root, sm, 1));
+  EXPECT_NO_THROW(oc_rep_set_boolean(root, isop, pstat[dev].isop));
+  EXPECT_NO_THROW(oc_rep_set_text_string(root, rowneruuid, suuid));
+  EXPECT_NO_THROW(oc_rep_end_root_object());
 
   int size = oc_rep_finalize();
   EXPECT_GT(size, 0);
@@ -985,15 +985,15 @@ TEST(Security, PstatDecode)
   memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                  (void *)rep_objects_pool, 0 };
-  oc_rep_set_pool(&rep_objects);
-  oc_parse_rep(buf, size, &rep);
+  EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+  EXPECT_NO_THROW(oc_parse_rep(buf, size, &rep));
   EXPECT_FALSE(oc_sec_decode_pstat(rep, false, dev));
   EXPECT_TRUE(oc_sec_decode_pstat(rep, true, dev));
 #ifdef OC_MFG
-  oc_sec_load_mfg_certs(dev);
+  EXPECT_NO_THROW(oc_sec_load_mfg_certs(dev));
 #endif /* OC_MFG */
-  oc_free_rep(rep);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_free_rep(rep));
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 
 #if !defined(OC_SPEC_VER_OIC)
@@ -1013,15 +1013,15 @@ TEST(Security, PstatSecReset)
     memset(rep_objects_pool, 0, 150 * sizeof(oc_rep_t));
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 150, rep_objects_alloc,
                                    (void *)rep_objects_pool, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    EXPECT_NO_THROW(oc_rep_set_pool(&rep_objects));
+    EXPECT_NO_THROW(oc_parse_rep(buf, (uint16_t)ret, &rep));
   }
 
-  oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
+  EXPECT_NO_THROW(oc_rep_new(buf, OC_MAX_APP_DATA_SIZE));
   oc_request_t *request = (oc_request_t *)oc_mem_malloc(sizeof(oc_request_t));
   request->resource = (oc_resource_t *)oc_mem_malloc(sizeof(oc_resource_t));
   request->resource->device = dev;
-  oc_new_string(&request->resource->name, "pstat", 5);
+  EXPECT_NO_THROW(oc_new_string(&request->resource->name, "pstat", 5));
   request->response = (oc_response_t *)oc_mem_malloc(sizeof(oc_response_t));
   request->response->response_buffer =
     (oc_response_buffer_t *)oc_mem_malloc(sizeof(oc_response_buffer_t));
@@ -1033,60 +1033,60 @@ TEST(Security, PstatSecReset)
   snprintf((char *)request->query, request->query_len,
            "coaps://127.0.0.1:2048/oic/sec/pstat");
   request->request_payload = rep;
-  get_pstat(request, OC_IF_BASELINE, 0);
+  EXPECT_NO_THROW(get_pstat(request, OC_IF_BASELINE, 0));
   request->query_len =
     snprintf((char *)request->query, 2048,
              "coaps://127.0.0.1:2048/oic/sec/pstat?id=0&id=1");
-  post_pstat(request, OC_IF_BASELINE, NULL);
+  EXPECT_NO_THROW(post_pstat(request, OC_IF_BASELINE, NULL));
   request->query_len = snprintf((char *)request->query, 2048,
                                 "coaps://127.0.0.1:2048/oic/sec/pstat");
-  post_pstat(request, OC_IF_BASELINE, NULL);
-  post_pstat(request, OC_IF_S, NULL);
-  oc_mem_free(buf);
-  oc_free_rep(request->request_payload);
-  oc_mem_free(request->response->response_buffer->buffer);
-  oc_mem_free(request->response->response_buffer);
-  oc_mem_free(request->response);
-  oc_mem_free((void *)request->query);
-  oc_mem_free(request);
+  EXPECT_NO_THROW(post_pstat(request, OC_IF_BASELINE, NULL));
+  EXPECT_NO_THROW(post_pstat(request, OC_IF_S, NULL));
+  EXPECT_NO_THROW(oc_mem_free(buf));
+  EXPECT_NO_THROW(oc_free_rep(request->request_payload));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer->buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response->response_buffer));
+  EXPECT_NO_THROW(oc_mem_free(request->response));
+  EXPECT_NO_THROW(oc_mem_free((void *)request->query));
+  EXPECT_NO_THROW(oc_mem_free(request));
 }
 #endif // !defined(OC_SPEC_VER_OIC)
 TEST(Security, PstatOcSecReset)
 {
-  oc_sec_reset();
+  EXPECT_NO_THROW(oc_sec_reset());
 }
 TEST(Security, PstatFree)
 {
-  sec_free();
+  EXPECT_NO_THROW(sec_free());
 }
 //------------------------------------------STORE------------------------------------
 TEST(Security, StoreInit)
 {
-  sec_init();
+  EXPECT_NO_THROW(sec_init());
 }
 TEST(Security, StoreGenSvrTag)
 {
   char *svr_tag = (char *)oc_mem_malloc(SVR_TAG_MAX);
-  gen_svr_tag("doxm", dev, svr_tag);
+  EXPECT_NO_THROW(gen_svr_tag("doxm", dev, svr_tag));
   EXPECT_STREQ("doxm_0", svr_tag);
-  oc_mem_free(svr_tag);
+  EXPECT_NO_THROW(oc_mem_free(svr_tag));
 }
 TEST(Security, StoreLoadDoxm)
 {
-  oc_sec_load_doxm(dev);
+  EXPECT_NO_THROW(oc_sec_load_doxm(dev));
 }
 TEST(Security, StoreLoadUniqueIds)
 {
-  oc_sec_load_unique_ids(dev);
+  EXPECT_NO_THROW(oc_sec_load_unique_ids(dev));
 }
 TEST(Security, StoreLoadPstat)
 {
-  oc_sec_load_pstat(dev);
+  EXPECT_NO_THROW(oc_sec_load_pstat(dev));
 }
 //------------------------------------------OTHER------------------------------------
 TEST(Security, SvrCreate)
 {
-  oc_sec_create_svr();
+  EXPECT_NO_THROW(oc_sec_create_svr());
 }
 //------------------------------------------TLS------------------------------------
 #if defined(OC_TCP)
@@ -1101,119 +1101,119 @@ TEST(Security, TlsFreePeer)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
   oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
-  oc_list_push(peer->send_q, message);
+  EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
   OC_LIST_STRUCT_INIT(peer, recv_q);
   oc_message_t *message1 = oc_allocate_message();
   EXPECT_TRUE(message1);
-  oc_list_push(peer->recv_q, message1);
-  oc_tls_free_peer(peer, true);
+  EXPECT_NO_THROW(oc_list_push(peer->recv_q, message1));
+  EXPECT_NO_THROW(oc_tls_free_peer(peer, true));
   EXPECT_TRUE(peer);
   peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
   message = oc_allocate_message();
   EXPECT_TRUE(message);
-  oc_list_push(peer->send_q, message);
+  EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
   OC_LIST_STRUCT_INIT(peer, recv_q);
   EXPECT_TRUE(message);
   message1 = oc_allocate_message();
   EXPECT_TRUE(message1);
-  oc_list_push(peer->recv_q, message1);
-  oc_tls_free_peer(peer, false);
+  EXPECT_NO_THROW(oc_list_push(peer->recv_q, message1));
+  EXPECT_NO_THROW(oc_tls_free_peer(peer, false));
   EXPECT_TRUE(peer);
 }
 TEST(Security, TlsRemovePeer)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep);
-  oc_tls_remove_peer(ep);
+  EXPECT_NO_THROW(oc_tls_remove_peer(ep));
 }
 TEST(Security, TlsHandleSchdReadWrite)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
-  oc_tls_handler_schedule_read(peer);
-  oc_tls_handler_schedule_write(peer);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
+  EXPECT_NO_THROW(oc_tls_handler_schedule_read(peer));
+  EXPECT_NO_THROW(oc_tls_handler_schedule_write(peer));
 }
 TEST(Security, TlsInactive)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
-  oc_tls_inactive(peer);
-  oc_mem_free(peer);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
+  EXPECT_NO_THROW(oc_tls_inactive(peer));
+  EXPECT_NO_THROW(oc_mem_free(peer));
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER));
   peer = oc_tls_get_peer(ep);
   EXPECT_TRUE(peer);
   peer->ssl_ctx.session =
     (mbedtls_ssl_session *)oc_mem_malloc(sizeof(mbedtls_ssl_session));
   ;
-  mbedtls_ssl_session_init(peer->ssl_ctx.session);
+  EXPECT_NO_THROW(mbedtls_ssl_session_init(peer->ssl_ctx.session));
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
-  oc_tls_inactive(peer);
+  EXPECT_NO_THROW(oc_tls_inactive(peer));
 }
 TEST(Security, TlsCloseConnection)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_close_connection(ep);
+  EXPECT_NO_THROW(oc_tls_close_connection(ep));
 }
 TEST(Security, TlsSslRecv)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
   OC_LIST_STRUCT_INIT(peer, recv_q);
   oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
-  oc_list_push(peer->recv_q, message);
+  EXPECT_NO_THROW(oc_list_push(peer->recv_q, message));
   size_t len = 512;
   unsigned char *buf = (unsigned char *)oc_mem_malloc(len);
   EXPECT_EQ(ssl_recv(peer, buf, len), 0);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, TlsSslSend)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_mem_malloc(sizeof(oc_tls_peer_t));
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   memcpy(&peer->endpoint, oc_connectivity_get_endpoints(dev),
          sizeof(oc_endpoint_t));
   size_t len = 512;
   unsigned char *buf = (unsigned char *)oc_mem_malloc(len);
   EXPECT_EQ(ssl_send(peer, buf, len), len);
-  oc_mem_free(buf);
+  EXPECT_NO_THROW(oc_mem_free(buf));
 }
 TEST(Security, TlsCheckRetsTimers)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER));
 
-  check_retr_timers();
+  EXPECT_NO_THROW(check_retr_timers());
 }
 TEST(Security, TlsSetTimers)
 {
   oc_tls_retr_timer_t *timer =
     (oc_tls_retr_timer_t *)oc_mem_malloc(sizeof(oc_tls_retr_timer_t));
-  ssl_set_timer(timer, 100, 102);
+  EXPECT_NO_THROW(ssl_set_timer(timer, 100, 102));
   timer->fin_timer.timer.interval = 1;
   ssl_set_timer(timer, 100, 102);
 }
 TEST(Security, TlsGetPskCb)
 {
   oc_uuid_t uuid;
-  oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &uuid);
+  EXPECT_NO_THROW(oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &uuid));
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   EXPECT_EQ(get_psk_cb(0, &peer->ssl_ctx, (const unsigned char *)&uuid, 16),
             -1);
@@ -1230,7 +1230,7 @@ TEST(Security, TlsSecDeriveOwnerPsk)
   uint8_t oxm[16];
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER));
   oc_tls_peer_t *peer = oc_tls_get_peer(ep);
   for (int i = 0; i < 48; i++) {
     peer->master_secret[i] = rand();
@@ -1242,8 +1242,8 @@ TEST(Security, TlsSecDeriveOwnerPsk)
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
   oc_uuid_t server_uuid, obt_uuid;
-  oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &server_uuid);
-  oc_str_to_uuid("11111111-1111-1111-1111-111111111110", &obt_uuid);
+  EXPECT_NO_THROW(oc_str_to_uuid("11111111-1111-1111-1111-111111111111", &server_uuid));
+  EXPECT_NO_THROW(oc_str_to_uuid("11111111-1111-1111-1111-111111111110", &obt_uuid));
   EXPECT_TRUE(oc_sec_derive_owner_psk(
     ep, oxm, sizeof(oxm), (const uint8_t *)&server_uuid, 16,
     (const uint8_t *)&obt_uuid, 16, key, sizeof(key)));
@@ -1260,18 +1260,18 @@ TEST(Security, TlsWriteAppData)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
   EXPECT_TRUE(peer);
-  mbedtls_ssl_init(&peer->ssl_ctx);
+  EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
   oc_message_t *message = oc_allocate_message();
   EXPECT_TRUE(message);
-  oc_list_push(peer->send_q, message);
+  EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
 
-  write_application_data(peer);
+  EXPECT_NO_THROW(write_application_data(peer));
 }
 TEST(Security, TlsElevateAnon)
 {
-  oc_tls_elevate_anon_ciphersuite();
-  oc_tls_demote_anon_ciphersuite();
+  EXPECT_NO_THROW(oc_tls_elevate_anon_ciphersuite());
+  EXPECT_NO_THROW(oc_tls_demote_anon_ciphersuite());
 }
 TEST(Security, TlsInitConnection)
 {
@@ -1279,7 +1279,7 @@ TEST(Security, TlsInitConnection)
   EXPECT_TRUE(message);
   memcpy(&message->endpoint, oc_connectivity_get_endpoints(dev),
          sizeof(oc_endpoint_t));
-  oc_tls_init_connection(message);
+  EXPECT_NO_THROW(oc_tls_init_connection(message));
 }
 TEST(Security, TlsConnected)
 {
@@ -1291,16 +1291,16 @@ TEST(Security, TlsReadApplicationData)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(dev);
   EXPECT_TRUE(ep != NULL);
-  oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER);
+  EXPECT_NO_THROW(oc_tls_add_peer(ep, MBEDTLS_SSL_IS_SERVER));
   oc_tls_peer_t *peer = oc_tls_get_peer(ep);
   peer->ssl_ctx.session =
     (mbedtls_ssl_session *)oc_mem_malloc(sizeof(mbedtls_ssl_session));
   ;
-  mbedtls_ssl_session_init(peer->ssl_ctx.session);
+  EXPECT_NO_THROW(mbedtls_ssl_session_init(peer->ssl_ctx.session));
   peer->ssl_ctx.session->ciphersuite =
     MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256;
   peer->ssl_ctx.state = MBEDTLS_SSL_HANDSHAKE_OVER;
-  read_application_data(peer);
+  EXPECT_NO_THROW(read_application_data(peer));
 }
 #if defined(OC_RPK)
 void
@@ -1351,8 +1351,8 @@ TEST(Security, TlsGenMasterKey)
   int len = 0;
   EXPECT_FALSE(gen_master_key(master, &len));
   EXPECT_EQ(0, len);
-  oc_sec_set_cpubkey_and_token_load(get_cpubkey_and_token);
-  oc_sec_set_own_key_load(get_own_key);
+  EXPECT_NO_THROW(oc_sec_set_cpubkey_and_token_load(get_cpubkey_and_token));
+  EXPECT_NO_THROW(oc_sec_set_own_key_load(get_own_key));
   EXPECT_TRUE(gen_master_key(master, &len));
   EXPECT_EQ(32, len);
 }
@@ -1369,7 +1369,7 @@ TEST(Security, TlsGetRptPsk)
 #endif // OC_RPK
 TEST(Security, TlsShutdown)
 {
-  oc_tls_shutdown();
+  EXPECT_NO_THROW(oc_tls_shutdown());
 }
 TEST(Security, Clear)
 {
