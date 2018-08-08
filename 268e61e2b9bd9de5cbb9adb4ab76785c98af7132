@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_a272fcaa",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "USER_INPUT is specified thread logic only for linux.(To control \u0026 command) other RTOS doesn\u0027t need this. And I think st-app-fw common logic is better to handle inside framework. How about make loop api for st_app?",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 381,
+        "endChar": 6
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_026928be",
+        "filename": "service/st-app-fw/include/st_process.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "What is different with app_sync_lock/unlock function? Should this be handled using another mutex?",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 40
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e26364db",
+        "filename": "service/st-app-fw/include/st_state_util.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Why this function use extern?",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 45
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3fc9e778",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Why state model and original one use different mutex, condition and thread alloc/free logic?",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 18
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_426330dc",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Why event function init in st_process? Can\u0027t init/deinit for event move into st_manager?",
+      "range": {
+        "startLine": 46,
+        "startChar": 2,
+        "endLine": 46,
+        "endChar": 16
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_225eec12",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "I think this logic can handle in handler_on_state_ready function.\nHow about these change to like below?\n-----------------------------------------------------\n\nset_current_state(ST_STATE_READY);\nst_evt_push(ST_EVT_START);",
+      "range": {
+        "startLine": 944,
+        "startChar": 2,
+        "endLine": 953,
+        "endChar": 3
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_829c18c2",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "If we not use timer_callback routine, I think calloc is not required.",
+      "range": {
+        "startLine": 966,
+        "startChar": 4,
+        "endLine": 966,
+        "endChar": 65
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_629f54b5",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Do we have to call signaling function?",
+      "range": {
+        "startLine": 1023,
+        "startChar": 4,
+        "endLine": 1023,
+        "endChar": 23
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_22b54c31",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "When cloud manager re-connect with cloud, application need to know that now cloud connecting is progressing again.",
+      "range": {
+        "startLine": 1028,
+        "startChar": 0,
+        "endLine": 1030,
+        "endChar": 29
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c2a62010",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Why some cases call st_process_signal() and other is not?\nIs it 100% covered with these code or is this added logic in case of stuck?",
+      "range": {
+        "startLine": 1137,
+        "startChar": 8,
+        "endLine": 1137,
+        "endChar": 28
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_42ba1024",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "ST_EVT_RESET can\u0027t handle in READY state?",
+      "range": {
+        "startLine": 1156,
+        "startChar": 4,
+        "endLine": 1156,
+        "endChar": 10
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_82837855",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1191,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "Why change state to READY if reset fail?",
+      "range": {
+        "startLine": 1190,
+        "startChar": 4,
+        "endLine": 1191,
+        "endChar": 40
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_02976891",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-08T06:56:44Z",
+      "side": 1,
+      "message": "actually in RTOS case, we saw that after reset function call, reboot device. In case of this, RESET event is pushed but not executed. So we change reset function directly reset every modules. Please consider this also.",
+      "range": {
+        "startLine": 1388,
+        "startChar": 2,
+        "endLine": 1389,
+        "endChar": 22
+      },
+      "revId": "268e61e2b9bd9de5cbb9adb4ab76785c98af7132",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
