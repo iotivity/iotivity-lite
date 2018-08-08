@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8206d8cc",
+        "filename": "api/oc_server_api.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-08-08T18:30:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7f4b6f87",
+      "range": {
+        "startLine": 130,
+        "startChar": 67,
+        "endLine": 130,
+        "endChar": 86
+      },
+      "revId": "00c85809631ff06b00da0efe4940979ba25ef7d4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_5f4e6b97",
         "filename": "port/windows/config.h",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a2131c0c",
+        "filename": "port/windows/config.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-08-08T18:30:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_5f4e6b97",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 20
+      },
+      "revId": "00c85809631ff06b00da0efe4940979ba25ef7d4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_bf45f771",
         "filename": "port/windows/config.h",
         "patchSetId": 5
@@ -59,6 +107,30 @@
       "writtenOn": "2018-08-07T18:55:02Z",
       "side": 1,
       "message": "Ditto.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 24
+      },
+      "revId": "00c85809631ff06b00da0efe4940979ba25ef7d4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_02fac8bc",
+        "filename": "port/windows/config.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-08-08T18:30:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_bf45f771",
       "range": {
         "startLine": 28,
         "startChar": 0,
