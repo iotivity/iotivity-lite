@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_a2a95ce1",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-08T06:16:35Z",
+      "side": 1,
+      "message": "check if this is achievable through single char instead of string.",
+      "range": {
+        "startLine": 154,
+        "startChar": 2,
+        "endLine": 154,
+        "endChar": 15
+      },
+      "revId": "6c91b5230f2f7b09210e9748e62ac47076716e46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
