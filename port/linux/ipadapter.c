@@ -1627,12 +1627,15 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   int ret = getaddrinfo(domain, NULL, &hints, &result);
 
   if (ret == 0) {
-    char address[INET6_ADDRSTRLEN];
+    char address[INET6_ADDRSTRLEN + 2] = { 0 };
     const char *dest = NULL;
     if (flags & IPV6) {
       struct sockaddr_in6 *s_addr = (struct sockaddr_in6 *)result->ai_addr;
-      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address,
+      address[0] = '[';
+      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address + 1,
                        INET6_ADDRSTRLEN);
+      address[strlen(address)] = ']';
+      address[strlen(address)] = '\0';
     }
 #ifdef OC_IPV4
     else {
