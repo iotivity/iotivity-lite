@@ -306,6 +306,13 @@ pthread_mutex_t TestUnicastRequest::s_waitingMutex;
 pthread_cond_t TestUnicastRequest::s_cv;
 pthread_cond_t TestUnicastRequest::s_cvDiscovery;
 
+/*
+ * @API				: oc_main_init(oc_handler_t handler)
+ * @Description		: call api in positive way 
+ * @PassCondition	: result less than 0
+ * @PreCondition	: N/A
+ * @PostCondition	: call oc_main_shutdown
+*/
 TEST(TestServerClient, ServerStartTest_P)
 {
     static const oc_handler_t handler = { .init = appInit, .signal_event_loop =
@@ -319,6 +326,13 @@ TEST(TestServerClient, ServerStartTest_P)
     oc_main_shutdown();
 }
 
+/*
+ * @API				: oc_main_shutdown()
+ * @Description		: test oc_main_shutdown in positive way 
+ * @PassCondition	: should not throw exception
+ * @PreCondition	: call oc_main_init
+ * @PostCondition	: N/A
+*/
 TEST(TestServerClient, ServerStopTest_P)
 {
 
@@ -333,6 +347,13 @@ TEST(TestServerClient, ServerStopTest_P)
     EXPECT_NO_THROW(oc_main_shutdown());
 }
 
+/*
+ * @API				: oc_do_ip_discovery
+ * @Description		: discover resource 
+ * @PassCondition	: s_isResourceDiscovered is true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, DiscoverResourceTest_P)
 {
     bool isSuccess = false;
@@ -342,6 +363,13 @@ TEST_F(TestUnicastRequest, DiscoverResourceTest_P)
     EXPECT_TRUE(s_isResourceDiscovered) << "Failed to discover light resource";
 }
 
+/*
+ * @API				: oc_do_ip_discovery_at_endpoint
+ * @Description		: call oc_do_ip_discovery_at_endpoint in positive way
+ * @PassCondition	: s_isResourceDiscovered is true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, IPDiscoverResourceTest_P)
 {
     bool isSuccess = false;
@@ -350,6 +378,13 @@ TEST_F(TestUnicastRequest, IPDiscoverResourceTest_P)
     EXPECT_TRUE(isSuccess) << "Failed to discover resource";
 }
 
+/*
+ * @API				: oc_do_get
+ * @Description		: send get request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendGetRequest_P)
 {
     bool isSuccess = false;
@@ -359,6 +394,13 @@ TEST_F(TestUnicastRequest, SendGetRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_do_get() returned failure";
 }
 
+/*
+ * @API				: oc_do_get twice
+ * @Description		: send get request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendGetRequestTwice_P)
 {
     bool isSuccess = false;
@@ -372,6 +414,13 @@ TEST_F(TestUnicastRequest, SendGetRequestTwice_P)
     ASSERT_TRUE(isSuccess) << "oc_do_get() returned failure during second call";
 }
 
+/*
+ * @API				: oc_init_put
+ * @Description		: call init put request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendInitPutRequest_P)
 {
     bool isSuccess = false;
@@ -384,6 +433,13 @@ TEST_F(TestUnicastRequest, SendInitPutRequest_P)
     oc_rep_end_root_object();
 }
 
+/*
+ * @API				: oc_do_put
+ * @Description		: do put request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendDoPutRequest_P)
 {
     bool isSuccess = false;
@@ -392,6 +448,13 @@ TEST_F(TestUnicastRequest, SendDoPutRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_do_put() returned failure";
 }
 
+/*
+ * @API				: oc_init_post
+ * @Description		: init post request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendInitPostRequest_P)
 {
     bool isSuccess = false;
@@ -404,6 +467,13 @@ TEST_F(TestUnicastRequest, SendInitPostRequest_P)
     oc_rep_end_root_object();
 }
 
+/*
+ * @API				: oc_do_post
+ * @Description		: do post request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendDoPostRequest_P)
 {
     bool isSuccess = false;
@@ -412,6 +482,13 @@ TEST_F(TestUnicastRequest, SendDoPostRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_do_put() returned failure";
 }
 
+/*
+ * @API				: oc_do_observe
+ * @Description		: observe request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendObserveRequest_P)
 {
     bool isSuccess = false;
@@ -421,6 +498,13 @@ TEST_F(TestUnicastRequest, SendObserveRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_do_observe() returned failure";
 }
 
+/*
+ * @API				: oc_stop_observe
+ * @Description		: stop observe request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendStopObserveRequest_P)
 {
     bool isSuccess = false;
@@ -429,6 +513,13 @@ TEST_F(TestUnicastRequest, SendStopObserveRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_stop_observe() returned failure";
 }
 
+/*
+ * @API				: oc_do_delete
+ * @Description		: delete request api in positive way
+ * @PassCondition	: returns true
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, SendDeleteRequest_P)
 {
     bool isSuccess = false;
@@ -438,16 +529,37 @@ TEST_F(TestUnicastRequest, SendDeleteRequest_P)
     ASSERT_TRUE(isSuccess) << "oc_do_delete() returned failure";
 }
 
+/*
+ * @API				: oc_free_server_endpoints
+ * @Description		: positive tc api in positive way
+ * @PassCondition	: should not throw any exception
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, FreeServerEndpoint_P)
 {
     ASSERT_NO_THROW(oc_free_server_endpoints(s_pLightEndpoint));
 }
 
+/*
+ * @API				: oc_free_server_endpoints
+ * @Description		: test api in negative way 
+ * @PassCondition	: should not throw any exception
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, FreeServerEndpoint_N)
 {
     ASSERT_NO_THROW(oc_free_server_endpoints(NULL));
 }
 
+/*
+ * @API				: oc_close_session
+ * @Description		: call api in positive way
+ * @PassCondition	: should not throw any exception
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST_F(TestUnicastRequest, CloseSession_P)
 {
     ASSERT_NO_THROW(oc_close_session(s_pLightEndpoint));

@@ -27,6 +27,14 @@ extern "C" {
 
 #define MAX_OUTPUT_BUFFER_LENGTH 1024
 
+/*
+ * @API				: int oc_base64_encode(const uint8_t *input, int input_len,
+                     uint8_t *output_buffer, int output_buffer_len);
+ * @Description		: test oc_base64_encode api positively
+ * @PassCondition	: oc_base64_encode should not return -1
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, EncodingTest_P)
 {
     uint8_t inputData[] = "123456";
@@ -38,6 +46,14 @@ TEST(TestBase64, EncodingTest_P)
     EXPECT_EQ(ret, inputLength * 4 / 3);
 }
 
+/*
+ * @API				: int oc_base64_encode(const uint8_t *input, int input_len,
+                     uint8_t *output_buffer, int output_buffer_len);
+ * @Description		: test oc_base64_encode api negatively
+ * @PassCondition	: oc_base64_encode should return -1
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, EmptyEncodingTest_N)
 {
     uint8_t inputData[] = "123456";
@@ -48,6 +64,14 @@ TEST(TestBase64, EmptyEncodingTest_N)
     ASSERT_EQ(ret, -1);
 }
 
+/*
+ * @API				: int oc_base64_encode(const uint8_t *input, int input_len,
+                     uint8_t *output_buffer, int output_buffer_len);
+ * @Description		: test oc_base64_encode api positively
+ * @PassCondition	: oc_base64_encode return verdict checking 
+ * @PreCondition	: with padding
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, EncodingWithPaddingTest_P)
 {
     uint8_t inputData[] = "1234567";
@@ -59,6 +83,13 @@ TEST(TestBase64, EncodingWithPaddingTest_P)
     EXPECT_EQ(ret, (inputLength / 3 ) * 4 + 4 * ((inputLength % 3) > 0));
 }
 
+/*
+ * @API				: int oc_base64_decode(uint8_t *str, int len);
+ * @Description		: oc_base64_decode api positively
+ * @PassCondition	: oc_base64_decode should not return -1
+ * @PreCondition	: with padding
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, DecodingTest_P)
 {
     uint8_t inputData[] = "12345678";
@@ -68,6 +99,13 @@ TEST(TestBase64, DecodingTest_P)
     EXPECT_EQ(ret, inputLength * 3 / 4);
 }
 
+/*
+ * @API				: int oc_base64_decode(uint8_t *str, int len);
+ * @Description		: oc_base64_decode api positively
+ * @PassCondition	: oc_base64_decode should not return -1
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, PaddedDecodingTest_P)
 {
     uint8_t inputData[] = "12345+/=";
@@ -77,6 +115,13 @@ TEST(TestBase64, PaddedDecodingTest_P)
     EXPECT_EQ(ret, (inputLength * 3 - 3)/ 4);
 }
 
+/*
+ * @API				: int oc_base64_decode(uint8_t *str, int len);
+ * @Description		: oc_base64_decode api negatively
+ * @PassCondition	: oc_base64_decode should return -1
+ * @PreCondition	: N/A
+ * @PostCondition	: N/A
+*/
 TEST(TestBase64, InvalidDecodingTest_N)
 {
     uint8_t inputData[] = "12345@#$";

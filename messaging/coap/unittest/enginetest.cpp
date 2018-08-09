@@ -25,11 +25,25 @@ class TestEngine: public testing::Test
         }
 };
 
+/*
+ * @API: coap_init_engine()
+ * @Description: Tries to initialize engine
+ * @PassCondition: Should initialize engine
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestEngine, CoapInitEngineTest_P)
 {
     coap_init_engine();
 }
 
+/*
+ * @API: coap_receive()
+ * @Description: Tries to receive message
+ * @PassCondition: Should receive message
+ * @PreCondition: getting internal outgoing message
+ * @PostCondition: N/A
+ */
 TEST_F(TestEngine, CoapReceiveTest_P)
 {
     coap_init_engine();
