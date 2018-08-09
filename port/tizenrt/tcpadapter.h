@@ -23,6 +23,10 @@
 #include "ipcontext.h"
 #include "port/oc_connectivity.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   TCP_STATUS_NONE = 0,
   TCP_STATUS_ACCEPT,
@@ -43,5 +47,9 @@ void oc_tcp_set_session_fds(void *fds);
 
 tcp_receive_state_t oc_tcp_receive_message(ip_context_t *dev, void *fds,
                                            oc_message_t *message);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif /* TCP_ADAPTER_H */

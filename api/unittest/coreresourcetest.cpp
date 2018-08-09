@@ -22,11 +22,11 @@
 #include <string>
 #include <stdio.h>
 #include <gtest/gtest.h>
-extern "C" {
-    #include "oc_core_res.h"
-    #include "oc_api.h"
-    #include "oc_helpers.h"
- }
+
+#include "oc_core_res.h"
+#include "oc_api.h"
+#include "oc_helpers.h"
+
 #define DEVICE_URI "/oic/d"
 #define DEVICE_TYPE "oic.d.light"
 #define MANUFACTURER_NAME "Samsung"

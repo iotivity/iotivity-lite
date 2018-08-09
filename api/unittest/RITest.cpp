@@ -22,12 +22,12 @@
 #include <string>
 #include <stdio.h>
 #include <gtest/gtest.h>
-extern "C" {
-    #include "port/linux/config.h"
-    #include "oc_api.h"
-    #include "oc_ri.h"
-    #include "oc_helpers.h"
- }
+
+#include "port/linux/config.h"
+#include "oc_api.h"
+#include "oc_ri.h"
+#include "oc_helpers.h"
+
 
 #define RESOURCE_URI "/LightResourceURI"
 #define RESOURCE_NAME "roomlights"

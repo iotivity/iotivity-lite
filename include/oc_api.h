@@ -36,6 +36,11 @@
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct {
   int (*init)(void);
   void (*signal_event_loop)(void);
@@ -304,8 +309,17 @@ void oc_send_separate_response(oc_separate_response_t *handle,
 
 int oc_notify_observers(oc_resource_t *resource);
 
+#ifdef __cplusplus
+}
+#endif
+
 /** Client side */
 #include "oc_client_state.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
@@ -384,5 +398,9 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
     OC_PROCESS_END();                                                          \
   }                                                                            \
   void name##_interrupt_x_handler(void)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_API_H */

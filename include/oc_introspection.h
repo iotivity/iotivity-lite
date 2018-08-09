@@ -17,6 +17,11 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * @brief functions for introspection .
  * The introspection mechanism is implemented by 2 different mechanisms
@@ -56,5 +61,8 @@ void oc_set_introspection_file(size_t device, const char* filename);
 */
 void oc_create_introspection_resource(size_t device);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_INTROSPECTION_H */

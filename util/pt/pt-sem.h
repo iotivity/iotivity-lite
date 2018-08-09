@@ -161,6 +161,11 @@ PT_THREAD(driver_thread(struct pt *pt))
 
 #include "pt.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 struct pt_sem
 {
   unsigned int head, tail;
@@ -226,6 +231,10 @@ struct pt_sem
  * \hideinitializer
  */
 #define PT_SEM_SIGNAL(pt, s) (++(s)->head)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PT_SEM_H_ */
 

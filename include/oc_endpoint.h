@@ -19,6 +19,11 @@
 
 #include "oc_helpers.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
 
 typedef struct
@@ -85,5 +90,9 @@ int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
 int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
 int oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_ENDPOINT_H */

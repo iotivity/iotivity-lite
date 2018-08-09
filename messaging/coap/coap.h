@@ -59,6 +59,11 @@
 #include "port/oc_log.h"
 #include "port/oc_random.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef MAX
 #define MAX(n, m) (((n) < (m)) ? (m) : (n))
 #endif
@@ -299,5 +304,9 @@ size_t coap_tcp_get_packet_size(const uint8_t *data);
 
 coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len);
 #endif /* OC_TCP */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* COAP_H */

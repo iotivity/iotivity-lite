@@ -18,6 +18,11 @@
 #define OC_STORE_H
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void oc_sec_load_pstat(size_t device);
 void oc_sec_load_doxm(size_t device);
 void oc_sec_load_cred(size_t device);
@@ -28,5 +33,9 @@ void oc_sec_dump_doxm(size_t device);
 void oc_sec_dump_acl(size_t device);
 void oc_sec_dump_unique_ids(size_t device);
 void oc_sec_load_unique_ids(size_t device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_STORE_H */

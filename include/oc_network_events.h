@@ -20,6 +20,11 @@
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {
   NETWORK_INTERFACE_DOWN,
   NETWORK_INTERFACE_UP
@@ -48,5 +53,9 @@ typedef struct oc_message_s oc_message_t;
 void oc_network_event(oc_message_t *message);
 
 void oc_network_interface_event(oc_interface_event_t event);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_NETWORK_EVENTS_H */
