@@ -22,11 +22,18 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-    #include "oc_uuid.h"
+#include "oc_uuid.h"
 }
 
 #define UUID "12345678123412341234123456789012"
 
+/*
+ * @API             : oc_str_to_uuid
+ * @Description     : test oc_str_to_uuid in a positive way
+ * @PassCondition   : UUID not equal to oc_uuid_t
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(UUIDGeneration, StrToUUIDTest_P)
 {
     oc_uuid_t uuid;

@@ -26,12 +26,26 @@ extern "C" {
 #include "oc_api.h"
 }
 
+/*
+ * @API             : oc_rep_finalize
+ * @Description     : test oc_rep_finalize api in positive way
+ * @PassCondition   : should not return -1
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepFinalizeTest_P)
 {
     int repSize = oc_rep_finalize();
     EXPECT_NE(repSize, -1);
 }
 
+/*
+ * @API             : oc_rep_get_double
+ * @Description     : oc_rep_get_double api in negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetDoubleTest_N)
 {
     oc_rep_t rep;
@@ -42,6 +56,13 @@ TEST(TestRep, OCRepGetDoubleTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_int_array
+ * @Description     : test oc_rep_get_int_array in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetIntArrayTest_N)
 {
     oc_rep_t rep;
@@ -53,6 +74,13 @@ TEST(TestRep, OCRepGetIntArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_string
+ * @Description     : test oc_rep_get_string in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetStringTest_P)
 {
     oc_rep_t rep;
@@ -74,6 +102,13 @@ TEST(TestRep, OCRepGetStringTest_P)
     ASSERT_TRUE(isSucess);
 }
 
+/*
+ * @API             : oc_rep_get_string
+ * @Description     : test oc_rep_get_string in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetStringTest_N)
 {
     oc_rep_t rep;
@@ -85,6 +120,13 @@ TEST(TestRep, OCRepGetStringTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_string_array
+ * @Description     : test oc_rep_get_string_array in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetStringArrayTest_P)
 {
 
@@ -111,6 +153,13 @@ TEST(TestRep, OCRepGetStringArrayTest_P)
     ASSERT_TRUE(isSucess);
 }
 
+/*
+ * @API             : oc_rep_get_string_array
+ * @Description     : test oc_rep_get_string_array in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetStringArrayTest_N)
 {
     oc_rep_t rep;
@@ -122,6 +171,13 @@ TEST(TestRep, OCRepGetStringArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_double
+ * @Description     : test oc_rep_get_double in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetDoubleTest_P)
 {
     oc_rep_t rep;
@@ -140,6 +196,13 @@ TEST(TestRep, OCRepGetDoubleTest_P)
     ASSERT_EQ(value, retrievedValue);
 }
 
+/*
+ * @API             : oc_rep_get_int_array
+ * @Description     : test oc_rep_get_int_array in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetIntArrayTest_P)
 {
     oc_rep_t rep;
@@ -165,6 +228,13 @@ TEST(TestRep, OCRepGetIntArrayTest_P)
     ASSERT_TRUE(isSuccess);
 }
 
+/*
+ * @API             : oc_rep_get_object
+ * @Description     : test oc_rep_get_object in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetObjectTest_P)
 {
     oc_rep_t rep;
@@ -184,6 +254,13 @@ TEST(TestRep, OCRepGetObjectTest_P)
     ASSERT_TRUE(isSuccess);
 }
 
+/*
+ * @API             : oc_rep_get_object
+ * @Description     : test oc_rep_get_object in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetObjectTest_N)
 {
     oc_rep_t rep;
@@ -202,6 +279,13 @@ TEST(TestRep, OCRepGetObjectTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_object_array
+ * @Description     : test oc_rep_get_object in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetObjectArrayTest_P)
 {
     oc_rep_t rep;
@@ -220,6 +304,13 @@ TEST(TestRep, OCRepGetObjectArrayTest_P)
     ASSERT_TRUE(isSuccess);
 }
 
+/*
+ * @API             : oc_rep_get_object_array
+ * @Description     : test oc_rep_get_object_array in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetObjectArrayTest_N)
 {
     oc_rep_t rep;
@@ -238,22 +329,50 @@ TEST(TestRep, OCRepGetObjectArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_free_rep
+ * @Description     : test oc_free_rep in a negative way
+ * @PassCondition   : should not throw any exception
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepFreeTest_N)
 {
-    oc_free_rep(NULL);
+    ASSERT_NO_THROW(oc_free_rep(NULL));
 }
 
+/*
+ * @API             : oc_rep_set_pool
+ * @Description     : test oc_rep_set_pool in a positive way
+ * @PassCondition   : should not throw any exception
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepSetPoolTest_P)
 {
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-    oc_rep_set_pool(&rep_objects);
+    ASSERT_NO_THROW(oc_rep_set_pool(&rep_objects));
 }
 
+/*
+ * @API             : oc_rep_set_pool
+ * @Description     : test oc_rep_set_pool in a negative way
+ * @PassCondition   : should not throw any exception
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepSetPoolTest_N)
 {
-    oc_rep_set_pool(NULL);
+    ASSERT_NO_THROW(oc_rep_set_pool(NULL));
 }
 
+/*
+ * @API             : oc_rep_set_pool
+ * @Description     : test oc_rep_set_pool in a negative way
+ * @PassCondition   : api should return true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepParseTest_N)
 {
     const uint8_t *payload = NULL;
@@ -262,6 +381,13 @@ TEST(TestRep, OCRepParseTest_N)
     ASSERT_TRUE(isSuccess);
 }
 
+/*
+ * @API             : oc_rep_get_int
+ * @Description     : test oc_rep_get_int in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetIntTest_P)
 {
     oc_rep_t rep;
@@ -282,6 +408,13 @@ TEST(TestRep, OCRepGetIntTest_P)
     ASSERT_TRUE(isSucess);
 }
 
+/*
+ * @API             : oc_rep_get_int
+ * @Description     : test oc_rep_get_int in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetIntTest_N)
 {
     oc_rep_t rep;
@@ -302,6 +435,13 @@ TEST(TestRep, OCRepGetIntTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_bool
+ * @Description     : test oc_rep_get_bool in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetBoolTest_P)
 {
     oc_rep_t rep;
@@ -320,6 +460,13 @@ TEST(TestRep, OCRepGetBoolTest_P)
     ASSERT_TRUE(isSucess);
 }
 
+/*
+ * @API             : oc_rep_get_bool
+ * @Description     : test oc_rep_get_bool in a negative way
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetBoolTest_N)
 {
     oc_rep_t rep;
@@ -338,6 +485,13 @@ TEST(TestRep, OCRepGetBoolTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_byte_string
+ * @Description     : test oc_rep_get_byte_string in a positive way
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetByteStringTest_P)
 {
     oc_rep_t rep;
@@ -360,6 +514,13 @@ TEST(TestRep, OCRepGetByteStringTest_P)
     ASSERT_TRUE(isSucess);
 }
 
+/*
+ * @API             : oc_rep_get_byte_string
+ * @Description     : negative tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetByteStringTest_N)
 {
     oc_rep_t rep;
@@ -378,6 +539,13 @@ TEST(TestRep, OCRepGetByteStringTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_byte_string
+ * @Description     : negative tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetByteStringSizeTest_N)
 {
     oc_rep_t rep;
@@ -388,6 +556,13 @@ TEST(TestRep, OCRepGetByteStringSizeTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_bool_array
+ * @Description     : positive tc
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetBoolArrayTest_P)
 {
 
@@ -411,6 +586,13 @@ TEST(TestRep, OCRepGetBoolArrayTest_P)
 
 }
 
+/*
+ * @API             : oc_rep_get_bool_array
+ * @Description     : negative tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetBoolArrayTest_N)
 {
     oc_rep_t rep;
@@ -422,6 +604,13 @@ TEST(TestRep, OCRepGetBoolArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_double_array
+ * @Description     : positive tc
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetDoubleArrayTest_P)
 {
 
@@ -445,6 +634,13 @@ TEST(TestRep, OCRepGetDoubleArrayTest_P)
 
 }
 
+/*
+ * @API             : oc_rep_get_double_array
+ * @Description     : negative tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetDoubleArrayTest_N)
 {
     oc_rep_t rep;
@@ -456,6 +652,13 @@ TEST(TestRep, OCRepGetDoubleArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_get_byte_string_array
+ * @Description     : positive tc
+ * @PassCondition   : returns true
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetByteStringArrayTest_P)
 {
 
@@ -483,6 +686,13 @@ TEST(TestRep, OCRepGetByteStringArrayTest_P)
 
 }
 
+/*
+ * @API             : oc_rep_get_byte_string_array
+ * @Description     : negative tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetByteStringArrayTest_N)
 {
     oc_rep_t rep;
@@ -494,18 +704,39 @@ TEST(TestRep, OCRepGetByteStringArrayTest_N)
     ASSERT_FALSE(isFailure);
 }
 
+/*
+ * @API             : oc_rep_reset
+ * @Description     : positive tc
+ * @PassCondition   : N/A
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepResetTest_P)
 {
-    oc_rep_reset();
+    ASSERT_NO_THROW(oc_rep_reset());
 }
 
+/*
+ * @API             : oc_rep_get_cbor_errno
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepGetCborErrorNoTest_P)
 {
     int err = oc_rep_get_cbor_errno();
     ASSERT_FALSE(err);
 }
 
-TEST(TestRep, OCRepMacroSetDouble)
+/*
+ * @API             : oc_rep_set_double
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
+TEST(TestRep, OCRepMacroSetDouble_p)
 {
     char key[] = "speed";
     double value = 1.000;
@@ -513,6 +744,13 @@ TEST(TestRep, OCRepMacroSetDouble)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_uint
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetUIntTest_p)
 {
     char key[] = "speed";
@@ -521,6 +759,13 @@ TEST(TestRep, OCRepMacroSetUIntTest_p)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_int
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetIntTest_P)
 {
     char key[] = "speed";
@@ -529,6 +774,13 @@ TEST(TestRep, OCRepMacroSetIntTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_boolean
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetBoolTest_P)
 {
     char key[] = "speed";
@@ -537,6 +789,13 @@ TEST(TestRep, OCRepMacroSetBoolTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_text_string
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetTextStringTest_P)
 {
     char key[] = "speed";
@@ -545,6 +804,13 @@ TEST(TestRep, OCRepMacroSetTextStringTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_byte_string
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetByteStringTest_P)
 {
     char key[] = "speed";
@@ -553,6 +819,13 @@ TEST(TestRep, OCRepMacroSetByteStringTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_start_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroStartArrayTest_P)
 {
     char key[] = "speed";
@@ -561,6 +834,13 @@ TEST(TestRep, OCRepMacroStartArrayTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_start_links_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroStartEndLinkArrayTest_P)
 {
     oc_rep_start_links_array();
@@ -568,6 +848,13 @@ TEST(TestRep, OCRepMacroStartEndLinkArrayTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_start_root_object
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroStartEndRootObjectTest_P)
 {
     oc_rep_start_root_object();
@@ -575,6 +862,13 @@ TEST(TestRep, OCRepMacroStartEndRootObjectTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_add_byte_string
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroAddByteStringTest_P)
 {
     oc_rep_set_key(g_encoder, "if");
@@ -584,6 +878,13 @@ TEST(TestRep, OCRepMacroAddByteStringTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_add_text_string
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroAddTextStringTest_P)
 {
     oc_rep_set_key(g_encoder, "if");
@@ -593,6 +894,13 @@ TEST(TestRep, OCRepMacroAddTextStringTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_add_double
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroAddeDoubleTest_P)
 {
     oc_rep_set_key(g_encoder, "if");
@@ -602,6 +910,13 @@ TEST(TestRep, OCRepMacroAddeDoubleTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_add_int
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroAddeIntTest_P)
 {
     oc_rep_set_key(g_encoder, "if");
@@ -611,6 +926,13 @@ TEST(TestRep, OCRepMacroAddeIntTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_add_boolean
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroAddeBooleanTest_P)
 {
     oc_rep_set_key(g_encoder, "if");
@@ -620,12 +942,26 @@ TEST(TestRep, OCRepMacroAddeBooleanTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_key
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetKeyTest_P)
 {
     oc_rep_set_key(g_encoder, "abcdefg");
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetArrayTest_P)
 {
     char key[] = "speed";
@@ -634,6 +970,13 @@ TEST(TestRep, OCRepMacroSetArrayTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_start_object, oc_rep_end_object
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroStartEndObjectTest_P)
 {
     char key[] = "speed";
@@ -642,6 +985,13 @@ TEST(TestRep, OCRepMacroStartEndObjectTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_object_array_start_item, oc_rep_object_array_end_item
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroStartEndObjectItemTest_P)
 {
     char key[] = "speed";
@@ -652,6 +1002,13 @@ TEST(TestRep, OCRepMacroStartEndObjectItemTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_object, oc_rep_close_object
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetCloseObjectItemTest_P)
 {
     char key[] = "speed";
@@ -660,6 +1017,13 @@ TEST(TestRep, OCRepMacroSetCloseObjectItemTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_int_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetInitObjectItemTest_P)
 {
     char key[] = "speed";
@@ -668,6 +1032,13 @@ TEST(TestRep, OCRepMacroSetInitObjectItemTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_bool_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetBoolObjectItemTest_P)
 {
     char key[] = "speed";
@@ -676,6 +1047,13 @@ TEST(TestRep, OCRepMacroSetBoolObjectItemTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_double_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetDoubleObjectItemTest_P)
 {
     char key[] = "speed";
@@ -684,6 +1062,13 @@ TEST(TestRep, OCRepMacroSetDoubleObjectItemTest_P)
     ASSERT_FALSE(g_err);
 }
 
+/*
+ * @API             : oc_rep_set_string_array
+ * @Description     : positive tc
+ * @PassCondition   : returns false
+ * @PreCondition    : N/A
+ * @PostCondition   : N/A
+*/
 TEST(TestRep, OCRepMacroSetStringObjectItemTest_P)
 {
     char key[] = "speed";

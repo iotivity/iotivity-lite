@@ -21,21 +21,40 @@ class TestCoap: public testing::Test
         }
 };
 
-
+/*
+* @API: coap_get_mid()
+* @Description: Tries to get mid value
+* @PassCondition: Should return mid value
+* @PreCondition: N/A
+* @PostCondition: N/A
+*/
 TEST_F(TestCoap, CoapGetMidTest_P)
 {
     uint16_t mid = coap_get_mid();
     EXPECT_TRUE(mid) << "Failed to get mid transaction";
 }
 
-
+/*
+ * @API: coap_udp_init_message()
+ * @Description: Tries to initialize udp message
+ * @PassCondition: should not throw exception
+ * @PreCondition: Get mid value
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapUDPInitMessageTest_P)
 {
     coap_packet_t ack[1];
     uint16_t mid = coap_get_mid();
-    coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
+    ASSERT_NO_THROW(coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid));
 }
 
+/*
+ * @API: coap_serialize_message()
+ * @Description: Tries to serialize message
+ * @PassCondition: Should serialize message
+ * @PreCondition: Get mid value, initialize udp message and getting internal outgoing message
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSerializeMessageTest_P)
 {
     coap_packet_t ack[1];
@@ -47,6 +66,13 @@ TEST_F(TestCoap, CoapSerializeMessageTest_P)
     EXPECT_TRUE(size) << "Failed to get mid transaction";
 }
 
+/*
+ * @API: coap_udp_parse_message()
+ * @Description: Tries to parse udp message
+ * @PassCondition: Should get status of udp parsing message
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, UDPParseMessageTest_P)
 {
     uint8_t data[] = "1234567890";
@@ -55,6 +81,13 @@ TEST_F(TestCoap, UDPParseMessageTest_P)
     ASSERT_NE(status, 0);
 }
 
+/*
+ * @API: coap_set_header_max_age()
+ * @Description: Tries to set header maximum age
+ * @PassCondition: Should get status of setup maximum age
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSetHeaderMaxAgeTest_P)
 {
     coap_packet_t packet[1];
@@ -63,6 +96,13 @@ TEST_F(TestCoap, CoapSetHeaderMaxAgeTest_P)
 
 }
 
+/*
+ * @API: coap_get_header_etag()
+ * @Description: Tries to get header etag
+ * @PassCondition: Should get status result of getting header etag
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapGetHeaderEtagTest_P)
 {
     coap_packet_t packet[1];
@@ -71,6 +111,13 @@ TEST_F(TestCoap, CoapGetHeaderEtagTest_P)
     ASSERT_NE(ret, -1);
 }
 
+/*
+ * @API: coap_set_header_location_query()
+ * @Description: Tries to set header location query
+ * @PassCondition: Should get status of setup header location query
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSetHeaderQueryTest_P)
 {
     coap_packet_t packet[1];
@@ -79,6 +126,13 @@ TEST_F(TestCoap, CoapSetHeaderQueryTest_P)
     ASSERT_NE(isSuccess, 0);
 }
 
+/*
+ * @API: coap_set_header_block1()
+ * @Description: Tries to set header block
+ * @PassCondition: Should get failure status of setup header block
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSetHeaderBlock1Test_N)
 {
     coap_packet_t packet[1];
@@ -86,6 +140,13 @@ TEST_F(TestCoap, CoapSetHeaderBlock1Test_N)
     ASSERT_EQ(isFailure, 0);
 }
 
+/*
+ * @API: coap_set_header_block1()
+ * @Description: Tries to set header block
+ * @PassCondition: Should get success status of setup header block
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSetHeaderBlock1Test_P)
 {
     coap_packet_t packet[1];
@@ -93,6 +154,13 @@ TEST_F(TestCoap, CoapSetHeaderBlock1Test_P)
     ASSERT_NE(isSuccess, 0);
 }
 
+/*
+ * @API: coap_get_header_size2()
+ * @Description: Tries to get header size2
+ * @PassCondition: Should get failure status of getting header size2
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapGetHeaderSize2Test_N)
 {
     coap_packet_t packet[1];
@@ -101,6 +169,13 @@ TEST_F(TestCoap, CoapGetHeaderSize2Test_N)
     // checking will be added later after verification
 }
 
+/*
+ * @API: coap_get_header_size1()
+ * @Description: Tries to get header size1
+ * @PassCondition: Should get failure status of getting header size1
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapGetHeaderSize1Test_N)
 {
     coap_packet_t packet[1];
@@ -109,6 +184,13 @@ TEST_F(TestCoap, CoapGetHeaderSize1Test_N)
     // checking will be added later after verification
 }
 
+/*
+ * @API: coap_set_header_size1()
+ * @Description: Tries to set header size
+ * @PassCondition: Should get success status of getting header size1
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, CoapSetHeaderSize1Test_P)
 {
     coap_packet_t packet[1];
@@ -116,16 +198,28 @@ TEST_F(TestCoap, CoapSetHeaderSize1Test_P)
     ASSERT_EQ(isSuccess, 1);
 }
 
-
+/*
+ * @API: coap_tcp_init_message()
+ * @Description: Tries to initialize tcp message
+ * @PassCondition: Should should not throw exception
+ * @PreCondition: Get mid value
+ * @PostCondition: N/A
+ */
 #ifdef OC_TCP
 TEST_F(TestCoap, CoapTCPInitMessageTest_P)
 {
     coap_packet_t packet[1];
     uint16_t mid = coap_get_mid();
-    coap_tcp_init_message(packet, 0);
+    ASSERT_NO_THROW(coap_tcp_init_message(packet, 0));
 }
 
-
+/*
+ * @API: coap_tcp_get_packet_size()
+ * @Description: Tries to get tcp packet size
+ * @PassCondition: Should get tcp packet size
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, TCPPacketSizeTest_P)
 {
     uint8_t data[] = "1234567890";
@@ -134,6 +228,13 @@ TEST_F(TestCoap, TCPPacketSizeTest_P)
 
 }
 
+/*
+ * @API: coap_tcp_parse_message()
+ * @Description: Tries to get status tcp parse message
+ * @PassCondition: Should get status tcp parsing message
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoap, TCPParseMessageTest_P)
 {
     uint8_t data[] = "1234567890";
