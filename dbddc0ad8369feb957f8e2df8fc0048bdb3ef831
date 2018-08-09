@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e2c5243e",
+        "filename": "apps/st_app/tizenrt/st_ref_app_tizenrt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "no tabs!",
+      "range": {
+        "startLine": 147,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 1
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_42c5f03a",
+        "filename": "apps/st_app/tizenrt/st_ref_app_tizenrt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "take care of indentation.",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 154,
+        "endChar": 12
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_22c0ac29",
+        "filename": "port/tizenrt/scripts/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "its same as \":\u003d\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 11,
+        "endLine": 24,
+        "endChar": 12
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_82ded80f",
+        "filename": "port/tizenrt/scripts/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "no interface files in enrollee folder. Instead include enrollee/include and enrollee/samsung.",
+      "range": {
+        "startLine": 109,
+        "startChar": 6,
+        "endLine": 109,
+        "endChar": 56
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_62e114d0",
+        "filename": "port/tizenrt/scripts/auto_build_TizenRT.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "find another way for applying mbedtls patches.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 82
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c2e8e0b6",
+        "filename": "port/tizenrt/scripts/auto_build_TizenRT.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-09T09:56:22Z",
+      "side": 1,
+      "message": "take board as script run argument form user.",
+      "range": {
+        "startLine": 74,
+        "startChar": 27,
+        "endLine": 74,
+        "endChar": 35
+      },
+      "revId": "dbddc0ad8369feb957f8e2df8fc0048bdb3ef831",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
