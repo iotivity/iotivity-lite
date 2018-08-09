@@ -1,0 +1,30 @@
+From 25d451f419e65911bbc91802e6877671f08f4cab Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Mon, 6 Aug 2018 18:24:28 +0300
+Subject: [PATCH] enable AES_ALT
+
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
+---
+ include/mbedtls/config.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
+index aa476c3..2a84be0 100644
+--- a/include/mbedtls/config.h
++++ b/include/mbedtls/config.h
+@@ -48,6 +48,12 @@
+ 
+ /* mbed TLS modules */
+ #define MBEDTLS_AES_C
++#ifdef ST_MBEDTLS_HW_AES
++#define MBEDTLS_AES_SETKEY_ENC_ALT
++#define MBEDTLS_AES_SETKEY_DEC_ALT
++#define MBEDTLS_AES_ENCRYPT_ALT
++#define MBEDTLS_AES_DECRYPT_ALT
++#endif  /* ST_MBEDTLS_HW_AES */
+ #define MBEDTLS_CIPHER_C
+ #define MBEDTLS_CTR_DRBG_C
+ #define MBEDTLS_ENTROPY_C
+-- 
+2.7.4
+

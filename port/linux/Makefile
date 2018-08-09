@@ -218,6 +218,10 @@ ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_otm_state.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
+ifeq ($(HW_AES),1)
+       SRC_COMMON += ../../security/oc_hw_aes.c
+       CFLAGS += -DST_MBEDTLS_HW_AES
+endif
 ifeq ($(DYNAMIC)$(CODE_SIZE_OPT),10)
 	SRC += ../../security/oc_obt.c
 	SAMPLES += ${OBT}
