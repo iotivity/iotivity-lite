@@ -20,6 +20,13 @@ class TestCoapPacketSeparate: public testing::Test
         }
 };
 
+/*
+ * @API: coap_separate_resume()
+ * @Description: Tries to separate resume by mid
+ * @PassCondition: Should separate resume by mid
+ * @PreCondition: Get mid
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapPacketSeparate, CoapSeparateClearTest_P)
 {
     coap_packet_t response[1];
@@ -28,6 +35,13 @@ TEST_F(TestCoapPacketSeparate, CoapSeparateClearTest_P)
     coap_separate_resume( response, &separate_store, OC_STATUS_OK, mid );
 }
 
+/*
+ * @API: coap_separate_resume()
+ * @Description: Tries to separate resume by mid
+ * @PassCondition: Should separate resume by mid
+ * @PreCondition: Get mid
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapPacketSeparate, CoapSeparateResumeTest_P)
 {
     coap_packet_t response[1];
