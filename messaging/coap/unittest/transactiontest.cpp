@@ -65,6 +65,13 @@ class TestCoapTransaction: public testing::Test
         }
 };
 
+/*
+ * @API: coap_new_transaction()
+ * @Description: Tries to create new transaction
+ * @PassCondition: Should create new transaction
+ * @PreCondition: Create new endpoint and get mid
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapTransaction, CreateTransactionTest_P)
 {
     oc_endpoint_t *endpoint = oc_new_endpoint();
@@ -74,6 +81,13 @@ TEST_F(TestCoapTransaction, CreateTransactionTest_P)
     EXPECT_TRUE(NULL != transaction) << "Failed to create transaction";
 }
 
+/*
+ * @API: coap_get_transaction_by_mid()
+ * @Description: Tries to get transaction by mid
+ * @PassCondition: Should get transaction by mid
+ * @PreCondition: Creat new endpoint, Get mid and Create new transaction
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapTransaction, GetTransactionTest_P)
 {
 
@@ -84,14 +98,28 @@ TEST_F(TestCoapTransaction, GetTransactionTest_P)
     EXPECT_EQ(retrievedTransaction, transaction) << "Failed to get transaction";
 }
 
+/*
+ * @API: coap_check_transactions()
+ * @Description: Tries to check all transactions
+ * @PassCondition: should not throw exception
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapTransaction, CheckTransactionTest_P)
 {
 
-    coap_check_transactions();
+    ASSERT_NO_THROW(coap_check_transactions());
 }
 
+/*
+ * @API: coap_free_all_transactions()
+ * @Description: Tries to free all transactions
+ * @PassCondition: should not throw exception
+ * @PreCondition: N/A
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapTransaction, FreeAllTransactionTest_P)
 {
 
-    coap_free_all_transactions();
+    ASSERT_NO_THROW(coap_free_all_transactions());
 }

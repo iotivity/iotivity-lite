@@ -20,18 +20,32 @@ class TestCoapPacketSeparate: public testing::Test
         }
 };
 
+/*
+ * @API: coap_separate_resume()
+ * @Description: Tries to separate resume by mid
+ * @PassCondition: should not throw exception
+ * @PreCondition: Get mid
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapPacketSeparate, CoapSeparateClearTest_P)
 {
     coap_packet_t response[1];
     coap_separate_t separate_store;
     int mid = coap_get_mid();
-    coap_separate_resume( response, &separate_store, OC_STATUS_OK, mid );
+    ASSERT_NO_THROW(coap_separate_resume( response, &separate_store, OC_STATUS_OK, mid ));
 }
 
+/*
+ * @API: coap_separate_resume()
+ * @Description: Tries to separate resume by mid
+ * @PassCondition: should not throw exception
+ * @PreCondition: Get mid
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapPacketSeparate, CoapSeparateResumeTest_P)
 {
     coap_packet_t response[1];
     coap_separate_t separate_store;
     int mid = coap_get_mid();
-    coap_separate_resume( response, &separate_store, OC_STATUS_OK,  mid);
+    ASSERT_NO_THROW(coap_separate_resume( response, &separate_store, OC_STATUS_OK,  mid));
 }
