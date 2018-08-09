@@ -25,6 +25,11 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifdef OC_TCP
 typedef struct tcp_context_t {
   struct sockaddr_storage server;
@@ -84,5 +89,9 @@ typedef struct ip_context_t {
   fd_set rfds;
   int shutdown_pipe[2];
 } ip_context_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* IPCONTEXT_H */

@@ -34,6 +34,11 @@
 #ifndef OC_RANDOM_H
 #define OC_RANDOM_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /*
  * Initialize the pseudo-random generator.
  *
@@ -48,5 +53,9 @@ void oc_random_init(void);
 unsigned int oc_random_value(void);
 
 void oc_random_destroy(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_RANDOM_H */

@@ -25,6 +25,11 @@
 #include "oc_ri.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct
 {
   int oxmsel;
@@ -44,5 +49,9 @@ void oc_sec_doxm_default(int device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_DOXM_H */
