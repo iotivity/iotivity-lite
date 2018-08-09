@@ -24,6 +24,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern CborEncoder g_encoder, root_map, links_array;
 extern int g_err;
 
@@ -255,5 +260,9 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_arra
 bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
 bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
 bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_REP_H */

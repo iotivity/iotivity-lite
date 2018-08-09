@@ -53,6 +53,11 @@
 #include "transactions.h"
 #include "util/oc_list.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #define COAP_OBSERVER_URL_LEN 20
 
 typedef struct coap_observer
@@ -96,4 +101,9 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* OBSERVE_H */

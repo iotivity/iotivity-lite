@@ -19,8 +19,17 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 int oc_base64_encode(const uint8_t *input, int input_len,
                      uint8_t *output_buffer, int output_buffer_len);
 int oc_base64_decode(uint8_t *str, int len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_BASE64_H */

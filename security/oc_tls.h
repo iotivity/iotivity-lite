@@ -26,6 +26,11 @@
 #include "util/oc_process.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 OC_PROCESS_NAME(oc_tls_handler);
 
 int oc_tls_init_context(void);
@@ -65,5 +70,9 @@ typedef struct oc_tls_peer_s {
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
 } oc_tls_peer_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_TLS_H */

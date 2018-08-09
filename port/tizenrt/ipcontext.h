@@ -21,6 +21,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef OC_TCP
 typedef struct tcp_context_t {
   void* server;
@@ -74,4 +78,9 @@ typedef struct ip_context_t {
   int device;
   int shutdown_pipe[2];
 } ip_context_t;
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
 #endif /* IPCONTEXT_H */
