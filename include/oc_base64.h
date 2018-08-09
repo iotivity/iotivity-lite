@@ -20,6 +20,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * encode byte buffer to base64 string. The base64 encoder does not NUL terminate
  * its output. User the return value to add '\0' to the end of the string.
@@ -75,5 +80,9 @@ int oc_base64_encode(const uint8_t *input, size_t input_len,
  *     is not a properly encoded base64 string.
  */
 int oc_base64_decode(uint8_t *str, size_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_BASE64_H */

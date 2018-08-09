@@ -21,15 +21,13 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
-    #include "oc_tls.h"
-    #include "oc_api.h"
-    #include "oc_endpoint.h"
-    #include "oc_signal_event_loop.h"
-    #define delete pseudo_delete
-    #include "oc_core_res.h"
-    #undef delete
-}
+#include "oc_tls.h"
+#include "oc_api.h"
+#include "oc_endpoint.h"
+#include "oc_signal_event_loop.h"
+#define delete pseudo_delete
+#include "oc_core_res.h"
+#undef delete
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"

@@ -20,6 +20,11 @@
 
 /* Time resolution */
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND 1
 
@@ -86,5 +91,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_SESSION_EVENT_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif /* CONFIG_H */

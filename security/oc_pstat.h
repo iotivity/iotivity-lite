@@ -19,6 +19,11 @@
 
 #include "oc_ri.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {
   OC_DOS_RESET = 0,
   OC_DOS_RFOTM,
@@ -50,5 +55,9 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t interface,
                 void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_PSTAT_H */

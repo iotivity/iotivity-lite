@@ -21,9 +21,8 @@
 
 #include <stdlib.h>
 #include "gtest/gtest.h"
-extern "C" {
-    #include "oc_rep.h"
-}
+
+#include "oc_rep.h"
 
 TEST(TestRep, OCRepFinalizeTest_P)
 {
