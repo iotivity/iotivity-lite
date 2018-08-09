@@ -17,11 +17,11 @@
 #ifndef OC_INSTANCE_H_
 #define OC_INSTANCE_H_
 
+#include "oc_api.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "oc_api.h"
 
 void ocInstanceInit(const oc_handler_t *handler);
 

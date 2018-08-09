@@ -24,6 +24,11 @@
 #include "util/oc_memb.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {
   OC_PERM_NONE = 0,
   OC_PERM_CREATE = (1 << 0),
@@ -102,5 +107,9 @@ void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                       oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(int device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_ACL_H */

@@ -22,10 +22,8 @@
 #include <string>
 #include <gtest/gtest.h>
 
-extern "C" {
-    #include "oc_api.h"
-    #include "port/oc_clock.h"
-}
+#include "oc_api.h"
+#include "port/oc_clock.h"
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"

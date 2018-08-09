@@ -19,6 +19,11 @@
 
 #include "port/oc_log.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void abort_impl(void);
 void exit_impl(int status);
 
@@ -41,5 +46,9 @@ oc_exit(int status)
 {
   exit_impl(status);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_ASSERT_H */

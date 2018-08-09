@@ -23,6 +23,11 @@
 #include "oc_ri.h"
 #include "port/oc_connectivity.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {
   OC_BLOCKWISE_CLIENT = 0,
   OC_BLOCKWISE_SERVER
@@ -108,5 +113,9 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 void oc_blockwise_scrub_buffers(void);
 
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_BLOCKWISE_H */
