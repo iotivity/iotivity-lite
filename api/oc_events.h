@@ -17,6 +17,11 @@
 #ifndef OC_EVENTS_H
 #define OC_EVENTS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "util/oc_process.h"
 
 typedef enum {
@@ -34,5 +39,9 @@ typedef enum {
 } oc_events_t;
 
 extern oc_process_event_t oc_events[];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_EVENTS_H */

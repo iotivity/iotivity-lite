@@ -22,6 +22,11 @@
 #include "oc_network_events.h"
 #include "oc_session_events.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
   @brief Add the callback to receive change notifications for
    Network interface event.
@@ -53,5 +58,9 @@ int oc_add_session_event_callback(session_event_handler_t cb);
   @return 0 if success. -1 return if error occur.
 */
 int oc_remove_session_event_callback(session_event_handler_t cb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_NETWORK_HELPERS_H */

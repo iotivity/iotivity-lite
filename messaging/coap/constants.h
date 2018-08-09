@@ -45,6 +45,11 @@
  * This file is part of the Contiki operating system.
  */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
@@ -200,5 +205,9 @@ typedef enum {
   APPLICATION_CBOR = 60,
   APPLICATION_VND_OCF_CBOR = 10000
 } coap_content_format_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CONSTANTS_H */

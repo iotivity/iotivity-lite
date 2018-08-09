@@ -21,9 +21,7 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
-    #include "oc_uuid.h"
-}
+#include "oc_uuid.h"
 
 #define UUID "12345678123412341234123456789012"
 
