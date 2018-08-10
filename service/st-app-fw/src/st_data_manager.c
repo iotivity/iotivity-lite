@@ -272,7 +272,7 @@ free_resource_types(void)
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
     int i;
-    for (i = 0; i < item->prperties_cnt; i++) {
+    for (i = 0; i < item->properties_cnt; i++) {
       st_string_check_free(&item->properties[i].key);
     }
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -526,7 +526,7 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
         st_print_log("[ST_DM] properties overflow\n");
         return -1;
       }
-      st_property_t *property = rt->properties[rt->properties_cnt];
+      st_property_t *property = &rt->properties[rt->properties_cnt];
       rt->properties_cnt++;
 #endif /* !OC-DYNAMIC_ALLOCATION */
       if (oc_rep_get_string(item, ST_PROPS_KEY_KEY, &value, &size)) {
