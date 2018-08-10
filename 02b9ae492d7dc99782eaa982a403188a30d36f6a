@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_42dcd012",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-10T02:13:50Z",
+      "side": 1,
+      "message": "How about it?\nst_error_t ret \u003d st_manager_initialize();\n  if (ret !\u003d NONE..",
+      "range": {
+        "startLine": 316,
+        "startChar": 2,
+        "endLine": 317,
+        "endChar": 36
+      },
+      "revId": "02b9ae492d7dc99782eaa982a403188a30d36f6a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_22d70cef",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-10T02:13:50Z",
+      "side": 1,
+      "message": "another error case is no problem?",
+      "range": {
+        "startLine": 356,
+        "startChar": 18,
+        "endLine": 356,
+        "endChar": 43
+      },
+      "revId": "02b9ae492d7dc99782eaa982a403188a30d36f6a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e28404b3",
+        "filename": "service/st-app-fw/include/st_manager.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-10T02:13:50Z",
+      "side": 1,
+      "message": "How about add comment?",
+      "revId": "02b9ae492d7dc99782eaa982a403188a30d36f6a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4294d0e1",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-10T02:13:50Z",
+      "side": 1,
+      "message": "in reset handler, init is execute and start easy-setup?",
+      "revId": "02b9ae492d7dc99782eaa982a403188a30d36f6a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
