@@ -440,6 +440,7 @@ class TestSTCloudManager_cb: public testing::Test
 TEST_F(TestSTCloudManager_cb, cloud_manager_normal_test)
 {
     is_st_app_ready = false;
+    test_case_type = CM_NO_ERROR;
     int ret = test_wait_until(mutex, cv, 20);
     ASSERT_EQ(0, ret);
 
