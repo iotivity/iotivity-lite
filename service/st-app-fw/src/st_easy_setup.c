@@ -208,12 +208,15 @@ st_otm_state_handler(oc_sec_otm_err_code_t state)
 {
   if (state == OC_SEC_OTM_START) {
     st_print_log("[ST_ES] OTM provisioning started.\n");
-    // Set timeout for easy setup procedure.
+    // Set timeout for security OTM procedure.
     oc_set_delayed_callback(NULL, easy_setup_timeout_handler,
                             EASYSETUP_TIMEOUT);
   } else if (state == OC_SEC_OTM_FINISH) {
     st_print_log("[ST_ES] OTM provisioning done.\n");
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
+    // Set timeout for easy setup procedure.
+    oc_set_delayed_callback(NULL, easy_setup_timeout_handler,
+                            EASYSETUP_TIMEOUT);
   } else if (state <= OC_SEC_ERR_PSTAT) {
     st_print_log("[ST_ES] OTM provisioning failed with %d.\n", state);
     oc_remove_delayed_callback(NULL, easy_setup_timeout_handler);
@@ -264,7 +267,7 @@ wifi_prov_cb(es_wifi_conf_data *wifi_prov_data)
   }
 
   if (!oc_string(wifi_prov_data->ssid) || !oc_string(wifi_prov_data->pwd)) {
-    st_print_log("[ST_ES] wifi provision info is not enough!");
+    st_print_log("[ST_ES] wifi provision info is not enough!\n");
     return;
   }
 
