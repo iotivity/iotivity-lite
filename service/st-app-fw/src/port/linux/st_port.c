@@ -591,6 +591,8 @@ soft_ap_process_routine(void *data)
     goto exit;
   }
 
+  pclose(p);
+
   int len = 30 + interface_len;
   char nmcli_command[200];
   snprintf(nmcli_command, len, "sudo ifconfig %s 10.0.0.2/24 up", interface);

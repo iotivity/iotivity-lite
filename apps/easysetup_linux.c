@@ -439,6 +439,7 @@ void set_device_info() {
   if (es_set_device_property(&device_property) == ES_ERROR)
     printf("[ES App] es_set_device_property error!\n");
 
+  oc_free_string(&device_property.DevConf.device_name);
   printf("[ES App] set_device_info out\n");
 }
 
