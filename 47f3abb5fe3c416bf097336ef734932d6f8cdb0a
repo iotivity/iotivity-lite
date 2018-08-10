@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_22026c0b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "Please change it to \u0027Fixing static analyzer reported issues.\u0027",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 5
+      },
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_621c7478",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "indent ?",
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e207e41b",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "this is not needed if you flush input buffer at the end of this function.",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 39
+      },
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_020da83e",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "put it in while loop till reading valid character \u0027y\u0027 or \u0027n\u0027. On reading wrong character print message of invalid input and go to user input read again.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 3
+      },
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4207b01c",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "this code never executes as function returns above only.",
+      "range": {
+        "startLine": 166,
+        "startChar": 2,
+        "endLine": 166,
+        "endChar": 51
+      },
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a2167c53",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-08-10T13:37:28Z",
+      "side": 1,
+      "message": "add comment that this code is flashing input buffer.",
+      "revId": "47f3abb5fe3c416bf097336ef734932d6f8cdb0a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
