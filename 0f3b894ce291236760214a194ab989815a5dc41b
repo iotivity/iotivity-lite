@@ -22,6 +22,30 @@
       "revId": "0f3b894ce291236760214a194ab989815a5dc41b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_62c0f4e0",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1638,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-10T02:16:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_22738c16",
+      "range": {
+        "startLine": 1637,
+        "startChar": 0,
+        "endLine": 1638,
+        "endChar": 38
+      },
+      "revId": "0f3b894ce291236760214a194ab989815a5dc41b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
