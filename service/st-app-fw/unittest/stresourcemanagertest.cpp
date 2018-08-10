@@ -50,16 +50,38 @@ resource_handler(st_request_t *request)
 
 class TestSTResourceManager: public testing::Test
 {
+    private:
+        static oc_handler_t s_handler;
+        static int appInit(void)
+        {
+            int result = oc_init_platform("Samsung", NULL, NULL);
+            result |= oc_add_device("/oic/d", "oic.d.light", "Light",
+                                    "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+            return result;
+        }
+
+        static void signalEventLoop(void)
+        {
+            return;
+        }
+
     protected:
         virtual void SetUp()
         {
             st_set_device_profile(st_device_def, st_device_def_len);
+            s_handler.init = appInit;
+            s_handler.signal_event_loop = signalEventLoop;
+            int initResult = oc_main_init(&s_handler);
+            ASSERT_TRUE((initResult == 0));
         }
 
         virtual void TearDown()
         {
+            st_free_device_profile();
+            oc_main_shutdown();
         }
 };
+oc_handler_t TestSTResourceManager::s_handler;
 
 TEST_F(TestSTResourceManager, st_register_resources)
 {
@@ -69,6 +91,7 @@ TEST_F(TestSTResourceManager, st_register_resources)
     st_register_resources(device_index);
     resource = oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
     EXPECT_STREQ(uri, oc_string(resource->uri));
+    deinit_provisioning_info_resource();
     st_data_mgr_info_free();
 }
 
