@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_6d99051f",
+        "filename": "api/unittest/collectiontest.cpp",
+        "patchSetId": 7
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-08-13T21:14:04Z",
+      "side": 1,
+      "message": "Remove this. You are freeing the collection twice and apitest crashes.\n\noc_delete_collection() is the public API (listed in oc_api.h) and invoking it once removes the one collection pointed to by both \u0027col\u0027 and \u0027collection\u0027.",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 35
+      },
+      "revId": "0daf5f915b09e71ac23f9e22b5db4dfb212272ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
