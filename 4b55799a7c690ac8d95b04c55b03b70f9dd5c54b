@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2de1bd9a",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 29
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-08-13T20:48:54Z",
+      "side": 0,
+      "message": "Please use this instead.\n\nOne thing you may consider adding here if possible is invoking the test_coverage script so we get to see those numbers for every patch in some build artifact.",
+      "range": {
+        "startLine": 142,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 38
+      },
+      "revId": "4b55799a7c690ac8d95b04c55b03b70f9dd5c54b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}

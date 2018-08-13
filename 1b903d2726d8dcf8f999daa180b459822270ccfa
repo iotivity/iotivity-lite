@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4de6c1b5",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 29
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-08-13T20:48:54Z",
+      "side": 1,
+      "message": "Please revert this line. As explained in other comments, the resulting build artifacts here are of no use and would waste disk space on our build infrastructure.\n\nIntegrating the TEST_RUNNER into our CI process is only useful in the intended context if you\u0027re somehow running a full IoTivity-Lite application.",
+      "range": {
+        "startLine": 143,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 65
+      },
+      "revId": "1b903d2726d8dcf8f999daa180b459822270ccfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0ddcb9e3",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-08-13T20:48:54Z",
+      "side": 1,
+      "message": "This doesn\u0027t do anything as the unit tests in most/all cases do not even get to initialize/shutdown the memory trace module. \n\nMT is used only in the typical application/stack startup (when MT logging begins) and shutdown (when MT logs are printed) sequences.\n\nBut the unit tests for most part test subsystems of the stack that do invoke these sequences.\n\nI might consider taking this part out.",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 1
+      },
+      "revId": "1b903d2726d8dcf8f999daa180b459822270ccfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_edd6b5c2",
+        "filename": "tests/port/linux/test-runner.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-08-13T20:48:54Z",
+      "side": 1,
+      "message": "The build artifacts that this produces are of no use because \n\na) you\u0027re running it on unit tests and not the entire stack,\n\nb) the unit tests binary includes GTest and references to the C++ runtime so the numbers reported are irrelevant, and do not give you the baseline measures for the stack.\n\nThese tools however (scripts/infrastructure) are generally useful.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 1
+      },
+      "revId": "1b903d2726d8dcf8f999daa180b459822270ccfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
