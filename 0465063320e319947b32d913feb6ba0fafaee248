@@ -1,0 +1,255 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_4da0819f",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "how about use memb alloc?",
+      "range": {
+        "startLine": 93,
+        "startChar": 33,
+        "endLine": 93,
+        "endChar": 39
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2d9b7d73",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "how about use memb alloc?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8d89e928",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "how about use memb alloc?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd83f102",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "I am afraid will occur deadlock.\nIf A gained app and B gained state then will occur lock.\nA function is..\napp_lock\nstate_lock\nstate_unlock\napp_unlock\nB function is ..\nstate_lock\napp_lock\napp_unlock\nstate_unlock",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ad866d11",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "ST_PROC",
+      "range": {
+        "startLine": 65,
+        "startChar": 19,
+        "endLine": 65,
+        "endChar": 26
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0d7dd91c",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "How about move to 81 line after cloud processing?\nI don\u0027t know what is exactly order.",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8d90c944",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "In my opinion, the function definition is better placed above.",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4d77e13a",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "how about use memb alloc?\nAnd every time require alloc and free?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6d93c54f",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "Why set state direct without check current state?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd9ad162",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "How about define?",
+      "range": {
+        "startLine": 1111,
+        "startChar": 33,
+        "endLine": 1111,
+        "endChar": 37
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ad9dcd5b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1215,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "please null check",
+      "range": {
+        "startLine": 1215,
+        "startChar": 16,
+        "endLine": 1215,
+        "endChar": 26
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ed9eb553",
+        "filename": "service/st-app-fw/src/st_state_util.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "I think mod function is very slow..",
+      "range": {
+        "startLine": 58,
+        "startChar": 34,
+        "endLine": 58,
+        "endChar": 35
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4daec186",
+        "filename": "service/st-app-fw/src/st_state_util.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-08-13T07:41:06Z",
+      "side": 1,
+      "message": "I don\u0027t know that why is same..",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
