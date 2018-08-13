@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_0dcb1954",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "memb_alloc is meaningful when oc_main_init() is called.\nGiven that st_manager should work well even though oc_main is unloaded, it uses different function",
+      "parentUuid": "da33351e_4da0819f",
+      "range": {
+        "startLine": 93,
+        "startChar": 33,
+        "endLine": 93,
+        "endChar": 39
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_2d9b7d73",
         "filename": "service/st-app-fw/src/port/linux/st_port.c",
         "patchSetId": 24
@@ -36,6 +60,24 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "how about use memb alloc?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_edc5153e",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "memb_alloc is meaningful when oc_main_init() is called.\nGiven that st_manager should work well even though oc_main is unloaded, it uses different function",
+      "parentUuid": "da33351e_2d9b7d73",
       "revId": "0465063320e319947b32d913feb6ba0fafaee248",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_4dc5213b",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "memb_alloc is meaningful when oc_main_init() is called.\nGiven that st_manager should work well even though oc_main is unloaded, it uses different function",
+      "parentUuid": "da33351e_8d89e928",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_cd83f102",
         "filename": "service/st-app-fw/src/port/linux/st_process.c",
         "patchSetId": 24
@@ -70,6 +130,24 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "I am afraid will occur deadlock.\nIf A gained app and B gained state then will occur lock.\nA function is..\napp_lock\nstate_lock\nstate_unlock\napp_unlock\nB function is ..\nstate_lock\napp_lock\napp_unlock\nstate_unlock",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8dde0910",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "app_lock and state_lock are merged into app_lock",
+      "parentUuid": "da33351e_cd83f102",
       "revId": "0465063320e319947b32d913feb6ba0fafaee248",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -99,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_2dc09d29",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "state_mutex is erased. so it is vanished too",
+      "parentUuid": "da33351e_ad866d11",
+      "range": {
+        "startLine": 65,
+        "startChar": 19,
+        "endLine": 65,
+        "endChar": 26
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_0d7dd91c",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 24
@@ -110,6 +212,24 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "How about move to 81 line after cloud processing?\nI don\u0027t know what is exactly order.",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cd365152",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_0d7dd91c",
       "revId": "0465063320e319947b32d913feb6ba0fafaee248",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -133,6 +253,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_ad394d43",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_8d90c944",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4d77e13a",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 24
@@ -144,6 +282,24 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "how about use memb alloc?\nAnd every time require alloc and free?",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6de105d0",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "instead of memory allocation, variable is applied",
+      "parentUuid": "da33351e_4d77e13a",
       "revId": "0465063320e319947b32d913feb6ba0fafaee248",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -167,6 +323,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_0d4039a4",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 996,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "1.considering queuing g_st_status_cb instead of calling it directly\n2.status list  under discussion, even though  status list is changed, hoping keeping set_current_states() with no change",
+      "parentUuid": "da33351e_6d93c54f",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_cd9ad162",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 24
@@ -178,6 +352,30 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "How about define?",
+      "range": {
+        "startLine": 1111,
+        "startChar": 33,
+        "endLine": 1111,
+        "endChar": 37
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_cde811b7",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_cd9ad162",
       "range": {
         "startLine": 1111,
         "startChar": 33,
@@ -236,6 +434,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_adeb0daf",
+        "filename": "service/st-app-fw/src/st_state_util.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_ed9eb553",
+      "range": {
+        "startLine": 58,
+        "startChar": 34,
+        "endLine": 58,
+        "endChar": 35
+      },
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_4daec186",
         "filename": "service/st-app-fw/src/st_state_util.c",
         "patchSetId": 24
@@ -247,6 +469,24 @@
       "writtenOn": "2018-08-13T07:41:06Z",
       "side": 1,
       "message": "I don\u0027t know that why is same..",
+      "revId": "0465063320e319947b32d913feb6ba0fafaee248",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0dd2f9ff",
+        "filename": "service/st-app-fw/src/st_state_util.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-13T13:03:53Z",
+      "side": 1,
+      "message": "when head equals tail+1, it means full in queue operation",
+      "parentUuid": "da33351e_4daec186",
       "revId": "0465063320e319947b32d913feb6ba0fafaee248",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
