@@ -369,10 +369,31 @@ st_connect_wifi(const char *ssid, const char *pwd)
 }
 
 void
+st_wifi_free_scan_list(st_wifi_ap_t *ap_list)
+{
+  while (ap_list) {
+    st_wifi_ap_t *del = ap_list;
+    ap_list = ap_list->next;
+
+    free(del->ssid);
+    free(del->mac_addr);
+    free(del->channel);
+    free(del->max_bitrate);
+    free(del->rssi);
+    free(del->enc_type);
+    free(del->sec_type);
+    free(del);
+  }
+}
+
+void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
 //  oc_abort(__func__);
 }
+
+#ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
+static st_wifi_ap_t *g_ap_scan_list = NULL;
 
 void
 st_wifi_set_cache(st_wifi_ap_t *scanlist)
@@ -385,6 +406,14 @@ st_wifi_get_cache(void)
 {
   oc_abort(__func__);
 }
+
+void
+st_wifi_clear_cache(void)
+{
+  st_wifi_free_scan_list(g_ap_scan_list);
+  g_ap_scan_list = NULL;
+}
+#endif
 
 static void *
 soft_ap_process_routine(void *data)
