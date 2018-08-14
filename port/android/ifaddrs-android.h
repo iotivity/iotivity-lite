@@ -36,6 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <sys/socket.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* Implementation of getifaddrs for Android.
  * Fills out a list of ifaddr structs (see below) which contain information
  * about every network interface available on the host.
@@ -53,5 +58,9 @@ struct ifaddrs
 
 int android_getifaddrs(struct ifaddrs **result);
 void android_freeifaddrs(struct ifaddrs *addrs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* WEBRTC_BASE_IFADDRS_ANDROID_H_ */

@@ -21,11 +21,9 @@
 #ifndef INCLUDE_TESTCASE_RI_RIHELPER_H_
 #define INCLUDE_TESTCASE_RI_RIHELPER_H_
 
-extern "C" {
 #include "oc_uuid.h"
 #include "oc_api.h"
 #include "port/oc_clock.h"
-}
 
 #include <gtest/gtest.h>
 #include <pthread.h>

@@ -37,6 +37,11 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #define OC_MMEM_PTR(m) (struct oc_mmem *)(m)->ptr
 
 struct oc_mmem
@@ -75,5 +80,9 @@ void _oc_mmem_free(
   const char *func,
 #endif
   struct oc_mmem *m, pool pool_type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_MMEM_H */

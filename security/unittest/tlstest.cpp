@@ -21,15 +21,13 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
-    #include "oc_tls.h"
-    #include "oc_api.h"
-    #include "oc_endpoint.h"
-    #include "oc_signal_event_loop.h"
-    #define delete pseudo_delete
-    #include "oc_core_res.h"
-    #undef delete
-}
+#include "oc_tls.h"
+#include "oc_api.h"
+#include "oc_endpoint.h"
+#include "oc_signal_event_loop.h"
+#define delete pseudo_delete
+#include "oc_core_res.h"
+#undef delete
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"
@@ -49,6 +47,7 @@ class TestTlsConnection: public testing::Test
         virtual void SetUp()
         {
             oc_ri_init();
+            oc_network_event_handler_mutex_init();
             oc_core_init();
             oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
             oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
@@ -60,6 +59,7 @@ class TestTlsConnection: public testing::Test
            oc_ri_shutdown();
            oc_tls_shutdown();
            oc_connectivity_shutdown(0);
+           oc_network_event_handler_mutex_destroy();
            oc_core_shutdown();
         }
 };
@@ -77,6 +77,7 @@ TEST_F(TestTlsConnection, InitTlsTestTwice_P)
 
     int errorCode = oc_tls_init_context();
     ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
+    oc_tls_shutdown();
     errorCode = oc_tls_init_context();
     EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
@@ -88,7 +89,6 @@ TEST_F(TestTlsConnection, LoadCertTest_P)
     ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
     errorCode = oc_tls_update_psk_identity(0);
     EXPECT_EQ(0, errorCode) << "Failed to update";
-
 }
 
 TEST_F(TestTlsConnection, TlsConnectionTest_N)
@@ -99,7 +99,7 @@ TEST_F(TestTlsConnection, TlsConnectionTest_N)
     oc_endpoint_t *endpoint = oc_new_endpoint();
     bool isConnected = oc_tls_connected(endpoint);
     EXPECT_FALSE(isConnected ) << "Failed to update";
-
+    oc_free_endpoint(endpoint);
 }
 
 #endif

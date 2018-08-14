@@ -149,11 +149,11 @@ oc_status_code(oc_status_t key)
 }
 
 int
-oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
-                              int *key_len, char **value, int *value_len, int n)
+oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
+                              size_t *key_len, char **value, size_t *value_len, size_t n)
 {
   int next_pos = -1;
-  int i = 0;
+  size_t i = 0;
   char *start = (char *)query, *current, *end = (char *)query + query_len;
   current = start;
 
@@ -168,14 +168,14 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 
   current = memchr(start, '=', end - start);
   if (current != NULL) {
-    *key_len = (int)(current - start);
+    *key_len = (current - start);
     *key = start;
     *value = current + 1;
     current = memchr(*value, '&', end - *value);
     if (current == NULL) {
-      *value_len = (int)(end - *value);
+      *value_len = (end - *value);
     } else {
-      *value_len = (int)(current - *value);
+      *value_len = (current - *value);
     }
     next_pos = (int)(*value + *value_len - query + 1);
   }
@@ -183,20 +183,21 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 }
 
 int
-oc_ri_get_query_value(const char *query, int query_len, const char *key,
+oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                       char **value)
 {
-  int next_pos = 0, found = -1, kl, vl, pos = 0;
+  int next_pos = 0, found = -1;
+  size_t  kl, vl, pos = 0;
   char *k;
 
   while (pos < query_len) {
     next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
-                                             &kl, value, &vl, 1);
+                                             &kl, value, &vl, 1u);
     if (next_pos == -1)
       return -1;
 
-    if (kl == (int)strlen(key) && strncasecmp(key, k, kl) == 0) {
-      found = vl;
+    if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
+      found = (int)vl;
       break;
     }
 
@@ -251,7 +252,7 @@ static void stop_processes(void) {
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, int device)
+oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 {
   int skip = 0;
   if (uri[0] != '/')
@@ -323,6 +324,9 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
+  if (resource->num_observers > 0) {
+    coap_remove_observer_by_resource(resource);
+  }
   oc_list_remove(app_resources, resource);
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);

@@ -342,13 +342,13 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   } else {
     return -1;
   }
-  int len = (int)oc_string_len(*endpoint_str);
+  size_t len = oc_string_len(*endpoint_str);
   const char *p = strrchr(oc_string(*endpoint_str), ':');
   char *u = 0;
   if (p) {
     p += 1;
     uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
-    if (uri && u && (u - oc_string(*endpoint_str)) < len) {
+    if (uri && u && (u - oc_string(*endpoint_str)) < (int)len) {
       oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
     }
 

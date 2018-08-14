@@ -22,10 +22,8 @@
 #include <string>
 #include <gtest/gtest.h>
 
-extern "C" {
-    #include "oc_api.h"
-    #include "port/oc_clock.h"
-}
+#include "oc_api.h"
+#include "port/oc_clock.h"
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"
@@ -267,7 +265,7 @@ TEST(TestServerClient, ServerStopTest_P)
     int result = oc_main_init(&handler);
     ASSERT_LT(result,  0);
 
-    EXPECT_NO_THROW(oc_main_shutdown());
+    oc_main_shutdown();
 }
 
 TEST(TestUnicastRequest, SendGetRequest_P)

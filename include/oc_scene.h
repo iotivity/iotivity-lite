@@ -24,6 +24,11 @@
 #include "oc_ri.h"
 #include "util/oc_list.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
   @brief URI of the scene list.
 */
@@ -50,7 +55,7 @@ struct oc_scene_mapping_s
 struct oc_scene_member_s
 {
   struct oc_scene_member_s *next;
-  int device;
+  size_t device;
   oc_string_t uri;
   oc_string_array_t types;
   oc_interface_mask_t interfaces;
@@ -137,7 +142,7 @@ void oc_scene_collection_add_scene(oc_collection_t *scene_collection,
   @internal Internal API.
 */
 oc_collection_t *oc_get_scene_collection_by_uri(const char *uri_path,
-                                                int uri_path_len);
+                                                size_t uri_path_len);
 
 /**
   @brief Looks up the scene collection with the specified URI.
@@ -148,7 +153,7 @@ oc_collection_t *oc_get_scene_collection_by_uri(const char *uri_path,
   @internal Internal API.
 */
 oc_resource_t *oc_get_scene_member_by_uri(const char *uri_path,
-                                          int uri_path_len);
+                                          size_t uri_path_len);
 
 /**
   @brief Checks whether the given resource is a scene collection.
@@ -180,4 +185,9 @@ bool oc_check_if_scene_member(oc_resource_t *resource);
 bool oc_handle_scene_member_request(oc_method_t method,
                                     oc_request_t *request,
                                     oc_interface_mask_t interface);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* OC_SCENE_H */

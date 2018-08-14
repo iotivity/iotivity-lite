@@ -209,7 +209,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
 
 static int
 process_device_resources(CborEncoder *links, oc_request_t *request,
-                         int device_index)
+                         size_t device_index)
 {
   int matches = 0;
   char uuid[OC_UUID_LEN];
@@ -408,7 +408,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
 static int
 process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
-                              int device_num, bool baseline)
+                              size_t device_num, bool baseline)
 {
   int matches = 0;
   char uuid[OC_UUID_LEN];
@@ -501,7 +501,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
                               oc_interface_mask_t interface, void *data)
 {
   (void)data;
-  int matches = 0, device;
+  int matches = 0;
+  size_t device;
 
   switch (interface) {
   case OC_IF_LL: {
@@ -549,7 +550,8 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
-  int matches = 0, device = request->resource->device;
+  int matches = 0;
+  size_t device = request->resource->device;
 
   switch (interface) {
   case OC_IF_LL: {
@@ -588,7 +590,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-oc_create_discovery_resource(int resource_idx, int device)
+oc_create_discovery_resource(int resource_idx, size_t device)
 {
   oc_core_populate_resource(
     resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,

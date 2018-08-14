@@ -78,7 +78,7 @@ typedef struct ip_context_t
   HANDLE event_server_handle;
   DWORD event_thread;
   BOOL terminate;
-  int device;
+  size_t device;
 } ip_context_t;
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -120,7 +120,7 @@ oc_network_event_handler_mutex_destroy(void)
 }
 
 static ip_context_t *
-get_ip_context_for_device(int device)
+get_ip_context_for_device(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = oc_list_head(ip_contexts);
@@ -495,7 +495,8 @@ refresh_endpoints_list(ip_context_t *dev, ifaddr_t *ifaddr_list)
 static int
 process_interface_change_event(void)
 {
-  int ret = 0, num_devices = oc_core_get_num_devices(), i;
+  int ret = 0;
+  size_t num_devices = oc_core_get_num_devices(), i;
   ifaddr_t *ifaddr_list = get_network_addresses();
   if (!ifaddr_list) {
     return -1;
@@ -880,7 +881,7 @@ network_event_thread_error:
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   if (!dev) {
@@ -1313,7 +1314,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 #endif
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   if (!ifchange_initialized) {
     WSADATA wsadata;
@@ -1504,7 +1505,7 @@ oc_connectivity_init(int device)
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = TRUE;

@@ -21,6 +21,11 @@
 #include "oc_uuid.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct oc_sec_cred_s
 {
   struct oc_sec_cred_s *next;
@@ -41,21 +46,25 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_creds_t;
 
-void oc_sec_cred_default(int device);
+void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
 void oc_sec_cred_free(void);
-void oc_sec_encode_cred(bool persist, int device);
+void oc_sec_encode_cred(bool persist, size_t device);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
-                        int device);
-bool oc_cred_remove_subject(const char *subjectuuid, int device);
-oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, int device);
-oc_sec_creds_t *oc_sec_get_creds(int device);
-oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, int device);
+                        size_t device);
+bool oc_cred_remove_subject(const char *subjectuuid, size_t device);
+oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, size_t device);
+oc_sec_creds_t *oc_sec_get_creds(size_t device);
+oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, size_t device);
 void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
 void get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void delete_cred(oc_request_t *request, oc_interface_mask_t interface,
                  void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_CRED_H */

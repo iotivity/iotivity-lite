@@ -24,6 +24,11 @@
 #include "util/oc_memb.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {
   OC_PERM_NONE = 0,
   OC_PERM_CREATE = (1 << 0),
@@ -90,10 +95,10 @@ typedef struct
 
 void oc_sec_acl_init(void);
 void oc_sec_acl_free(void);
-oc_sec_acl_t *oc_sec_get_acl(int device);
-void oc_sec_acl_default(int device);
-bool oc_sec_encode_acl(int device);
-bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device);
+oc_sec_acl_t *oc_sec_get_acl(size_t device);
+void oc_sec_acl_default(size_t device);
+bool oc_sec_encode_acl(size_t device);
+bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
@@ -101,6 +106,10 @@ void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                       oc_endpoint_t *endpoint);
-void oc_sec_set_post_otm_acl(int device);
+void oc_sec_set_post_otm_acl(size_t device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_ACL_H */

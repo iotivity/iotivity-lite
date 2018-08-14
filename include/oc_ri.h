@@ -28,6 +28,11 @@
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE } oc_method_t;
 
 /**
@@ -132,7 +137,7 @@ typedef struct oc_request_handler_s
 struct oc_resource_s
 {
   struct oc_resource_s *next;
-  int device;
+  size_t device;
   oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
@@ -189,7 +194,7 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
 int oc_status_code(oc_status_t key);
 
 oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
-                                             int device);
+                                             size_t device);
 
 oc_resource_t *oc_ri_get_app_resources(void);
 
@@ -209,12 +214,16 @@ bool oc_ri_delete_resource(oc_resource_t *resource);
 
 void oc_ri_free_resource_properties(oc_resource_t *resource);
 
-int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
-                                  int *key_len, char **value, int *value_len,
-                                  int n);
-int oc_ri_get_query_value(const char *query, int query_len, const char *key,
+int oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
+                                  size_t *key_len, char **value, size_t *value_len,
+                                  size_t n);
+int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                           char **value);
 
 oc_interface_mask_t oc_ri_get_interface_mask(char *iface, size_t if_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_RI_H */

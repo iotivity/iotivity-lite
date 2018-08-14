@@ -25,6 +25,11 @@
 #include "oc_api.h"
 #include "security/oc_acl.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct oc_device_t
 {
   struct oc_device_t *next;
@@ -93,5 +98,9 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
 int oc_obt_provision_ace(oc_device_t *device, oc_sec_ace_t *ace,
                          oc_obt_status_cb_t cb, void *data);
 void oc_obt_free_ace(oc_sec_ace_t *ace);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_OBT_H */
