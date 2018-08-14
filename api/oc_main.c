@@ -97,7 +97,7 @@ oc_get_block_size(void)
 }
 #else
 int
-oc_set_mtu_size(long mtu_size)
+oc_set_mtu_size(size_t mtu_size)
 {
   (void)mtu_size;
   OC_WRN("Dynamic memory not available");
@@ -133,6 +133,18 @@ oc_get_block_size(void)
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+static void
+oc_shutdown_all_devices(void)
+{
+  size_t device;
+  for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_connectivity_shutdown(device);
+  }
+
+  oc_network_event_handler_mutex_destroy();
+  oc_core_shutdown();
+}
+
 int
 oc_main_init(const oc_handler_t *handler)
 {
@@ -152,13 +164,19 @@ oc_main_init(const oc_handler_t *handler)
   oc_network_event_handler_mutex_init();
 
   ret = app_callbacks->init();
-  if (ret < 0)
+  if (ret < 0) {
+    oc_ri_shutdown();
+    oc_shutdown_all_devices();
     goto err;
+  }
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
-  if (ret < 0)
+  if (ret < 0) {
+    oc_ri_shutdown();
+    oc_shutdown_all_devices();
     goto err;
+  }
 #endif /* OC_SECURITY */
 
 #ifdef OC_SECURITY
@@ -222,13 +240,7 @@ oc_main_shutdown(void)
   oc_tls_shutdown();
 #endif /* OC_SECURITY */
 
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_connectivity_shutdown(device);
-  }
-
-  oc_network_event_handler_mutex_destroy();
-  oc_core_shutdown();
+  oc_shutdown_all_devices();
 
   app_callbacks = NULL;
   initialized = false;
