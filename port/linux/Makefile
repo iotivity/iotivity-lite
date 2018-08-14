@@ -183,6 +183,11 @@ ifeq ($(AUTH_OPTION),1)
 CFLAGS += -DOC_UNLOAD_CERT
 endif
 
+ifeq ($(AUTH_OPTION),2)
+#remove all certchains from TLS context after OTM
+CFLAGS +=  -DOC_MFG
+endif
+
 endif
 SAMPLES += rpk_server
 UNIT_TESTS += securitytest securitytest_v2
