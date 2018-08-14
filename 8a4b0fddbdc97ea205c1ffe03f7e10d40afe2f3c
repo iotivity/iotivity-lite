@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_083b07d2",
+        "filename": "port/tizenrt/scripts/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-08-14T14:06:05Z",
+      "side": 1,
+      "message": "todo: align lines vertically as much as possible (helps readability)",
+      "revId": "8a4b0fddbdc97ea205c1ffe03f7e10d40afe2f3c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_682a937f",
+        "filename": "port/tizenrt/scripts/auto_build_TizenRT.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-08-14T14:06:05Z",
+      "side": 1,
+      "message": "is this file needed ?\n\nas there is another file prep_build.sh .. are both of these files needed or one can be removed ?",
+      "revId": "8a4b0fddbdc97ea205c1ffe03f7e10d40afe2f3c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c8211fa1",
+        "filename": "port/tizenrt/scripts/prep_build.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-08-14T14:06:05Z",
+      "side": 1,
+      "message": "IoTivity Constrained",
+      "range": {
+        "startLine": 2,
+        "startChar": 1,
+        "endLine": 2,
+        "endChar": 21
+      },
+      "revId": "8a4b0fddbdc97ea205c1ffe03f7e10d40afe2f3c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a8249baf",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-08-14T14:06:05Z",
+      "side": 1,
+      "message": "suggested to add one blank line between two functions for readability.",
+      "revId": "8a4b0fddbdc97ea205c1ffe03f7e10d40afe2f3c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
