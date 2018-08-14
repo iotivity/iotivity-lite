@@ -73,4 +73,5 @@ TEST_F(TestCoreResource, CoreDevice_P)
     ASSERT_NE(addcoredevice, NULL);
     numcoredevice = oc_core_get_num_devices();
     EXPECT_EQ(1, numcoredevice);
+    oc_connectivity_shutdown(0);
 }
