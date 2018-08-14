@@ -249,6 +249,26 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
   OC_DBG("Removed %d observers", removed);
   return removed;
 }
+/*---------------------------------------------------------------------------*/
+int
+coap_remove_observer_by_resource(const oc_resource_t *rsc)
+{
+  int removed = 0;
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
+
+  while (obs) {
+    next = obs->next;
+    if ((obs->resource == rsc) && (oc_string(rsc->uri) &&
+                                   memcmp(obs->url, oc_string(rsc->uri) + 1,
+                                          oc_string_len(rsc->uri) - 1) == 0)) {
+      obs->resource->num_observers--;
+      coap_remove_observer(obs);
+      removed++;
+    }
+    obs = next;
+  }
+  return removed;
+}
 
 /*---------------------------------------------------------------------------*/
 /*- Notification ------------------------------------------------------------*/

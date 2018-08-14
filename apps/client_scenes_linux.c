@@ -55,9 +55,9 @@ dump_rep(oc_rep_t *rep, int n)
         break;
       case OC_REP_STRING_ARRAY: {
         PRINT("[ ");
-        int i;
+        size_t i;
         for (i = 0;
-             i < (int)oc_string_array_get_allocated_size(rep->value.array);
+             i < oc_string_array_get_allocated_size(rep->value.array);
              i++) {
           PRINT(" %s ", oc_string_array_get_item(rep->value.array, i));
         }
@@ -68,7 +68,7 @@ dump_rep(oc_rep_t *rep, int n)
             oc_string_array_get_allocated_size(scenes) == 0) {
           oc_new_string_array(&scenes, oc_string_array_get_allocated_size(rep->value.array));
           for (i = 0;
-               i < (int)oc_string_array_get_allocated_size(rep->value.array);
+               i < oc_string_array_get_allocated_size(rep->value.array);
                i++) {
             oc_string_array_add_item(scenes, oc_string_array_get_item(rep->value.array, i));
           }
@@ -154,11 +154,11 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)interfaces;
   (void)user_data;
   (void)bm;
-  int i;
-  int uri_len = strlen(uri);
+  size_t i;
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
+  for (i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     PRINT("\ntype: %s\n", t);
     if (strlen(t) == 22 && strncmp(t, "oic.wk.scenecollection", 22) == 0) {

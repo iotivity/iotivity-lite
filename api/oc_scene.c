@@ -143,12 +143,12 @@ oc_scene_collection_add_scene(oc_collection_t *scene_collection, const char *sce
 }
 
 oc_collection_t *
-oc_get_scene_collection_by_uri(const char *uri_path, int uri_path_len)
+oc_get_scene_collection_by_uri(const char *uri_path, size_t uri_path_len)
 {
   const char *scene_list_uri = OC_SCENELIST_URI;
   ++scene_list_uri; /* skip leading /, the caller has skipped
                        it already in uri_path */
-  int scene_list_uri_len = strlen(scene_list_uri);
+  size_t scene_list_uri_len = strlen(scene_list_uri);
   /* The function is called by oc_get_collection_by_uri() and we call
      that ourselves again to get the scene list collection. Add
      a check here that we do not enter an endless loop in case
@@ -191,7 +191,7 @@ oc_check_if_scene_member(oc_resource_t *resource)
 }
 
 oc_resource_t *
-oc_get_scene_member_by_uri(const char *uri_path, int uri_path_len)
+oc_get_scene_member_by_uri(const char *uri_path, size_t uri_path_len)
 {
   oc_collection_t *scene_list = oc_scene_get_scenelist();
   if (scene_list) {

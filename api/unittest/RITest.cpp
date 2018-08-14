@@ -22,12 +22,12 @@
 #include <string>
 #include <stdio.h>
 #include <gtest/gtest.h>
-extern "C" {
-    #include "port/linux/config.h"
-    #include "oc_api.h"
-    #include "oc_ri.h"
-    #include "oc_helpers.h"
- }
+
+#include "port/linux/config.h"
+#include "oc_api.h"
+#include "oc_ri.h"
+#include "oc_helpers.h"
+
 
 #define RESOURCE_URI "/LightResourceURI"
 #define RESOURCE_NAME "roomlights"
@@ -125,6 +125,7 @@ TEST_F(TestOcRi, RiFreeResourceProperties_P)
     res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
     oc_ri_free_resource_properties(res);
     EXPECT_EQ(0, oc_string_len(res->name));
+    oc_ri_delete_resource(res);
 }
 
 TEST_F(TestOcRi, RiAddResource_P)

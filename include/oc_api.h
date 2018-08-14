@@ -51,6 +51,11 @@
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct {
   int (*init)(void);
   void (*signal_event_loop)(void);
@@ -129,7 +134,7 @@ void oc_set_id_updated_callback(oc_id_updated_t callback);
 
 /** Server side */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
-                               uint8_t num_resource_types, int device);
+                               uint8_t num_resource_types, size_t device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
                                          uint8_t interface);
 void oc_resource_set_default_interface(oc_resource_t *resource,
@@ -175,7 +180,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   @see oc_new_scene_collection
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types, int device);
+                                 uint8_t num_resource_types, size_t device);
 
 /**
   @brief Deletes the specified collection.
@@ -589,7 +594,7 @@ bool oc_delete_resource(oc_resource_t *resource);
    applied, 0 is the first device
   @param rep list of properties and their new values
 */
-typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
+typedef void(*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
 
 /**
   @brief Sets the callback to receive change notifications for
@@ -606,8 +611,8 @@ typedef void(*oc_con_write_cb_t)(int device_index, oc_rep_t *rep);
 void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
 void oc_init_query_iterator(void);
-int oc_iterate_query(oc_request_t *request, char **key, int *key_len,
-                     char **value, int *value_len);
+int oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
+                     char **value, size_t *value_len);
 bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
                                  char **value, int *value_len);
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
@@ -623,8 +628,17 @@ void oc_send_separate_response(oc_separate_response_t *handle,
 
 int oc_notify_observers(oc_resource_t *resource);
 
+#ifdef __cplusplus
+}
+#endif
+
 /** Client side */
 #include "oc_client_state.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
@@ -703,5 +717,9 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
     OC_PROCESS_END();                                                          \
   }                                                                            \
   void name##_interrupt_x_handler(void)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_API_H */

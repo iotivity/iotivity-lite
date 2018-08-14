@@ -157,7 +157,7 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, int device)
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, size_t device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -182,7 +182,7 @@ oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, int device)
 }
 
 oc_link_t *
-oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len)
+oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, size_t uri_path_len)
 {
   oc_link_t *link = NULL;
 
@@ -195,7 +195,7 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_pa
     link = oc_list_head(collection->links);
     while (link != NULL) {
       if (link->resource &&
-          (int)oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
+          oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
           strncmp(oc_string(link->resource->uri) + 1, uri_path, uri_path_len) == 0) {
         break;
       }

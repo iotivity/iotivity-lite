@@ -61,20 +61,20 @@ oc_sec_acl_init(void)
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  int i;
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     OC_LIST_STRUCT_INIT(&aclist[i], subjects);
   }
 }
 
 oc_sec_acl_t *
-oc_sec_get_acl(int device)
+oc_sec_get_acl(size_t device)
 {
   return &aclist[device];
 }
 
 static bool
-unique_aceid(int aceid, int device)
+unique_aceid(int aceid, size_t device)
 {
   oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
   while (ace != NULL) {
@@ -86,7 +86,7 @@ unique_aceid(int aceid, int device)
 }
 
 static int
-get_new_aceid(int device)
+get_new_aceid(size_t device)
 {
   int aceid;
   do {
@@ -164,7 +164,7 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
 static oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
                         oc_ace_subject_t *subject, int aceid,
-                        uint16_t permission, int device)
+                        uint16_t permission, size_t device)
 {
   oc_sec_ace_t *ace = start;
   if (!ace) {
@@ -250,7 +250,7 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
 
 #ifdef OC_DEBUG
 static void
-dump_acl(int device)
+dump_acl(size_t device)
 {
   oc_sec_acl_t *a = &aclist[device];
   oc_sec_ace_t *ace = oc_list_head(a->subjects);
@@ -430,7 +430,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 }
 
 bool
-oc_sec_encode_acl(int device)
+oc_sec_encode_acl(size_t device)
 {
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
@@ -517,7 +517,7 @@ static oc_ace_res_t *
 oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                    const char *href, oc_ace_wildcard_t wildcard,
                    oc_string_array_t *rt, oc_interface_mask_t interfaces,
-                   int aceid, uint16_t permission, int device, bool create)
+                   int aceid, uint16_t permission, size_t device, bool create)
 {
   oc_sec_ace_t *ace =
     oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
@@ -637,7 +637,7 @@ static bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       int aceid, uint16_t permission, const char *href,
                       oc_ace_wildcard_t wildcard, oc_string_array_t *rt,
-                      oc_interface_mask_t interfaces, int device)
+                      oc_interface_mask_t interfaces, size_t device)
 {
   if (oc_sec_ace_get_res(type, subject, href, wildcard, rt, interfaces, aceid,
                          permission, device, true))
@@ -646,7 +646,7 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
 }
 
 static void
-oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
+oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
 {
   oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head((*ace)->resources),
                *next = NULL;
@@ -675,7 +675,7 @@ oc_ace_free_resources(int device, oc_sec_ace_t **ace, const char *href)
 }
 
 static bool
-oc_acl_remove_ace(int aceid, int device)
+oc_acl_remove_ace(int aceid, size_t device)
 {
   bool removed = false;
   oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects), *next = 0;
@@ -694,7 +694,7 @@ oc_acl_remove_ace(int aceid, int device)
 }
 
 static void
-oc_sec_clear_acl(int device)
+oc_sec_clear_acl(size_t device)
 {
   oc_sec_acl_t *acl_d = &aclist[device];
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
@@ -714,7 +714,7 @@ oc_sec_clear_acl(int device)
 void
 oc_sec_acl_free(void)
 {
-  int device;
+  size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_clear_acl(device);
   }
@@ -726,7 +726,7 @@ oc_sec_acl_free(void)
 }
 
 void
-oc_sec_acl_default(int device)
+oc_sec_acl_default(size_t device)
 {
   oc_sec_clear_acl(device);
   bool success = true;
@@ -760,7 +760,7 @@ oc_sec_acl_default(int device)
 }
 
 void
-oc_sec_set_post_otm_acl(int device)
+oc_sec_set_post_otm_acl(size_t device)
 {
   oc_ace_subject_t _auth_crypt, _anon_clear;
   memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
@@ -790,7 +790,7 @@ oc_sec_set_post_otm_acl(int device)
 }
 
 bool
-oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, int device)
+oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;

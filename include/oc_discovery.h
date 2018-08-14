@@ -24,7 +24,12 @@
 #define OC_DISCOVERY_H
 #include "oc_endpoint.h"
 
-void oc_create_discovery_resource(int resource_idx, int device);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+void oc_create_discovery_resource(int resource_idx, size_t device);
 
 /**
   @brief Gets the pseudo device number at the specified endpoint.
@@ -53,5 +58,9 @@ uint8_t oc_discovery_get_device(oc_endpoint_t *endpoint);
    ignored if NULL
 */
 void oc_discovery_add_eps_to_cache(oc_endpoint_t *source, oc_endpoint_t *eps);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_DISCOVERY_H */

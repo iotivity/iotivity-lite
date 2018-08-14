@@ -29,6 +29,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
 
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
@@ -153,5 +158,9 @@ void _oc_alloc_string_array(
   const char *func,
 #endif
   oc_string_array_t *ocstringarray, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_HELPERS_H */

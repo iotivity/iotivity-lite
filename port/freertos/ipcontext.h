@@ -19,7 +19,13 @@
 #ifndef IPCONTEXT_H
 #define IPCONTEXT_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #ifdef OC_TCP
 typedef struct tcp_context_t {
@@ -71,8 +77,12 @@ typedef struct ip_context_t {
   tcp_context_t tcp;
 #endif
   int terminate;
-  int device;
+  size_t device;
   int shutdown_pipe[2];
 } ip_context_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* IPCONTEXT_H */

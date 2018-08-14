@@ -53,6 +53,11 @@
 #include "transactions.h"
 #include "util/oc_list.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #define COAP_OBSERVER_URL_LEN 20
 
 typedef struct coap_observer
@@ -83,6 +88,7 @@ int coap_remove_observer_by_client(oc_endpoint_t *endpoint);
 int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
                                   size_t token_len);
 int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
+int coap_remove_observer_by_resource(const oc_resource_t *rsc);
 void coap_free_all_observers(void);
 
 int coap_notify_observers(oc_resource_t *resource,
@@ -96,4 +102,9 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* OBSERVE_H */

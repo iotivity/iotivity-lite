@@ -27,7 +27,7 @@ extern "C" {
     #include "oc_network_monitor.h"
 }
 
-static const int device = 0;
+static const size_t device = 0;
 static bool is_callback_received = false;
 
 class TestConnectivity: public testing::Test

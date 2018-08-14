@@ -19,6 +19,11 @@
 
 /* Time resolution */
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint64_t oc_clock_time_t;
 /* 1 clock tick = 1ms */
 #define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
@@ -55,5 +60,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif /* CONFIG_H */
