@@ -52,6 +52,36 @@ CSRCS =
 
 MAINSRC = tizenrt/st_ref_app_tizenrt.c tizenrt/port_tinyara.c
 
+ifeq ($(CONFIG_IOTLITE_ST_APP_FW),y)
+	ST_DEVICE_DEF= ./json/st_device_def
+	ST_JSON_FILE := $(wildcard ./json/*.json)
+	ST_DEVICE_DEF_HEADER=./tizenrt/st_device_def.h
+ifeq ($(CONFIG_IOTLITE_ARCH), x86_64)
+	JSON_TO_CBOR=$(IOTCON_BASE_DIR)/tools/json/json2cbor
+else
+	JSON_TO_CBOR=$(IOTCON_BASE_DIR)/tools/json/json2cbor_32
+endif
+	HEADER_DIR +=-I./tizenrt/
+endif
+
+prep_st_app_fw_json_present:
+ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
+else
+ifneq ("$(wildcard $(ST_JSON_FILE))", "")
+else
+	$(error please use proper json file in apps/st_app/json)
+endif
+ifneq ($(words $(ST_JSON_FILE)), 1)
+	$(error please use 1 json file in apps/st_app/json)
+endif
+endif
+
+prep_st_app_fw_create_device_def:
+	$(info make new st_device_def file using $(ST_JSON_FILE))
+	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
+	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
+	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
+
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
 MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
@@ -94,7 +124,7 @@ all: .built
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
+$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c prep_st_app_fw_json_present prep_st_app_fw_create_device_def
 	$(call COMPILE, $<, $@)
 
 .built: $(OBJS)
