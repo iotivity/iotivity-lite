@@ -129,9 +129,11 @@ get_secure_endpoint(oc_endpoint_t *endpoint)
   return endpoint;
 }
 
-static bool
-owned_device(oc_uuid_t *uuid)
+bool
+oc_obt_is_owned_device(oc_uuid_t *uuid)
 {
+  if (!uuid)
+    return false;
   /* Check if we already own this device by querying our creds */
   oc_sec_creds_t *creds = oc_sec_get_creds(0);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
@@ -820,7 +822,7 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
 {
   OC_DBG("In oc_obt_perform_just_works_otm");
 
-  if (owned_device(&device->uuid)) {
+  if (oc_obt_is_owned_device(&device->uuid)) {
     return -1;
   }
 
@@ -938,7 +940,7 @@ get_endpoints(oc_client_response_t *data)
   }
 
   if (device->ctx) {
-    // See oc_obt_rediscover_owned_device() and obt_check_owned().
+    // See oc_obt_get_ownership() and oc_obt_check_owned().
     trigger_get_ownership(device, device->ctx);
     device->ctx = NULL;
   }
@@ -997,7 +999,7 @@ obt_check_owned(oc_client_response_t *data)
     new_device = cache_device_if_not_known(oc_cache, &uuid, data->endpoint);
   } else {
     /* Device is owned by somebody else */
-    if (!owned_device(&uuid)) {
+    if (!oc_obt_is_owned_device(&uuid)) {
       trigger_get_ownership(NULL, cb);
       return;
     } else {
