@@ -68,6 +68,18 @@ int oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data);
 int oc_obt_get_ownership(oc_endpoint_t *ep,
                          oc_obt_devicelist_cb_t cb, void *data);
 
+/**
+  @brief Checks whether a specific UUID is owned.
+
+  The function checks via the credential store whether the
+  specified di is owned. This is independent of the discovery
+  of owned devices and available already right after initialization.
+  @param uuid UUID of the device to check
+  @return true if owned, false if unowned or uuid is NULL
+  @see oc_sec_get_creds
+*/
+bool oc_obt_is_owned_device(oc_uuid_t *uuid);
+
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
                                   void *data);
