@@ -1,24 +1,20 @@
-From 66ac7f3fd595e1779c98fe2b0918551e3c2b9513 Mon Sep 17 00:00:00 2001
-From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 30 Jul 2018 13:38:45 +0300
-Subject: [PATCH] Reduce MbedTLS
+From 9241f955e9a8f500c2c549302a964f269368649c Mon Sep 17 00:00:00 2001
+From: Oleksandr Dmytrenko <o.dmytrenko@samsung.com>
+Date: Thu, 16 Aug 2018 11:15:45 +0300
+Subject: [PATCH] reduce
 
-Reduce MbedTLS routines due memory optimization
-
-Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
-Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
 ---
- include/mbedtls/config.h | 16 ++++++++++++++--
- library/asn1parse.c      | 23 +++++++++++++++++++++++
- library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++++++---
- library/ecdsa.c          | 20 ++++++++++++++++++++
- library/pk.c             | 20 ++++++++++++++++++++
- library/pkparse.c        | 20 ++++++++++++++++++++
- library/ssl_cli.c        | 15 +++++++++++++++
- 7 files changed, 153 insertions(+), 5 deletions(-)
+ include/mbedtls/config.h | 16 +++++++++++++--
+ library/asn1parse.c      | 18 ++++++++++++++++
+ library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++---
+ library/ecdsa.c          | 20 ++++++++++++++++++
+ library/pk.c             | 20 ++++++++++++++++++
+ library/pkparse.c        | 20 ++++++++++++++++++
+ library/ssl_cli.c        | 15 ++++++++++++++
+ 7 files changed, 148 insertions(+), 5 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..aa476c3 100644
+index 45143a5db..aa476c363 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -58,8 +58,17 @@
@@ -66,29 +62,10 @@ index 45143a5..aa476c3 100644
  #define MBEDTLS_CIPHER_MODE_CBC
  
 diff --git a/library/asn1parse.c b/library/asn1parse.c
-index 4dd65c0..8809a87 100644
+index 4dd65c03c..e2e1a9614 100644
 --- a/library/asn1parse.c
 +++ b/library/asn1parse.c
-@@ -243,6 +243,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-                           mbedtls_asn1_sequence *cur,
-                           int tag)
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret;
-     size_t len;
-     mbedtls_asn1_buf *buf;
-@@ -286,6 +287,10 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-         return( MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
- 
-     return( 0 );
-+#else
-+    oc_abort(__func__);
-+    return( 0 );
-+#endif /* ST_MBEDTLS_OPT */
- }
- 
- int mbedtls_asn1_get_alg( unsigned char **p,
-@@ -336,6 +341,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+@@ -336,6 +336,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
                         const unsigned char *end,
                         mbedtls_asn1_buf *alg )
  {
@@ -96,7 +73,7 @@ index 4dd65c0..8809a87 100644
      int ret;
      mbedtls_asn1_buf params;
  
-@@ -348,10 +354,15 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+@@ -348,10 +349,15 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
          return( MBEDTLS_ERR_ASN1_INVALID_DATA );
  
      return( 0 );
@@ -112,7 +89,7 @@ index 4dd65c0..8809a87 100644
      if( cur == NULL )
          return;
  
-@@ -359,10 +370,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
+@@ -359,10 +365,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
      mbedtls_free( cur->val.p );
  
      mbedtls_zeroize( cur, sizeof( mbedtls_asn1_named_data ) );
@@ -127,7 +104,7 @@ index 4dd65c0..8809a87 100644
      mbedtls_asn1_named_data *cur;
  
      while( ( cur = *head ) != NULL )
-@@ -371,11 +386,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
+@@ -371,11 +381,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
          mbedtls_asn1_free_named_data( cur );
          mbedtls_free( cur );
      }
@@ -143,7 +120,7 @@ index 4dd65c0..8809a87 100644
      while( list != NULL )
      {
          if( list->oid.len == len &&
-@@ -388,6 +407,10 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
+@@ -388,6 +402,10 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
      }
  
      return( list );
@@ -155,7 +132,7 @@ index 4dd65c0..8809a87 100644
  
  #endif /* MBEDTLS_ASN1_PARSE_C */
 diff --git a/library/bignum.c b/library/bignum.c
-index 6fdf317..8834ffe 100644
+index 6fdf31772..8834ffeb8 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
 @@ -286,6 +286,7 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
@@ -343,7 +320,7 @@ index 6fdf317..8834ffe 100644
  
  /*
 diff --git a/library/ecdsa.c b/library/ecdsa.c
-index 826fefe..e535e08 100644
+index 826fefe5c..e535e0867 100644
 --- a/library/ecdsa.c
 +++ b/library/ecdsa.c
 @@ -74,6 +74,7 @@ int mbedtls_ecdsa_sign( mbedtls_ecp_group *grp, mbedtls_mpi *r, mbedtls_mpi *s,
@@ -418,7 +395,7 @@ index 826fefe..e535e08 100644
  #endif /* MBEDTLS_ECDSA_GENKEY_ALT */
  
 diff --git a/library/pk.c b/library/pk.c
-index b52c73f..efb47fe 100644
+index b52c73fbc..efb47fe53 100644
 --- a/library/pk.c
 +++ b/library/pk.c
 @@ -258,6 +258,7 @@ int mbedtls_pk_sign( mbedtls_pk_context *ctx, mbedtls_md_type_t md_alg,
@@ -498,7 +475,7 @@ index b52c73f..efb47fe 100644
  
  /*
 diff --git a/library/pkparse.c b/library/pkparse.c
-index e19511e..44ddbb7 100644
+index e19511ee5..44ddbb7a1 100644
 --- a/library/pkparse.c
 +++ b/library/pkparse.c
 @@ -179,6 +179,7 @@ int mbedtls_pk_parse_public_keyfile( mbedtls_pk_context *ctx, const char *path )
@@ -578,7 +555,7 @@ index e19511e..44ddbb7 100644
  
  #endif /* MBEDTLS_PK_PARSE_C */
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index e9b0d82..94ff8e7 100644
+index 4bd9838b2..e14839a2f 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
 @@ -1132,6 +1132,7 @@ static int ssl_parse_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -619,7 +596,7 @@ index e9b0d82..94ff8e7 100644
  }
  #endif /* MBEDTLS_ECDH_C || MBEDTLS_ECDSA_C || 
            MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
-@@ -2075,6 +2085,7 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
+@@ -2080,6 +2090,7 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
                                        unsigned char **p,
                                        unsigned char *end )
  {
@@ -627,7 +604,7 @@ index e9b0d82..94ff8e7 100644
      int ret = 0;
      size_t n;
  
-@@ -2141,6 +2152,10 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
+@@ -2146,6 +2157,10 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
      *p += n;
  
      return( 0 );
@@ -639,5 +616,5 @@ index e9b0d82..94ff8e7 100644
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
  
 -- 
-1.9.1
+2.18.0
 
