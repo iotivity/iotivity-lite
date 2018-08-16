@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0821474d",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 0,
+      "message": "Why free is removed?",
+      "range": {
+        "startLine": 367,
+        "startChar": 4,
+        "endLine": 367,
+        "endChar": 16
+      },
+      "revId": "23d40a46352996f604e237ec0395af4996d4c092",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}

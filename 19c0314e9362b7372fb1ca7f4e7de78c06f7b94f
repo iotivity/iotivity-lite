@@ -1,0 +1,297 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_8806f7cc",
+        "filename": "service/st-app-fw/include/st_state_util.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "How about change file name to st_event_manager or some regarding event?\nThis file doesn\u0027t have any relation to state I think.",
+      "range": {
+        "startLine": 19,
+        "startChar": 8,
+        "endLine": 19,
+        "endChar": 23
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e8f4e3d0",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "In case of stop, doesn\u0027t it need to clean event queue?\nIf we are on WIFI_CONNECTING event processing and some RESET event is called and WIFI_CONNECTING is not done. So event queue is stacked like below.\n\n------------------------------\n RESET | WIFI_CONNECTING | ...\n-------------------------------\n\nIn that case, after reset WIFI_CONNECTING will be executed. Is it right logic?",
+      "range": {
+        "startLine": 916,
+        "startChar": 0,
+        "endLine": 916,
+        "endChar": 27
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a813fb0b",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "We use queue for st_status. Because It will happen set_status at the similar time. Is state safe in that kind of situation?",
+      "range": {
+        "startLine": 1002,
+        "startChar": 4,
+        "endLine": 1002,
+        "endChar": 28
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c810ff03",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "Why st_process_stop() is calling in stop logic?",
+      "range": {
+        "startLine": 1069,
+        "startChar": 2,
+        "endLine": 1069,
+        "endChar": 20
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6809f3dc",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "Why st_process_start here? oc_main_poll need to be executed after oc_main_init().",
+      "range": {
+        "startLine": 1122,
+        "startChar": 6,
+        "endLine": 1122,
+        "endChar": 25
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_08fae7bc",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "If st_process is started in 1122 line, it need to st_process_stop first.",
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6830d39e",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "Why waiting time is increased?",
+      "range": {
+        "startLine": 390,
+        "startChar": 4,
+        "endLine": 390,
+        "endChar": 41
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_28ffebab",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "need to remove.",
+      "range": {
+        "startLine": 403,
+        "startChar": 4,
+        "endLine": 403,
+        "endChar": 34
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_882d5749",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "need to remove.",
+      "range": {
+        "startLine": 405,
+        "startChar": 4,
+        "endLine": 405,
+        "endChar": 49
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a82adb29",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "why otm_cv and otm_fail_cv(below) need?",
+      "range": {
+        "startLine": 415,
+        "startChar": 4,
+        "endLine": 415,
+        "endChar": 28
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c8275f63",
+        "filename": "service/st-app-fw/unittest/steasysetuptest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "Why test time is increased?",
+      "range": {
+        "startLine": 475,
+        "startChar": 55,
+        "endLine": 475,
+        "endChar": 57
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4804efbf",
+        "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "Please remove.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 4
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e81b431a",
+        "filename": "service/st-app-fw/unittest/stresourcemanagertest.cpp",
+        "patchSetId": 28
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T06:17:28Z",
+      "side": 1,
+      "message": "st_unregister_status_handler?",
+      "range": {
+        "startLine": 288,
+        "startChar": 12,
+        "endLine": 288,
+        "endChar": 58
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
