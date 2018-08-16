@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_48f22fd3",
+        "filename": "service/st-app-fw/src/port/linux/st_process.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-08-16T08:29:59Z",
+      "side": 1,
+      "message": "How to handle that handle_request error return?",
+      "range": {
+        "startLine": 150,
+        "startChar": 6,
+        "endLine": 150,
+        "endChar": 26
+      },
+      "revId": "19c0314e9362b7372fb1ca7f4e7de78c06f7b94f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e8f4e3d0",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 28
