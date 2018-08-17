@@ -581,14 +581,14 @@ st_decode_configuration(oc_rep_t *conf_rep)
 {
   st_configuration_t *conf = oc_memb_alloc(&st_configuration_s);
   if (!conf) {
-    st_print_log("[ST_DATA_MGR] alloc failed\n");
+    st_print_log("[ST_DM] alloc failed\n");
     return -1;
   }
 
   oc_rep_t *conf_es_rep = NULL;
   int int_value = 0;
   if (!oc_rep_get_object(conf_rep, ST_CONF_ES_KEY, &conf_es_rep)) {
-    st_print_log("[ST_DATA_MGR] can't get easy setup data\n");
+    st_print_log("[ST_DM] can't get easy setup data\n");
     goto error;
   }
 #ifdef ST_CONF_ENABLED
@@ -597,14 +597,14 @@ st_decode_configuration(oc_rep_t *conf_rep)
   int size = 0;
   bool bool_value;
   if (!oc_rep_get_object(conf_es_rep, ST_CONF_ES_CONN_KEY, &conn_rep)) {
-    st_print_log("[ST_DATA_MGR] can't get connectivity data\n");
+    st_print_log("[ST_DM] can't get connectivity data\n");
     goto error;
   }
   if (oc_rep_get_int(conn_rep, ST_CONF_CONN_TYPE_KEY, &int_value)) {
     conf->easy_setup.connectivity.type = int_value;
   }
   if (!oc_rep_get_object(conn_rep, ST_CONF_CONN_SOFTAP_KEY, &softap_rep)) {
-    st_print_log("[ST_DATA_MGR] can't get softAP data\n");
+    st_print_log("[ST_DM] can't get softAP data\n");
     goto error;
   }
   if (oc_rep_get_string(softap_rep, ST_CONF_SOFTAP_SETUPID_KEY, &str_value,
@@ -619,19 +619,19 @@ st_decode_configuration(oc_rep_t *conf_rep)
   if (oc_rep_get_int(conf_es_rep, ST_CONF_ES_OTM_KEY, &int_value)) {
 #ifdef OC_SECURITY
     if (!check_valid_otm_method(int_value)) {
-      st_print_log("[ST_DATA_MGR] Invalid otm method data(%d)\n", int_value);
+      st_print_log("[ST_DM] Invalid otm method data(%d)\n", int_value);
       goto error;
     }
 #endif /* OC_SECURITY */
     conf->easy_setup.ownership_transfer_method = int_value;
-    st_print_log("[ST_DATA_MGR] OTM Method: %d\n",
+    st_print_log("[ST_DM] OTM Method: %d\n",
                  conf->easy_setup.ownership_transfer_method);
   }
 
 #ifdef ST_CONF_ENABLED
   oc_rep_t *conf_wifi_rep = NULL;
   if (!oc_rep_get_object(conf_rep, ST_CONF_WIFI_KEY, &conf_wifi_rep)) {
-    st_print_log("[ST_DATA_MGR] can't get wifi data\n");
+    st_print_log("[ST_DM] can't get wifi data\n");
     goto error;
   }
   if (oc_rep_get_int(conf_wifi_rep, ST_CONF_WIFI_IFS_KEY, &int_value)) {
@@ -643,7 +643,7 @@ st_decode_configuration(oc_rep_t *conf_rep)
 
   oc_rep_t *conf_file_rep = NULL;
   if (!oc_rep_get_object(conf_rep, ST_CONF_FILE_PATH_KEY, &conf_file_rep)) {
-    st_print_log("[ST_DATA_MGR] can't get file path data\n");
+    st_print_log("[ST_DM] can't get file path data\n");
     goto error;
   }
   if (oc_rep_get_string(conf_file_rep, ST_CONF_FILE_SVRDB_KEY, &str_value,
@@ -711,11 +711,11 @@ st_decode_device_data_info(oc_rep_t *rep)
   oc_rep_t *conf_rep = NULL;
   if (oc_rep_get_object(rep, ST_CONF_KEY, &conf_rep)) {
     if (st_decode_configuration(conf_rep) != 0) {
-      st_print_log("[ST_DATA_MGR] can't decode configuration data\n");
+      st_print_log("[ST_DM] can't decode configuration data\n");
       return -1;
     }
   } else {
-    st_print_log("[ST_DATA_MGR] can't get configuration data\n");
+    st_print_log("[ST_DM] can't get configuration data\n");
     return -1;
   }
 
