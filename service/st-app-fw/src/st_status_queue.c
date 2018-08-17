@@ -83,6 +83,7 @@ is_initialized(void)
   return true;
 }
 
+#ifndef STATUS_Q_SIGNAL_DISABLE
 static void
 status_queue_send_signal(void)
 {
@@ -91,12 +92,11 @@ status_queue_send_signal(void)
     return;
   }
 
-#ifndef STATUS_Q_SIGNAL_DISABLE
   st_mutex_lock(status_queue_mutex);
   st_cond_signal(status_queue_cv);
   st_mutex_unlock(status_queue_mutex);
-#endif /* STATUS_Q_SIGNAL_DISABLE */
 }
+#endif /* STATUS_Q_SIGNAL_DISABLE */
 
 int
 st_status_queue_wait_signal(void)
