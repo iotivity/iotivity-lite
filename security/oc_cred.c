@@ -335,7 +335,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                     if (size == 0)
                       goto next_item;
                     if (size != 24) {
-                      OC_ERR("oc_cred: Invalid key");
+                      OC_ERR("oc_cred: Invalid key(24)");
                       goto error_exit;
                     }
                     got_key = true;
@@ -362,7 +362,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #endif
                   } else {
                     if (size != 16) {
-                      OC_ERR("oc_cred: Invalid key");
+                      OC_ERR("oc_cred: Invalid key(16)");
                       goto error_exit;
                     }
                     memcpy(key, p, 16);
@@ -397,19 +397,17 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 if ((len == 4) &&
                     memcmp(oc_string(data->name), "data", 4) == 0) {
 #ifdef OC_DYNAMIC_ALLOCATION
-                  if (mfgcert_flag || mfgtrustca_flag) {
-                    uint8_t *p = oc_cast(data->value.string, uint8_t);
-                    int size = oc_string_len(data->value.string);
-                    if (size == 0)
-                      goto next_item;
-                    cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
-                    if (cert == NULL) {
-                      OC_ERR("memory alloc");
-                      goto error_exit;
-                    }
-                    memcpy(cert, p, size);
-                    certlen = size;
+                  uint8_t *p = oc_cast(data->value.string, uint8_t);
+                  int size = oc_string_len(data->value.string);
+                  if (size == 0)
+                    goto next_item;
+                  cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
+                  if (cert == NULL) {
+                    OC_ERR("memory alloc");
+                    goto error_exit;
                   }
+                  memcpy(cert, p, size);
+                  certlen = size;
 #else
                   oc_abort("alloc failed");
 #endif
@@ -492,12 +490,15 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
         creds_array = creds_array->next;
         continue;
       error_exit:
+#ifdef OC_DYNAMIC_ALLOCATION
         if (cert) {
           oc_mem_free(cert);
         }
         if (mfgkey) {
           oc_mem_free(mfgkey);
         }
+#endif
+        OC_ERR("%s", __func__);
         return false;
       }
     } break;
