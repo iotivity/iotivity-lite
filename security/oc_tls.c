@@ -738,8 +738,7 @@ oc_sec_load_mfg_certs(int device)
     c = (oc_sec_cred_t *)oc_list_head(creds->creds);
     while (c != NULL) {
       if (c->mfgkeylen != 0) {
-        mbedtls_pk_context *pkey =
-          (mbedtls_pk_context *)oc_mem_malloc(sizeof(mbedtls_pk_context));
+         pkey = (mbedtls_pk_context *)oc_mem_malloc(sizeof(mbedtls_pk_context));
         if (!pkey) {
           goto tls_certs_load_err;
         }
