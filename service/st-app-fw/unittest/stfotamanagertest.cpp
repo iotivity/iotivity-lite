@@ -103,10 +103,11 @@ TEST_F(TestSTFotaManager, st_fota_set_fw_info)
 {
     // Given
     char ver[4] = "1.0";
+    char newver[4] = "2.0";
     char uri[23] = "http://www.samsung.com";
 
     // When
-    st_error_t ret = st_fota_set_fw_info(ver, uri);
+    st_error_t ret = st_fota_set_fw_info(ver, newver, uri);
 
     // Then
     EXPECT_EQ(ST_ERROR_NONE, ret);
@@ -119,7 +120,7 @@ TEST_F(TestSTFotaManager, st_fota_set_fw_info_fail)
     char uri[23] = "http://www.samsung.com";
 
     // When
-    st_error_t ret = st_fota_set_fw_info(ver, uri);
+    st_error_t ret = st_fota_set_fw_info(ver, ver, uri);
 
     // Then
     EXPECT_NE(ST_ERROR_NONE, ret);

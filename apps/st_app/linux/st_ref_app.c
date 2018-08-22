@@ -201,8 +201,9 @@ st_fota_cmd_handler(fota_cmd_t cmd)
     break;
   case FOTA_CMD_CHECK: {
     char *ver = "1.0";
+    char *newver = "2.0";
     char *uri = "http://www.samsung.com";
-    if (st_fota_set_fw_info(ver, uri) != ST_ERROR_NONE) {
+    if (st_fota_set_fw_info(ver, newver, uri) != ST_ERROR_NONE) {
       printf("[ST_APP] st_fota_set_fw_info failed.\n");
     }
     break;
