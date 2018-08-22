@@ -38,7 +38,8 @@ enum notify_type
 
 typedef struct
 {
-  oc_string_t ver;
+  oc_string_t version;
+  oc_string_t newversion;
   oc_string_t uri;
   fota_state_t state;
   fota_result_t result;
@@ -63,16 +64,20 @@ get_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     if (g_fota_info.type == FOTA_NOTIFY_STATE) {
       oc_rep_set_int(root, state, g_fota_info.state);
     } else if (g_fota_info.type == FOTA_NOTIFY_INFO) {
-      oc_rep_set_text_string(root, newversion, oc_string(g_fota_info.ver));
+      oc_rep_set_text_string(root, version, oc_string(g_fota_info.version));
+      oc_rep_set_text_string(root, newversion,
+                             oc_string(g_fota_info.newversion));
       oc_rep_set_text_string(root, packageuri, oc_string(g_fota_info.uri));
     } else if (g_fota_info.type == FOTA_NOTIFY_RESULT) {
       oc_rep_set_int(root, result, g_fota_info.result);
     } else {
-      oc_rep_set_text_string(root, version, "version");
+      oc_rep_set_text_string(root, version, oc_string(g_fota_info.version));
+      oc_rep_set_text_string(root, newversion,
+                             oc_string(g_fota_info.newversion));
       oc_rep_set_text_string(root, vendor, "vendor");
       oc_rep_set_text_string(root, model, "model");
       oc_rep_set_int(root, state, g_fota_info.state);
-      oc_rep_set_int(root, result, FOTA_RESULT_INIT);
+      oc_rep_set_int(root, result, g_fota_info.result);
     }
     break;
   default:
@@ -134,8 +139,10 @@ fota_info_init(void)
   g_fota_info.result = FOTA_RESULT_INIT;
   g_fota_info.type = FOTA_NOTIFY_DEFAULT;
 
-  if (oc_string_len(g_fota_info.ver) > 0)
-    oc_free_string(&g_fota_info.ver);
+  if (oc_string_len(g_fota_info.version) > 0)
+    oc_free_string(&g_fota_info.version);
+  if (oc_string_len(g_fota_info.newversion) > 0)
+    oc_free_string(&g_fota_info.newversion);
   if (oc_string_len(g_fota_info.uri) > 0)
     oc_free_string(&g_fota_info.uri);
 }
@@ -199,19 +206,25 @@ fota_set_state(fota_state_t state)
 }
 
 int
-fota_set_fw_info(const char *ver, const char *uri)
+fota_set_fw_info(const char *cur_version, const char *new_version,
+                 const char *uri)
 {
-  if (!ver || !uri) {
+  if (!cur_version || !uri) {
     OC_ERR("Error of input parameters");
     return -1;
   }
 
-  if (oc_string_len(g_fota_info.ver) > 0)
-    oc_free_string(&g_fota_info.ver);
-  oc_new_string(&g_fota_info.ver, ver, strlen(ver));
+  if (oc_string_len(g_fota_info.version) > 0)
+    oc_free_string(&g_fota_info.version);
+  oc_new_string(&g_fota_info.version, cur_version, strlen(cur_version));
   if (oc_string_len(g_fota_info.uri) > 0)
     oc_free_string(&g_fota_info.uri);
   oc_new_string(&g_fota_info.uri, uri, strlen(uri));
+  if (new_version) {
+    if (oc_string_len(g_fota_info.newversion) > 0)
+      oc_free_string(&g_fota_info.newversion);
+    oc_new_string(&g_fota_info.newversion, new_version, strlen(new_version));
+  }
 
   g_notify_type = FOTA_NOTIFY_INFO;
   oc_set_delayed_callback(NULL, notify_fota, 0);

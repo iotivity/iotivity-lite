@@ -45,13 +45,15 @@ st_error_t st_fota_set_state(fota_state_t state);
 
 /**
   @brief Function to set the firmware information.
-  @param ver The version of firmware.
+  @param cur_version The version of current firmware.
+  @param new_version The version of the newest firmware.
   @param uri An address of firmware download.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful.
   @retval ST_ERROR_INVALID_PARAMETER if input parameters are NULL.
 */
-st_error_t st_fota_set_fw_info(const char *ver, const char *uri);
+st_error_t st_fota_set_fw_info(const char *cur_version, const char *new_version,
+                               const char *uri);
 
 /**
   @brief Function to set the result of the fota operation.

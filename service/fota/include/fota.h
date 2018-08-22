@@ -54,11 +54,13 @@ int fota_set_state(fota_state_t state);
 
 /**
   @brief Function for set the firmware information.
-  @param ver The version of firmware.
+  @param cur_version The version of current firmware.
+  @param new_version The version of the newest firmware.
   @param uri An address of firmware for download.
   @return Returns 0 if successful, or -1 otherwise.
 */
-int fota_set_fw_info(const char *ver, const char *uri);
+int fota_set_fw_info(const char *cur_version, const char *new_version,
+                     const char *uri);
 
 /**
   @brief Function for set the result of the fota.

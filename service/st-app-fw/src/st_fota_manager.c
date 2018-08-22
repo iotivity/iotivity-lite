@@ -53,10 +53,12 @@ st_fota_set_state(fota_state_t state)
 }
 
 st_error_t
-st_fota_set_fw_info(const char *ver, const char *uri)
+st_fota_set_fw_info(const char *cur_version, const char *new_version,
+                    const char *uri)
 {
-  return (fota_set_fw_info(ver, uri) == 0) ? ST_ERROR_NONE
-                                           : ST_ERROR_INVALID_PARAMETER;
+  return (fota_set_fw_info(cur_version, new_version, uri) == 0)
+           ? ST_ERROR_NONE
+           : ST_ERROR_INVALID_PARAMETER;
 }
 
 st_error_t

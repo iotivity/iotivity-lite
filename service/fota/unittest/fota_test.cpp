@@ -100,10 +100,11 @@ TEST_F(TestFota, fota_set_fw_info_p)
 {
   // Given
   char ver[4] = "1.0";
+  char newver[4] = "2.0";
   char uri[23] = "http://www.samsung.com";
 
   // When
-  int ret = fota_set_fw_info(ver, uri);
+  int ret = fota_set_fw_info(ver, newver, uri);
 
   // Then
   EXPECT_EQ(0, ret);
@@ -112,7 +113,7 @@ TEST_F(TestFota, fota_set_fw_info_p)
 TEST_F(TestFota, fota_set_fw_info_f)
 {
   // When
-  int ret = fota_set_fw_info(NULL, NULL);
+  int ret = fota_set_fw_info(NULL, NULL, NULL);
 
   // Then
   EXPECT_EQ(-1, ret);
