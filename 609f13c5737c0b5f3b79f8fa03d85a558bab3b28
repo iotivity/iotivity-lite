@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d39a7462",
+        "filename": "service/st-app-fw/src/port/linux/st_port.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-24T07:06:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_5377843a",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 6
+      },
+      "revId": "609f13c5737c0b5f3b79f8fa03d85a558bab3b28",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_3372c049",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 31
@@ -62,6 +86,54 @@
       "range": {
         "startLine": 1362,
         "startChar": 0,
+        "endLine": 1369,
+        "endChar": 37
+      },
+      "revId": "609f13c5737c0b5f3b79f8fa03d85a558bab3b28",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_53ae6486",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-24T07:06:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9390ec44",
+      "range": {
+        "startLine": 1362,
+        "startChar": 0,
+        "endLine": 1369,
+        "endChar": 37
+      },
+      "revId": "609f13c5737c0b5f3b79f8fa03d85a558bab3b28",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f39e9853",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1369,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-24T07:06:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3372c049",
+      "range": {
+        "startLine": 1369,
+        "startChar": 9,
         "endLine": 1369,
         "endChar": 37
       },
