@@ -173,6 +173,21 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
   return NULL;
 }
 
+int
+oc_sec_find_max_credid(int device)
+{
+  int credid = -1;
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  credid = cred->credid;
+  while (cred != NULL) {
+    if (credid < cred->credid) {
+      credid = cred->credid;
+    }
+    cred = cred->next;
+  }
+  return credid;
+}
+
 oc_sec_cred_t *
 oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 {
@@ -186,6 +201,25 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
       OC_WRN("insufficient memory to add new credential");
     }
   }
+  return cred;
+}
+
+oc_sec_cred_t *
+oc_sec_new_cred(oc_uuid_t *subjectuuid, int device)
+{
+  oc_sec_cred_t *cred = NULL;
+  cred = oc_sec_find_cred(subjectuuid, device);
+  if (cred != NULL) {
+    OC_WRN("cred with given uuid already exists");
+    return NULL;
+  }
+  cred = oc_memb_alloc(&creds);
+  if (cred == NULL) {
+    OC_WRN("insufficient memory to add new credential");
+    return NULL;
+  }
+  memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
+  oc_list_add(devices[device].creds, cred);
   return cred;
 }
 
@@ -235,7 +269,7 @@ oc_sec_encode_cred(bool persist, int device)
       oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgtrustca");
     }
 #endif /* OC_MFG */
-    char t = 0, i = 0;
+    uint8_t t = 0, i = 0;
     for (i = 0; i < 16; i++) {
       t += cr->key[i];
     }

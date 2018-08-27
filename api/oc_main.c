@@ -53,7 +53,11 @@ static const oc_handler_t *app_callbacks;
 static long _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
 /* only for Samsung Requirement
  */
+#ifndef OC_CRED_TOOL
 static long _OC_MAX_APP_DATA_SIZE = 3072;
+#else
+static long _OC_MAX_APP_DATA_SIZE = 6144;
+#endif /* OC_CRED_TOOL */
 static long _OC_BLOCK_SIZE = 1024;
 
 int
