@@ -213,14 +213,43 @@ oc_sec_encode_cred(bool persist, int device)
       }
       oc_rep_close_object(creds, roleid);
     }
-    oc_rep_set_object(creds, privatedata);
-    if (persist) {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 16);
-    } else {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+#ifdef OC_MFG
+    for (int i = 0; i < cr->ownchainlen; i++) {
+      oc_rep_set_object(creds, publicdata);
+      oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+      oc_rep_set_byte_string(publicdata, data, cr->mfgowncert[i], cr->mfgowncertlen[i]);
+      oc_rep_close_object(creds, publicdata);
+      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgcert");
     }
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-    oc_rep_close_object(creds, privatedata);
+    if (cr->mfgkeylen != 0 && cr->mfgkey != NULL) {
+      oc_rep_set_object(creds, privatedata);
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_set_byte_string(privatedata, data, cr->mfgkey, cr->mfgkeylen);
+      oc_rep_close_object(creds, privatedata);
+    }
+    if (cr->mfgtrustcalen > 0) {
+      oc_rep_set_object(creds, publicdata);
+      oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+      oc_rep_set_byte_string(publicdata, data, cr->mfgtrustca, cr->mfgtrustcalen);
+      oc_rep_close_object(creds, publicdata);
+      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgtrustca");
+    }
+#endif /* OC_MFG */
+    char t = 0, i = 0;
+    for (i = 0; i < 16; i++) {
+      t += cr->key[i];
+    }
+    if (t) {
+      oc_rep_set_object(creds, privatedata);
+      if (persist) {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 16);
+      } else {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+      }
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_close_object(creds, privatedata);
+    }
+
     oc_rep_object_array_end_item(creds);
     cr = cr->next;
   }
@@ -441,6 +470,10 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           }
           credobj->credid = credid;
           credobj->credtype = credtype;
+          credobj->mfgtrustca = NULL;
+          credobj->mfgtrustcalen = 0;
+          credobj->mfgkey = NULL;
+          credobj->mfgkeylen = 0;
           if (role) {
             oc_new_string(&credobj->role.role, oc_string(*role),
                           oc_string_len(*role));
