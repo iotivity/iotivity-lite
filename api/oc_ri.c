@@ -248,6 +248,9 @@ static void stop_processes(void) {
 oc_resource_t *
 oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
 {
+  if (uri == null)
+    return null;
+
   int skip = 0;
   if (uri[0] != '/')
     skip = 1;
