@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2e19b379",
+        "filename": "include/oc_rep.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T01:55:51Z",
+      "side": 1,
+      "message": "set g_err as false in case of null input What is you opinion for this?",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 80
+      },
+      "revId": "74f43a428de1cc9282e08456099870d153759246",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
