@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_0ea4afa4",
+        "filename": "tests/port/linux/memory_profile.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 227
+      },
+      "writtenOn": "2018-08-27T09:12:07Z",
+      "side": 1,
+      "message": "we have provided configuration script which controls whether memory profile/trace should be running or not. so i can disable memory trace by default from the script. if any one wants to test memory trace he can enable it manually.",
+      "parentUuid": "da33351e_0ddcb9e3",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 1
+      },
+      "revId": "1b903d2726d8dcf8f999daa180b459822270ccfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_edd6b5c2",
         "filename": "tests/port/linux/test-runner.sh",
         "patchSetId": 29
@@ -59,6 +83,30 @@
       "writtenOn": "2018-08-13T20:48:54Z",
       "side": 1,
       "message": "The build artifacts that this produces are of no use because \n\na) you\u0027re running it on unit tests and not the entire stack,\n\nb) the unit tests binary includes GTest and references to the C++ runtime so the numbers reported are irrelevant, and do not give you the baseline measures for the stack.\n\nThese tools however (scripts/infrastructure) are generally useful.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 1
+      },
+      "revId": "1b903d2726d8dcf8f999daa180b459822270ccfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6e93bb4f",
+        "filename": "tests/port/linux/test-runner.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 227
+      },
+      "writtenOn": "2018-08-27T09:12:07Z",
+      "side": 1,
+      "message": "we don\u0027t intend to measure actual memory consumption by iotivity-lite stack. but if any api is leaking memory then we can detect it by unusual memory consumption value.",
+      "parentUuid": "da33351e_edd6b5c2",
       "range": {
         "startLine": 41,
         "startChar": 0,
