@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_ce580735",
+        "filename": "service/fota/include/fota.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T05:24:02Z",
+      "side": 1,
+      "message": "rename into cur_version and apply this all code for clear understanding.",
+      "range": {
+        "startLine": 62,
+        "startChar": 33,
+        "endLine": 62,
+        "endChar": 40
+      },
+      "revId": "4cbbad30490823057dce75e964a7272c3a1e9e51",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
