@@ -64,5 +64,7 @@ void post_cred(oc_request_t *request, oc_interface_mask_t interface,
 void get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void delete_cred(oc_request_t *request, oc_interface_mask_t interface,
                  void *data);
+int oc_sec_find_max_credid(int device);
+oc_sec_cred_t *oc_sec_new_cred(oc_uuid_t *subjectuuid, int device);
 
 #endif /* OC_CRED_H */
