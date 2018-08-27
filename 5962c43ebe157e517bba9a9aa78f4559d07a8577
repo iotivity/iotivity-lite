@@ -22,6 +22,30 @@
       "revId": "5962c43ebe157e517bba9a9aa78f4559d07a8577",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6ee1fbcf",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-08-27T10:46:16Z",
+      "side": 1,
+      "message": "Renamed to secure_server.c.",
+      "parentUuid": "da33351e_2ea9b37b",
+      "range": {
+        "startLine": 512,
+        "startChar": 0,
+        "endLine": 521,
+        "endChar": 37
+      },
+      "revId": "5962c43ebe157e517bba9a9aa78f4559d07a8577",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
