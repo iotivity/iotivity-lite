@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2e725349",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T08:50:31Z",
+      "side": 1,
+      "message": "why do you have a different input thread model from previous code? Can you follow existing model?",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 372,
+        "endChar": 21
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ae866311",
+        "filename": "apps/st_app/linux/st_ref_app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T08:50:31Z",
+      "side": 1,
+      "message": "From this code, st_manager_start() will be executed continually. But, st_manager_start() should be called once in normal state.\nAnd from the ifdef STATE_MODEL, key input 5 will execute st_manager_start() then why do you call it here again?",
+      "range": {
+        "startLine": 422,
+        "startChar": 0,
+        "endLine": 428,
+        "endChar": 33
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4ea0779f",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1184,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T08:50:31Z",
+      "side": 1,
+      "message": "move this into easysetup_processing.",
+      "range": {
+        "startLine": 1177,
+        "startChar": 0,
+        "endLine": 1184,
+        "endChar": 55
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ce83e702",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T08:50:31Z",
+      "side": 1,
+      "message": "place wifi AP connecting code here.",
+      "range": {
+        "startLine": 1229,
+        "startChar": 0,
+        "endLine": 1229,
+        "endChar": 32
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8e89df28",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T08:50:31Z",
+      "side": 1,
+      "message": "move it into handler_on_cloudmanager_processing()",
+      "range": {
+        "startLine": 1244,
+        "startChar": 4,
+        "endLine": 1283,
+        "endChar": 5
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
