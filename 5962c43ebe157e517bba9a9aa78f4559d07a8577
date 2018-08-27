@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_2ea9b37b",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-08-27T09:16:40Z",
+      "side": 1,
+      "message": "mfg_server and rpk_server are created from rpk_server.c.\nPeople get confused to find the mfg_server.c somewhere.\nRecommend to change the c code in better naming such as mfg_rpk_server.c or secure_server.c.",
+      "range": {
+        "startLine": 512,
+        "startChar": 0,
+        "endLine": 521,
+        "endChar": 37
+      },
+      "revId": "5962c43ebe157e517bba9a9aa78f4559d07a8577",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
