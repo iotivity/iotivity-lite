@@ -29,7 +29,12 @@ typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
 typedef struct
 {
+#ifndef RAM_OPT
   oc_rep_t *payload;
+#else
+  uint8_t *payload;
+  int payload_len;
+#endif
   oc_endpoint_t *endpoint;
   void *client_cb;
   void *user_data;

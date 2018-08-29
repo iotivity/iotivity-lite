@@ -254,6 +254,9 @@ ifeq ($(MEMTRACE),1)
 	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
+ifeq ($(RAM_OPT),1)
+	CFLAGS += -DRAM_OPT
+endif
 
 ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DST_APP_OPTIMIZATION
