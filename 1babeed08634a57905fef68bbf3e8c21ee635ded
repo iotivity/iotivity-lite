@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_62e62fb6",
+        "filename": "include/oc_helpers.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-08-29T08:42:55Z",
+      "side": 1,
+      "message": "can we control this from config.h ?",
+      "revId": "1babeed08634a57905fef68bbf3e8c21ee635ded",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
