@@ -1182,6 +1182,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
 
+#ifndef RAM_OPT
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -1194,6 +1195,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
+#endif
 
   if (payload_len) {
 #ifdef OC_SPEC_VER_OIC
@@ -1222,6 +1224,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       }
 #endif /*.ST_APP_OPTIMIZATION */
     } else {
+#ifndef RAM_OPT
       int err = oc_parse_rep(payload, payload_len, &client_response.payload);
       if (err == 0) {
         oc_response_handler_t handler =
@@ -1231,6 +1234,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         OC_WRN("Error parsing payload!");
       }
       oc_free_rep(client_response.payload);
+#else
+      client_response.payload = payload;
+      client_response.payload_len = payload_len;
+
+      oc_response_handler_t handler =
+        (oc_response_handler_t)cb->handler.response;
+      handler(&client_response);
+#endif
     }
   } else {
     if (pkt->type == COAP_TYPE_ACK && pkt->code == 0) {
