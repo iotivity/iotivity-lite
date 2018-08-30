@@ -20,6 +20,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_discovery.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"

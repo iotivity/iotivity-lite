@@ -16,6 +16,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_introspection.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
