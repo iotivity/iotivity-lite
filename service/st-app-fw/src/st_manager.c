@@ -105,7 +105,15 @@ const st_state_handler g_handler[ST_STATE_MAX] = {
 st_state g_current_state = ST_STATE_IDLE;
 
 void state_easy_setup_handler(st_easy_setup_status_t status);
+st_error_t handle_request(st_evt evt);
 
+oc_define_interrupt_handler(st_manager)
+{
+  if (st_evt_is_in_queue()) {
+    st_evt evt = st_evt_pop();
+    handle_request(evt);
+  }
+}
 #else
 static bool g_start_fail = false;
 
@@ -189,6 +197,10 @@ init_platform_cb(void *data)
 static int
 app_init(void)
 {
+#ifdef STATE_MODEL
+  oc_activate_interrupt_handler(st_manager);
+#endif
+
   st_specification_t *spec = st_data_mgr_get_spec_info();
   platform_cb_data_t *platform_data = clone_platform_cb_data(spec);
   int ret = oc_init_platform(oc_string(spec->platform.manufacturer_name),
@@ -831,7 +843,7 @@ static void
 st_manager_evt_with_signal(const st_evt evt)
 {
   st_evt_push(evt);
-  st_process_signal();
+  oc_signal_interrupt_handler(st_manager);
 }
 
 static int
@@ -1079,6 +1091,7 @@ change_ready_to_idle(void)
   st_process_stop();
   st_process_destroy(); //  st_process_state_sync_unlock(); doesn't work after
                         //  destory
+  st_evt_deinit();
 }
 
 static st_error_t
@@ -1125,6 +1138,7 @@ handler_on_state_idle(st_evt evt)
 
     // after init.  signal and st_process_state_sync_lock()  are available  and
     // meaningful
+    st_evt_init();
     if (st_process_init() != 0) {
       st_print_log("[ST_MGR] st_process_init failed.\n");
       st_error_ret = ST_ERROR_OPERATION_FAILED;
