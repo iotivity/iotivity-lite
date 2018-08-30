@@ -1,18 +1,42 @@
-From b79e947952f16de8b50a9718ce190846013361ea Mon Sep 17 00:00:00 2001
+From b0dfea0c904172bd58055e91a992d2a872aecd1c Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Fri, 3 Aug 2018 12:56:02 +0300
+Date: Thu, 30 Aug 2018 17:55:40 +0300
 Subject: [PATCH] mbedtls reduce more
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
+ library/debug.c    |  5 +++++
  library/oid.c      |  5 +++++
  library/pkcs5.c    | 10 ++++++++++
  library/ssl_cli.c  |  5 +++++
  library/ssl_tls.c  |  5 +++++
  library/x509.c     | 15 +++++++++++++++
  library/x509_crt.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 80 insertions(+)
+ 7 files changed, 85 insertions(+)
 
+diff --git a/library/debug.c b/library/debug.c
+index f9229b3..b1e131d 100644
+--- a/library/debug.c
++++ b/library/debug.c
+@@ -342,6 +342,7 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
+                       const char *file, int line,
+                       const char *text, const mbedtls_x509_crt *crt )
+ {
++#ifndef ST_MBEDTLS_OPT
+     char str[DEBUG_BUF_SIZE];
+     int i = 0;
+ 
+@@ -362,6 +363,10 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
+ 
+         crt = crt->next;
+     }
++#else
++    debug_send_line( ssl, level, file, line,
++                              "certificate print disabled\n" );
++#endif /* ST_MBEDTLS_OPT */
+ }
+ #endif /* MBEDTLS_X509_CRT_PARSE_C */
+ 
 diff --git a/library/oid.c b/library/oid.c
 index f13826e..252f006 100644
 --- a/library/oid.c
@@ -79,7 +103,7 @@ index 7405fc3..8014b7f 100644
  
  int mbedtls_pkcs5_pbkdf2_hmac( mbedtls_md_context_t *ctx, const unsigned char *password,
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index b9289e2..ebf9035 100644
+index 94ff8e7..e14839a 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
 @@ -1402,6 +1402,7 @@ static int ssl_parse_alpn_ext( mbedtls_ssl_context *ssl,
