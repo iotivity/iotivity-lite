@@ -69,25 +69,6 @@ diff --git a/library/asn1parse.c b/library/asn1parse.c
 index 4dd65c0..8809a87 100644
 --- a/library/asn1parse.c
 +++ b/library/asn1parse.c
-@@ -243,6 +243,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-                           mbedtls_asn1_sequence *cur,
-                           int tag)
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret;
-     size_t len;
-     mbedtls_asn1_buf *buf;
-@@ -286,6 +287,10 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-         return( MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
- 
-     return( 0 );
-+#else
-+    oc_abort(__func__);
-+    return( 0 );
-+#endif /* ST_MBEDTLS_OPT */
- }
- 
- int mbedtls_asn1_get_alg( unsigned char **p,
 @@ -336,6 +341,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
                         const unsigned char *end,
                         mbedtls_asn1_buf *alg )
