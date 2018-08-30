@@ -22,6 +22,46 @@
       "revId": "4cbbad30490823057dce75e964a7272c3a1e9e51",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_655639d4",
+        "filename": "service/fota/src/fota.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-30T00:53:53Z",
+      "side": 1,
+      "message": "is it OK to miss checking new_version?",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 211,
+        "endChar": 2
+      },
+      "revId": "4cbbad30490823057dce75e964a7272c3a1e9e51",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_455175d7",
+        "filename": "service/st-app-fw/include/st_fota_manager.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-08-30T00:53:53Z",
+      "side": 1,
+      "message": "a tiny suggestion. \nnewest -\u003e the newest\n\nyou can ignore it if you don\u0027t have a plan to update this submission",
+      "revId": "4cbbad30490823057dce75e964a7272c3a1e9e51",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
