@@ -93,7 +93,7 @@ check_if_duplicate(uint16_t mid, uint8_t device)
   return false;
 }
 
-void
+static void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
