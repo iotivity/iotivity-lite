@@ -36,7 +36,7 @@ gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
   idd_tag[idd_tag_len] = '\0';
 }
 
-int
+static int
 get_IDD_filename(size_t device_index, char *filename)
 {
   char idd_tag[MAX_TAG_LENGTH];
@@ -62,7 +62,7 @@ oc_set_introspection_file(size_t device, const char *filename)
   }
 }
 
-long
+static long
 IDD_storage_size(const char *store)
 {
   FILE *fp;
@@ -81,7 +81,7 @@ IDD_storage_size(const char *store)
   return filesize;
 }
 
-size_t
+static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
@@ -101,7 +101,7 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 
 #include "server_introspection.dat.h"
 
-int
+static int
 get_IDD_filename(size_t index, char *filename)
 {
   (void)index;
@@ -109,14 +109,14 @@ get_IDD_filename(size_t index, char *filename)
   return 0;
 }
 
-long
+static long
 IDD_storage_size(const char *store)
 {
   (void)store;
   return introspection_data_size;
 }
 
-size_t
+static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   (void)store;
