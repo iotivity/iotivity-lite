@@ -143,6 +143,10 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   cur->next = 0;
   cur->value.object_array = 0;
   /* key */
+  if (!cbor_value_is_text_string(value)) {
+    *err = CborErrorIllegalType;
+    return;
+  }
   *err |= cbor_value_calculate_string_length(value, &len);
   len++;
   oc_alloc_string(&cur->name, len);
