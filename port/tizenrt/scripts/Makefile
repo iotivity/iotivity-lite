@@ -145,6 +145,8 @@ ifeq ($(CONFIG_WIFI_MANAGER),y)
 	EXTRA_CFLAGS += -DTIZEN_RT_WIFI_MANAGER
 endif
 
+EXTRA_CFLAGS += -DSTATE_MODEL
+
 # AUTH_OPTION = 0   - root ca check is disabled for any TLS connection
 # AUTH_OPTION = 1   - preload manufacturer certificate chain to TLS context & and remove it after OTM
 # AUTH_OPTION = 2   - preload manufacturer certificate chain to TLS context

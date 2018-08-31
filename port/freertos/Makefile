@@ -104,6 +104,8 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
+CFLAGS += -DSTATE_MODEL
+
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES}
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
