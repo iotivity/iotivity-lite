@@ -417,6 +417,10 @@ static coap_status_t coap_parse_token_option(void *packet,
              option_length);
       SET_OPTION(coap_pkt, option_number);
     }
+    if (current_option + option_length > data + data_len) {
+      OC_WRN("Unsupported option");
+      return BAD_OPTION_4_02;
+    }
 
     switch (option_number) {
     case COAP_OPTION_CONTENT_FORMAT:
