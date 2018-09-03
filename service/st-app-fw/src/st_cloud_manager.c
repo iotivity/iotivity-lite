@@ -58,6 +58,7 @@ typedef enum {
 
 OC_LIST(st_cloud_context_list);
 OC_MEMB(st_cloud_context_s, st_cloud_context_t, MAX_CONTEXT_SIZE);
+struct oc_memb st_rep_objects_pool = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 
 static bool cloud_start_process(st_cloud_context_t *context);
 static oc_event_callback_retval_t sign_up(void *data);
@@ -79,6 +80,31 @@ callback_handler(void *data)
   context->callback(context->cloud_manager_status);
 
   return OC_EVENT_DONE;
+}
+
+static oc_rep_t*
+get_res_payload(oc_client_response_t *data)
+{
+#ifndef ST_RES_PAYLOAD_PARSE
+  return data->payload;
+#else
+  OC_DBG("[HARISH] get_res_payload - %d, %d", st_rep_objects_pool.size,  st_rep_objects_pool.num);
+  oc_rep_t *payload = NULL;
+  oc_rep_set_pool(&st_rep_objects_pool);
+  int err = oc_parse_rep(data->payload, data->payload_len, &payload);
+  if (err != 0) {
+    OC_ERR("Error parsing payload!");
+  }
+  return payload;
+#endif /* ST_RES_PAYLOAD_PARSE */
+}
+
+static void
+free_res_payload(oc_rep_t *payload)
+{
+#ifdef ST_RES_PAYLOAD_PARSE
+  oc_free_rep(payload);
+#endif /* ST_RES_PAYLOAD_PARSE */
 }
 
 #ifdef OC_SESSION_EVENTS
@@ -225,18 +251,17 @@ get_ci_error_code(oc_status_t response_code, int ci_code)
 }
 
 static void
-error_handler(oc_client_response_t *data, oc_trigger_t callback)
+error_handler(st_cloud_context_t *context, oc_rep_t* res_payload,
+  oc_status_t res_code, oc_trigger_t callback)
 {
-  st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
-
   int code;
-  if (!oc_rep_get_int(data->payload, "code", &code))
+  if (!oc_rep_get_int(res_payload, "code", &code))
     return;
 
-  code = get_ci_error_code(data->code, code);
+  code = get_ci_error_code(res_code, code);
   char *message = NULL;
   int size;
-  if (oc_rep_get_string(data->payload, "message", &message, &size))
+  if (oc_rep_get_string(res_payload, "message", &message, &size))
     st_print_log("[ST_CM] ci message : %s (%d)\n", message, code);
 
   switch (code) {
@@ -288,13 +313,16 @@ sign_up_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] sign up handler(%d)\n", data->code);
 
+  oc_rep_t *payload = get_res_payload(data);
+
   if (data->code != OC_STATUS_CHANGED)
     goto error;
 
   char *token_value = NULL, *uri_value = NULL;
   int size;
-  oc_rep_get_string(data->payload, ACCESS_TOKEN_KEY, &token_value, &size);
-  oc_rep_get_string(data->payload, REDIRECTURI_KEY, &uri_value, &size);
+
+  oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &token_value, &size);
+  oc_rep_get_string(payload, REDIRECTURI_KEY, &uri_value, &size);
 
   if (!token_value || !uri_value) {
     goto error;
@@ -314,10 +342,12 @@ sign_up_handler(oc_client_response_t *data)
   context->retry_count = 0;
   context->cloud_manager_status = CLOUD_MANAGER_SIGNED_UP;
   es_set_state(ES_STATE_REGISTERED_TO_CLOUD);
+  free_res_payload(payload);
   return;
 
 error:
-  error_handler(data, sign_up);
+  error_handler(data->user_data, payload, data->code, sign_up);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -345,6 +375,7 @@ static void
 sign_in_handler(oc_client_response_t *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  oc_rep_t *payload = NULL;
   st_print_log("[ST_CM] sign in handler(%d)\n", data->code);
 
   if (data->code != OC_STATUS_CHANGED)
@@ -367,7 +398,9 @@ sign_in_handler(oc_client_response_t *data)
   return;
 
 error:
-  error_handler(data, sign_in);
+  payload = get_res_payload(data);
+  error_handler(data->user_data, payload, data->code, sign_in);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -397,13 +430,15 @@ refresh_token_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] refresh token handler(%d)\n", data->code);
 
+  oc_rep_t *payload = get_res_payload(data);
+
   if (data->code != OC_STATUS_CHANGED)
     goto error;
 
   char *access_value, *refresh_value = NULL;
   int size;
-  oc_rep_get_string(data->payload, ACCESS_TOKEN_KEY, &access_value, &size);
-  oc_rep_get_string(data->payload, REFRESH_TOKEN_KEY, &refresh_value, &size);
+  oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value, &size);
+  oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value, &size);
 
   if (!access_value || !refresh_value) {
     goto error;
@@ -423,10 +458,12 @@ refresh_token_handler(oc_client_response_t *data)
   context->retry_count = 0;
   oc_set_delayed_callback(context, sign_in,
                           session_timeout[context->retry_count]);
+  free_res_payload(payload);
   return;
 
 error:
-  error_handler(data, refresh_token);
+  error_handler(data->user_data, payload, data->code, refresh_token);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -452,6 +489,7 @@ static void
 set_dev_profile_handler(oc_client_response_t *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  oc_rep_t *payload = NULL;
   st_print_log("[ST_CM] set dev profile handler(%d)\n", data->code);
 
   if (data->code != OC_STATUS_CHANGED)
@@ -464,7 +502,9 @@ set_dev_profile_handler(oc_client_response_t *data)
   return;
 
 error:
-  error_handler(data, set_dev_profile);
+  payload = get_res_payload(data);
+  error_handler(data->user_data, payload, data->code, set_dev_profile);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -486,6 +526,7 @@ static void
 publish_resource_handler(oc_client_response_t *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  oc_rep_t *payload = NULL;
   st_print_log("[ST_CM] publish resource handler(%d)\n", data->code);
 
   if (data->code != OC_STATUS_CHANGED)
@@ -504,7 +545,9 @@ publish_resource_handler(oc_client_response_t *data)
   return;
 
 error:
-  error_handler(data, publish_resource);
+  payload = get_res_payload(data);
+  error_handler(data->user_data, payload, data->code, publish_resource);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -529,26 +572,32 @@ find_ping_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] find ping handler(%d)\n", data->code);
 
+  oc_rep_t *payload = get_res_payload(data);
+
   if (data->code != OC_STATUS_OK)
     goto error;
 
   oc_remove_delayed_callback(context, find_ping);
   if (context->cloud_manager_status == CLOUD_MANAGER_FINISH)
-    return;
+    goto exit;
   context->retry_count = 0;
   context->cloud_manager_status = CLOUD_MANAGER_FINISH;
 
   int *interval = NULL, size;
-  oc_rep_get_int_array(data->payload, "inarray", &interval, &size);
+  oc_rep_get_int_array(payload, "inarray", &interval, &size);
   if (interval)
     g_ping_interval = interval[size - 1];
   oc_set_delayed_callback(context, callback_handler, 0);
   oc_set_delayed_callback(context, send_ping,
                           message_timeout[context->retry_count]);
+
+exit:
+  free_res_payload(payload);
   return;
 
 error:
-  error_handler(data, find_ping);
+  error_handler(data->user_data, payload, data->code, find_ping);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
@@ -573,6 +622,7 @@ static void
 send_ping_handler(oc_client_response_t *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
+  oc_rep_t *payload = NULL;
   st_print_log("[ST_CM] send ping handler(%d)\n", data->code);
 
   if (data->code != OC_STATUS_NOT_MODIFIED)
@@ -584,7 +634,9 @@ send_ping_handler(oc_client_response_t *data)
   return;
 
 error:
-  error_handler(data, send_ping);
+  payload = get_res_payload(data);
+  error_handler(data->user_data, payload, data->code, send_ping);
+  free_res_payload(payload);
 }
 
 static oc_event_callback_retval_t
