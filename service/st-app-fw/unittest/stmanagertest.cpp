@@ -148,6 +148,7 @@ TEST_F(TestSTManager, st_manager_start)
     st_manager_deinitialize();
 }
 
+#ifdef OC_SECURITY
 TEST_F(TestSTManager, st_manager_reset)
 {
     int st_error_ret = st_manager_initialize();
@@ -189,6 +190,7 @@ TEST_F(TestSTManager, st_manager_reset)
     st_unregister_status_handler();
     st_manager_deinitialize();
 }
+#endif /* OC_SECURITY */
 
 TEST_F(TestSTManager, st_manager_stop_fail_dueto_excluding_init)
 {

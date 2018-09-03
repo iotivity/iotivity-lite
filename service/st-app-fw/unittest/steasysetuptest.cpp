@@ -380,6 +380,7 @@ handle_prov_data(uint8_t *data, int len)
     return 0;
 }
 
+#ifdef OC_SECURITY
 TEST_F(TestSTEasySetup_cb, easy_setup_prov_response_test)
 {
     int ret = handle_prov_data(wifi_prov_data, wifi_prov_data_len);
@@ -390,8 +391,6 @@ TEST_F(TestSTEasySetup_cb, easy_setup_prov_response_test)
     ret = test_wait_until(mutex, cv, 10);
     EXPECT_EQ(0, ret);
 }
-
-#ifdef OC_SECURITY
 
 static st_cond_t otm_cv = NULL;
 
