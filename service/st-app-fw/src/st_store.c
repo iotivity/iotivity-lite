@@ -98,7 +98,10 @@ st_store_dump(void)
   size = oc_rep_finalize();
   if (size > 0) {
     OC_DBG("[ST_Store] encoded info size %d", size);
-    oc_storage_write(ST_STORE_NAME, buf, size);
+    if (oc_storage_write(ST_STORE_NAME, buf, size) < 0) {
+      OC_ERR("[ST_Store] oc_storage_write failed");
+      return -1;
+    }
   }
   OC_LOGbytes(buf, size);
 #endif /* OC_SECURITY */
