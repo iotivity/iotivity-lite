@@ -33,8 +33,8 @@
 static void
 gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
 {
-  int svr_tag_len = snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
-  svr_tag_len = (svr_tag_len < SVR_TAG_MAX) ? svr_tag_len + 1 : SVR_TAG_MAX;
+  int svr_tag_len = snprintf(svr_tag, SVR_TAG_MAX, "%s_%d", name, device_index);
+  svr_tag_len = (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
   svr_tag[svr_tag_len] = '\0';
 }
 
