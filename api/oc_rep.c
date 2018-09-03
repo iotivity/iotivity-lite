@@ -330,6 +330,9 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
       *err |= cbor_value_advance(&array);
     }
     break;
+  case CborInvalidType:
+    *err |= CborErrorIllegalType;
+    return;
   default:
     break;
   }
