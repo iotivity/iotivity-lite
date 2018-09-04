@@ -282,6 +282,8 @@ cloud_start_process(st_cloud_context_t *context)
 static void
 sign_up_handler(oc_client_response_t *data)
 {
+  unsigned char *encrypted_token;
+  unsigned int encrypted_token_len;
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] sign up handler(%d)\n", data->code);
 
@@ -293,18 +295,24 @@ sign_up_handler(oc_client_response_t *data)
   oc_rep_get_string(data->payload, ACCESS_TOKEN_KEY, &token_value, &size);
   oc_rep_get_string(data->payload, REDIRECTURI_KEY, &uri_value, &size);
 
+  encrypted_token= (unsigned char *)malloc(32*strlen(token_value));
+  encrypted_token_len = sizeof(encrypted_token);
+
+  st_security_encrypt(token_value,strlen(token_value), encrypted_token, encrypted_token_len);
+
   if (!token_value || !uri_value) {
     goto error;
   }
   st_store_t *store_info = st_store_get_info();
   if (oc_string_len(store_info->cloudinfo.access_token) > 0)
     oc_free_string(&store_info->cloudinfo.access_token);
-  oc_new_string(&store_info->cloudinfo.access_token, token_value,
-                strlen(token_value));
+  oc_new_string(&store_info->cloudinfo.access_token, encrypted_token,
+                strlen(encrypted_token));
   if (oc_string_len(store_info->cloudinfo.ci_server) > 0)
     oc_free_string(&store_info->cloudinfo.ci_server);
   oc_new_string(&store_info->cloudinfo.ci_server, uri_value, strlen(uri_value));
   store_info->cloudinfo.status = CLOUD_MANAGER_SIGNED_UP;
+  store_info->securityinfo.access_token_len = encrypted_token_len;
   st_store_dump_async();
 
   oc_remove_delayed_callback(context, sign_up);
@@ -320,6 +328,8 @@ error:
 static oc_event_callback_retval_t
 sign_up(void *data)
 {
+  unsigned char *decrypted_token;
+  unsigned int decrypted_token_len;
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[ST_CM] try sign up(%d)\n", context->retry_count++);
 
@@ -327,8 +337,12 @@ sign_up(void *data)
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
     if (0 ==
         oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
+      st_security_store_t securityinfo = st_store_get_info()->securityinfo;
+      decrypted_token = (unsigned char *)malloc(securityinfo.access_token_len);
+      decrypted_token_len = securityinfo.access_token_len;
+      st_security_decrypt(oc_string(securityinfo.salt),oc_string(securityinfo.iv),oc_string(cloudinfo.access_token),oc_string_len(cloudinfo.access_token),decrypted_token,decrypted_token_len);
       oc_sign_up(&context->cloud_ep, oc_string(cloudinfo.auth_provider),
-                 oc_string(cloudinfo.uid), oc_string(cloudinfo.access_token),
+                 oc_string(cloudinfo.uid), decrypted_token,
                  context->device_index, sign_up_handler, context);
     }
     oc_set_delayed_callback(context, sign_up,
@@ -370,6 +384,8 @@ error:
 static oc_event_callback_retval_t
 sign_in(void *data)
 {
+  unsigned char *decrypted_token;
+  unsigned int decrypted_token_len;
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[ST_CM] try sign in(%d)\n", context->retry_count++);
 
@@ -377,8 +393,12 @@ sign_in(void *data)
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
     if (0 ==
         oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
+      st_security_store_t securityinfo = st_store_get_info()->securityinfo;
+      decrypted_token = (unsigned char *)malloc(securityinfo.access_token_len);
+      decrypted_token_len = securityinfo.access_token_len;
+      st_security_decrypt(oc_string(securityinfo.salt),oc_string(securityinfo.iv),oc_string(cloudinfo.access_token),oc_string_len(cloudinfo.access_token),decrypted_token,decrypted_token_len);
       oc_sign_in(&context->cloud_ep, oc_string(cloudinfo.uid),
-                 oc_string(cloudinfo.access_token), 0, sign_in_handler,
+                 decrypted_token, 0, sign_in_handler,
                  context);
     }
     oc_set_delayed_callback(context, sign_in,
@@ -391,6 +411,11 @@ sign_in(void *data)
 static void
 refresh_token_handler(oc_client_response_t *data)
 {
+  unsigned char *encrypted_access_token;
+  unsigned int encrypted_access_token_len;
+  unsigned char *encrypted_refresh_token;
+  unsigned int encrypted_refresh_token_len;
+
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] refresh token handler(%d)\n", data->code);
 
@@ -402,18 +427,28 @@ refresh_token_handler(oc_client_response_t *data)
   oc_rep_get_string(data->payload, ACCESS_TOKEN_KEY, &access_value, &size);
   oc_rep_get_string(data->payload, REFRESH_TOKEN_KEY, &refresh_value, &size);
 
+  encrypted_access_token= (unsigned char *)malloc(32*strlen(access_value));
+  encrypted_access_token_len = sizeof(encrypted_access_token);
+  encrypted_refresh_token =  (unsigned char *)malloc(32*strlen(refresh_value));
+  encrypted_refresh_token_len = sizeof(encrypted_refresh_token);
+
+  st_security_encrypt(access_value,strlen(access_value), encrypted_access_token, encrypted_access_token_len);
+  st_security_encrypt(refresh_value,strlen(refresh_value), encrypted_refresh_token, encrypted_refresh_token_len);
+
   if (!access_value || !refresh_value) {
     goto error;
   }
   st_store_t *store_info = st_store_get_info();
   if (oc_string_len(store_info->cloudinfo.access_token) > 0)
     oc_free_string(&store_info->cloudinfo.access_token);
-  oc_new_string(&store_info->cloudinfo.access_token, access_value,
-                strlen(access_value));
+  oc_new_string(&store_info->cloudinfo.access_token, encrypted_access_token,
+                strlen(encrypted_access_token));
   if (oc_string_len(store_info->cloudinfo.refresh_token) > 0)
     oc_free_string(&store_info->cloudinfo.refresh_token);
-  oc_new_string(&store_info->cloudinfo.refresh_token, refresh_value,
-                strlen(refresh_value));
+  oc_new_string(&store_info->cloudinfo.refresh_token, encrypted_refresh_token,
+                strlen(encrypted_refresh_token));
+  store_info->securityinfo.access_token_len = encrypted_access_token_len;
+  store_info->securityinfo.refresh_token_len= encrypted_refresh_token_len;
   st_store_dump_async();
 
   oc_remove_delayed_callback(context, refresh_token);
@@ -429,13 +464,18 @@ error:
 static oc_event_callback_retval_t
 refresh_token(void *data)
 {
+  unsigned char *decrypted_token;
+  unsigned int decrypted_token_len;
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[ST_CM] try refresh token(%d)\n", context->retry_count++);
 
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
+    st_security_store_t securityinfo = st_store_get_info()->securityinfo;
+      decrypted_token = (unsigned char *)malloc(securityinfo.refresh_token_len);
+      decrypted_token_len = securityinfo.refresh_token_len;
     oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
-                            oc_string(cloudinfo.refresh_token),
+                            decrypted_token,
                             context->device_index, refresh_token_handler,
                             context);
     oc_set_delayed_callback(context, refresh_token,

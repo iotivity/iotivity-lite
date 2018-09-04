@@ -341,6 +341,11 @@ dev_conf_prov_cb(es_dev_conf_data *dev_prov_data)
 static void
 cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
 {
+  unsigned char *encrypted_access_token;
+  unsigned int encrypted_access_token_len;
+  unsigned char *encrypted_refresh_token;
+  unsigned int encrypted_refresh_token_len;
+
   if (g_prov_step_check & ST_EASY_SETUP_CLOUD_PROV)
     return;
 
@@ -389,14 +394,26 @@ cloud_conf_prov_cb(es_coap_cloud_conf_data *cloud_prov_data)
     return;
   }
 
+  encrypted_access_token= (unsigned char *)malloc(32*oc_string_len(cloud_prov_data->access_token));
+  encrypted_access_token_len = sizeof(encrypted_access_token);
+  encrypted_refresh_token =  (unsigned char *)malloc(32*oc_string_len(data->refresh_token));
+  encrypted_refresh_token_len = sizeof(encrypted_refresh_token);
+
+  st_security_encrypt(oc_string(cloud_prov_data->access_token),oc_string_len(cloud_prov_data->access_token), encrypted_access_token, encrypted_access_token_len);
+  st_security_encrypt(oc_string(data->refresh_token),oc_string_len(data->refresh_token), encrypted_refresh_token, encrypted_refresh_token_len);
+
   st_store_t *store_info = st_store_get_info();
-  st_string_copy(&store_info->cloudinfo.access_token,
-                 &cloud_prov_data->access_token);
+  oc_new_string(&store_info->cloudinfo.access_token, encrypted_access_token,
+                strlen(encrypted_access_token));
+    oc_new_string(&store_info->cloudinfo.access_token, encrypted_refresh_token,
+                strlen(encrypted_refresh_token));
   st_string_copy(&store_info->cloudinfo.refresh_token, &data->refresh_token);
   st_string_copy(&store_info->cloudinfo.auth_provider,
                  &cloud_prov_data->auth_provider);
   st_string_copy(&store_info->cloudinfo.ci_server, &cloud_prov_data->ci_server);
   st_string_copy(&store_info->cloudinfo.uid, &data->uid);
+  store_info->securityinfo.access_token_len = encrypted_access_token_len;
+  store_info->securityinfo.refresh_token_len= encrypted_refresh_token_len;
 
   g_prov_step_check |= ST_EASY_SETUP_CLOUD_PROV;
   if (is_easy_setup_step_done()) {

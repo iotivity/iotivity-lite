@@ -153,6 +153,12 @@ st_store_info_initialize(void)
   if (oc_string(g_store_info.cloudinfo.refresh_token)) {
     oc_free_string(&g_store_info.cloudinfo.refresh_token);
   }
+  if (oc_string(g_store_info.securityinfo.salt)) {
+    oc_free_string(&g_store_info.securityinfo.salt);
+  }
+  if (oc_string(g_store_info.securityinfo.iv)) {
+    oc_free_string(&g_store_info.securityinfo.iv);
+  }
   g_store_info.cloudinfo.status = 0;
 }
 
@@ -247,6 +253,45 @@ st_decode_cloud_manager_info(oc_rep_t *rep)
 }
 
 static int
+st_decode_security_info(oc_rep_t *rep)
+{
+  oc_rep_t *t = rep;
+  int len = 0;
+
+  while (t != NULL) {
+    len = oc_string_len(t->name);
+    switch (t->type) {
+    case OC_REP_STRING:
+      if (len == 4 && memcmp(oc_string(t->name), "salt", 4) == 0) {
+        oc_new_string(&g_store_info.securityinfo.salt,
+                      oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else if (len == 2 && memcmp(oc_string(t->name), "iv", 2) == 0) {
+        oc_new_string(&g_store_info.securityinfo.iv, oc_string(t->value.string),
+                      oc_string_len(t->value.string));
+      } else {
+        OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+        return -1;
+      }
+      break;
+    case OC_REP_INT:
+      if (len == 16 && memcmp(oc_string(t->name), "access_token_len", 16) == 0) {
+        g_store_info.securityinfo.access_token_len= t->value.integer;
+      }else if (len == 17 && memcmp(oc_string(t->name), "refresh_token_len", 17) == 0) {
+        g_store_info.securityinfo.refresh_token_len= t->value.integer;
+      }
+      break;
+    default:
+      OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
+      return -1;
+    }
+    t = t->next;
+  }
+
+  return 0;
+}
+
+static int
 st_decode_store_info(oc_rep_t *rep)
 {
   oc_rep_t *t = rep;
@@ -270,7 +315,10 @@ st_decode_store_info(oc_rep_t *rep)
       } else if (len == 9 && memcmp(oc_string(t->name), "cloudinfo", 9) == 0) {
         if (st_decode_cloud_manager_info(t->value.object) != 0)
           return -1;
-      } else {
+      } else if (len == 12 && memcmp(oc_string(t->name), "securityinfo", 12) == 0) {
+        if (st_decode_security_info(t->value.object) != 0)
+          return -1;
+      }else {
         OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
         return -1;
       }
@@ -309,5 +357,13 @@ st_encode_store_info(void)
                              oc_string(g_store_info.cloudinfo.refresh_token));
   oc_rep_set_int(cloudinfo, status, g_store_info.cloudinfo.status);
   oc_rep_close_object(root, cloudinfo);
+  oc_rep_set_object(root, securityinfo);
+  st_rep_set_string_with_chk(securityinfo, salt,
+                             oc_string(g_store_info.securityinfo.salt));
+  st_rep_set_string_with_chk(securityinfo, iv,
+                             oc_string(g_store_info.securityinfo.iv));
+  oc_rep_set_int(securityinfo, access_token_len, g_store_info.securityinfo.access_token_len);
+  oc_rep_set_int(securityinfo, refresh_token_len, g_store_info.securityinfo.refresh_token_len);
+  oc_rep_close_object(root, securityinfo);
   oc_rep_end_root_object();
 }
