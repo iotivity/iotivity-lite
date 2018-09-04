@@ -1220,7 +1220,11 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   if (j == 64) {
     return false;
   }
-  uint8_t key_block[96];
+#ifndef OC_DYNAMIC_ALLOCATION
+  uint8_t key_block[184];
+#else
+  uint8_t * key_block = NULL;
+#endif  /* OC_DYNAMIC_ALLOCATION */
   uint8_t label[] = { 0x6b, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70,
                       0x61, 0x6e, 0x73, 0x69, 0x6f, 0x6e };
 
@@ -1277,14 +1281,26 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   }
   key_block_len = 2 * (mac_key_len + key_size + iv_size);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  key_block = oc_mem_malloc(key_block_len);
+  if (!key_block) {
+    return false;
+  }
+#endif  /* OC_DYNAMIC_ALLOCATION */
   if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
                  sizeof(label), peer->client_server_random + 32, 32,
                  peer->client_server_random, 32) != key_block_len) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_mem_free(key_block);
+#endif  /* OC_DYNAMIC_ALLOCATION */
     return false;
   }
 
   if (oc_tls_prf(key_block, key_block_len, key, key_len, 3, oxm, oxm_len, obt_uuid,
                  obt_uuid_len, server_uuid, server_uuid_len) != (int)key_len) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_mem_free(key_block);
+#endif  /* OC_DYNAMIC_ALLOCATION */
     return false;
   }
 
@@ -1297,6 +1313,9 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   OC_DBG("oc_tls: PSK ");
   OC_LOGbytes(key, key_len);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_mem_free(key_block);
+#endif  /* OC_DYNAMIC_ALLOCATION */
   return true;
 }
 
