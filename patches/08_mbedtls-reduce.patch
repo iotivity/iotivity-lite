@@ -1,12 +1,13 @@
-From 66ac7f3fd595e1779c98fe2b0918551e3c2b9513 Mon Sep 17 00:00:00 2001
+From d1cee9a3b1018da0cef84c120a609084817fa3e5 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 30 Jul 2018 13:38:45 +0300
+Date: Tue, 4 Sep 2018 18:20:21 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
  include/mbedtls/config.h | 16 ++++++++++++++--
  library/asn1parse.c      | 23 +++++++++++++++++++++++
@@ -15,7 +16,8 @@ Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
  library/pk.c             | 20 ++++++++++++++++++++
  library/pkparse.c        | 20 ++++++++++++++++++++
  library/ssl_cli.c        | 15 +++++++++++++++
- 7 files changed, 153 insertions(+), 5 deletions(-)
+ library/ssl_srv.c        |  2 +-
+ 8 files changed, 154 insertions(+), 6 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
 index 45143a5..aa476c3 100644
@@ -638,6 +640,19 @@ index e9b0d82..94ff8e7 100644
  }
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
  
+diff --git a/library/ssl_srv.c b/library/ssl_srv.c
+index 2bfab37..ff0e70f 100644
+--- a/library/ssl_srv.c
++++ b/library/ssl_srv.c
+@@ -809,7 +809,7 @@ static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
+     if( suite_info == NULL )
+     {
+         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
+-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
++        return( 0 );
+     }
+ 
+     MBEDTLS_SSL_DEBUG_MSG( 3, ( "trying ciphersuite: %s", suite_info->name ) );
 -- 
 1.9.1
 
