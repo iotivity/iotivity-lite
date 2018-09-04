@@ -199,6 +199,10 @@ oc_main_init(const oc_handler_t *handler)
   if (!oc_sec_load_ca_cert(rootca_crt, rootca_crt_len)) {
     goto err;
   }
+
+  if (!oc_sec_load_ca_cert(rootca_test_crt, rootca_test_crt_len)) {
+    goto err;
+  }
 #endif
 #endif
 
