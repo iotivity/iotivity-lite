@@ -1044,28 +1044,34 @@ oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   for (i = 0; i < oc_core_get_num_devices(); i++) {
-    if (server_conf[i].ca_chain != NULL) {
-      mbedtls_x509_crt_free(server_conf[i].ca_chain);
-    }
-    mbedtls_x509_crt *ca_crt =
-      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_x509_crt * ca_crt = (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
     if (!ca_crt) {
       goto tls_load_ca_cert_err;
     }
     mbedtls_x509_crt_init(ca_crt);
     ret = mbedtls_x509_crt_parse( ca_crt, ca_cert_buf, ca_cet_buf_len );
     if( ret < 0 ) {
-        OC_ERR( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
-        goto tls_load_ca_cert_err;
+      OC_ERR( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
+      goto tls_load_ca_cert_err;
     } else {
       OC_DBG("oc_tls: trust ca cert loaded ");
     }
-    mbedtls_ssl_conf_ca_chain(&server_conf[i], ca_crt, NULL);
+    mbedtls_x509_crt * chain = server_conf[i].ca_chain;
+    if (chain == NULL) {
+      chain = ca_crt;
+    } else {
+      mbedtls_x509_crt * tmp = chain;
+      while (tmp->next != NULL) {
+        tmp = tmp->next;
+      }
+      tmp->next = ca_crt;
+    }
+    mbedtls_ssl_conf_ca_chain(&server_conf[i], chain, NULL);
 #ifdef OC_CLIENT
 #ifdef OC_TCP
-    mbedtls_ssl_conf_ca_chain(&client_conf_tls[0], ca_crt, NULL);
+    mbedtls_ssl_conf_ca_chain(&client_conf_tls[0], chain, NULL);
 #endif /* OC_TCP */
-    mbedtls_ssl_conf_ca_chain(&client_conf[0], ca_crt, NULL);
+    mbedtls_ssl_conf_ca_chain(&client_conf[0], chain, NULL);
 #endif /* OC_CLIENT */
   }
   return true;
