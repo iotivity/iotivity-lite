@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7b86da66",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "please remove commited word",
+      "range": {
+        "startLine": 7,
+        "startChar": 27,
+        "endLine": 7,
+        "endChar": 31
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_db7d6670",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "remove if any unwanted header files",
+      "range": {
+        "startLine": 9,
+        "startChar": 18,
+        "endLine": 9,
+        "endChar": 19
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1bb06e42",
+        "filename": "apps/CertificationApp_Example.json",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 32,
+        "startChar": 5,
+        "endLine": 32,
+        "endChar": 8
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3bb57231",
+        "filename": "include/Certification.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "remove if any header files are not used currently",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 18
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5bbaf623",
+        "filename": "include/Certification.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "please remove if any unused macros",
+      "range": {
+        "startLine": 7,
+        "startChar": 26,
+        "endLine": 7,
+        "endChar": 27
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fbaaead0",
+        "filename": "include/Certification.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 11,
+        "startChar": 17,
+        "endLine": 12,
+        "endChar": 22
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9b83de55",
+        "filename": "include/Certification.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "remove above comments",
+      "range": {
+        "startLine": 19,
+        "startChar": 23,
+        "endLine": 19,
+        "endChar": 26
+      },
+      "revId": "1bab31456e1eb7e3f175388e15145198c2c42638",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
