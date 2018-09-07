@@ -22,6 +22,30 @@
       "revId": "9a7d4942402db8bb4567a66bce47c68c0926a83c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_78642049",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-07T01:47:32Z",
+      "side": 1,
+      "message": "I use \u0027st_manager\u0027 according to other code  like \"oc_network_events\" in  oc_network_events.c about proto thread.\n\nif you have any good idea,  Would you please suggest proper name?",
+      "parentUuid": "da33351e_38b57831",
+      "range": {
+        "startLine": 110,
+        "startChar": 28,
+        "endLine": 110,
+        "endChar": 38
+      },
+      "revId": "9a7d4942402db8bb4567a66bce47c68c0926a83c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
