@@ -1,0 +1,34 @@
+[
+
+    {
+      "path" : "/binaryswitch",
+      "rt"   : [ "oic.r.switch.binary" ],
+      "if"   : ["oic.if.a", "oic.if.baseline" ],
+      "remove_properties" : [ "range", "step" , "id", "precision" ]
+    },
+    {
+      "path" : "/oic/p",
+      "rt"   : [ "oic.wk.p" ],
+      "if"   : ["oic.if.baseline", "oic.if.r" ],
+      "remove_properties" : [ "n", "range", "value", "step", "precision", "vid"  ]
+    },
+    {
+      "path" : "/humidity",
+      "rt"   : [ "oic.r.humidity" ],
+      "if"   : ["oic.if.a", "oic.if.baseline" ],
+      "remove_properties" : [ "range", "step" , "id", "precision" ]
+    },
+    {
+      "path" : "/3D Printer",
+      "rt"   : [ "oic.r.printer.3d" ],
+      "if"   : ["oic.if.a", "oic.if.baseline" ],
+      "remove_properties" : [ "range", "step" , "id", "precision" ]
+    },
+    {
+      "path" : "/Audio Controls",
+      "rt"   : [ "oic.r.audio" ],
+      "if"   : ["oic.if.a", "oic.if.baseline" ],
+      "remove_properties" : [ "range", "step" , "id", "precision" ]
+    }
+
+]
