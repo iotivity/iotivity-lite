@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_bba982e1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T10:20:02Z",
+      "side": 1,
+      "message": "Remove commited",
+      "range": {
+        "startLine": 7,
+        "startChar": 27,
+        "endLine": 7,
+        "endChar": 31
+      },
+      "revId": "375aa5a8482bfc091f3f0b1810d1c6a01506fe8d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
