@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_1b698ebe",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "Adding c file? , please check it",
+      "range": {
+        "startLine": 14,
+        "startChar": 33,
+        "endLine": 14,
+        "endChar": 34
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_bb5b422d",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 1
@@ -13,6 +36,144 @@
       "writtenOn": "2018-09-07T08:45:25Z",
       "side": 1,
       "message": "remove all spaces",
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fb3caac1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "please remove unwanted comments",
+      "range": {
+        "startLine": 154,
+        "startChar": 17,
+        "endLine": 154,
+        "endChar": 23
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5b4cb670",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "please take care of indentation",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 182,
+        "endChar": 8
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3b47324d",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "Mention in comment saying will be implemented and same in printf",
+      "range": {
+        "startLine": 205,
+        "startChar": 47,
+        "endLine": 205,
+        "endChar": 50
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9b759e9a",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "remove above",
+      "range": {
+        "startLine": 308,
+        "startChar": 13,
+        "endLine": 308,
+        "endChar": 15
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7b789a8f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "rectify the typo to  Initialisation",
+      "range": {
+        "startLine": 312,
+        "startChar": 22,
+        "endLine": 312,
+        "endChar": 35
+      },
+      "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bb7222ab",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-07T09:25:09Z",
+      "side": 1,
+      "message": "Better rename to functionality...\nmay be stack_init etc",
+      "range": {
+        "startLine": 335,
+        "startChar": 4,
+        "endLine": 335,
+        "endChar": 25
+      },
       "revId": "5ecece3e71196d30e7f19491f92a2c02d4600348",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
