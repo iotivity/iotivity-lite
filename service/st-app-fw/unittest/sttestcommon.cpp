@@ -56,6 +56,7 @@ reset_storage(void)
     remove("./st_things_creds/doxm_0");
     remove("./st_things_creds/pstat_0");
     remove("./st_things_creds/st_info");
+    remove("./st_things_creds/st_info_secure");
 }
 
 int
