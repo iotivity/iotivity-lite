@@ -40,9 +40,19 @@ typedef struct
 
 typedef struct
 {
+  oc_string_t salt;
+  oc_string_t iv;
+  int data_len;
+  int encrypted_len;
+} st_security_store_t;
+
+
+typedef struct
+{
   bool status;
   st_ap_store_t accesspoint;
   st_cloud_store_t cloudinfo;
+  st_security_store_t securityinfo;
 } st_store_t;
 
 int st_store_load(void);
