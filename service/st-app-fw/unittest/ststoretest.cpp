@@ -23,6 +23,7 @@ extern "C"{
     #include "st_manager.h"
     #include "st_store.h"
     #include "st_cloud_manager.h"
+    #include <oc_random.h>
 }
 
 class TestSTStore: public testing::Test
@@ -30,12 +31,14 @@ class TestSTStore: public testing::Test
     protected:
         virtual void SetUp()
         {
+            oc_random_init();
 
         }
 
         virtual void TearDown()
         {
             st_store_info_initialize();
+	        oc_random_destroy();
         }
 };
 
