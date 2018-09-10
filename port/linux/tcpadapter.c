@@ -58,6 +58,7 @@ typedef struct tcp_session
 OC_LIST(session_list);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
+#ifndef DISABLE_TCP_SERVER
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
 {
@@ -90,6 +91,7 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
 
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 static int
 get_interface_index(int sock)
@@ -602,6 +604,7 @@ oc_tcp_send_buffer_done:
   return bytes_sent;
 }
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV4
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
@@ -790,5 +793,6 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
 
   OC_DBG("oc_tcp_connectivity_shutdown for device %d", dev->device);
 }
+#endif /* DISABLE_TCP_SERVER */
 
 #endif /* OC_TCP */

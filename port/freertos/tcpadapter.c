@@ -39,6 +39,7 @@ typedef struct tcp_session
 OC_LIST(session_list);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
+#ifndef DISABLE_TCP_SERVER
 static int
 configure_tcp_socket(int sock, void *sock_info)
 {
@@ -52,6 +53,7 @@ get_assigned_tcp_port(int sock, void *sock_info)
   oc_abort(__func__);    
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
@@ -130,6 +132,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
   return -1;
 }
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV4
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
@@ -151,5 +154,6 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
 {
   oc_abort(__func__);
 }
+#endif /* DISABLE_TCP_SERVER */
 
 #endif /* OC_TCP */

@@ -524,6 +524,7 @@ refresh_endpoints_list(ip_context_t *dev)
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_TCP
   get_interface_addresses(dev, AF_INET6, dev->tcp.port, false, true);
 #ifdef OC_SECURITY
@@ -536,6 +537,7 @@ refresh_endpoints_list(ip_context_t *dev)
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
+#endif /* DISABLE_TCP_SERVER */
 }
 
 oc_endpoint_t *
@@ -1511,11 +1513,13 @@ int oc_connectivity_init(int device) {
 #endif
 #endif
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_TCP
   if (oc_tcp_connectivity_init(dev) != 0) {
     OC_ERR("Could not initialize TCP adapter");
   }
 #endif /* OC_TCP */
+#endif /* DISABLE_TCP_SERVER */
 
   /* Netlink socket to listen for network interface changes.
    * Only initialized once, and change events are captured by only
@@ -1582,9 +1586,11 @@ oc_connectivity_shutdown(int device)
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_TCP
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
+#endif /* DISABLE_TCP_SERVER */
 
   pthread_join(dev->event_thread, NULL);
 
