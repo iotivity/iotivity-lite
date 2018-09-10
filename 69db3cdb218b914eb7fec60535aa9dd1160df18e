@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9bb75ed8",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "this block seems not needed...please remove if not needed",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 3
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7bba5ac1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "i think you used 4 spaces gap across functions...if so please add same..",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 137,
+        "endChar": 2
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bbb4e2d1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "i would suggest 4 spaces after if...\nif (condition) {\n    register_resources():\n\ni could see 2 spaces at some places...4 spaces at some other places...better have 4 spaces...for readability perpose...\n\nplease do for all file...",
+      "range": {
+        "startLine": 149,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 6
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dbb1e6e2",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "use 4 spaces...indentation",
+      "range": {
+        "startLine": 169,
+        "startChar": 2,
+        "endLine": 169,
+        "endChar": 8
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1bcb4e54",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "move braces to upper line, to maintain uniformity across the file....",
+      "range": {
+        "startLine": 258,
+        "startChar": 8,
+        "endLine": 258,
+        "endChar": 9
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3bc0d229",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "i think you added a space after if () ...across the file...if so maintain same...",
+      "range": {
+        "startLine": 292,
+        "startChar": 2,
+        "endLine": 292,
+        "endChar": 4
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fbc5ca3d",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "add space",
+      "range": {
+        "startLine": 314,
+        "startChar": 17,
+        "endLine": 314,
+        "endChar": 18
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5bc5d63a",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:26:30Z",
+      "side": 1,
+      "message": "make proper indentaion",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 320,
+        "endChar": 6
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
