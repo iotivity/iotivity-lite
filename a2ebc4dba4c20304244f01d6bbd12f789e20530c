@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_1b406ea4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T11:24:00Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 204,
+        "startChar": 1,
+        "endLine": 204,
+        "endChar": 3
+      },
+      "revId": "a2ebc4dba4c20304244f01d6bbd12f789e20530c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fb3aea32",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T11:24:00Z",
+      "side": 1,
+      "message": "please move to top of function",
+      "range": {
+        "startLine": 273,
+        "startChar": 23,
+        "endLine": 273,
+        "endChar": 26
+      },
+      "revId": "a2ebc4dba4c20304244f01d6bbd12f789e20530c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5b4af6c5",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T11:24:00Z",
+      "side": 1,
+      "message": "remove space ...retain to old way...\n} else {",
+      "range": {
+        "startLine": 361,
+        "startChar": 9,
+        "endLine": 361,
+        "endChar": 10
+      },
+      "revId": "a2ebc4dba4c20304244f01d6bbd12f789e20530c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bb398243",
+        "filename": "include/Certification.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T11:24:00Z",
+      "side": 1,
+      "message": "please add copy right info",
+      "range": {
+        "startLine": 1,
+        "startChar": 23,
+        "endLine": 1,
+        "endChar": 32
+      },
+      "revId": "a2ebc4dba4c20304244f01d6bbd12f789e20530c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
