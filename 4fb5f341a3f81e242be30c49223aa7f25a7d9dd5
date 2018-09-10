@@ -252,6 +252,75 @@
       "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1bcfce80",
+        "filename": "include/Certification.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:16:10Z",
+      "side": 1,
+      "message": "remove unwanted commnts",
+      "range": {
+        "startLine": 3,
+        "startChar": 19,
+        "endLine": 3,
+        "endChar": 20
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fbc94a7a",
+        "filename": "include/Certification.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:16:10Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 12,
+        "startChar": 21,
+        "endLine": 12,
+        "endChar": 22
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5bc95677",
+        "filename": "include/Certification.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:16:10Z",
+      "side": 1,
+      "message": "remove one of register_resources...\nremove unwanted variables if any..",
+      "range": {
+        "startLine": 25,
+        "startChar": 23,
+        "endLine": 25,
+        "endChar": 26
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
