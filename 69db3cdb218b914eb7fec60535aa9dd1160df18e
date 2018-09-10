@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_7be1bacf",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T09:33:10Z",
+      "side": 1,
+      "message": "please add copy right at the top , even to header file...",
+      "range": {
+        "startLine": 1,
+        "startChar": 1,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9bb75ed8",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 8
