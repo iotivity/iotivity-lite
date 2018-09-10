@@ -79,6 +79,7 @@ typedef struct tcp_session
 OC_LIST(session_list);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
+#ifndef DISABLE_TCP_SERVER
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
 {
@@ -111,10 +112,12 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
 
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 {
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV6
   FD_SET(dev->tcp.server_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -128,6 +131,8 @@ oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
   FD_SET(dev->tcp.secure4_sock, &dev->rfds);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
+#endif /* DISABLE_TCP_SERVER */
+
   FD_SET(dev->tcp.connect_pipe[0], &dev->rfds);
 }
 
@@ -177,6 +182,7 @@ add_new_session(int sock, ip_context_t *dev, const oc_endpoint_t *endpoint)
   return 0;
 }
 
+#ifndef DISABLE_TCP_SERVER
 static int
 accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
                    oc_endpoint_t *endpoint)
@@ -223,6 +229,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 static tcp_session_t *
 find_session_by_endpoint(oc_endpoint_t *endpoint)
@@ -284,6 +291,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   tcp_receive_state_t ret = TCP_STATUS_ERROR;
   message->endpoint.device = dev->device;
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV6
   if (FD_ISSET(dev->tcp.server_sock, fds)) {
     message->endpoint.flags = IPV6 | TCP;
@@ -302,7 +310,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       ret_with_code(TCP_STATUS_ERROR);
     }
     ret_with_code(TCP_STATUS_ACCEPT);
-}
+  }
 #endif /* OC_SECURITY */
 #ifdef OC_IPV6
   else
@@ -328,7 +336,11 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     ret_with_code(TCP_STATUS_ACCEPT);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-  } else if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
+  }
+  else
+#endif /* DISABLE_TCP_SERVER */
+    if (FD_ISSET(dev->tcp.connect_pipe[0], fds))
+  {
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
     if (len < 0) {
       OC_ERR("read error! %d\n", errno);
@@ -510,9 +522,9 @@ oc_tcp_send_buffer_done:
   return bytes_sent;
 }
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV4
-static int
-tcp_connectivity_ipv4_init(ip_context_t *dev)
+static int tcp_connectivity_ipv4_init(ip_context_t * dev)
 {
   OC_DBG("Initializing TCP adapter IPv4 for device %d\n", dev->device);
 
@@ -576,6 +588,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
   return 0;
 }
 #endif /* OC_IPV4 */
+#endif /* DISABLE_TCP_SERVER */
 
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
@@ -585,6 +598,8 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0) {
     oc_abort("error initializing TCP adapter mutex\n");
   }
+
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV6
   memset(&dev->tcp.server, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)&dev->tcp.server;
@@ -645,11 +660,13 @@ oc_tcp_connectivity_init(ip_context_t *dev)
     OC_ERR("Could not initialize IPv4 for TCP\n");
   }
 #endif /* OC_IPV4 */
+#endif /* DISABLE_TCP_SERVER */
 
   if (pipe(dev->tcp.connect_pipe) < 0) {
     OC_ERR("Could not initialize connection pipe\n");
   }
 
+#ifndef DISABLE_TCP_SERVER
   OC_DBG("=======tcp port info.========\n");
 #ifdef OC_IPV6
   OC_DBG("  ipv6 port   : %u\n", dev->tcp.port);
@@ -663,6 +680,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   OC_DBG("  ipv4 secure : %u\n", dev->tcp.tls4_port);
 #endif
 #endif
+#endif /* DISABLE_TCP_SERVER */
 
   OC_DBG("Successfully initialized TCP adapter for device %d\n", dev->device);
 
@@ -672,6 +690,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 void
 oc_tcp_connectivity_shutdown(ip_context_t *dev)
 {
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV6
   close(dev->tcp.server_sock);
 #endif
@@ -687,6 +706,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
   close(dev->tcp.secure4_sock);
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
+#endif /* DISABLE_TCP_SERVER */
 
   close(dev->tcp.connect_pipe[0]);
   close(dev->tcp.connect_pipe[1]);

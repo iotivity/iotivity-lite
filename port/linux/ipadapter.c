@@ -524,6 +524,7 @@ refresh_endpoints_list(ip_context_t *dev)
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_TCP
   get_interface_addresses(dev, AF_INET6, dev->tcp.port, false, true);
 #ifdef OC_SECURITY
@@ -536,6 +537,7 @@ refresh_endpoints_list(ip_context_t *dev)
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
+#endif /* DISABLE_TCP_SERVER */
 }
 
 oc_endpoint_t *
