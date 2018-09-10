@@ -39,6 +39,7 @@ typedef struct tcp_session
 OC_LIST(session_list);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
+#ifndef DISABLE_TCP_SERVER
 static int
 configure_tcp_socket(int sock, void *sock_info)
 {
@@ -49,9 +50,10 @@ configure_tcp_socket(int sock, void *sock_info)
 static int
 get_assigned_tcp_port(int sock, void *sock_info)
 {
-  oc_abort(__func__);    
+  oc_abort(__func__);
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
@@ -66,6 +68,7 @@ add_new_session(int sock, const oc_endpoint_t *endpoint)
   return 0;
 }
 
+#ifndef DISABLE_TCP_SERVER
 static int
 accecpt_new_session(ip_context_t *dev, int fd, void *setfds,
                     oc_endpoint_t *endpoint)
@@ -73,6 +76,7 @@ accecpt_new_session(ip_context_t *dev, int fd, void *setfds,
   oc_abort(__func__);
   return 0;
 }
+#endif /* DISABLE_TCP_SERVER */
 
 static tcp_session_t *
 find_session_by_endpoint(oc_endpoint_t *endpoint)
@@ -130,6 +134,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
   return -1;
 }
 
+#ifndef DISABLE_TCP_SERVER
 #ifdef OC_IPV4
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
@@ -138,6 +143,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
   return 0;
 }
 #endif /* OC_IPV4 */
+#endif /* DISABLE_TCP_SERVER */
 
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
