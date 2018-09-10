@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_7bbedad5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "better remove code",
+      "range": {
+        "startLine": 7,
+        "startChar": 18,
+        "endLine": 7,
+        "endChar": 22
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5b1b161b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "Please add a space after adding #includes....\nThis is just for better indentation",
+      "range": {
+        "startLine": 11,
+        "startChar": 25,
+        "endLine": 11,
+        "endChar": 26
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3b1612f2",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "It seems no where it is used.\nEven if it is used move to Certification.h",
+      "range": {
+        "startLine": 12,
+        "startChar": 26,
+        "endLine": 12,
+        "endChar": 27
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9bbbdee4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "I would suggest to add static key word if the variable and functions are used only in this file alone...",
+      "range": {
+        "startLine": 19,
+        "startChar": 5,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9bd47e21",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "please check why 1 is added",
+      "range": {
+        "startLine": 150,
+        "startChar": 8,
+        "endLine": 150,
+        "endChar": 28
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7bd7fa23",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "please do proper indentation",
+      "range": {
+        "startLine": 152,
+        "startChar": 8,
+        "endLine": 152,
+        "endChar": 10
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_dbde063f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "please take care of indentation across whole file",
+      "range": {
+        "startLine": 173,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 10
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bbe18200",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "Add a comment saying will be implemented and same in printf...",
+      "range": {
+        "startLine": 197,
+        "startChar": 47,
+        "endLine": 197,
+        "endChar": 50
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1be86ee1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "i would suggest to do declarations at function start",
+      "range": {
+        "startLine": 232,
+        "startChar": 23,
+        "endLine": 232,
+        "endChar": 24
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fbe2eaff",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 12
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5bf2f6d2",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-10T06:06:56Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 380,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 12
+      },
+      "revId": "4fb5f341a3f81e242be30c49223aa7f25a7d9dd5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
