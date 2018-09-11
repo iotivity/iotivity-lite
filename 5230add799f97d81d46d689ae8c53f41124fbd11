@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_9b32be0e",
+        "filename": "service/st-app-fw/include/st_store.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "is it required without SECURE build?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 35
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9b4bde86",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "check the white spaces in this function scope.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 1
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7b4eda97",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "check the white space all this lines with 4 spaces in next line.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 2
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_db3c46e5",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "why +1?",
+      "range": {
+        "startLine": 272,
+        "startChar": 21,
+        "endLine": 272,
+        "endChar": 23
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_bb486288",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "st_store_t has security_key info(iv,...) and cloud and so on info which means whole data set.\nBut this function only handles cloud and so on info. which function name may misleads context. Better to rename into store_info_wo_security_key or change the data structure definition to align.",
+      "range": {
+        "startLine": 39,
+        "startChar": 12,
+        "endLine": 39,
+        "endChar": 32
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_db456671",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "white space indent is not 2 spaces.",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 1
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5b595659",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "it looks natural encryption is done inside this function to align the loading side function.",
+      "range": {
+        "startLine": 208,
+        "startChar": 23,
+        "endLine": 208,
+        "endChar": 57
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_3b545220",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "dump_internal/secure_dump set is not align to load_internal(0,..)/load_internal(1,..) relationship.",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 223,
+        "endChar": 31
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1b5fce42",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T07:26:21Z",
+      "side": 1,
+      "message": "This requires securityinfo even though this can be accessed globally.",
+      "range": {
+        "startLine": 379,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 100
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
