@@ -155,6 +155,7 @@ TEST_F(TestSTEasySetup, st_gen_ssid_compare)
     EXPECT_STREQ(expected_ssid, ssid);
 }
 
+#ifdef OC_SECURITY
 /*
 {
     "cd": "wifi_ssid",
@@ -241,6 +242,7 @@ static uint8_t cloud_prov_data[] = {
     0x78, 0x78, 0x78, 0x78, 0x78, 0x78
 };
 static int cloud_prov_data_len = 282;
+#endif /* OC_SECURITY */
 
 static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;
@@ -330,6 +332,7 @@ class TestSTEasySetup_cb: public testing::Test
         }
 };
 
+#ifdef OC_SECURITY
 static oc_endpoint_t *
 get_endpoint(void)
 {
@@ -380,7 +383,6 @@ handle_prov_data(uint8_t *data, int len)
     return 0;
 }
 
-#ifdef OC_SECURITY
 TEST_F(TestSTEasySetup_cb, easy_setup_prov_response_test)
 {
     int ret = handle_prov_data(wifi_prov_data, wifi_prov_data_len);
@@ -405,11 +407,11 @@ otm_test_handler(void *data)
         st_cond_signal(otm_cv);
         st_mutex_unlock(mutex);
     }
-    
+
     if(state){
         free(state);
     }
-            
+
     return OC_EVENT_DONE;
 }
 TEST_F(TestSTEasySetup_cb, easy_setup_otm_start_finish_test)
@@ -450,7 +452,6 @@ TEST_F(TestSTEasySetup_cb, easy_setup_otm_fail_test)
 #endif
     EXPECT_EQ(0, ret);
 }
-#endif /* OC_SECURITY */
 
 static bool g_isCallbackReceived;
 static st_mutex_t access_mutex = NULL;
@@ -482,3 +483,4 @@ TEST_F(TestSTEasySetup_cb, easy_setup_sec_accesslist_test)
     access_cv = NULL;
     access_mutex = NULL;
 }
+#endif /* OC_SECURITY */
