@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f66fa1c3",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T11:54:38Z",
+      "side": 1,
+      "message": "This can be declared below :error.",
+      "range": {
+        "startLine": 553,
+        "startChar": 17,
+        "endLine": 553,
+        "endChar": 28
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d6725dac",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T11:54:38Z",
+      "side": 1,
+      "message": "Any idea to make this logic into common function or move these into error_handler() for better optimization.",
+      "range": {
+        "startLine": 567,
+        "startChar": 0,
+        "endLine": 578,
+        "endChar": 33
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9678d590",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-11T11:54:38Z",
+      "side": 1,
+      "message": "this variable needs to be declared below :error.",
+      "range": {
+        "startLine": 615,
+        "startChar": 17,
+        "endLine": 615,
+        "endChar": 28
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
