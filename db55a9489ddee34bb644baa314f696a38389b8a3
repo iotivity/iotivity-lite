@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "da33351e_d6a9bde0",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-09-11T13:39:08Z",
+      "side": 1,
+      "message": "question : what does this macro signify ? \na. Response payload will be parsed by stack ?\nOR\nb. Response payload will be parsed by application ?",
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f66fa1c3",
         "filename": "service/st-app-fw/src/st_cloud_manager.c",
         "patchSetId": 9
