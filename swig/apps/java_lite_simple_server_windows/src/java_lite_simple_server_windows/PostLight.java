@@ -32,13 +32,13 @@ public class PostLight implements RequestHandler {
                 break;
             default:
                 System.out.println("NOT YET HANDLED VALUE");
-                OCMain.sendResponce(request, OCStatus.OC_STATUS_BAD_REQUEST);
+                OCMain.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
             }
         
             System.out.println("-----------------------------------------------------");
             rep = rep.getNext();
         }
-        OCMain.sendResponce(request, OCStatus.OC_STATUS_CHANGED);
+        OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }
 
 }
