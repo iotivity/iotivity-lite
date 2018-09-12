@@ -1,4 +1,4 @@
-package java_lite_simple_server_windows;
+package java_lite_simple_server;
 
 import org.iotivity.*;
 import org.iotivity.MainInitHandler;
@@ -18,16 +18,16 @@ public class MyInitHandler implements MainInitHandler {
     @Override
     public void registerResources() {
         System.out.println("inside MyInitHandler.registerResources()");
-        Resource resource = new Resource("", "/a/light", (short)2, 0);
-        resource.bindResourceType("core.light");
-        resource.bindResourceType("core.brightlight");
-        resource.bindResourceInterface((short) OCInterfaceMask.RW); //Fix the type the bindResourceInterface to take OCInterfaceMask
-        resource.setDefaultInterface(OCInterfaceMask.RW);
-        resource.setDiscoverable(true);
-        resource.setPeriodicObservable(1);
-        resource.setRequestHandler(OCMethod.OC_GET, new GetLight());
-        resource.setRequestHandler(OCMethod.OC_PUT, new PutLight());
-        resource.setRequestHandler(OCMethod.OC_POST, new PostLight());
+        OCResource resource = OCMain.newResource("", "/a/light", (short) 2, 0);
+        OCMain.resourceBindResourceType(resource, "core.light");
+        OCMain.resourceBindResourceType(resource, "core.brightlight");
+        OCMain.resourceBindResourceInterface(resource, (short) OCInterfaceMask.RW);
+        OCMain.resourceSetDefaultInterface(resource, OCInterfaceMask.RW);
+        OCMain.resourceSetDiscoverable(resource, true);
+        OCMain.resourceSetPeriodicObservable(resource, 1);
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_GET, new GetLight());
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLight());
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLight());
         OCMain.addResource(resource);
     }
 
@@ -39,11 +39,11 @@ public class MyInitHandler implements MainInitHandler {
     @Override
     public void signalEventLoop() {
         System.out.println("inside MyInitHandler.signalEventLoop()");
-        server.lock.lock();
+        Server.lock.lock();
         try {
-            server.cv.signalAll();
+            Server.cv.signalAll();
         } finally {
-            server.lock.unlock();
+            Server.lock.unlock();
         }
     }
 }

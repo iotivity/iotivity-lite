@@ -1,11 +1,11 @@
-package java_lite_simple_server_windows;
+package java_lite_simple_client;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.iotivity.*;
-public class server {
+public class Client {
     static {
         System.loadLibrary("iotivity-lite-java");
       }
@@ -14,7 +14,7 @@ public class server {
     public static Condition cv = lock.newCondition();
 
     public static void main(String argv[]) {
-        storage.storage_config("./simpleserver_creds");
+        storage.storage_config("./simpleclient_creds");
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {
@@ -33,13 +33,12 @@ public class server {
                     cv.awaitNanos(next_event);
                 }
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 } finally {
                     lock.unlock();
                 }
             }
-        System.out.println("Calling main_shutdown.");
+        System.out.println("Calling mainShutdown.");
         OCMain.mainShutdown();
         System.exit(0);
       }
