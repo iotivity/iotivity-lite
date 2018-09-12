@@ -11,6 +11,18 @@
 %typemap(javain)  oc_interface_mask_t "$javainput"
 %typemap(javaout) oc_interface_mask_t { return $jnicall; }
 
+%typemap(jni)     oc_resource_properties_t "jint";
+%typemap(jtype)   oc_resource_properties_t "int";
+%typemap(jstype)  oc_resource_properties_t "int";
+%typemap(javain)  oc_resource_properties_t "$javainput"
+%typemap(javaout) oc_resource_properties_t { return $jnicall; }
+
+%typemap(jni)     enum transport_flags "jint";
+%typemap(jtype)   enum transport_flags "int";
+%typemap(jstype)  enum transport_flags "int";
+%typemap(javain)  enum transport_flags "$javainput"
+%typemap(javaout) enum transport_flags { return $jnicall; }
+
 /* oc_string_t - treat as String */
 %typemap(javain) oc_string_t "$javainput"
 %typemap(javaout) oc_string_t {
