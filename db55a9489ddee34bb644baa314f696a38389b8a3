@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_16c0457b",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-09-12T05:00:49Z",
+      "side": 1,
+      "message": "This macro is for ST use case. ST service framework will take care of parsing response payload.",
+      "parentUuid": "da33351e_d6a9bde0",
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_f66fa1c3",
         "filename": "service/st-app-fw/src/st_cloud_manager.c",
         "patchSetId": 9
@@ -30,6 +48,30 @@
       "writtenOn": "2018-09-11T11:54:38Z",
       "side": 1,
       "message": "This can be declared below :error.",
+      "range": {
+        "startLine": 553,
+        "startChar": 17,
+        "endLine": 553,
+        "endChar": 28
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f6cb21a3",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-09-12T05:00:49Z",
+      "side": 1,
+      "message": "variables are not allowed to declare under label section.",
+      "parentUuid": "da33351e_f66fa1c3",
       "range": {
         "startLine": 553,
         "startChar": 17,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d6ceddb3",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-09-12T05:00:49Z",
+      "side": 1,
+      "message": "error_handler is being called from different handlers\n1. After parsing response payload.\n2. Without parsing response payload.\nAs cbor payload parsing deals with global rep_objects we can not parse the same payload twice in the same call stack. Because of these restriction I could not move payload parsing logic to error handler, instead passing parsed payload itself to error_handler.",
+      "parentUuid": "da33351e_d6725dac",
+      "range": {
+        "startLine": 567,
+        "startChar": 0,
+        "endLine": 578,
+        "endChar": 33
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9678d590",
         "filename": "service/st-app-fw/src/st_cloud_manager.c",
         "patchSetId": 9
@@ -76,6 +142,30 @@
       "writtenOn": "2018-09-11T11:54:38Z",
       "side": 1,
       "message": "this variable needs to be declared below :error.",
+      "range": {
+        "startLine": 615,
+        "startChar": 17,
+        "endLine": 615,
+        "endChar": 28
+      },
+      "revId": "db55a9489ddee34bb644baa314f696a38389b8a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_36c5898e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-09-12T05:00:49Z",
+      "side": 1,
+      "message": "variables are not allowed to declare under label section.",
+      "parentUuid": "da33351e_9678d590",
       "range": {
         "startLine": 615,
         "startChar": 17,
