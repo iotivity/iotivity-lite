@@ -31,6 +31,6 @@ public class GetLight implements RequestHandler {
             break;
         }
         OCMain.repEndRootObject();
-        OCMain.sendResponce(request, OCStatus.OC_STATUS_OK);
+        OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }
