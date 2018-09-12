@@ -43,7 +43,7 @@ public class OCResourceTest {
         //TODO properly encode/decode the OCResource oc_string_array_t types.
         //r.setTypes(value);
         // failure purposely done till the setTypes/getProperties methods are updated with non SWIG type values.
-        assertTrue(false);
+        fail("Not yet implemented");
     }
     
     @Test
@@ -69,7 +69,7 @@ public class OCResourceTest {
         //TODO properly encode/decode the OCResource oc_resource_properties_t types.
         //r.setTypes(value);
         // failure purposely done till the setProperties/getProperties methods are updated with non SWIG type values.
-        assertTrue(false);
+        fail("Not yet implemented");
     }
 
     @Test

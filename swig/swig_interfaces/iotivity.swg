@@ -11,6 +11,12 @@
 %typemap(javain)  oc_interface_mask_t "$javainput"
 %typemap(javaout) oc_interface_mask_t { return $jnicall; }
 
+%typemap(jni)     oc_resource_properties_t "jint";
+%typemap(jtype)   oc_resource_properties_t "int";
+%typemap(jstype)  oc_resource_properties_t "int";
+%typemap(javain)  oc_resource_properties_t "$javainput"
+%typemap(javaout) oc_resource_properties_t { return $jnicall; }
+
 /* oc_string_t - treat as String */
 %typemap(javain) oc_string_t "$javainput"
 %typemap(javaout) oc_string_t {
