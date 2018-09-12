@@ -1,4 +1,4 @@
-package java_lite_simple_server_windows;
+package java_lite_simple_server;
 
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
@@ -27,10 +27,10 @@ public class GetLight implements RequestHandler {
             OCMain.repSetTextString("name", Light.name);
             break;
         }
-        default: 
+        default:
             break;
         }
         OCMain.repEndRootObject();
-        OCMain.sendResponce(request, OCStatus.OC_STATUS_OK);
+        OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }

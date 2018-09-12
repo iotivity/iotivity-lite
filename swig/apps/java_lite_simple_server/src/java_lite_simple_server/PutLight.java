@@ -1,4 +1,4 @@
-package java_lite_simple_server_windows;
+package java_lite_simple_server;
 
 import org.iotivity.OCRequest;
 import org.iotivity.RequestHandler;
