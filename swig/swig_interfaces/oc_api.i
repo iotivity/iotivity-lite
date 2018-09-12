@@ -198,6 +198,12 @@ int java_oc_add_device(const char *uri, const char *rt, const char *name,
     return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
 }
 
+void java_oc_resource_make_public() {
+#ifdef OC_SECURITY
+      oc_resource_make_public(res);
+#endif /* OC_SECURITY */
+    }
+
 
 /* from oc_rep.h */
 void rep_start_root_object() {
@@ -253,27 +259,6 @@ void java_rep_set_text_string(const char* key, const char* value) {
   $2 = data;
 }
 
-/* the oc_init_platform without the callback or data pointer */
-%rename(initPlatform) java_oc_init_platform;
-int java_oc_init_platform(const char *mfg_name);
-
-/* TODO Need to figure out how to handle callback and data ctx pointer
-%rename(initPlatform) oc_init_platform;
-int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, void *data);
-*/
-
-/* TODO The oc_add_device without the callback or data pointer */
-%rename(addDevice) java_oc_add_device;
-int java_oc_add_device(const char *uri, const char *rt, const char *name,
-                       const char *spec_version, const char *data_model_version);
-
-/* TODO Need to figure out how to handle callback and data ctx pointer
-%rename(addDevice) oc_add_device;
-int oc_add_device(const char *uri, const char *rt, const char *name,
-                  const char *spec_version, const char *data_model_version,
-                  oc_add_device_cb_t add_device_cb, void *data);
-*/
-
 %typemap(jni)    const oc_handler_t *handler "jobject";
 %typemap(jtype)  const oc_handler_t *handler "MainInitHandler";
 %typemap(jstype) const oc_handler_t *handler "MainInitHandler";
@@ -289,21 +274,6 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
   cid_MainInitHandler = static_cast<jclass>(jenv->NewGlobalRef(callback_interface));
 }
 
-%rename(mainInit) oc_main_init;
-int oc_main_init(const oc_handler_t *handler);
-
-%rename (mainPoll) oc_main_poll;
-oc_clock_time_t oc_main_poll(void);
-
-%rename (mainShutdown) oc_main_shutdown;
-void oc_main_shutdown(void);
-
-%rename (processBaselineInterface) oc_process_baseline_interface;
-void oc_process_baseline_interface(oc_resource_t *resource);
-
-%rename (sendResponce) oc_send_response;
-void oc_send_response(oc_request_t *request, oc_status_t response_code);
-
 %typemap(jni)    oc_request_callback_t callback "jobject";
 %typemap(jtype)  oc_request_callback_t callback "RequestHandler";
 %typemap(jstype) oc_request_callback_t callback "RequestHandler";
@@ -317,20 +287,89 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code);
   $2 = user_data;
 }
 
-class Resource {
-  public:
-    Resource(const char *name, const char *url, uint8_t num_resource_types, int device);
-    void bindResourceInterface(uint8_t interface);
-    void setDefaultInterface(oc_interface_mask_t interface);
-    void bindResourceType(const char *type);
-    void makePublic();
-    void setDiscoverable(bool state);
-    void setObservable(bool state);
-    void setPeriodicObservable(uint16_t seconds);
-    void setRequestHandler(oc_method_t method, oc_request_callback_t callback, void *user_data);
-};
+%rename(mainInit) oc_main_init;
+%rename(mainPoll) oc_main_poll;
+%rename(mainShutdown) oc_main_shutdown;
+/* TODO The oc_add_device without the callback or data pointer */
+%rename(addDevice) java_oc_add_device;
+int java_oc_add_device(const char *uri, const char *rt, const char *name,
+                       const char *spec_version, const char *data_model_version);
+%ignore oc_add_device;
+/* TODO Need to figure out how to handle callback and data ctx pointer
+%rename(addDevice) oc_add_device;
+int oc_add_device(const char *uri, const char *rt, const char *name,
+                  const char *spec_version, const char *data_model_version,
+                  oc_add_device_cb_t add_device_cb, void *data);
+*/
+/* the oc_init_platform without the callback or data pointer */
+%rename(initPlatform) java_oc_init_platform;
+int java_oc_init_platform(const char *mfg_name);
+%ignore oc_init_platform;
+/* TODO Need to figure out how to handle callback and data ctx pointer
+%rename(initPlatform) oc_init_platform;
+int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, void *data);
+*/
+%rename(getConResAnnounced) oc_get_con_res_announced;
+%rename(setConResAnnounce) oc_set_con_res_announced;
 
-void addResource(Resource r);
+// server side
+%rename(newResource) oc_new_resource;
+%rename(resourceBindResourceInterface) oc_resource_bind_resource_interface;
+%rename(resourceSetDefaultInterface) oc_resource_set_default_interface;
+%rename(resourceBindResourceType) oc_resource_bind_resource_type;
+%rename(processBaselineInterface) oc_process_baseline_interface;
+%rename(newCollection) oc_new_collection;
+%rename(deleteCollection) oc_delete_collection;
+%rename(newLink) oc_new_link;
+%rename(deleteLink) oc_delete_link;
+%rename(linkAddRelation) oc_link_add_rel;
+%rename(linkSetInstance) oc_link_set_ins;
+%rename(collectionAddLink) oc_collection_add_link;
+%rename(collectionRemoveLink) oc_collection_remove_link;
+%rename(collectionGetLinks) oc_collection_get_links;
+%rename(addCollection) oc_add_collection;
+%rename(collectionGetCollection) oc_collection_get_collections;
+// custom instance of oc_resource_make_public to handle OC_SECURITY
+%rename(resourceMakePublic) java_oc_resource_make_public;
+%ignore oc_resource_make_public;
+%rename(resourceSetDiscoverable) oc_resource_set_discoverable;
+%rename(resourceSetObservable) oc_resource_set_observable;
+%rename(resourceSetPeriodicObservable) oc_resource_set_periodic_observable;
+%rename(resourceSetRequestHandler) oc_resource_set_request_handler;
+%rename(addResource) oc_add_resource;
+%rename(deleteResource) oc_delete_resource;
+%rename(setConWriteCallback) oc_set_con_write_cb;
+%rename(initQueryIterator) oc_init_query_iterator;
+%rename(iterateQuery) oc_iterate_query;
+%rename(iterateQueryGetValues) oc_iterate_query_get_values;
+%rename(getQueryValue) oc_get_query_value;
+%rename(sendResponce) oc_send_response;
+%rename(ignoreRequest) oc_ignore_request;
+%rename(indicateSeparateResponse) oc_indicate_separate_response;
+%rename(setSeparateResponseBuffer) oc_set_separate_response_buffer;
+%rename(sendSeparateResponse) oc_send_separate_response;
+%rename(notifyObservers) oc_notify_observers;
+
+// client side
+%rename(doIPDiscovery) oc_do_ip_discovery;
+%rename(doIPDiscoveryAtEndpoint) oc_do_ip_discovery_at_endpoint;
+%rename(doGet) oc_do_get;
+%rename(doDelete) oc_do_delete;
+%rename(initPut) oc_init_put;
+%rename(doPut) oc_do_put;
+%rename(initPost) oc_init_post;
+%rename(doPost) oc_do_post;
+%rename(doObserve) oc_do_observe;
+%rename(stopObserve) oc_stop_observe;
+%rename(doIPMulticast) oc_do_ip_multicast;
+%rename(stopMulticast) oc_stop_multicast;
+%rename(freeServerEndpoints) oc_free_server_endpoints;
+%rename(closeSession) oc_close_session;
+
+// common operations
+%rename(setDelayedCallback) oc_set_delayed_callback;
+%rename(removeDelayedCallback) oc_remove_delayed_callback;
+%include "oc_api.h"
 
 %rename (OCRequestPayload) oc_rep_s;
 %rename (OCType) oc_rep_value_type_t;

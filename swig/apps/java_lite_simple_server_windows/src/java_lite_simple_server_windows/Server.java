@@ -5,7 +5,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.iotivity.*;
-public class server {
+public class Server {
     static {
         System.loadLibrary("iotivity-lite-java");
       }
