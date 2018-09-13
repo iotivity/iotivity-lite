@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_36e8e9e1",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-13T04:28:24Z",
+      "side": 1,
+      "message": "What do you intend for your name?",
+      "range": {
+        "startLine": 91,
+        "startChar": 11,
+        "endLine": 91,
+        "endChar": 17
+      },
+      "revId": "64b1d37d0789fe72924d8e62d0f07922979157dd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
