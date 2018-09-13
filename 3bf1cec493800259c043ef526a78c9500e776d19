@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_16916552",
+        "filename": "apps/device_builder_server.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-09-13T12:33:00Z",
+      "side": 1,
+      "message": "Please remove all blank spaces",
+      "range": {
+        "startLine": 812,
+        "startChar": 0,
+        "endLine": 812,
+        "endChar": 2
+      },
+      "revId": "3bf1cec493800259c043ef526a78c9500e776d19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_76a0b19f",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 12
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 580
+      },
+      "writtenOn": "2018-09-13T12:33:00Z",
+      "side": 1,
+      "message": "It would be better to also include  -DOC_CLIENT  so that single app can handle both server and client role.",
+      "range": {
+        "startLine": 274,
+        "startChar": 111,
+        "endLine": 274,
+        "endChar": 122
+      },
+      "revId": "3bf1cec493800259c043ef526a78c9500e776d19",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
