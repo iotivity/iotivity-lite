@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_f6b5e1ee",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-13T09:12:31Z",
+      "side": 1,
+      "message": "This code is placed under the st_decode_encrypted_data_info():403 it will be more logical. And we can remove the parameter decrypted_buff from st_decode_encrypted_data_info(). Any concern for this?",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 34
+      },
+      "revId": "c084871f1ba1979e612321517ebae57ef86d5a22",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_16ca056e",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-13T09:12:31Z",
+      "side": 1,
+      "message": "Can we do this once instead of twice? Considering OS with file system, redundant file operation we have. Any pros cons for this idea?",
+      "range": {
+        "startLine": 154,
+        "startChar": 6,
+        "endLine": 154,
+        "endChar": 22
+      },
+      "revId": "c084871f1ba1979e612321517ebae57ef86d5a22",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_36cf4981",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-13T09:12:31Z",
+      "side": 1,
+      "message": "Logically, st_decode_encrypted_data_info is better naming.",
+      "range": {
+        "startLine": 320,
+        "startChar": 11,
+        "endLine": 320,
+        "endChar": 43
+      },
+      "revId": "c084871f1ba1979e612321517ebae57ef86d5a22",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_56edadee",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-13T09:12:31Z",
+      "side": 1,
+      "message": "Logically, st_decode_cloud_accesspoint_info is better naming.",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 372,
+        "endChar": 29
+      },
+      "revId": "c084871f1ba1979e612321517ebae57ef86d5a22",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
