@@ -55,18 +55,20 @@ OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
 OC_LIST(tls_peers);
 
-static mbedtls_entropy_context entropy_ctx;
-static mbedtls_ctr_drbg_context ctr_drbg_ctx;
-static mbedtls_ssl_cookie_ctx cookie_ctx;
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "util/oc_mem.h"
 
+static mbedtls_ctr_drbg_context *ctr_drbg_ctx;
+static mbedtls_ssl_cookie_ctx *cookie_ctx;
 static mbedtls_ssl_config *server_conf;
 #ifdef OC_TCP
 static mbedtls_ssl_config *server_conf_tls;
 #endif /* OC_TCP */
 #else  /* OC_DYNAMIC_ALLOCATION */
 #define MBEDTLS_ALLOC_BUF_SIZE (20000)
+static mbedtls_entropy_context entropy_ctx;
+static mbedtls_ctr_drbg_context ctr_drbg_ctx;
+static mbedtls_ssl_cookie_ctx cookie_ctx;
 #ifdef OC_TCP
 static mbedtls_ssl_config server_conf_tls[OC_MAX_NUM_DEVICES];
 #endif /* OC_TCP */
@@ -543,23 +545,46 @@ oc_tls_shutdown(void)
   if (server_conf) {
     oc_mem_free(server_conf);
   }
+  mbedtls_ctr_drbg_free(ctr_drbg_ctx);
+  if (ctr_drbg_ctx) {
+    oc_mem_free(ctr_drbg_ctx);
+  }
+  mbedtls_ssl_cookie_free(cookie_ctx);
+  if (cookie_ctx) {
+    oc_mem_free(cookie_ctx);
+  }
 #ifdef OC_TCP
   if (server_conf_tls) {
     oc_mem_free(server_conf_tls);
   }
 #endif /* OC_TCP */
-#endif /* OC_DYNAMIC_ALLOCATION */
+#else
   mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&cookie_ctx);
   mbedtls_entropy_free(&entropy_ctx);
+#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 
 int
 oc_tls_init_context(void)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  mbedtls_entropy_context *entropy_ctx = NULL;
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (oc_core_get_num_devices() < 1) {
     goto dtls_init_err;
   }
+#ifdef OC_DYNAMIC_ALLOCATION
+  entropy_ctx = oc_mem_malloc(sizeof(mbedtls_entropy_context));
+  if (!entropy_ctx)
+    goto dtls_init_err;
+  ctr_drbg_ctx = oc_mem_malloc(sizeof(mbedtls_ctr_drbg_context));
+  if (!ctr_drbg_ctx)
+    goto dtls_init_err;
+  cookie_ctx = oc_mem_malloc(sizeof(mbedtls_ssl_cookie_ctx));
+  if (!cookie_ctx)
+    goto dtls_init_err;
+#endif /* OC_DYNAMIC_ALLOCATION */
 #ifdef OC_DYNAMIC_ALLOCATION
   server_conf = (mbedtls_ssl_config *)oc_mem_calloc(oc_core_get_num_devices(),
                                                     sizeof(mbedtls_ssl_config));
@@ -575,11 +600,12 @@ oc_tls_init_context(void)
   mbedtls_debug_set_threshold(4);
 #endif /* OC_DEBUG */
 
+#ifndef OC_DYNAMIC_ALLOCATION
   mbedtls_entropy_init(&entropy_ctx);
   mbedtls_ssl_cookie_init(&cookie_ctx);
   mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
   if (mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
-                            (const unsigned char *)PERSONALIZATION_STR,
+                           (const unsigned char *)PERSONALIZATION_STR,
                             strlen(PERSONALIZATION_STR)) != 0) {
     goto dtls_init_err;
   }
@@ -587,6 +613,20 @@ oc_tls_init_context(void)
                                &ctr_drbg_ctx) != 0) {
     goto dtls_init_err;
   }
+#else
+  mbedtls_entropy_init(entropy_ctx);
+  mbedtls_ssl_cookie_init(cookie_ctx);
+  mbedtls_ctr_drbg_init(ctr_drbg_ctx);
+  if (mbedtls_ctr_drbg_seed(ctr_drbg_ctx, mbedtls_entropy_func, entropy_ctx,
+                            (const unsigned char *)PERSONALIZATION_STR,
+                            strlen(PERSONALIZATION_STR)) != 0) {
+    goto dtls_init_err;
+  }
+  if (mbedtls_ssl_cookie_setup(cookie_ctx, mbedtls_ctr_drbg_random,
+                               ctr_drbg_ctx) != 0) {
+    goto dtls_init_err;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   int i;
 
 #ifdef OC_TCP
@@ -636,8 +676,13 @@ oc_tls_init_context(void)
     mbedtls_ssl_conf_dbg(&server_conf_tls[i], oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
 #endif /* OC_TCP */
+#ifndef OC_DYNAMIC_ALLOCATION
     mbedtls_config(mbedtls_ssl_conf_rng, server_conf, i,
                    mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
+#else
+    mbedtls_config(mbedtls_ssl_conf_rng, server_conf, i,
+                   mbedtls_ctr_drbg_random, ctr_drbg_ctx);
+#endif /* OC_DYNAMIC_ALLOCATION */
     mbedtls_config(mbedtls_ssl_conf_min_version, server_conf, i,
                    MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_config(mbedtls_ssl_conf_ciphersuites, server_conf, i, ciphers);
@@ -645,8 +690,13 @@ oc_tls_init_context(void)
                    MBEDTLS_SSL_VERIFY_REQUIRED);
     mbedtls_config(mbedtls_ssl_conf_psk_cb, server_conf, i, get_psk_cb, NULL);
 
+#ifndef OC_DYNAMIC_ALLOCATION
     mbedtls_ssl_conf_dtls_cookies(&server_conf[i], mbedtls_ssl_cookie_write,
                                   mbedtls_ssl_cookie_check, &cookie_ctx);
+#else
+    mbedtls_ssl_conf_dtls_cookies(&server_conf[i], mbedtls_ssl_cookie_write,
+                                  mbedtls_ssl_cookie_check, cookie_ctx);
+#endif /* OC_DYNAMIC_ALLOCATION */
     mbedtls_ssl_conf_handshake_timeout(&server_conf[i], 2500, 20000);
   }
 
@@ -680,8 +730,13 @@ oc_tls_init_context(void)
   mbedtls_ssl_conf_dbg(&client_conf_tls[0], oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
 #endif /* OC_TCP */
+#ifndef OC_DYNAMIC_ALLOCATION
   mbedtls_config(mbedtls_ssl_conf_rng, client_conf, 0, mbedtls_ctr_drbg_random,
                  &ctr_drbg_ctx);
+#else
+  mbedtls_config(mbedtls_ssl_conf_rng, client_conf, 0, mbedtls_ctr_drbg_random,
+                 ctr_drbg_ctx);
+#endif /* OC_DYNAMIC_ALLOCATION */
   mbedtls_config(mbedtls_ssl_conf_min_version, client_conf, 0,
                  MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
   mbedtls_config(mbedtls_ssl_conf_ciphersuites, client_conf, 0, ciphers);
@@ -691,6 +746,12 @@ oc_tls_init_context(void)
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (entropy_ctx) {
+    mbedtls_entropy_free(entropy_ctx);
+    oc_mem_free(entropy_ctx);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   OC_ERR("oc_tls: TLS initialization error");
   oc_tls_shutdown();
   return -1;
@@ -931,11 +992,19 @@ gen_master_key(uint8_t *master, int *master_len)
     OC_ERR("set peer's public key Z");
     goto master_key_error;
   }
+#ifndef OC_DYNAMIC_ALLOCATION
   if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
       &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, &ctr_drbg_ctx) != 0) {
     OC_ERR("compute shared key");
     goto master_key_error;
   }
+#else
+  if (mbedtls_ecdh_compute_shared(&ecdh_ctx.grp, &ecdh_ctx.z,
+      &ecdh_ctx.Qp, &ecdh_ctx.d, mbedtls_ctr_drbg_random, ctr_drbg_ctx) != 0) {
+    OC_ERR("compute shared key");
+    goto master_key_error;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (mbedtls_mpi_write_binary(&ecdh_ctx.z, shared, 32) != 0) {
     OC_ERR("write shared key");
     goto master_key_error;
@@ -1077,7 +1146,7 @@ oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
   return true;
 #else
   oc_abort("alloc failed");
-#endif
+#endif /* !OC_DYNAMIC_ALLOCATION */
 tls_load_ca_cert_err:
   OC_ERR("oc_tls: TLS initialization error");
   return false;
