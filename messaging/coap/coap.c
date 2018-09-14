@@ -107,22 +107,41 @@ coap_set_option_header(unsigned int delta, size_t length, uint8_t *buffer)
 {
   size_t written = 0;
 
-  buffer[0] = coap_option_nibble(delta) << 4 | coap_option_nibble(length);
+  if(buffer) {
+    buffer[0] = coap_option_nibble(delta) << 4 | coap_option_nibble(length);
+  }
 
   if (delta > 268) {
-    buffer[++written] = ((delta - 269) >> 8) & 0xff;
-    buffer[++written] = (delta - 269) & 0xff;
+    ++written;
+    if(buffer) {
+      buffer[written] = ((delta - 269) >> 8) & 0xff;
+    }
+    ++written;
+    if(buffer){
+      buffer[written] = (delta - 269) & 0xff;
+    }
   } else if (delta > 12) {
-    buffer[++written] = (uint8_t)(delta - 13);
+    ++written;
+    if(buffer){
+      buffer[written] = (uint8_t)(delta - 13);
+    }
   }
 
   if (length > 268) {
-    buffer[++written] = ((length - 269) >> 8) & 0xff;
-    buffer[++written] = (length - 269) & 0xff;
+    ++written;
+    if(buffer){
+      buffer[written] = ((length - 269) >> 8) & 0xff;
+    }
+    ++written;
+    if(buffer){
+      buffer[written] = (length - 269) & 0xff;
+    }
   } else if (length > 12) {
-    buffer[++written] = (uint8_t)(length - 13);
+    ++written;
+    if(buffer){
+      buffer[written] = (uint8_t)(length - 13);
+    }
   }
-
   OC_DBG("WRITTEN %zu B opt header", 1 + written);
 
   return ++written;
@@ -151,16 +170,28 @@ coap_serialize_int_option(unsigned int number, unsigned int current_number,
   i = coap_set_option_header(number - current_number, i, buffer);
 
   if (0xFF000000 & value) {
-    buffer[i++] = (uint8_t)(value >> 24);
+    if(buffer){
+      buffer[i] = (uint8_t)(value >> 24);
+    }
+    i++;
   }
   if (0xFFFF0000 & value) {
-    buffer[i++] = (uint8_t)(value >> 16);
+    if(buffer){
+      buffer[i] = (uint8_t)(value >> 16);
+    }
+    i++;
   }
   if (0xFFFFFF00 & value) {
-    buffer[i++] = (uint8_t)(value >> 8);
+    if(buffer){
+      buffer[i] = (uint8_t)(value >> 8);
+    }
+    i++;
   }
   if (0xFFFFFFFF & value) {
-    buffer[i++] = (uint8_t)(value);
+    if(buffer) {
+      buffer[i] = (uint8_t)(value);
+    }
+    i++;
   }
   return i;
 }
@@ -187,9 +218,16 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
         part_end = array + j;
         temp_length = part_end - part_start;
 
-        i += coap_set_option_header(number - current_number, temp_length,
-                                    &buffer[i]);
-        memcpy(&buffer[i], part_start, temp_length);
+        if(buffer){
+          i += coap_set_option_header(number - current_number, temp_length,
+                                      &buffer[i]);
+          memcpy(&buffer[i], part_start, temp_length);
+        }
+        else{
+          i += coap_set_option_header(number - current_number, temp_length,
+                                      NULL);
+        }
+
         i += temp_length;
 
         OC_DBG("OPTION type %u, delta %u, len %zu, part [%.*s]", number,
@@ -201,8 +239,15 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
       }
     } /* for */
   } else {
-    i += coap_set_option_header(number - current_number, length, &buffer[i]);
-    memcpy(&buffer[i], array, length);
+
+    if( buffer ){
+      i += coap_set_option_header(number - current_number, length, &buffer[i]);
+      memcpy(&buffer[i], array, length);
+    }
+    else {
+      i += coap_set_option_header(number - current_number, length, NULL);
+    }
+
     i += length;
 
     OC_DBG("OPTION type %u, delta %u, len %zu", number,
@@ -270,13 +315,21 @@ coap_get_variable(const char *buffer, size_t length, const char *name,
 }
 #endif
 /*---------------------------------------------------------------------------*/
-static size_t coap_serialize_options(void *packet, uint8_t *option_array)
+/* It just caculates size of option when option_array is NULL */
+static size_t
+coap_serialize_options(void *packet, uint8_t *option_array)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   uint8_t *option = option_array;
   unsigned int current_number = 0;
+  size_t option_length = 0;
 
-  OC_DBG("Serializing options at %p", option);
+  if(option){
+    OC_DBG("Serializing options at %p", option);
+  }
+  else{
+    OC_DBG("Caculating size of options");
+  }
 #if 0
   /* The options must be serialized in the order of their number */
   COAP_SERIALIZE_BYTE_OPTION(COAP_OPTION_IF_MATCH, if_match, "If-Match");
@@ -302,8 +355,7 @@ static size_t coap_serialize_options(void *packet, uint8_t *option_array)
 #if 0
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_MAX_AGE, max_age, "Max-Age");
 #endif
-  COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_QUERY, uri_query, '&',
-                               "Uri-Query");
+  COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_QUERY, uri_query, '&',"Uri-Query");
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_ACCEPT, accept, "Accept");
 #if 0
   COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_LOCATION_QUERY, location_query,
@@ -322,36 +374,58 @@ static size_t coap_serialize_options(void *packet, uint8_t *option_array)
 
   if (IS_OPTION(coap_pkt, COAP_OPTION_ACCEPT)) {
     if (coap_pkt->accept == APPLICATION_CBOR) {
-      option +=
-        coap_serialize_int_option(OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER,
-                                  current_number, option, OIC_VER_1_1_0);
+
+      option_length += coap_serialize_int_option(
+        OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER, current_number, option,
+        OIC_VER_1_1_0);
+      if (option) {
+        option = option_array + option_length;
+      }
+
     } else {
-      option +=
-        coap_serialize_int_option(OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER,
-                                  current_number, option, OCF_VER_1_0_0);
+
+      option_length += coap_serialize_int_option(
+        OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER, current_number, option,
+        OCF_VER_1_0_0);
+      if (option) {
+        option = option_array + option_length;
+      }
     }
+
     current_number = OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER;
   }
   if (IS_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT)) {
     if (coap_pkt->content_format == APPLICATION_CBOR) {
-      option += coap_serialize_int_option(
-        OCF_OPTION_CONTENT_FORMAT_VER, current_number, option, OIC_VER_1_1_0);
+
+      option_length +=
+        coap_serialize_int_option(OCF_OPTION_CONTENT_FORMAT_VER, current_number,
+                                  option, OIC_VER_1_1_0);
+      if (option) {
+        option = option_array + option_length;
+      }
+
     } else {
-      option += coap_serialize_int_option(
-        OCF_OPTION_CONTENT_FORMAT_VER, current_number, option, OCF_VER_1_0_0);
+
+      option_length +=
+        coap_serialize_int_option(OCF_OPTION_CONTENT_FORMAT_VER, current_number,
+                                  option, OCF_VER_1_0_0);
+      if (option) {
+        option = option_array + option_length;
+      }
     }
     current_number = OCF_OPTION_CONTENT_FORMAT_VER;
   }
 
-  OC_DBG("-Done serializing at %p----", option);
+  if(option){
+    OC_DBG("-Done serializing at %p----", option);
+  }
 
-  return (option - option_array);
+  return option_length;
 }
 /*---------------------------------------------------------------------------*/
-static coap_status_t coap_parse_token_option(void *packet,
-                                               uint8_t *data,
-                                               uint32_t data_len,
-                                               uint8_t *current_option)
+static coap_status_t
+coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
+                        uint8_t *current_option)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
 
@@ -597,12 +671,32 @@ static coap_status_t coap_parse_token_option(void *packet,
 }
 /*---------------------------------------------------------------------------*/
 #ifdef OC_TCP
-static void coap_tcp_serialize_length(void *packet, size_t option_length,
-                                      uint8_t *num_extended_length_bytes)
-{
+static void coap_tcp_set_header_fields(void *packet,
+                                       uint8_t *num_extended_length_bytes,
+                                       uint8_t *len, size_t *extended_len) {
   coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
-  uint8_t len = 0;
-  size_t extended_len = 0;
+
+  coap_pkt->buffer[0] = 0x00;
+  coap_pkt->buffer[0] |=
+    COAP_TCP_HEADER_LEN_MASK & (*len) << COAP_TCP_HEADER_LEN_POSITION;
+  coap_pkt->buffer[0] |=
+    COAP_HEADER_TOKEN_LEN_MASK &
+                ( coap_pkt->token_len) << COAP_HEADER_TOKEN_LEN_POSITION;
+
+  int i = 0;
+  for (i = 1; i <= *num_extended_length_bytes; i++) {
+    coap_pkt->buffer[i] = (uint8_t)((*extended_len)
+                            >> (8 * (*num_extended_length_bytes - i)));
+  }
+  coap_pkt->buffer[1 + *num_extended_length_bytes] = coap_pkt->code;
+}
+static void coap_tcp_serialize_length(void *packet, size_t option_length,
+                                      uint8_t *num_extended_length_bytes,
+                                      uint8_t *len, size_t *extended_len) {
+
+  coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
+  *len = 0;
+  *extended_len = 0;
 
   size_t total_length = option_length;
   if (coap_pkt->payload && coap_pkt->payload_len > 0) {
@@ -612,53 +706,42 @@ static void coap_tcp_serialize_length(void *packet, size_t option_length,
   if (total_length < COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN) {
     OC_DBG("-TCP Len < COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN(%d) ",
             COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN);
-    len = total_length;
+    *len = total_length;
     goto exit;
   }
 
-  len = COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
+  *len = COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
   *num_extended_length_bytes = 1;
 
   if (total_length < COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN) {
-    extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
+    *extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
     OC_DBG("-TCP Len < COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN(%d) ",
             COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN);
     goto exit;
   }
 
-  len += 1;
+  *len += 1;
   *num_extended_length_bytes <<= 1;
 
   if (total_length < COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN) {
-    extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN;
+    *extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN;
     OC_DBG("-TCP Len < COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN(%d) ",
             COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN);
     goto exit;
   }
 
-  len += 1;
+  *len += 1;
   *num_extended_length_bytes <<= 1;
-  extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
+  *extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
 
 exit:
-  coap_pkt->buffer[0] = 0x00;
-  coap_pkt->buffer[0] |=
-    COAP_TCP_HEADER_LEN_MASK & (len) << COAP_TCP_HEADER_LEN_POSITION;
-
-  int i = 0;
-  for (i = 1; i <= *num_extended_length_bytes; i++) {
-    coap_pkt->buffer[i] = (uint8_t)((extended_len)
-                            >> (8 * (*num_extended_length_bytes - i)));
-  }
-
   OC_DBG("-Totel length %ld option len : %ld ", total_length, option_length);
-  OC_DBG("-TCP length field %u Extended length header len : %ld ", len, extended_len);
+  OC_DBG("-TCP length field %u Extended length header len : %ld ", *len, *extended_len);
 }
 /*---------------------------------------------------------------------------*/
 static void coap_tcp_get_message_length(const uint8_t *data,
                                         size_t *message_length,
-                                        uint8_t *num_extended_length_bytes)
-{
+                                        uint8_t *num_extended_length_bytes) {
   uint8_t tcp_len = (COAP_TCP_HEADER_LEN_MASK & data[0])
                     >> COAP_TCP_HEADER_LEN_POSITION;
 
@@ -733,60 +816,85 @@ coap_tcp_init_message(void *packet, uint8_t code)
 }
 #endif /* OC_TCP */
 /*---------------------------------------------------------------------------*/
-size_t
-coap_serialize_message(void *packet, uint8_t *buffer)
-{
+static void coap_set_header_fields(void *packet) {
+  coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
+
+  coap_pkt->buffer[0] = 0x00;
+  coap_pkt->buffer[0] |= COAP_HEADER_VERSION_MASK &
+                          (coap_pkt->version) << COAP_HEADER_VERSION_POSITION;
+  coap_pkt->buffer[0] |=
+        COAP_HEADER_TYPE_MASK & (coap_pkt->type) << COAP_HEADER_TYPE_POSITION;
+  coap_pkt->buffer[0] |= COAP_HEADER_TOKEN_LEN_MASK &
+        (coap_pkt->token_len) << COAP_HEADER_TOKEN_LEN_POSITION;
+  coap_pkt->buffer[1] = coap_pkt->code;
+  coap_pkt->buffer[2] = (uint8_t)((coap_pkt->mid) >> 8);
+  coap_pkt->buffer[3] = (uint8_t)(coap_pkt->mid);
+}
+/*---------------------------------------------------------------------------*/
+size_t coap_serialize_message(void *packet, uint8_t *buffer) {
+  if(!packet || !buffer )
+  {
+    OC_ERR("packet: %p or buffer: %p is NULL", packet, buffer);
+    return 0;
+  }
+
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
-  uint8_t option_array[COAP_MAX_HEADER_SIZE * 2];
   uint8_t *option;
   unsigned int current_number = 0;
   uint8_t token_location = 0;
+  size_t option_length = 0, option_length_caculation= 0;
 
   /* Initialize */
   coap_pkt->buffer = buffer;
   coap_pkt->version = 1;
 
   /* coap header option serialize first to know total length about options */
-  size_t option_length = coap_serialize_options(packet, option_array);
+  option_length_caculation = coap_serialize_options(packet,NULL);
 
 #ifdef OC_TCP
   if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
-    OC_DBG("-Serializing CoAP over TCP packet to %p, ", coap_pkt->buffer);
-    uint8_t num_extended_length_bytes = 0;
-    coap_tcp_serialize_length(packet, option_length, &num_extended_length_bytes);
-    coap_pkt->buffer[0] |= COAP_HEADER_TOKEN_LEN_MASK &
-                          (coap_pkt->token_len)
-                            << COAP_HEADER_TOKEN_LEN_POSITION;
-    coap_pkt->buffer[1 + num_extended_length_bytes] = coap_pkt->code;
+    uint8_t num_extended_length_bytes = 0,len=0;
+    size_t extended_len=0;
+
+    coap_tcp_serialize_length(coap_pkt, option_length_caculation,
+                              &num_extended_length_bytes, &len, &extended_len);
 
     token_location = 2 + num_extended_length_bytes;
+
+    /* an error occurred: caller must check for !=0 */
+    if( token_location+ coap_pkt->token_len + option_length_caculation >
+        COAP_MAX_HEADER_SIZE ){
+      OC_ERR("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u-TCP",
+             (unsigned int)(token_location+ coap_pkt->token_len + option_length_caculation),
+             COAP_MAX_HEADER_SIZE);
+      goto exit;
+    }
+    /* set header fields */
+    coap_tcp_set_header_fields(coap_pkt,&num_extended_length_bytes, &len, &extended_len);
   } else
 #endif /* OC_TCP */
   {
     OC_DBG("-Serializing MID %u to %p", coap_pkt->mid, coap_pkt->buffer);
 
     /* set header fields */
-    coap_pkt->buffer[0] = 0x00;
-    coap_pkt->buffer[0] |= COAP_HEADER_VERSION_MASK &
-                          (coap_pkt->version) << COAP_HEADER_VERSION_POSITION;
-    coap_pkt->buffer[0] |=
-      COAP_HEADER_TYPE_MASK & (coap_pkt->type) << COAP_HEADER_TYPE_POSITION;
-    coap_pkt->buffer[0] |= COAP_HEADER_TOKEN_LEN_MASK &
-                          (coap_pkt->token_len)
-                            << COAP_HEADER_TOKEN_LEN_POSITION;
-    coap_pkt->buffer[1] = coap_pkt->code;
-    coap_pkt->buffer[2] = (uint8_t)((coap_pkt->mid) >> 8);
-    coap_pkt->buffer[3] = (uint8_t)(coap_pkt->mid);
-
     token_location = COAP_HEADER_LEN;
+
+    if( token_location+ coap_pkt->token_len +option_length_caculation >
+        COAP_MAX_HEADER_SIZE ){
+      OC_ERR("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u-UDP",
+             (unsigned int)(token_location+ coap_pkt->token_len+option_length_caculation),
+             COAP_MAX_HEADER_SIZE);
+      goto exit;
+    }
+
+    coap_set_header_fields(coap_pkt);
   }
 
   /* empty packet, dont need to do more stuff */
   if (!coap_pkt->code) {
     OC_DBG("Done serializing empty message at %p-", coap_pkt->buffer);
-    return 4;
+    return token_location;
   }
-
   /* set Token */
   OC_DBG("Token (len %u)", coap_pkt->token_len);
   OC_LOGbytes(coap_pkt->token, coap_pkt->token_len);
@@ -797,8 +905,12 @@ coap_serialize_message(void *packet, uint8_t *buffer)
     ++option;
   }
 
-  /* Serialize options */
-  memmove(option, option_array, option_length);
+  option_length = coap_serialize_options(packet, option);
+  if (option_length != option_length_caculation){
+    OC_ERR("expecting header length is different. expected:%u, actual:%u",
+           (unsigned int)option_length_caculation, (unsigned int)option_length);
+    goto exit;
+  }
   option += option_length;
 
   /* Pack payload */
@@ -813,8 +925,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
     /* an error occurred: caller must check for !=0 */
     OC_WRN("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u",
            (unsigned int)(option - coap_pkt->buffer), COAP_MAX_HEADER_SIZE);
-    coap_pkt->buffer = NULL;
-    return 0;
+    goto exit;
   }
 
   OC_DBG("-Done %u B (header len %u, payload len %u)-",
@@ -825,6 +936,10 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   OC_LOGbytes(coap_pkt->buffer, 8);
 
   return (option - buffer) + coap_pkt->payload_len; /* packet length */
+
+exit:
+  coap_pkt->buffer = NULL;
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -1060,9 +1175,8 @@ coap_get_header_etag(void *packet, const uint8_t **etag)
   *etag = coap_pkt->etag;
   return coap_pkt->etag_len;
 }
-int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len)
-{
-  coap_packet_t * const coap_pkt = (coap_packet_t *)packet;
+int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len) {
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, etag_len);
   memcpy(coap_pkt->etag, etag, coap_pkt->etag_len);
