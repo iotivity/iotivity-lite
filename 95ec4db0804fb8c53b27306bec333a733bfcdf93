@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_36b10990",
+        "filename": "tests/itc/ri/src/RICollectionIntegrationTest.cpp",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-14T16:27:02Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this use collectionDiscoverResource()?",
+      "range": {
+        "startLine": 37,
+        "startChar": 17,
+        "endLine": 37,
+        "endChar": 33
+      },
+      "revId": "95ec4db0804fb8c53b27306bec333a733bfcdf93",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
