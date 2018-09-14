@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_366e2930",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-14T04:26:21Z",
+      "side": 1,
+      "message": "This logic need to be disabled if tcp server disabled.",
+      "range": {
+        "startLine": 146,
+        "startChar": 1,
+        "endLine": 156,
+        "endChar": 20
+      },
+      "revId": "b33a944d5aec8698caaf7b3f62851a76a8b066be",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_16696525",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-14T04:26:21Z",
+      "side": 1,
+      "message": "This logic need to be disabled if tcp server disabled.",
+      "range": {
+        "startLine": 317,
+        "startChar": 2,
+        "endLine": 355,
+        "endChar": 3
+      },
+      "revId": "b33a944d5aec8698caaf7b3f62851a76a8b066be",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d687fdd5",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-14T04:26:21Z",
+      "side": 1,
+      "message": "I think we need to enable connect pipe socket although tcp server diabled.",
+      "range": {
+        "startLine": 743,
+        "startChar": 2,
+        "endLine": 745,
+        "endChar": 3
+      },
+      "revId": "b33a944d5aec8698caaf7b3f62851a76a8b066be",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_7678b1f2",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 790,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-14T04:26:21Z",
+      "side": 1,
+      "message": "This logic need to be enabled although tcp server diabled.",
+      "range": {
+        "startLine": 780,
+        "startChar": 2,
+        "endLine": 790,
+        "endChar": 3
+      },
+      "revId": "b33a944d5aec8698caaf7b3f62851a76a8b066be",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_5673ed14",
+        "filename": "port/linux/tcpadapter.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-14T04:26:21Z",
+      "side": 1,
+      "message": "I think we need to diable some part of init/terminate. Although tcp server is diabled, some logic should be executed.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 26
+      },
+      "revId": "b33a944d5aec8698caaf7b3f62851a76a8b066be",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
