@@ -146,34 +146,46 @@ typedef struct
 } coap_packet_t;
 
 /* option format serialization */
-#define COAP_SERIALIZE_INT_OPTION(number, field, text)                         \
+#define COAP_SERIALIZE_INT_OPTION(number, field, text, get_size_flag)          \
   if (IS_OPTION(coap_pkt, number)) {                                           \
     OC_DBG(text " [%u]", (unsigned int)coap_pkt->field);                       \
-    option += coap_serialize_int_option(number, current_number, option,        \
-                                        coap_pkt->field);                      \
+    option_length += coap_serialize_int_option(                                \
+      number, current_number, option, coap_pkt->field, get_size_flag);         \
+    if (!get_size_flag) {                                                      \
+      option = option_array + option_length;                                   \
+    }                                                                          \
     current_number = number;                                                   \
   }
-#define COAP_SERIALIZE_BYTE_OPTION(number, field, text)                        \
+
+#define COAP_SERIALIZE_BYTE_OPTION(number, field, text, get_size_flag)         \
   if (IS_OPTION(coap_pkt, number)) {                                           \
     OC_DBG(text " %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]",                    \
            (unsigned int)coap_pkt->field##_len, coap_pkt->field[0],            \
            coap_pkt->field[1], coap_pkt->field[2], coap_pkt->field[3],         \
            coap_pkt->field[4], coap_pkt->field[5], coap_pkt->field[6],         \
            coap_pkt->field[7]); /* FIXME always prints 8 bytes */              \
-    option += coap_serialize_array_option(number, current_number, option,      \
-                                          coap_pkt->field,                     \
-                                          coap_pkt->field##_len, '\0');        \
+    option_length += coap_serialize_array_option(                              \
+      number, current_number, option, coap_pkt->field, coap_pkt->field##_len,  \
+      '\0', get_size_flag);                                                    \
+    if (!get_size_flag) {                                                      \
+      option = option_array + option_length;                                   \
+    }                                                                          \
     current_number = number;                                                   \
   }
-#define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text)            \
+
+#define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text,            \
+                                     get_size_flag)                            \
   if (IS_OPTION(coap_pkt, number)) {                                           \
     OC_DBG(text " [%.*s]", (int)coap_pkt->field##_len, coap_pkt->field);       \
-    option += coap_serialize_array_option(number, current_number, option,      \
-                                          (uint8_t *)coap_pkt->field,          \
-                                          coap_pkt->field##_len, splitter);    \
+    option_length += coap_serialize_array_option(                              \
+      number, current_number, option, (uint8_t *)coap_pkt->field,              \
+      coap_pkt->field##_len, splitter, get_size_flag);                         \
+    if (!get_size_flag) {                                                      \
+      option = option_array + option_length;                                   \
+    }                                                                          \
     current_number = number;                                                   \
   }
-#define COAP_SERIALIZE_BLOCK_OPTION(number, field, text)                       \
+#define COAP_SERIALIZE_BLOCK_OPTION(number, field, text, get_size_flag)        \
   if (IS_OPTION(coap_pkt, number)) {                                           \
     OC_DBG(text " [%lu%s (%u B/blk)]", (unsigned long)coap_pkt->field##_num,   \
            coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size);         \
@@ -183,8 +195,11 @@ typedef struct
     }                                                                          \
     block |= 0xF & coap_log_2(coap_pkt->field##_size / 16);                    \
     OC_DBG(text " encoded: 0x%lX", (unsigned long)block);                      \
-    option +=                                                                  \
-      coap_serialize_int_option(number, current_number, option, block);        \
+    option_length += coap_serialize_int_option(number, current_number, option, \
+                                               block, get_size_flag);          \
+    if (!get_size_flag) {                                                      \
+      option = option_array + option_length;                                   \
+    }                                                                          \
     current_number = number;                                                   \
   }
 
