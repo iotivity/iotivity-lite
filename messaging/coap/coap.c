@@ -55,6 +55,10 @@
 #include "security/oc_tls.h"
 #endif
 
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_TCP)
+#include "util/oc_mem.h"
+#endif /* OC_DYNAMIC_ALLOCATION  &&  OC_TCP */
+
 /*---------------------------------------------------------------------------*/
 /*- Variables ---------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -269,8 +273,104 @@ coap_get_variable(const char *buffer, size_t length, const char *name,
   return 0;
 }
 #endif
+
+#ifdef OC_TCP
+
+#define COAP_MAX_OPTION_HEADER_LEN 5
+
+static uint8_t
+coap_get_num_of_matched_ch(const char *buffer, const size_t len, const char ch)
+{
+  uint8_t num = 0;
+  size_t i;
+
+  if (buffer == NULL) {
+    OC_ERR("buffer is null\n");
+    return 0;
+  }
+
+  for (i = 0; i < len; i++) {
+    if (buffer[i] == ch)
+      num++;
+  }
+  return num;
+}
+
+static size_t
+coap_serialize_options_get_size(void *packet)
+{
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+  size_t length = 0;
+
+  if (packet == NULL) {
+    OC_ERR("packet is null\n");
+    return 0;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_ETAG)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + coap_pkt->etag_len;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE)) {
+    length += COAP_MAX_OPTION_HEADER_LEN;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_URI_PORT)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 2;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_URI_PATH)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 2;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_URI_PATH)) {
+    uint8_t num = coap_get_num_of_matched_ch(coap_pkt->uri_path,
+                                             coap_pkt->uri_path_len, '/');
+    length +=
+      (num + 1) * COAP_MAX_OPTION_HEADER_LEN + coap_pkt->uri_path_len - num;
+    ;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 2;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_URI_QUERY)) {
+    uint8_t num = coap_get_num_of_matched_ch(coap_pkt->uri_query,
+                                             coap_pkt->uri_query_len, '&');
+    length +=
+      (num + 1) * COAP_MAX_OPTION_HEADER_LEN + coap_pkt->uri_query_len - num;
+    ;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_ACCEPT)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 2;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_BLOCK2)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 4;
+  }
+  if (IS_OPTION(coap_pkt, COAP_OPTION_BLOCK1)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 4;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_SIZE1)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 4;
+  }
+
+  if (IS_OPTION(coap_pkt, COAP_OPTION_SIZE2)) {
+    length += COAP_MAX_OPTION_HEADER_LEN + 4;
+  }
+
+  return length;
+}
+#endif
+
 /*---------------------------------------------------------------------------*/
-static size_t coap_serialize_options(void *packet, uint8_t *option_array)
+// if coap_serialize_options is changed,
+//   coap_serialize_options_get_size() should be modified too.
+static size_t
+coap_serialize_options(void *packet, uint8_t *option_array)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
   uint8_t *option = option_array;
@@ -733,23 +833,49 @@ coap_tcp_init_message(void *packet, uint8_t code)
 }
 #endif /* OC_TCP */
 /*---------------------------------------------------------------------------*/
+
+#ifdef OC_TCP
+#ifndef OC_DYNAMIC_ALLOCATION
+#define OPTION_ARRAY_LENGTH 256
+#endif /* OC_TCP */
+#endif /* OC_TCP */
+
 size_t
 coap_serialize_message(void *packet, uint8_t *buffer)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
-  uint8_t option_array[COAP_MAX_HEADER_SIZE * 2];
   uint8_t *option;
   unsigned int current_number = 0;
   uint8_t token_location = 0;
+  size_t option_length = 0;
 
   /* Initialize */
   coap_pkt->buffer = buffer;
   coap_pkt->version = 1;
 
-  /* coap header option serialize first to know total length about options */
-  size_t option_length = coap_serialize_options(packet, option_array);
+/* coap header option serialize first to know total length about options */
 
 #ifdef OC_TCP
+  size_t option_length_max = coap_serialize_options_get_size(packet);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *option_array = oc_mem_malloc(option_length_max);
+#else
+  uint8_t option_array[OPTION_ARRAY_LENGTH];
+  if (option_length_max > OPTION_ARRAY_LENGTH) {
+    OC_WRN("there is a possiblity about buffer overflow in creating option");
+  }
+#endif
+  option_length = coap_serialize_options(packet, option_array);
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  if (option_length > OPTION_ARRAY_LENGTH) {
+    OC_ERR("buffer overflow in creating option, please extend the size of "
+           "option_array");
+  }
+  return 0;
+#endif
+
   if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
     OC_DBG("-Serializing CoAP over TCP packet to %p, ", coap_pkt->buffer);
     uint8_t num_extended_length_bytes = 0;
@@ -797,9 +923,20 @@ coap_serialize_message(void *packet, uint8_t *buffer)
     ++option;
   }
 
-  /* Serialize options */
+/* Serialize options */
+#ifdef OC_TCP
   memmove(option, option_array, option_length);
   option += option_length;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_mem_free(option_array);
+  option_array = NULL;
+#endif
+
+#else
+  option_length = coap_serialize_options(packet, option);
+  option += option_length;
+#endif
 
   /* Pack payload */
   if ((option - coap_pkt->buffer) <= COAP_MAX_HEADER_SIZE) {
