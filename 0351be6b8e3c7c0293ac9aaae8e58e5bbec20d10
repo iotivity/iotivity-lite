@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_d1454718",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1184,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-17T11:50:43Z",
+      "side": 1,
+      "message": "From comparing your state machine framework and oc_process concept, there is a gap where the processing logic exist.\nIf A state receive the event_1 and go to B state. Your concept process all tasks in A state. But oc_process concept guide for state B process for event_1. If we follow oc_process concept any problem we may have, your opinion?\nAnyway it is strange state_ready state code has the easy-setup processing logic which may code-understanding more time.",
+      "parentUuid": "da33351e_25739181",
+      "range": {
+        "startLine": 1177,
+        "startChar": 0,
+        "endLine": 1184,
+        "endChar": 55
+      },
+      "revId": "0351be6b8e3c7c0293ac9aaae8e58e5bbec20d10",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_ce83e702",
         "filename": "service/st-app-fw/src/st_manager.c",
         "patchSetId": 33
