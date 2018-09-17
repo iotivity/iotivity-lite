@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_b1ea430d",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-17T10:33:28Z",
+      "side": 1,
+      "message": "This should be careful because we user COAP_MAX_HEADER_SIZE in every where to alloc payload.\nIf we alloc payload which has size(COAP_MAX_HEADER_SIZE + MAX_APP_DATA_SIZE) and use header size over COAP_MAX_HEADER_SIZE, then It will occur overflow in handling app data. (In case Payload size is MAX_APP_DATA_SIZE).\nSo, I think it is better to limit coap header max size and if someone want to use more header in their app, they should re-define COAP_MAX_HEADER_SIZE.",
+      "range": {
+        "startLine": 299,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 45
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_31975392",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-17T10:33:28Z",
+      "side": 1,
+      "message": "Why only TCP serialize options first and UDP later? Is there any reason to saperate logic?",
+      "range": {
+        "startLine": 856,
+        "startChar": 0,
+        "endLine": 867,
+        "endChar": 63
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d180a748",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-17T10:33:28Z",
+      "side": 1,
+      "message": "I think this return statement should put in the upper if.",
+      "range": {
+        "startLine": 874,
+        "startChar": 2,
+        "endLine": 874,
+        "endChar": 11
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_11920f9f",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-17T10:33:28Z",
+      "side": 1,
+      "message": "I don\u0027t know why UDP coap serialize here and TCP serialize other logic.",
+      "range": {
+        "startLine": 929,
+        "startChar": 0,
+        "endLine": 937,
+        "endChar": 5
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
