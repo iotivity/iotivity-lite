@@ -1,27 +1,39 @@
-From 66ac7f3fd595e1779c98fe2b0918551e3c2b9513 Mon Sep 17 00:00:00 2001
+From f6af4c4e910268d8c473a220f50b2de97ae6a07d Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 30 Jul 2018 13:38:45 +0300
+Date: Mon, 17 Sep 2018 14:09:28 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 16 ++++++++++++++--
- library/asn1parse.c      | 23 +++++++++++++++++++++++
+ include/mbedtls/config.h | 19 +++++++++++++++----
+ include/mbedtls/sha512.h | 18 ------------------
+ library/asn1parse.c      | 18 ++++++++++++++++++
  library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++++++---
  library/ecdsa.c          | 20 ++++++++++++++++++++
  library/pk.c             | 20 ++++++++++++++++++++
  library/pkparse.c        | 20 ++++++++++++++++++++
  library/ssl_cli.c        | 15 +++++++++++++++
- 7 files changed, 153 insertions(+), 5 deletions(-)
+ 8 files changed, 149 insertions(+), 25 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..aa476c3 100644
+index 45143a5..f766ab6 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -58,8 +58,17 @@
+@@ -49,17 +49,25 @@
+ /* mbed TLS modules */
+ #define MBEDTLS_AES_C
+ #define MBEDTLS_CIPHER_C
+-#define MBEDTLS_CTR_DRBG_C
+-#define MBEDTLS_ENTROPY_C
+ #define MBEDTLS_MD_C
+ #define MBEDTLS_SHA256_C
++#define MBEDTLS_SHA512_C
+ #define MBEDTLS_SSL_COOKIE_C
+ #define MBEDTLS_SSL_CLI_C
  #define MBEDTLS_SSL_SRV_C
  #define MBEDTLS_SSL_TLS_C
  
@@ -39,7 +51,7 @@ index 45143a5..aa476c3 100644
  
  /* Save some RAM by adjusting to your exact needs */
  #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
-@@ -82,12 +91,13 @@
+@@ -82,12 +90,13 @@
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
@@ -55,7 +67,7 @@ index 45143a5..aa476c3 100644
  #define MBEDTLS_X509_USE_C
  
  #define MBEDTLS_ASN1_PARSE_C
-@@ -98,7 +108,9 @@
+@@ -98,7 +107,9 @@
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -65,30 +77,40 @@ index 45143a5..aa476c3 100644
  
  #define MBEDTLS_CIPHER_MODE_CBC
  
-diff --git a/library/asn1parse.c b/library/asn1parse.c
-index 4dd65c0..8809a87 100644
---- a/library/asn1parse.c
-+++ b/library/asn1parse.c
-@@ -243,6 +243,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-                           mbedtls_asn1_sequence *cur,
-                           int tag)
- {
-+#ifndef ST_MBEDTLS_OPT
-     int ret;
-     size_t len;
-     mbedtls_asn1_buf *buf;
-@@ -286,6 +287,10 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
-         return( MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
- 
-     return( 0 );
-+#else
-+    oc_abort(__func__);
-+    return( 0 );
-+#endif /* ST_MBEDTLS_OPT */
+diff --git a/include/mbedtls/sha512.h b/include/mbedtls/sha512.h
+index 52ae204..b6e6a61 100644
+--- a/include/mbedtls/sha512.h
++++ b/include/mbedtls/sha512.h
+@@ -164,24 +164,6 @@ MBEDTLS_DEPRECATED static inline void mbedtls_sha512_starts(
  }
  
- int mbedtls_asn1_get_alg( unsigned char **p,
-@@ -336,6 +341,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+ /**
+- * \brief          This function feeds an input buffer into an ongoing
+- *                 SHA-512 checksum calculation.
+- *
+- * \deprecated     Superseded by mbedtls_sha512_update_ret() in 2.7.0
+- *
+- * \param ctx      The SHA-512 context.
+- * \param input    The buffer holding the data.
+- * \param ilen     The length of the input data.
+- */
+-MBEDTLS_DEPRECATED static inline void mbedtls_sha512_update(
+-                                                mbedtls_sha512_context *ctx,
+-                                                const unsigned char *input,
+-                                                size_t ilen )
+-{
+-    mbedtls_sha512_update_ret( ctx, input, ilen );
+-}
+-
+-/**
+  * \brief          This function finishes the SHA-512 operation, and writes
+  *                 the result to the output buffer.
+  *
+diff --git a/library/asn1parse.c b/library/asn1parse.c
+index 4dd65c0..e2e1a96 100644
+--- a/library/asn1parse.c
++++ b/library/asn1parse.c
+@@ -336,6 +336,7 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
                         const unsigned char *end,
                         mbedtls_asn1_buf *alg )
  {
@@ -96,7 +118,7 @@ index 4dd65c0..8809a87 100644
      int ret;
      mbedtls_asn1_buf params;
  
-@@ -348,10 +354,15 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
+@@ -348,10 +349,15 @@ int mbedtls_asn1_get_alg_null( unsigned char **p,
          return( MBEDTLS_ERR_ASN1_INVALID_DATA );
  
      return( 0 );
@@ -112,7 +134,7 @@ index 4dd65c0..8809a87 100644
      if( cur == NULL )
          return;
  
-@@ -359,10 +370,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
+@@ -359,10 +365,14 @@ void mbedtls_asn1_free_named_data( mbedtls_asn1_named_data *cur )
      mbedtls_free( cur->val.p );
  
      mbedtls_zeroize( cur, sizeof( mbedtls_asn1_named_data ) );
@@ -127,7 +149,7 @@ index 4dd65c0..8809a87 100644
      mbedtls_asn1_named_data *cur;
  
      while( ( cur = *head ) != NULL )
-@@ -371,11 +386,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
+@@ -371,11 +381,15 @@ void mbedtls_asn1_free_named_data_list( mbedtls_asn1_named_data **head )
          mbedtls_asn1_free_named_data( cur );
          mbedtls_free( cur );
      }
@@ -143,7 +165,7 @@ index 4dd65c0..8809a87 100644
      while( list != NULL )
      {
          if( list->oid.len == len &&
-@@ -388,6 +407,10 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
+@@ -388,6 +402,10 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
      }
  
      return( list );
