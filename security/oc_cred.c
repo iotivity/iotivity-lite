@@ -173,6 +173,23 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
   return NULL;
 }
 
+#ifdef OC_CRED_TOOL
+int
+oc_sec_find_max_credid(int device)
+{
+  int credid = -1;
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  credid = cred->credid;
+  while (cred != NULL) {
+    if (credid < cred->credid) {
+      credid = cred->credid;
+    }
+    cred = cred->next;
+  }
+  return credid;
+}
+#endif /* OC_CRED_TOOL */
+
 oc_sec_cred_t *
 oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 {
@@ -186,6 +203,25 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
       OC_WRN("insufficient memory to add new credential");
     }
   }
+  return cred;
+}
+
+oc_sec_cred_t *
+oc_sec_new_cred(oc_uuid_t *subjectuuid, int device)
+{
+  oc_sec_cred_t *cred = NULL;
+  cred = oc_sec_find_cred(subjectuuid, device);
+  if (cred != NULL) {
+    OC_WRN("cred with given uuid already exists");
+    return NULL;
+  }
+  cred = oc_memb_alloc(&creds);
+  if (cred == NULL) {
+    OC_WRN("insufficient memory to add new credential");
+    return NULL;
+  }
+  memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
+  oc_list_add(devices[device].creds, cred);
   return cred;
 }
 
@@ -213,14 +249,45 @@ oc_sec_encode_cred(bool persist, int device)
       }
       oc_rep_close_object(creds, roleid);
     }
-    oc_rep_set_object(creds, privatedata);
+#if defined(OC_MFG) && defined(OC_CRED_TOOL)
     if (persist) {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 16);
-    } else {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+      for (int i = 0; i < cr->ownchainlen; i++) {
+        oc_rep_set_object(creds, publicdata);
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+        oc_rep_set_byte_string(publicdata, data, cr->mfgowncert[i], cr->mfgowncertlen[i]);
+        oc_rep_close_object(creds, publicdata);
+        oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgcert");
+      }
+      if (cr->mfgkeylen != 0 && cr->mfgkey != NULL) {
+        oc_rep_set_object(creds, privatedata);
+        oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+        oc_rep_set_byte_string(privatedata, data, cr->mfgkey, cr->mfgkeylen);
+        oc_rep_close_object(creds, privatedata);
+      }
+      if (cr->mfgtrustcalen > 0) {
+        oc_rep_set_object(creds, publicdata);
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+        oc_rep_set_byte_string(publicdata, data, cr->mfgtrustca, cr->mfgtrustcalen);
+        oc_rep_close_object(creds, publicdata);
+        oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgtrustca");
+      }
     }
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-    oc_rep_close_object(creds, privatedata);
+#endif /* OC_MFG && OC_CRED_TOOL */
+    uint8_t t = 0, i = 0;
+    for (i = 0; i < 16; i++) {
+      t += cr->key[i];
+    }
+    if (t) {
+      oc_rep_set_object(creds, privatedata);
+      if (persist) {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 16);
+      } else {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+      }
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_close_object(creds, privatedata);
+    }
+
     oc_rep_object_array_end_item(creds);
     cr = cr->next;
   }
@@ -441,6 +508,10 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           }
           credobj->credid = credid;
           credobj->credtype = credtype;
+          credobj->mfgtrustca = NULL;
+          credobj->mfgtrustcalen = 0;
+          credobj->mfgkey = NULL;
+          credobj->mfgkeylen = 0;
           if (role) {
             oc_new_string(&credobj->role.role, oc_string(*role),
                           oc_string_len(*role));

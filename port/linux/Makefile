@@ -163,6 +163,11 @@ endif
 SAMPLES += st_things
 endif
 
+ifeq ($(CATOOL),1)
+CFLAGS += -DOC_MFG -DOC_CRED_TOOL
+SAMPLES = mfg_server add_ca_tool
+endif
+
 ifeq ($(SECURE),1)
 
 # AUTH_OPTION = 0   - root ca check is disabled for any TLS connection
@@ -524,6 +529,9 @@ mfg_server: libiotivity-constrained-server.a
 	@cp ../../apps/pstat_0 $@_creds/pstat_0
 	@cp ../../apps/mfgserver_cred $@_creds/cred_0
 	${CC} -o $@ ../../apps/secure_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_MFG ${CFLAGS}  ${LIBS}
+
+add_ca_tool: libiotivity-constrained-server.a
+	${CC} -o $@ ../../apps/add_ca_tool.c libiotivity-constrained-server.a -DOC_SERVER -DOC_MFG -DOC_CRED_TOOL ${CFLAGS}  ${LIBS}
 
 rpk_server: libiotivity-constrained-server.a
 	@mkdir -p $@_creds
