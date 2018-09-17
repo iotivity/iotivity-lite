@@ -1,18 +1,42 @@
-From b79e947952f16de8b50a9718ce190846013361ea Mon Sep 17 00:00:00 2001
+From 2a250922a4ab59e118a633718b0e3994982b997b Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Fri, 3 Aug 2018 12:56:02 +0300
+Date: Fri, 31 Aug 2018 15:24:02 +0300
 Subject: [PATCH] mbedtls reduce more
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
+ library/debug.c    |  5 +++++
  library/oid.c      |  5 +++++
  library/pkcs5.c    | 10 ++++++++++
  library/ssl_cli.c  |  5 +++++
  library/ssl_tls.c  |  5 +++++
  library/x509.c     | 15 +++++++++++++++
  library/x509_crt.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 80 insertions(+)
+ 7 files changed, 85 insertions(+)
 
+diff --git a/library/debug.c b/library/debug.c
+index f9229b3..b1e131d 100644
+--- a/library/debug.c
++++ b/library/debug.c
+@@ -342,6 +342,7 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
+                       const char *file, int line,
+                       const char *text, const mbedtls_x509_crt *crt )
+ {
++#ifndef ST_MBEDTLS_OPT
+     char str[DEBUG_BUF_SIZE];
+     int i = 0;
+ 
+@@ -362,6 +363,10 @@ void mbedtls_debug_print_crt( const mbedtls_ssl_context *ssl, int level,
+ 
+         crt = crt->next;
+     }
++#else
++    debug_send_line( ssl, level, file, line,
++                              "certificate print disabled\n" );
++#endif /* ST_MBEDTLS_OPT */
+ }
+ #endif /* MBEDTLS_X509_CRT_PARSE_C */
+ 
 diff --git a/library/oid.c b/library/oid.c
 index f13826e..252f006 100644
 --- a/library/oid.c
@@ -79,7 +103,7 @@ index 7405fc3..8014b7f 100644
  
  int mbedtls_pkcs5_pbkdf2_hmac( mbedtls_md_context_t *ctx, const unsigned char *password,
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index b9289e2..ebf9035 100644
+index 94ff8e7..e14839a 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
 @@ -1402,6 +1402,7 @@ static int ssl_parse_alpn_ext( mbedtls_ssl_context *ssl,
@@ -125,7 +149,7 @@ index d51230d..485f706 100644
  #endif /* MBEDTLS_SSL_PROTO_TLS1 || MBEDTLS_SSL_PROTO_TLS1_1 || \
            MBEDTLS_SSL_PROTO_TLS1_2 */
 diff --git a/library/x509.c b/library/x509.c
-index 8f77559..0e65856 100644
+index 8f77559..6e1d501 100644
 --- a/library/x509.c
 +++ b/library/x509.c
 @@ -747,6 +747,7 @@ int mbedtls_x509_get_ext( unsigned char **p, const unsigned char *end,
@@ -141,8 +165,8 @@ index 8f77559..0e65856 100644
  
      return( (int) ( size - n ) );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( buf, size, "mbedtls_x509_dn_gets disabled\n");
++    return( size - 30 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
@@ -160,8 +184,8 @@ index 8f77559..0e65856 100644
  
      return( (int) ( size - n ) );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( buf, size, "mbedtls_x509_serial_gets disabled\n" );
++    return( size - 34 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
@@ -179,14 +203,14 @@ index 8f77559..0e65856 100644
  
      return( (int)( size - n ) );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( buf, size, "mbedtls_x509_sig_alg_gets disabled\n" );
++    return( size - 35 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
  /*
 diff --git a/library/x509_crt.c b/library/x509_crt.c
-index 3597480..b29afbc 100644
+index 3597480..68f39bb 100644
 --- a/library/x509_crt.c
 +++ b/library/x509_crt.c
 @@ -355,6 +355,7 @@ static int x509_get_ns_cert_type( unsigned char **p,
@@ -221,8 +245,8 @@ index 3597480..b29afbc 100644
  
      return( 0 );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( *buf, *size, "x509_info_subject_alt_name disabled\n");
++    return( *size - 36 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  #endif
@@ -240,8 +264,8 @@ index 3597480..b29afbc 100644
  
      return( 0 );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( *buf, *size, "crt type info disabled\n");
++    return( *size - 23 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
@@ -259,8 +283,8 @@ index 3597480..b29afbc 100644
  
      return( 0 );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( *buf, *size, "key usage info disabled\n");
++    return( *size - 24 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
@@ -276,8 +300,8 @@ index 3597480..b29afbc 100644
  
      return( 0 );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( *buf, *size, "x509_info_ext_key_usage disabled\n");
++    return( *size - 33 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
@@ -295,8 +319,8 @@ index 3597480..b29afbc 100644
  
      return( (int) ( size - n ) );
 +#else
-+    oc_abort(__func__);
-+    return( 0 );
++    mbedtls_snprintf( buf, size, "mbedtls_x509_crt_info disabled\n" );
++    return( size - 31 );
 +#endif  /* ST_MBEDTLS_OPT */
  }
  
