@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_6c63bedc",
+        "filename": "swig/apps/java_lite_simple_server_windows/src/java_lite_simple_server_windows/server.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-18T20:44:36Z",
+      "side": 1,
+      "message": "already fixed in later commit. Thanks :)",
+      "parentUuid": "da33351e_6c357ed9",
+      "revId": "5b5aa4d8c4677da8592d45b250065e70f94c2b40",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_8c2a827c",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 8
@@ -30,6 +48,30 @@
       "writtenOn": "2018-09-18T17:27:57Z",
       "side": 1,
       "message": "should be sendResponse",
+      "range": {
+        "startLine": 304,
+        "startChar": 9,
+        "endLine": 304,
+        "endChar": 21
+      },
+      "revId": "5b5aa4d8c4677da8592d45b250065e70f94c2b40",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0c64b2e3",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-18T20:44:36Z",
+      "side": 1,
+      "message": "will be fixed in a later commit. Thanks for finding.",
+      "parentUuid": "da33351e_8c2a827c",
       "range": {
         "startLine": 304,
         "startChar": 9,
