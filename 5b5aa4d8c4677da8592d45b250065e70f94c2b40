@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_8c2a827c",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-18T17:27:57Z",
+      "side": 1,
+      "message": "should be sendResponse",
+      "range": {
+        "startLine": 304,
+        "startChar": 9,
+        "endLine": 304,
+        "endChar": 21
+      },
+      "revId": "5b5aa4d8c4677da8592d45b250065e70f94c2b40",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
