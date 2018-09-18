@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f642010f",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "inside pbkdf2, password length is fetched using strlen",
+      "parentUuid": "da33351e_db3c46e5",
+      "range": {
+        "startLine": 272,
+        "startChar": 21,
+        "endLine": 272,
+        "endChar": 23
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_bb486288",
         "filename": "service/st-app-fw/src/st_store.c",
         "patchSetId": 2
@@ -105,6 +129,30 @@
       "writtenOn": "2018-09-11T07:26:21Z",
       "side": 1,
       "message": "st_store_t has security_key info(iv,...) and cloud and so on info which means whole data set.\nBut this function only handles cloud and so on info. which function name may misleads context. Better to rename into store_info_wo_security_key or change the data structure definition to align.",
+      "range": {
+        "startLine": 39,
+        "startChar": 12,
+        "endLine": 39,
+        "endChar": 32
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d6137d0b",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "Change name for better undersatnding.",
+      "parentUuid": "da33351e_bb486288",
       "range": {
         "startLine": 39,
         "startChar": 12,
@@ -140,6 +188,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_f6104103",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_db456671",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 1
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_5b595659",
         "filename": "service/st-app-fw/src/st_store.c",
         "patchSetId": 2
@@ -151,6 +223,30 @@
       "writtenOn": "2018-09-11T07:26:21Z",
       "side": 1,
       "message": "it looks natural encryption is done inside this function to align the loading side function.",
+      "range": {
+        "startLine": 208,
+        "startChar": 23,
+        "endLine": 208,
+        "endChar": 57
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_9609f5df",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "Change the name of function for better understanding.",
+      "parentUuid": "da33351e_5b595659",
       "range": {
         "startLine": 208,
         "startChar": 23,
@@ -186,6 +282,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_b606b9cc",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_3b545220",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 223,
+        "endChar": 31
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_1b5fce42",
         "filename": "service/st-app-fw/src/st_store.c",
         "patchSetId": 2
@@ -197,6 +317,30 @@
       "writtenOn": "2018-09-11T07:26:21Z",
       "side": 1,
       "message": "This requires securityinfo even though this can be accessed globally.",
+      "range": {
+        "startLine": 379,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 100
+      },
+      "revId": "5230add799f97d81d46d689ae8c53f41124fbd11",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_36faa9bd",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 14167
+      },
+      "writtenOn": "2018-09-18T16:55:45Z",
+      "side": 1,
+      "message": "Change name for better understanding.",
+      "parentUuid": "da33351e_1b5fce42",
       "range": {
         "startLine": 379,
         "startChar": 0,
