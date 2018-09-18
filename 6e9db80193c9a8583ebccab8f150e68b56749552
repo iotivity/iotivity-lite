@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_113b2f39",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-18T07:34:56Z",
+      "side": 1,
+      "message": "I used COAP_MAX_OPTION_HEADER_LEN  instead of COAP_MAX_HEADER_SIZE and  COAP_MAX_OPTION_HEADER_LEN is 5.",
+      "parentUuid": "da33351e_b1ea430d",
+      "range": {
+        "startLine": 299,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 45
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_31975392",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-17T10:33:28Z",
       "side": 1,
       "message": "Why only TCP serialize options first and UDP later? Is there any reason to saperate logic?",
+      "range": {
+        "startLine": 856,
+        "startChar": 0,
+        "endLine": 867,
+        "endChar": 63
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d1d547ba",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 867,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-18T07:34:56Z",
+      "side": 1,
+      "message": "Given that TCP needs the option length before  adding option to packet. in other words UDP doesn\u0027t need.",
+      "parentUuid": "da33351e_31975392",
       "range": {
         "startLine": 856,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_91cbbf1d",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-18T07:34:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_d180a748",
+      "range": {
+        "startLine": 874,
+        "startChar": 2,
+        "endLine": 874,
+        "endChar": 11
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_11920f9f",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2018-09-17T10:33:28Z",
       "side": 1,
       "message": "I don\u0027t know why UDP coap serialize here and TCP serialize other logic.",
+      "range": {
+        "startLine": 929,
+        "startChar": 0,
+        "endLine": 937,
+        "endChar": 5
+      },
+      "revId": "6e9db80193c9a8583ebccab8f150e68b56749552",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_31dc73e4",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 937,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-18T07:34:56Z",
+      "side": 1,
+      "message": "I think making UDP doesn\u0027t need another static array. \nwe can directly write there.",
+      "parentUuid": "da33351e_11920f9f",
       "range": {
         "startLine": 929,
         "startChar": 0,
