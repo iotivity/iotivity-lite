@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_11732fe8",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "please add static keyword to below variables also..\nI would suggest even move them to .h file...",
+      "range": {
+        "startLine": 32,
+        "startChar": 11,
+        "endLine": 32,
+        "endChar": 12
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_517db7b0",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "please move this bracket to above line...\nto maintain uniformity",
+      "range": {
+        "startLine": 218,
+        "startChar": 7,
+        "endLine": 218,
+        "endChar": 8
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_b14b6386",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "remove above line",
+      "range": {
+        "startLine": 219,
+        "startChar": 26,
+        "endLine": 219,
+        "endChar": 29
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f145eb70",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "add  empty line above if, for better readability",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 12
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_71827b95",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 231,
+        "startChar": 9,
+        "endLine": 231,
+        "endChar": 13
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_d148a789",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "add empty line after declaration",
+      "range": {
+        "startLine": 343,
+        "startChar": 19,
+        "endLine": 343,
+        "endChar": 20
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_315f5343",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 347,
+        "startChar": 76,
+        "endLine": 347,
+        "endChar": 77
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_f13ccbe4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-18T16:19:30Z",
+      "side": 1,
+      "message": "rename to res...to avoid confusion",
+      "range": {
+        "startLine": 352,
+        "startChar": 28,
+        "endLine": 352,
+        "endChar": 29
+      },
+      "revId": "4ff5f24f52485c63348570bf15ef1c96da34a0ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
