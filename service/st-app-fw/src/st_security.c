@@ -157,8 +157,6 @@ int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char
 
   st_print_log("[ST_SEC] encrypted_data_len %d \n",*encrypted_data_len);
 
-  ret = 0;
-
  cleanup:
   mbedtls_aes_free(&aes_ctx);
 
@@ -219,7 +217,7 @@ int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
 
   st_store_t *store_info = st_store_get_info();
   //Check if already exists
-  if(oc_string_len(store_info->securityinfo.iv) == 0 && oc_string(store_info->securityinfo.salt)==0){
+  if(oc_string_len(store_info->securityinfo.iv) == 0 && oc_string_len(store_info->securityinfo.salt)==0){
 
     ret = gen_random(salt_internal, 32);
     if(ret != 0)
