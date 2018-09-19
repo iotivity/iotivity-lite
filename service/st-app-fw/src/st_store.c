@@ -27,6 +27,8 @@
 #define ST_MAX_SECURE_DATA_SIZE (100)
 #define ST_STORE_NAME "st_info"
 #define ST_STORE_SECURE_NAME "st_info_secure"
+#define ST_SALT_LEN          32
+#define ST_IV_LEN            16
 
 #define st_rep_set_string_with_chk(object, key, value)                         \
   if (value)                                                                   \
@@ -260,11 +262,11 @@ st_decode_security_info(oc_rep_t *rep)
       if (len == 4 && memcmp(oc_string(t->name), "salt", 4) == 0) {
         oc_new_string(&g_store_info.securityinfo.salt,
                       oc_string(t->value.string),
-                      oc_string_len(t->value.string));
+                      ST_SALT_LEN);
       } else if (len == 2 && memcmp(oc_string(t->name), "iv", 2) == 0) {
         oc_new_string(&g_store_info.securityinfo.iv,
                       oc_string(t->value.string),
-                      oc_string_len(t->value.string));
+                      ST_IV_LEN);
       } else {
         st_print_log("[ST_Store] Unknown property %s", oc_string(t->name));
         return -1;
@@ -410,10 +412,10 @@ st_encode_security_info(void)
   oc_rep_start_root_object();
   oc_rep_set_byte_string(root, salt,
                                      oc_string(g_store_info.securityinfo.salt),
-                                     oc_string_len(g_store_info.securityinfo.salt));
+                                     ST_SALT_LEN);
   oc_rep_set_byte_string(root, iv,
                                      oc_string(g_store_info.securityinfo.iv),
-                                     oc_string_len(g_store_info.securityinfo.iv));
+                                     ST_IV_LEN);
   oc_rep_set_int(root, data_len, g_store_info.securityinfo.data_len);
   oc_rep_set_int(root, encrypted_len, g_store_info.securityinfo.encrypted_len);
     oc_rep_end_root_object();
