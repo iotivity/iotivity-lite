@@ -244,9 +244,9 @@ ifneq ($(OIC),0)
 	EXTRA_CFLAGS += -DOC_SPEC_VER_OIC
 endif
 
-#ifeq ($(STATE_MODEL), 1)
-EXTRA_CFLAGS += -DSTATE_MODEL
-#endif
+ifeq ($(STATE_MODEL), 1)
+	EXTRA_CFLAGS += -DSTATE_MODEL
+endif
 
 CFLAGS += $(EXTRA_CFLAGS)
 
