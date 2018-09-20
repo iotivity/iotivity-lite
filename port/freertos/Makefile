@@ -104,7 +104,9 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
-CFLAGS += -DSTATE_MODEL
+ifeq ($(STATE_MODEL), 1)
+	CFLAGS += -DSTATE_MODEL
+endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES}
 
