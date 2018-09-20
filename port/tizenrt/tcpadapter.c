@@ -352,6 +352,13 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     ret_with_code(TCP_STATUS_NONE);
   }
 
+  // Set RECV TIMEOUT
+  struct timeval timeout;
+  timeout.tv_sec = 30;
+  timeout.tv_usec = 0;
+
+  setsockopt(session->sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
   // receive message.
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
