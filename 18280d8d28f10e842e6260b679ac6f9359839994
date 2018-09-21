@@ -1,0 +1,297 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_8709bddf",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Seems like you could replace each of these lines with:\n\n++written;\n\nif (buffer) {\n\n  buffer[written] \u003d ...\n\n}\n\nThis way if you passed in a NULL buffer, it would report back length. You would get rid of the else/#else blocks below as well as get_size_flag.",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 54
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7108903",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as comment above.",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 43
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c713c50b",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as comment above.",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 54
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_27fa71bd",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as comment above.",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 40
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_670479c0",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "No need for get_size_flag. Just check if (option) { ...",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 27
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_27739181",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Why is this only for OC_TCP?\n\nSeems like we could check for header size overflows even on UDP packets?",
+      "range": {
+        "startLine": 442,
+        "startChar": 0,
+        "endLine": 448,
+        "endChar": 6
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_671bd91b",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "You could put all this into an if (coap_pkt) { ...\n\nThat way this function can be called with a NULL coap_pkt and still set num_extended_bytes which you can factor into the HEADER size calculations while checking for overflow before serializing.",
+      "range": {
+        "startLine": 742,
+        "startChar": 1,
+        "endLine": 750,
+        "endChar": 3
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_071c8d12",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Once you make the other changes as suggested above, you would be able to directly invoke coap_serialize_options() with a NULL options_array to simply report back the header length without any header encodig.",
+      "range": {
+        "startLine": 856,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 64
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2721d14d",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "This is actually excluding the size of the COAP_TCP header and token. coap_serialize_options() only sets everything else.\n\nYou could have a case where the size of options \u003d COAP_MAX_HEADER_SIZE and potentially cause an overflow.\n\nThat leftover size is coap_pkt-\u003etoken_len + 2 + num_extended_bytes.\n\nLook for comment in coap_tcp_serialize_length for finding num_extended_length_bytes.",
+      "range": {
+        "startLine": 857,
+        "startChar": 0,
+        "endLine": 857,
+        "endChar": 51
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a72de148",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Just check if (option) { ...",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 159,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87309d9f",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as above.",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e727e962",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as above.",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c72aa52b",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-21T22:17:35Z",
+      "side": 1,
+      "message": "Ditto as above.",
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
