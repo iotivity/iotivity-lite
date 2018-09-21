@@ -1640,17 +1640,25 @@ read_application_data(oc_tls_peer_t *peer)
     }
 #endif /* OC_CLIENT */
   } else {
+    oc_message_t *message = (oc_message_t *)oc_list_head(peer->recv_q);
+    if (!message) {
+      OC_ERR("recv_q is empty!");
+      return;
+    }
+    oc_message_add_ref(message);
+
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_message_t *message = oc_allocate_message_by_size(0);
-#else
-    oc_message_t *message = oc_allocate_message();
+    uint8_t *decrypt_data = NULL;
+#else  /* OC_DYNAMIC-ALLOCATION */
+    uint8_t decrypt_data[OC_PDU_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
     if (message) {
-      memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
 #ifdef OC_DYNAMIC_ALLOCATION
-      int ret = mbedtls_ssl_read_dynamic(&peer->ssl_ctx, &(message->data), OC_PDU_SIZE);
+      int ret =
+        mbedtls_ssl_read_dynamic(&peer->ssl_ctx, &(decrypt_data), OC_PDU_SIZE);
 #else
-      int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
+      int ret = mbedtls_ssl_read(&peer->ssl_ctx, decrypt_data, OC_PDU_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
       if (ret <= 0) {
         oc_message_unref(message);
@@ -1677,6 +1685,10 @@ read_application_data(oc_tls_peer_t *peer)
         return;
       }
       message->length = (size_t)ret;
+      memcpy(message->data, decrypt_data, message->length);
+#ifdef OC_DYNAMIC_ALLOCATION
+      oc_mem_free(decrypt_data);
+#endif /* OC_DYNAMIC_ALLOCATION */
       oc_recv_message(message);
       OC_DBG("oc_tls: Decrypted incoming message");
     }
