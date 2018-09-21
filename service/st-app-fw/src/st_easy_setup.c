@@ -45,6 +45,11 @@ static bool g_is_secured = true;
 static bool g_is_secured = false;
 #endif /* !OC_SECURITY */
 
+#ifdef OC_SESSION_EVENTS
+static bool g_is_connected = false;
+static oc_endpoint_t *g_cur_session_ep = NULL;
+#endif /* OC_SESSION_EVENTS */
+
 static st_easy_setup_cb_t g_callback = NULL;
 
 static st_easy_setup_status_t g_easy_setup_status = EASY_SETUP_INITIALIZE;
@@ -61,6 +66,10 @@ static oc_event_callback_retval_t easy_setup_timeout_handler(void *data);
 static void st_otm_state_handler(oc_sec_otm_err_code_t state);
 #endif
 static void get_ap_list(sec_accesspoint **ap_list);
+#ifdef OC_SESSION_EVENTS
+static void session_event_handler(const oc_endpoint_t *endpoint,
+                                  oc_session_state_t state);
+#endif /* OC_SESSION_EVENTS */
 
 static es_provisioning_callbacks_s g_callbacks = {.wifi_prov_cb = wifi_prov_cb,
                                                   .dev_conf_prov_cb =
@@ -114,6 +123,10 @@ st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb)
   oc_sec_otm_set_err_cb(st_otm_state_handler);
 #endif
 
+#ifdef OC_SESSION_EVENTS
+  oc_add_session_event_callback(session_event_handler);
+#endif /* OC_SESSION_EVENTS */
+
   st_print_log("[ST_ES] st_easy_setup_start out\n");
   return 0;
 }
@@ -127,6 +140,16 @@ st_easy_setup_stop(void)
     st_print_log("[ST_ES] es_terminate_enrollee failed!\n");
     return;
   }
+
+#ifdef OC_SESSION_EVENTS
+  oc_remove_session_event_callback(session_event_handler);
+  if (g_cur_session_ep) {
+    oc_close_session(g_cur_session_ep);
+    free(g_cur_session_ep);
+    g_cur_session_ep = NULL;
+  }
+  g_is_connected = false;
+#endif /* OC_SESSION_EVENTS */
 
   reset_sc_properties();
 
@@ -162,6 +185,24 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
   st_print_log("[ST_ES] ssid : %s\n", ssid);
   return 0;
 }
+
+#ifdef OC_SESSION_EVENTS
+static void
+session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
+{
+  if (state == OC_SESSION_CONNECTED) {
+    st_print_log("[ST_ES] New session CONNECTED\n");
+    if (!g_cur_session_ep) {
+      g_cur_session_ep = (oc_endpoint_t *)calloc(1, sizeof(oc_endpoint_t));
+    } else if (g_is_connected &&
+               oc_endpoint_compare(g_cur_session_ep, endpoint) != 0) {
+      oc_close_session(g_cur_session_ep);
+    }
+    memcpy(g_cur_session_ep, endpoint, sizeof(oc_endpoint_t));
+    g_is_connected = true;
+  }
+}
+#endif /* OC_SESSION_EVENTS */
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
