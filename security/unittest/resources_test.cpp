@@ -120,13 +120,14 @@ requests_entry(void)
   FUNC_NAME;
 }
 
+static const oc_handler_t handler = { .init = app_init,
+                                      .signal_event_loop = signal_event_loop,
+                                      .register_resources =
+                                        register_resources,
+                                      .requests_entry = NULL };
+
 TEST(Security, Init)
 {
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = NULL };
 
   mkdir("unittest_creds", 0770);
   EXPECT_NO_THROW(oc_storage_config("unittest_creds"));
@@ -1103,7 +1104,7 @@ TEST(Security, TlsFreePeer)
   EXPECT_TRUE(peer);
   EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
-  oc_message_t *message = oc_allocate_message();
+  oc_message_t *message = oc_internal_allocate_outgoing_message();
   EXPECT_TRUE(message);
   EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
   OC_LIST_STRUCT_INIT(peer, recv_q);
@@ -1116,7 +1117,7 @@ TEST(Security, TlsFreePeer)
   EXPECT_TRUE(peer);
   EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
-  message = oc_allocate_message();
+  message = oc_internal_allocate_outgoing_message();
   EXPECT_TRUE(message);
   EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
   OC_LIST_STRUCT_INIT(peer, recv_q);
@@ -1181,6 +1182,7 @@ TEST(Security, TlsSslRecv)
   unsigned char *buf = (unsigned char *)oc_mem_malloc(len);
   EXPECT_EQ(ssl_recv(peer, buf, len), 0);
   EXPECT_NO_THROW(oc_mem_free(buf));
+  EXPECT_NO_THROW(oc_tls_free_peer(peer, false));
 }
 TEST(Security, TlsSslSend)
 {
@@ -1193,6 +1195,9 @@ TEST(Security, TlsSslSend)
   unsigned char *buf = (unsigned char *)oc_mem_malloc(len);
   EXPECT_EQ(ssl_send(peer, buf, len), len);
   EXPECT_NO_THROW(oc_mem_free(buf));
+  EXPECT_NO_THROW(oc_tls_free_peer(peer, false));
+  oc_main_shutdown();
+  oc_main_init(&handler);
 }
 TEST(Security, TlsCheckRetsTimers)
 {
@@ -1250,7 +1255,7 @@ TEST(Security, TlsSecDeriveOwnerPsk)
 }
 TEST(Security, TlsSendMessage)
 {
-  oc_message_t *message = oc_allocate_message();
+  oc_message_t *message = oc_internal_allocate_outgoing_message();
   EXPECT_TRUE(message);
   memcpy(&message->endpoint, oc_connectivity_get_endpoints(dev),
          sizeof(oc_endpoint_t));
@@ -1262,7 +1267,7 @@ TEST(Security, TlsWriteAppData)
   EXPECT_TRUE(peer);
   EXPECT_NO_THROW(mbedtls_ssl_init(&peer->ssl_ctx));
   OC_LIST_STRUCT_INIT(peer, send_q);
-  oc_message_t *message = oc_allocate_message();
+  oc_message_t *message = oc_internal_allocate_outgoing_message();
   EXPECT_TRUE(message);
   EXPECT_NO_THROW(oc_list_push(peer->send_q, message));
 
