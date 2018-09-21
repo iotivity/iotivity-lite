@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8751bd10",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 14323
+      },
+      "writtenOn": "2018-09-21T04:28:00Z",
+      "side": 1,
+      "message": "I agree. but it should be verified whether it works fine or not.",
+      "parentUuid": "da33351e_673599d9",
+      "range": {
+        "startLine": 382,
+        "startChar": 0,
+        "endLine": 387,
+        "endChar": 80
+      },
+      "revId": "f41680950d425c10b9d15cd81bfab760029803b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_473055e8",
         "filename": "port/linux/tcpadapter.c",
         "patchSetId": 2
@@ -83,6 +107,30 @@
       "writtenOn": "2018-09-21T04:19:09Z",
       "side": 1,
       "message": "What happen if recv timeout?",
+      "range": {
+        "startLine": 394,
+        "startChar": 4,
+        "endLine": 395,
+        "endChar": 73
+      },
+      "revId": "f41680950d425c10b9d15cd81bfab760029803b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7588934",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 14323
+      },
+      "writtenOn": "2018-09-21T04:28:00Z",
+      "side": 1,
+      "message": "The below error is shown in FreeRTOS.\nE: \u003coc_tcp_receive_message:409\u003e: recv error! 32",
+      "parentUuid": "da33351e_473055e8",
       "range": {
         "startLine": 394,
         "startChar": 4,
