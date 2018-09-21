@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e7a6c90f",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-21T07:10:49Z",
+      "side": 1,
+      "message": "There are 2 questions. If my thought is wrong, Please correct me.\n\n-\u003e peer-\u003erecv_q  list may not have oc_message_t, therefore \n I think checking NULL would be preferred.\n\n\n-\u003e It seems that message from  peer-\u003erecv_q list may have its own data (oc_tls_recv_message() adds message with meaningful data from OC_PROCESS_THREAD(message_buffer_handler, UDP_TO_TLS_EVENT) into list ) but   you have overwritten it at line 1692.",
+      "range": {
+        "startLine": 1654,
+        "startChar": 3,
+        "endLine": 1654,
+        "endChar": 71
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_879ffdb3",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1666,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-21T07:10:49Z",
+      "side": 1,
+      "message": "if \"message\" is available, why don\u0027t you use \"message-\u003edata\" instead of g_decrypt_data and remove memcpy() at line 1692?\nI\u0027m wondering if there is a specific reason or not",
+      "range": {
+        "startLine": 1666,
+        "startChar": 48,
+        "endLine": 1666,
+        "endChar": 63
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
