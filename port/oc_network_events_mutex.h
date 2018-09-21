@@ -25,4 +25,8 @@ void oc_network_event_handler_mutex_unlock(void);
 
 void oc_network_event_handler_mutex_destroy(void);
 
+#ifdef RISTRICT_INCOMING_REQUESTS
+void oc_network_event_handler_wait_request(void);
+#endif /* RISTRICT_INCOMING_REQUESTS */
+
 #endif /* OC_NETWORK_EVENTS_MUTEX_H */
