@@ -22,6 +22,30 @@
       "revId": "f41680950d425c10b9d15cd81bfab760029803b8",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c72465b1",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 14323
+      },
+      "writtenOn": "2018-09-21T02:02:03Z",
+      "side": 1,
+      "message": "This is timeout value. I could not find the exact value to apply this on the real target. I think 10 seconds would be fine. but it should be verified with enough test.",
+      "parentUuid": "da33351e_e70a4920",
+      "range": {
+        "startLine": 384,
+        "startChar": 19,
+        "endLine": 384,
+        "endChar": 21
+      },
+      "revId": "f41680950d425c10b9d15cd81bfab760029803b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
