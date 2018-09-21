@@ -82,6 +82,9 @@ static mbedtls_ssl_config client_conf_tls[1];
 #endif /* OC_TCP */
 static mbedtls_ssl_config client_conf[1];
 #endif /* OC_CLIENT */
+
+static uint8_t *g_decrypt_data = NULL;
+
 #define PERSONALIZATION_STR "IoTivity-Constrained"
 
 #define CCM_MAC_KEY_LENGTH (0)
@@ -563,6 +566,10 @@ oc_tls_shutdown(void)
   mbedtls_ssl_cookie_free(&cookie_ctx);
   mbedtls_entropy_free(&entropy_ctx);
 #endif /* !OC_DYNAMIC_ALLOCATION */
+  if (g_decrypt_data) {
+    oc_mem_free(g_decrypt_data);
+    g_decrypt_data = NULL;
+  }
 }
 
 int
@@ -1644,10 +1651,23 @@ read_application_data(oc_tls_peer_t *peer)
     }
 #endif /* OC_CLIENT */
   } else {
-    oc_message_t *message = oc_allocate_message();
+    oc_message_t *message = (oc_message_t *)oc_list_head(peer->recv_q);
+    if (!message) {
+      OC_ERR("recv_q is empty!");
+      return;
+    }
+    oc_message_add_ref(message);
+
+    if (!g_decrypt_data) {
+      g_decrypt_data = oc_mem_malloc(OC_PDU_SIZE);
+      if (!g_decrypt_data) {
+        OC_ERR("oc_mem_malloc error!");
+        return;
+      }
+    }
+
     if (message) {
-      memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
-      int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
+      int ret = mbedtls_ssl_read(&peer->ssl_ctx, g_decrypt_data, OC_PDU_SIZE);
       if (ret <= 0) {
         oc_message_unref(message);
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
@@ -1673,6 +1693,7 @@ read_application_data(oc_tls_peer_t *peer)
         return;
       }
       message->length = (size_t)ret;
+      memcpy(message->data, g_decrypt_data, message->length);
       oc_recv_message(message);
       OC_DBG("oc_tls: Decrypted incoming message");
     }

@@ -60,6 +60,13 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
 
+#ifdef RISTRICT_INCOMING_REQUESTS
+#define MAX_WAIT_TIME 1
+
+static int cv_wait_need;
+static pthread_cond_t cv;
+static pthread_mutex_t buffer_mutex;
+#endif /* RISTRICT_INCOMING_REQUESTS */
 static pthread_mutex_t mutex;
 struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
@@ -197,12 +204,67 @@ remove_all_session_event_cbs(void)
 
 #endif /* OC_SESSION_EVENTS */
 
+#ifdef RISTRICT_INCOMING_REQUESTS
+void
+oc_network_event_handler_wait_request(void)
+{
+  pthread_mutex_lock(&buffer_mutex);
+  cv_wait_need = 1;
+  pthread_mutex_unlock(&buffer_mutex);
+}
+
+static void
+oc_network_event_handler_cv_wait(void)
+{
+  while (cv_wait_need) {
+    pthread_mutex_lock(&buffer_mutex);
+    struct timeval curtime;
+    gettimeofday(&curtime, NULL);
+    struct timespec wait_time;
+    wait_time.tv_sec = curtime.tv_sec + MAX_WAIT_TIME;
+    wait_time.tv_nsec = curtime.tv_usec * 1000;
+    pthread_cond_timedwait(&cv, &buffer_mutex, &wait_time);
+    pthread_mutex_unlock(&buffer_mutex);
+  }
+}
+
+static void
+oc_network_event_handler_cv_signal(void)
+{
+  pthread_mutex_lock(&buffer_mutex);
+  cv_wait_need = 0;
+  pthread_cond_signal(&cv);
+  pthread_mutex_unlock(&buffer_mutex);
+}
+
+static void
+oc_network_incoming_buffer_avail_cb(int numfree)
+{
+  OC_DBG("Incoming buffer is now available.(%d)", numfree);
+  oc_network_event_handler_cv_signal();
+}
+#endif /* RISTRICT_INCOMING_REQUESTS */
+
 void
 oc_network_event_handler_mutex_init(void)
 {
   if (pthread_mutex_init(&mutex, NULL) != 0) {
     oc_abort("error initializing network event handler mutex");
   }
+
+#ifdef RISTRICT_INCOMING_REQUESTS
+  if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
+    oc_abort("error initializing network event handler buffer_mutex");
+  }
+
+  if (pthread_cond_init(&cv, NULL) != 0) {
+    oc_abort("error initializing network event handler cv");
+  }
+
+  cv_wait_need = 1;
+
+  oc_set_buffers_avail_cb(oc_network_incoming_buffer_avail_cb);
+#endif /* RISTRICT_INCOMING_REQUESTS */
 }
 
 void
@@ -229,6 +291,11 @@ oc_network_event_handler_mutex_destroy(void)
 #ifdef OC_SESSION_EVENTS
   remove_all_session_event_cbs();
 #endif /* OC_SESSION_EVENTS */
+#ifdef RISTRICT_INCOMING_REQUESTS
+  oc_set_buffers_avail_cb(NULL);
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&buffer_mutex);
+#endif /* RISTRICT_INCOMING_REQUESTS */
   pthread_mutex_destroy(&mutex);
 }
 
@@ -819,7 +886,17 @@ network_event_thread(void *data)
       oc_message_t *message = oc_allocate_message();
 
       if (!message) {
+#ifdef RISTRICT_INCOMING_REQUESTS
+        OC_DBG("No available Incoming buffer Now.");
+        oc_network_event_handler_cv_wait();
+        message = oc_allocate_message();
+        if (!message) {
+          OC_ERR("oc_allocate_message error");
+          break;
+        }
+#else  /* RISTRICT_INCOMING_REQUESTS */
         break;
+#endif /* !RISTRICT_INCOMING_REQUESTS */
       }
 
       message->endpoint.device = dev->device;
@@ -1589,6 +1666,10 @@ oc_connectivity_shutdown(size_t device)
 #ifdef OC_TCP
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
+
+#ifdef RISTRICT_INCOMING_REQUESTS
+  oc_network_event_handler_cv_signal();
+#endif /* RISTRICT_INCOMING_REQUESTS */
 
   pthread_join(dev->event_thread, NULL);
 

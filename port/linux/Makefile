@@ -272,6 +272,10 @@ ifeq ($(CODE_SIZE_OPT),1)
 	CFLAGS += -DSC_ES_OPT
 endif
 
+ifeq ($(RISTRICT_INCOMING_REQUESTS),1)
+	CFLAGS += -DRISTRICT_INCOMING_REQUESTS
+endif
+
 ## This MOCK_WIFI_SCAN flag prevents jsnkins failure in unit test case by sudo wifi scan return
 ifneq ($(MOCK_WIFI_SCAN),0)
 	CFLAGS += -DMOCK_WIFI_SCAN
