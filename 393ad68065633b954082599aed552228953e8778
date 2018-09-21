@@ -1,0 +1,464 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_07d92d83",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "please declare the prototypes in the same order as it is present",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 6
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_67e8f910",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "reduce to 10, it occupies memory",
+      "range": {
+        "startLine": 51,
+        "startChar": 28,
+        "endLine": 51,
+        "endChar": 30
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7f409f4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove this variable....",
+      "range": {
+        "startLine": 52,
+        "startChar": 28,
+        "endLine": 52,
+        "endChar": 29
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87ed3d28",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "please remove space...and move the comment to above line",
+      "range": {
+        "startLine": 53,
+        "startChar": 122,
+        "endLine": 53,
+        "endChar": 124
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c7f745f4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "declare a static variable with index name",
+      "range": {
+        "startLine": 57,
+        "startChar": 8,
+        "endLine": 57,
+        "endChar": 21
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_27def16d",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "add a space after comma",
+      "range": {
+        "startLine": 57,
+        "startChar": 45,
+        "endLine": 57,
+        "endChar": 46
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a7d16159",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove it",
+      "range": {
+        "startLine": 210,
+        "startChar": 33,
+        "endLine": 210,
+        "endChar": 48
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47e33533",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove it",
+      "range": {
+        "startLine": 220,
+        "startChar": 56,
+        "endLine": 220,
+        "endChar": 58
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7cb69a3",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "move to above line for uniformity",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 16
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87d41d48",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "please remove space",
+      "range": {
+        "startLine": 250,
+        "startChar": 9,
+        "endLine": 250,
+        "endChar": 13
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c7ce25b4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "use a macro instead of direct hard coding",
+      "range": {
+        "startLine": 314,
+        "startChar": 19,
+        "endLine": 314,
+        "endChar": 20
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_27c5518e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "add a space after comma...\nnext lines also..",
+      "range": {
+        "startLine": 319,
+        "startChar": 55,
+        "endLine": 319,
+        "endChar": 58
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_07c00d7b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "modify accordingly",
+      "range": {
+        "startLine": 349,
+        "startChar": 40,
+        "endLine": 349,
+        "endChar": 43
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_67bf59fc",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "I think it is not needed ...ResouceIndexNumber can be reused",
+      "range": {
+        "startLine": 355,
+        "startChar": 43,
+        "endLine": 355,
+        "endChar": 44
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a73841a1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove spaces",
+      "range": {
+        "startLine": 356,
+        "startChar": 65,
+        "endLine": 356,
+        "endChar": 69
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47ba150b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove bool_value1",
+      "range": {
+        "startLine": 357,
+        "startChar": 9,
+        "endLine": 357,
+        "endChar": 20
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_873b7d9b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "make this in 2 lines..",
+      "range": {
+        "startLine": 359,
+        "startChar": 40,
+        "endLine": 359,
+        "endChar": 66
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e742490f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove whole stuff...",
+      "range": {
+        "startLine": 364,
+        "startChar": 32,
+        "endLine": 364,
+        "endChar": 34
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c7458518",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove spaces",
+      "range": {
+        "startLine": 366,
+        "startChar": 39,
+        "endLine": 366,
+        "endChar": 40
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_274c3142",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-21T14:58:31Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 374,
+        "startChar": 5,
+        "endLine": 374,
+        "endChar": 6
+      },
+      "revId": "393ad68065633b954082599aed552228953e8778",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
