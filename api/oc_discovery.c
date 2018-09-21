@@ -584,6 +584,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
                       eps_cur->addr.ipv6.scope = endpoint->addr.ipv6.scope;
                     }
+                    eps_cur->version = endpoint->version;
                   }
                 }
               }
