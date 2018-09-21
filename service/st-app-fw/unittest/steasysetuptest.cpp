@@ -369,12 +369,7 @@ handle_prov_data(uint8_t *data, int len)
     memcpy(message->data, data, len);
     message->length = len;
 
-#ifdef STATE_MODEL
     coap_receive_handler(message);
-#else
-    oc_set_delayed_callback(message, coap_receive_handler, 0);
-#endif
-
     return 0;
 }
 

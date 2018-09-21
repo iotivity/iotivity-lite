@@ -36,7 +36,12 @@
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
+#ifdef RISTRICT_INCOMING_REQUESTS
+#define MAX_INCOMING_REQUESTS 1
+OC_MEMB_FIXED(oc_incoming_buffers, oc_message_t, MAX_INCOMING_REQUESTS);
+#else  /* RISTRICT_INCOMING_REQUESTS */
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
+#endif /* !RISTRICT_INCOMING_REQUESTS */
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -82,6 +87,11 @@ allocate_message(struct oc_memb *pool)
 {
   oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
+#ifdef RISTRICT_INCOMING_REQUESTS
+  if (!message) {
+    oc_network_event_handler_wait_request();
+  }
+#endif /* RISTRICT_INCOMING_REQUESTS */
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -135,6 +145,8 @@ oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
 oc_message_t *
 oc_allocate_message(void)
 {
+  printf("====================================================================="
+         "======= oc_allocate_message\n");
 #ifdef OC_DYNAMIC_ALLOCATION
   return allocate_message(&oc_incoming_buffers, OC_PDU_SIZE);
 #else
