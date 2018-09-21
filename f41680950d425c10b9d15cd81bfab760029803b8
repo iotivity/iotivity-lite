@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e70a4920",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-21T01:17:16Z",
+      "side": 1,
+      "message": "30 sec timeout looks too long, it will be better to set smaller value with value define such as TCP_RECV_TIMEOUT.",
+      "range": {
+        "startLine": 384,
+        "startChar": 19,
+        "endLine": 384,
+        "endChar": 21
+      },
+      "revId": "f41680950d425c10b9d15cd81bfab760029803b8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
