@@ -259,6 +259,7 @@ endif
 
 ifeq ($(ST_RAM_OPT),1)
 	CFLAGS += -DST_RES_PAYLOAD_PARSE
+	CFLAGS += -DST_STRING_ARRAY_ITEM_LEN=32
 endif
 
 ifeq ($(CODE_SIZE_OPT),1)
