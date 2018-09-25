@@ -1,0 +1,285 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_6772b8ae",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "Where is the code that talks to your TAF agent?",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a73cc0c0",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "This is totally unnecessary.",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 21
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_675bd82e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "Why is this necessary? We\u0027re already defining a bunch of resources using the device builder framework. We should be simply using those. If we discover a problem with the generated code, we should patch the code generator. Creating resources on the fly in this way isn\u0027t something that the CTT tests as far as I know. It relies on a static list of resources from discovery through the tests.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 1
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_272a707e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "What do all these additional options do? They aren\u0027t defined.",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_474e9470",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "register_resources() is already doing all of this I believe. Why are you invoking these again?",
+      "range": {
+        "startLine": 236,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 71
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2751d00e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "I don\u0027t get this. Why are you adding the resource here? register_resources() is already adding it. That is why you\u0027re able to use get_app_resource_...() above.",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 240,
+        "endChar": 39
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87589c33",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "I don\u0027t see why this is necessary. All vertical resources are internally flagged with OC_SECURE by default.",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 1
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_074c8c6f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "Well, it seems like once this runs it would be stuck inside the while() loop inside Stack_Initialisation() and won\u0027t reach any of the code below.\n\nIn other words, you won\u0027t even see the menu until you effectively exit out of IoTivity-Lite\u0027s event loop.",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 413,
+        "endChar": 44
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e746c84e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure what these conditions are supposed to mean.",
+      "range": {
+        "startLine": 422,
+        "startChar": 0,
+        "endLine": 433,
+        "endChar": 5
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4775f496",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "You won\u0027t even get to this until you\u0027ve returned from Stack_Initialisation(). But when you return from that function, you\u0027re no longer running the event loop and won\u0027t receive or handle any requests.",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2778b08e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "This is not doing just initialization. You\u0027re both initializing and running the stack.",
+      "range": {
+        "startLine": 439,
+        "startChar": 4,
+        "endLine": 439,
+        "endChar": 24
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_876ffcc4",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "This is the loop that runs the stack.",
+      "range": {
+        "startLine": 462,
+        "startChar": 0,
+        "endLine": 473,
+        "endChar": 5
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c768e4bc",
+        "filename": "include/Certification.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-09-25T19:18:26Z",
+      "side": 1,
+      "message": "Please don\u0027t define macros or variables that aren\u0027t being used or serve no purpose.\n\nAlso, please keep the naming consistent and clean.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 41
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
