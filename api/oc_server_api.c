@@ -218,7 +218,7 @@ oc_collection_get_collections(void)
 #endif /* OC_COLLECTIONS */
 
 void
-oc_resource_bind_resource_interface(oc_resource_t *resource, uint8_t interface)
+oc_resource_bind_resource_interface(oc_resource_t *resource, oc_interface_mask_t interface)
 {
   resource->interfaces |= interface;
 }

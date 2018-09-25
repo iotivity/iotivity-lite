@@ -143,8 +143,14 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   cur->next = 0;
   cur->value.object_array = 0;
   /* key */
+  if (!cbor_value_is_text_string(value)) {
+    *err = CborErrorIllegalType;
+    return;
+  }
   *err |= cbor_value_calculate_string_length(value, &len);
   len++;
+  if (*err != CborNoError || len == 0)
+    return;
   oc_alloc_string(&cur->name, len);
   *err |= cbor_value_copy_text_string(value, (char *)oc_string(cur->name), &len,
                                       NULL);
@@ -168,6 +174,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   case CborByteStringType:
     *err |= cbor_value_calculate_string_length(value, &len);
     len++;
+    if (*err != CborNoError || len == 0)
+      return;
     oc_alloc_string(&cur->value.string, len);
     *err |= cbor_value_copy_byte_string(
       value, oc_cast(cur->value.string, uint8_t), &len, NULL);
@@ -176,6 +184,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   case CborTextStringType:
     *err |= cbor_value_calculate_string_length(value, &len);
     len++;
+    if (*err != CborNoError || len == 0)
+      return;
     oc_alloc_string(&cur->value.string, len);
     *err |= cbor_value_copy_text_string(value, oc_string(cur->value.string),
                                         &len, NULL);
@@ -323,6 +333,9 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
       *err |= cbor_value_advance(&array);
     }
     break;
+  case CborInvalidType:
+    *err |= CborErrorIllegalType;
+    return;
   default:
     break;
   }

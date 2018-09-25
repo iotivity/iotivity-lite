@@ -929,7 +929,7 @@ network_event_thread(void *data)
   pthread_exit(NULL);
 }
 
-int
+static int
 send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
   char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];
