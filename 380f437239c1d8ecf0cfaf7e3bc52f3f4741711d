@@ -1,0 +1,441 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_67abd91d",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/Client.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47a69554",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/GetLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e76ec900",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/GetLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 12
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a764c122",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/Light.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8767fd24",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/Light.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "Tab",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 4
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c77105e2",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/MyDiscoveryHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2778b1c3",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/MyInitHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c73f45d5",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/ObserveLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6782b995",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/Post2LightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0773ede7",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/Post2LightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 8
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_477df5b0",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/PostLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_874edd94",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/PostLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 12
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a74b2186",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_client_windows/PutLightResponseHandler.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_client",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e7452971",
+        "filename": "swig/apps/java_lite_simple_server_windows/src/java_lite_simple_server_windows/GetLight.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 30,
+        "startChar": 16,
+        "endLine": 30,
+        "endChar": 17
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c748e589",
+        "filename": "swig/apps/java_lite_simple_server_windows/src/java_lite_simple_server_windows/PostLight.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 8
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_275f1143",
+        "filename": "swig/apps/java_lite_simple_server_windows/src/java_lite_simple_server_windows/Server.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "The package name should not be platform specific. Can we call this java_lite_simple_server",
+      "range": {
+        "startLine": 1,
+        "startChar": 8,
+        "endLine": 1,
+        "endChar": 39
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6759195a",
+        "filename": "swig/iotivity-lite-eclipse-project/junit/org/iotivity/OCResourceTest.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 4
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a732010e",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 123,
+        "startChar": 50,
+        "endLine": 123,
+        "endChar": 51
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87353df9",
+        "filename": "swig/swig_interfaces/oc_ri.i",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-25T17:42:52Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 49,
+        "startChar": 14,
+        "endLine": 49,
+        "endChar": 15
+      },
+      "revId": "380f437239c1d8ecf0cfaf7e3bc52f3f4741711d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
