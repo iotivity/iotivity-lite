@@ -96,8 +96,7 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
                 System.out.println("\t\tendpoint.device " + endpoint.getDevice());
                 System.out.println("\t\tendpoint.flags " + endpoint.getFlags());
                 System.out.println("\t\tendpoint.interfaceIndex " + endpoint.getInterfaceIndex());
-                // TODO can not print endpoint.getVersion() do to value not being set
-                //System.out.println("\t\tendpoint.version " + endpoint.getVersion().ordinal());
+                System.out.println("\t\tendpoint.version " + endpoint.getVersion().toString());
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
                     if ((ep.getFlags() & OCTransportFlags.IPV4) > 0) {
