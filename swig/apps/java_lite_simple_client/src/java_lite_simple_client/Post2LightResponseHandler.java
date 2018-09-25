@@ -21,7 +21,8 @@ public class Post2LightResponseHandler implements ResponseHandler {
 
         ObserveLightResponseHandler observerLight = new ObserveLightResponseHandler();
         OCMain.doObserve(Light.server_uri, Light.server, null, OCQos.LOW_QOS, observerLight);
-        // TODO add setDelayedCallback
+        StopObserveTriggerHandler stopObserve = new StopObserveTriggerHandler();
+        OCMain.setDelayedCallback(stopObserve, 5);
         System.out.println("Sent OBSERVE request");
     }
 
