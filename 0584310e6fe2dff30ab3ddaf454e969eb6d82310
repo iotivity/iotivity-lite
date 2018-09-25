@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_07cdad5d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-25T05:56:19Z",
+      "side": 1,
+      "message": "containe -\u003e contain",
+      "range": {
+        "startLine": 34,
+        "startChar": 55,
+        "endLine": 34,
+        "endChar": 61
+      },
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_67dc7913",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/Post2LightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-25T05:56:19Z",
+      "side": 1,
+      "message": "response -\u003e response",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47d7b5ed",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/PostLightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-25T05:56:19Z",
+      "side": 1,
+      "message": "response -\u003e response",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a705e17b",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/PutLightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-25T05:56:19Z",
+      "side": 1,
+      "message": "responce -\u003e response",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
