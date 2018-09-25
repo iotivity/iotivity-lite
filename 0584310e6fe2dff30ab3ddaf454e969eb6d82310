@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a7c84123",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/Client.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-25T16:28:14Z",
+      "side": 1,
+      "message": "yes it should. I copied the server sample to start this one and missed this one.",
+      "parentUuid": "da33351e_e75b6985",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_67dc7913",
         "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/Post2LightResponseHandler.java",
         "patchSetId": 5
@@ -53,6 +71,24 @@
       "writtenOn": "2018-09-25T05:56:19Z",
       "side": 1,
       "message": "response -\u003e response",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_27dc31e4",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/Post2LightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-25T16:28:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_67dc7913",
       "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -76,6 +112,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_07d76dc0",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/PostLightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-25T16:28:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_47d7b5ed",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a705e17b",
         "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/PutLightResponseHandler.java",
         "patchSetId": 5
@@ -87,6 +141,24 @@
       "writtenOn": "2018-09-25T05:56:19Z",
       "side": 1,
       "message": "responce -\u003e response",
+      "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_67e639b6",
+        "filename": "swig/apps/java_lite_simple_client_windows/src/java_lite_simple_server_windows/PutLightResponseHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-25T16:28:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a705e17b",
       "revId": "0584310e6fe2dff30ab3ddaf454e969eb6d82310",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
