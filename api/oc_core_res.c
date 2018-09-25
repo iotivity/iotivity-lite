@@ -366,7 +366,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   return &oc_device_info[device_count - 1];
 }
 
-void
+static void
 oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
                          void *data)
 {

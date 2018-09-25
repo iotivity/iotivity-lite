@@ -20,6 +20,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_discovery.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
@@ -583,6 +584,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
                       eps_cur->addr.ipv6.scope = endpoint->addr.ipv6.scope;
                     }
+                    eps_cur->version = endpoint->version;
                   }
                 }
               }

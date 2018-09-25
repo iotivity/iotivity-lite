@@ -1121,6 +1121,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                        oc_endpoint_t *endpoint)
 #endif /* OC_BLOCK_WISE */
 {
+  endpoint->version = OCF_VER_1_0_0;
+  unsigned int cf = 0;
+  if (coap_get_header_content_format(response, &cf) == 1) {
+    if (cf == APPLICATION_CBOR) {
+      endpoint->version = OIC_VER_1_1_0;
+    }
+  }
+
   uint8_t *payload = NULL;
   int payload_len = 0;
   coap_packet_t *const pkt = (coap_packet_t *)response;
