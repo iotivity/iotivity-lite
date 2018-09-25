@@ -222,7 +222,31 @@ void java_oc_response_handler(oc_client_response_t *response) {
                                                          "handler",
                                                          "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
-  jobject jDiscoveryFlag = (data->env)->CallObjectMethod(data->obj, mid_handler, jresponse);
+  (data->env)->CallObjectMethod(data->obj, mid_handler, jresponse);
+}
+
+void java_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds) {
+  oc_set_delayed_callback(cb_data, callback, seconds);
+}
+
+oc_event_callback_retval_t java_oc_trigger_handler(void* cb_data) {
+  printf("JNI: %s\n", __FUNCTION__);
+  struct callback_data *data = (callback_data *)cb_data;
+
+  const jclass cls_TriggerHandler = (data->env)->FindClass("org/iotivity/TriggerHandler");
+  assert(cls_TriggerHandler);
+  const jmethodID mid_handler = (data->env)->GetMethodID(cls_TriggerHandler,
+                                                         "handler",
+                                                         "()Lorg/iotivity/OCEventCallbackResult;");
+  assert(mid_handler);
+  jobject jEventCallbackRet = (data->env)->CallObjectMethod(data->obj, mid_handler);
+  
+  jclass cls_OCEventCallbackResult = (data->env)->GetObjectClass(jEventCallbackRet);
+  assert(cls_OCEventCallbackResult);
+  const jmethodID mid_OCEventCallbackResult_swigValue = (data->env)->GetMethodID(cls_OCEventCallbackResult, "swigValue", "()I");
+  assert(mid_OCEventCallbackResult_swigValue);
+  jint return_value = (data->env)->CallIntMethod(jEventCallbackRet, mid_OCEventCallbackResult_swigValue);
+  return (oc_event_callback_retval_t) return_value;
 }
 
 int java_oc_init_platform(const char *mfg_name) {
@@ -349,6 +373,19 @@ void java_rep_set_text_string(const char* key, const char* value) {
   $2 = user_data;
 }
 
+%typemap(jni)    oc_trigger_t callback "jobject";
+%typemap(jtype)  oc_trigger_t callback "TriggerHandler";
+%typemap(jstype) oc_trigger_t callback "TriggerHandler";
+%typemap(javain) oc_trigger_t callback "$javainput";
+%typemap(in,numinputs=1) (oc_trigger_t callback, void *cb_data) {
+  struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
+  user_data->env = jenv;
+  user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  $1 = java_oc_trigger_handler;
+  $2 = user_data;
+}
+
 %ignore oc_handler_t;
 %rename(mainInit) oc_main_init;
 %rename(mainPoll) oc_main_poll;
@@ -438,7 +475,9 @@ bool java_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *qu
 %rename(closeSession) oc_close_session;
 
 // common operations
-%rename(setDelayedCallback) oc_set_delayed_callback;
+%ignore oc_set_delayed_callback;
+%rename(setDelayedCallback) java_oc_set_delayed_callback;
+void java_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds);
 %rename(removeDelayedCallback) oc_remove_delayed_callback;
 %include "oc_api.h"
 
