@@ -21,7 +21,7 @@ public class MyInitHandler implements MainInitHandler {
         OCResource resource = OCMain.newResource("", "/a/light", (short) 2, 0);
         OCMain.resourceBindResourceType(resource, "core.light");
         OCMain.resourceBindResourceType(resource, "core.brightlight");
-        OCMain.resourceBindResourceInterface(resource, (short) OCInterfaceMask.RW);
+        OCMain.resourceBindResourceInterface(resource, OCInterfaceMask.RW);
         OCMain.resourceSetDefaultInterface(resource, OCInterfaceMask.RW);
         OCMain.resourceSetDiscoverable(resource, true);
         OCMain.resourceSetPeriodicObservable(resource, 1);
