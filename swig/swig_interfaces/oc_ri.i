@@ -100,3 +100,9 @@ typedef struct
   uint16_t observe_period_seconds;
   uint8_t num_observers;
 }oc_resource_t;
+
+%rename(OCEventCallbackResult) oc_event_callback_retval_t;
+typedef enum {
+  OC_EVENT_DONE = 0,
+  OC_EVENT_CONTINUE
+} oc_event_callback_retval_t;
