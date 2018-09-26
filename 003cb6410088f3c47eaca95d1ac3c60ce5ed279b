@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_8759bc00",
+        "filename": "swig/iotivity-lite-eclipse-project/.gitignore",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-26T19:24:32Z",
+      "side": 1,
+      "message": "My bad - Never mind",
+      "parentUuid": "da33351e_07564cd2",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 24
+      },
+      "revId": "003cb6410088f3c47eaca95d1ac3c60ce5ed279b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e75088d6",
         "filename": "swig/java_lang/.gitignore",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-26T19:19:16Z",
       "side": 1,
       "message": "You should remove .gitignore file",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 5
+      },
+      "revId": "003cb6410088f3c47eaca95d1ac3c60ce5ed279b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_276270ad",
+        "filename": "swig/java_lang/.gitignore",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-09-26T19:24:32Z",
+      "side": 1,
+      "message": "My bad - Never mind",
+      "parentUuid": "da33351e_e75088d6",
       "range": {
         "startLine": 1,
         "startChar": 0,
