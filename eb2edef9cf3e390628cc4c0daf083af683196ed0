@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e78b6866",
+        "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/Post2LightResponseHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-26T03:16:57Z",
+      "side": 1,
+      "message": "StopObserveTriggerHandler does not exist",
+      "revId": "eb2edef9cf3e390628cc4c0daf083af683196ed0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
