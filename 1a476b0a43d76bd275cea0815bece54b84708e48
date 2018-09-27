@@ -97,6 +97,29 @@
     },
     {
       "key": {
+        "uuid": "da33351e_27a550b5",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T07:16:21Z",
+      "side": 1,
+      "message": "typo in WIME",
+      "range": {
+        "startLine": 64,
+        "startChar": 8,
+        "endLine": 64,
+        "endChar": 21
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a7f4c0cf",
         "filename": "port/linux/ipadapter.c",
         "patchSetId": 1
@@ -132,6 +155,30 @@
       "side": 1,
       "message": "Sometimes the signal is occured before condition wait start. So timed_wait is used to handle this situation.",
       "parentUuid": "da33351e_a7f4c0cf",
+      "range": {
+        "startLine": 224,
+        "startChar": 40,
+        "endLine": 224,
+        "endChar": 53
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_87ac1ca2",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T07:16:21Z",
+      "side": 1,
+      "message": "Thanks for explanation.",
+      "parentUuid": "da33351e_672ab82d",
       "range": {
         "startLine": 224,
         "startChar": 40,
