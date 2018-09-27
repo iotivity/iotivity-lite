@@ -10,17 +10,21 @@
 %{
 #include "oc_api.h"
 #include "oc_rep.h"
+#include <map>
 #include <assert.h>
 
-struct callback_data {
+struct jni_callback_data {
   JNIEnv *env;
   jobject obj;
   jobject juser_data;
 };
 
-void init_platform_java_callback(void *ptr) {
+
+std::map <jobject, jni_callback_data*> jni_callbacks_map;
+
+void jni_init_platform_callback(void *ptr) {
 /* TODO still a work in progress
-  struct callback_data *data = ptr;
+  struct jni_callback_data *data = ptr;
   const jclass callbackInterfaceClass = (*data->env)->FindClass(data->env, "InitPlatformHandler");
   assert(callbackInterfaceClass);
   const jmethodID mid_handle = (*data->env)->GetMethodID(data->env, callbackInterfaceClass, "handle", "()V");
@@ -36,7 +40,7 @@ static jclass cls_MainInitHandler;
 
 int oc_handler_init_callback(void)
 {
-  printf("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __FUNCTION__);
   JNIEnv *jenv = 0;
   int getEnvResult = 0;
   int attachCurrentThreadResult = 0;
@@ -58,7 +62,7 @@ int oc_handler_init_callback(void)
 
 void oc_handler_signal_event_loop_callback(void)
 {
-  printf("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __FUNCTION__);
   JNIEnv *jenv = 0;
   int getEnvResult = 0;
   int attachCurrentThreadResult = 0;
@@ -79,7 +83,7 @@ void oc_handler_signal_event_loop_callback(void)
 
 void oc_handler_register_resource_callback(void)
 {
-  printf("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __FUNCTION__);
   JNIEnv *jenv = 0;
   int getEnvResult = 0;
   int attachCurrentThreadResult = 0;
@@ -100,7 +104,7 @@ void oc_handler_register_resource_callback(void)
 
 void oc_handler_requests_entry_callback(void)
 {
-  printf("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __FUNCTION__);
   JNIEnv *jenv = 0;
   int getEnvResult = 0;
   int attachCurrentThreadResult = 0;
@@ -119,16 +123,26 @@ void oc_handler_requests_entry_callback(void)
   }
 }
 
-static oc_handler_t java_handler = {
+static oc_handler_t jni_handler = {
     oc_handler_init_callback,              // init
     oc_handler_signal_event_loop_callback, // signal_event_loop
     oc_handler_register_resource_callback, // register_resources
     oc_handler_requests_entry_callback     // requests_entry
     };
 
-void java_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data) {
-  printf("JNI: %s\n", __FUNCTION__);
-  struct callback_data *data = (callback_data *)user_data;
+void jni_oc_resource_set_request_handler(oc_resource_t *resource,
+                                          oc_method_t method,
+                                          oc_request_callback_t callback, jni_callback_data *jcb,
+                                          void *user_data)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_resource_set_request_handler(resource, method, callback, jcb);
+}
+    
+void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)user_data;
   const jclass callbackInterfaceClass = (data->env)->FindClass("org/iotivity/RequestHandler");
   assert(callbackInterfaceClass);
   const jmethodID mid_handler = (data->env)->GetMethodID(callbackInterfaceClass, "handler", "(Lorg/iotivity/OCRequest;ILjava/lang/Object;)V");
@@ -138,18 +152,35 @@ void java_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfa
   assert(cls_OCRequest);
   const jmethodID mid_OCRequest_init = (data->env)->GetMethodID(cls_OCRequest, "<init>", "(JZ)V");
   assert(mid_OCRequest_init);
-  (data->env)->CallVoidMethod(data->obj, mid_handler, (data->env)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, NULL/* user_data */);
+  (data->env)->CallVoidMethod(data->obj, mid_handler, (data->env)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, data->juser_data);
 }
 
-oc_discovery_flags_t java_oc_discovery_handler_callback(const char *anchor,
+bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_ip_discovery(rt, handler, jcb);
+}
+
+
+bool jni_oc_do_ip_discovery_at_endpoint(const char *rt,
+                                         oc_discovery_handler_t handler, jni_callback_data *jcb,
+                                         oc_endpoint_t *endpoint, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_ip_discovery_at_endpoint(rt, handler, endpoint, jcb);
+}
+
+oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                                                         const char *uri,
                                                         oc_string_array_t types,
                                                         oc_interface_mask_t interfaces,
                                                         oc_endpoint_t *endpoint,
                                                         oc_resource_properties_t bm,
                                                         void *user_data) {
-  printf("JNI: %s\n", __FUNCTION__);
-  struct callback_data *data = (callback_data *)user_data;
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)user_data;
 
   jstring janchor = (data->env)->NewStringUTF(anchor);
   jstring juri = (data->env)->NewStringUTF(uri);
@@ -177,7 +208,7 @@ oc_discovery_flags_t java_oc_discovery_handler_callback(const char *anchor,
   assert(mid_handler);
   jobject jDiscoveryFlag = (data->env)->CallObjectMethod(data->obj, mid_handler, janchor, juri,
                                                          jtypes, jinterfaceMask, jendpoint,
-                                                         jresourcePropertiesMask, /*TODO user_data*/NULL);
+                                                         jresourcePropertiesMask, data->juser_data);
   jclass cls_DiscoveryFlags = (data->env)->GetObjectClass(jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
   const jmethodID mid_OCDiscoveryFlags_swigValue = (data->env)->GetMethodID(cls_DiscoveryFlags, "swigValue", "()I");
@@ -187,29 +218,41 @@ oc_discovery_flags_t java_oc_discovery_handler_callback(const char *anchor,
 }
 
 // for swig we need handler and user data next to each other
-bool java_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                    oc_qos_t qos, oc_response_handler_t handler, void *user_data) {
-  return oc_do_get(uri, endpoint, query, handler, qos, user_data);
+bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                   oc_response_handler_t handler, jni_callback_data *jcb,
+                   oc_qos_t qos, void *user_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_get(uri, endpoint, query, handler, qos, jcb);
 }
 
-bool java_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                 oc_qos_t qos, oc_response_handler_t handler, void *user_data) {
-  return oc_init_put(uri, endpoint, query, handler, qos, user_data);
+bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                     oc_response_handler_t handler, jni_callback_data *jcb,
+                     oc_qos_t qos, void *user_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_init_put(uri, endpoint, query, handler, qos, jcb);
 }
 
-bool java_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                       oc_qos_t qos, oc_response_handler_t handler, void *user_data) {
-  return oc_init_post(uri, endpoint, query, handler, qos, user_data);
+bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos, void *user_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_init_post(uri, endpoint, query, handler, qos, jcb);
 }
 
-bool java_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                        oc_qos_t qos, oc_response_handler_t handler, void *user_data) {
- return oc_do_observe(uri, endpoint, query, handler, qos, user_data);
+bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos, void *user_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_observe(uri, endpoint, query, handler, qos, jcb);
 }
 
-void java_oc_response_handler(oc_client_response_t *response) {
-  printf("JNI: %s\n", __FUNCTION__);
-  struct callback_data *data = (callback_data *)response->user_data;
+void jni_oc_response_handler(oc_client_response_t *response) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)response->user_data;
   const jclass cls_OCClientResponce = (data->env)->FindClass("org/iotivity/OCClientResponse");
   assert(cls_OCClientResponce);
   const jmethodID mid_OCClientResponce_init = (data->env)->GetMethodID(cls_OCClientResponce, "<init>", "(JZ)V");
@@ -225,13 +268,14 @@ void java_oc_response_handler(oc_client_response_t *response) {
   (data->env)->CallObjectMethod(data->obj, mid_handler, jresponse);
 }
 
-void java_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds) {
+void jni_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
   oc_set_delayed_callback(cb_data, callback, seconds);
 }
 
-oc_event_callback_retval_t java_oc_trigger_handler(void* cb_data) {
-  printf("JNI: %s\n", __FUNCTION__);
-  struct callback_data *data = (callback_data *)cb_data;
+oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)cb_data;
 
   const jclass cls_TriggerHandler = (data->env)->FindClass("org/iotivity/TriggerHandler");
   assert(cls_TriggerHandler);
@@ -249,58 +293,69 @@ oc_event_callback_retval_t java_oc_trigger_handler(void* cb_data) {
   return (oc_event_callback_retval_t) return_value;
 }
 
-int java_oc_init_platform(const char *mfg_name) {
-    return oc_init_platform(mfg_name, NULL, NULL);
+int jni_oc_init_platform(const char *mfg_name) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  return oc_init_platform(mfg_name, NULL, NULL);
 }
 
-int java_oc_add_device(const char *uri, const char *rt, const char *name,
+int jni_oc_add_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version) {
-    return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
 }
 
-void java_oc_resource_make_public() {
+void jni_oc_resource_make_public() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
 #ifdef OC_SECURITY
-      oc_resource_make_public(res);
+  oc_resource_make_public(res);
 #endif /* OC_SECURITY */
-    }
+}
 
 
 /* from oc_rep.h */
 void rep_start_root_object() {
-    oc_rep_start_root_object();
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  oc_rep_start_root_object();
 }
 
 void rep_end_root_object() {
-    oc_rep_end_root_object();
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  oc_rep_end_root_object();
 }
 
-int java_get_rep_error() {
-    return g_err;
+int jni_get_rep_error() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  return g_err;
 }
 
-void java_rep_set_double(const char* key, double value) {
-    g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-    g_err |= cbor_encode_double(&root_map, value); 
+void jni_rep_set_double(const char* key, double value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
+  g_err |= cbor_encode_double(&root_map, value); 
 }
 
-void java_rep_set_int(const char* key, int value) {
-    g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-    g_err |= cbor_encode_int(&root_map, value);
+void jni_rep_set_int(const char* key, int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
+  g_err |= cbor_encode_int(&root_map, value);
 }
 
-void java_rep_set_uint(const char* key, unsigned int value) {
-    g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-    g_err |= cbor_encode_uint(&root_map, value);
+void jni_rep_set_uint(const char* key, unsigned int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
+  g_err |= cbor_encode_uint(&root_map, value);
 }
 
-void java_rep_set_boolean(const char* key, bool value) {
-    g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-    g_err |= cbor_encode_boolean(&root_map, value);
+void jni_rep_set_boolean(const char* key, bool value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
+  g_err |= cbor_encode_boolean(&root_map, value);
 }
 
-void java_rep_set_text_string(const char* key, const char* value) {
-    g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-    g_err |= cbor_encode_text_string(&root_map, value, strlen(value));
+void jni_rep_set_text_string(const char* key, const char* value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
+  g_err |= cbor_encode_text_string(&root_map, value, strlen(value));
 }
 
 %}
@@ -311,11 +366,11 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %typemap(javain) oc_init_platform_cb_t init_platform_cb "$javainput";
 
 %typemap(in,numinputs=1) (oc_init_platform_cb_t init_platform_cb, void *data) {
-  struct callback_data *data = (callback_data *)malloc(sizeof *data);
+  struct jni_callback_data *data = (jni_callback_data *)malloc(sizeof *data);
   data->env = jenv;
   data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = init_platform_java_callback;
+  $1 = jni_init_platform_callback;
   $2 = data;
 }
 
@@ -327,7 +382,7 @@ void java_rep_set_text_string(const char* key, const char* value) {
   JCALL1(GetJavaVM, jenv, &jvm);
   init_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = &java_handler;
+  $1 = &jni_handler;
 
   const jclass callback_interface = jenv->FindClass("org/iotivity/MainInitHandler");
   assert(callback_interface);
@@ -338,12 +393,13 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %typemap(jtype)  oc_request_callback_t callback "RequestHandler";
 %typemap(jstype) oc_request_callback_t callback "RequestHandler";
 %typemap(javain) oc_request_callback_t callback "$javainput";
-%typemap(in,numinputs=1) (oc_request_callback_t callback, void *user_data) {
-  struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
+%typemap(in,numinputs=1) (oc_request_callback_t callback, jni_callback_data *jcb) {
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = java_oc_request_callback;
+  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  $1 = jni_oc_request_callback;
   $2 = user_data;
 }
 
@@ -351,25 +407,44 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %typemap(jtype)  oc_discovery_handler_t handler "DiscoveryHandler";
 %typemap(jstype) oc_discovery_handler_t handler "DiscoveryHandler";
 %typemap(javain) oc_discovery_handler_t handler "$javainput";
-%typemap(in,numinputs=1) (oc_discovery_handler_t handler, void *user_data) {
-  struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
+%typemap(in,numinputs=1) (oc_discovery_handler_t handler, jni_callback_data *jcb) {
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = java_oc_discovery_handler_callback;
+  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
+}
+
+%typemap(jni)    void *user_data "jobject";
+%typemap(jtype)  void *user_data "Object";
+%typemap(jstype) void *user_data "Object";
+%typemap(javain) void *user_data "$javainput";
+%typemap(in)     void *user_data {
+  jobject juser_data = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  $1 = (void*)&juser_data;
+}
+%typemap(javaout) void *user_data {
+   return $jnicall;
+}
+%typemap(out) void *user_data {
+    struct jni_callback_data *data = (jni_callback_data *)result;
+    jresult = data->juser_data;
 }
 
 %typemap(jni)    oc_response_handler_t handler "jobject";
 %typemap(jtype)  oc_response_handler_t handler "ResponseHandler";
 %typemap(jstype) oc_response_handler_t handler "ResponseHandler";
 %typemap(javain) oc_response_handler_t handler "$javainput";
-%typemap(in,numinputs=1) (oc_response_handler_t handler, void *user_data) {
-  struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
+%typemap(in,numinputs=1) (oc_response_handler_t handler, jni_callback_data *jcb) {
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = java_oc_response_handler;
+  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  $1 = jni_oc_response_handler;
   $2 = user_data;
 }
 
@@ -378,11 +453,11 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %typemap(jstype) oc_trigger_t callback "TriggerHandler";
 %typemap(javain) oc_trigger_t callback "$javainput";
 %typemap(in,numinputs=1) (oc_trigger_t callback, void *cb_data) {
-  struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = java_oc_trigger_handler;
+  $1 = jni_oc_trigger_handler;
   $2 = user_data;
 }
 
@@ -391,8 +466,8 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %rename(mainPoll) oc_main_poll;
 %rename(mainShutdown) oc_main_shutdown;
 /* TODO The oc_add_device without the callback or data pointer */
-%rename(addDevice) java_oc_add_device;
-int java_oc_add_device(const char *uri, const char *rt, const char *name,
+%rename(addDevice) jni_oc_add_device;
+int jni_oc_add_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version);
 %ignore oc_add_device;
 /* TODO Need to figure out how to handle callback and data ctx pointer
@@ -402,8 +477,8 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
                   oc_add_device_cb_t add_device_cb, void *data);
 */
 /* the oc_init_platform without the callback or data pointer */
-%rename(initPlatform) java_oc_init_platform;
-int java_oc_init_platform(const char *mfg_name);
+%rename(initPlatform) jni_oc_init_platform;
+int jni_oc_init_platform(const char *mfg_name);
 %ignore oc_init_platform;
 /* TODO Need to figure out how to handle callback and data ctx pointer
 %rename(initPlatform) oc_init_platform;
@@ -430,12 +505,17 @@ int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_c
 %rename(addCollection) oc_add_collection;
 %rename(collectionGetCollection) oc_collection_get_collections;
 // custom instance of oc_resource_make_public to handle OC_SECURITY
-%rename(resourceMakePublic) java_oc_resource_make_public;
+%rename(resourceMakePublic) jni_oc_resource_make_public;
 %ignore oc_resource_make_public;
 %rename(resourceSetDiscoverable) oc_resource_set_discoverable;
 %rename(resourceSetObservable) oc_resource_set_observable;
 %rename(resourceSetPeriodicObservable) oc_resource_set_periodic_observable;
-%rename(resourceSetRequestHandler) oc_resource_set_request_handler;
+%ignore oc_resource_set_request_handler;
+%rename(resourceSetRequestHandler) jni_oc_resource_set_request_handler;
+void jni_oc_resource_set_request_handler(oc_resource_t *resource,
+                                          oc_method_t method,
+                                          oc_request_callback_t callback, jni_callback_data *jcb,
+                                          void *user_data);
 %rename(addResource) oc_add_resource;
 %rename(deleteResource) oc_delete_resource;
 %rename(setConWriteCallback) oc_set_con_write_cb;
@@ -451,23 +531,37 @@ int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_c
 %rename(notifyObservers) oc_notify_observers;
 
 // client side
-%rename(doIPDiscovery) oc_do_ip_discovery;
-%rename(doIPDiscoveryAtEndpoint) oc_do_ip_discovery_at_endpoint;
+%ignore oc_do_ip_discovery;
+%rename(doIPDiscovery) jni_oc_do_ip_discovery;
+bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb, void *user_data);
+%ignore oc_do_ip_discovery_at_endpoint;
+%rename(doIPDiscoveryAtEndpoint) jni_oc_do_ip_discovery_at_endpoint;
+bool jni_oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
+                                         jni_callback_data *jcb, oc_endpoint_t *endpoint,
+                                         void *user_data);
 %ignore oc_do_get;
-%rename(doGet) java_oc_do_get;
-bool java_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query, oc_qos_t qos, oc_response_handler_t handler, void *user_data);
+%rename(doGet) jni_oc_do_get;
+bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                   oc_response_handler_t handler, jni_callback_data *jcb, 
+                   oc_qos_t qos, void *user_data);
 %rename(doDelete) oc_do_delete;
 %ignore oc_init_put;
-%rename(initPut) java_oc_init_put;
-bool java_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query, oc_qos_t qos, oc_response_handler_t handler, void *user_data);
+%rename(initPut) jni_oc_init_put;
+bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                     oc_response_handler_t handler, jni_callback_data *jcb,
+                     oc_qos_t qos, void *user_data);
 %rename(doPut) oc_do_put;
 %ignore oc_init_post;
-%rename(initPost) java_oc_init_post;
-bool java_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query, oc_qos_t qos, oc_response_handler_t handler, void *user_data);
+%rename(initPost) jni_oc_init_post;
+bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos, void *user_data);
 %rename(doPost) oc_do_post;
 %ignore oc_do_observe;
-%rename(doObserve) java_oc_do_observe;
-bool java_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query, oc_qos_t qos, oc_response_handler_t handler, void *user_data);
+%rename(doObserve) jni_oc_do_observe;
+bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos, void *user_data);
 %rename(stopObserve) oc_stop_observe;
 %rename(doIPMulticast) oc_do_ip_multicast;
 %rename(stopMulticast) oc_stop_multicast;
@@ -476,8 +570,8 @@ bool java_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *qu
 
 // common operations
 %ignore oc_set_delayed_callback;
-%rename(setDelayedCallback) java_oc_set_delayed_callback;
-void java_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds);
+%rename(setDelayedCallback) jni_oc_set_delayed_callback;
+void jni_oc_set_delayed_callback(oc_trigger_t callback, void *cb_data, uint16_t seconds);
 %rename(removeDelayedCallback) oc_remove_delayed_callback;
 %include "oc_api.h"
 
@@ -554,14 +648,14 @@ void rep_start_root_object();
 %rename(repEndRootObject) rep_end_root_object;
 void rep_end_root_object();
 
-%rename (getRepError) java_get_rep_error;
-int java_get_rep_error();
+%rename (getRepError) jni_get_rep_error;
+int jni_get_rep_error();
 
-%rename (repSetInt) java_rep_set_int;
-void java_rep_set_int(const char* key, int value);
+%rename (repSetInt) jni_rep_set_int;
+void jni_rep_set_int(const char* key, int value);
 
-%rename (repSetBoolean) java_rep_set_boolean;
-void java_rep_set_boolean(const char* key, bool value);
+%rename (repSetBoolean) jni_rep_set_boolean;
+void jni_rep_set_boolean(const char* key, bool value);
 
-%rename (repSetTextString) java_rep_set_text_string;
-void java_rep_set_text_string(const char* key, const char* value);
+%rename (repSetTextString) jni_rep_set_text_string;
+void jni_rep_set_text_string(const char* key, const char* value);

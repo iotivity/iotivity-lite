@@ -25,9 +25,9 @@ public class MyInitHandler implements MainInitHandler {
         OCMain.resourceSetDefaultInterface(resource, OCInterfaceMask.RW);
         OCMain.resourceSetDiscoverable(resource, true);
         OCMain.resourceSetPeriodicObservable(resource, 1);
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_GET, new GetLight());
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLight());
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLight());
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_GET, new GetLight(), null);
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLight(), null);
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLight(), null);
         OCMain.addResource(resource);
     }
 

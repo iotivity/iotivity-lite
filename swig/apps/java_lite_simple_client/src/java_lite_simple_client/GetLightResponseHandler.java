@@ -34,7 +34,7 @@ public class GetLightResponseHandler implements ResponseHandler {
         }
 
         PutLightResponseHandler putLight = new PutLightResponseHandler();
-        if (OCMain.initPut(Light.server_uri, Light.server, null, OCQos.LOW_QOS, putLight)) {
+        if (OCMain.initPut(Light.server_uri, Light.server, null, putLight, OCQos.LOW_QOS, null)) {
             OCMain.repStartRootObject();
             OCMain.repSetBoolean("state", true);
             OCMain.repSetInt("power", 15);
