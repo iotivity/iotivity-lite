@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_470694cf",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T01:29:15Z",
+      "side": 1,
+      "message": "No. I didn\u0027t see kishen\u0027s patch and I just want to ristrict incomming buffer allocation using this.",
+      "parentUuid": "da33351e_c7af4593",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 72
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e7a6c90f",
         "filename": "security/oc_tls.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-21T07:10:49Z",
       "side": 1,
       "message": "There are 2 questions. If my thought is wrong, Please correct me.\n\n-\u003e peer-\u003erecv_q  list may not have oc_message_t, therefore \n I think checking NULL would be preferred.\n\n\n-\u003e It seems that message from  peer-\u003erecv_q list may have its own data (oc_tls_recv_message() adds message with meaningful data from OC_PROCESS_THREAD(message_buffer_handler, UDP_TO_TLS_EVENT) into list ) but   you have overwritten it at line 1692.",
+      "range": {
+        "startLine": 1654,
+        "startChar": 3,
+        "endLine": 1654,
+        "endChar": 71
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e767e8b5",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T01:29:15Z",
+      "side": 1,
+      "message": "1. Done.\n2. I don\u0027t understrand what you mean. I changed logic to overwriten in original meaasage buffer as you said in line 1692. What is problem of this?",
+      "parentUuid": "da33351e_e7a6c90f",
       "range": {
         "startLine": 1654,
         "startChar": 3,
@@ -83,6 +131,30 @@
       "side": 1,
       "message": "Reason looks like Jaehyun wants to use encrypted buffer (from network event) for putting decrypted data. As mbedtls does not support inbuffer decryption he is using one auxiliary buffer \u0027g_decrypt_data\u0027. Other reason is network thread should wait for the buffer for next read, in the original code network event buffer will be released once message is decrypted and network thread will be free to read next message even though logically we have not processed the decrypted message yet. check that \u0027oc_message_add_ref\u0027 which makes buffer not to get destroy even after decryption is done.",
       "parentUuid": "da33351e_879ffdb3",
+      "range": {
+        "startLine": 1666,
+        "startChar": 48,
+        "endLine": 1666,
+        "endChar": 63
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_076dac98",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1666,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T01:29:15Z",
+      "side": 1,
+      "message": "Harish\u0027s comments are exactly correct my intention. Thank.",
+      "parentUuid": "da33351e_87a53db7",
       "range": {
         "startLine": 1666,
         "startChar": 48,
