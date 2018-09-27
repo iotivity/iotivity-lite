@@ -90,6 +90,7 @@ st_store_load_internal(int security_info , char *store_name)
 #endif/* OC_SECURITY */
   } else {
     st_store_info_initialize();
+    ret = 1;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
@@ -101,6 +102,12 @@ st_store_load(void)
 {
   int ret =0;
   ret= st_store_load_internal(1,ST_STORE_SECURE_NAME);
+
+  if (ret == 1) {
+    st_print_log("[ST_Store] we don't need to load %s\n", ST_STORE_NAME);
+    return 0;
+  }
+
   ret = st_store_load_internal(0,ST_STORE_NAME);
 
   return ret;
