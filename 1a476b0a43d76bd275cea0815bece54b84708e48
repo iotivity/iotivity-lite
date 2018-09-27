@@ -49,6 +49,53 @@
     },
     {
       "key": {
+        "uuid": "da33351e_c7f904ca",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T02:02:53Z",
+      "side": 1,
+      "message": "Harish point is already your code seems to be implemented in Kishen patch message_avail_cb in OC_MEMB_FIXED.\nIf you use existing code, I expect smaller code patch.\nCan you explain how they are different from https://gerrit.iotivity.org/gerrit/#/c/26029 ?",
+      "parentUuid": "da33351e_470694cf",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 72
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a7f4c0cf",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T02:02:53Z",
+      "side": 1,
+      "message": "why timer is used here?",
+      "range": {
+        "startLine": 224,
+        "startChar": 40,
+        "endLine": 224,
+        "endChar": 53
+      },
+      "revId": "1a476b0a43d76bd275cea0815bece54b84708e48",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e7a6c90f",
         "filename": "security/oc_tls.c",
         "patchSetId": 1
