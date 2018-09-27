@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_87b1bce3",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 10583
+      },
+      "writtenOn": "2018-09-27T09:55:31Z",
+      "side": 1,
+      "message": "TAF agent talks to the certification code and the Certification App is decoupled from the TAFAgent code.\nTAF agent code issues the command to the UI of Certification app and the same is available in the IoTivity repository",
+      "parentUuid": "da33351e_6772b8ae",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a73cc0c0",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
