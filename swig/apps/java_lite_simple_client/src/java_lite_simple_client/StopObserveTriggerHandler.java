@@ -7,7 +7,7 @@ import org.iotivity.TriggerHandler;
 public class StopObserveTriggerHandler implements TriggerHandler {
 
     @Override
-    public OCEventCallbackResult handler() {
+    public OCEventCallbackResult handler(Object userData) {
         System.out.println("-------------------------------------------------------");
         System.out.println("Stopping OBSERVE");
         System.out.println("-------------------------------------------------------");

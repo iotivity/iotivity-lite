@@ -20,7 +20,7 @@ public class PostLightResponseHandler implements ResponseHandler {
         }
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler();
-        if (OCMain.initPost(Light.server_uri, Light.server, null, OCQos.LOW_QOS, postLight)) {
+        if (OCMain.initPost(Light.server_uri, Light.server, null, postLight, OCQos.LOW_QOS, null)) {
             OCMain.repStartRootObject();
             OCMain.repSetBoolean("state", true);
             OCMain.repSetInt("power", 55);
