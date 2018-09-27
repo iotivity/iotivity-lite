@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_27939050",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_8709bddf",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 115,
+        "endChar": 54
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e7108903",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Ditto as comment above.",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 43
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_879a5c61",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e7108903",
       "range": {
         "startLine": 174,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_679d9859",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c713c50b",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 54
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_27fa71bd",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Ditto as comment above.",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 40
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c7a3c49c",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_27fa71bd",
       "range": {
         "startLine": 253,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a79e8052",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_670479c0",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 27
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_27739181",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 1
@@ -128,6 +248,30 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Why is this only for OC_TCP?\n\nSeems like we could check for header size overflows even on UDP packets?",
+      "range": {
+        "startLine": 442,
+        "startChar": 0,
+        "endLine": 448,
+        "endChar": 6
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_07ae4c85",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "It had been skipped in UDP because I didn\u0027t want to enlarge binary(code)   and  the header size could be checked after the serialization without overflow when the current buffer was enough big comparing to header . \nBut there was still a potential overflow.\n\nTherefore it is applied to both UDP and TCP as you suggest",
+      "parentUuid": "da33351e_27739181",
       "range": {
         "startLine": 442,
         "startChar": 0,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e7a88879",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "checking coap_pkt whether it is NULL or not, is added at the starting of coap_serialize_message()",
+      "parentUuid": "da33351e_671bd91b",
+      "range": {
+        "startLine": 742,
+        "startChar": 1,
+        "endLine": 750,
+        "endChar": 3
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_071c8d12",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 1
@@ -174,6 +342,30 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Once you make the other changes as suggested above, you would be able to directly invoke coap_serialize_options() with a NULL options_array to simply report back the header length without any header encodig.",
+      "range": {
+        "startLine": 856,
+        "startChar": 0,
+        "endLine": 856,
+        "endChar": 64
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47b7b4d8",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_071c8d12",
       "range": {
         "startLine": 856,
         "startChar": 0,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_27ba70c0",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_2721d14d",
+      "range": {
+        "startLine": 857,
+        "startChar": 0,
+        "endLine": 857,
+        "endChar": 51
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_a72de148",
         "filename": "messaging/coap/coap.h",
         "patchSetId": 1
@@ -220,6 +436,30 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Just check if (option) { ...",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 159,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a777a03a",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_a72de148",
       "range": {
         "startLine": 159,
         "startChar": 0,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_07776c3b",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_87309d9f",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e727e962",
         "filename": "messaging/coap/coap.h",
         "patchSetId": 1
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e771a845",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_e727e962",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 80
+      },
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c72aa52b",
         "filename": "messaging/coap/coap.h",
         "patchSetId": 1
@@ -289,6 +577,24 @@
       "writtenOn": "2018-09-21T22:17:35Z",
       "side": 1,
       "message": "Ditto as above.",
+      "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47905443",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-27T10:04:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_c72aa52b",
       "revId": "18280d8d28f10e842e6260b679ac6f9359839994",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
