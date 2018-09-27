@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_e7fec8ad",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T04:01:41Z",
+      "side": 1,
+      "message": "session_event_handler setting is independent from removing tls close by oc_tls_close_connection call below. Can you add reason why you add it in comment?",
+      "range": {
+        "startLine": 128,
+        "startChar": 2,
+        "endLine": 128,
+        "endChar": 54
+      },
+      "revId": "8c2e4f272b0ca7c8c017efccbb2a784679b7b501",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_472df445",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T04:01:41Z",
+      "side": 1,
+      "message": "is OC_SESSION_DISCONNECTED case handling not required?",
+      "range": {
+        "startLine": 195,
+        "startChar": 2,
+        "endLine": 195,
+        "endChar": 38
+      },
+      "revId": "8c2e4f272b0ca7c8c017efccbb2a784679b7b501",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
