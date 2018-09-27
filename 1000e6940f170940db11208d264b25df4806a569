@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_47bb34e5",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-27T06:13:58Z",
+      "side": 1,
+      "message": "set -2 to hint as error case.",
+      "range": {
+        "startLine": 93,
+        "startChar": 10,
+        "endLine": 93,
+        "endChar": 11
+      },
+      "revId": "1000e6940f170940db11208d264b25df4806a569",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
