@@ -10,6 +10,7 @@
 %{
 #include "oc_api.h"
 #include "oc_rep.h"
+#include <map>
 #include <assert.h>
 
 struct callback_data {
@@ -17,6 +18,9 @@ struct callback_data {
   jobject obj;
   jobject juser_data;
 };
+
+
+std::map <jobject, callback_data*> java_callbacks_map;
 
 void init_platform_java_callback(void *ptr) {
 /* TODO still a work in progress
@@ -141,6 +145,12 @@ void java_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfa
   (data->env)->CallVoidMethod(data->obj, mid_handler, (data->env)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, NULL/* user_data */);
 }
 
+bool java_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, callback_data* jcb, void *discovery_user_data)
+{
+    jcb->juser_data = *(jobject*)discovery_user_data;
+    return oc_do_ip_discovery(rt, handler, jcb);
+}
+
 oc_discovery_flags_t java_oc_discovery_handler_callback(const char *anchor,
                                                         const char *uri,
                                                         oc_string_array_t types,
@@ -177,7 +187,7 @@ oc_discovery_flags_t java_oc_discovery_handler_callback(const char *anchor,
   assert(mid_handler);
   jobject jDiscoveryFlag = (data->env)->CallObjectMethod(data->obj, mid_handler, janchor, juri,
                                                          jtypes, jinterfaceMask, jendpoint,
-                                                         jresourcePropertiesMask, /*TODO user_data*/NULL);
+                                                         jresourcePropertiesMask, data->juser_data);
   jclass cls_DiscoveryFlags = (data->env)->GetObjectClass(jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
   const jmethodID mid_OCDiscoveryFlags_swigValue = (data->env)->GetMethodID(cls_DiscoveryFlags, "swigValue", "()I");
@@ -351,13 +361,25 @@ void java_rep_set_text_string(const char* key, const char* value) {
 %typemap(jtype)  oc_discovery_handler_t handler "DiscoveryHandler";
 %typemap(jstype) oc_discovery_handler_t handler "DiscoveryHandler";
 %typemap(javain) oc_discovery_handler_t handler "$javainput";
-%typemap(in,numinputs=1) (oc_discovery_handler_t handler, void *user_data) {
+%typemap(in,numinputs=1) (oc_discovery_handler_t handler, callback_data* jcb) {
   struct callback_data *user_data = (callback_data *)malloc(sizeof *user_data);
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
+  java_callbacks_map.insert(std::pair<jobject, callback_data*>(user_data->obj, user_data));
   $1 = java_oc_discovery_handler_callback;
   $2 = user_data;
+}
+
+%typemap(jni)    void *discovery_user_data "jobject";
+%typemap(jni)    void *discovery_user_data "jobject";
+%typemap(jtype)  void *discovery_user_data "Object";
+%typemap(jstype) void *discovery_user_data "Object";
+%typemap(javain) void *discovery_user_data "$javainput";
+%typemap(in) void *discovery_user_data {
+  jobject jdiscovery_user_data = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  $1 = (void*)&jdiscovery_user_data;
 }
 
 %typemap(jni)    oc_response_handler_t handler "jobject";
@@ -451,7 +473,9 @@ int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_c
 %rename(notifyObservers) oc_notify_observers;
 
 // client side
-%rename(doIPDiscovery) oc_do_ip_discovery;
+%ignore oc_do_ip_discovery;
+%rename(doIPDiscovery) java_oc_do_ip_discovery;
+bool java_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, callback_data* jcb, void *discovery_user_data);
 %rename(doIPDiscoveryAtEndpoint) oc_do_ip_discovery_at_endpoint;
 %ignore oc_do_get;
 %rename(doGet) java_oc_do_get;

@@ -16,7 +16,6 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
     @Override
     public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
                                     int resourcePropertiesMask, Object userData) {
-
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
         System.out.println("\turi: " + uri);
