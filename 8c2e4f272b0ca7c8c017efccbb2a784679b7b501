@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a71b201b",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T04:48:47Z",
+      "side": 1,
+      "message": "To remove dtls session, I need endpoint about client. session_event_callback can give that endpoint. That\u0027s why I added sesion_event_callbck when start easy_setup.",
+      "parentUuid": "da33351e_e7fec8ad",
+      "range": {
+        "startLine": 128,
+        "startChar": 2,
+        "endLine": 128,
+        "endChar": 54
+      },
+      "revId": "8c2e4f272b0ca7c8c017efccbb2a784679b7b501",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_472df445",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-27T04:01:41Z",
       "side": 1,
       "message": "is OC_SESSION_DISCONNECTED case handling not required?",
+      "range": {
+        "startLine": 195,
+        "startChar": 2,
+        "endLine": 195,
+        "endChar": 38
+      },
+      "revId": "8c2e4f272b0ca7c8c017efccbb2a784679b7b501",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_071bec1b",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T04:48:47Z",
+      "side": 1,
+      "message": "Yes. OC_SESSION_DISCONNECTED is not our concern.",
+      "parentUuid": "da33351e_472df445",
       "range": {
         "startLine": 195,
         "startChar": 2,
