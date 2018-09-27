@@ -21,7 +21,7 @@ public class MyInitHandler implements MainInitHandler {
     public void requestEntry() {
         System.out.println("inside MyInitHandler.requestEntry()");
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler();
-        OCMain.doIPDiscovery("core.light", discoveryHandler);
+        OCMain.doIPDiscovery("core.light", discoveryHandler, null);
     }
 
     @Override

@@ -16,7 +16,6 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
     @Override
     public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
                                     int resourcePropertiesMask, Object userData) {
-
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
         System.out.println("\turi: " + uri);
@@ -130,7 +129,7 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
                     ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
-                OCMain.doGet(Light.server_uri, Light.server, null, OCQos.LOW_QOS, responseHandler);
+                OCMain.doGet(Light.server_uri, Light.server, null, responseHandler, OCQos.LOW_QOS, null);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
