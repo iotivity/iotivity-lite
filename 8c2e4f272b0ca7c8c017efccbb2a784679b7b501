@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_a7c9607b",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-09-27T06:43:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_87dedc3d",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 33
+      },
+      "revId": "8c2e4f272b0ca7c8c017efccbb2a784679b7b501",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e7fec8ad",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 2
