@@ -293,15 +293,14 @@ get_ready_to_read_session(fd_set *setfds)
 }
 
 static size_t
-get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
+get_total_length_from_header(uint8_t *data, oc_endpoint_t *endpoint)
 {
   size_t total_length = 0;
   if (endpoint->flags & SECURED) {
     //[3][4] bytes in tls header are tls payload length
-    total_length =
-      TLS_HEADER_SIZE + (size_t)((message->data[3] << 8) | message->data[4]);
+    total_length = TLS_HEADER_SIZE + (size_t)((data[3] << 8) | data[4]);
   } else {
-    total_length = coap_tcp_get_packet_size(message->data);
+    total_length = coap_tcp_get_packet_size(data);
   }
 
   return total_length;
@@ -361,11 +360,33 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } else
 #endif /* DISABLE_TCP_SERVER */
     if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
-    ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
+
+    uint8_t *temp_data = oc_allocate_data(OC_PDU_SIZE);
+    if (!temp_data) {
+      OC_ERR("oc_allocate_data failure");
+      ret_with_code(TCP_STATUS_ERROR);
+    }
+
+    ssize_t len = read(dev->tcp.connect_pipe[0], temp_data, OC_PDU_SIZE);
+
     if (len < 0) {
       OC_ERR("read error! %d", errno);
       ret_with_code(TCP_STATUS_ERROR);
     }
+
+    if (len > (ssize_t)(OC_PDU_SIZE / 2)) {
+      message->data = temp_data;
+    } else {
+      message->data = oc_allocate_data(len);
+
+      if (!(message->data)) {
+        OC_ERR("oc_allocate_data failure");
+        ret_with_code(TCP_STATUS_ERROR);
+      }
+      memcpy(message->data, temp_data, len);
+      oc_data_unref(temp_data);
+    }
+
     FD_CLR(dev->tcp.connect_pipe[0], fds);
     ret_with_code(TCP_STATUS_NONE);
   }
@@ -388,9 +409,14 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
   message->length = 0;
+
+  uint8_t default_buf[DEFAULT_RECEIVE_SIZE];
+  uint8_t *rcv_buf_pointer = NULL;
+  rcv_buf_pointer = default_buf;
+
   do {
     int count =
-      recv(session->sock, message->data + message->length, want_read, 0);
+      recv(session->sock, rcv_buf_pointer + message->length, want_read, 0);
     if (count < 0) {
       OC_ERR("recv error! %d", errno);
 
@@ -410,7 +436,9 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     want_read -= (size_t)count;
 
     if (total_length == 0) {
-      total_length = get_total_length_from_header(message, &session->endpoint);
+      total_length =
+        get_total_length_from_header(rcv_buf_pointer, &session->endpoint);
+
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
         OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)",
@@ -420,7 +448,15 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       }
       OC_DBG("tcp packet total length : %ld bytes.", total_length);
 
-      want_read = total_length - (size_t)count;
+      message->data = oc_allocate_data(total_length);
+      if (message->data) {
+        memcpy(message->data, rcv_buf_pointer, count);
+        rcv_buf_pointer = message->data;
+        want_read = total_length - (size_t)count;
+      } else {
+        OC_ERR("oc_allocate_data failure");
+        ret_with_code(TCP_STATUS_ERROR);
+      }
     }
   } while (total_length > message->length);
 
