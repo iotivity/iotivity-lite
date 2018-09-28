@@ -149,7 +149,7 @@ TEST_F(TestSTResourceManager, st_notify_back)
     request.observe = 0;
     response.code = COAP_NO_ERROR;
 #ifdef OC_BLOCK_WISE
-    int observe = coap_observe_handler(&request, &response, resource, 10, endpoint);
+    int observe = coap_observe_handler(&request, &response, resource, 1024, endpoint);
 #else  /* OC_BLOCK_WISE */
     int observe = coap_observe_handler(&request, &response, resource, endpoint);
 #endif /* !OC_BLOCK_WISE */
