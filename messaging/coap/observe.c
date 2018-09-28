@@ -460,7 +460,13 @@ coap_notify_observers(oc_resource_t *resource,
                                          APPLICATION_VND_OCF_CBOR);
         }
         coap_set_token(notification, obs->token, obs->token_len);
+#ifdef OC_DYNAMIC_ALLOCATION
+        transaction = coap_new_transaction_by_size(
+          coap_get_mid(), &obs->endpoint,
+          COAP_MAX_HEADER_SIZE + notification->payload_len);
+#else
         transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+#endif
         if (transaction) {
           obs->last_mid = transaction->mid;
           notification->mid = transaction->mid;
