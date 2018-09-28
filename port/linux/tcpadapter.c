@@ -361,7 +361,11 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } else
 #endif /* DISABLE_TCP_SERVER */
     if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
+    message->length=0;
+    message = oc_reallocate_message_by_size(message, OC_PDU_SIZE);
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
+    message = oc_reallocate_message_by_size(message, 0);
+
     if (len < 0) {
       OC_ERR("read error! %d", errno);
       ret_with_code(TCP_STATUS_ERROR);
@@ -387,6 +391,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   // receive message.
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
+  message = oc_reallocate_message_by_size(message, DEFAULT_RECEIVE_SIZE);
   message->length = 0;
   do {
     int count =
@@ -419,7 +424,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         ret_with_code(TCP_STATUS_ERROR);
       }
       OC_DBG("tcp packet total length : %ld bytes.", total_length);
-
+      message = oc_reallocate_message_by_size(message, total_length);
       want_read = total_length - (size_t)count;
     }
   } while (total_length > message->length);
