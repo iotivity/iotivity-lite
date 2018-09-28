@@ -460,14 +460,22 @@ coap_notify_observers(oc_resource_t *resource,
                                          APPLICATION_VND_OCF_CBOR);
         }
         coap_set_token(notification, obs->token, obs->token_len);
-        transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+        transaction =
+          coap_new_transaction_except_data(coap_get_mid(), &obs->endpoint);
         if (transaction) {
-          obs->last_mid = transaction->mid;
-          notification->mid = transaction->mid;
-          transaction->message->length =
-            coap_serialize_message(notification, transaction->message->data);
+          transaction->message->data = oc_allocate_data(
+            COAP_MAX_HEADER_SIZE + notification[0].payload_len);
+          if (transaction->message->data) {
+            obs->last_mid = transaction->mid;
+            notification->mid = transaction->mid;
+            transaction->message->length =
+              coap_serialize_message(notification, transaction->message->data);
 
-          coap_send_transaction(transaction);
+            coap_send_transaction(transaction);
+          } else {
+            OC_ERR("oc_allocate_data failure");
+            coap_clear_transaction(transaction);
+          }
         }
       }
     }

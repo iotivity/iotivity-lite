@@ -28,17 +28,23 @@ extern "C" {
 
 OC_PROCESS_NAME(message_buffer_handler);
 oc_message_t *oc_allocate_message(void);
+oc_message_t *oc_allocate_message_except_data(void);
+
 void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb);
 
 oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool);
 
 oc_message_t *oc_internal_allocate_outgoing_message(void);
+oc_message_t *oc_internal_allocate_outgoing_message_except_data(void);
 
 void oc_message_add_ref(oc_message_t *message);
 void oc_message_unref(oc_message_t *message);
 
 void oc_recv_message(oc_message_t *message);
 void oc_send_message(oc_message_t *message);
+
+uint8_t *oc_allocate_data(size_t size);
+void oc_data_unref(uint8_t *data);
 
 #ifdef __cplusplus
 }
