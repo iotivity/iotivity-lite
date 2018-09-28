@@ -207,7 +207,9 @@ _oc_mmem_free(
   }
 #else /* !OC_DYNAMIC_ALLOCATION */
   (void)pool_type;
-  free(m->ptr);
+  if (m->ptr)
+    free(m->ptr);
+  m->ptr = NULL;
   m->size = 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

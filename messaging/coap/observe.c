@@ -460,6 +460,7 @@ coap_notify_observers(oc_resource_t *resource,
                                          APPLICATION_VND_OCF_CBOR);
         }
         coap_set_token(notification, obs->token, obs->token_len);
+
         transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
         if (transaction) {
           obs->last_mid = transaction->mid;
@@ -467,6 +468,17 @@ coap_notify_observers(oc_resource_t *resource,
           transaction->message->length =
             coap_serialize_message(notification, transaction->message->data);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+          if ((OC_PDU_SIZE >> 1) < transaction->message->length) {
+            transaction->message = oc_reallocate_message_by_size(
+              transaction->message, transaction->message->length);
+
+            if (!(transaction->message)) {
+              coap_clear_transaction(transaction);
+              goto leave_notify_observers;
+            }
+          }
+#endif
           coap_send_transaction(transaction);
         }
       }

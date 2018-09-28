@@ -65,7 +65,6 @@ TEST_F(TestOcRi, GetAppResourceByUri_P)
 
     res = oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI),0);
     EXPECT_NE(res, NULL);
-    oc_ri_delete_resource(res);
 }
 
 
@@ -88,7 +87,6 @@ TEST_F(TestOcRi, RiGetAppResource_P)
     oc_ri_add_resource(res);
     res = oc_ri_get_app_resources();
     EXPECT_NE(0, res);
-    oc_ri_delete_resource(res);
 }
 
 TEST_F(TestOcRi, RiGetAppResource_N)
@@ -105,7 +103,6 @@ TEST_F(TestOcRi, RiAllocResource_P)
 
     res = oc_ri_alloc_resource();
     EXPECT_NE(0, res);
-    oc_ri_delete_resource(res);
 }
 
 TEST_F(TestOcRi, RiDeleteResource_P)
@@ -125,7 +122,6 @@ TEST_F(TestOcRi, RiFreeResourceProperties_P)
     res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
     oc_ri_free_resource_properties(res);
     EXPECT_EQ(0, oc_string_len(res->name));
-    oc_ri_delete_resource(res);
 }
 
 TEST_F(TestOcRi, RiAddResource_P)
@@ -139,5 +135,4 @@ TEST_F(TestOcRi, RiAddResource_P)
     oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
     res_check = oc_ri_add_resource(res);
     EXPECT_EQ(res_check, 1);
-    oc_ri_delete_resource(res);
 }
