@@ -360,7 +360,7 @@ int jni_oc_init_platform(const char *mfg_name) {
   return oc_init_platform(mfg_name, NULL, NULL);
 }
 
-int jni_oc_add_device(const char *uri, const char *rt, const char *name,
+int jni_oc_add_device0(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
@@ -373,6 +373,29 @@ void jni_oc_resource_make_public() {
 #endif /* OC_SECURITY */
 }
 
+int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
+                  const char *spec_version, const char *data_model_version,
+                  oc_add_device_cb_t add_device_cb, jni_callback_data *jcb,
+                  void *user_data) 
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_add_device(uri, rt, name, spec_version, data_model_version, add_device_cb, jcb);
+}
+
+void jni_oc_add_device_callback(void *user_data) 
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)user_data;
+
+  const jclass cls_OCAddDeviceHandler = (data->env)->FindClass("org/iotivity/OCAddDeviceHandler");
+  assert(cls_OCAddDeviceHandler);
+  const jmethodID mid_handler = (data->env)->GetMethodID(cls_OCAddDeviceHandler,
+                                                         "handler",
+                                                         "(Ljava/lang/Object;)V");
+  assert(mid_handler);
+  (data->env)->CallObjectMethod(data->obj, mid_handler, data->juser_data);
+}
 
 /* from oc_rep.h */
 void rep_start_root_object() {
@@ -434,6 +457,20 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   JCALL1(DeleteLocalRef, jenv, $input);
   $1 = jni_init_platform_callback;
   $2 = data;
+}
+
+%typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
+%typemap(jtype)  oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
+%typemap(jstype) oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
+%typemap(javain) oc_add_device_cb_t add_device_cb "$javainput";
+%typemap(in,numinputs=1) (oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->env = jenv;
+  user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  $1 = jni_oc_add_device_callback;
+  $2 = user_data;
 }
 
 %typemap(jni)    const oc_handler_t *handler "jobject";
@@ -528,17 +565,15 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 %rename(mainInit) oc_main_init;
 %rename(mainPoll) oc_main_poll;
 %rename(mainShutdown) oc_main_shutdown;
-/* TODO The oc_add_device without the callback or data pointer */
-%rename(addDevice) jni_oc_add_device;
-int jni_oc_add_device(const char *uri, const char *rt, const char *name,
-                       const char *spec_version, const char *data_model_version);
 %ignore oc_add_device;
-/* TODO Need to figure out how to handle callback and data ctx pointer
-%rename(addDevice) oc_add_device;
-int oc_add_device(const char *uri, const char *rt, const char *name,
+%rename(addDevice) jni_oc_add_device0;
+int jni_oc_add_device0(const char *uri, const char *rt, const char *name,
+                       const char *spec_version, const char *data_model_version);
+%rename(addDevice) jni_oc_add_device1;
+int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
-                  oc_add_device_cb_t add_device_cb, void *data);
-*/
+                  oc_add_device_cb_t add_device_cb, jni_callback_data *jcb,
+                  void *user_data);
 /* the oc_init_platform without the callback or data pointer */
 %rename(initPlatform) jni_oc_init_platform;
 int jni_oc_init_platform(const char *mfg_name);
