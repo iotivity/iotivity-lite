@@ -4,7 +4,6 @@ import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCRequestPayload;
-import org.iotivity.OCType;
 import org.iotivity.ResponseHandler;
 
 public class GetLightResponseHandler implements ResponseHandler {
@@ -34,7 +33,7 @@ public class GetLightResponseHandler implements ResponseHandler {
         }
 
         PutLightResponseHandler putLight = new PutLightResponseHandler();
-        if (OCMain.initPut(Light.server_uri, Light.server, null, putLight, OCQos.LOW_QOS, null)) {
+        if (OCMain.initPut(Light.server_uri, Light.server, null, putLight, OCQos.LOW_QOS)) {
             OCMain.repStartRootObject();
             OCMain.repSetBoolean("state", true);
             OCMain.repSetInt("power", 15);

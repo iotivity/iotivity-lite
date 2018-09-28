@@ -18,7 +18,7 @@ public class PutLightResponseHandler implements ResponseHandler {
         }
 
         PostLightResponseHandler postLight = new PostLightResponseHandler();
-        if (OCMain.initPost(Light.server_uri, Light.server, null, postLight, OCQos.LOW_QOS, null)) {
+        if (OCMain.initPost(Light.server_uri, Light.server, null, postLight, OCQos.LOW_QOS)) {
             OCMain.repStartRootObject();
             OCMain.repSetBoolean("state", false);
             OCMain.repSetInt("power", 105);

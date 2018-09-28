@@ -129,7 +129,7 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
                     ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
-                OCMain.doGet(Light.server_uri, Light.server, null, responseHandler, OCQos.LOW_QOS, null);
+                OCMain.doGet(Light.server_uri, Light.server, null, responseHandler, OCQos.LOW_QOS);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
