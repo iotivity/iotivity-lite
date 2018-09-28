@@ -920,6 +920,14 @@ network_event_thread(void *data)
 #endif /* OC_TCP */
 
     common:
+#ifdef OC_DYNAMIC_ALLOCATION
+      message = oc_reallocate_message_by_size(message, message->length);
+      if (!message) {
+        OC_ERR("oc_reallocate_message_by_size failure");
+        continue;
+      }
+#endif
+
 #ifdef OC_DEBUG
       PRINT("Incoming message of size %d bytes from ", message->length);
       PRINTipaddr(message->endpoint);
