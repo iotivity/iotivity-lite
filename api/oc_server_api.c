@@ -357,8 +357,13 @@ oc_send_separate_response(oc_separate_response_t *handle,
   while (cur != NULL) {
     next = cur->next;
     if (cur->observe > 0) {
+#ifdef OC_BLOCK_WISE
+      coap_transaction_t *t =
+        coap_new_transaction_except_data(coap_get_mid(), &cur->endpoint);
+#else
       coap_transaction_t *t =
         coap_new_transaction(coap_get_mid(), &cur->endpoint);
+#endif
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);
@@ -411,6 +416,15 @@ oc_send_separate_response(oc_separate_response_t *handle,
                            response_buffer.response_length);
         }
         coap_set_status_code(response, response_buffer.code);
+#ifdef OC_BLOCK_WISE
+        t->message->data =
+          oc_allocate_data(COAP_MAX_HEADER_SIZE + response[0].payload_len);
+        if (!(t->message->data)) {
+          OC_ERR("oc_allocate_data failure");
+          coap_clear_transaction(t);
+          goto next_separate_request;
+        }
+#endif
         t->message->length = coap_serialize_message(response, t->message->data);
         coap_send_transaction(t);
       }

@@ -816,7 +816,8 @@ network_event_thread(void *data)
         }
       }
 
-      oc_message_t *message = oc_allocate_message();
+      oc_message_t *message = oc_allocate_message_except_data();
+      uint8_t *temp_data = NULL;
 
       if (!message) {
         break;
@@ -825,84 +826,126 @@ network_event_thread(void *data)
       message->endpoint.device = dev->device;
 
       if (FD_ISSET(dev->server_sock, &setfds)) {
-        int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->server_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, false);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV6;
+          FD_CLR(dev->server_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6;
-        FD_CLR(dev->server_sock, &setfds);
-        goto common;
       }
 
       if (FD_ISSET(dev->mcast_sock, &setfds)) {
-        int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->mcast_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, true);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV6 | MULTICAST;
+          FD_CLR(dev->mcast_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | MULTICAST;
-        FD_CLR(dev->mcast_sock, &setfds);
-        goto common;
       }
 
 #ifdef OC_IPV4
       if (FD_ISSET(dev->server4_sock, &setfds)) {
-        int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->server4_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, false);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV4;
+          FD_CLR(dev->server4_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4;
-        FD_CLR(dev->server4_sock, &setfds);
-        goto common;
       }
 
       if (FD_ISSET(dev->mcast4_sock, &setfds)) {
-        int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->mcast4_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, true);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV4 | MULTICAST;
+          FD_CLR(dev->mcast4_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | MULTICAST;
-        FD_CLR(dev->mcast4_sock, &setfds);
-        goto common;
       }
 #endif /* OC_IPV4 */
 
 #ifdef OC_SECURITY
       if (FD_ISSET(dev->secure_sock, &setfds)) {
-        int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->secure_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, false);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV6 | SECURED;
+          FD_CLR(dev->secure_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | SECURED;
-        FD_CLR(dev->secure_sock, &setfds);
-        goto common;
       }
 #ifdef OC_IPV4
       if (FD_ISSET(dev->secure4_sock, &setfds)) {
-        int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
+        temp_data = oc_allocate_data(OC_PDU_SIZE);
+        if (temp_data) {
+          int count = recv_msg(dev->secure4_sock, temp_data, OC_PDU_SIZE,
+                               &message->endpoint, false);
+          if (count < 0) {
+            oc_message_unref(message);
+            continue;
+          }
+          message->length = (size_t)count;
+          message->endpoint.flags = IPV4 | SECURED;
+          FD_CLR(dev->secure4_sock, &setfds);
+          goto common;
+        } else {
+          OC_ERR("oc_allocate_data failure");
           oc_message_unref(message);
           continue;
         }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | SECURED;
-        FD_CLR(dev->secure4_sock, &setfds);
-        goto common;
       }
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
@@ -912,7 +955,7 @@ network_event_thread(void *data)
                                                               &setfds,
                                                               message);
       if (tcp_status == TCP_STATUS_RECEIVE) {
-        goto common;
+        goto common_tcp;
       } else {
         oc_message_unref(message);
         continue;
@@ -920,6 +963,26 @@ network_event_thread(void *data)
 #endif /* OC_TCP */
 
     common:
+      if (temp_data) {
+        if ((size_t)(OC_PDU_SIZE / 2) < message->length) {
+          message->data = temp_data;
+        } else {
+          message->data = oc_allocate_data(message->length);
+          if (message->data) {
+            memcpy(message->data, temp_data, message->length);
+          }
+          oc_data_unref(temp_data);
+          temp_data = NULL;
+
+          if (!(message->data)) {
+            OC_ERR("oc_allocate_data failure");
+            oc_message_unref(message);
+            continue;
+          }
+        }
+      }
+
+    common_tcp:
 #ifdef OC_DEBUG
       PRINT("Incoming message of size %d bytes from ", message->length);
       PRINTipaddr(message->endpoint);

@@ -80,6 +80,16 @@ dispatch_coap_request(void)
 #endif /* OC_SPEC_VER_OIC */
   }
 
+#ifdef OC_BLOCK_WISE
+  transaction->message->data =
+    oc_allocate_data(COAP_MAX_HEADER_SIZE + request[0].payload_len);
+  if (!(transaction->message->data)) {
+    OC_ERR("oc_allocate_data failure");
+    coap_clear_transaction(transaction);
+    return false;
+  }
+#endif
+
   transaction->message->length =
     coap_serialize_message(request, transaction->message->data);
 
@@ -115,8 +125,11 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->qos == HIGH_QOS) {
     type = COAP_TYPE_CON;
   }
-
+#ifdef OC_BLOCK_WISE
+  transaction = coap_new_transaction_except_data(cb->mid, cb->endpoint);
+#else
   transaction = coap_new_transaction(cb->mid, cb->endpoint);
+#endif
 
   if (!transaction) {
     return false;
