@@ -908,11 +908,19 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
 
 #ifdef OC_TCP
+#ifdef OC_DYNAMIC_ALLOCATION
+      message->length=0;
+      message = oc_reallocate_message_by_size(message, message->length);
+      if (!message) {
+        OC_ERR("oc_reallocate_message_by_size failure");
+        continue;
+      }
+#endif
       tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
                                                               &setfds,
                                                               message);
       if (tcp_status == TCP_STATUS_RECEIVE) {
-        goto common;
+        goto common_tcp;
       } else {
         oc_message_unref(message);
         continue;
@@ -920,6 +928,16 @@ network_event_thread(void *data)
 #endif /* OC_TCP */
 
     common:
+#ifdef OC_DYNAMIC_ALLOCATION
+      if ((size_t)(OC_PDU_SIZE >> 1) > message->length) {
+        message = oc_reallocate_message_by_size(message, message->length);
+        if (!message) {
+          OC_ERR("oc_reallocate_message_by_size failure");
+          continue;
+        }
+      }
+#endif
+    common_tcp:
 #ifdef OC_DEBUG
       PRINT("Incoming message of size %d bytes from ", message->length);
       PRINTipaddr(message->endpoint);
