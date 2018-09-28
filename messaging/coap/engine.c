@@ -98,7 +98,13 @@ coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
   coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
+  oc_message_t *ack_message =
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_internal_allocate_outgoing_message_by_size(COAP_MAX_HEADER_SIZE +
+                                                  ack->payload_len);
+#else
+    oc_internal_allocate_outgoing_message();
+#endif
   if (ack_message) {
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
     ack_message->length = coap_serialize_message(ack, ack_message->data);
@@ -241,7 +247,12 @@ coap_receive(oc_message_t *msg)
       }
 
       /* create transaction for response */
-      transaction = coap_new_transaction(message->mid, &msg->endpoint);
+      transaction =
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+        coap_new_transaction_by_size(message->mid, &msg->endpoint, 0);
+#else
+        coap_new_transaction(message->mid, &msg->endpoint);
+#endif
 
       if (transaction) {
 #ifdef OC_BLOCK_WISE
@@ -517,10 +528,15 @@ coap_receive(oc_message_t *msg)
         }
         if (payload) {
           OC_DBG("dispatching next block");
-          transaction = coap_new_transaction(response_mid, &msg->endpoint);
+          transaction =
+#ifdef OC_DYNAMIC_ALLOCATION
+            coap_new_transaction_by_size(response_mid, &msg->endpoint, 0);
+#else
+            coap_new_transaction(response_mid, &msg->endpoint);
+#endif
           if (transaction) {
             coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
-                              response_mid);
+                                  response_mid);
             uint8_t more =
               (request_buffer->next_block_offset < request_buffer->payload_size)
                 ? 1
@@ -587,10 +603,16 @@ coap_receive(oc_message_t *msg)
           OC_DBG("processing incoming block");
           if (block2 && block2_more) {
             OC_DBG("issuing request for next block");
-            transaction = coap_new_transaction(response_mid, &msg->endpoint);
+            transaction =
+#ifdef OC_DYNAMIC_ALLOCATION
+              coap_new_transaction_by_size(response_mid, &msg->endpoint, 0);
+#else
+              coap_new_transaction(response_mid, &msg->endpoint);
+#endif
+
             if (transaction) {
               coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
-                                response_mid);
+                                    response_mid);
               response_buffer->mid = response_mid;
               coap_set_header_block2(response, block2_num + 1, 0, block2_size);
               coap_set_header_uri_path(response, oc_string(client_cb->uri),
@@ -669,6 +691,19 @@ send_message:
         }
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
+
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+      transaction->message = oc_reallocate_message_by_size(
+        transaction->message, (COAP_MAX_HEADER_SIZE + response->payload_len));
+      if (!(transaction->message)) {
+        OC_ERR("oc_reallocate_message_by_size failure");
+        coap_clear_transaction(transaction);
+        coap_status_code = MEMORY_ALLOCATION_ERROR;
+
+        goto exit;
+      }
+#endif
+
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
       if (transaction->message->length) {
@@ -682,6 +717,7 @@ send_message:
   }
 
 #ifdef OC_BLOCK_WISE
+exit:
   oc_blockwise_scrub_buffers();
 #endif /* OC_BLOCK_WISE */
 
