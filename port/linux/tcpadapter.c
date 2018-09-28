@@ -361,7 +361,25 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } else
 #endif /* DISABLE_TCP_SERVER */
     if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
+    message->length=0;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+    message = oc_reallocate_message_by_size(message, OC_PDU_SIZE);
+    if (!message) {
+      OC_ERR("oc_reallocate_message_by_size failure");
+      ret_with_code(TCP_STATUS_ERROR);
+    }
+#endif
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+    message = oc_reallocate_message_by_size(message, 0);
+    if (!message) {
+      OC_ERR("oc_reallocate_message_by_size failure");
+      ret_with_code(TCP_STATUS_ERROR);
+    }
+#endif
+
     if (len < 0) {
       OC_ERR("read error! %d", errno);
       ret_with_code(TCP_STATUS_ERROR);
@@ -377,7 +395,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     ret_with_code(TCP_STATUS_NONE);
   }
 
-  // In case abnormal packet coming from the authorized cloud by mistake, 
+  // In case abnormal packet coming from the authorized cloud by mistake,
   // this timeout can make waiting released at least.
   struct timeval timeout;
   timeout.tv_sec = 30;
@@ -387,6 +405,13 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   // receive message.
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
+#ifdef OC_DYNAMIC_ALLOCATION
+  message = oc_reallocate_message_by_size(message, DEFAULT_RECEIVE_SIZE);
+  if (!message) {
+    OC_ERR("oc_reallocate_message_by_size failure");
+    ret_with_code(TCP_STATUS_ERROR);
+  }
+#endif
   message->length = 0;
   do {
     int count =
@@ -419,7 +444,13 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         ret_with_code(TCP_STATUS_ERROR);
       }
       OC_DBG("tcp packet total length : %ld bytes.", total_length);
-
+#ifdef OC_DYNAMIC_ALLOCATION
+      message = oc_reallocate_message_by_size(message, total_length);
+      if (!message) {
+        OC_ERR("oc_reallocate_message_by_size failure");
+        ret_with_code(TCP_STATUS_ERROR);
+      }
+#endif
       want_read = total_length - (size_t)count;
     }
   } while (total_length > message->length);
