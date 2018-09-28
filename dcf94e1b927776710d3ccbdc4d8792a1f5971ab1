@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_67391841",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-28T00:22:09Z",
+      "side": 1,
+      "message": "Considering added code, other name is preferred instead of g_client_ep, \n\n[the role of g_client_ep is keeping the current session endpoint]\n\nI am not good at naming. but I think including current session would be better..   how about g_cur_session_ep?",
+      "revId": "dcf94e1b927776710d3ccbdc4d8792a1f5971ab1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8736dc50",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-09-28T00:22:09Z",
+      "side": 1,
+      "message": "It seems that it isn\u0027t meaningful because \u0027g_is_connected\u0027 turns true at line 208\nDo you have any reason to set it to \u0027false\u0027?",
+      "range": {
+        "startLine": 205,
+        "startChar": 5,
+        "endLine": 205,
+        "endChar": 29
+      },
+      "revId": "dcf94e1b927776710d3ccbdc4d8792a1f5971ab1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
