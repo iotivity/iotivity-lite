@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_c77744d3",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/PutLight.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-09-28T19:31:26Z",
+      "side": 1,
+      "message": "nit: white space",
+      "revId": "1d12dce41057c03f03296365cde779893ef96bf7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
