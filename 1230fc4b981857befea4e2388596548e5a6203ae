@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_074accc4",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-09-28T01:06:40Z",
+      "side": 1,
+      "message": "duplicate ?",
+      "revId": "1230fc4b981857befea4e2388596548e5a6203ae",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
