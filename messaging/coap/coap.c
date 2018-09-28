@@ -838,12 +838,28 @@ coap_udp_set_header_fields(void *packet)
 }
 /*---------------------------------------------------------------------------*/
 size_t
-coap_serialize_message(void *packet, uint8_t *buffer)
+coap_serialize_message(void *packet, void *buf)
 {
-  if (!packet || !buffer) {
-    OC_ERR("packet: %p or buffer: %p is NULL", packet, buffer);
+  if (!packet || !buf) {
+    OC_ERR("packet: %p or buffer: %p is NULL", packet, buf);
     return 0;
   }
+
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+  oc_message_t *message = (oc_message_t *)(buf);
+  message = oc_reallocate_message_by_size(message, OC_PDU_SIZE);
+  if (!message) {
+    OC_ERR("message: %p is NULL", message);
+    return 0;
+  }
+  if (!(message->data)) {
+    OC_ERR("message->data: %p is NULL", message->data);
+    return 0;
+  }
+  uint8_t *buffer = (uint8_t *)(message->data);
+#else
+  uint8_t *buffer = (uint8_t *)buf;
+#endif
 
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   uint8_t *option;
@@ -950,7 +966,16 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   OC_DBG("Dump");
   OC_LOGbytes(coap_pkt->buffer, 8);
 
-  return (option - buffer) + coap_pkt->payload_len; /* packet length */
+  size_t packet_length = ((option - buffer) + coap_pkt->payload_len);
+
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+  if ((OC_PDU_SIZE >> 1) > packet_length) {
+    message->length = packet_length;
+    message = oc_reallocate_message_by_size(message, packet_length);
+  }
+#endif
+
+  return packet_length; /* packet length */
 
 exit:
   coap_pkt->buffer = NULL;

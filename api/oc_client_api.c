@@ -81,7 +81,7 @@ dispatch_coap_request(void)
   }
 
   transaction->message->length =
-    coap_serialize_message(request, transaction->message->data);
+    coap_serialize_message(request, transaction->message);
 
   coap_send_transaction(transaction);
 
@@ -115,7 +115,6 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->qos == HIGH_QOS) {
     type = COAP_TYPE_CON;
   }
-
   transaction = coap_new_transaction(cb->mid, cb->endpoint);
 
   if (!transaction) {

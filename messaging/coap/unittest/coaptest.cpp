@@ -59,7 +59,7 @@ TEST_F(TestCoap, CoapSerializeMessageTest_P)
     uint16_t mid = coap_get_mid();
     coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
     oc_message_t *message = oc_internal_allocate_outgoing_message();
-    size_t size = coap_serialize_message(ack, message->data);
+    size_t size = coap_serialize_message(ack, message);
     oc_message_unref(message);
     EXPECT_TRUE(size) << "Failed to get mid transaction";
 }
