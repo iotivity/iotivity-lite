@@ -84,6 +84,12 @@ void coap_register_as_transaction_handler(void);
 
 coap_transaction_t *coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+coap_transaction_t *coap_new_transaction_by_size(uint16_t mid,
+                                                 oc_endpoint_t *endpoint,
+                                                 size_t size);
+#endif
+
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
