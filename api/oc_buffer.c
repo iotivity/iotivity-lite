@@ -22,6 +22,9 @@
 #include <stdio.h>
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "util/oc_mem.h"
+
+#define MIN_DATA_SIZE (1 << 5) // 0b100000
+
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
@@ -36,18 +39,57 @@ OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
+void
+oc_data_unref(uint8_t *data)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (data)
+    oc_mem_free(data);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+uint8_t *
+oc_allocate_data(size_t size)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  // make 2^x  length
+  size_t tunned_size = MIN_DATA_SIZE;
+
+  if (size >= OC_PDU_SIZE) {
+    tunned_size = OC_PDU_SIZE;
+  } else {
+    while (tunned_size < size) {
+      tunned_size = tunned_size << 1;
+      if (tunned_size > OC_PDU_SIZE) {
+        tunned_size = OC_PDU_SIZE;
+        break;
+      }
+    }
+  }
+  OC_DBG("oc_allocate_data:input size(%zu)-tunned_size(%zu)", size, tunned_size);
+
+  return oc_mem_malloc(tunned_size);
+#else
+  return NULL;
+#endif
+}
+
 static oc_message_t *
-allocate_message(struct oc_memb *pool)
+allocate_message(struct oc_memb *pool, bool flexible_data_flag)
 {
   oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    message->data = oc_mem_malloc(OC_PDU_SIZE);
-    if (!message->data) {
-      oc_memb_free(pool, message);
-      return NULL;
+    if (!flexible_data_flag) {
+      message->data = oc_mem_malloc(OC_PDU_SIZE);
+      if (!message->data) {
+        oc_memb_free(pool, message);
+        return NULL;
+      }
+    } else {
+      message->data = NULL;
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
     message->pool = pool;
@@ -72,7 +114,7 @@ oc_message_t *
 oc_allocate_message_from_pool(struct oc_memb *pool)
 {
   if (pool) {
-    return allocate_message(pool);
+    return allocate_message(pool, false);
   }
   return NULL;
 }
@@ -86,13 +128,25 @@ oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
 oc_message_t *
 oc_allocate_message(void)
 {
-  return allocate_message(&oc_incoming_buffers);
+  return allocate_message(&oc_incoming_buffers, false);
+}
+
+oc_message_t *
+oc_allocate_message_except_data(void)
+{
+  return allocate_message(&oc_incoming_buffers, true);
 }
 
 oc_message_t *
 oc_internal_allocate_outgoing_message(void)
 {
-  return allocate_message(&oc_outgoing_buffers);
+  return allocate_message(&oc_outgoing_buffers, false);
+}
+
+oc_message_t *
+oc_internal_allocate_outgoing_message_except_data(void)
+{
+  return allocate_message(&oc_outgoing_buffers, true);
 }
 
 void

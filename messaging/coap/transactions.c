@@ -79,12 +79,17 @@ coap_register_as_transaction_handler(void)
   transaction_handler_process = OC_PROCESS_CURRENT();
 }
 
-coap_transaction_t *
-coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+static coap_transaction_t *
+coap_new_transaction_with_flag(uint16_t mid, oc_endpoint_t *endpoint,
+                               bool flexible_data_flag)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
-    t->message = oc_internal_allocate_outgoing_message();
+    if (flexible_data_flag) {
+      t->message = oc_internal_allocate_outgoing_message_except_data();
+    } else {
+      t->message = oc_internal_allocate_outgoing_message();
+    }
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;
@@ -106,6 +111,18 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
   }
 
   return t;
+}
+
+coap_transaction_t *
+coap_new_transaction_except_data(uint16_t mid, oc_endpoint_t *endpoint)
+{
+  return coap_new_transaction_with_flag(mid, endpoint, true);
+}
+
+coap_transaction_t *
+coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+{
+  return coap_new_transaction_with_flag(mid, endpoint, false);
 }
 
 /*---------------------------------------------------------------------------*/

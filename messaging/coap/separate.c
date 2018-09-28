@@ -142,13 +142,21 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_udp_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
-    oc_message_t *message = oc_internal_allocate_outgoing_message();
+    oc_message_t *message = oc_internal_allocate_outgoing_message_except_data();
     if (message != NULL) {
-      memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
-      message->length = coap_serialize_message(ack, message->data);
-      coap_send_message(message);
-      if (message->ref_count == 0)
+      message->data =
+        oc_allocate_data(COAP_MAX_HEADER_SIZE + ack[0].payload_len);
+      if (message->data) {
+        memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
+        message->length = coap_serialize_message(ack, message->data);
+        coap_send_message(message);
+        if (message->ref_count == 0) {
+          oc_message_unref(message);
+        }
+      } else {
+        OC_ERR("oc_allocate_data failure");
         oc_message_unref(message);
+      }
     } else {
       coap_separate_clear(separate_response, separate_store);
       return 0;

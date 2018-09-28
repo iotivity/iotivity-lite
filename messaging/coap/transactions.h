@@ -83,6 +83,8 @@ typedef struct coap_transaction
 void coap_register_as_transaction_handler(void);
 
 coap_transaction_t *coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint);
+coap_transaction_t *coap_new_transaction_except_data(uint16_t mid,
+                                                     oc_endpoint_t *endpoint);
 
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
