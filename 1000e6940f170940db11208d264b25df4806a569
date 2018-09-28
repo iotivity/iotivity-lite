@@ -46,6 +46,30 @@
       "revId": "1000e6940f170940db11208d264b25df4806a569",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_678758d8",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-09-28T07:40:15Z",
+      "side": 1,
+      "message": "Frankly no guidance here. Because other error return was -1, I think -2 is more aligned. If you do not agree, let me know it for merge without fix.",
+      "parentUuid": "da33351e_a72160fe",
+      "range": {
+        "startLine": 93,
+        "startChar": 10,
+        "endLine": 93,
+        "endChar": 11
+      },
+      "revId": "1000e6940f170940db11208d264b25df4806a569",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
