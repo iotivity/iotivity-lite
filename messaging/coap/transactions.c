@@ -79,12 +79,21 @@ coap_register_as_transaction_handler(void)
   transaction_handler_process = OC_PROCESS_CURRENT();
 }
 
-coap_transaction_t *
-coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+static coap_transaction_t *
+#ifdef OC_DYNAMIC_ALLOCATION
+coap_allocate_transaction(uint16_t mid, oc_endpoint_t *endpoint, size_t size)
+#else
+coap_allocate_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+#endif
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    t->message = oc_internal_allocate_outgoing_message_by_size(size);
+#else
     t->message = oc_internal_allocate_outgoing_message();
+#endif
+
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;
@@ -107,6 +116,25 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 
   return t;
 }
+
+coap_transaction_t *
+coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  return coap_allocate_transaction(mid, endpoint, OC_PDU_SIZE);
+#else
+  return coap_allocate_transaction(mid, endpoint);
+#endif
+}
+
+#ifdef OC_DYNAMIC_ALLOCATION
+
+coap_transaction_t *
+coap_new_transaction_by_size(uint16_t mid, oc_endpoint_t *endpoint, size_t size)
+{
+  return coap_allocate_transaction(mid, endpoint, size);
+}
+#endif
 
 /*---------------------------------------------------------------------------*/
 void

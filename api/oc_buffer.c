@@ -22,6 +22,9 @@
 #include <stdio.h>
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "util/oc_mem.h"
+
+#define MIN_DATA_SIZE (1 << 5) // 0b100000
+
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
@@ -36,18 +39,60 @@ OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static void
+oc_data_unref(uint8_t *data)
+{
+  if (data)
+    oc_mem_free(data);
+}
+
+static uint8_t *
+oc_allocate_data(size_t size)
+{
+  if (!size) {
+    return NULL;
+  }
+  // make 2^x  length
+  size_t tunned_size = MIN_DATA_SIZE;
+
+  if (size >= OC_PDU_SIZE) {
+    tunned_size = OC_PDU_SIZE;
+  } else {
+    while (tunned_size < size) {
+      tunned_size = tunned_size << 1;
+      if (tunned_size > OC_PDU_SIZE) {
+        tunned_size = OC_PDU_SIZE;
+        break;
+      }
+    }
+  }
+  OC_DBG("oc_allocate_data:input size(%zu)-tunned_size(%zu)", size, tunned_size);
+
+  return oc_mem_malloc(tunned_size);
+}
+#endif
+
 static oc_message_t *
+#ifdef OC_DYNAMIC_ALLOCATION
+allocate_message(struct oc_memb *pool, size_t size)
+#else
 allocate_message(struct oc_memb *pool)
+#endif
 {
   oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    message->data = oc_mem_malloc(OC_PDU_SIZE);
-    if (!message->data) {
-      oc_memb_free(pool, message);
-      return NULL;
+    if (!size) {
+      message->data = NULL;
+    } else {
+      message->data = oc_allocate_data(OC_PDU_SIZE);
+      if (!message->data) {
+        oc_memb_free(pool, message);
+        return NULL;
+      }
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
     message->pool = pool;
@@ -72,7 +117,11 @@ oc_message_t *
 oc_allocate_message_from_pool(struct oc_memb *pool)
 {
   if (pool) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    return allocate_message(pool, OC_PDU_SIZE);
+#else
     return allocate_message(pool);
+#endif
   }
   return NULL;
 }
@@ -86,14 +135,99 @@ oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
 oc_message_t *
 oc_allocate_message(void)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  return allocate_message(&oc_incoming_buffers, OC_PDU_SIZE);
+#else
   return allocate_message(&oc_incoming_buffers);
+#endif
+}
+
+oc_message_t *
+oc_allocate_message_except_data(void)
+{
+  return allocate_message(&oc_incoming_buffers, 0);
 }
 
 oc_message_t *
 oc_internal_allocate_outgoing_message(void)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  return allocate_message(&oc_outgoing_buffers, OC_PDU_SIZE);
+#else
   return allocate_message(&oc_outgoing_buffers);
+#endif
 }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+oc_message_t *
+oc_allocate_message_by_size(size_t size)
+{
+  return allocate_message(&oc_incoming_buffers, size);
+}
+
+oc_message_t *
+oc_internal_allocate_outgoing_message_by_size(size_t size)
+{
+  return allocate_message(&oc_outgoing_buffers, size);
+}
+
+oc_message_t *
+oc_reallocate_message_by_size(oc_message_t *message, size_t size)
+{
+  if (!message) {
+    OC_ERR("message is NULL");
+    return NULL;
+  }
+
+  // just free data if size =0
+  if (size == 0) {
+    if (message->data) {
+      oc_message_unref(message);
+      message = NULL;
+    }
+    return NULL;
+  }
+
+  // just alloc data if data is Null
+  if (message->data == NULL) {
+    message->data = oc_allocate_data(size);
+    if (message->data == NULL) {
+      OC_ERR("oc_allocate_data failure");
+      oc_message_unref(message);
+      message = NULL;
+      return NULL;
+    }
+    return message;
+  }
+
+  // just realloc data when message->length is 0
+  // Since allocated data isn't meaningful
+  if (message->length == 0) {
+    oc_data_unref(message->data);
+    message->data = oc_allocate_data(size);
+    return message;
+  }
+
+  // memcpy
+  uint8_t *temp_data = oc_allocate_data(size);
+  ;
+  if (temp_data) {
+    size_t min_len = MIN(message->length, size);
+    memcpy(temp_data, message->data, min_len);
+    oc_data_unref(message->data);
+    message->data = temp_data;
+    message->length = min_len;
+    return message;
+  } else {
+    OC_ERR("oc_allocate_data for temp failure");
+    oc_message_unref(message);
+    message = NULL;
+    return NULL;
+  }
+
+  return NULL;
+}
+#endif
 
 void
 oc_message_add_ref(oc_message_t *message)
