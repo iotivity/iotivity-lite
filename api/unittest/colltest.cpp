@@ -177,6 +177,8 @@ TEST_F(TestCollectionRequest, AddCollectionLinkTest_P)
     oc_delete_collection(TestCollectionRequest::s_pCol);
 }
 
+// comment it out to avoid memory issue
+// the fixed one would be submitted with different one
 /*
  * @API             : oc_collection_get_links(oc_resource_t s_pCol);
  * @Description     : get collection from link
