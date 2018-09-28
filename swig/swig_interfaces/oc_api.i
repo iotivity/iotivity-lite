@@ -130,6 +130,15 @@ static oc_handler_t jni_handler = {
     oc_handler_requests_entry_callback     // requests_entry
     };
 
+void jni_oc_resource_set_request_handler0(oc_resource_t *resource,
+                                          oc_method_t method,
+                                          oc_request_callback_t callback, jni_callback_data *jcb) 
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_resource_set_request_handler(resource, method, callback, jcb);
+}
+                                          
 void jni_oc_resource_set_request_handler(oc_resource_t *resource,
                                           oc_method_t method,
                                           oc_request_callback_t callback, jni_callback_data *jcb,
@@ -155,6 +164,13 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   (data->env)->CallVoidMethod(data->obj, mid_handler, (data->env)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, data->juser_data);
 }
 
+bool jni_oc_do_ip_discovery0(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_ip_discovery(rt, handler, jcb);
+}
+
 bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb, void *user_data)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
@@ -162,6 +178,14 @@ bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_
   return oc_do_ip_discovery(rt, handler, jcb);
 }
 
+bool jni_oc_do_ip_discovery_at_endpoint0(const char *rt,
+                                         oc_discovery_handler_t handler, jni_callback_data *jcb,
+                                         oc_endpoint_t *endpoint)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_ip_discovery_at_endpoint(rt, handler, endpoint, jcb);
+}
 
 bool jni_oc_do_ip_discovery_at_endpoint(const char *rt,
                                          oc_discovery_handler_t handler, jni_callback_data *jcb,
@@ -217,13 +241,28 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   return (oc_discovery_flags_t) return_value;
 }
 
-// for swig we need handler and user data next to each other
+bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                   oc_response_handler_t handler, jni_callback_data *jcb,
+                   oc_qos_t qos) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_get(uri, endpoint, query, handler, qos, jcb);
+}
+
 bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler, jni_callback_data *jcb,
                    oc_qos_t qos, void *user_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_get(uri, endpoint, query, handler, qos, jcb);
+}
+
+bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                     oc_response_handler_t handler, jni_callback_data *jcb,
+                     oc_qos_t qos) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_init_put(uri, endpoint, query, handler, qos, jcb);
 }
 
 bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
@@ -234,12 +273,28 @@ bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query
   return oc_init_put(uri, endpoint, query, handler, qos, jcb);
 }
 
+bool jni_oc_init_post0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_init_post(uri, endpoint, query, handler, qos, jcb);
+}
+
 bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos, void *user_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_init_post(uri, endpoint, query, handler, qos, jcb);
+}
+
+bool jni_oc_do_observe0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_observe(uri, endpoint, query, handler, qos, jcb);
 }
 
 bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
@@ -266,6 +321,12 @@ void jni_oc_response_handler(oc_client_response_t *response) {
                                                          "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
   (data->env)->CallObjectMethod(data->obj, mid_handler, jresponse);
+}
+
+void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb, uint16_t seconds) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  oc_set_delayed_callback(jcb, callback, seconds);
 }
 
 void jni_oc_set_delayed_callback(void *user_data, oc_trigger_t callback, jni_callback_data *jcb, uint16_t seconds) {
@@ -513,6 +574,10 @@ int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_c
 %rename(resourceSetObservable) oc_resource_set_observable;
 %rename(resourceSetPeriodicObservable) oc_resource_set_periodic_observable;
 %ignore oc_resource_set_request_handler;
+%rename(resourceSetRequestHandler) jni_oc_resource_set_request_handler0;
+void jni_oc_resource_set_request_handler0(oc_resource_t *resource,
+                                          oc_method_t method,
+                                          oc_request_callback_t callback, jni_callback_data *jcb);
 %rename(resourceSetRequestHandler) jni_oc_resource_set_request_handler;
 void jni_oc_resource_set_request_handler(oc_resource_t *resource,
                                           oc_method_t method,
@@ -534,32 +599,54 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
 
 // client side
 %ignore oc_do_ip_discovery;
+%rename(doIPDiscovery) jni_oc_do_ip_discovery0;
+bool jni_oc_do_ip_discovery0(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb);
 %rename(doIPDiscovery) jni_oc_do_ip_discovery;
 bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb, void *user_data);
 %ignore oc_do_ip_discovery_at_endpoint;
+%rename(doIPDiscoveryAtEndpoint) jni_oc_do_ip_discovery_at_endpoint0;
+bool jni_oc_do_ip_discovery_at_endpoint0(const char *rt,
+                                         oc_discovery_handler_t handler, jni_callback_data *jcb,
+                                         oc_endpoint_t *endpoint);
 %rename(doIPDiscoveryAtEndpoint) jni_oc_do_ip_discovery_at_endpoint;
-bool jni_oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
-                                         jni_callback_data *jcb, oc_endpoint_t *endpoint,
-                                         void *user_data);
+bool jni_oc_do_ip_discovery_at_endpoint(const char *rt, 
+                                        oc_discovery_handler_t handler, jni_callback_data *jcb,
+                                        oc_endpoint_t *endpoint, void *user_data);
 %ignore oc_do_get;
+%rename(doGet) jni_oc_do_get0;
+bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                   oc_response_handler_t handler, jni_callback_data *jcb,
+                   oc_qos_t qos);
 %rename(doGet) jni_oc_do_get;
 bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler, jni_callback_data *jcb, 
                    oc_qos_t qos, void *user_data);
 %rename(doDelete) oc_do_delete;
 %ignore oc_init_put;
+%rename(initPut) jni_oc_init_put0;
+bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                     oc_response_handler_t handler, jni_callback_data *jcb,
+                     oc_qos_t qos);
 %rename(initPut) jni_oc_init_put;
 bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
                      oc_response_handler_t handler, jni_callback_data *jcb,
                      oc_qos_t qos, void *user_data);
 %rename(doPut) oc_do_put;
 %ignore oc_init_post;
+%rename(initPost) jni_oc_init_post0;
+bool jni_oc_init_post0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos);
 %rename(initPost) jni_oc_init_post;
 bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos, void *user_data);
 %rename(doPost) oc_do_post;
 %ignore oc_do_observe;
+%rename(doObserve) jni_oc_do_observe0;
+bool jni_oc_do_observe0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos);
 %rename(doObserve) jni_oc_do_observe;
 bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
                        oc_response_handler_t handler, jni_callback_data *jcb,
@@ -572,6 +659,9 @@ bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *que
 
 // common operations
 %ignore oc_set_delayed_callback;
+%rename(setDelayedCallback) jni_oc_set_delayed_callback0;
+void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb,
+                                  uint16_t seconds);
 %rename(setDelayedCallback) jni_oc_set_delayed_callback;
 void jni_oc_set_delayed_callback(void *user_data, oc_trigger_t callback, jni_callback_data *jcb,
                                  uint16_t seconds);
