@@ -8,7 +8,7 @@ public class MyInitHandler implements MainInitHandler {
     public int initilize() {
         System.out.println("inside MyInitHandler.initiliaze()");
         int ret = OCMain.initPlatform("Intel");
-        ret |= OCMain.addDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
+        ret |= OCMain.addDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0", new Light(), "Do wap ding wap");
         Light.name = "John's Light";
         Light.power = 0;
         Light.state = false;
