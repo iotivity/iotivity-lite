@@ -98,10 +98,15 @@ coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
   coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
+  oc_message_t *ack_message =
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+    oc_internal_allocate_outgoing_message_by_size(0);
+#else
+    oc_internal_allocate_outgoing_message();
+#endif
   if (ack_message) {
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
-    ack_message->length = coap_serialize_message(ack, ack_message->data);
+    ack_message->length = coap_serialize_message(ack, ack_message);
     coap_send_message(ack_message);
     if (ack_message->ref_count == 0)
       oc_message_unref(ack_message);
@@ -520,7 +525,7 @@ coap_receive(oc_message_t *msg)
           transaction = coap_new_transaction(response_mid, &msg->endpoint);
           if (transaction) {
             coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
-                              response_mid);
+                                  response_mid);
             uint8_t more =
               (request_buffer->next_block_offset < request_buffer->payload_size)
                 ? 1
@@ -588,9 +593,10 @@ coap_receive(oc_message_t *msg)
           if (block2 && block2_more) {
             OC_DBG("issuing request for next block");
             transaction = coap_new_transaction(response_mid, &msg->endpoint);
+
             if (transaction) {
               coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
-                                response_mid);
+                                    response_mid);
               response_buffer->mid = response_mid;
               coap_set_header_block2(response, block2_num + 1, 0, block2_size);
               coap_set_header_uri_path(response, oc_string(client_cb->uri),
@@ -670,7 +676,8 @@ send_message:
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
       transaction->message->length =
-        coap_serialize_message(response, transaction->message->data);
+        coap_serialize_message(response, transaction->message);
+
       if (transaction->message->length) {
         coap_send_transaction(transaction);
       } else {
@@ -682,6 +689,7 @@ send_message:
   }
 
 #ifdef OC_BLOCK_WISE
+exit:
   oc_blockwise_scrub_buffers();
 #endif /* OC_BLOCK_WISE */
 

@@ -27,12 +27,26 @@ extern "C" {
 #endif
 
 OC_PROCESS_NAME(message_buffer_handler);
+/* create incomming message with buffer alloc as much as OC_PDU_SIZE */
 oc_message_t *oc_allocate_message(void);
+
 void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb);
 
 oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool);
 
+/* create outgoing message with buffer alloc as much as OC_PDU_SIZE */
 oc_message_t *oc_internal_allocate_outgoing_message(void);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+/* create incomming message with buffer size setting,
+  in case of 0 size, do not alloc buffer for later relloc */
+oc_message_t *oc_allocate_message_by_size(size_t size);
+/* create outgoing message with buffer size setting,
+  in case of 0 size, do not alloc buffer now for later relloc */
+oc_message_t *oc_internal_allocate_outgoing_message_by_size(size_t size);
+/* rellocate message buffer for resize or late alloc */
+oc_message_t *oc_reallocate_message_by_size(oc_message_t *message, size_t size);
+#endif
 
 void oc_message_add_ref(oc_message_t *message);
 void oc_message_unref(oc_message_t *message);

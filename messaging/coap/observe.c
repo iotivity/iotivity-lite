@@ -460,12 +460,13 @@ coap_notify_observers(oc_resource_t *resource,
                                          APPLICATION_VND_OCF_CBOR);
         }
         coap_set_token(notification, obs->token, obs->token_len);
+
         transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
         if (transaction) {
           obs->last_mid = transaction->mid;
           notification->mid = transaction->mid;
           transaction->message->length =
-            coap_serialize_message(notification, transaction->message->data);
+            coap_serialize_message(notification, transaction->message);
 
           coap_send_transaction(transaction);
         }
