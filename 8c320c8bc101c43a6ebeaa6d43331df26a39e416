@@ -1,0 +1,487 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da33351e_0a35b1d9",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "For consistency make first letter as w",
+      "range": {
+        "startLine": 47,
+        "startChar": 21,
+        "endLine": 47,
+        "endChar": 24
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8a58a133",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "make first letter small s to look uniform",
+      "range": {
+        "startLine": 50,
+        "startChar": 5,
+        "endLine": 50,
+        "endChar": 13
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ea2fad86",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "move this to above line...make proper indentation",
+      "range": {
+        "startLine": 68,
+        "startChar": 12,
+        "endLine": 68,
+        "endChar": 13
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4a4e9970",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "declaration move to top...",
+      "range": {
+        "startLine": 69,
+        "startChar": 40,
+        "endLine": 69,
+        "endChar": 43
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2a51950e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "always this will true only....please cross verify...",
+      "range": {
+        "startLine": 133,
+        "startChar": 39,
+        "endLine": 133,
+        "endChar": 40
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6a5b9d2e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "please change to say already created, we are not creating with option...",
+      "range": {
+        "startLine": 181,
+        "startChar": 56,
+        "endLine": 181,
+        "endChar": 63
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ca41093b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "please move declarations to top...",
+      "range": {
+        "startLine": 203,
+        "startChar": 13,
+        "endLine": 203,
+        "endChar": 16
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_aa3c85c0",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "please make all prints to look similar....remove \u003e\u003e",
+      "range": {
+        "startLine": 239,
+        "startChar": 14,
+        "endLine": 239,
+        "endChar": 46
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0a4c916f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 240,
+        "endChar": 4
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ea468d4e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "add an empty line here...\nfor readability and understanding keep grouping of operations...then add an empty line...again add next logic...",
+      "range": {
+        "startLine": 245,
+        "startChar": 37,
+        "endLine": 245,
+        "endChar": 40
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2a78758e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "I do ont think it is needed to have above variable...\nafter delete resource you can print success case...\nif res \u003d\u003d NULL , print resource not available or delted case...",
+      "range": {
+        "startLine": 246,
+        "startChar": 31,
+        "endLine": 246,
+        "endChar": 32
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4a75f996",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "add g_ to know the above is global variable...it is applicable for other variables also....please try to make uniform across",
+      "range": {
+        "startLine": 256,
+        "startChar": 4,
+        "endLine": 256,
+        "endChar": 24
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_6a727dae",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "add an empty line after function",
+      "range": {
+        "startLine": 269,
+        "startChar": 0,
+        "endLine": 269,
+        "endChar": 1
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8a6f01c5",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "To make uniform across apis...\nfirst keep printf...\nempty line...\nall declarations at top ...\nempty line...\nstart calling apis logical group wise..\nthen empty line...",
+      "range": {
+        "startLine": 274,
+        "startChar": 9,
+        "endLine": 274,
+        "endChar": 19
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ca68e9bc",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "why res2...it creates confusion...make res",
+      "range": {
+        "startLine": 283,
+        "startChar": 27,
+        "endLine": 283,
+        "endChar": 28
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_aa63e5db",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "better change the name to \"handleSignalCb\"\nAdd a comment on top to say \"It is called when ever user press Ctrl+C\"",
+      "range": {
+        "startLine": 306,
+        "startChar": 43,
+        "endLine": 306,
+        "endChar": 44
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_0a63f1dc",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "add space",
+      "range": {
+        "startLine": 312,
+        "startChar": 18,
+        "endLine": 312,
+        "endChar": 22
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4a9cd9c0",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "change the name to reflect functionality...\nhere we are taking input and doing operation...\nyou can change to do_selected_operation  kind of ...",
+      "range": {
+        "startLine": 380,
+        "startChar": 12,
+        "endLine": 380,
+        "endChar": 28
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ea5ded16",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "indentation...",
+      "range": {
+        "startLine": 405,
+        "startChar": 9,
+        "endLine": 405,
+        "endChar": 14
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_8aa6e10e",
+        "filename": "include/Certification.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "add \n#ifndef ...refer other header file",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 68
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_2a9fd5b5",
+        "filename": "include/Certification.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2018-09-30T06:32:29Z",
+      "side": 1,
+      "message": "remove space\nplease add indentation...\ngroup logical things at one place",
+      "range": {
+        "startLine": 28,
+        "startChar": 21,
+        "endLine": 28,
+        "endChar": 22
+      },
+      "revId": "8c320c8bc101c43a6ebeaa6d43331df26a39e416",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
