@@ -4,20 +4,20 @@
       "specification": {
         "device": {
           "deviceType": "oic.d.light",
-          "deviceName": "Samsung",
+          "deviceName": "AmbienceSY18",
           "specVersion": "core.1.1.0",
           "dataModelVersion": "res.1.1.0"
         },
         "platform": {
-          "manufacturerName": "xxxx",
+          "manufacturerName": "fAMt",
           "manufacturerUrl": "http://www.samsung.com/sec/",
           "manufacturingDate": "2017-08-31",
-          "modelNumber": "001",
+          "modelNumber": "000",
           "platformVersion": "1.0",
           "osVersion": "1.0",
           "hardwareVersion": "1.0",
           "firmwareVersion": "1.0",
-          "vendorId": "IoT2020"
+          "vendorId": "AmbienceSY2018"
         }
       },
       "resources": {

@@ -1,3 +1,4 @@
+/* ST_WIFI_SOFT_AP_UTIL_H */
 /* ****************************************************************
  *
  * Copyright 2018 Samsung Electronics All Rights Reserved.
@@ -19,34 +20,30 @@
 #ifndef ST_WIFI_SOFT_AP_UTIL_H
 #define ST_WIFI_SOFT_AP_UTIL_H
 
-#include <slsi_wifi/slsi_wifi_api.h>
-#include <stdint.h>
+#include <wifi_manager/wifi_manager.h>
 
-int es_create_softap(void);
+int es_create_softap (void);
 
-void es_stop_softap(void);
+int es_stop_softap(void);
 
-int dhcpserver_start(void);
-int wifi_start_station(void);
-int wifi_join(const char *ssid, const char *security, const char *passwd);
-int dhcpc_start(void);
+int wifi_join(const char *ssid, const char *auth_type, const char *enc_type, const char *passwd);
 
-#define SLSI_WIFI_SECURITY_OPEN "open"
-#define SLSI_WIFI_SECURITY_WEP_OPEN "wep"
-#define SLSI_WIFI_SECURITY_WEP_SHARED "wep_shared"
-#define SLSI_WIFI_SECURITY_WPA_MIXED "wpa_mixed"
-#define SLSI_WIFI_SECURITY_WPA_TKIP "wpa_tkip"
-#define SLSI_WIFI_SECURITY_WPA_AES "wpa_aes"
-#define SLSI_WIFI_SECURITY_WPA2_MIXED "wpa2_mixed"
-#define SLSI_WIFI_SECURITY_WPA2_TKIP "wpa2_tkip"
-#define SLSI_WIFI_SECURITY_WPA2_AES "wpa2_aes"
-#define SLSI_WIFI_SECURITY_WPA_PSK "wpa_psk"
-#define SLSI_WIFI_SECURITY_WPA2_PSK "wpa2_psk"
+wifi_manager_scan_info_s* stapp_wifi_get_wifi_aps(void);
 
-enum wifi_state
-{
-  WIFI_CONNECTED,
-  WIFI_DISCONNECTED,
-};
+#define WM_TEST_WAIT(cond,mutex)                     \
+    do{                                              \
+        pthread_mutex_lock(&mutex);                  \
+        st_print_log("T%d waiting...\n",getpid());   \
+        pthread_cond_wait(&cond,&mutex);             \
+        pthread_mutex_unlock(&mutex);                \
+    }while(0)
+
+#define WM_TEST_SIGNAL(cond,mutex)                   \
+    do{                                              \
+        pthread_mutex_lock(&mutex);                  \
+        printf("%d send signal\n",getpid());         \
+        pthread_cond_signal(&cond);                  \
+        pthread_mutex_unlock(&mutex);                \
+    }while(0)
 
 #endif /* ST_WIFI_SOFT_AP_UTIL_H */

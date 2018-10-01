@@ -1699,14 +1699,13 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 bool
 oc_get_mac_addr(unsigned char *mac)
 {
-  // WiFiGetMac(mac);
-  mac[0] = 0x28;
-  mac[1] = 0x6d;
-  mac[2] = 0x97;
-  mac[3] = 0x40;
-  mac[4] = 0x22;
-  mac[5] = 0x14;
-
+  wifi_manager_info_s st_wifi_info;
+  if(!mac || WIFI_MANAGER_SUCCESS != wifi_manager_get_info(&st_wifi_info)) {
+    return false;
+  }
+  for (int i = 0; i < 6; i++) {
+    mac[i] = st_wifi_info.mac_address[i];
+  }
   OC_DBG("oc_get_mac_addr MAC: %02X%02X%02X%02X%02X%02X\n", mac[0], mac[1],
          mac[2], mac[3], mac[4], mac[5]);
   return true;

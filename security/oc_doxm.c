@@ -26,7 +26,7 @@
 #include <stddef.h>
 #include <string.h>
 #ifndef _WIN32
-#include <strings.h>
+#include <string.h>
 #endif
 
 #ifdef OC_DYNAMIC_ALLOCATION

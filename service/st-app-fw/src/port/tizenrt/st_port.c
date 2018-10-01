@@ -23,6 +23,7 @@
 #include "st_process.h"
 #include "util/oc_memb.h"
 #include "wifi_soft_ap_util.h"
+#include <wifi_manager/wifi_manager.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -297,6 +298,7 @@ st_turn_off_soft_AP(void)
 {
   if (!g_soft_ap.is_soft_ap_on) {
     st_print_log("[ST_PORT] soft AP is already turned off\n");
+    return;
   }
 
   st_print_log("[ST_PORT] st_turn_off_soft_AP\n");
@@ -309,7 +311,6 @@ st_turn_off_soft_AP(void)
   }
   st_print_log("[ST_PORT] st_turn_off_soft_AP success.\n");
 
-exit:
   st_thread_destroy(g_soft_ap.thread);
 
   if (oc_string(g_soft_ap.ssid)) {
@@ -335,17 +336,17 @@ st_connect_wifi(const char *ssid, const char *pwd)
   st_sleep(5);
 
   // TODO: auth and enc type should be passed from Wi-Fi Prob Cb
-  char auth_type[20] = "wpa2_psk";
-  // char enc_type[20] = "aes";
+  char auth_type[20] = "WPA2-PSK";
+  char enc_type[20] = "AES";
 
-  if (wifi_start_station() < 0) {
+  if (wifi_manager_set_mode(STA_MODE,NULL) < 0) {
     st_print_log("[ST_PORT] start station error! \n");
     return -1;
   }
 
   int retry;
   for (retry = 0; retry < 5; ++retry) {
-    if (0 == wifi_join(ssid, auth_type, pwd)) {
+    if (0 == wifi_join(ssid, auth_type, enc_type, pwd)) {
       st_print_log("[ST_PORT] wifi_join success\n");
       break;
     } else {
@@ -355,18 +356,159 @@ st_connect_wifi(const char *ssid, const char *pwd)
 
   st_print_log("[ST_PORT] AP join done\n");
 
-  for (retry = 0; retry < 5; ++retry) {
-    if (0 == dhcpc_start()) {
-      st_print_log("[ST_PORT] dhcpc_start success\n");
-      break;
-    } else {
-      st_print_log("[ST_PORT] Get IP address failed\n");
-    }
-  }
+/*
+ *  for (retry = 0; retry < 5; ++retry) {
+ *    if (0 == dhcpc_start()) {
+ *      st_print_log("[ST_PORT] dhcpc_start success\n");
+ *      break;
+ *    } else {
+ *      st_print_log("[ST_PORT] Get IP address failed\n");
+ *    }
+ *  }
+ */
 
   st_print_log("[ST_PORT] st_connect_wifi out\n");
   return 0;
 }
+
+/*
+ *static void wm_start(void);
+ *static void wm_scan(void);
+ *static void wm_stop(void);
+ */
+//callbacks
+/*
+ *static void wm_sta_connected(wifi_manager_result_e);
+ *static void wm_sta_disconnected(void);
+ *static void wm_softap_sta_join(void);
+ *static void wm_softap_sta_leave(void);
+ *static void wm_scan_done(wifi_manager_scan_info_s **scan_result,wifi_manager_scan_result_e res);
+ *
+ *static wifi_manager_cb_s wifi_callbacks = {
+ *    wm_sta_connected,
+ *    wm_sta_disconnected,
+ *    wm_softap_sta_join,
+ *    wm_softap_sta_leave,
+ *    wm_scan_done,
+ *};
+ */
+
+/*
+ *static pthread_mutex_t g_wm_mutex = PTHREAD_MUTEX_INITIALIZER;;
+ *static pthread_cond_t g_wm_cond;
+ *static int g_mode = 0;
+ *
+ *#define WM_TEST_WAIT                                 \
+ *    do{                                              \
+ *        pthread_mutex_lock(&g_wm_mutex);             \
+ *        st_print_log("wait signal\n");               \
+ *        pthread_cond_wait(&g_wm_cond,&g_wm_mutex);   \
+ *        pthread_mutex_unlock(&g_wm_mutex);           \
+ *    }while(0)
+ *
+ *#define WM_TEST_SIGNAL                               \
+ *    do{                                              \
+ *        pthread_mutex_lock(&g_wm_mutex);             \
+ *        printf("%d send signal\n",getpid());         \
+ *        pthread_cond_signal(&g_wm_cond);             \
+ *        pthread_mutex_unlock(&g_wm_mutex);           \
+ *    }while(0)
+ *
+ * //global variable
+ * wifi_manager_scan_info_s *g_store_result = NULL;
+ *
+ */
+//callback
+/*
+ *void wm_sta_connected(wifi_manager_result_e res){
+ *    printf("res (%d)\n",res);
+ *    [>WM_TEST_SIGNAL;<]
+ *}
+ *void wm_sta_disconnected(void){
+ *    sleep(2);
+ *    printf("%s\n",__FUNCTION__);
+ *    [>WM_TEST_SIGNAL;<]
+ *}
+ *void wm_softap_sta_join(void){
+ *    printf("%s\n",__FUNCTION__);
+ *    [>WM_TEST_SIGNAL;<]
+ *}
+ *void wm_softap_sta_leave(void){
+ *    printf("%s\n",__FUNCTION__);
+ *    [>WM_TEST_SIGNAL;<]
+ *}
+ */
+
+/*
+ *void wm_scan_done(wifi_manager_scan_info_s **scan_result,wifi_manager_scan_result_e res){
+ *    printf("%d->%d\n",getpid(),__FUNCTION__);
+ *    if(scan_result == NULL){
+ *        WM_TEST_SIGNAL;
+ *        return;
+ *    }
+ *    wifi_manager_scan_info_s *cur = NULL, *prev = NULL;
+ *    wifi_manager_scan_info_s *scan_iter = *scan_result;
+ *    while(scan_iter != NULL){
+ *        wifi_manager_scan_info_s *temp = (wifi_manager_scan_info_s *)calloc(1,sizeof(wifi_manager_scan_info_s));
+ *        temp->next = NULL;
+ *
+ *        temp->rssi = scan_iter->rssi;
+ *        temp->channel = scan_iter->channel;
+ *        temp->phy_mode = scan_iter->phy_mode;
+ *        strncpy(temp->ssid,(char *)scan_iter->ssid,32);
+ *        strncpy(temp->bssid,(char *)scan_iter->bssid,17);
+ *        if(cur == NULL){
+ *            cur = temp;
+ *            prev = temp;
+ *        }
+ *        else{
+ *            prev->next = temp;
+ *            prev = temp;
+ *        }
+ *        scan_iter = scan_iter->next;
+ *    }
+ *    g_store_result = cur;
+ *    WM_TEST_SIGNAL;
+ *}
+ *
+ */
+/*
+ *void wm_start(void){
+ *    st_print_log("%s Start\n",__FUNCTION__);
+ *    wifi_manager_result_e res = WIFI_MANAGER_SUCCESS;
+ *    res = wifi_manager_init(&wifi_callbacks);
+ *    if(res != WIFI_MANAGER_SUCCESS){
+ *        printf("wifi manager init failed\n");
+ *    }
+ *    st_print_log("%s Finish\n",__FUNCTION__);
+ *}
+ */
+
+/*
+ *void wm_scan(void){
+ *    st_print_log("%s Start\n",__FUNCTION__);
+ *    wifi_manager_result_e res = WIFI_MANAGER_SUCCESS;
+ *
+ *    res = wifi_manager_scan_ap();
+ *    if(res != WIFI_MANAGER_SUCCESS){
+ *        printf("scan failed\n");
+ *        return;
+ *    }
+ *    WM_TEST_WAIT;
+ *    st_print_log("%s Finish\n",__FUNCTION__);
+ *}
+ *
+ */
+/*
+ *void wm_stop(void){
+ *    st_print_log("%s Start\n",__FUNCTION__);
+ *    wifi_manager_result_e res = wifi_manager_deinit();
+ *    if(res != WIFI_MANAGER_SUCCESS){
+ *        printf("Wifi manager failed to stop\n");
+ *    }
+ *    st_print_log("%s Finish\n",__FUNCTION__);
+ *}
+ */
 
 void
 st_wifi_free_scan_list(st_wifi_ap_t *ap_list)
@@ -386,10 +528,75 @@ st_wifi_free_scan_list(st_wifi_ap_t *ap_list)
   }
 }
 
+/*
+ *typedef struct st_wifi_ap_s
+ *{
+ *  char *ssid;
+ *  char *mac_addr;
+ *  char *channel;
+ *  char *max_bitrate;
+ *  char *rssi;
+ *  char *enc_type;
+ *  char *sec_type;
+ *  struct st_wifi_ap_s *next;
+ *} st_wifi_ap_t;
+ */
 void
 st_wifi_scan(st_wifi_ap_t **ap_list)
 {
-//  oc_abort(__func__);
+    st_print_log("%s Start\n",__FUNCTION__);
+    if(!ap_list){
+        st_print_log("ap_list is NULL\n");
+        return;
+    }
+
+    wifi_manager_scan_info_s *list = stapp_wifi_get_wifi_aps();
+    st_wifi_ap_t *tail = NULL;
+    *ap_list = NULL;
+    int cnt = 0;
+    while(list && cnt < 10){
+        st_wifi_ap_t *ap = (st_wifi_ap_t*)calloc(1,sizeof(st_wifi_ap_t));
+
+        //ssid
+        int len = strlen(list->ssid);
+        ap->ssid = (char*) calloc(len+1,sizeof(char));
+        strncpy(ap->ssid,list->ssid,len);
+
+        //mac address
+        len = strlen(list->bssid);
+        ap->mac_addr = (char*)calloc(len+1,sizeof(char));
+        strncpy(ap->mac_addr,list->bssid,len);
+
+        //channel
+        ap->channel = (char*) calloc(4,sizeof(char));
+        snprintf(ap->channel,4,"%d",list->channel);
+
+        //rssi
+        ap->rssi = (char*) calloc(4,sizeof(char));
+        snprintf(ap->rssi,4,"%d",list->rssi);
+
+        //enc type
+        const char *sec_type = "WPA2";
+        ap->sec_type = (char*) calloc(strlen(sec_type)+1,sizeof(char));
+        strncpy(ap->sec_type,sec_type,strlen(sec_type));
+
+
+        //sec type
+        const char * enc_type = "AES";
+        ap->enc_type = (char*) calloc(strlen(enc_type)+1,sizeof(char));
+        strncpy(ap->enc_type,enc_type,strlen(enc_type));
+
+        if(!*ap_list){
+            *ap_list = ap;
+        }else{
+            tail->next = ap;
+        }
+        tail = ap;
+        list = list->next;
+        cnt++;
+    }
+    printf("[St Port] Found %d neighbouring access points\n",cnt);
+    st_print_log("%s Finish\n",__FUNCTION__);
 }
 
 #ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
@@ -398,22 +605,22 @@ static st_wifi_ap_t *g_ap_scan_list = NULL;
 void
 st_wifi_set_cache(st_wifi_ap_t *scanlist)
 {
-//  oc_abort(__func__);
+    st_wifi_clear_cache();
+    g_ap_scan_list = scanlist;
 }
 
 st_wifi_ap_t*
 st_wifi_get_cache(void)
 {
-  oc_abort(__func__);
+  return g_ap_scan_list;
 }
 
 void
-st_wifi_clear_cache(void)
-{
-  st_wifi_free_scan_list(g_ap_scan_list);
-  g_ap_scan_list = NULL;
+st_wifi_clear_cache(void){
+    st_wifi_free_scan_list(g_ap_scan_list);
+    g_ap_scan_list = NULL;
 }
-#endif
+#endif /* not WIFI_SCAN_IN_SOFT_AP_SUPPORTED */
 
 static void *
 soft_ap_process_routine(void *data)
@@ -432,7 +639,7 @@ soft_ap_process_routine(void *data)
     return NULL;
   }
 
-  dhcpserver_start();
+  /*dhcpserver_start();*/
 
   st_mutex_lock(soft_ap->mutex);
   st_cond_signal(soft_ap->cv);
