@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_9f64b3e6",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-02T08:02:40Z",
+      "side": 1,
+      "message": "why the message is unrefered when ack_message is null?",
+      "range": {
+        "startLine": 113,
+        "startChar": 6,
+        "endLine": 113,
+        "endChar": 36
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ff617fd4",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-02T08:02:40Z",
+      "side": 1,
+      "message": "why this function is used when OC_BLOCK_WISE flag is on?",
+      "range": {
+        "startLine": 252,
+        "startChar": 8,
+        "endLine": 252,
+        "endChar": 40
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
