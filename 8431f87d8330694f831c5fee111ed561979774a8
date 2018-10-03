@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_e72a488f",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "we removed it",
+      "parentUuid": "da33351e_a73cc0c0",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 21
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_675bd82e",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
@@ -71,6 +95,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "Why is this necessary? We\u0027re already defining a bunch of resources using the device builder framework. We should be simply using those. If we discover a problem with the generated code, we should patch the code generator. Creating resources on the fly in this way isn\u0027t something that the CTT tests as far as I know. It relies on a static list of resources from discovery through the tests.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 1
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_47197487",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "da33351e_675bd82e",
       "range": {
         "startLine": 55,
         "startChar": 0,
@@ -100,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_271c3077",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "for knowing purpose we kept it.",
+      "parentUuid": "da33351e_272a707e",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_474e9470",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
@@ -111,6 +177,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "register_resources() is already doing all of this I believe. Why are you invoking these again?",
+      "range": {
+        "startLine": 236,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 71
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_c70c6445",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "removed  this part only checking the res based on the resource type.",
+      "parentUuid": "da33351e_474e9470",
       "range": {
         "startLine": 236,
         "startChar": 0,
@@ -146,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_bf941745",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "this part we removed and based the return type of resource we are checking this function.",
+      "parentUuid": "da33351e_2751d00e",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 240,
+        "endChar": 39
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_87589c33",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
@@ -157,6 +271,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "I don\u0027t see why this is necessary. All vertical resources are internally flagged with OC_SECURE by default.",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 1
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_a707a01c",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "when secure\u003d0 that time oc_security will not add that time if user want to create the resource in secure mode we need to use this option",
+      "parentUuid": "da33351e_87589c33",
       "range": {
         "startLine": 254,
         "startChar": 0,
@@ -192,6 +330,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_07076c1d",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "now CertificationApp code move to the nextevent loop  and without teriminating we can use App code .",
+      "parentUuid": "da33351e_074c8c6f",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 413,
+        "endChar": 44
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_e746c84e",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
@@ -203,6 +365,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "I\u0027m not sure what these conditions are supposed to mean.",
+      "range": {
+        "startLine": 422,
+        "startChar": 0,
+        "endLine": 433,
+        "endChar": 5
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_4a005901",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "modified this part and during compile time you can give input and that you can handle it",
+      "parentUuid": "da33351e_e746c84e",
       "range": {
         "startLine": 422,
         "startChar": 0,
@@ -232,6 +418,24 @@
     },
     {
       "key": {
+        "uuid": "da33351e_2a03550e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "modified it",
+      "parentUuid": "da33351e_4775f496",
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_2778b08e",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 18
@@ -243,6 +447,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "This is not doing just initialization. You\u0027re both initializing and running the stack.",
+      "range": {
+        "startLine": 439,
+        "startChar": 4,
+        "endLine": 439,
+        "endChar": 24
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_e701a807",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "removed it and add this thing in main code .",
+      "parentUuid": "da33351e_2778b08e",
       "range": {
         "startLine": 439,
         "startChar": 4,
@@ -278,6 +506,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_9f915355",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "now this part we moved to in main and we are  running our code inside the event_loop.",
+      "parentUuid": "da33351e_876ffcc4",
+      "range": {
+        "startLine": 462,
+        "startChar": 0,
+        "endLine": 473,
+        "endChar": 5
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_c768e4bc",
         "filename": "include/Certification.h",
         "patchSetId": 18
@@ -289,6 +541,30 @@
       "writtenOn": "2018-09-25T19:18:26Z",
       "side": 1,
       "message": "Please don\u0027t define macros or variables that aren\u0027t being used or serve no purpose.\n\nAlso, please keep the naming consistent and clean.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 41
+      },
+      "revId": "8431f87d8330694f831c5fee111ed561979774a8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_ca13c95a",
+        "filename": "include/Certification.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "modified it",
+      "parentUuid": "da33351e_c768e4bc",
       "range": {
         "startLine": 21,
         "startChar": 0,
