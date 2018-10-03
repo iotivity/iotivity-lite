@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_1bd22e00",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_7be1bacf",
+      "range": {
+        "startLine": 1,
+        "startChar": 1,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_9bb75ed8",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-09-10T09:26:30Z",
       "side": 1,
       "message": "this block seems not needed...please remove if not needed",
+      "range": {
+        "startLine": 101,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 3
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_fbccaa63",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_9bb75ed8",
       "range": {
         "startLine": 101,
         "startChar": 2,
@@ -186,6 +234,30 @@
     },
     {
       "key": {
+        "uuid": "da33351e_bb02226d",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_fbc5ca3d",
+      "range": {
+        "startLine": 314,
+        "startChar": 17,
+        "endLine": 314,
+        "endChar": 18
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da33351e_5bc5d63a",
         "filename": "apps/CertificationApp.c",
         "patchSetId": 8
@@ -197,6 +269,30 @@
       "writtenOn": "2018-09-10T09:26:30Z",
       "side": 1,
       "message": "make proper indentaion",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 320,
+        "endChar": 6
+      },
+      "revId": "69db3cdb218b914eb7fec60535aa9dd1160df18e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da33351e_1bf98e80",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 14223
+      },
+      "writtenOn": "2018-10-03T09:18:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da33351e_5bc5d63a",
       "range": {
         "startLine": 320,
         "startChar": 0,
