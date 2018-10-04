@@ -27,13 +27,25 @@
 #include "oc_client_state.h"
 
 /** Account URI.*/
+#ifdef OC_SPEC_VER_OIC
 #define OC_RSRVD_ACCOUNT_URI "/oic/account"
+#else
+#define OC_RSRVD_ACCOUNT_URI "/oic/sec/account"
+#endif
 
 /** Account session URI.*/
+#ifdef OC_SPEC_VER_OIC
 #define OC_RSRVD_ACCOUNT_SESSION_URI "/oic/account/session"
+#else
+#define OC_RSRVD_ACCOUNT_SESSION_URI "/oic/sec/session"
+#endif
 
 /** Account token refresh URI.*/
+#ifdef OC_SPEC_VER_OIC
 #define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/account/tokenrefresh"
+#else
+#define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/sec/tokenrefresh"
+#endif
 
 /** Device URI.*/
 #define OC_RSRVD_DEVICE_URI "/oic/device"
