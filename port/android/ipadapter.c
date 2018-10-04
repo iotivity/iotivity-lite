@@ -242,7 +242,7 @@ oc_network_event_handler_mutex_destroy(void)
 }
 
 static ip_context_t *
-get_ip_context_for_device(int device)
+get_ip_context_for_device(size_t device)
 {
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
@@ -553,7 +553,7 @@ refresh_endpoints_list(ip_context_t *dev)
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
 
@@ -1385,7 +1385,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 #endif
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   OC_DBG("Initializing connectivity for device %d", device);
 
@@ -1582,7 +1582,7 @@ oc_connectivity_init(int device)
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;

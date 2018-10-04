@@ -1,10 +1,8 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
 #include "separate.h"
 #include "oc_api.h"
-}
 
 class TestCoapPacketSeparate: public testing::Test
 {

@@ -91,7 +91,7 @@ coap_parse_int_option(uint8_t *bytes, size_t length)
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
-coap_option_nibble(unsigned int value)
+coap_option_nibble(size_t value)
 {
   if (value < 13) {
     return (uint8_t)value;
@@ -1150,7 +1150,7 @@ int coap_set_header_uri_host(void *packet, const char *host)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-int
+size_t
 coap_get_header_uri_path(void *packet, const char **path)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1161,8 +1161,8 @@ coap_get_header_uri_path(void *packet, const char **path)
   *path = coap_pkt->uri_path;
   return coap_pkt->uri_path_len;
 }
-int
-coap_set_header_uri_path(void *packet, const char *path, int path_len)
+size_t
+coap_set_header_uri_path(void *packet, const char *path, size_t path_len)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
@@ -1172,13 +1172,13 @@ coap_set_header_uri_path(void *packet, const char *path, int path_len)
   }
 
   coap_pkt->uri_path = path;
-  coap_pkt->uri_path_len = (size_t)path_len;
+  coap_pkt->uri_path_len = path_len;
 
   SET_OPTION(coap_pkt, COAP_OPTION_URI_PATH);
   return coap_pkt->uri_path_len;
 }
 /*---------------------------------------------------------------------------*/
-int
+size_t
 coap_get_header_uri_query(void *packet, const char **query)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1190,7 +1190,7 @@ coap_get_header_uri_query(void *packet, const char **query)
   return coap_pkt->uri_query_len;
 }
 #ifdef OC_CLIENT
-int
+size_t
 coap_set_header_uri_query(void *packet, const char *query)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1251,7 +1251,7 @@ int coap_get_header_location_query(void *packet, const char **query)
   return coap_pkt->location_query_len;
 }
 #endif
-int
+size_t
 coap_set_header_location_query(void *packet, const char *query)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;

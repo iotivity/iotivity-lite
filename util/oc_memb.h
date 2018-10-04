@@ -49,6 +49,10 @@
 
 #include "config.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CC_CONCAT2(s1, s2) s1##s2
 /**
  * A C preprocessing macro for concatenating two preprocessor tokens.
@@ -80,7 +84,13 @@
  *
  */
 #ifdef OC_DYNAMIC_ALLOCATION
+#ifdef __cplusplus
+}
+#endif
 #include <stdlib.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define OC_MEMB(name, structure, num)                                          \
   static struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
 #define OC_MEMB_FIXED(name, structure, num)                                    \
@@ -159,5 +169,9 @@ void oc_memb_set_buffers_avail_cb(struct oc_memb *m,
 int oc_memb_inmemb(struct oc_memb *m, void *ptr);
 
 int oc_memb_numfree(struct oc_memb *m);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_MEMB_H */

@@ -271,7 +271,7 @@ sign_up_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     (void)interface;
     (void)user_data;
     oc_rep_t *rep = request->request_payload;
-    int len = 0;
+    size_t len = 0;
     char *access_token = NULL;
     bool ret = oc_rep_get_string(rep, "accesstoken", &access_token, &len);
     ASSERT_TRUE(ret);
@@ -295,7 +295,7 @@ sign_in_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     (void)interface;
     (void)user_data;
     oc_rep_t *rep = request->request_payload;
-    int len = 0;
+    size_t len = 0;
     char *access_token = NULL;
     bool ret = oc_rep_get_string(rep, "accesstoken", &access_token, &len);
     ASSERT_TRUE(ret);
@@ -345,7 +345,7 @@ refresh_token_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     (void)interface;
     (void)user_data;
     oc_rep_t *rep = request->request_payload;
-    int len = 0;
+    size_t len = 0;
     char *refresh_token = NULL;
     bool ret = oc_rep_get_string(rep, "refreshtoken", &refresh_token, &len);
     ASSERT_TRUE(ret);

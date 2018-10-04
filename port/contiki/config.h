@@ -19,6 +19,10 @@
 
 #include <contiki-conf.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Time resolution */
 #include <stdint.h>
 typedef uint64_t oc_clock_time_t;
@@ -56,5 +60,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CONFIG_H */

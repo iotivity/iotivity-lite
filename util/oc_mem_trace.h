@@ -19,12 +19,20 @@
 #ifndef OC_MEM_TRACE_H
 #define OC_MEM_TRACE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MEM_TRACE_REALLOC (2)
-#define MEM_TRACE_ALLOC (1)
+#define MEM_TRACE_ALLOC (1) // it would be combination when BYTE, INT, DOUBLE
 #define MEM_TRACE_FREE (0)
 
 void oc_mem_trace_init(void);
 void oc_mem_trace_add_pace(const char *func, int size, int type, void *address);
 void oc_mem_trace_shutdown(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_MEM_TRACE_H */

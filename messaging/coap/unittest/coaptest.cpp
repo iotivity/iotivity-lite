@@ -1,11 +1,9 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
 #include "coap.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
-}
 
 class TestCoap: public testing::Test
 {

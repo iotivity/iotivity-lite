@@ -19,6 +19,10 @@
 
 #include "oc_ri.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   OC_DOS_RESET = 0,
   OC_DOS_RFOTM,
@@ -41,15 +45,19 @@ typedef struct
 
 void oc_sec_pstat_init(void);
 void oc_sec_pstat_free(void);
-bool oc_sec_is_operational(int device);
-bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device);
-void oc_sec_encode_pstat(int device);
-oc_sec_pstat_t *oc_sec_get_pstat(int device);
-void oc_sec_pstat_default(int device);
+bool oc_sec_is_operational(size_t device);
+bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device);
+void oc_sec_encode_pstat(size_t device);
+oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
+void oc_sec_pstat_default(size_t device);
 void get_pstat(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t interface,
                 void *data);
 void oc_sec_reset(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_PSTAT_H */

@@ -26,6 +26,10 @@
 #include "util/oc_process.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef OC_DYNAMIC_ALLOCATION
 #ifndef OC_MAX_APP_DATA_SIZE
 #error "Set OC_MAX_APP_DATA_SIZE in config.h"
@@ -68,7 +72,13 @@ enum
 #endif /* !OC_TCP */
 };
 #else /* !OC_DYNAMIC_ALLOCATION */
+#ifdef __cplusplus
+}
+#endif
 #include "oc_buffer_settings.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef OC_TCP
 #define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
 #else /* OC_TCP */
@@ -99,9 +109,9 @@ struct oc_message_s
 
 int oc_send_buffer(oc_message_t *message);
 
-int oc_connectivity_init(int device);
+int oc_connectivity_init(size_t device);
 
-void oc_connectivity_shutdown(int device);
+void oc_connectivity_shutdown(size_t device);
 
 void oc_send_discovery_request(oc_message_t *message);
 
@@ -114,11 +124,15 @@ int oc_dns_lookup(const char *domain, oc_string_t *addr,
 
 bool oc_get_mac_addr(unsigned char *mac);
 
-oc_endpoint_t *oc_connectivity_get_endpoints(int device);
+oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
 
 void handle_network_interface_event_callback(oc_interface_event_t event);
 
 void handle_session_event_callback(const oc_endpoint_t *endpoint,
                                    oc_session_state_t state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_CONNECTIVITY_H */

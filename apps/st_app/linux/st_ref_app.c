@@ -107,7 +107,7 @@ get_resource_handler(st_request_t *request)
 static void
 switch_resource_change(oc_rep_t *rep)
 {
-  int len = 0;
+  size_t len = 0;
   char *m_power = NULL;
   if (oc_rep_get_string(rep, power_prop_key, &m_power, &len)) {
     strncpy(power, m_power, len);

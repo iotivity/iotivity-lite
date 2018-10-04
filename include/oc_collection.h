@@ -20,6 +20,10 @@
 #include "oc_ri.h"
 #include "util/oc_list.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct oc_link_s
 {
   struct oc_link_s *next;
@@ -31,7 +35,7 @@ struct oc_link_s
 struct oc_collection_s
 {
   struct oc_collection_s *next;
-  int device;
+  size_t device;
   oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
@@ -53,11 +57,16 @@ oc_collection_t *oc_collection_alloc(void);
 void oc_collection_free(oc_collection_t *collection);
 
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
-                                          int uri_path_len, int device);
+                                          size_t uri_path_len, size_t device);
 oc_collection_t *oc_collection_get_all(void);
-oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len);
+oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
+                              int uri_path_len);
 
 bool oc_check_if_collection(oc_resource_t *resource);
 void oc_collection_add(oc_collection_t *collection);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_COLLECTION_H */

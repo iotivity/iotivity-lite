@@ -19,6 +19,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PRINT(...) printf(__VA_ARGS__)
 
 #define PRINTipaddr(endpoint)                                                  \
@@ -84,6 +88,10 @@
 #define OC_LOGbytes(bytes, length)
 #endif
 
-void OC_LOG2(const char *file,const char *func,int line, __const char *__restrict __format,...);
+void OC_LOG2(const char *file, const char *func, int line,
+             __const char *__restrict __format, ...);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_LOG_H */

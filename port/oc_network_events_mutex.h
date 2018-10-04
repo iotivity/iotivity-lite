@@ -17,6 +17,10 @@
 #ifndef OC_NETWORK_EVENTS_MUTEX_H
 #define OC_NETWORK_EVENTS_MUTEX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void oc_network_event_handler_mutex_init(void);
 
 void oc_network_event_handler_mutex_lock(void);
@@ -24,5 +28,9 @@ void oc_network_event_handler_mutex_lock(void);
 void oc_network_event_handler_mutex_unlock(void);
 
 void oc_network_event_handler_mutex_destroy(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_NETWORK_EVENTS_MUTEX_H */

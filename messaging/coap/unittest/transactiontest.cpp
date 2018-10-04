@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
 #include "transactions.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
@@ -29,7 +28,6 @@ extern "C" {
 #define delete pseudo_delete
 #include "oc_core_res.h"
 #undef delete
-}
 
 
 #define MAX_WAIT_TIME 10

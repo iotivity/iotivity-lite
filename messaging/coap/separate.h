@@ -53,6 +53,10 @@
 #include "oc_ri.h"
 #include "transactions.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct coap_separate
 {
   struct coap_separate *next;
@@ -81,5 +85,9 @@ void coap_separate_resume(void *response, coap_separate_t *separate_store,
                           uint8_t code, uint16_t mid);
 void coap_separate_clear(oc_separate_response_t *separate_response,
                          coap_separate_t *separate_store);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SEPARATE_H */
