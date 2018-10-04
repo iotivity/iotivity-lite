@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
 #include "engine.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
@@ -9,7 +8,6 @@ extern "C" {
 #define delete pseudo_delete
 #include "oc_core_res.h"
 #undef delete
-}
 
 class TestEngine: public testing::Test
 {

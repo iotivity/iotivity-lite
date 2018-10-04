@@ -139,7 +139,7 @@ update_wifi_conf_resource(oc_request_t *request)
 
   {
     char *str_val = NULL;
-    int str_len = 0;
+    size_t str_len = 0;
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_SSID, &str_val,
                           &str_len)) {
       es_new_string(&(wifi_res->data.ssid), str_val);
@@ -204,7 +204,7 @@ update_coap_cloud_conf_resource(oc_request_t *request)
 
   {
     char *str_val = NULL;
-    int str_len = 0;
+    size_t str_len = 0;
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_AUTHCODE,
                           &str_val, &str_len)) {
       es_new_string(&(cloud_res->data.auth_code), str_val);
@@ -300,7 +300,8 @@ update_devconf_resource(oc_request_t *request)
 static void
 update_easysetup_resource(oc_request_t *request)
 {
-  int *connect_req, connect_req_size;
+  int *connect_req;
+  size_t connect_req_size;
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
 

@@ -23,6 +23,10 @@
 #include "oc_ri.h"
 #include "port/oc_connectivity.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   OC_BLOCKWISE_CLIENT = 0,
   OC_BLOCKWISE_SERVER
@@ -76,20 +80,22 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
 
 oc_blockwise_state_t *oc_blockwise_find_request_buffer(
-  const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  const char *query, int query_len, oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, const char *query, size_t query_len,
+  oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer(
-  const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  const char *query, int query_len, oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, const char *query, size_t query_len,
+  oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
-  const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
-  const char *href, int href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, oc_blockwise_role_t role);
 
 void oc_blockwise_free_request_buffer(oc_blockwise_state_t *buffer);
 
@@ -108,5 +114,9 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 void oc_blockwise_scrub_buffers(void);
 
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_BLOCKWISE_H */
