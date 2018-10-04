@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_9f22f3ff",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_ff1cdf6c",
+      "range": {
+        "startLine": 695,
+        "startChar": 0,
+        "endLine": 695,
+        "endChar": 25
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_9f0f932e",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "Change to:\n    total_length +\u003d coap_pkt-\u003epayload_len;",
+      "range": {
+        "startLine": 706,
+        "startChar": 0,
+        "endLine": 706,
+        "endChar": 68
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_df1c7bc4",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "According to \"Figure 4: CoAP Frame for Reliable Transports\" at https://www.rfc-editor.org/rfc/rfc8323.txt,\n\nLength(len) means the length of options/payload instead of th e whole size of CoAP Frame\ntherefore option_length should be the real length of option\n\nSince I am not good at TCP Spec, I wonder whether MAKER_LEN is needed or not. So, I leave it to be added.",
+      "parentUuid": "9a3d3df0_9f0f932e",
       "range": {
         "startLine": 706,
         "startChar": 0,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_3f7927fd",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "According to \"Figure 4: CoAP Frame for Reliable Transports\" at https://www.rfc-editor.org/rfc/rfc8323.txt,\n\nlength is not supposed to include  num_extended_length_bytes",
+      "parentUuid": "9a3d3df0_df191b7b",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_3f2647bb",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -76,6 +142,24 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "Add the following line to line 730:\n\n    total_length +\u003d *num_extended_length_bytes;",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1f7ee3e4",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "According to \"Figure 4: CoAP Frame for Reliable Transports\" at https://www.rfc-editor.org/rfc/rfc8323.txt,\n\nlength is not supposed to include  num_extended_length_bytes",
+      "parentUuid": "9a3d3df0_3f2647bb",
       "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -99,6 +183,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_7f83afcc",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "According to \"Figure 4: CoAP Frame for Reliable Transports\" at https://www.rfc-editor.org/rfc/rfc8323.txt,\n\nlength is not supposed to include  num_extended_length_bytes",
+      "parentUuid": "9a3d3df0_1f2b8383",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_bf409736",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -110,6 +212,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "Rename to coap_tcp_parse_message_length().",
+      "range": {
+        "startLine": 746,
+        "startChar": 0,
+        "endLine": 746,
+        "endChar": 27
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_5faa2bd5",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_bf409736",
       "range": {
         "startLine": 746,
         "startChar": 0,
@@ -145,6 +271,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_7fa56f03",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_9f3dd3be",
+      "range": {
+        "startLine": 824,
+        "startChar": 0,
+        "endLine": 824,
+        "endChar": 22
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_9f3673e6",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -156,6 +306,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "Rename to header_length_calculation.",
+      "range": {
+        "startLine": 852,
+        "startChar": 28,
+        "endLine": 852,
+        "endChar": 52
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_5f886be7",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_9f3673e6",
       "range": {
         "startLine": 852,
         "startChar": 28,
@@ -185,6 +359,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_bf6c1738",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_7f20cf9b",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_5f250baa",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -196,6 +388,24 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "Add the following to line 863:\n\n    header_length_calculation +\u003d COAP_TCP_DEFAULT_HEADER_LEN;\n\nFor TCP, this adds the length of the TCP (length + code) fields.",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_9f695328",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "at line 869 , there is 2 meaning COAP_TCP_DEFAULT_HEADER_LEN",
+      "parentUuid": "9a3d3df0_5f250baa",
       "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -230,6 +440,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "This should simply be:\n\nif (header_length_calculation \u003c COAP_MAX_HEADER_SIZE) {",
+      "range": {
+        "startLine": 872,
+        "startChar": 0,
+        "endLine": 873,
+        "endChar": 31
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ff769f05",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_ff333ff4",
       "range": {
         "startLine": 872,
         "startChar": 0,
@@ -282,6 +516,48 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_df73db13",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_df30fbea",
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_3f600735",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 884,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Would you please let me know the reason why it is supposed to be moved?",
+      "parentUuid": "9a3d3df0_3f4da773",
+      "range": {
+        "startLine": 884,
+        "startChar": 4,
+        "endLine": 884,
+        "endChar": 73
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_1f526313",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -293,6 +569,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "This should simply be:\n\nif (header_length_calculation \u003c COAP_MAX_HEADER_SIZE) {",
+      "range": {
+        "startLine": 889,
+        "startChar": 0,
+        "endLine": 890,
+        "endChar": 31
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1f654345",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_1f526313",
       "range": {
         "startLine": 889,
         "startChar": 0,
@@ -328,6 +628,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_7f5a8f84",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 920,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "comparing them is meaningful Just in case there is a mistake in assuming the length of option",
+      "parentUuid": "9a3d3df0_7f572f03",
+      "range": {
+        "startLine": 916,
+        "startChar": 0,
+        "endLine": 920,
+        "endChar": 3
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_5f5ceb25",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 5
@@ -339,6 +663,30 @@
       "writtenOn": "2018-10-01T21:24:42Z",
       "side": 1,
       "message": "We don\u0027t need this function.\n\nIt seems like this function was partly responsible of making the incorrect length calculation right.\n\nThe TCP adapter can directly call coap_tcp_parse_message_length() to determine how many more bytes to read.",
+      "range": {
+        "startLine": 1002,
+        "startChar": 0,
+        "endLine": 1018,
+        "endChar": 1
+      },
+      "revId": "eaf29cac42bb320d277004faa40fd5352798d0b2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_5f5fcb72",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-04T06:20:00Z",
+      "side": 1,
+      "message": "According to \"Figure 4: CoAP Frame for Reliable Transports\" at https://www.rfc-editor.org/rfc/rfc8323.txt, \n\ncoap_tcp_parse_message_length just returns the length of option and the length of payload.\nso it is still needed",
+      "parentUuid": "9a3d3df0_5f5ceb25",
       "range": {
         "startLine": 1002,
         "startChar": 0,
