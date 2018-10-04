@@ -96,7 +96,7 @@ post_fota(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 
   oc_status_t code = OC_STATUS_BAD_REQUEST;
   char *cmd = NULL;
-  int size;
+  size_t size;
   if (oc_rep_get_string(request->request_payload, "update", &cmd, &size)) {
     fota_cmd_t fota_cmd = 0;
     if (strncmp(FOTA_INIT_STRING, cmd, size) == 0) {

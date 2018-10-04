@@ -21,8 +21,12 @@
 /* Time resolution */
 #include <stdint.h>
 #include <time.h>
-typedef uint64_t oc_clock_time_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef uint64_t oc_clock_time_t;
 
 #define FD_SETSIZE	(CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
 
@@ -106,5 +110,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_SESSION_EVENT_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* CONFIG_H */

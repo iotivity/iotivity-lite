@@ -2,11 +2,9 @@
 #include <cstdlib>
 #include "gtest/gtest.h"
 
-extern "C" {
 #include "observe.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
-}
 
 class TestObserve: public testing::Test
 {

@@ -29,6 +29,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern CborEncoder g_encoder, root_map, links_array;
 extern int g_err;
 
@@ -94,7 +98,7 @@ int oc_rep_finalize(void);
 */
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
-    if (value != NULL) {                                                       \
+    if ((const char *)value != NULL) {                                         \
       g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
       g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
     }                                                                          \
@@ -155,14 +159,14 @@ int oc_rep_finalize(void);
   @brief A macro to add byte string value for parent object.
 */
 #define oc_rep_add_byte_string(parent, value)                                  \
-  if (value != NULL)                                                           \
+  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_byte_string(&parent##_array, value, strlen(value))
 
 /**
   @brief A macro to add string value for parent object.
 */
 #define oc_rep_add_text_string(parent, value)                                  \
-  if (value != NULL)                                                           \
+  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 /**
@@ -187,7 +191,7 @@ int oc_rep_finalize(void);
   @brief A macro to set key for parent object.
 */
 #define oc_rep_set_key(parent, key)                                            \
-  if (key != NULL)                                                             \
+  if ((const char *)key != NULL)                                               \
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
 
 /**
@@ -435,7 +439,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *size);
+bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                            size_t *size);
 
 /**
   @brief A function to get the string value from OC Representation.
@@ -448,7 +453,8 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, int *s
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size);
+bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
+                       size_t *size);
 
 /**
   @brief A function to get the int array value from OC Representation.
@@ -461,7 +467,8 @@ bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, int *size);
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size);
+bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value,
+                          size_t *size);
 
 /**
   @brief A function to get the bool array value from OC Representation.
@@ -474,7 +481,8 @@ bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, int *size
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *size);
+bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                           size_t *size);
 
 /**
   @brief A function to get the double array value from OC Representation.
@@ -487,7 +495,8 @@ bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, int *si
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int *size);
+bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                             size_t *size);
 
 /**
   @brief A function to get the byte string array value from OC Representation.
@@ -500,7 +509,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, int
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size);
+bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                                  oc_string_array_t *value, size_t *size);
 
 /**
   @brief A function to get the string array value from OC Representation.
@@ -513,7 +523,8 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_arra
   @retval false if any input parameter is NULL,
                 or the rep doesn't have the key.
 */
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, int *size);
+bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                             oc_string_array_t *value, size_t *size);
 
 /**
   @brief A function to get the object value from OC Representation.
@@ -538,5 +549,9 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
                 or the rep doesn't have the key.
 */
 bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_REP_H */

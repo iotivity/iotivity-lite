@@ -46,7 +46,7 @@ static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 void
-oc_sec_cred_default(int device)
+oc_sec_cred_default(size_t device)
 {
   int len = oc_list_length(devices[device].creds);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_pop(devices[device].creds);
@@ -65,7 +65,7 @@ oc_sec_cred_default(int device)
 }
 
 oc_sec_creds_t *
-oc_sec_get_creds(int device)
+oc_sec_get_creds(size_t device)
 {
   return &devices[device];
 }
@@ -80,14 +80,14 @@ oc_sec_cred_init(void)
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  int i;
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     OC_LIST_STRUCT_INIT(&devices[i], creds);
   }
 }
 
 static bool
-unique_credid(int credid, int device)
+unique_credid(int credid, size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
@@ -99,7 +99,7 @@ unique_credid(int credid, int device)
 }
 
 static int
-get_new_credid(int device)
+get_new_credid(size_t device)
 {
   int credid;
   do {
@@ -109,7 +109,7 @@ get_new_credid(int device)
 }
 
 static void
-oc_sec_remove_cred(oc_sec_cred_t *cred, int device)
+oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
 {
   oc_list_remove(devices[device].creds, cred);
   if (oc_string_len(cred->role.role) > 0) {
@@ -122,7 +122,7 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, int device)
 }
 
 static bool
-oc_sec_remove_cred_by_credid(int credid, int device)
+oc_sec_remove_cred_by_credid(int credid, size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
@@ -136,7 +136,7 @@ oc_sec_remove_cred_by_credid(int credid, int device)
 }
 
 static void
-oc_sec_clear_creds(int device)
+oc_sec_clear_creds(size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
   while (cred != NULL) {
@@ -149,7 +149,7 @@ oc_sec_clear_creds(int device)
 void
 oc_sec_cred_free(void)
 {
-  int device;
+  size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_clear_creds(device);
   }
@@ -161,7 +161,7 @@ oc_sec_cred_free(void)
 }
 
 oc_sec_cred_t *
-oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
+oc_sec_find_cred(oc_uuid_t *subjectuuid, size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
@@ -174,7 +174,7 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid, int device)
 }
 
 oc_sec_cred_t *
-oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
+oc_sec_get_cred(oc_uuid_t *subjectuuid, size_t device)
 {
   oc_sec_cred_t *cred = oc_sec_find_cred(subjectuuid, device);
   if (cred == NULL) {
@@ -190,7 +190,7 @@ oc_sec_get_cred(oc_uuid_t *subjectuuid, int device)
 }
 
 void
-oc_sec_encode_cred(bool persist, int device)
+oc_sec_encode_cred(bool persist, size_t device)
 {
   oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
   char uuid[OC_UUID_LEN];
@@ -232,11 +232,11 @@ oc_sec_encode_cred(bool persist, int device)
 
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
-                   int device)
+                   size_t device)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
-  int len = 0;
+  size_t len = 0;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -331,7 +331,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   } else if (oc_string_len(data->name) == 4 &&
                              memcmp(oc_string(data->name), "data", 4) == 0) {
                     uint8_t *p = oc_cast(data->value.string, uint8_t);
-                    int size = oc_string_len(data->value.string);
+                    size_t size = oc_string_len(data->value.string);
                     if (size == 0)
                       goto next_item;
                     if (size != 24) {
@@ -344,7 +344,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 } break;
                 case OC_REP_BYTE_STRING: {
                   uint8_t *p = oc_cast(data->value.string, uint8_t);
-                  int size = oc_string_len(data->value.string);
+                  size_t size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
                   if (mfgcert_flag) {
@@ -520,7 +520,7 @@ get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 bool
-oc_cred_remove_subject(const char *subjectuuid, int device)
+oc_cred_remove_subject(const char *subjectuuid, size_t device)
 {
   oc_uuid_t _subjectuuid;
   oc_str_to_uuid(subjectuuid, &_subjectuuid);

@@ -28,6 +28,10 @@
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE } oc_method_t;
 
 /**
@@ -124,7 +128,7 @@ typedef struct
   oc_endpoint_t *origin;
   oc_resource_t *resource;
   const char *query;
-  int query_len;
+  size_t query_len;
   oc_rep_t *request_payload;
   oc_response_t *response;
 } oc_request_t;
@@ -153,7 +157,7 @@ typedef struct oc_request_handler_s
 struct oc_resource_s
 {
   struct oc_resource_s *next;
-  int device;
+  size_t device;
   oc_string_t name;
   oc_string_t uri;
   oc_string_array_t types;
@@ -248,8 +252,8 @@ int oc_status_code(oc_status_t key);
  *@param device device.
  *@return resource OC Resource.
  */
-oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, int uri_len,
-                                             int device);
+oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
+                                             size_t device);
 
 /**
  *@brief A function to fetch list of resources present in app.
@@ -305,9 +309,9 @@ void oc_ri_free_resource_properties(oc_resource_t *resource);
  *@param n index to be fetched.
  *@return int  next index in query..
  */
-int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
-                                  int *key_len, char **value, int *value_len,
-                                  int n);
+int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
+                                  char **key, size_t *key_len, char **value,
+                                  size_t *value_len, size_t n);
 
 /**
  *@brief A function to fetch the value of particular key related to query.
@@ -317,7 +321,7 @@ int oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
  *@param value variable to store value related to key.
  *@return int value length.
  */
-int oc_ri_get_query_value(const char *query, int query_len, const char *key,
+int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                           char **value);
 
 /**
@@ -326,6 +330,9 @@ int oc_ri_get_query_value(const char *query, int query_len, const char *key,
  *@param if_len interface length
  *@return oc_interface_mask_t masked value of the interface.
  */
-oc_interface_mask_t oc_ri_get_interface_mask(char *iface, int if_len);
+oc_interface_mask_t oc_ri_get_interface_mask(char *iface, size_t if_len);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_RI_H */

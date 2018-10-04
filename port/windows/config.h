@@ -3,6 +3,11 @@
 
 /* Time resolution */
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint64_t oc_clock_time_t;
 #define strncasecmp _strnicmp
 /* Sets one clock tick to 1 ms */
@@ -21,5 +26,9 @@ typedef uint64_t oc_clock_time_t;
 #if !defined(OC_BLOCK_WISE)
 #define OC_BLOCK_WISE
 #endif /* OC_BLOCK_WISE */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CONFIG_H */

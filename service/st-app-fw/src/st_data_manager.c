@@ -325,7 +325,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
   spec_info->device_idx = device_index;
 
   char *value = NULL;
-  int size = 0;
+  size_t size = 0;
   oc_rep_t *spec_device_rep = NULL;
   if (oc_rep_get_object(spec_rep, ST_SPEC_DEVICE_KEY, &spec_device_rep)) {
     if (oc_rep_get_string(spec_device_rep, ST_SPEC_DEVICE_TYPE_KEY, &value,
@@ -413,7 +413,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
       resource_info->device_idx = device_index;
 
       char *value = NULL;
-      int size = 0;
+      size_t size = 0;
       if (oc_rep_get_string(item, ST_RSC_URI_KEY, &value, &size)) {
         st_string_check_new(&resource_info->uri, value, size);
       }
@@ -422,7 +422,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
       if (oc_rep_get_string_array(item, ST_RSC_TYPES_KEY, &array_value,
                                   &size)) {
         oc_new_string_array(&resource_info->types, size);
-        int i = 0;
+        size_t i = 0;
         for (i = 0; i < size; i++) {
           value = oc_string_array_get_item(array_value, i);
           oc_string_array_add_item(resource_info->types, value);
@@ -431,7 +431,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
 
       if (oc_rep_get_string_array(item, ST_RSC_INTERFACES_KEY, &array_value,
                                   &size)) {
-        int i = 0;
+        size_t i = 0;
         resource_info->interfaces = 0;
         resource_info->default_interface = 0;
         for (i = 0; i < size; i++) {
@@ -499,7 +499,7 @@ st_decode_resource_types(oc_rep_t *rsc_type_rep)
   }
 
   char *value = NULL;
-  int size = 0;
+  size_t size = 0;
   if (oc_rep_get_string(rsc_type_rep, ST_RSC_TYPES_TYPE_KEY, &value, &size)) {
     st_string_check_new(&rt->type, value, size);
   }
@@ -594,7 +594,7 @@ st_decode_configuration(oc_rep_t *conf_rep)
 #ifdef ST_CONF_ENABLED
   oc_rep_t *conn_rep = NULL, *softap_rep = NULL;
   char *str_value = NULL;
-  int size = 0;
+  size_t size = 0;
   bool bool_value;
   if (!oc_rep_get_object(conf_es_rep, ST_CONF_ES_CONN_KEY, &conn_rep)) {
     st_print_log("[ST_DM] can't get connectivity data\n");

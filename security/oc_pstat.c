@@ -93,7 +93,7 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
 #endif /* OC_DEBUG */
 
 static bool
-valid_transition(int device, oc_dostype_t state)
+valid_transition(size_t device, oc_dostype_t state)
 {
   switch (pstat[device].s) {
   case OC_DOS_RESET:
@@ -120,9 +120,9 @@ valid_transition(int device, oc_dostype_t state)
   return true;
 }
 
-static bool oc_pstat_handle_state(oc_sec_pstat_t *ps, int device);
+static bool oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device);
 static bool
-oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
+oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
 {
   oc_sec_acl_t *acl = oc_sec_get_acl(device);
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
@@ -133,7 +133,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, int device)
     ps->isop = false;
     ps->cm = 1;
     ps->tm = 2;
-    pstat->om = 3;
+    ps->om = 3;
     ps->sm = 4;
     memset(ps->rowneruuid.id, 0, 16);
 #if !defined(OC_SPEC_VER_OIC)
@@ -347,7 +347,7 @@ pstat_state_error:
 }
 
 oc_sec_pstat_t *
-oc_sec_get_pstat(int device)
+oc_sec_get_pstat(size_t device)
 {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
@@ -356,13 +356,13 @@ oc_sec_get_pstat(int device)
 }
 
 bool
-oc_sec_is_operational(int device)
+oc_sec_is_operational(size_t device)
 {
   return pstat[device].isop;
 }
 
 void
-oc_sec_pstat_default(int device)
+oc_sec_pstat_default(size_t device)
 {
   pstat[device].s = OC_DOS_RESET;
   oc_pstat_handle_state(&pstat[device], device);
@@ -370,7 +370,7 @@ oc_sec_pstat_default(int device)
 }
 
 void
-oc_sec_encode_pstat(int device)
+oc_sec_encode_pstat(size_t device)
 {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
@@ -396,13 +396,14 @@ oc_sec_encode_pstat(int device)
 static oc_event_callback_retval_t
 dump_acl_post_otm(void *data)
 {
-  oc_sec_dump_acl((long)data);
-  oc_sec_dump_unique_ids((long)data);
+  size_t device = (size_t)data;
+  oc_sec_dump_acl(device);
+  oc_sec_dump_unique_ids(device);
   return OC_EVENT_DONE;
 }
 
 bool
-oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
+oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
 {
   bool transition_state = false;
   oc_sec_pstat_t ps;
@@ -503,8 +504,8 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, int device)
       bool transition_success = oc_pstat_handle_state(&ps, device);
       if (transition_success && ps.s == OC_DOS_RFNOP && set_post_otm_acl) {
         oc_sec_set_post_otm_acl(device);
-        oc_ri_add_timed_event_callback_ticks((void *)(long)device,
-                                             &dump_acl_post_otm, 0);
+        size_t d = (size_t)device;
+        oc_ri_add_timed_event_callback_ticks((void *)d, &dump_acl_post_otm, 0);
         set_post_otm_acl = false;
       }
       return transition_success;
@@ -534,7 +535,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
-  int device = request->resource->device;
+  size_t device = request->resource->device;
 #if defined(OC_SPEC_VER_OIC)
   bool flag = false;
   if (request->origin && request->origin->version == OIC_VER_1_1_0)
@@ -546,6 +547,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
 #endif // OC_SPEC_VER_OIC
     oc_send_response(request, OC_STATUS_CHANGED);
+    request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
