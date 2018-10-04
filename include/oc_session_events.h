@@ -21,6 +21,10 @@
 #include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   OC_SESSION_CONNECTED,
   OC_SESSION_DISCONNECTED
@@ -48,5 +52,9 @@ OC_PROCESS_NAME(oc_session_events);
 void oc_session_start_event(oc_endpoint_t *endpoint);
 void oc_session_end_event(oc_endpoint_t *endpoint);
 void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_SESSION_EVENTS_H */

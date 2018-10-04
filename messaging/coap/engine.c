@@ -93,7 +93,7 @@ check_if_duplicate(uint16_t mid, uint8_t device)
   return false;
 }
 
-void
+static void
 coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
 {
   coap_packet_t ack[1];
@@ -246,10 +246,10 @@ coap_receive(oc_message_t *msg)
       if (transaction) {
 #ifdef OC_BLOCK_WISE
         const char *href;
-        int href_len = coap_get_header_uri_path(message, &href);
+        size_t href_len = coap_get_header_uri_path(message, &href);
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
-            (uint32_t)coap_get_payload(message, &incoming_block);
+          (uint32_t)coap_get_payload(message, &incoming_block);
         if (block1) {
           OC_DBG("processing block1 option");
           request_buffer = oc_blockwise_find_request_buffer(

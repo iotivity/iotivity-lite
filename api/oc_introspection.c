@@ -16,6 +16,7 @@
 #ifndef ST_OC_INTROSPECTION_OPT
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_introspection.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
@@ -27,7 +28,7 @@
 #define MAX_TAG_LENGTH 20
 
 static void
-gen_idd_tag(const char *name, int device_index, char *idd_tag)
+gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 {
   int idd_tag_len =
     snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
@@ -36,8 +37,8 @@ gen_idd_tag(const char *name, int device_index, char *idd_tag)
   idd_tag[idd_tag_len] = '\0';
 }
 
-int
-get_IDD_filename(int device_index, char *filename)
+static int
+get_IDD_filename(size_t device_index, char *filename)
 {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device_index, idd_tag);
@@ -51,7 +52,7 @@ get_IDD_filename(int device_index, char *filename)
 }
 
 void
-oc_set_introspection_file(int device, const char *filename)
+oc_set_introspection_file(size_t device, const char *filename)
 {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
@@ -62,7 +63,7 @@ oc_set_introspection_file(int device, const char *filename)
   }
 }
 
-long
+static long
 IDD_storage_size(const char *store)
 {
   FILE *fp;
@@ -81,7 +82,7 @@ IDD_storage_size(const char *store)
   return filesize;
 }
 
-long
+static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
@@ -101,22 +102,22 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 
 #include "server_introspection.dat.h"
 
-int
-get_IDD_filename(int index, char *filename)
+static int
+get_IDD_filename(size_t index, char *filename)
 {
   (void)index;
   (void)filename;
   return 0;
 }
 
-long
+static long
 IDD_storage_size(const char *store)
 {
   (void)store;
   return introspection_data_size;
 }
 
-long
+static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   (void)store;
@@ -135,7 +136,7 @@ oc_core_introspection_data_handler(oc_request_t *request,
 
   OC_DBG("in oc_core_introspection_data_handler");
 
-  int index = request->resource->device;
+  size_t index = request->resource->device;
   char filename[MAX_FILENAME_LENGTH];
   long filesize;
 
@@ -215,7 +216,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 }
 
 void
-oc_create_introspection_resource(int device)
+oc_create_introspection_resource(size_t device)
 {
   OC_DBG("oc_introspection: Initializing introspection resource");
 

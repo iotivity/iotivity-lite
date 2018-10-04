@@ -26,13 +26,13 @@ oc_malloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_handle_t *block, int num_items, pool pool_type)
+  oc_handle_t *block, size_t num_items, pool pool_type)
 {
   if (!mmem_initialized) {
     oc_mmem_init();
     mmem_initialized = true;
   }
-  int alloc_ret = _oc_mmem_alloc(
+  size_t alloc_ret = _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
     func,
 #endif
@@ -63,7 +63,7 @@ _oc_new_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_t *ocstring, const char *str, int str_len)
+  oc_string_t *ocstring, const char *str, size_t str_len)
 {
   oc_malloc(
 #ifdef OC_MEMORY_TRACE
@@ -79,7 +79,7 @@ _oc_alloc_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_t *ocstring, int size)
+  oc_string_t *ocstring, size_t size)
 {
   oc_malloc(
 #ifdef OC_MEMORY_TRACE
@@ -117,7 +117,7 @@ _oc_new_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, int size, pool type)
+  oc_array_t *ocarray, size_t size, pool type)
 {
   switch (type) {
   case INT_POOL:
@@ -153,7 +153,7 @@ _oc_alloc_string_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_string_array_t *ocstringarray, int size)
+  oc_string_array_t *ocstringarray, size_t size)
 {
   _oc_alloc_string(
 #ifdef OC_MEMORY_TRACE
@@ -161,7 +161,7 @@ _oc_alloc_string_array(
 #endif
     ocstringarray, size * STRING_ARRAY_ITEM_MAX_LEN);
 
-  int i, pos;
+  size_t i, pos;
   for (i = 0; i < size; i++) {
     pos = i * STRING_ARRAY_ITEM_MAX_LEN;
     memcpy((char *)oc_string(*ocstringarray) + pos, (const char *)"", 1);
@@ -170,12 +170,12 @@ _oc_alloc_string_array(
 
 bool
 _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                const char str[], int index)
+                                const char str[], size_t index)
 {
   if (strlen(str) >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }
-  int pos = index * STRING_ARRAY_ITEM_MAX_LEN;
+  size_t pos = index * STRING_ARRAY_ITEM_MAX_LEN;
   size_t len = strlen(str);
   memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, len);
   memcpy(oc_string(*ocstringarray) + pos + len, (const uint8_t *)"", 1);

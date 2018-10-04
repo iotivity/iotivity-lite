@@ -59,6 +59,10 @@
 #include "port/oc_log.h"
 #include "port/oc_random.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MAX
 #define MAX(n, m) (((n) < (m)) ? (m) : (n))
 #endif
@@ -246,15 +250,16 @@ int coap_get_header_uri_host(
   const char **host); /* in-place string might not be 0-terminated. */
 int coap_set_header_uri_host(void *packet, const char *host);
 
-int coap_get_header_uri_path(
+size_t coap_get_header_uri_path(
   void *packet,
   const char **path); /* in-place string might not be 0-terminated. */
-int coap_set_header_uri_path(void *packet, const char *path, int path_len);
+size_t coap_set_header_uri_path(void *packet, const char *path,
+                                size_t path_len);
 
-int coap_get_header_uri_query(
+size_t coap_get_header_uri_query(
   void *packet,
   const char **query); /* in-place string might not be 0-terminated. */
-int coap_set_header_uri_query(void *packet, const char *query);
+size_t coap_set_header_uri_query(void *packet, const char *query);
 
 int coap_get_header_location_path(
   void *packet,
@@ -268,7 +273,7 @@ int coap_set_header_location_path(void *packet,
 int coap_get_header_location_query(
   void *packet,
   const char **query); /* in-place string might not be 0-terminated. */
-int coap_set_header_location_query(void *packet, const char *query);
+size_t coap_set_header_location_query(void *packet, const char *query);
 
 int coap_get_header_observe(void *packet, uint32_t *observe);
 int coap_set_header_observe(void *packet, uint32_t observe);
@@ -299,5 +304,9 @@ size_t coap_tcp_get_packet_size(const uint8_t *data);
 
 coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len);
 #endif /* OC_TCP */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* COAP_H */

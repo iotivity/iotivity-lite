@@ -25,6 +25,10 @@
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
 typedef struct
@@ -106,5 +110,9 @@ bool oc_ri_remove_client_cb_by_mid(uint16_t mid);
 oc_discovery_flags_t oc_ri_process_discovery_payload(
   uint8_t *payload, int len, oc_discovery_handler_t handler,
   oc_endpoint_t *endpoint, void *user_data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_CLIENT_STATE_H */

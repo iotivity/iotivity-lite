@@ -19,6 +19,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define OC_UUID_LEN (37)
 
 typedef struct
@@ -33,5 +37,8 @@ void oc_gen_uuid(oc_uuid_t *uuid);
 void oc_gen_uuid_from_mac(oc_uuid_t *uuid);
 #endif //OC_SPEC_VER_OIC
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_UUID_H */

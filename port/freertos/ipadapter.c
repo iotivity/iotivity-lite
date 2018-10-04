@@ -48,8 +48,10 @@ void oc_network_event_handler_mutex_destroy(void) {
   oc_abort(__func__);
 }
 
-static ip_context_t *get_ip_context_for_device(int device) {
-  (void) device;
+static ip_context_t *
+get_ip_context_for_device(size_t device)
+{
+  (void)device;
   oc_abort(__func__);
   return NULL;
 }
@@ -112,9 +114,9 @@ get_interface_addresses(unsigned char family, uint16_t port, bool secure,
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
-  (void) device;
+  (void)device;
   oc_abort(__func__);
   return NULL;
 }
@@ -145,16 +147,18 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-int oc_connectivity_init(int device) {
-  (void) device;
+int
+oc_connectivity_init(size_t device)
+{
+  (void)device;
   oc_abort(__func__);
   return -1;
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
-  (void) device;
+  (void)device;
   oc_abort(__func__);
 }
 

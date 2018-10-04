@@ -79,7 +79,7 @@ typedef struct ip_context_t
   HANDLE event_server_handle;
   DWORD event_thread;
   BOOL terminate;
-  int device;
+  size_t device;
 } ip_context_t;
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -121,7 +121,7 @@ oc_network_event_handler_mutex_destroy(void)
 }
 
 static ip_context_t *
-get_ip_context_for_device(int device)
+get_ip_context_for_device(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = oc_list_head(ip_contexts);
@@ -496,7 +496,8 @@ refresh_endpoints_list(ip_context_t *dev, ifaddr_t *ifaddr_list)
 static int
 process_interface_change_event(void)
 {
-  int ret = 0, num_devices = oc_core_get_num_devices(), i;
+  int ret = 0;
+  size_t num_devices = oc_core_get_num_devices(), i;
   ifaddr_t *ifaddr_list = get_network_addresses();
   if (!ifaddr_list) {
     return -1;
@@ -549,7 +550,7 @@ get_WSARecvMsg(void)
 }
 
 static int
-recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
+recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
          oc_endpoint_t *endpoint, bool multicast)
 {
   if (!PWSARecvMsg && get_WSARecvMsg() < 0) {
@@ -860,7 +861,7 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
       common:
 #ifdef OC_DEBUG
-        PRINT("Incoming message of size %d bytes from ", message->length);
+        PRINT("Incoming message of size %zd bytes from ", message->length);
         PRINTipaddr(message->endpoint);
         PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -881,7 +882,7 @@ network_event_thread_error:
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   if (!dev) {
@@ -969,7 +970,7 @@ set_source_address_for_interface(ADDRESS_FAMILY family, uint8_t *address,
 }
 
 int
-send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
+send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
   if (!PWSASendMsg && get_WSASendMsg() < 0) {
     return -1;
@@ -1085,7 +1086,7 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %d bytes to ", message->length);
+  PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n");
 #endif /* OC_DEBUG */
@@ -1314,7 +1315,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 #endif
 
 int
-oc_connectivity_init(int device)
+oc_connectivity_init(size_t device)
 {
   if (!ifchange_initialized) {
     WSADATA wsadata;
@@ -1505,7 +1506,7 @@ oc_connectivity_init(int device)
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = TRUE;

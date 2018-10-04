@@ -25,11 +25,17 @@
 #include <stdbool.h>
 #include "oc_endpoint.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
- * Function pointer for getting peer's public key and token for raw public key OTM.
+ * Function pointer for getting peer's public key and token for raw public key
+ * OTM.
  * Callback is expected to copy key and token to the pointers provided.
  *
- * Function provides pointers to be filled with key and token binary values and their length.
+ * Function provides pointers to be filled with key and token binary values and
+ * their length.
  *
  * @param cpubkey pointer to peer's public key
  * @param cpubkey_len peer's public key length
@@ -139,5 +145,9 @@ void oc_sec_set_owner_cb(oc_sec_change_owner_cb_t cb);
  * @param hmac_len HMAC length
  */
 bool oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_SECURITY_H */
