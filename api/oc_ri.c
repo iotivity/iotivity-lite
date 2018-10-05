@@ -144,11 +144,12 @@ oc_status_code(oc_status_t key)
 }
 
 int
-oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
-                              int *key_len, char **value, int *value_len, int n)
+oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
+                              size_t *key_len, char **value, size_t *value_len,
+                              size_t n)
 {
   int next_pos = -1;
-  int i = 0;
+  size_t i = 0;
   char *start = (char *)query, *current, *end = (char *)query + query_len;
   current = start;
 
@@ -163,35 +164,36 @@ oc_ri_get_query_nth_key_value(const char *query, int query_len, char **key,
 
   current = memchr(start, '=', end - start);
   if (current != NULL) {
-    *key_len = current - start;
+    *key_len = (current - start);
     *key = start;
     *value = current + 1;
     current = memchr(*value, '&', end - *value);
     if (current == NULL) {
-      *value_len = end - *value;
+      *value_len = (end - *value);
     } else {
-      *value_len = current - *value;
+      *value_len = (current - *value);
     }
-    next_pos = *value + *value_len - query + 1;
+    next_pos = (int)(*value + *value_len - query + 1);
   }
   return next_pos;
 }
 
 int
-oc_ri_get_query_value(const char *query, int query_len, const char *key,
+oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                       char **value)
 {
-  int next_pos = 0, found = -1, kl, vl, pos = 0;
+  int next_pos = 0, found = -1;
+  size_t kl, vl, pos = 0;
   char *k;
 
   while (pos < query_len) {
     next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
-                                             &kl, value, &vl, 1);
+                                             &kl, value, &vl, 1u);
     if (next_pos == -1)
       return -1;
 
-    if (kl == (int)strlen(key) && strncasecmp(key, k, kl) == 0) {
-      found = vl;
+    if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
+      found = (int)vl;
       break;
     }
 
@@ -246,7 +248,7 @@ static void stop_processes(void) {
 
 #ifdef OC_SERVER
 oc_resource_t *
-oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
+oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 {
   if (uri == NULL)
     return NULL;
@@ -256,7 +258,7 @@ oc_ri_get_app_resource_by_uri(const char *uri, int uri_len, int device)
     skip = 1;
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if ((int)oc_string_len(res->uri) == (uri_len + skip) &&
+    if (oc_string_len(res->uri) == (uri_len + skip) &&
         strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0 &&
         res->device == device)
       return res;
@@ -549,7 +551,7 @@ free_all_event_timers(void)
 }
 
 oc_interface_mask_t
-oc_ri_get_interface_mask(char *iface, int if_len)
+oc_ri_get_interface_mask(char *iface, size_t if_len)
 {
   oc_interface_mask_t interface = 0;
   if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0)
@@ -679,21 +681,22 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
-  int uri_path_len = coap_get_header_uri_path(request, &uri_path);
+  size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
   /* Obtain query string from CoAP packet. */
   const char *uri_query = 0;
-  int uri_query_len = coap_get_header_uri_query(request, &uri_query);
+  size_t uri_query_len = coap_get_header_uri_query(request, &uri_query);
 
   if (uri_query_len) {
     request_obj.query = uri_query;
-    request_obj.query_len = uri_query_len;
+    request_obj.query_len = (int)uri_query_len;
 
     /* Check if query string includes interface selection. */
     char *iface;
-    int if_len = oc_ri_get_query_value(uri_query, uri_query_len, "if", &iface);
+    int if_len =
+      oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
-      interface |= oc_ri_get_interface_mask(iface, if_len);
+      interface |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
   }
 
@@ -758,7 +761,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int i;
     for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
       resource = oc_core_get_resource_by_index(i, endpoint->device);
-      if ((int)oc_string_len(resource->uri) == (uri_path_len + 1) &&
+      if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
         request_obj.resource = cur_resource = resource;
@@ -1145,6 +1148,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                        oc_endpoint_t *endpoint)
 #endif /* OC_BLOCK_WISE */
 {
+  endpoint->version = OCF_VER_1_0_0;
+  unsigned int cf = 0;
+  if (coap_get_header_content_format(response, &cf) == 1) {
+    if (cf == APPLICATION_CBOR) {
+      endpoint->version = OIC_VER_1_1_0;
+    }
+  }
+
   uint8_t *payload = NULL;
   int payload_len = 0;
   coap_packet_t *const pkt = (coap_packet_t *)response;
@@ -1272,6 +1283,25 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
   } else {
     cb->observe_seq = client_response.observe_option;
+
+    // Drop old observe callback and keep the last one.
+    if (cb->observe_seq == 0) {
+      oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      size_t uri_len = oc_string_len(cb->uri);
+
+      while (dup_cb != NULL) {
+        if (dup_cb != cb && oc_string_len(dup_cb->uri) == uri_len &&
+            strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
+            oc_endpoint_compare(dup_cb->endpoint, endpoint) == 0) {
+          OC_DBG("Freeing cb %s, token 0x%02X%02X", oc_string(dup_cb->uri),
+                 dup_cb->token[0], dup_cb->token[1]);
+          oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
+          free_client_cb(dup_cb);
+          break;
+        }
+        dup_cb = dup_cb->next;
+      }
+    }
   }
 
   return true;

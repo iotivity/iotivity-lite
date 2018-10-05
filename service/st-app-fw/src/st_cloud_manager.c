@@ -260,7 +260,7 @@ error_handler(st_cloud_context_t *context, oc_rep_t* res_payload,
 
   code = get_ci_error_code(res_code, code);
   char *message = NULL;
-  int size;
+  size_t size;
   if (oc_rep_get_string(res_payload, "message", &message, &size))
     st_print_log("[ST_CM] ci message : %s (%d)\n", message, code);
 
@@ -319,7 +319,7 @@ sign_up_handler(oc_client_response_t *data)
     goto error;
 
   char *token_value = NULL, *uri_value = NULL;
-  int size;
+  size_t size;
 
   oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &token_value, &size);
   oc_rep_get_string(payload, REDIRECTURI_KEY, &uri_value, &size);
@@ -436,7 +436,7 @@ refresh_token_handler(oc_client_response_t *data)
     goto error;
 
   char *access_value, *refresh_value = NULL;
-  int size;
+  size_t size;
   oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value, &size);
   oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value, &size);
 
@@ -583,7 +583,8 @@ find_ping_handler(oc_client_response_t *data)
   context->retry_count = 0;
   context->cloud_manager_status = CLOUD_MANAGER_FINISH;
 
-  int *interval = NULL, size;
+  int *interval = NULL;
+  size_t size;
   oc_rep_get_int_array(payload, "inarray", &interval, &size);
   if (interval)
     g_ping_interval = interval[size - 1];

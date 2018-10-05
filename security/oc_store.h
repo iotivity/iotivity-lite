@@ -16,16 +16,25 @@
 
 #ifndef OC_STORE_H
 #define OC_STORE_H
+#include <stddef.h>
 
-void oc_sec_load_pstat(int device);
-void oc_sec_load_doxm(int device);
-void oc_sec_load_cred(int device);
-void oc_sec_load_acl(int device);
-void oc_sec_dump_pstat(int device);
-void oc_sec_dump_cred(int device);
-void oc_sec_dump_doxm(int device);
-void oc_sec_dump_acl(int device);
-void oc_sec_dump_unique_ids(int device);
-void oc_sec_load_unique_ids(int device);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void oc_sec_load_pstat(size_t device);
+void oc_sec_load_doxm(size_t device);
+void oc_sec_load_cred(size_t device);
+void oc_sec_load_acl(size_t device);
+void oc_sec_dump_pstat(size_t device);
+void oc_sec_dump_cred(size_t device);
+void oc_sec_dump_doxm(size_t device);
+void oc_sec_dump_acl(size_t device);
+void oc_sec_dump_unique_ids(size_t device);
+void oc_sec_load_unique_ids(size_t device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_STORE_H */

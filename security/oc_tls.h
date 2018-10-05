@@ -26,6 +26,10 @@
 #include "util/oc_process.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 OC_PROCESS_NAME(oc_tls_handler);
 
 int oc_tls_init_context(void);
@@ -43,7 +47,7 @@ bool oc_sec_get_rpk_psk(int device, unsigned char *psk, int *psk_len);
 void oc_tls_shutdown(void);
 void oc_tls_close_connection(oc_endpoint_t *endpoint);
 
-int oc_tls_update_psk_identity(int device);
+int oc_tls_update_psk_identity(size_t device);
 bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t oxm_len, const uint8_t *server_uuid,
                              const size_t server_uuid_len,
@@ -51,7 +55,7 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              uint8_t *key, const size_t key_len);
 
 void oc_tls_remove_peer(oc_endpoint_t *endpoint);
-int oc_tls_send_message(oc_message_t *message);
+size_t oc_tls_send_message(oc_message_t *message);
 oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
 bool oc_tls_connected(oc_endpoint_t *endpoint);
 
@@ -76,6 +80,10 @@ typedef struct oc_tls_peer_s {
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
 } oc_tls_peer_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_SECURITY */
 #endif /* OC_TLS_H */

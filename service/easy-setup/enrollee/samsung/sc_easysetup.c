@@ -138,7 +138,7 @@ read_sc_string_prop_from_payload(oc_rep_t *payload, char *prop_key,
                                  oc_string_t *prop_value)
 {
   char *str_val = NULL;
-  int str_len = 0;
+  size_t str_len = 0;
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
   construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN, prop_key);
@@ -251,9 +251,9 @@ read_dev_conf_data(oc_rep_t *payload, void **user_data)
 #ifndef SC_ES_OPT
   char attr_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
   oc_string_array_t str_arr;
-  int str_arr_len;
+  size_t str_arr_len;
   construct_vnd_attr_name(attr_name, SC_MAX_ES_ATTR_NAME_LEN,
-                           SC_RSRVD_ES_VENDOR_LOCATION);
+                          SC_RSRVD_ES_VENDOR_LOCATION);
   if (oc_rep_get_string_array(payload, attr_name, &str_arr, &str_arr_len)) {
     oc_new_string_array(&dev_prop->location, str_arr_len);
     if (oc_string_array_get_allocated_size(g_scprop->location) > 0)

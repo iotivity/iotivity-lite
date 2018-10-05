@@ -233,7 +233,7 @@ oc_network_event_handler_mutex_destroy(void)
 }
 
 static ip_context_t *
-get_ip_context_for_device(int device)
+get_ip_context_for_device(size_t device)
 {
   ip_context_t *dev = oc_list_head(ip_contexts);
   while (dev != NULL && dev->device != device) {
@@ -541,7 +541,7 @@ refresh_endpoints_list(ip_context_t *dev)
 }
 
 oc_endpoint_t *
-oc_connectivity_get_endpoints(int device)
+oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
 
@@ -932,7 +932,7 @@ network_event_thread(void *data)
   pthread_exit(NULL);
 }
 
-int
+static int
 send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
   char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];
@@ -1364,7 +1364,9 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-int oc_connectivity_init(int device) {
+int
+oc_connectivity_init(size_t device)
+{
   OC_DBG("Initializing connectivity for device %d", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
@@ -1561,7 +1563,7 @@ int oc_connectivity_init(int device) {
 }
 
 void
-oc_connectivity_shutdown(int device)
+oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;
@@ -1630,12 +1632,16 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   int ret = getaddrinfo(domain, NULL, &hints, &result);
 
   if (ret == 0) {
-    char address[INET6_ADDRSTRLEN];
+    char address[INET6_ADDRSTRLEN + 2] = { 0 };
     const char *dest = NULL;
     if (flags & IPV6) {
       struct sockaddr_in6 *s_addr = (struct sockaddr_in6 *)result->ai_addr;
-      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address,
+      address[0] = '[';
+      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address + 1,
                        INET6_ADDRSTRLEN);
+      size_t addr_len = strlen(address);
+      address[addr_len] = ']';
+      address[addr_len + 1] = '\0';
     }
 #ifdef OC_IPV4
     else {

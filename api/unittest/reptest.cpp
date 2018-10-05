@@ -21,10 +21,8 @@
 
 #include <stdlib.h>
 #include "gtest/gtest.h"
-extern "C" {
 #include "oc_rep.h"
 #include "oc_api.h"
-}
 
 /*
  * @API             : oc_rep_finalize
@@ -68,7 +66,7 @@ TEST(TestRep, OCRepGetIntArrayTest_N)
     oc_rep_t rep;
     char key[] = "speed";
     int **value = NULL;
-    int *size = NULL;
+    size_t *size = NULL;
 
     bool isFailure = oc_rep_get_int_array(&rep, key, value, size);
     ASSERT_FALSE(isFailure);
@@ -96,7 +94,7 @@ TEST(TestRep, OCRepGetStringTest_P)
     char *testvalue = key;
     char **retrievedValue = &testvalue;
 
-    int ret_size = size;
+    size_t ret_size = size;
 
     bool isSucess = oc_rep_get_string(&rep, key, retrievedValue, &ret_size);
     ASSERT_TRUE(isSucess);
@@ -113,7 +111,7 @@ TEST(TestRep, OCRepGetStringTest_N)
 {
     oc_rep_t rep;
     char key[] = "speed";
-    int *size = NULL;
+    size_t *size = NULL;
     char  **value = NULL;
 
     bool isFailure = oc_rep_get_string(&rep, key, value, size);
@@ -138,7 +136,7 @@ TEST(TestRep, OCRepGetStringArrayTest_P)
     byte_string_value[1].size = 5;
     byte_string_value[1].next = NULL;
 
-    int size = 2;
+    size_t size = 2;
     char key[] = "speed";
 
     oc_string_t name;
@@ -164,7 +162,7 @@ TEST(TestRep, OCRepGetStringArrayTest_N)
 {
     oc_rep_t rep;
     char key[] = "speed";
-    int *size = NULL;
+    size_t *size = NULL;
     oc_string_array_t  *value = NULL;
 
     bool isFailure = oc_rep_get_string_array(&rep, key, value, size);
@@ -208,7 +206,7 @@ TEST(TestRep, OCRepGetIntArrayTest_P)
     oc_rep_t rep;
     char key[] = "speed";
     int value[] = {1, 2};
-    int size = 2;
+    size_t size = 2;
 
     oc_array_t intArray;
     intArray.size = size;
@@ -508,7 +506,7 @@ TEST(TestRep, OCRepGetByteStringTest_P)
     char **retrievedValue = &testvalue;
 
 
-    int ret_size = 6;
+    size_t ret_size = 6;
 
     bool isSucess = oc_rep_get_byte_string(&rep, key, retrievedValue, &ret_size);
     ASSERT_TRUE(isSucess);
@@ -533,7 +531,7 @@ TEST(TestRep, OCRepGetByteStringTest_N)
     rep.type = OC_REP_BYTE_STRING;
 
     char **retrievedValue = NULL;
-    int ret_size = 0;
+    size_t ret_size = 0;
 
     bool isFailure = oc_rep_get_byte_string(&rep, key, retrievedValue, &ret_size);
     ASSERT_FALSE(isFailure);
@@ -567,7 +565,7 @@ TEST(TestRep, OCRepGetBoolArrayTest_P)
 {
 
     bool bool_value[] = {true, false};
-    int size = 2;
+    size_t size = 2;
     char key[] = "speed";
 
     oc_string_t name;
@@ -598,7 +596,7 @@ TEST(TestRep, OCRepGetBoolArrayTest_N)
     oc_rep_t rep;
     char key[] = "speed";
     bool **value = NULL;
-    int *size = NULL;
+    size_t *size = NULL;
 
     bool isFailure = oc_rep_get_bool_array(&rep, key, value, size);
     ASSERT_FALSE(isFailure);
@@ -615,7 +613,7 @@ TEST(TestRep, OCRepGetDoubleArrayTest_P)
 {
 
     double double_value[] = {1.0000, 2.1111};
-    int size = 2;
+    size_t size = 2;
     char key[] = "speed";
 
     oc_string_t name;
@@ -646,7 +644,7 @@ TEST(TestRep, OCRepGetDoubleArrayTest_N)
     oc_rep_t rep;
     char key[] = "speed";
     double **value = NULL;
-    int *size = NULL;
+    size_t *size = NULL;
 
     bool isFailure = oc_rep_get_double_array(&rep, key, value, size);
     ASSERT_FALSE(isFailure);
@@ -670,7 +668,7 @@ TEST(TestRep, OCRepGetByteStringArrayTest_P)
     byte_string_value[1].size = 5;
     byte_string_value[1].next = NULL;
 
-    int size = 2;
+    size_t size = 2;
     char key[] = "speed";
 
     oc_string_t name;
@@ -698,7 +696,7 @@ TEST(TestRep, OCRepGetByteStringArrayTest_N)
     oc_rep_t rep;
     char key[] = "speed";
     oc_string_array_t *value = NULL;
-    int *size = NULL;
+    size_t *size = NULL;
 
     bool isFailure = oc_rep_get_byte_string_array(&rep, key, value, size);
     ASSERT_FALSE(isFailure);

@@ -21,12 +21,18 @@
 
 #include "oc_endpoint.h"
 #include <pthread.h>
-#include <stdint.h>
 #include <pthread.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <sys/socket.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef OC_TCP
-typedef struct tcp_context_t {
+typedef struct tcp_context_t
+{
 #ifdef OC_IPV6
   struct sockaddr_storage server;
   int server_sock;
@@ -86,9 +92,13 @@ typedef struct ip_context_t {
 #endif
   pthread_t event_thread;
   int terminate;
-  int device;
+  size_t device;
   fd_set rfds;
   int shutdown_pipe[2];
 } ip_context_t;
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* IPCONTEXT_H */

@@ -20,6 +20,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_discovery.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
@@ -54,7 +55,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
        i++) {
-    int size = oc_string_array_get_item_size(resource->types, i);
+    size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
       oc_rep_add_text_string(rt, t);
@@ -105,7 +106,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
 
 static int
 process_device_resources(CborEncoder *links, oc_request_t *request,
-                         int device_index)
+                         size_t device_index)
 {
   int matches = 0;
   char uuid[OC_UUID_LEN];
@@ -203,7 +204,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
   int i;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
        i++) {
-    int size = oc_string_array_get_item_size(resource->types, i);
+    size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (size > 0)
       oc_rep_add_text_string(rt, t);
@@ -282,7 +283,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
 static int
 process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
-                              int device_num, bool baseline)
+                              size_t device_num, bool baseline)
 {
   int matches = 0;
   char uuid[OC_UUID_LEN];
@@ -375,7 +376,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
                               oc_interface_mask_t interface, void *data)
 {
   (void)data;
-  int matches = 0, device;
+  int matches = 0;
+  size_t device;
 
   switch (interface) {
   case OC_IF_LL: {
@@ -423,7 +425,8 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 #ifndef OC_SPEC_VER_OIC
-  int matches = 0, device = request->resource->device;
+  int matches = 0;
+  size_t device = request->resource->device;
 
   switch (interface) {
   case OC_IF_LL: {
@@ -462,7 +465,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-oc_create_discovery_resource(int resource_idx, int device)
+oc_create_discovery_resource(int resource_idx, size_t device)
 {
   oc_core_populate_resource(
     resource_idx, device, "oic/res", OC_IF_LL | OC_IF_BASELINE, OC_IF_LL, 0,
@@ -597,14 +600,13 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
         }
       } break;
       case OC_REP_STRING_ARRAY: {
-        int i;
+        size_t i;
         if (oc_string_len(link->name) == 2 &&
             strncmp(oc_string(link->name), "rt", 2) == 0) {
           types = &link->value.array;
         } else {
           interfaces = 0;
-          for (i = 0;
-               i < (int)oc_string_array_get_allocated_size(link->value.array);
+          for (i = 0; i < oc_string_array_get_allocated_size(link->value.array);
                i++) {
             interfaces |= oc_ri_get_interface_mask(
               oc_string_array_get_item(link->value.array, i),
@@ -640,6 +642,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
                       eps_cur->addr.ipv6.scope = endpoint->addr.ipv6.scope;
                     }
+                    eps_cur->version = endpoint->version;
                   }
                 }
               }
