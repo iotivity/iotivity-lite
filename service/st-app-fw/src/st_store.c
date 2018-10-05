@@ -85,6 +85,7 @@ st_store_load_internal(int security_info , char *store_name)
     }else{
       //Decoding encrypted data info and then decrypting data.
       ret = st_decode_encrypted_data_info(rep);
+      oc_rep_set_pool(&rep_objects);
       oc_free_rep(rep);
     }
 #endif/* OC_SECURITY */
@@ -377,12 +378,11 @@ st_decode_encrypted_data_info(oc_rep_t *rep)
         unsigned int decrypted_buff_len =ST_MAX_DATA_SIZE;
         decrypted_buff = (unsigned char *)malloc(decrypted_buff_len);
         //Decrypting data.
-        st_security_decrypt(oc_string(securityinfo.salt),oc_string(securityinfo.iv),
-                      oc_string(t->value.string),
-                      securityinfo.encrypted_len,
-                      decrypted_buff,
-                      &decrypted_buff_len);
-        #ifndef OC_DYNAMIC_ALLOCATION
+        st_security_decrypt(
+          oc_string(securityinfo.salt), oc_string(securityinfo.iv),
+          oc_string(t->value.string), securityinfo.encrypted_len,
+          decrypted_buff, &decrypted_buff_len);
+#ifndef OC_DYNAMIC_ALLOCATION
         char rep_objects_alloc2[OC_MAX_NUM_REP_OBJECTS];
         oc_rep_t rep_objects_pool2[OC_MAX_NUM_REP_OBJECTS];
         memset(rep_objects_alloc2, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
