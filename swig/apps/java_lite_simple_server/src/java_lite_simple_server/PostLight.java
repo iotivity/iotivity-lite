@@ -1,9 +1,9 @@
 package java_lite_simple_server;
 
 import org.iotivity.OCMain;
-import org.iotivity.OCRequestPayload;
 import org.iotivity.OCRequest;
 import org.iotivity.OCRequestHandler;
+import org.iotivity.OCRepresentation;
 import org.iotivity.OCStatus;
 
 public class PostLight implements OCRequestHandler {
@@ -12,7 +12,7 @@ public class PostLight implements OCRequestHandler {
     public void handler(OCRequest request, int interfaces, Object userData) {
         System.out.println("Inside the PostLight RequestHandler");
         System.out.println("POST LIGHT:");
-        OCRequestPayload rep = request.getRequest_payload();
+        OCRepresentation rep = request.getRequest_payload();
         while(rep != null) {
             System.out.println("-----------------------------------------------------");
             System.out.println("Key: " + rep.getName());
