@@ -52,6 +52,24 @@
       "revId": "155c2ddc7ff6f2e4bb70dd39ebb8178f50513e8e",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_02496cd0",
+        "filename": "swig/java_lang/build-iotivity-lite.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-10-08T21:26:52Z",
+      "side": 1,
+      "message": "it probably isn\u0027t needed",
+      "parentUuid": "9a3d3df0_c23e6429",
+      "revId": "155c2ddc7ff6f2e4bb70dd39ebb8178f50513e8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
