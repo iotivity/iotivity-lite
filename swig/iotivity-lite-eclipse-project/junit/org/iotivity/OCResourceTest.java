@@ -7,7 +7,7 @@ import org.junit.Test;
 
 public class OCResourceTest {
     static {
-        System.loadLibrary("iotivity-lite-java");
+        System.loadLibrary("iotivity-lite-jni");
     }
 
     @Test

@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.iotivity.*;
 public class Server {
     static {
-        System.loadLibrary("iotivity-lite-java");
+        System.loadLibrary("iotivity-lite-jni");
       }
 
     public final static Lock lock = new ReentrantLock();
