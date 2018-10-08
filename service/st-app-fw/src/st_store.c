@@ -37,6 +37,8 @@
 static st_store_t g_store_info;
 static int decoded_data_status = 0;
 
+static int st_store_load_internal(int security_info , char *store_name);
+static int st_store_dump_internal(int security_info , char *store_name);
 static void st_encode_encrypted_data_info(unsigned char *encrypted_data,int encrypted_data_len);
 static int st_decode_encrypted_data_info(oc_rep_t *rep);
 static void st_encode_security_info(void);
@@ -44,7 +46,7 @@ static int st_decode_security_info(oc_rep_t *rep);
 static void st_encode_cloud_accesspoint_info(void);
 static int st_decode_cloud_accesspoint_info(oc_rep_t *rep);
 
-int
+static int
 st_store_load_internal(int security_info , char *store_name)
 {
   int ret = 0;
@@ -82,7 +84,7 @@ st_store_load_internal(int security_info , char *store_name)
       //Decoding security info.
       ret = st_decode_security_info(rep);
       oc_free_rep(rep);
-    }else{
+    } else {
       //Decoding encrypted data info and then decrypting data.
       ret = st_decode_encrypted_data_info(rep);
       oc_rep_set_pool(&rep_objects);
@@ -98,6 +100,7 @@ st_store_load_internal(int security_info , char *store_name)
 #endif /* OC_DYNAMIC_ALLOCATION */
   return ret;
 }
+
 int
 st_store_load(void)
 {
@@ -114,6 +117,7 @@ st_store_load(void)
   return ret;
 }
 
+static int
 st_store_dump_internal(int security_info , char *store_name)
 {
   unsigned char *encrypted_data= NULL;
@@ -145,7 +149,7 @@ st_store_dump_internal(int security_info , char *store_name)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_reset();
 
-  }else{
+  } else {
 #ifdef OC_SECURITY
     // Dumping cloud  and accesspoint information.
     st_encode_cloud_accesspoint_info();
@@ -283,7 +287,7 @@ st_decode_security_info(oc_rep_t *rep)
     case OC_REP_INT:
       if (len == 8 && memcmp(oc_string(t->name), "data_len", 8) == 0) {
         g_store_info.securityinfo.data_len= t->value.integer;
-      }else if (len == 13 && memcmp(oc_string(t->name), "encrypted_len", 13) == 0) {
+      } else if (len == 13 && memcmp(oc_string(t->name), "encrypted_len", 13) == 0) {
         g_store_info.securityinfo.encrypted_len= t->value.integer;
       } else {
         st_print_log("[ST_Store] Unknown property %s", oc_string(t->name));
@@ -338,7 +342,7 @@ static int st_decode_cloud_accesspoint_info(oc_rep_t *rep)
         oc_new_string(&g_store_info.cloudinfo.refresh_token,
                       oc_string(t->value.string),
                       oc_string_len(t->value.string));
-      }else {
+      } else {
         OC_ERR("[ST_Store] Unknown property %s", oc_string(t->name));
         return -1;
       }
@@ -348,8 +352,9 @@ static int st_decode_cloud_accesspoint_info(oc_rep_t *rep)
       return -1;
     }
     t = t->next;
-}
   }
+  return 0;
+}
 
 static int
 st_decode_encrypted_data_info(oc_rep_t *rep)
@@ -419,11 +424,11 @@ st_encode_security_info(void)
   oc_rep_start_root_object();
   if(oc_string_len(g_store_info.securityinfo.salt) > 0){
     oc_rep_set_byte_string(root, salt,
-                                       oc_string(g_store_info.securityinfo.salt),
+                                       oc_cast(g_store_info.securityinfo.salt,uint8_t),
                                        ST_SALT_LEN);}
   if(oc_string_len(g_store_info.securityinfo.iv) > 0){
     oc_rep_set_byte_string(root, iv,
-                                       oc_string(g_store_info.securityinfo.iv),
+                                       oc_cast(g_store_info.securityinfo.iv,uint8_t),
                                        ST_IV_LEN);}
   oc_rep_set_int(root, data_len, g_store_info.securityinfo.data_len);
   oc_rep_set_int(root, encrypted_len, g_store_info.securityinfo.encrypted_len);
