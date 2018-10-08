@@ -2,9 +2,9 @@ package java_lite_simple_client;
 
 import org.iotivity.OCEventCallbackResult;
 import org.iotivity.OCMain;
-import org.iotivity.TriggerHandler;
+import org.iotivity.OCTriggerHandler;
 
-public class StopObserveTriggerHandler implements TriggerHandler {
+public class StopObserveTriggerHandler implements OCTriggerHandler {
 
     @Override
     public OCEventCallbackResult handler(Object userData) {

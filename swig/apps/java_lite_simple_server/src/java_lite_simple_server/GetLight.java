@@ -4,9 +4,9 @@ import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCRequest;
 import org.iotivity.OCStatus;
-import org.iotivity.RequestHandler;
+import org.iotivity.OCRequestHandler;
 
-public class GetLight implements RequestHandler {
+public class GetLight implements OCRequestHandler {
 
     @Override
     public void handler(OCRequest request, int interfaces, Object userData) {

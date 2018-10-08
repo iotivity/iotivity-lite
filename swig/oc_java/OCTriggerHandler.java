@@ -1,5 +1,5 @@
 package org.iotivity;
 
-public interface TriggerHandler {
+public interface OCTriggerHandler {
     public OCEventCallbackResult handler(Object userData );
 }

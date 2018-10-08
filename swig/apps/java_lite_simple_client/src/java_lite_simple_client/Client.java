@@ -14,7 +14,7 @@ public class Client {
     public static Condition cv = lock.newCondition();
 
     public static void main(String argv[]) {
-        storage.storage_config("./simpleclient_creds");
+        OCStorage.storage_config("./simpleclient_creds");
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {

@@ -2,7 +2,7 @@ package java_lite_simple_client;
 
 import java.util.Arrays;
 
-import org.iotivity.DiscoveryHandler;
+import org.iotivity.OCDiscoveryHandler;
 import org.iotivity.OCDiscoveryFlags;
 import org.iotivity.OCEndpoint;
 import org.iotivity.OCInterfaceMask;
@@ -11,7 +11,7 @@ import org.iotivity.OCQos;
 import org.iotivity.OCResourcePropertiesMask;
 import org.iotivity.OCTransportFlags;
 
-public class MyDiscoveryHandler implements DiscoveryHandler {
+public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
     @Override
     public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,

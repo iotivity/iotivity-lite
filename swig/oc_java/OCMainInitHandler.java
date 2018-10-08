@@ -1,6 +1,6 @@
 package org.iotivity;
 
-public interface MainInitHandler {
+public interface OCMainInitHandler {
     public int initilize();
     public void signalEventLoop();
     public void registerResources();

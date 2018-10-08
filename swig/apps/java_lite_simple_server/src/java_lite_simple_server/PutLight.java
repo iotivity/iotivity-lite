@@ -1,9 +1,9 @@
 package java_lite_simple_server;
 
 import org.iotivity.OCRequest;
-import org.iotivity.RequestHandler;
+import org.iotivity.OCRequestHandler;
 
-public class PutLight implements RequestHandler {
+public class PutLight implements OCRequestHandler {
 
     @Override
     public void handler(OCRequest request, int interfaces, Object userData) {
