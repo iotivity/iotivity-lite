@@ -18,8 +18,6 @@
 #ifdef OC_SECURITY
 #include "st_security.h"
 
-static unsigned char key_internal[32] = {0};
-
 #define ST_SECURITY_DEBUG
 #ifdef ST_SECURITY_DEBUG
 static void _print_binary_to_hex(const char* name, const unsigned char* buffer, int buffer_len)
@@ -44,7 +42,7 @@ static void _print_binary_to_hex(const char* name, const unsigned char* buffer, 
 #endif
 
 // Generate random number
-int gen_random(unsigned char* random, unsigned int random_len)
+static int gen_random(unsigned char* random, unsigned int random_len)
 {
   int ret = 0;
    unsigned char mac[6] = { 0 };
@@ -74,17 +72,15 @@ int gen_random(unsigned char* random, unsigned int random_len)
     goto cleanup;
   }
 
-    _print_binary_to_hex("random on initial(encrypt)", random, random_len);
+  _print_binary_to_hex("random on initial(encrypt)", random, random_len);
 
-  ret = 0;
-  cleanup:
-
+ cleanup:
   mbedtls_ctr_drbg_free(&ctr_drbg);
   mbedtls_entropy_free(&entropy);
   return ret;
 }
 
-int pbkdf2(const char *password, unsigned char* key,unsigned char * salt)
+static int pbkdf2(const unsigned char *password, unsigned char* key,unsigned char * salt)
 {
   int ret = 0;
 
@@ -113,15 +109,15 @@ int pbkdf2(const char *password, unsigned char* key,unsigned char * salt)
     goto cleanup;
   }
 
-  ret = 0;
-  cleanup:
+ cleanup:
   mbedtls_md_free(&ctx);
 
   return ret;
 }
 
-int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char* data, const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len)
-  {
+static int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char* data, 
+           const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len)
+{
   int ret = 0;
 
   unsigned char temp_iv[16] = {0};
@@ -164,7 +160,8 @@ int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char
 }
 
 
-int aes_decrypt(const unsigned char* key, const unsigned char* iv, unsigned char* encrypted_data, unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len)
+static int aes_decrypt(const unsigned char* key, const unsigned char* iv, unsigned char* encrypted_data, 
+           unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len)
 {
   int ret = 0;
   unsigned char i = 0;
@@ -190,34 +187,36 @@ int aes_decrypt(const unsigned char* key, const unsigned char* iv, unsigned char
   // Checking PKCS7 padding
   for(i = 1; i<= padding_len; i++){
     if(padding_len != decrypted_data[encrypted_data_len - i]){
-      printf("Invalid padding");
+      st_print_log("Invalid padding\n");
       ret = -1;
       goto cleanup;
       break;
     }
   }
 
-printf("Remove padding\n");
-*decrypted_data_len = encrypted_data_len - padding_len;
-
-  ret = 0;
+  st_print_log("Remove padding\n");
+  *decrypted_data_len = encrypted_data_len - padding_len;
 
  cleanup:
   mbedtls_aes_free(&aes_ctx);
 
   return ret;
 }
-int st_security_encrypt(const unsigned char* data, const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len)
+
+int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
+                        unsigned char* encrypted_data, unsigned int* encrypted_data_len)
 {
   unsigned char key[32] = {0};
   unsigned char mac[6+1] = { 0 };
-  unsigned char iv_internal[16] = {0};
-  unsigned char salt_internal[32] = {0};
+  char iv_internal[16] = {0};
+  char salt_internal[32] = {0};
   int ret = 0;
 
   st_store_t *store_info = st_store_get_info();
   //Check if already exists
-  if(oc_string_len(store_info->securityinfo.iv) == 0 && oc_string_len(store_info->securityinfo.salt)==0){
+  if (oc_string_len(store_info->securityinfo.iv) == 0 
+     && oc_string_len(store_info->securityinfo.salt)==0)
+  {
 
     ret = gen_random(salt_internal, 32);
     if(ret != 0)
@@ -234,7 +233,7 @@ int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
       return -1;
     }
       //Dumping security info
-   oc_new_string(&store_info->securityinfo.salt, salt_internal, 32);
+    oc_new_string(&store_info->securityinfo.salt, salt_internal, 32);
     oc_new_string(&store_info->securityinfo.iv, iv_internal, 16);
     st_store_dump_async();
 
@@ -263,7 +262,9 @@ int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
   return ret;
 }
 
-int st_security_decrypt(unsigned char *salt,unsigned char *iv, unsigned char* encrypted_data, unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len)
+int st_security_decrypt(unsigned char *salt,unsigned char *iv, unsigned char* encrypted_data, 
+                        unsigned int encrypted_data_len, unsigned char* decrypted_data, 
+                        unsigned int* decrypted_data_len)
 {
   unsigned char key[32] = {0};
   unsigned char mac[6+1] = { 0 };
