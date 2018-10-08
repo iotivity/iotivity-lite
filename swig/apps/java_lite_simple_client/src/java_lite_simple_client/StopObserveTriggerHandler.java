@@ -11,7 +11,7 @@ public class StopObserveTriggerHandler implements TriggerHandler {
         System.out.println("-------------------------------------------------------");
         System.out.println("Stopping OBSERVE");
         System.out.println("-------------------------------------------------------");
-        OCMain.stopObserve(Light.server_uri, Light.server);
+        OCMain.stopObserve(Light.serverUri, Light.serverEndpoint);
         return OCEventCallbackResult.OC_EVENT_DONE;
     }
 

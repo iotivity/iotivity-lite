@@ -11,6 +11,7 @@ public class GetLight implements RequestHandler {
     @Override
     public void handler(OCRequest request, int interfaces, Object userData) {
         System.out.println("Inside the GetLight RequestHandler");
+
         Light.power++;
         System.out.println("GET LIGHT:");
         OCMain.repStartRootObject();

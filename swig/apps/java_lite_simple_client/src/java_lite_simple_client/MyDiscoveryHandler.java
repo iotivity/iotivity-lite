@@ -89,9 +89,9 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
 
         for (String type: types) {
             if(type.equals("core.light")) {
-                Light.server = endpoint;
-                Light.server_uri = uri;
-                System.out.println("\tResource " + Light.server_uri + " hosted at endpoints:");
+                Light.serverEndpoint = endpoint;
+                Light.serverUri = uri;
+                System.out.println("\tResource " + Light.serverUri + " hosted at endpoints:");
                 System.out.println("\t\tendpoint.device " + endpoint.getDevice());
                 System.out.println("\t\tendpoint.flags " + endpoint.getFlags());
                 System.out.println("\t\tendpoint.interfaceIndex " + endpoint.getInterfaceIndex());
@@ -129,7 +129,7 @@ public class MyDiscoveryHandler implements DiscoveryHandler {
                     ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
-                OCMain.doGet(Light.server_uri, Light.server, null, responseHandler, OCQos.LOW_QOS);
+                OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }

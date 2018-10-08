@@ -7,7 +7,7 @@ public class Light {
     public static int power;
     public static boolean state;
 
-    public static OCEndpoint server;
-    public static String server_uri;
+    public static OCEndpoint serverEndpoint;
+    public static String serverUri;
 
 }
