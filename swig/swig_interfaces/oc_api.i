@@ -36,7 +36,7 @@ void jni_init_platform_callback(void *ptr) {
 /* Callback handlers for oc_main_init */
 static JavaVM *jvm;
 static jobject init_obj;
-static jclass cls_MainInitHandler;
+static jclass cls_OCMainInitHandler;
 
 int oc_handler_init_callback(void)
 {
@@ -50,8 +50,8 @@ int oc_handler_init_callback(void)
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
-  assert(cls_MainInitHandler);
-  const jmethodID mid_initilize = jenv->GetMethodID(cls_MainInitHandler, "initilize", "()I");
+  assert(cls_OCMainInitHandler);
+  const jmethodID mid_initilize = jenv->GetMethodID(cls_OCMainInitHandler, "initilize", "()I");
   assert(mid_initilize);
   jint ret_value = jenv->CallIntMethod(init_obj, mid_initilize);
   if (JNI_EDETACHED == getEnvResult) {
@@ -72,8 +72,8 @@ void oc_handler_signal_event_loop_callback(void)
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
-  assert(cls_MainInitHandler);
-  const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_MainInitHandler, "signalEventLoop", "()V");
+  assert(cls_OCMainInitHandler);
+  const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
   assert(mid_signalEventLoop);
   jenv->CallIntMethod(init_obj, mid_signalEventLoop);
   if (JNI_EDETACHED == getEnvResult) {
@@ -93,8 +93,8 @@ void oc_handler_register_resource_callback(void)
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
-  assert(cls_MainInitHandler);
-  const jmethodID mid_registerResources = jenv->GetMethodID(cls_MainInitHandler, "registerResources", "()V");
+  assert(cls_OCMainInitHandler);
+  const jmethodID mid_registerResources = jenv->GetMethodID(cls_OCMainInitHandler, "registerResources", "()V");
   assert(mid_registerResources);
   jenv->CallVoidMethod(init_obj, mid_registerResources);
   if (JNI_EDETACHED == getEnvResult) {
@@ -114,8 +114,8 @@ void oc_handler_requests_entry_callback(void)
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
-  assert(cls_MainInitHandler);
-  const jmethodID mid_requestEntry_method = jenv->GetMethodID(cls_MainInitHandler, "requestEntry", "()V");
+  assert(cls_OCMainInitHandler);
+  const jmethodID mid_requestEntry_method = jenv->GetMethodID(cls_OCMainInitHandler, "requestEntry", "()V");
   assert(mid_requestEntry_method);
   jenv->CallVoidMethod(init_obj, mid_requestEntry_method);
   if (JNI_EDETACHED == getEnvResult) {
@@ -152,7 +152,7 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
 void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)user_data;
-  const jclass callbackInterfaceClass = (data->env)->FindClass("org/iotivity/RequestHandler");
+  const jclass callbackInterfaceClass = (data->env)->FindClass("org/iotivity/OCRequestHandler");
   assert(callbackInterfaceClass);
   const jmethodID mid_handler = (data->env)->GetMethodID(callbackInterfaceClass, "handler", "(Lorg/iotivity/OCRequest;ILjava/lang/Object;)V");
   assert(mid_handler);
@@ -224,7 +224,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   jobject jendpoint = (data->env)->NewObject(cls_OCEndpoint, mid_OCEndpoint_init, (jlong)endpoint, false);
 
   jint jresourcePropertiesMask = (jint)bm;
-  const jclass callbackInterfaceClass = (data->env)->FindClass("org/iotivity/DiscoveryHandler");
+  const jclass callbackInterfaceClass = (data->env)->FindClass("org/iotivity/OCDiscoveryHandler");
   assert(callbackInterfaceClass);
   const jmethodID mid_handler = (data->env)->GetMethodID(callbackInterfaceClass,
           "handler",
@@ -314,9 +314,9 @@ void jni_oc_response_handler(oc_client_response_t *response) {
   assert(mid_OCClientResponce_init);
   jobject jresponse = (data->env)->NewObject(cls_OCClientResponce, mid_OCClientResponce_init, (jlong)response, false);
 
-  const jclass cls_ResponseHandler = (data->env)->FindClass("org/iotivity/ResponseHandler");
-  assert(cls_ResponseHandler);
-  const jmethodID mid_handler = (data->env)->GetMethodID(cls_ResponseHandler,
+  const jclass cls_OCResponseHandler = (data->env)->FindClass("org/iotivity/OCResponseHandler");
+  assert(cls_OCResponseHandler);
+  const jmethodID mid_handler = (data->env)->GetMethodID(cls_OCResponseHandler,
                                                          "handler",
                                                          "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
@@ -339,9 +339,9 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)cb_data;
 
-  const jclass cls_TriggerHandler = (data->env)->FindClass("org/iotivity/TriggerHandler");
-  assert(cls_TriggerHandler);
-  const jmethodID mid_handler = (data->env)->GetMethodID(cls_TriggerHandler,
+  const jclass cls_OCTriggerHandler = (data->env)->FindClass("org/iotivity/OCTriggerHandler");
+  assert(cls_OCTriggerHandler);
+  const jmethodID mid_handler = (data->env)->GetMethodID(cls_OCTriggerHandler,
                                                          "handler",
                                                          "(Ljava/lang/Object;)Lorg/iotivity/OCEventCallbackResult;");
   assert(mid_handler);
@@ -437,8 +437,8 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 }
 
 %typemap(jni)    const oc_handler_t *handler "jobject";
-%typemap(jtype)  const oc_handler_t *handler "MainInitHandler";
-%typemap(jstype) const oc_handler_t *handler "MainInitHandler";
+%typemap(jtype)  const oc_handler_t *handler "OCMainInitHandler";
+%typemap(jstype) const oc_handler_t *handler "OCMainInitHandler";
 %typemap(javain) const oc_handler_t *handler "$javainput";
 %typemap(in)     const oc_handler_t *handler {
   JCALL1(GetJavaVM, jenv, &jvm);
@@ -446,14 +446,14 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   JCALL1(DeleteLocalRef, jenv, $input);
   $1 = &jni_handler;
 
-  const jclass callback_interface = jenv->FindClass("org/iotivity/MainInitHandler");
+  const jclass callback_interface = jenv->FindClass("org/iotivity/OCMainInitHandler");
   assert(callback_interface);
-  cls_MainInitHandler = static_cast<jclass>(jenv->NewGlobalRef(callback_interface));
+  cls_OCMainInitHandler = static_cast<jclass>(jenv->NewGlobalRef(callback_interface));
 }
 
 %typemap(jni)    oc_request_callback_t callback "jobject";
-%typemap(jtype)  oc_request_callback_t callback "RequestHandler";
-%typemap(jstype) oc_request_callback_t callback "RequestHandler";
+%typemap(jtype)  oc_request_callback_t callback "OCRequestHandler";
+%typemap(jstype) oc_request_callback_t callback "OCRequestHandler";
 %typemap(javain) oc_request_callback_t callback "$javainput";
 %typemap(in,numinputs=1) (oc_request_callback_t callback, jni_callback_data *jcb) {
   struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
@@ -466,8 +466,8 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 }
 
 %typemap(jni)    oc_discovery_handler_t handler "jobject";
-%typemap(jtype)  oc_discovery_handler_t handler "DiscoveryHandler";
-%typemap(jstype) oc_discovery_handler_t handler "DiscoveryHandler";
+%typemap(jtype)  oc_discovery_handler_t handler "OCDiscoveryHandler";
+%typemap(jstype) oc_discovery_handler_t handler "OCDiscoveryHandler";
 %typemap(javain) oc_discovery_handler_t handler "$javainput";
 %typemap(in,numinputs=1) (oc_discovery_handler_t handler, jni_callback_data *jcb) {
   struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
@@ -497,8 +497,8 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 }
 
 %typemap(jni)    oc_response_handler_t handler "jobject";
-%typemap(jtype)  oc_response_handler_t handler "ResponseHandler";
-%typemap(jstype) oc_response_handler_t handler "ResponseHandler";
+%typemap(jtype)  oc_response_handler_t handler "OCResponseHandler";
+%typemap(jstype) oc_response_handler_t handler "OCResponseHandler";
 %typemap(javain) oc_response_handler_t handler "$javainput";
 %typemap(in,numinputs=1) (oc_response_handler_t handler, jni_callback_data *jcb) {
   struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
@@ -511,8 +511,8 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 }
 
 %typemap(jni)    oc_trigger_t callback "jobject";
-%typemap(jtype)  oc_trigger_t callback "TriggerHandler";
-%typemap(jstype) oc_trigger_t callback "TriggerHandler";
+%typemap(jtype)  oc_trigger_t callback "OCTriggerHandler";
+%typemap(jstype) oc_trigger_t callback "OCTriggerHandler";
 %typemap(javain) oc_trigger_t callback "$javainput";
 %typemap(in,numinputs=1) (oc_trigger_t callback, jni_callback_data *jcb) {
   struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);

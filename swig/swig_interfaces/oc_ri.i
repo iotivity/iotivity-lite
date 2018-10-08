@@ -1,5 +1,5 @@
 /* File oc_ri.o */
-%module ri
+%module OCRi
 %include "enums.swg"
 %javaconst(1);
 %include "iotivity.swg"

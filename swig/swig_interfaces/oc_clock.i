@@ -1,5 +1,5 @@
 /* File oc_clock.i */
-%module clock
+%module OCClock
 #define OC_DYNAMIC_ALLOCATION
 %include "../../port/windows/config.h"
 %{

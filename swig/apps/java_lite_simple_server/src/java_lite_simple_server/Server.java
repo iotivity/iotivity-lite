@@ -14,7 +14,7 @@ public class Server {
     public static Condition cv = lock.newCondition();
 
     public static void main(String argv[]) {
-        storage.storage_config("./simpleserver_creds");
+        OCStorage.storage_config("./simpleserver_creds");
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {

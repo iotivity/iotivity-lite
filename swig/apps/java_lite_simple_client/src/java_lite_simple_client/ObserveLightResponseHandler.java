@@ -2,9 +2,9 @@ package java_lite_simple_client;
 
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCRequestPayload;
-import org.iotivity.ResponseHandler;
+import org.iotivity.OCResponseHandler;
 
-public class ObserveLightResponseHandler implements ResponseHandler {
+public class ObserveLightResponseHandler implements OCResponseHandler {
 
     @Override
     public void handler(OCClientResponse response) {

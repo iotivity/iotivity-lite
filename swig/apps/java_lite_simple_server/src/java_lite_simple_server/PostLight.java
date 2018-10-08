@@ -1,12 +1,12 @@
 package java_lite_simple_server;
 
 import org.iotivity.OCMain;
-import org.iotivity.OCRequest;
 import org.iotivity.OCRequestPayload;
+import org.iotivity.OCRequest;
+import org.iotivity.OCRequestHandler;
 import org.iotivity.OCStatus;
-import org.iotivity.RequestHandler;
 
-public class PostLight implements RequestHandler {
+public class PostLight implements OCRequestHandler {
 
     @Override
     public void handler(OCRequest request, int interfaces, Object userData) {

@@ -4,9 +4,9 @@ import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCRequestPayload;
-import org.iotivity.ResponseHandler;
+import org.iotivity.OCResponseHandler;
 
-public class GetLightResponseHandler implements ResponseHandler {
+public class GetLightResponseHandler implements OCResponseHandler {
 
     @Override
     public void handler(OCClientResponse response) {
