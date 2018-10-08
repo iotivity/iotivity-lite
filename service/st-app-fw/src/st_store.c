@@ -114,6 +114,7 @@ st_store_load(void)
   return ret;
 }
 
+int
 st_store_dump_internal(int security_info , char *store_name)
 {
   unsigned char *encrypted_data= NULL;
@@ -348,8 +349,9 @@ static int st_decode_cloud_accesspoint_info(oc_rep_t *rep)
       return -1;
     }
     t = t->next;
-}
   }
+  return 0;
+}
 
 static int
 st_decode_encrypted_data_info(oc_rep_t *rep)
@@ -419,11 +421,11 @@ st_encode_security_info(void)
   oc_rep_start_root_object();
   if(oc_string_len(g_store_info.securityinfo.salt) > 0){
     oc_rep_set_byte_string(root, salt,
-                                       oc_string(g_store_info.securityinfo.salt),
+                                       oc_cast(g_store_info.securityinfo.salt,uint8_t),
                                        ST_SALT_LEN);}
   if(oc_string_len(g_store_info.securityinfo.iv) > 0){
     oc_rep_set_byte_string(root, iv,
-                                       oc_string(g_store_info.securityinfo.iv),
+                                       oc_cast(g_store_info.securityinfo.iv,uint8_t),
                                        ST_IV_LEN);}
   oc_rep_set_int(root, data_len, g_store_info.securityinfo.data_len);
   oc_rep_set_int(root, encrypted_len, g_store_info.securityinfo.encrypted_len);
