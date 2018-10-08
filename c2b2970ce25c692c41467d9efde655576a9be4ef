@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_62b038f5",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-10-08T14:40:11Z",
+      "side": 1,
+      "message": "this endif is for ifndef from 165 line",
+      "parentUuid": "9a3d3df0_bf2417c7",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 5
+      },
+      "revId": "c2b2970ce25c692c41467d9efde655576a9be4ef",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_ff2e9fa4",
         "filename": "port/linux/Makefile",
         "patchSetId": 1
@@ -64,6 +88,54 @@
         "startChar": 40,
         "endLine": 180,
         "endChar": 49
+      },
+      "revId": "c2b2970ce25c692c41467d9efde655576a9be4ef",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_c294a446",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-10-08T14:40:11Z",
+      "side": 1,
+      "message": "It is called only on transition from OC_DOS_RFOTM\u0026OC_DOS_RFPROV to OC_DOS_RFNOP",
+      "parentUuid": "9a3d3df0_9f2153b7",
+      "range": {
+        "startLine": 180,
+        "startChar": 40,
+        "endLine": 180,
+        "endChar": 49
+      },
+      "revId": "c2b2970ce25c692c41467d9efde655576a9be4ef",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a291a054",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2018-10-08T14:40:11Z",
+      "side": 1,
+      "message": "We implemented it for mfg otm before we start testing cloud connection, but never used after..",
+      "parentUuid": "9a3d3df0_ff2e9fa4",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 180,
+        "endChar": 22
       },
       "revId": "c2b2970ce25c692c41467d9efde655576a9be4ef",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
