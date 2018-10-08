@@ -4,9 +4,9 @@ import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCStatus;
-import org.iotivity.ResponseHandler;
+import org.iotivity.OCResponseHandler;
 
-public class PostLightResponseHandler implements ResponseHandler {
+public class PostLightResponseHandler implements OCResponseHandler {
 
     @Override
     public void handler(OCClientResponse response) {

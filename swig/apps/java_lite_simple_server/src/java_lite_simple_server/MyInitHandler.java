@@ -1,9 +1,9 @@
 package java_lite_simple_server;
 
 import org.iotivity.*;
-import org.iotivity.MainInitHandler;
+import org.iotivity.OCMainInitHandler;
 
-public class MyInitHandler implements MainInitHandler {
+public class MyInitHandler implements OCMainInitHandler {
     @Override
     public int initilize() {
         System.out.println("inside MyInitHandler.initiliaze()");

@@ -1,5 +1,5 @@
 package org.iotivity;
 
-public interface ResponseHandler {
+public interface OCResponseHandler {
     public void handler(OCClientResponse response);
 }

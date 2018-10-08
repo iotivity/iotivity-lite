@@ -1,5 +1,5 @@
 package org.iotivity;
 
-public interface RequestHandler {
+public interface OCRequestHandler {
     public void handler(OCRequest request, int interfaces, Object userData);
 }

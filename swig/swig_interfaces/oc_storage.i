@@ -1,5 +1,5 @@
 /* File oc_storage.i */
-%module storage
+%module OCStorage
 %include "typemaps.i"
 %{
 #include "oc_storage.h"
