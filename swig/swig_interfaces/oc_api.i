@@ -578,7 +578,7 @@ void jni_oc_set_delayed_callback(void *user_data, oc_trigger_t callback, jni_cal
 %rename(removeDelayedCallback) oc_remove_delayed_callback;
 %include "oc_api.h"
 
-%rename(OCRequestPayload) oc_rep_s;
+%rename(OCRepresentation) oc_rep_s;
 %rename(OCType) oc_rep_value_type_t;
 %rename(OCValue) oc_rep_value;
 %rename(Double) double_p;
