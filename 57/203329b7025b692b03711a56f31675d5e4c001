@@ -1,0 +1,9 @@
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+1: Larry Sachs <larry.j.sachs@intel.com>
+Code-Review+1: Rick Bell <richard.s.bell@intel.com>
+Code-Review+2: George Nash <george.nash@intel.com>
+Submitted-by: George Nash <george.nash@intel.com>
+Submitted-at: Mon, 08 Oct 2018 22:11:11 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/27151
+Project: iotivity-constrained
+Branch: refs/heads/swig
