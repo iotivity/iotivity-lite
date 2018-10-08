@@ -3,7 +3,7 @@ package java_lite_simple_client;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
-import org.iotivity.OCRequestPayload;
+import org.iotivity.OCRepresentation;
 import org.iotivity.ResponseHandler;
 
 public class GetLightResponseHandler implements ResponseHandler {
@@ -11,7 +11,7 @@ public class GetLightResponseHandler implements ResponseHandler {
     @Override
     public void handler(OCClientResponse response) {
         System.out.println("Get Light Response Handler:");
-        OCRequestPayload rep = response.getPayload();
+        OCRepresentation rep = response.getPayload();
         while(rep != null) {
             switch(rep.getType()) {
             case OC_REP_BOOL:
