@@ -34,93 +34,55 @@ void jni_init_platform_callback(void *ptr) {
 }
 
 /* Callback handlers for oc_main_init */
-static JavaVM *jvm;
-static jobject init_obj;
-static jclass cls_OCMainInitHandler;
+static struct jni_callback_data gmain_init_callback_data;
 
 int oc_handler_init_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
-  assert(jenv);
+  assert(gmain_init_callback_data.env);
+  assert(gmain_init_callback_data.obj);
+  const jclass cls_OCMainInitHandler = gmain_init_callback_data.env->FindClass("org/iotivity/OCMainInitHandler");
   assert(cls_OCMainInitHandler);
-  const jmethodID mid_initilize = jenv->GetMethodID(cls_OCMainInitHandler, "initilize", "()I");
+  const jmethodID mid_initilize = gmain_init_callback_data.env->GetMethodID(cls_OCMainInitHandler, "initilize", "()I");
   assert(mid_initilize);
-  jint ret_value = jenv->CallIntMethod(init_obj, mid_initilize);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+  jint ret_value = gmain_init_callback_data.env->CallIntMethod(gmain_init_callback_data.obj, mid_initilize);
   return (int)ret_value;
 }
 
 void oc_handler_signal_event_loop_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
-  assert(jenv);
+  assert(gmain_init_callback_data.env);
+  assert(gmain_init_callback_data.obj);
+  const jclass cls_OCMainInitHandler = gmain_init_callback_data.env->FindClass("org/iotivity/OCMainInitHandler");
   assert(cls_OCMainInitHandler);
-  const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
+  const jmethodID mid_signalEventLoop = gmain_init_callback_data.env->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
   assert(mid_signalEventLoop);
-  jenv->CallIntMethod(init_obj, mid_signalEventLoop);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+  gmain_init_callback_data.env->CallIntMethod(gmain_init_callback_data.obj, mid_signalEventLoop);
 }
 
 void oc_handler_register_resource_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
-  assert(jenv);
+  assert(gmain_init_callback_data.env);
+  assert(gmain_init_callback_data.obj);
+  const jclass cls_OCMainInitHandler = gmain_init_callback_data.env->FindClass("org/iotivity/OCMainInitHandler");
   assert(cls_OCMainInitHandler);
-  const jmethodID mid_registerResources = jenv->GetMethodID(cls_OCMainInitHandler, "registerResources", "()V");
+  const jmethodID mid_registerResources = gmain_init_callback_data.env->GetMethodID(cls_OCMainInitHandler, "registerResources", "()V");
   assert(mid_registerResources);
-  jenv->CallVoidMethod(init_obj, mid_registerResources);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+  gmain_init_callback_data.env->CallVoidMethod(gmain_init_callback_data.obj, mid_registerResources);
 }
 
 void oc_handler_requests_entry_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
-  assert(jenv);
+  assert(gmain_init_callback_data.env);
+  assert(gmain_init_callback_data.obj);
+  const jclass cls_OCMainInitHandler = gmain_init_callback_data.env->FindClass("org/iotivity/OCMainInitHandler");
   assert(cls_OCMainInitHandler);
-  const jmethodID mid_requestEntry_method = jenv->GetMethodID(cls_OCMainInitHandler, "requestEntry", "()V");
+  const jmethodID mid_requestEntry_method = gmain_init_callback_data.env->GetMethodID(cls_OCMainInitHandler, "requestEntry", "()V");
   assert(mid_requestEntry_method);
-  jenv->CallVoidMethod(init_obj, mid_requestEntry_method);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+  gmain_init_callback_data.env->CallVoidMethod(gmain_init_callback_data.obj, mid_requestEntry_method);
 }
 
 static oc_handler_t jni_handler = {
@@ -441,14 +403,10 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 %typemap(jstype) const oc_handler_t *handler "OCMainInitHandler";
 %typemap(javain) const oc_handler_t *handler "$javainput";
 %typemap(in)     const oc_handler_t *handler {
-  JCALL1(GetJavaVM, jenv, &jvm);
-  init_obj = JCALL1(NewGlobalRef, jenv, $input);
+  gmain_init_callback_data.env = jenv;
+  gmain_init_callback_data.obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
   $1 = &jni_handler;
-
-  const jclass callback_interface = jenv->FindClass("org/iotivity/OCMainInitHandler");
-  assert(callback_interface);
-  cls_OCMainInitHandler = static_cast<jclass>(jenv->NewGlobalRef(callback_interface));
 }
 
 %typemap(jni)    oc_request_callback_t callback "jobject";
