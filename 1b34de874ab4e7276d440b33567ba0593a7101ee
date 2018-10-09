@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_e2e1e89b",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-10-09T12:12:22Z",
+      "side": 1,
+      "message": "fix indentation.",
+      "revId": "1b34de874ab4e7276d440b33567ba0593a7101ee",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_42eed48c",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-10-09T12:12:22Z",
+      "side": 1,
+      "message": "Remove this extra line.",
+      "revId": "1b34de874ab4e7276d440b33567ba0593a7101ee",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
