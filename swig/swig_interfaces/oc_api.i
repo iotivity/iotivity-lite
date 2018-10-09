@@ -305,6 +305,20 @@ bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *que
   return oc_do_observe(uri, endpoint, query, handler, qos, jcb);
 }
 
+bool jni_oc_do_ip_multicast0(const char *uri, const char *query,
+                        oc_response_handler_t handler, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_ip_multicast(uri, query, handler, jcb);
+}
+
+bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
+                        oc_response_handler_t handler, jni_callback_data *jcb, void *user_data){
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_ip_multicast(uri, query, handler, jcb);
+}
+
 void jni_oc_response_handler(oc_client_response_t *response) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)response->user_data;
@@ -687,7 +701,14 @@ bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *que
                        oc_response_handler_t handler, jni_callback_data *jcb,
                        oc_qos_t qos, void *user_data);
 %rename(stopObserve) oc_stop_observe;
-%rename(doIPMulticast) oc_do_ip_multicast;
+%ignore oc_do_ip_multicast;
+%rename(doIPMulticast) jni_oc_do_ip_multicast0;
+bool jni_oc_do_ip_multicast0(const char *uri, const char *query,
+                             oc_response_handler_t handler, jni_callback_data *jcb);
+%rename(doIPMulticast) jni_oc_do_ip_multicast1;
+bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
+                             oc_response_handler_t handler, jni_callback_data *jcb, void *user_data);
+
 %rename(stopMulticast) oc_stop_multicast;
 %rename(freeServerEndpoints) oc_free_server_endpoints;
 %rename(closeSession) oc_close_session;
