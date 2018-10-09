@@ -22,17 +22,6 @@ struct jni_callback_data {
 
 std::map <jobject, jni_callback_data*> jni_callbacks_map;
 
-void jni_init_platform_callback(void *ptr) {
-/* TODO still a work in progress
-  struct jni_callback_data *data = ptr;
-  const jclass callbackInterfaceClass = (*data->env)->FindClass(data->env, "InitPlatformHandler");
-  assert(callbackInterfaceClass);
-  const jmethodID mid_handle = (*data->env)->GetMethodID(data->env, callbackInterfaceClass, "handle", "()V");
-  assert(mid_handle);
-  (*data->env)->CallVoidMethod(data->env, data->obj, mid_handle);
-*/
-}
-
 /* Callback handlers for oc_main_init */
 static JavaVM *jvm;
 static jobject init_obj;
@@ -371,9 +360,29 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   return (oc_event_callback_retval_t) return_value;
 }
 
-int jni_oc_init_platform(const char *mfg_name) {
+int jni_oc_init_platform0(const char *mfg_name) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   return oc_init_platform(mfg_name, NULL, NULL);
+}
+
+int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, jni_callback_data *jcb, void *user_data) {
+ OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_init_platform(mfg_name, init_platform_cb, jcb);
+}
+
+void jni_oc_init_platform_callback(void *user_data)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  struct jni_callback_data *data = (jni_callback_data *)user_data;
+
+  const jclass cls_OCInitPlatformHandler = (data->env)->FindClass("org/iotivity/OCInitPlatformHandler");
+  assert(cls_OCInitPlatformHandler);
+  const jmethodID mid_handler = (data->env)->GetMethodID(cls_OCInitPlatformHandler,
+                                                         "handler",
+                                                         "(Ljava/lang/Object;)V");
+  assert(mid_handler);
+  (data->env)->CallObjectMethod(data->obj, mid_handler, data->juser_data);
 }
 
 int jni_oc_add_device0(const char *uri, const char *rt, const char *name,
@@ -462,17 +471,18 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 %}
 
 %typemap(jni)    oc_init_platform_cb_t init_platform_cb "jobject";
-%typemap(jtype)  oc_init_platform_cb_t init_platform_cb "InitPlatformHandler";
-%typemap(jstype) oc_init_platform_cb_t init_platform_cb "InitPlatformHandler";
+%typemap(jtype)  oc_init_platform_cb_t init_platform_cb "OCInitPlatformHandler";
+%typemap(jstype) oc_init_platform_cb_t init_platform_cb "OCInitPlatformHandler";
 %typemap(javain) oc_init_platform_cb_t init_platform_cb "$javainput";
 
-%typemap(in,numinputs=1) (oc_init_platform_cb_t init_platform_cb, void *data) {
-  struct jni_callback_data *data = (jni_callback_data *)malloc(sizeof *data);
-  data->env = jenv;
-  data->obj = JCALL1(NewGlobalRef, jenv, $input);
+%typemap(in,numinputs=1) (oc_init_platform_cb_t init_platform_cb, jni_callback_data *jcb) {
+  struct jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->env = jenv;
+  user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  $1 = jni_init_platform_callback;
-  $2 = data;
+  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  $1 = jni_oc_init_platform_callback;
+  $2 = user_data;
 }
 
 %typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
@@ -590,14 +600,12 @@ int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, jni_callback_data *jcb,
                   void *user_data);
-/* the oc_init_platform without the callback or data pointer */
-%rename(initPlatform) jni_oc_init_platform;
-int jni_oc_init_platform(const char *mfg_name);
 %ignore oc_init_platform;
-/* TODO Need to figure out how to handle callback and data ctx pointer
-%rename(initPlatform) oc_init_platform;
-int oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, void *data);
-*/
+/* the oc_init_platform without the callback or data pointer */
+%rename(initPlatform) jni_oc_init_platform0;
+int jni_oc_init_platform0(const char *mfg_name);
+%rename(initPlatform) jni_oc_init_platform1;
+int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, jni_callback_data *jcb, void *user_data);
 %rename(getConResAnnounced) oc_get_con_res_announced;
 %rename(setConResAnnounce) oc_set_con_res_announced;
 
