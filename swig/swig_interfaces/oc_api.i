@@ -257,6 +257,22 @@ bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
   return oc_do_get(uri, endpoint, query, handler, qos, jcb);
 }
 
+bool jni_oc_do_delete0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos){
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = NULL;
+  return oc_do_delete(uri, endpoint, query, handler, qos, jcb);
+}
+
+bool jni_oc_do_delete1(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                      oc_response_handler_t handler, jni_callback_data *jcb,
+                      oc_qos_t qos, void *user_data){
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  jcb->juser_data = *(jobject*)user_data;
+  return oc_do_delete(uri, endpoint, query, handler, qos, jcb);
+}
+
 bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                      oc_response_handler_t handler, jni_callback_data *jcb,
                      oc_qos_t qos) {
@@ -656,7 +672,16 @@ bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler, jni_callback_data *jcb, 
                    oc_qos_t qos, void *user_data);
-%rename(doDelete) oc_do_delete;
+%ignore oc_do_delete;
+%rename(doDelete) jni_oc_do_delete0;
+bool jni_oc_do_delete0(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos);
+%rename(doDelete) jni_oc_do_delete1;
+bool jni_oc_do_delete1(const char *uri, oc_endpoint_t *endpoint, const char *query,
+                       oc_response_handler_t handler, jni_callback_data *jcb,
+                       oc_qos_t qos, void *user_data);
+
 %ignore oc_init_put;
 %rename(initPut) jni_oc_init_put0;
 bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *query,
