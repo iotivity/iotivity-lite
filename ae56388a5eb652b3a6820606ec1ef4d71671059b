@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_e24a88ab",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-10-09T05:45:34Z",
+      "side": 1,
+      "message": "take care of indentation.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 3
+      },
+      "revId": "ae56388a5eb652b3a6820606ec1ef4d71671059b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_42c7f412",
+        "filename": "service/st-app-fw/src/st_security.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-10-09T05:45:34Z",
+      "side": 1,
+      "message": "follow single indentation rule. extra space is not required I guess, I mean label start from 1 column.",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 2
+      },
+      "revId": "ae56388a5eb652b3a6820606ec1ef4d71671059b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_22cc7035",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2018-10-09T05:45:34Z",
+      "side": 1,
+      "message": "space required right ?",
+      "revId": "ae56388a5eb652b3a6820606ec1ef4d71671059b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
