@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_c594ae46",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-10T23:20:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_a5c08a7d",
+      "range": {
+        "startLine": 313,
+        "startChar": 9,
+        "endLine": 313,
+        "endChar": 21
+      },
+      "revId": "c70c675f5682440eada7a57be23632055ec83435",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_05be96ff",
         "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2018-10-10T11:13:22Z",
       "side": 1,
       "message": "same as below comment.\nsize_t i \u003d 0;\nfor (...) {\n\u0027\u0027\u0027",
+      "range": {
+        "startLine": 262,
+        "startChar": 9,
+        "endLine": 262,
+        "endChar": 21
+      },
+      "revId": "c70c675f5682440eada7a57be23632055ec83435",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a591aa54",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-10T23:20:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_05be96ff",
       "range": {
         "startLine": 262,
         "startChar": 9,
