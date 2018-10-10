@@ -63,6 +63,30 @@
       "revId": "6b21af42d2c71bf0d8d253f433757639e88b8216",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_655de2e9",
+        "filename": "service/st-app-fw/unittest/stcloudmanagertest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-10T11:51:54Z",
+      "side": 1,
+      "message": "I think after make store info using store_info variable, this values are alloced before st_app_fw start.\nWhen st-app-fw start, st_store will be loaded from st_manager, so previous store values are leaked.",
+      "parentUuid": "9a3d3df0_253c7a93",
+      "range": {
+        "startLine": 223,
+        "startChar": 4,
+        "endLine": 223,
+        "endChar": 20
+      },
+      "revId": "6b21af42d2c71bf0d8d253f433757639e88b8216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
