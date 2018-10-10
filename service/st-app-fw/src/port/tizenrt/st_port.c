@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 /* setting up the stack size for st_thread */
-#define STACKSIZE 4096
+#define STACKSIZE 8192
 
 #define SYSTEM_RET_CHECK(ret)                                                  \
   do {                                                                         \
