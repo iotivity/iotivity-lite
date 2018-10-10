@@ -1106,21 +1106,22 @@ oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len)
 bool
 oc_sec_load_ca_cert(const unsigned char *ca_cert_buf, size_t ca_cet_buf_len)
 {
-  int i = 0, ret = 0;
   if (ca_cet_buf_len == 0 || ca_cert_buf == NULL) {
     OC_ERR("oc_tls: empty ca cert buffer");
     goto tls_load_ca_cert_err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
-    mbedtls_x509_crt * ca_crt = (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    mbedtls_x509_crt *ca_crt =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
     if (!ca_crt) {
       goto tls_load_ca_cert_err;
     }
     mbedtls_x509_crt_init(ca_crt);
-    ret = mbedtls_x509_crt_parse( ca_crt, ca_cert_buf, ca_cet_buf_len );
-    if( ret < 0 ) {
-      OC_ERR( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
+    int ret = mbedtls_x509_crt_parse(ca_crt, ca_cert_buf, ca_cet_buf_len);
+    if (ret < 0) {
+      OC_ERR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
       goto tls_load_ca_cert_err;
     } else {
       OC_DBG("oc_tls: trust ca cert loaded ");

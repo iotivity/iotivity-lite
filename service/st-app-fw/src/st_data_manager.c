@@ -315,7 +315,7 @@ st_data_mgr_info_free(void)
 }
 
 static int
-st_decode_spec(int device_index, oc_rep_t *spec_rep)
+st_decode_spec(size_t device_index, oc_rep_t *spec_rep)
 {
   st_specification_t *spec_info = oc_memb_alloc(&st_specification_s);
   if (!spec_info) {
@@ -398,7 +398,7 @@ st_decode_spec(int device_index, oc_rep_t *spec_rep)
 }
 
 static int
-st_decode_resources(int device_index, oc_rep_t *resources_rep)
+st_decode_resources(size_t device_index, oc_rep_t *resources_rep)
 {
   oc_rep_t *single_rep;
   if (oc_rep_get_object_array(resources_rep, ST_RSC_SINGLE_KEY, &single_rep)) {
@@ -462,7 +462,7 @@ st_decode_resources(int device_index, oc_rep_t *resources_rep)
 }
 
 static int
-st_decode_device(int device_idx, oc_rep_t *device_rep)
+st_decode_device(size_t device_idx, oc_rep_t *device_rep)
 {
   oc_rep_t *spec_rep = NULL;
   if (oc_rep_get_object(device_rep, ST_SPECIFICATION_KEY, &spec_rep)) {

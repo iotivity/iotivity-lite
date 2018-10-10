@@ -27,7 +27,7 @@
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;
 
-static int device_index = 0;
+static size_t device_index = 0;
 
 typedef enum {
   ST_RSC_READABLE = (1 << 0),
@@ -160,7 +160,7 @@ st_register_resource(st_resource_info_t *resource_info)
 }
 
 int
-st_register_resources(int device)
+st_register_resources(size_t device)
 {
   st_resource_info_t *resources = st_data_mgr_get_resource_info();
   if (!resources) {

@@ -24,7 +24,7 @@
 static bool
 _oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
             const char *auth_code, const char *uid, const char *access_token,
-            int device_index, oc_response_handler_t handler, void *user_data)
+            size_t device_index, oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || ((!auth_provider || !auth_code) && !access_token) ||
       !handler) {
@@ -60,7 +60,7 @@ _oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
 
 bool
 oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider, const char *uid,
-           const char *access_token, int device_index,
+           const char *access_token, size_t device_index,
            oc_response_handler_t handler, void *user_data)
 {
   return _oc_sign_up(endpoint, auth_provider, NULL, uid, access_token,
@@ -70,7 +70,7 @@ oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider, const char *uid,
 #ifndef ST_APP_OPTIMIZATION
 bool
 oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
-                     const char *auth_code, int device_index,
+                     const char *auth_code, size_t device_index,
                      oc_response_handler_t handler, void *user_data)
 {
   return _oc_sign_up(endpoint, auth_provider, auth_code, NULL, NULL,
@@ -80,7 +80,7 @@ oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
 
 static bool
 oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
-              const char *access_token, int device_index, bool is_sign_in,
+              const char *access_token, size_t device_index, bool is_sign_in,
               oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || (is_sign_in && !uid) || !access_token || !handler) {
@@ -110,15 +110,15 @@ oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
 
 bool
 oc_sign_in(oc_endpoint_t *endpoint, const char *uid, const char *access_token,
-           int device_index, oc_response_handler_t handler, void *user_data)
+           size_t device_index, oc_response_handler_t handler, void *user_data)
 {
   return oc_sign_inout(endpoint, uid, access_token, device_index, true, handler,
                        user_data);
 }
 
 bool
-oc_sign_out(oc_endpoint_t *endpoint, const char *access_token, int device_index,
-            oc_response_handler_t handler, void *user_data)
+oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
+            size_t device_index, oc_response_handler_t handler, void *user_data)
 {
   return oc_sign_inout(endpoint, NULL, access_token, device_index, false,
                        handler, user_data);
@@ -139,7 +139,7 @@ oc_set_device_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
 
     oc_rep_start_root_object();
     oc_rep_set_array(root, devices);
-    int device = 0;
+    size_t device = 0;
     for (; device < oc_core_get_num_devices(); device++) {
       oc_device_info_t *device_info = oc_core_get_device_info(device);
       char uuid[OC_UUID_LEN] = { 0 };
@@ -175,7 +175,7 @@ oc_set_device_profile(oc_endpoint_t *endpoint, oc_response_handler_t handler,
 
 #ifndef ST_APP_OPTIMIZATION
 bool
-oc_delete_device(oc_endpoint_t *endpoint, const char *uid, int device_index,
+oc_delete_device(oc_endpoint_t *endpoint, const char *uid, size_t device_index,
                  oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || !uid || !handler) {
@@ -197,7 +197,7 @@ oc_delete_device(oc_endpoint_t *endpoint, const char *uid, int device_index,
 
 bool
 oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
-                        const char *refresh_token, int device_index,
+                        const char *refresh_token, size_t device_index,
                         oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || !uid || !refresh_token || !handler) {

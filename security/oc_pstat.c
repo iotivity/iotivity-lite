@@ -558,7 +558,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 void
 oc_sec_reset()
 {
-  for (int device = 0; device < oc_core_get_num_devices(); device++)
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++)
     oc_sec_pstat_default(device);
 }
 #endif /* OC_SECURITY */

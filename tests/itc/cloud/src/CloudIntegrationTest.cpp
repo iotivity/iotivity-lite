@@ -37,7 +37,7 @@ public:
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with auth API with positive values
  * @target oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *auth_code, int device_index,
+ const char *auth_code, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data
  * @pre_condition 1. create resource
@@ -66,7 +66,7 @@ TEST(CloudIntegrationTest, cloud_signup_with_auth_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with auth API callback return
  * @target oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *auth_code, int device_index,
+ const char *auth_code, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1. resource data, authcode, address, provider
  * @pre_condition 1. create resource
@@ -98,7 +98,7 @@ TEST(CloudIntegrationTest, cloud_signup_with_auth_clientCB_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with auth API with address null value
  * @target oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *auth_code, int device_index,
+ const char *auth_code, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1. resource authcode, address, provider
  * @pre_condition 1. create resource
@@ -127,7 +127,7 @@ TEST(CloudIntegrationTest, cloud_signup_with_auth_address_null_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with auth API with auth null value
  * @target oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *auth_code, int device_index,
+ const char *auth_code, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1. resource data,authcode, address, provider
  * @pre_condition 1. create resource
@@ -156,7 +156,7 @@ TEST(CloudIntegrationTest, cloud_signup_with_auth_null_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with auth API with null value
  * @target oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *auth_code, int device_index,
+ const char *auth_code, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1. resource data
  * @pre_condition 1. create resource
@@ -184,7 +184,7 @@ TEST(CloudIntegrationTest, cloud_signup_with_param_null_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignIn API with positive values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -220,7 +220,7 @@ TEST(CloudIntegrationTest, cloud_signin_return_check_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignIn API with positive values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -256,7 +256,7 @@ TEST(CloudIntegrationTest, cloud_signin_cb_check_P)
  * @see none
  * @objective Test iotivity-constrained cloud Signout API with negative values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -292,7 +292,7 @@ TEST(CloudIntegrationTest, cloud_signin_empty_value_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud Signout API with negative values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -328,7 +328,7 @@ TEST(CloudIntegrationTest, cloud_signin_invalid_value_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud Signout API with negative values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -364,7 +364,7 @@ TEST(CloudIntegrationTest, cloud_signin_endpoint_null_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud Signout API with negative values
  * @target oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
- const char *access_token, int device_index,
+ const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -400,7 +400,7 @@ TEST(CloudIntegrationTest, cloud_signin_callback_null_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with positive values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -435,7 +435,7 @@ TEST(CloudIntegrationTest, cloud_signout_return_check_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with positive values for callback check
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -473,7 +473,7 @@ TEST(CloudIntegrationTest, cloud_signout_cb_check_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with Negative values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -508,7 +508,7 @@ TEST(CloudIntegrationTest, cloud_signout_access_null_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with Negative values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -543,7 +543,7 @@ TEST(CloudIntegrationTest, cloud_signout_access_empty_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with Negative values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -578,7 +578,7 @@ TEST(CloudIntegrationTest, cloud_signout_access_invalid_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with Negative values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -613,7 +613,7 @@ TEST(CloudIntegrationTest, cloud_signout_endpoint_null_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignOut API with Negative values
  * @target oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
- int device_index, oc_response_handler_t handler,
+ size_t device_index, oc_response_handler_t handler,
  void *user_data);
  * @pre_condition 1. create resource
  * 2. start oc_main_init
@@ -648,7 +648,7 @@ TEST(CloudIntegrationTest, cloud_signout_callback_null_check_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp API with positive values
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -677,7 +677,7 @@ TEST(CloudIntegrationTest, cloud_signup_check_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp API callback return
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -709,7 +709,7 @@ TEST(CloudIntegrationTest, cloud_signup_clientCB_P)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with endpoint null value
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -738,7 +738,7 @@ TEST(CloudIntegrationTest, cloud_signup_null_endpoint_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with param null value
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -767,7 +767,7 @@ TEST(CloudIntegrationTest, cloud_signup_null_value_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with param empty string value
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -796,7 +796,7 @@ TEST(CloudIntegrationTest, cloud_signup_empty_string_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with param Invalid string value
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource
@@ -825,7 +825,7 @@ TEST(CloudIntegrationTest, cloud_signup_invalid_string_N)
  * @see none
  * @objective Test iotivity-constrained cloud SignUp with callback null value
  * @target oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
- const char *uid, const char *access_token, int device_index,
+ const char *uid, const char *access_token, size_t device_index,
  oc_response_handler_t handler, void *user_data);
  * @test_data     1.resource data, authprovider, accesstoken, uid
  * @pre_condition 1. create resource

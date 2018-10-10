@@ -310,7 +310,7 @@ update_easysetup_resource(oc_request_t *request)
     memset(es_res->data.connect_request, 0,
            sizeof(es_res->data.connect_request));
     es_res->data.num_request = 0;
-    for (int i = 0; i < NUM_CONNECT_TYPE && i < connect_req_size; ++i) {
+    for (size_t i = 0; i < NUM_CONNECT_TYPE && i < connect_req_size; ++i) {
       if (connect_req[i] == ES_CONNECT_WIFI ||
           connect_req[i] == ES_CONNECT_COAPCLOUD) {
         es_res->data.connect_request[es_res->data.num_request++] =

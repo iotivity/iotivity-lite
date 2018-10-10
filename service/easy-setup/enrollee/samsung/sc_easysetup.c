@@ -259,7 +259,7 @@ read_dev_conf_data(oc_rep_t *payload, void **user_data)
     if (oc_string_array_get_allocated_size(g_scprop->location) > 0)
       oc_free_string_array(&g_scprop->location);
     oc_new_string_array(&g_scprop->location, str_arr_len);
-    for (int i = 0; i < str_arr_len; i++) {
+    for (size_t i = 0; i < str_arr_len; i++) {
       oc_string_array_add_item(dev_prop->location,
                                oc_string_array_get_item(str_arr, i));
       oc_string_array_add_item(g_scprop->location,

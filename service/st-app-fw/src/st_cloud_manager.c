@@ -41,7 +41,7 @@ typedef struct st_cloud_context
   struct st_cloud_context *next;
   st_cloud_manager_cb_t callback;
   oc_endpoint_t cloud_ep;
-  int device_index;
+  size_t device_index;
   st_cloud_manager_status_t cloud_manager_status;
   uint8_t retry_count;
 } st_cloud_context_t;
@@ -104,6 +104,8 @@ free_res_payload(oc_rep_t *payload)
 {
 #ifdef ST_RES_PAYLOAD_PARSE
   oc_free_rep(payload);
+#else
+  (void)payload;
 #endif /* ST_RES_PAYLOAD_PARSE */
 }
 
@@ -136,7 +138,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 #endif /* OC_SESSION_EVENTS */
 
 int
-st_cloud_manager_start(st_store_t *store_info, int device_index,
+st_cloud_manager_start(st_store_t *store_info, size_t device_index,
                        st_cloud_manager_cb_t cb)
 {
   st_print_log("[ST_CM] st_cloud_manager_start in\n");
@@ -172,7 +174,7 @@ errors:
 }
 
 void
-st_cloud_manager_stop(int device_index)
+st_cloud_manager_stop(size_t device_index)
 {
   st_print_log("[ST_CM] st_cloud_manager_stop in\n");
   st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
@@ -180,7 +182,7 @@ st_cloud_manager_stop(int device_index)
     context = context->next;
   }
   if (!context) {
-    st_print_log("[ST_CM] can't find any context regarding device(%d)\n",
+    st_print_log("[ST_CM] can't find any context regarding device(%zu)\n",
                  device_index);
     return;
   }

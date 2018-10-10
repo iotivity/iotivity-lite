@@ -50,14 +50,14 @@ typedef void (*st_cloud_manager_cb_t)(st_cloud_manager_status_t status);
   @param cb Callback function to return the st cloud manager status.
   @return Returns 0 if successful, or -1 otherwise.
 */
-int st_cloud_manager_start(st_store_t *cloud_info, int device_index,
+int st_cloud_manager_start(st_store_t *cloud_info, size_t device_index,
                            st_cloud_manager_cb_t cb);
 
 /**
   @brief Function for stop about cloud manager.
   @param device_index Index of the device for an unique identifier.
 */
-void st_cloud_manager_stop(int device_index);
+void st_cloud_manager_stop(size_t device_index);
 
 /**
   @brief Function for check that connection of an internet.
