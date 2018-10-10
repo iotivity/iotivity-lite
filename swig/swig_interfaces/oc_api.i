@@ -10,7 +10,7 @@
 %{
 #include "oc_api.h"
 #include "oc_rep.h"
-#include <map>
+#include <vector>
 #include <assert.h>
 
 struct jni_callback_data {
@@ -20,7 +20,7 @@ struct jni_callback_data {
 };
 
 
-std::map <jobject, jni_callback_data*> jni_callbacks_map;
+std::vector <jni_callback_data*> jni_callbacks_vector;
 
 void jni_init_platform_callback(void *ptr) {
 /* TODO still a work in progress
@@ -357,17 +357,20 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
 
 void jni_oc_remove_delayed_callback(jobject callback) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-    auto it = jni_callbacks_map.begin();
-  for (it = jni_callbacks_map.begin(); it != jni_callbacks_map.end(); ++it) {
-    if ((it->second->env)->IsSameObject(callback, it->second->obj)) {
-      oc_remove_delayed_callback(it->second, jni_oc_trigger_handler);
-      (it->second->env)->DeleteGlobalRef(it->second->obj);
-      (it->second->env)->DeleteGlobalRef(it->second->juser_data);
+  auto it = jni_callbacks_vector.begin();
+  for (it = jni_callbacks_vector.begin(); it != jni_callbacks_vector.end(); ++it) {
+    if ((*it)->env->IsSameObject(callback, (*it)->obj)) {
+      oc_remove_delayed_callback(*it, jni_oc_trigger_handler);
+      (*it)->env->DeleteGlobalRef((*it)->obj);
+      (*it)->env->DeleteGlobalRef((*it)->juser_data);
       break;
     }
   }
-  if (it != jni_callbacks_map.end()) {
-    jni_callbacks_map.erase(it);
+  if (it != jni_callbacks_vector.end()) {
+    free(*it);
+    jni_callbacks_vector.erase(it);
+    //Prevent the jni_callback_vector from using un-needed memory.
+    jni_callbacks_vector.shrink_to_fit();
   }
 }
 
@@ -484,7 +487,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_add_device_callback;
   $2 = user_data;
 }
@@ -513,7 +516,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_request_callback;
   $2 = user_data;
 }
@@ -527,7 +530,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
 }
@@ -558,7 +561,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_response_handler;
   $2 = user_data;
 }
@@ -572,7 +575,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_trigger_handler;
   $2 = user_data;
 }
