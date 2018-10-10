@@ -32,13 +32,13 @@ extern "C"{
     #include "sttestcommon.h"
     #include "sc_easysetup.h"
     #include "messaging/coap/observe.h"
-    int st_register_resources(int device);
+    int st_register_resources(size_t device);
 
     extern unsigned char st_device_def[];
     extern unsigned int st_device_def_len;
 }
 
-static int device_index = 0;
+static size_t device_index = 0;
 static bool request_handled;
 
 static bool

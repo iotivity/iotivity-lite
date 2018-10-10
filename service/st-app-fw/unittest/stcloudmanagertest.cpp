@@ -40,7 +40,7 @@ typedef enum {
   CM_FAIL
 } cm_test_case_t;
 
-static int device_index = 0;
+static size_t device_index = 0;
 st_store_t *store_info = NULL;
 void cloud_manager_handler_test(st_cloud_manager_status_t status)
 {

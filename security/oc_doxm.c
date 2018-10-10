@@ -70,7 +70,7 @@ oc_sec_doxm_init(void)
 void
 oc_set_doxm(oc_doxm_method_t oxmsel)
 {
-  int i;
+  size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_sec_doxm(i, oxmsel);
   }

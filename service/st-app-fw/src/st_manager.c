@@ -54,7 +54,7 @@
 
 #define ST_BUFFER_SIZE (3072)
 
-extern int st_register_resources(int device);
+extern int st_register_resources(size_t device);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 
@@ -69,7 +69,7 @@ static sc_properties st_vendor_props;
 
 static sec_provisioning_info g_prov_resource;
 
-static int device_index = 0;
+static size_t device_index = 0;
 
 #ifdef STATE_MODEL
 
@@ -503,12 +503,11 @@ st_manager_stack_init(void)
   st_fota_manager_start();
   st_data_mgr_info_free();
 
-  int i = 0;
-  int device_num = 0;
-  device_num = oc_core_get_num_devices();
+  size_t i = 0;
+  size_t device_num = oc_core_get_num_devices();
   for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    st_print_log("[ST_MGR] === device(%d) endpoint info. ===\n", i);
+    st_print_log("[ST_MGR] === device(%zu) endpoint info. ===\n", i);
     while (ep) {
       oc_string_t ep_str;
       if (oc_endpoint_to_string(ep, &ep_str) == 0) {
@@ -905,12 +904,11 @@ st_manager_stack_start(void)
   st_fota_manager_start();
   st_data_mgr_info_free();
 
-  int i = 0;
-  int device_num = 0;
-  device_num = oc_core_get_num_devices();
+  size_t i = 0;
+  size_t device_num = oc_core_get_num_devices();
   for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    st_print_log("[ST_MGR] === device(%d) endpoint info. ===\n", i);
+    st_print_log("[ST_MGR] === device(%zu) endpoint info. ===\n", i);
     while (ep) {
       oc_string_t ep_str;
       if (oc_endpoint_to_string(ep, &ep_str) == 0) {
