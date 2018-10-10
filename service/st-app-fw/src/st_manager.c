@@ -398,7 +398,7 @@ st_manager_initialize(void)
 
 #ifdef OC_SECURITY
 #ifdef __TIZENRT__
-  oc_storage_config("/mnt/st_things_creds");
+  oc_storage_config("/mnt");
 #else
   oc_storage_config("./st_things_creds");
 #endif
