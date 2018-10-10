@@ -120,7 +120,7 @@ int pbkdf2(const char *password, unsigned char* key,unsigned char * salt)
   return ret;
 }
 
-int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char* data, const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len)
+int aes_encrypt_internal(const unsigned char* key, unsigned char* iv, const unsigned char* data, const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len)
   {
   int ret = 0;
 
@@ -164,7 +164,7 @@ int aes_encrypt(const unsigned char* key, unsigned char* iv, const unsigned char
 }
 
 
-int aes_decrypt(const unsigned char* key, const unsigned char* iv, unsigned char* encrypted_data, unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len)
+int aes_decrypt_internal(const unsigned char* key, const unsigned char* iv, unsigned char* encrypted_data, unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len)
 {
   int ret = 0;
   unsigned char i = 0;
@@ -258,7 +258,7 @@ int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
     _print_binary_to_hex("key on initial(encrypt)", key, 32);
 #endif
 
-  ret = aes_encrypt(key, iv_internal, data, data_len, encrypted_data, encrypted_data_len);
+  ret = aes_encrypt_internal(key, iv_internal, data, data_len, encrypted_data, encrypted_data_len);
 
   return ret;
 }
@@ -284,7 +284,7 @@ int st_security_decrypt(unsigned char *salt,unsigned char *iv, unsigned char* en
   st_print_log("[ST_ES] decrypted data length %d \n",*decrypted_data_len);
 #endif
 
-  ret = aes_decrypt(key, iv, encrypted_data, encrypted_data_len,decrypted_data, decrypted_data_len);
+  ret = aes_decrypt_internal(key, iv, encrypted_data, encrypted_data_len,decrypted_data, decrypted_data_len);
   return ret;
 }
 #endif /* OC_SECURITY*/
