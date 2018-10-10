@@ -355,6 +355,23 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   return (oc_event_callback_retval_t) return_value;
 }
 
+void jni_oc_remove_delayed_callback(jobject callback) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+    auto it = jni_callbacks_map.begin();
+  for (it = jni_callbacks_map.begin(); it != jni_callbacks_map.end(); ++it) {
+    if ((it->second->env)->IsSameObject(callback, it->second->obj)) {
+      oc_remove_delayed_callback(it->second, jni_oc_trigger_handler);
+      (it->second->env)->DeleteGlobalRef(it->second->obj);
+      (it->second->env)->DeleteGlobalRef(it->second->juser_data);
+      break;
+    }
+  }
+  if (it != jni_callbacks_map.end()) {
+    free(it->second);
+    jni_callbacks_map.erase(it);
+  }
+}
+
 int jni_oc_init_platform(const char *mfg_name) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   return oc_init_platform(mfg_name, NULL, NULL);
@@ -561,6 +578,9 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   $2 = user_data;
 }
 
+%typemap(jtype)  jobject callback "OCTriggerHandler";
+%typemap(jstype) jobject callback "OCTriggerHandler";
+
 %ignore oc_handler_t;
 %rename(mainInit) oc_main_init;
 %rename(mainPoll) oc_main_poll;
@@ -700,7 +720,9 @@ void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb,
 %rename(setDelayedCallback) jni_oc_set_delayed_callback;
 void jni_oc_set_delayed_callback(void *user_data, oc_trigger_t callback, jni_callback_data *jcb,
                                  uint16_t seconds);
-%rename(removeDelayedCallback) oc_remove_delayed_callback;
+%ignore oc_remove_delayed_callback;
+%rename(removeDelayedCallback) jni_oc_remove_delayed_callback;
+void jni_oc_remove_delayed_callback(jobject callback);
 %include "oc_api.h"
 
 %rename(OCRepresentation) oc_rep_s;
