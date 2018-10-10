@@ -47,7 +47,7 @@ typedef struct st_specification
   struct st_specification *next;
   st_device_info_t device;
   st_platform_info_t platform;
-  int device_idx;
+  size_t device_idx;
 } st_specification_t;
 
 typedef struct st_resource
@@ -58,7 +58,7 @@ typedef struct st_resource
   uint8_t interfaces;
   uint8_t default_interface;
   uint8_t policy;
-  int device_idx;
+  size_t device_idx;
 } st_resource_info_t;
 
 typedef enum {

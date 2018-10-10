@@ -42,7 +42,7 @@
   @return Returns true if success.
 */
 #ifndef ST_APP_OPTIMIZATION
-bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
+bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
                 oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 #endif
 
@@ -73,7 +73,7 @@ bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
-bool rd_publish_all(oc_endpoint_t *endpoint, int device_index,
+bool rd_publish_all(oc_endpoint_t *endpoint, size_t device_index,
                     oc_response_handler_t handler, oc_qos_t qos,
                     void *user_data);
 
@@ -88,7 +88,7 @@ bool rd_publish_all(oc_endpoint_t *endpoint, int device_index,
   @return Returns true if success.
 */
 #ifndef ST_APP_OPTIMIZATION
-bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, int device_index,
+bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 #endif
 

@@ -60,7 +60,7 @@
   @return Returns true if success.
 */
 bool oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
-                const char *uid, const char *access_token, int device_index,
+                const char *uid, const char *access_token, size_t device_index,
                 oc_response_handler_t handler, void *user_data);
 
 /**
@@ -76,7 +76,7 @@ bool oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
 */
 #ifndef ST_APP_OPTIMIZATION
 bool oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
-                          const char *auth_code, int device_index,
+                          const char *auth_code, size_t device_index,
                           oc_response_handler_t handler, void *user_data);
 #endif
 
@@ -92,7 +92,7 @@ bool oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
   @return Returns true if success.
 */
 bool oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
-                const char *access_token, int device_index,
+                const char *access_token, size_t device_index,
                 oc_response_handler_t handler, void *user_data);
 
 /**
@@ -106,7 +106,7 @@ bool oc_sign_in(oc_endpoint_t *endpoint, const char *uid,
   @return Returns true if success.
 */
 bool oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
-                 int device_index, oc_response_handler_t handler,
+                 size_t device_index, oc_response_handler_t handler,
                  void *user_data);
 
 /**
@@ -120,7 +120,7 @@ bool oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
   @return Returns true if success.
 */
 bool oc_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
-                             const char *refresh_token, int device_index,
+                             const char *refresh_token, size_t device_index,
                              oc_response_handler_t handler, void *user_data);
 
 /**
@@ -144,7 +144,7 @@ bool oc_set_device_profile(oc_endpoint_t *endpoint,
 */
 #ifndef ST_APP_OPTIMIZATION
 bool oc_delete_device(oc_endpoint_t *endpoint, const char *uid,
-                      int device_index, oc_response_handler_t handler,
+                      size_t device_index, oc_response_handler_t handler,
                       void *user_data);
 #endif
 
