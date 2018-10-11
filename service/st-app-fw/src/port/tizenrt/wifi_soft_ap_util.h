@@ -22,7 +22,7 @@
 #include <slsi_wifi/slsi_wifi_api.h>
 #include <stdint.h>
 
-int es_create_softap(void);
+int es_create_softap(const char *ssid, const char *passwd);
 
 void es_stop_softap(void);
 
