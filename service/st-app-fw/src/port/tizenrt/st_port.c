@@ -28,6 +28,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
+#include <wifi_manager/wifi_manager.h>
 
 /* setting up the stack size for st_thread */
 #define STACKSIZE 8192
@@ -50,6 +52,17 @@ typedef struct
   int channel;
 } st_soft_ap_t;
 
+static void wifi_sta_connected_cb(wifi_manager_result_e res); // in station mode, connected to ap
+static void wifi_sta_disconnected_cb(void); // in station mode, disconnected from ap
+
+static wifi_manager_cb_s wifi_callbacks = {
+  wifi_sta_connected_cb,
+  wifi_sta_disconnected_cb,
+  NULL,
+  NULL,
+  NULL,
+};
+
 static st_soft_ap_t g_soft_ap;
 
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
@@ -58,18 +71,36 @@ OC_MEMB(st_thread_s, pthread_t, 10);
 
 static void *soft_ap_process_routine(void *data);
 
+static void wifi_sta_connected_cb(wifi_manager_result_e res)
+{
+  st_print_log("wifi_sta_connected: send signal!!! \n");
+}
+
+static void wifi_sta_disconnected_cb(void)
+{
+ st_print_log("wifi_sta_disconnected: send signal!!! \n");
+}
+
 int
 st_port_specific_init(void)
 {
-  /* set port specific logics. in here */
+  wifi_manager_result_e ret = WIFI_MANAGER_FAIL;
+
+  ret = wifi_manager_init(&wifi_callbacks);
+  if (ret != WIFI_MANAGER_SUCCESS) {
+    st_print_log("wifi_manager_init failed\n");
+  }
+
   return 0;
 }
 
 void
 st_port_specific_destroy(void)
 {
-  /* set initialized port specific logics destroyer. in here */
-  return;
+  int ret = wifi_manager_deinit();
+  if (ret != WIFI_MANAGER_SUCCESS) {
+    st_print_log("wifi_manager_init failed\n");
+  }
 }
 
 void
@@ -424,7 +455,8 @@ soft_ap_process_routine(void *data)
 
   st_print_log("[ST_PORT] soft_ap_handler in\n");
 
-  if (es_create_softap() == -1) {
+  if (es_create_softap(oc_string(soft_ap->ssid),
+                       oc_string(soft_ap->pwd)) == -1) {
     st_print_log("[ST_PORT] Soft AP mode failed!!\n");
     st_mutex_lock(soft_ap->mutex);
     soft_ap->is_soft_ap_on = 0;
