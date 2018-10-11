@@ -1,0 +1,210 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_25175aa5",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "the reason this define existed was a workaround to get passed below jenkins error.\n\n\n06:49:28 ipadapter.c:50:39: fatal error: wifi_manager/wifi_manager.h: No such file or directory\n06:49:28  #include \u003cwifi_manager/wifi_manager.h\u003e\n06:49:28   \n\n\n- You need to find a proper way to add tizen_rt wifimanager include path in makefile. :",
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_85358648",
+        "filename": "port/tizenrt/ipadapter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1708,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "its advisable to define 6 as a constant / macro instead of using directly as magic number.",
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_054976d0",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "variable name looks odd. Why to use _test_ in this name ?",
+      "range": {
+        "startLine": 34,
+        "startChar": 23,
+        "endLine": 34,
+        "endChar": 48
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_e54572b4",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "here too.",
+      "range": {
+        "startLine": 35,
+        "startChar": 36,
+        "endLine": 35,
+        "endChar": 42
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_45125eb5",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "_test_ can be avoided ?",
+      "range": {
+        "startLine": 103,
+        "startChar": 15,
+        "endLine": 103,
+        "endChar": 21
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a53b6a37",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "can\u0027t logging function be used instead of printf() ?",
+      "range": {
+        "startLine": 107,
+        "startChar": 4,
+        "endLine": 107,
+        "endChar": 64
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_653a0238",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "tabs should be removed.",
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_c53e6e29",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "indentation needs to be fixed.",
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_052056f6",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "do we need null checks around ssid and passwd which are input parameter into this function ?",
+      "range": {
+        "startLine": 134,
+        "startChar": 25,
+        "endLine": 134,
+        "endChar": 29
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_850c6696",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-11T10:49:52Z",
+      "side": 1,
+      "message": "can this header be removed  ?",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 36
+      },
+      "revId": "6e4c5e36ac56211c1ca4f45c8b67d2ccf1c941a1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
