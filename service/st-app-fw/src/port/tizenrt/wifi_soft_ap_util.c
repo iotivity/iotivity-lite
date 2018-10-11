@@ -118,8 +118,11 @@ wifi_start_station(void)
 }
 
 int
-es_create_softap(void)
+es_create_softap(const char *ssid, const char *passwd)
 {
+  if (!ssid || !passwd) {
+    return -1;
+  }
   printf("es_create_softap in\n");
   slsi_ap_config_t *app_settings =
     (slsi_ap_config_t *)zalloc(sizeof(slsi_ap_config_t));
@@ -131,8 +134,8 @@ es_create_softap(void)
   // device name - is as per device name (refer st_main.c)
   // MNID and onboarding id - you get from s-devworkspace
 
-  char *es_softap_ssid = CONFIG_IOTLITE_SSID_SOFTAP;
-  char *es_softap_passphrase = CONFIG_IOTLITE_PWD_SOFTAP;
+  char *es_softap_ssid = ssid;
+  char *es_softap_passphrase = passwd;
   char *es_softap_security = CONFIG_IOTLITE_SECURITY_SOFTAP;
 
   printf("SoftAP SSID : %s\n", es_softap_ssid);

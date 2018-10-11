@@ -46,12 +46,9 @@
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif
-
 #ifdef TIZEN_RT_WIFI_MANAGER
 #include <wifi_manager/wifi_manager.h>
-//#include <slsi_wifi/slsi_wifi_api.h>
 #endif
-
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
 #ifndef IFA_FLAGS
@@ -60,6 +57,7 @@
 
 /* select timeout value */
 #define SELECT_TIMEOUT 5
+#define MAC_ADDRESS_SIZE 6
 
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
@@ -1701,15 +1699,22 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 bool
 oc_get_mac_addr(unsigned char *mac)
 {
-  // WiFiGetMac(mac);
-  mac[0] = 0x28;
-  mac[1] = 0x6d;
-  mac[2] = 0x97;
-  mac[3] = 0x40;
-  mac[4] = 0x22;
-  mac[5] = 0x14;
+#ifdef TIZEN_RT_WIFI_MANAGER
+  wifi_manager_info_s info;
 
+  if (!mac || WIFI_MANAGER_SUCCESS != wifi_manager_get_info(&info)) {
+    OC_ERR("wifi_manager_get_info failed\n");
+    return false;
+  }
+
+  for (int i = 0; i < MAC_ADDRESS_SIZE; i++) {
+    mac[i] = info.mac_address[i];
+  }
   OC_DBG("oc_get_mac_addr MAC: %02X%02X%02X%02X%02X%02X\n", mac[0], mac[1],
          mac[2], mac[3], mac[4], mac[5]);
   return true;
+#else
+  OC_ERR("fail to get mac address\n");
+  return false;
+#endif
 }
