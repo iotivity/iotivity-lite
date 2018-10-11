@@ -77,5 +77,9 @@ typedef struct oc_tls_peer_s {
   oc_clock_time_t timestamp;
 } oc_tls_peer_t;
 
+#ifdef OC_DYNAMIC_ALLOCATION
+int mbedtls_ssl_read_dynamic( mbedtls_ssl_context *ssl, unsigned char **buf, size_t len );
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 #endif /* OC_SECURITY */
 #endif /* OC_TLS_H */
