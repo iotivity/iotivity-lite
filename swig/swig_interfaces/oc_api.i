@@ -27,6 +27,8 @@ static JavaVM *jvm;
 static jobject init_obj;
 static jclass cls_OCMainInitHandler;
 
+static struct jni_callback_data oc_con_write_cb_data;
+
 int oc_handler_init_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
@@ -455,6 +457,22 @@ void jni_oc_add_device_callback(void *user_data)
   (data->env)->CallObjectMethod(data->obj, mid_handler, data->juser_data);
 }
 
+void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
+{
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  const jclass cls_OCConWriteHandler = (oc_con_write_cb_data.env)->FindClass("org/iotivity/OCConWriteHandler");
+  assert(cls_OCConWriteHandler);
+  const jmethodID mid_handler = (oc_con_write_cb_data.env)->GetMethodID(cls_OCConWriteHandler, "handler", "(JLorg/iotivity/OCRepresentation;)V");
+  assert(mid_handler);
+
+  const jclass cls_OCRepresentation = (oc_con_write_cb_data.env)->FindClass("org/iotivity/OCRepresentation");
+  assert(cls_OCRepresentation);
+  const jmethodID mid_OCRepresentation_init = (oc_con_write_cb_data.env)->GetMethodID(cls_OCRepresentation, "<init>", "(JZ)V");
+  assert(mid_OCRepresentation_init);
+  (oc_con_write_cb_data.env)->CallVoidMethod(oc_con_write_cb_data.obj, mid_handler, (jlong)device_index,
+                                            (oc_con_write_cb_data.env)->NewObject(cls_OCRepresentation, mid_OCRepresentation_init, (jlong)rep, false));
+}
+
 /* from oc_rep.h */
 void rep_start_root_object() {
   OC_DBG("JNI: %s\n", __FUNCTION__);
@@ -623,6 +641,26 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 %typemap(jtype)  jobject callback "OCTriggerHandler";
 %typemap(jstype) jobject callback "OCTriggerHandler";
 
+%typemap(jni)    oc_con_write_cb_t callback "jobject";
+%typemap(jtype)  oc_con_write_cb_t callback "OCConWriteHandler";
+%typemap(jstype) oc_con_write_cb_t callback "OCConWriteHandler";
+%typemap(javain) oc_con_write_cb_t callback "$javainput";
+%typemap(in,numinputs=1) (oc_con_write_cb_t callback) {
+  if(!JCALL2(IsSameObject, jenv, oc_con_write_cb_data.obj, NULL)) {
+    //Delete the old callback obj if this method is called multiple times
+    JCALL1(DeleteGlobalRef, jenv, oc_con_write_cb_data.obj);
+  }
+  oc_con_write_cb_data.env = jenv;
+  oc_con_write_cb_data.obj = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  if(JCALL2(IsSameObject, jenv, $input, NULL))
+  {
+    $1 = NULL;
+  } else {
+    $1 = jni_oc_con_callback;
+  }
+}
+
 %ignore oc_handler_t;
 %rename(mainInit) oc_main_init;
 %rename(mainPoll) oc_main_poll;
@@ -680,7 +718,7 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
                                           void *user_data);
 %rename(addResource) oc_add_resource;
 %rename(deleteResource) oc_delete_resource;
-%rename(setConWriteCallback) oc_set_con_write_cb;
+%rename(setConWriteHandler) oc_set_con_write_cb;
 %rename(initQueryIterator) oc_init_query_iterator;
 %rename(iterateQuery) oc_iterate_query;
 %rename(iterateQueryGetValues) oc_iterate_query_get_values;
@@ -770,14 +808,14 @@ bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
 
 // common operations
 %ignore oc_set_delayed_callback;
-%rename(setDelayedCallback) jni_oc_set_delayed_callback0;
+%rename(setDelayedHandler) jni_oc_set_delayed_callback0;
 void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb,
                                   uint16_t seconds);
-%rename(setDelayedCallback) jni_oc_set_delayed_callback;
+%rename(setDelayedHandler) jni_oc_set_delayed_callback;
 void jni_oc_set_delayed_callback(void *user_data, oc_trigger_t callback, jni_callback_data *jcb,
                                  uint16_t seconds);
 %ignore oc_remove_delayed_callback;
-%rename(removeDelayedCallback) jni_oc_remove_delayed_callback;
+%rename(removeDelayedHandler) jni_oc_remove_delayed_callback;
 void jni_oc_remove_delayed_callback(jobject callback);
 %include "oc_api.h"
 
