@@ -19,6 +19,7 @@
 #include "st_easy_setup.h"
 #include "oc_helpers.h"
 #include "oc_network_monitor.h"
+#include <wifi_manager/wifi_manager.h>
 #ifdef OC_SECURITY
 #include "oc_security.h"
 #endif
