@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_c5a2ee99",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-11T05:28:10Z",
+      "side": 1,
+      "message": "Please use %zu instead %d",
+      "range": {
+        "startLine": 69,
+        "startChar": 37,
+        "endLine": 69,
+        "endChar": 57
+      },
+      "revId": "bce039f830532b6d8b27ff05f4cc7b703d9fcb81",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a59fea4f",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-11T05:28:10Z",
+      "side": 1,
+      "message": "how about using shift?",
+      "range": {
+        "startLine": 967,
+        "startChar": 21,
+        "endLine": 967,
+        "endChar": 36
+      },
+      "revId": "bce039f830532b6d8b27ff05f4cc7b703d9fcb81",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_05adf688",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-11T05:28:10Z",
+      "side": 1,
+      "message": "how about using shift?",
+      "range": {
+        "startLine": 377,
+        "startChar": 24,
+        "endLine": 377,
+        "endChar": 39
+      },
+      "revId": "bce039f830532b6d8b27ff05f4cc7b703d9fcb81",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_e5a9f27c",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-10-11T05:28:10Z",
+      "side": 1,
+      "message": "Is it safe from stack overflow?",
+      "revId": "bce039f830532b6d8b27ff05f4cc7b703d9fcb81",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
