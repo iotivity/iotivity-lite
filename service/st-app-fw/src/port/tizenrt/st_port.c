@@ -28,6 +28,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
+#include <wifi_manager/wifi_manager.h>
+
+static pthread_mutex_t g_wifi_manager_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_wifi_manager_cond;
 
 /* setting up the stack size for st_thread */
 #define STACKSIZE 8192
@@ -38,6 +43,20 @@
       goto exit;                                                               \
     }                                                                          \
   } while (0);
+
+#define WIFITEST_SIGNAL                                                        \
+  do {                                                                         \
+    pthread_mutex_lock(&g_wifi_manager_mutex);                                 \
+    pthread_cond_signal(&g_wifi_manager_cond);                                 \
+    pthread_mutex_unlock(&g_wifi_manager_mutex);                               \
+  } while (0)
+
+#define WIFITEST_WAIT                                                          \
+  do {                                                                         \
+    pthread_mutex_lock(&g_wifi_manager_mutex);                                 \
+    pthread_cond_wait(&g_wifi_manager_cond, &g_wifi_manager_mutex);            \
+    pthread_mutex_unlock(&g_wifi_manager_mutex);                               \
+  } while (0)
 
 typedef struct
 {
@@ -50,6 +69,17 @@ typedef struct
   int channel;
 } st_soft_ap_t;
 
+static void wifi_sta_connected_cb(wifi_manager_result_e res); // in station mode, connected to ap
+static void wifi_sta_disconnected_cb(void); // in station mode, disconnected from ap
+
+static wifi_manager_cb_s wifi_callbacks = {
+  wifi_sta_connected_cb,
+  wifi_sta_disconnected_cb,
+  NULL,
+  NULL,
+  NULL,
+};
+
 static st_soft_ap_t g_soft_ap;
 
 OC_MEMB(st_mutex_s, pthread_mutex_t, 10);
@@ -58,18 +88,77 @@ OC_MEMB(st_thread_s, pthread_t, 10);
 
 static void *soft_ap_process_routine(void *data);
 
+static void wifi_sta_connected_cb(wifi_manager_result_e res)
+{
+  st_print_log("wifi_sta_connected: send signal!!! \n");
+  WIFITEST_SIGNAL;
+}
+
+static void wifi_sta_disconnected_cb(void)
+{
+ st_print_log("wifi_sta_disconnected: send signal!!! \n");
+  WIFITEST_SIGNAL;
+}
+
+static int wifi_signal_init(void)
+{
+  int res = pthread_mutex_init(&g_wifi_manager_mutex, NULL);
+  if (res != 0) {
+    st_print_log("wifi signal init fail(%d) (%d)\n", res, errno);
+    return -1;
+  }
+  res = pthread_cond_init(&g_wifi_manager_cond, NULL);
+  if (res != 0) {
+    st_print_log("wifi condition init fail(%d) (%d)\n", res, errno);
+    res = pthread_mutex_destroy(&g_wifi_manager_mutex);
+    if (res != 0) {
+      st_print_log("wifi signal init fail(%d) (%d)\n", res, errno);
+    }
+    return -1;
+  }
+  return 0;
+}
+
+static void wifi_signal_deinit(void)
+{
+  int res = pthread_mutex_destroy(&g_wifi_manager_mutex);
+  if (res != 0) {
+    st_print_log("wifi signal deinit fail(%d) (%d)\n", res, errno);
+  }
+  res = pthread_cond_destroy(&g_wifi_manager_cond);
+  if (res != 0) {
+    st_print_log("wifi signal deinit fail(%d) (%d)\n", res, errno);
+  }
+}
+
 int
 st_port_specific_init(void)
 {
-  /* set port specific logics. in here */
+  int res = wifi_signal_init();
+  if (res < 0) {
+    return -1;
+  }
+
+  wifi_manager_result_e ret = WIFI_MANAGER_FAIL;
+  int i;
+
+  ret = wifi_manager_init(&wifi_callbacks);
+  if (ret != WIFI_MANAGER_SUCCESS) {
+    st_print_log("wifi_manager_init failed\n");
+  }
+
   return 0;
 }
 
 void
 st_port_specific_destroy(void)
 {
-  /* set initialized port specific logics destroyer. in here */
-  return;
+  int ret = wifi_manager_deinit();
+  if (ret != WIFI_MANAGER_SUCCESS) {
+    st_print_log("wifi_manager_init failed\n");
+  }
+
+  wifi_signal_deinit();
 }
 
 void
@@ -424,7 +513,8 @@ soft_ap_process_routine(void *data)
 
   st_print_log("[ST_PORT] soft_ap_handler in\n");
 
-  if (es_create_softap() == -1) {
+  if (es_create_softap(oc_string(soft_ap->ssid),
+                       oc_string(soft_ap->pwd)) == -1) {
     st_print_log("[ST_PORT] Soft AP mode failed!!\n");
     st_mutex_lock(soft_ap->mutex);
     soft_ap->is_soft_ap_on = 0;
