@@ -5,15 +5,37 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.iotivity.*;
+
 public class Client {
     static {
         System.loadLibrary("iotivity-lite-jni");
-      }
+    }
 
     public final static Lock lock = new ReentrantLock();
     public static Condition cv = lock.newCondition();
 
+    public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
+    public static final long CLOCK_TICKS_PER_SECOND = OCClock.OC_CLOCK_SECOND;
+
+    static private boolean quit;
+    static private Thread mainThread;
+    static private Thread shutdownHook = new Thread() {
+        public void run() {
+            quit = true;
+            System.out.println("Calling main_shutdown.");
+            OCMain.mainShutdown();
+            mainThread.interrupt();
+        }
+    };
+
     public static void main(String argv[]) {
+        mainThread = Thread.currentThread();
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+        String osName = System.getProperty("os.name");
+        boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
+        System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
+
         OCStorage.storage_config("./simpleclient_creds");
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
@@ -21,26 +43,42 @@ public class Client {
             System.exit(init_ret);
         }
 
-            while(!Thread.currentThread().isInterrupted()) {
-                long next_event = OCMain.mainPoll().longValue();
-                lock.lock();
-                try {
+        while (!quit) {
+            long next_event = OCMain.mainPoll().longValue();
+            lock.lock();
+            try {
                 if (next_event == 0) {
                     System.out.println("Calling cv.await");
                     cv.await();
                 } else {
-                    System.out.println("Calling cv.awaitNanos " + next_event);
-                    cv.awaitNanos(next_event);
-                }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    lock.unlock();
-                }
-            }
-        System.out.println("Calling mainShutdown.");
-        OCMain.mainShutdown();
-        System.exit(0);
-      }
+                    if (isLinux) {
+                        // For Linux next_event is absolute time.
+                        // Decrement next_event by the current time to get the nanoseconds to wait.
+                        long next_event_secs = (next_event / CLOCK_TICKS_PER_SECOND);
+                        long next_event_nanos = (next_event % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
 
+                        long now = OCMain.oc_clock_time().longValue();
+                        long now_secs = (now / CLOCK_TICKS_PER_SECOND);
+                        long now_nanos = (now % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
+
+                        long timeToWait = ((next_event_secs * NANOS_PER_SECOND) + next_event_nanos) -
+                                          ((now_secs * NANOS_PER_SECOND) + now_nanos);
+                        timeToWait %= (NANOS_PER_SECOND * 10); // never more than 10 seconds
+                        System.out.println("Calling cv.awaitNanos " + timeToWait);
+                        cv.awaitNanos(timeToWait);
+                    } else {
+                        // For Windows next_event is the number of nanoseconds to wait
+                        System.out.println("Calling cv.awaitNanos " + next_event);
+                        cv.awaitNanos(next_event);
+                    }
+                }
+            } catch (InterruptedException e) {
+                System.out.println(e);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        System.exit(0);
+    }
 }
