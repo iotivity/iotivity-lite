@@ -513,7 +513,7 @@ void jni_rep_set_text_string(const char* key, const char* value) {
   user_data->env = jenv;
   user_data->obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_map.insert(std::pair<jobject, jni_callback_data*>(user_data->obj, user_data));
+  jni_callbacks_vector.push_back(user_data);
   $1 = jni_oc_init_platform_callback;
   $2 = user_data;
 }
