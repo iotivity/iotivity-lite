@@ -5,11 +5,11 @@
 %include "stdint.i"
 %include <oc_ri.i>
 %include "iotivity.swg"
-/*%include <oc_collection.i>*/
 
 %{
 #include "oc_api.h"
 #include "oc_rep.h"
+#include "oc_collection.h"
 #include <vector>
 #include <assert.h>
 
@@ -903,3 +903,49 @@ void jni_rep_set_boolean(const char* key, bool value);
 
 %rename (repSetTextString) jni_rep_set_text_string;
 void jni_rep_set_text_string(const char* key, const char* value);
+
+/**************************************************************
+Add OCCollection and OCList to the output
+***************************************************************/
+
+//replace all instances of oc_link_s with oc_link_t since parser
+// seems to have a problem with typedef that tells the code they
+// are both the same
+%rename(OCLink) oc_link_t;
+%ignore oc_link_s;
+typedef struct
+{
+  struct oc_link_t *next;
+  oc_resource_t *resource;
+  oc_string_t ins;
+  oc_string_array_t rel;
+}oc_link_t;
+
+// replace all instance os oc_collection_s with oc_collection_t
+%rename(OCCollection) oc_collection_t;
+%ignore oc_collection_s;
+typedef struct
+{
+  struct oc_collection_t *next;
+  size_t device;
+  oc_string_t name;
+  oc_string_t uri;
+  oc_string_array_t types;
+  oc_interface_mask_t interfaces;
+  oc_interface_mask_t default_interface;
+  oc_resource_properties_t properties;
+  oc_request_handler_t get_handler;
+  oc_request_handler_t put_handler;
+  oc_request_handler_t post_handler;
+  oc_request_handler_t delete_handler;
+  OC_LIST_STRUCT(links);
+}oc_collection_t;
+
+%rename(handleCollectionRequest) oc_handle_collection_request;
+%rename(newCollection) oc_collection_alloc;
+%rename(getCollectionByUri) oc_get_collection_by_uri;
+%rename(collectionGetAll) oc_collection_get_all;
+%rename(getLinkByUri) oc_get_link_by_uri;
+%rename(checkIfCollection) oc_check_if_collection;
+%rename(collectionAdd) oc_collection_add;
+%include "oc_collection.h"
