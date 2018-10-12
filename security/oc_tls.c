@@ -1644,10 +1644,18 @@ read_application_data(oc_tls_peer_t *peer)
     }
 #endif /* OC_CLIENT */
   } else {
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_message_t *message = oc_allocate_message_except_data();
+#else
     oc_message_t *message = oc_allocate_message();
+#endif /* !OC_DYNAMIC_ALLOCATION */
     if (message) {
       memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_DYNAMIC_ALLOCATION
+      int ret = mbedtls_ssl_read(&peer->ssl_ctx, &(message->data), OC_PDU_SIZE);
+#else
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data, OC_PDU_SIZE);
+#endif /* !OC_DYNAMIC_ALLOCATION */
       if (ret <= 0) {
         oc_message_unref(message);
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
