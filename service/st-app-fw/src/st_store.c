@@ -16,11 +16,14 @@
  *
  ****************************************************************************/
 
-#include "st_store.h"
+#ifdef OC_SECURITY
+#include "st_security.h"
+#endif
 #include "oc_rep.h"
 #include "port/oc_storage.h"
 #include "st_easy_setup.h"
 #include "st_port.h"
+#include "st_store.h"
 #include "util/oc_mem.h"
 
 #define ST_MAX_DATA_SIZE (1024)
@@ -37,17 +40,20 @@
 static st_store_t g_store_info;
 static int decoded_data_status = 0;
 
-static int st_store_load_internal(int security_info , char *store_name);
-static int st_store_dump_internal(int security_info , char *store_name);
-static void st_encode_encrypted_data_info(unsigned char *encrypted_data,int encrypted_data_len);
+static int st_store_load_internal(int security_info, char *store_name);
+static int st_store_dump_internal(int security_info, char *store_name);
+#ifdef OC_SECURITY
+static void st_encode_encrypted_data_info(unsigned char *encrypted_data,
+                                          int encrypted_data_len);
 static int st_decode_encrypted_data_info(oc_rep_t *rep);
 static void st_encode_security_info(void);
 static int st_decode_security_info(oc_rep_t *rep);
 static void st_encode_cloud_accesspoint_info(void);
 static int st_decode_cloud_accesspoint_info(oc_rep_t *rep);
+#endif /* OC_SECURITY */
 
 static int
-st_store_load_internal(int security_info , char *store_name)
+st_store_load_internal(int security_info, char *store_name)
 {
   int ret = 0;
   oc_rep_t *rep;
@@ -64,7 +70,10 @@ st_store_load_internal(int security_info , char *store_name)
   long size = 0;
 #ifdef OC_SECURITY
   size = oc_storage_read(store_name, buf, ST_MAX_DATA_SIZE);
-#endif/* OC_SECURITY */
+#else
+  (void)security_info;
+  (void)store_name;
+#endif /* OC_SECURITY */
   if (size > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
     char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -90,7 +99,7 @@ st_store_load_internal(int security_info , char *store_name)
       oc_rep_set_pool(&rep_objects);
       oc_free_rep(rep);
     }
-#endif/* OC_SECURITY */
+#endif /* OC_SECURITY */
   } else {
     st_store_info_initialize();
     ret = -2;
@@ -120,9 +129,13 @@ st_store_load(void)
 static int
 st_store_dump_internal(int security_info , char *store_name)
 {
-  unsigned char *encrypted_data= NULL;
-  unsigned int encrypted_data_len =0;
   int size = -1;
+#ifdef OC_SECURITY
+  unsigned char *encrypted_data = NULL;
+  unsigned int encrypted_data_len = 0;
+#else
+  (void)store_name;
+#endif /* OC_SECURITY */
 
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = oc_mem_malloc(ST_MAX_DATA_SIZE);
@@ -302,9 +315,9 @@ st_decode_security_info(oc_rep_t *rep)
   }
   return 0;
 }
-#endif /* OC_SECURITY */
 
-static int st_decode_cloud_accesspoint_info(oc_rep_t *rep)
+static int
+st_decode_cloud_accesspoint_info(oc_rep_t *rep)
 {
   oc_rep_t *t = rep;
   int len = 0;
@@ -376,17 +389,17 @@ st_decode_encrypted_data_info(oc_rep_t *rep)
       break;
     case OC_REP_BYTE_STRING:
       if (len == 4 && memcmp(oc_string(t->name), "data", 4) == 0) {
-#ifdef OC_SECURITY
         unsigned char *decrypted_buff;
         oc_rep_t *rep_internal;
         st_security_store_t securityinfo = g_store_info.securityinfo;
-        unsigned int decrypted_buff_len =ST_MAX_DATA_SIZE;
+        unsigned int decrypted_buff_len = ST_MAX_DATA_SIZE;
         decrypted_buff = (unsigned char *)malloc(decrypted_buff_len);
-        //Decrypting data.
-        st_security_decrypt(
-          oc_string(securityinfo.salt), oc_string(securityinfo.iv),
-          oc_string(t->value.string), securityinfo.encrypted_len,
-          decrypted_buff, &decrypted_buff_len);
+        // Decrypting data.
+        st_security_decrypt(oc_cast(securityinfo.salt, unsigned char),
+                            oc_cast(securityinfo.iv, unsigned char),
+                            oc_cast(t->value.string, unsigned char),
+                            securityinfo.encrypted_len, decrypted_buff,
+                            &decrypted_buff_len);
 #ifndef OC_DYNAMIC_ALLOCATION
         char rep_objects_alloc2[OC_MAX_NUM_REP_OBJECTS];
         oc_rep_t rep_objects_pool2[OC_MAX_NUM_REP_OBJECTS];
@@ -404,7 +417,6 @@ st_decode_encrypted_data_info(oc_rep_t *rep)
         st_decode_cloud_accesspoint_info(rep_internal);
         oc_free_rep(rep_internal);
         oc_mem_free(decrypted_buff);
-#endif /* OC_SECURITY */
       }
       break;
     default:
@@ -417,7 +429,6 @@ st_decode_encrypted_data_info(oc_rep_t *rep)
   return 0;
 }
 
-#ifdef OC_SECURITY
 static void
 st_encode_security_info(void)
 {
@@ -434,7 +445,6 @@ st_encode_security_info(void)
   oc_rep_set_int(root, encrypted_len, g_store_info.securityinfo.encrypted_len);
   oc_rep_end_root_object();
 }
-#endif /* OC_SECURITY */
 
 static void
 st_encode_cloud_accesspoint_info(void)
@@ -476,17 +486,13 @@ st_encode_encrypted_data_info(unsigned char *encrypted_data,int encrypted_data_l
     oc_rep_set_byte_string(root, data,encrypted_data,encrypted_data_len);
   oc_rep_end_root_object();
 
-    int size = -1;
-#ifdef OC_SECURITY
-  size = oc_rep_finalize();
+  int size = oc_rep_finalize();
   if (size > 0) {
     oc_storage_write(ST_STORE_NAME, buf, size);
   }
-
-#endif /* OC_SECURITY */
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_mem_free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_reset();
-
 }
+#endif /* OC_SECURITY */

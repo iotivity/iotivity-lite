@@ -17,6 +17,7 @@
  ****************************************************************************/
 #ifdef OC_SECURITY
 #include "st_security.h"
+#include "st_port.h"
 
 #define ST_SECURITY_DEBUG
 #ifdef ST_SECURITY_DEBUG
@@ -102,9 +103,9 @@ static int pbkdf2(const unsigned char *password, unsigned char* key,unsigned cha
     goto cleanup;
   }
 
-  ret = mbedtls_pkcs5_pbkdf2_hmac(&ctx, password, strlen(password), salt, 32, 1000, 32, key);
-  if(ret != 0)
-  {
+  ret = mbedtls_pkcs5_pbkdf2_hmac(
+    &ctx, password, strlen((const char *)password), salt, 32, 1000, 32, key);
+  if (ret != 0) {
     st_print_log("[ST_SEC]failed in mbedtls_pkcs5_pbkdf2_hmac: %d", ret);
     goto cleanup;
   }
@@ -206,10 +207,10 @@ static int aes_decrypt(const unsigned char* key, const unsigned char* iv, unsign
 int st_security_encrypt(const unsigned char* data, const unsigned int data_len, 
                         unsigned char* encrypted_data, unsigned int* encrypted_data_len)
 {
-  unsigned char key[32] = {0};
-  unsigned char mac[6+1] = { 0 };
-  char iv_internal[16] = {0};
-  char salt_internal[32] = {0};
+  unsigned char key[32] = { 0 };
+  unsigned char mac[6 + 1] = { 0 };
+  unsigned char iv_internal[16] = { 0 };
+  unsigned char salt_internal[32] = { 0 };
   int ret = 0;
 
   st_store_t *store_info = st_store_get_info();
@@ -232,9 +233,10 @@ int st_security_encrypt(const unsigned char* data, const unsigned int data_len,
       st_print_log("[ST_SEC]failed in gen_random: %d\n", ret);
       return -1;
     }
-      //Dumping security info
-    oc_new_string(&store_info->securityinfo.salt, salt_internal, 32);
-    oc_new_string(&store_info->securityinfo.iv, iv_internal, 16);
+    // Dumping security info
+    oc_new_string(&store_info->securityinfo.salt, (const char *)salt_internal,
+                  32);
+    oc_new_string(&store_info->securityinfo.iv, (const char *)iv_internal, 16);
     st_store_dump_async();
 
   }else {
