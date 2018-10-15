@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_68b5b7cc",
+        "filename": "patches/05_mbedtls_ocf-samsung.patch",
+        "patchSetId": 5
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-10-15T08:59:54Z",
+      "side": 1,
+      "message": "44 recalculate with macro such as \n\\ (len \u003c 32  ? 16                                                                      \\ : (len \u003c 64 ? 32                                                                 \\ : (len \u003c 128 ? 64                                                            \\ : (len \u003c 256 ? 128                                                      \\ : (len  \u003c 512  ? 256                                                 \\  : (len \u003c 1024  ? 512                                            \\  : (len \u003c 2048 ? 1024 : 2048)))))))",
+      "range": {
+        "startLine": 603,
+        "startChar": 31,
+        "endLine": 603,
+        "endChar": 34
+      },
+      "revId": "f3be23b6aeba2280179372c8e2c1a89242da6ffd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
