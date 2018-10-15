@@ -19,19 +19,20 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_manager.h"
-    #include "st_fota_manager.h"
-    #include "st_data_manager.h"
-    #include "oc_ri.h"
-    #include "oc_api.h"
-    #include "sttestcommon.h"
+#include "st_manager.h"
+#include "st_fota_manager.h"
+#include "st_data_manager.h"
+#include "oc_ri.h"
+#include "oc_api.h"
+#include "sttestcommon.h"
+
+extern "C" {
     int st_fota_manager_start(void);
     void st_fota_manager_stop(void);
+};
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 #define device_index 0
 

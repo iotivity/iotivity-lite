@@ -16,14 +16,12 @@
  *
  ****************************************************************************/
 
-extern "C"{
-    #include "sttestcommon.h"
-    #include "oc_endpoint.h"
-    #include "oc_api.h"
+#include "sttestcommon.h"
+#include "oc_endpoint.h"
+#include "oc_api.h"
 #ifdef OC_SECURITY
-    #include "security/oc_store.h"
+#include "security/oc_store.h"
 #endif /* OC_SECURITY */
-}
 
 #ifdef OC_SECURITY
 static unsigned char acl_data[] = {

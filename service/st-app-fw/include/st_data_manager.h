@@ -21,6 +21,10 @@
 
 #include "oc_helpers.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct st_device_info
 {
   oc_string_t device_type;
@@ -145,5 +149,9 @@ st_specification_t *st_data_mgr_get_spec_info(void);
 st_resource_info_t *st_data_mgr_get_resource_info(void);
 st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);
 st_configuration_t *st_data_mgr_get_config_info(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_DATA_MANAGER_H */

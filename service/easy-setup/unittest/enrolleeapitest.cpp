@@ -22,9 +22,7 @@
 #include <string>
 #include <gtest/gtest.h>
 
-extern "C" {
-    #include "easysetup.h"
-}
+#include "easysetup.h"
 
 #define DEVICE_URI "/oic/d"
 #define DEVICE_TYPE "oic.d.light"

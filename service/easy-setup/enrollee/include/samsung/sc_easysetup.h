@@ -26,6 +26,10 @@
 
 #include "es_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  *@brief  WIFI discovery channel init value.
  */
@@ -354,4 +358,9 @@ es_result_e init_accesspointlist_resource(get_ap_scan_list cb);
  *@retval ES_OK if deinit is successful..
  */
 es_result_e deinit_accesspointlist_resource(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* SC_EASYSETUP_H */

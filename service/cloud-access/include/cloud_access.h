@@ -26,6 +26,10 @@
 
 #include "oc_client_state.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Account URI.*/
 #define OC_RSRVD_ACCOUNT_URI "/oic/account"
 
@@ -182,6 +186,10 @@ bool oc_send_ping_request(oc_endpoint_t *endpoint, int interval,
 bool oc_send_ping_update(oc_endpoint_t *endpoint, const int *interval,
                          int length, oc_response_handler_t handler,
                          void *user_data);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* CLOUD_ACCESS_H */

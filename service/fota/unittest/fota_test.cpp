@@ -18,10 +18,8 @@
 
 #include <gtest/gtest.h>
 
-extern "C" {
-  #include "fota.h"
-  #include "oc_ri.h"
-}
+#include "fota.h"
+#include "oc_ri.h"
 
 static int
 fota_cmd_handler(fota_cmd_t cmd)

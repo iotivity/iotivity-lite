@@ -28,6 +28,10 @@
 #include "st_types.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
   @brief A data structure to Provide request from clients which
      include resource informations and request payloads.
@@ -74,5 +78,9 @@ st_error_t st_register_resource_handler(st_resource_handler get_handler,
     such as failure to get the resource info. of input parameter.
 */
 st_error_t st_notify_back(const char *uri);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_RECOURCE_MGR_H */

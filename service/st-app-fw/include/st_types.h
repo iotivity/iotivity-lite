@@ -24,6 +24,10 @@
 #ifndef ST_TYPES_H
 #define ST_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   ST_ERROR_NONE = 0,                  /**< Successful*/
   ST_ERROR_INVALID_PARAMETER,         /**<Invalid parameter
@@ -48,5 +52,9 @@ typedef enum {
   ST_STATUS_RESET,
   ST_STATUS_STOP
 } st_status_t;
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif

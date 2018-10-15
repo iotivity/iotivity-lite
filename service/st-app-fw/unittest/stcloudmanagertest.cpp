@@ -19,18 +19,16 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_cloud_manager.h"
-    #include "st_manager.h"
-    #include "st_resource_manager.h"
-    #include "st_store.h"
-    #include "st_port.h"
-    #include "sttestcommon.h"
-    #include "es_common.h"
+#include "st_cloud_manager.h"
+#include "st_manager.h"
+#include "st_resource_manager.h"
+#include "st_store.h"
+#include "st_port.h"
+#include "sttestcommon.h"
+#include "es_common.h"
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 typedef enum {
   CM_NO_ERROR,

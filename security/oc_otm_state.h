@@ -21,6 +21,14 @@
 
 #include "oc_security.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void oc_sec_otm_err(int device, oc_sec_otm_err_code_t code);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_OTM_STATE_H */

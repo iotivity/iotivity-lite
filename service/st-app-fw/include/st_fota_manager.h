@@ -27,6 +27,11 @@
 #include "fota_types.h"
 #include "st_types.h"
 #include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
   @brief A function pointer for handling the fota command.
   @param cmd Command for firmware update.
@@ -79,5 +84,9 @@ bool st_register_fota_cmd_handler(st_fota_cmd_cb_t cb);
   @brief Function to unregister fota command handler
 */
 void st_unregister_fota_cmd_handler(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_FOTA_MANAGER_H */

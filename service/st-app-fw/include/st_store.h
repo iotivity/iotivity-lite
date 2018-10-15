@@ -22,6 +22,10 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
   oc_string_t ssid;
@@ -61,5 +65,9 @@ int st_store_dump(void);
 void st_store_dump_async(void);
 void st_store_info_initialize(void);
 st_store_t *st_store_get_info(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_STORE_H */

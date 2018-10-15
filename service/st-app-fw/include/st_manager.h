@@ -30,6 +30,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
   @brief A function pointer for handling OTM(Ownership Transfer
      Method) confirm function.
@@ -210,5 +214,9 @@ void st_unregister_rpk_handler(void);
 */
 bool st_set_device_profile(unsigned char *device_def,
                            unsigned int device_def_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_MANAGER_H */

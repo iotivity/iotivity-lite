@@ -27,6 +27,10 @@
 #include "oc_client_state.h"
 #include "oc_ri.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Resource Directory URI used to Discover RD and Publish resources.*/
 #define OC_RSRVD_RD_URI "/oic/rd"
 
@@ -106,6 +110,10 @@ bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
 bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                               const char *id, oc_response_handler_t handler,
                               oc_qos_t qos, void *user_data);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* RD_CLIENT_H */

@@ -18,11 +18,9 @@
 
 #include <gtest/gtest.h>
 
-extern "C" {
 #include "cloud_access.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
-}
 
 class TestCloudAccess: public testing::Test
 {

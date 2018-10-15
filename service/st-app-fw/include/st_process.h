@@ -21,6 +21,10 @@
 
 #include "st_port.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int st_process_init(void);
 int st_process_start(void);
 int st_process_stop(void);
@@ -29,5 +33,9 @@ int st_process_destroy(void);
 void st_process_signal(void);
 void st_process_app_sync_lock(void);
 void st_process_app_sync_unlock(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_PROCESS_H */

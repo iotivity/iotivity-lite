@@ -19,24 +19,22 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_manager.h"
-    #include "st_easy_setup.h"
-    #include "sc_easysetup.h"
-    #include "st_store.h"
-    #include "easysetup.h"
-    #include "st_data_manager.h"
-    #include "st_port.h"
-    #include "sttestcommon.h"
-    #include "messaging/coap/engine.h"
-    #include "oc_api.h"
+#include "st_manager.h"
+#include "st_easy_setup.h"
+#include "sc_easysetup.h"
+#include "st_store.h"
+#include "easysetup.h"
+#include "st_data_manager.h"
+#include "st_port.h"
+#include "sttestcommon.h"
+#include "messaging/coap/engine.h"
+#include "oc_api.h"
 #ifdef OC_SECURITY
-    #include "security/oc_otm_state.h"
+#include "security/oc_otm_state.h"
 #endif /* OC_SECURITY */
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 #define MAX_SSID_LEN (32)
 #define EASYSETUP_TAG "E1"
