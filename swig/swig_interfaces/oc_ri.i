@@ -5,6 +5,7 @@
 %include "iotivity.swg"
 %include "oc_api.i"
 %{
+#include "../../messaging/coap/oc_coap.h"
 #include "../../include/oc_ri.h"
 %}
 
@@ -33,6 +34,13 @@ typedef enum {
   __NUM_OC_STATUS_CODES__,
   OC_IGNORE
 } oc_status_t;
+
+%rename(OCResponse) oc_response_t;
+typedef struct
+{
+  oc_separate_response_t *separate_response;
+  oc_response_buffer_t *response_buffer;
+} oc_response_t;
 
 %rename (OCInterfaceMask) oc_interface_mask_t;
 typedef enum {
@@ -106,3 +114,29 @@ typedef enum {
   OC_EVENT_DONE = 0,
   OC_EVENT_CONTINUE
 } oc_event_callback_retval_t;
+
+/***************************************************************
+structs from oc_coap
+***************************************************************/
+// replace all instances of oc_separate_response_s with oc_separate_response_t since parser
+// seems to have a problem with typedef that tells the code they are both the same
+%rename(OCSeparateResponse) oc_separate_response_t;
+typedef struct
+{
+  OC_LIST_STRUCT(requests);
+  int active;
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+} oc_separate_response_t;
+
+%rename(OCResponseBuffer) oc_response_buffer_t;
+typedef struct
+{
+  uint8_t *buffer;
+  uint16_t buffer_size;
+  uint16_t response_length;
+  int code;
+} oc_response_buffer_t;
