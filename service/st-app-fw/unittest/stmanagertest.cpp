@@ -19,15 +19,13 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_manager.h"
-    #include "st_process.h"
-    #include "st_port.h"
-    #include "sttestcommon.h"
+#include "st_manager.h"
+#include "st_process.h"
+#include "st_port.h"
+#include "sttestcommon.h"
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 static st_mutex_t mutex = NULL;
 static st_cond_t cv = NULL;

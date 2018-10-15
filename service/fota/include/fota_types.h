@@ -19,6 +19,10 @@
 #ifndef FOTA_TYPES_H
 #define FOTA_TYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 typedef enum {
   FOTA_CMD_INIT = 1,
   FOTA_CMD_CHECK,
@@ -46,5 +50,9 @@ typedef enum {
   FOTA_RESULT_FAILED,
   FOTA_RESULT_UNSUPPORT_PROTOCOL
 } fota_result_t;
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* FOTA_TYPES_H */

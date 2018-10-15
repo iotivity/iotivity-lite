@@ -22,6 +22,10 @@
 #include "config.h"
 #include "oc_helpers.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *st_mutex_t;
 typedef void *st_cond_t;
 typedef void *st_thread_t;
@@ -76,6 +80,10 @@ void st_wifi_free_scan_list(st_wifi_ap_t *ap_list);
 void st_wifi_set_cache(st_wifi_ap_t *ap_list);
 st_wifi_ap_t* st_wifi_get_cache(void);
 void st_wifi_clear_cache(void);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* ST_PORT_H */

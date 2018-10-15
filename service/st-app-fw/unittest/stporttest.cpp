@@ -20,14 +20,12 @@
 #include <cstdlib>
 #include <pthread.h>
 
-extern "C"{
-    #include "st_port.h"
-    #include "st_process.h"
-    #include "st_manager.h"
-    #include "st_easy_setup.h"
-    #include "st_data_manager.h"
-    #include "st_device_def.h"
-}
+#include "st_port.h"
+#include "st_process.h"
+#include "st_manager.h"
+#include "st_easy_setup.h"
+#include "st_data_manager.h"
+#include "st_device_def.h"
 
 #define SOFT_AP_PWD "1111122222"
 #define SOFT_AP_CHANNEL (6)

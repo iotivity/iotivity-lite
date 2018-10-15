@@ -26,6 +26,10 @@
 
 #include "fota_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
   @brief A function pointer for handling the fota command.
   @param cmd Command for firmware update.
@@ -68,5 +72,9 @@ int fota_set_fw_info(const char *cur_version, const char *new_version,
   @return Returns 0 if successful, or -1 otherwise.
 */
 int fota_set_result(fota_result_t result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FOTA_H */

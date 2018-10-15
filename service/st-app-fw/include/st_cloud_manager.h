@@ -26,6 +26,10 @@
 
 #include "st_store.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   CLOUD_MANAGER_INITIALIZE = 0,
   CLOUD_MANAGER_SIGNED_UP = 1 << 0,
@@ -65,5 +69,9 @@ void st_cloud_manager_stop(size_t device_index);
   @return Returns 0 if successful, or -1 otherwise.
 */
 int st_cloud_manager_check_connection(oc_string_t *ci_server);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_CLOUD_MANAGER_H */

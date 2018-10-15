@@ -20,23 +20,24 @@
 #include <cstdlib>
 #include <pthread.h>
 
-extern "C"{
-    #include "st_data_manager.h"
-    #include "st_resource_manager.h"
-    #include "st_manager.h"
-    #include "oc_api.h"
-    #include "oc_ri.h"
-    #include "oc_rep.h"
-    #include "st_port.h"
-    #include "st_types.h"
-    #include "sttestcommon.h"
-    #include "sc_easysetup.h"
-    #include "messaging/coap/observe.h"
-    int st_register_resources(size_t device);
+#include "st_data_manager.h"
+#include "st_resource_manager.h"
+#include "st_manager.h"
+#include "oc_api.h"
+#include "oc_ri.h"
+#include "oc_rep.h"
+#include "st_port.h"
+#include "st_types.h"
+#include "sttestcommon.h"
+#include "sc_easysetup.h"
+#include "messaging/coap/observe.h"
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern "C" {
+    int st_register_resources(size_t device);
+};
+
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 static size_t device_index = 0;
 static bool request_handled;

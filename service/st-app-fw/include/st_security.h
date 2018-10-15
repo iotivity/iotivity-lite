@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
- #ifndef ST_SECURITY_H
+#ifndef ST_SECURITY_H
 #define ST_SECURITY_H
 
 #include <stdio.h>
@@ -29,8 +29,21 @@
 #endif /* OC_SECURITY*/
 #include "st_store.h"
 
-int st_security_encrypt(const unsigned char* data, const unsigned int data_len, unsigned char* encrypted_data, unsigned int* encrypted_data_len);
-int st_security_decrypt(unsigned char* salt, unsigned char* iv, unsigned char* encrypted_data, unsigned int encrypted_data_len, unsigned char* decrypted_data, unsigned int* decrypted_data_len);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+int st_security_encrypt(const unsigned char *data, const unsigned int data_len,
+                        unsigned char *encrypted_data,
+                        unsigned int *encrypted_data_len);
+int st_security_decrypt(unsigned char *salt, unsigned char *iv,
+                        unsigned char *encrypted_data,
+                        unsigned int encrypted_data_len,
+                        unsigned char *decrypted_data,
+                        unsigned int *decrypted_data_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_SECURITY_H */

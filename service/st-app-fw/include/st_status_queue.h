@@ -26,6 +26,10 @@
 
 #include "st_manager.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_STATUS_COUNT 10
 
 /**
@@ -46,5 +50,9 @@ int st_status_queue_free_item(st_status_item_t *item);
 void st_status_queue_remove_all_items(void);
 void st_status_queue_remove_all_items_without_stop(void);
 void st_status_queue_deinitialize(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* ST_STATUS_QUEUE_H */

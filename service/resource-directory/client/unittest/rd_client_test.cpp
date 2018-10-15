@@ -18,11 +18,9 @@
 
 #include <gtest/gtest.h>
 
-extern "C" {
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "rd_client.h"
-}
 
 class TestRDClient: public testing::Test
 {

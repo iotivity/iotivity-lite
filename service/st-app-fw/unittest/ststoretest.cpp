@@ -19,12 +19,10 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_manager.h"
-    #include "st_store.h"
-    #include "st_cloud_manager.h"
-    #include <oc_random.h>
-}
+#include "st_manager.h"
+#include "st_store.h"
+#include "st_cloud_manager.h"
+#include <oc_random.h>
 
 class TestSTStore: public testing::Test
 {

@@ -21,6 +21,10 @@
 #include "st_types.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   ST_EVT_INIT = 0,
   ST_EVT_START,
@@ -40,5 +44,9 @@ void st_evt_deinit(void);
 bool st_evt_is_in_queue(void);
 st_evt st_evt_pop(void);
 void st_evt_push(st_evt evt);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

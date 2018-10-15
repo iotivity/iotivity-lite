@@ -19,13 +19,11 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_data_manager.h"
-    #include "st_manager.h"
+#include "st_data_manager.h"
+#include "st_manager.h"
 
-    extern unsigned char st_device_def[];
-    extern unsigned int st_device_def_len;
-}
+extern unsigned char st_device_def[];
+extern unsigned int st_device_def_len;
 
 class TestSTDataManager: public testing::Test
 {

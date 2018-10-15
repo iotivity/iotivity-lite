@@ -19,9 +19,7 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-extern "C"{
-    #include "st_process.h"
-}
+#include "st_process.h"
 
 class TestSTProcess: public testing::Test
 {
