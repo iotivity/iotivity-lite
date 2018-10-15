@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_8882bbfe",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-15T01:37:37Z",
+      "side": 1,
+      "message": "It seems that you would like to rearrange #if OC_SECURITY.\naccording to it, ST_MAX_SECURE_DATA_SIZE and ST_STORE_SECURE_NAME are supposed to be in OC_SECURITY.\n\nMoreover  ST_MAX_SECURE_DATA_SIZE isn\u0027t used anymore.",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 45
+      },
+      "revId": "74fe5fd1e4244f4c4d9aa603bcc9920fadcf42f2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_68877710",
+        "filename": "service/st-app-fw/src/st_store.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-15T01:37:37Z",
+      "side": 1,
+      "message": "I think it isn\u0027t needed if it isn\u0027t secure mode.",
+      "range": {
+        "startLine": 117,
+        "startChar": 2,
+        "endLine": 117,
+        "endChar": 54
+      },
+      "revId": "74fe5fd1e4244f4c4d9aa603bcc9920fadcf42f2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
