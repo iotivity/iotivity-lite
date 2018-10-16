@@ -47,7 +47,7 @@
 #ifndef OC_MEMB_H
 #define OC_MEMB_H
 
-#include "config.h"
+#include "oc_config.h"
 
 #ifdef __cplusplus
 extern "C" {

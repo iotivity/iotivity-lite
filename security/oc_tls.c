@@ -35,19 +35,19 @@
 #endif /* OC_DEBUG */
 
 #include "api/oc_events.h"
-#include "config.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
+#include "oc_doxm.h"
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
+#include "oc_security.h"
 #include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
-#include "oc_doxm.h"
-#include "oc_security.h"
 
 #define PBKDF_ITERATIONS 1000
 

@@ -120,7 +120,7 @@ SRC +=../../port/oc_log.c
 endif
 
 HEADERS = $(wildcard ../../include/*.h)
-HEADERS += ../../port/linux/config.h
+HEADERS += ../../port/linux/oc_config.h
 
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)

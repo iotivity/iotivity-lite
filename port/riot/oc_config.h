@@ -14,26 +14,28 @@
  // limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef OC_CONFIG_H
+#define OC_CONFIG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Time resolution */
 #include <stdint.h>
 typedef uint64_t oc_clock_time_t;
-#include <zephyr.h>
+/* 1 clock tick = 1ms */
 #define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
 
-#define OC_BYTES_POOL_SIZE (1024)
-#define OC_INTS_POOL_SIZE (16)
-#define OC_DOUBLES_POOL_SIZE (16)
+#define OC_BYTES_POOL_SIZE (900)
+#define OC_INTS_POOL_SIZE (4)
+#define OC_DOUBLES_POOL_SIZE (4)
 
 /* Server-side parameters */
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (1)
 
 /* Common paramters */
-//#define OC_BLOCK_WISE_SET_MTU (80)
-
 /* Maximum size of request/response PDUs */
 #define OC_MAX_APP_DATA_SIZE (600)
 
@@ -58,4 +60,8 @@ typedef uint64_t oc_clock_time_t;
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
 
-#endif /* CONFIG_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* OC_CONFIG_H */

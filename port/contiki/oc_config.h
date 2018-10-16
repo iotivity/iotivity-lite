@@ -14,8 +14,10 @@
  // limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef OC_CONFIG_H
+#define OC_CONFIG_H
+
+#include <contiki-conf.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,8 +26,7 @@ extern "C" {
 /* Time resolution */
 #include <stdint.h>
 typedef uint64_t oc_clock_time_t;
-/* 1 clock tick = 1ms */
-#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
+#define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCK_CONF_SECOND
 
 #define OC_BYTES_POOL_SIZE (900)
 #define OC_INTS_POOL_SIZE (4)
@@ -64,4 +65,4 @@ typedef uint64_t oc_clock_time_t;
 }
 #endif
 
-#endif /* CONFIG_H */
+#endif /* OC_CONFIG_H */
