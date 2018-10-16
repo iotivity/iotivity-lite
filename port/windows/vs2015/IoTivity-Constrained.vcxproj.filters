@@ -486,7 +486,7 @@
     <ClInclude Include="..\..\..\security\oc_tls.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\config.h">
+    <ClInclude Include="..\oc_config.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_session_events.h">

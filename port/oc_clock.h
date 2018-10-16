@@ -50,7 +50,7 @@
 #ifndef OC_CLOCK_H
 #define OC_CLOCK_H
 
-#include "config.h"
+#include "oc_config.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -64,7 +64,7 @@ extern "C"
  * \hideinitializer
  */
 #ifndef OC_CLOCK_CONF_TICKS_PER_SECOND
-#error "Please define OC_CLOCK_CONF_TICKS_PER_SECOND in config.h"
+#error "Please define OC_CLOCK_CONF_TICKS_PER_SECOND in oc_config.h"
 #else
 #define OC_CLOCK_SECOND OC_CLOCK_CONF_TICKS_PER_SECOND
 #endif

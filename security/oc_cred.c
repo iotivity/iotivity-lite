@@ -17,9 +17,9 @@
 #ifdef OC_SECURITY
 
 #include "oc_cred.h"
-#include "config.h"
 #include "oc_api.h"
 #include "oc_base64.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
