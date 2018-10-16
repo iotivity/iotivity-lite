@@ -55,12 +55,16 @@ st_process_init(void)
     st_mutex_destroy(g_process_data.app_mutex);
     return -1;
   }
+
+  g_process_data.quit = 0;
   return 0;
 }
 
 int
 st_process_start(void)
 {
+  st_print_log("[ST_PROC] st_process_start IN\n");
+#ifdef STATE_MODEL
   g_process_data.quit = 0;
   g_process_data.thread =
     st_thread_create(st_process_func, "MAIN", 0, &g_process_data);
@@ -68,20 +72,32 @@ st_process_start(void)
     st_print_log("[ST_PROC] Failed to create main thread\n");
     return -1;
   }
+#else  /* STATE_MODEL */
+  st_process_func(&g_process_data);
+#endif /* !STATE_MODEL */
+  st_print_log("[ST_PROC] st_process_start OUT\n");
   return 0;
 }
 
 int
 st_process_stop(void)
 {
+  if (g_process_data.quit == 1) {
+    st_print_log("[ST_PROC] st_process already stop.\n");
+    return 0;
+  }
+
   g_process_data.quit = 1;
   st_process_signal();
+
+#ifdef STATE_MODEL
   if (st_thread_destroy(g_process_data.thread) != 0) {
     st_print_log("[ST_PROC] st_thread_destroy failed!\n");
     return -1;
   }
   g_process_data.thread = NULL;
   st_print_log("[ST_PROC] st_thread_destroy finish!\n");
+#endif /* STATE_MODEL */
   return 0;
 }
 
@@ -97,6 +113,7 @@ st_process_destroy(void)
     st_cond_destroy(g_process_data.cv);
     g_process_data.cv = NULL;
   }
+
   if (g_process_data.app_mutex) {
     st_mutex_destroy(g_process_data.app_mutex);
     g_process_data.app_mutex = NULL;
@@ -131,7 +148,9 @@ st_process_func(void *data)
     st_mutex_unlock(process_data->mutex);
   }
 
+#ifdef STATE_MODEL
   st_thread_exit(NULL);
+#endif
   return NULL;
 }
 
