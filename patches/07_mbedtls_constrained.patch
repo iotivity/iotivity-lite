@@ -561,7 +561,7 @@ index 79eedffd..b218ab04 100644
 - *            security risk. We recommend considering stronger ciphers instead.
 - */
 -//#define MBEDTLS_ENABLE_WEAK_CIPHERSUITES
-+#include <config.h>
++#include <oc_config.h>
 +#include "port/oc_connectivity.h"
 +#include "port/oc_assert.h"
  

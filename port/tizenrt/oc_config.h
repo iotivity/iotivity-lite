@@ -15,15 +15,14 @@
  // limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef OC_CONFIG_H
+#define OC_CONFIG_H
 
 /* Time resolution */
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef uint64_t oc_clock_time_t;
@@ -88,10 +87,13 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of peer for TCP channel */
 #define OC_MAX_TCP_PEERS (2)
 
+/* Maximum number of callbacks for connection of session */
+#define OC_MAX_SESSION_EVENT_CBS (2)
+
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef __cplusplus
-}
+} // extern "C"
 #endif
 
-#endif /* CONFIG_H */
+#endif /* OC_CONFIG_H */

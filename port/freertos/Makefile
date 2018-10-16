@@ -50,7 +50,7 @@ SRC_COMMON=$(wildcard ${topdir}/util/*.c) ${CBOR}
 SRC=$(wildcard ${topdir}/messaging/coap/*.c ${topdir}/api/*.c ${portdir}/*.c)
 
 HEADERS = $(wildcard ${topdir}/include/*.h)
-HEADERS += ${portdir}/config.h
+HEADERS += ${portdir}/oc_config.h
 
 HEADERS_COAP = $(wildcard ${topdir}/messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ${topdir}/util/*.h)

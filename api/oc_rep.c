@@ -15,7 +15,7 @@
 */
 
 #include "oc_rep.h"
-#include "config.h"
+#include "oc_config.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
