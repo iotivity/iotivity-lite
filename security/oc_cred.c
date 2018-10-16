@@ -17,19 +17,19 @@
 #ifdef OC_SECURITY
 
 #include "oc_cred.h"
-#include "config.h"
 #include "oc_api.h"
 #include "oc_base64.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
+#include "oc_otm_state.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
-#include "util/oc_memb.h"
 #include "util/oc_mem.h"
-#include "oc_otm_state.h"
+#include "util/oc_memb.h"
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"

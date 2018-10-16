@@ -14,9 +14,9 @@
  // See the License for the specific language governing permissions and
  // limitations under the License.
  */
-#ifndef CONFIG_H
-#define CONFIG_H
 
+#ifndef OC_CONFIG_H
+#define OC_CONFIG_H
 
 /* Time resolution */
 #include <stdint.h>
@@ -28,7 +28,7 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 
-#define FD_SETSIZE	(CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
+#define FD_SETSIZE (CONFIG_NFILE_DESCRIPTORS + CONFIG_NSOCKET_DESCRIPTORS)
 
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 
@@ -115,4 +115,4 @@ typedef uint64_t oc_clock_time_t;
 } // extern "C"
 #endif
 
-#endif /* CONFIG_H */
+#endif /* OC_CONFIG_H */
