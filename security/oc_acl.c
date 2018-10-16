@@ -17,8 +17,8 @@
 #ifdef OC_SECURITY
 
 #include "oc_acl.h"
-#include "config.h"
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"

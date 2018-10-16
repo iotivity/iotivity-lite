@@ -45,7 +45,7 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "config.h"
+#include "oc_config.h"
 
 #ifdef OC_SERVER
 
