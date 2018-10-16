@@ -851,6 +851,7 @@ void jni_oc_remove_delayed_callback(jobject callback);
 
 %rename(OCEndpoint) oc_endpoint_t;
 // transport flags are pulled from hand generated class as `int` not `enum`
+%ignore transport_flags;
 //%rename (OCTransportFlags) transport_flags;
 %rename(DevAddr) dev_addr;
 //if uncommented the following apply lines will cause the output to be byte[] vs short[]
@@ -874,6 +875,7 @@ void jni_oc_remove_delayed_callback(jobject callback);
 %rename(endpointCompareAddress) oc_endpoint_compare_address;
 %include "oc_endpoint.h"
 
+/* TODO check if any of these ignored functions and data types are needed */
 %rename(OCQos) oc_qos_t;
 %rename(OCClientResponse) oc_client_response_t;
 %rename(OCDiscoveryFlags) oc_discovery_flags_t;
@@ -882,7 +884,13 @@ void jni_oc_remove_delayed_callback(jobject callback);
 %ignore oc_response_handler_t;
 %ignore oc_discovery_handler_t;
 %rename (OCClientCallback) oc_client_cb_s;
-%ignore handler;
+%ignore handler; /*part of the oc_client_cb_s */
+%ignore oc_ri_invoke_client_cb;
+%ignore oc_ri_alloc_client_cb;
+%ignore oc_ri_get_client_cb;
+%ignore oc_ri_find_client_cb_by_token;
+%ignore oc_ri_find_client_cb_by_mid;
+%ignore oc_ri_remove_client_cb_by_mid;
 %ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
 
@@ -943,6 +951,7 @@ typedef struct
 
 %rename(handleCollectionRequest) oc_handle_collection_request;
 %rename(newCollection) oc_collection_alloc;
+%rename(freeCollection) oc_collection_free;
 %rename(getCollectionByUri) oc_get_collection_by_uri;
 %rename(collectionGetAll) oc_collection_get_all;
 %rename(getLinkByUri) oc_get_link_by_uri;
