@@ -63,11 +63,11 @@ public class Server {
 
                         long timeToWait = ((next_event_secs * NANOS_PER_SECOND) + next_event_nanos) -
                                           ((now_secs * NANOS_PER_SECOND) + now_nanos);
-                        System.out.println("Calling cv.awaitNanos " + timeToWait);
+                        //System.out.println("Calling cv.awaitNanos " + timeToWait);
                         cv.awaitNanos(timeToWait);
                     } else {
                         // For Windows next_event is the number of nanoseconds to wait
-                        System.out.println("Calling cv.awaitNanos " + next_event);
+                        //System.out.println("Calling cv.awaitNanos " + next_event);
                         cv.awaitNanos(next_event);
                     }
                 }
