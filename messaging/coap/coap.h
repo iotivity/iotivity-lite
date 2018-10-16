@@ -53,8 +53,8 @@
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
 
-#include "config.h"
 #include "oc_buffer.h"
+#include "oc_config.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log.h"
 #include "port/oc_random.h"

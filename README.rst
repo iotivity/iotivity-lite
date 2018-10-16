@@ -184,8 +184,8 @@ will be updated imminently. Please watch for further updates on this matter.
 Framework configuration
 -----------------------
 
-Build-time configuration options for an application are set in ``config.h``.
+Build-time configuration options for an application are set in ``oc_config.h``.
 This needs to be present in one of the include paths.
 
 Pre-populated (sample) configurations for the sample applications for all
-targets are present in ``port/<OS>/config.h``.
+targets are present in ``port/<OS>/oc_config.h``.
