@@ -136,8 +136,9 @@ set_resource_handler(st_request_t *request)
 int
 stapp_main(void)
 {
-  if (st_manager_initialize() != ST_ERROR_NONE) {
-    printf("[ST_APP] st_manager_initialize failed.\n");
+  st_error_t ret = st_manager_initialize();
+  if (ret != ST_ERROR_NONE) {
+    printf("[ST_APP] st_manager_initialize failed[%d].\n", ret);
     return -1;
   }
 
@@ -156,9 +157,22 @@ stapp_main(void)
 
   // TODO: callback registration. (ex. user confirm cb)
 
-  if (st_manager_start() != ST_ERROR_NONE) {
-    printf("[ST_APP] st_manager_start failed.\n");
-  }
+#ifndef STATE_MODEL
+  do {
+    ret = st_manager_start();
+    if (ret != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_start failed[%d].\n", ret);
+      st_manager_deinitialize();
+      return -1;
+    }
+
+    ret = st_manager_run_loop();
+    if (ret != ST_ERROR_NONE) {
+      printf("[ST_APP] st_manager_run_loop failed[%d].\n", ret);
+      sleep(6000);
+    }
+  } while (ret != ST_ERROR_NONE);
+#endif
 
   st_manager_stop();
   st_manager_deinitialize();
