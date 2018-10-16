@@ -19,7 +19,7 @@
 #ifndef ST_PORT_H
 #define ST_PORT_H
 
-#include "config.h"
+#include "oc_config.h"
 #include "oc_helpers.h"
 
 #ifdef __cplusplus

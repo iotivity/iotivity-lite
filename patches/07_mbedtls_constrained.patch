@@ -585,7 +585,7 @@ index 79eedff..45143a5 100644
 - * Uncomment this macro to remove RC4 ciphersuites by default.
 - */
 -#define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
-+#include <config.h>
++#include <oc_config.h>
 +#include "port/oc_connectivity.h"
 +#include "port/oc_assert.h"
  

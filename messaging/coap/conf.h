@@ -48,8 +48,8 @@
 #ifndef CONF_H
 #define CONF_H
 
-#include "config.h"
 #include "constants.h"
+#include "oc_config.h"
 
 #ifdef __cplusplus
 extern "C" {

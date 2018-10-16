@@ -17,16 +17,16 @@
 #ifdef OC_SECURITY
 
 #include "oc_acl.h"
-#include "config.h"
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
+#include "oc_otm_state.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"
 #include "oc_store.h"
 #include "oc_tls.h"
-#include "oc_otm_state.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
