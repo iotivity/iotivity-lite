@@ -866,9 +866,11 @@ void jni_oc_remove_delayed_callback(jobject callback);
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
 %rename(newEndpoint) oc_new_endpoint;
 %rename(freeEndpoint) oc_free_endpoint;
-// TODO figure out why this apply is not working.
-// %apply oc_string_t *OUTPUT { oc_string_t *endpoint_str };
+%apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
 %rename(endpointToString) oc_endpoint_to_string;
+int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
+%apply oc_string_t *INPUT { oc_string_t *endpoint_str };
+%apply oc_string_t *OUTPUT { oc_string_t *uri };
 %rename(stringToEndpoint) oc_string_to_endpoint;
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(endpointCompare) oc_endpoint_compare;
