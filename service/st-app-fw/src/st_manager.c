@@ -262,7 +262,6 @@ cloud_manager_handler(st_cloud_manager_status_t status)
     set_st_manager_status(ST_STATUS_RESET);
   }
 }
-#endif /* !STATE_MODEL */
 
 static oc_event_callback_retval_t
 connection_check_handler(void *data)
@@ -383,6 +382,7 @@ exit:
   st_status_queue_remove_all_items();
   g_main_status = ST_STATUS_INIT;
 }
+#endif /* !STATE_MODEL */
 
 static void
 set_sc_prov_info(void)
@@ -1017,11 +1017,11 @@ run_status_callback(st_state state)
     if (state == ST_STATE_RUNNING) {
       st_status_item = ST_STATUS_DONE;
     } else if (state == ST_STATE_EASYSETUP_PROCESSING) {
-      st_status_item = ST_STATUS_EASY_SETUP_PROGRESSING;
+      st_status_item = ST_STATUS_EASY_SETUP_START;
     } else if (state == ST_STATE_WIFI_CONNECTING) {
       st_status_item = ST_STATUS_WIFI_CONNECTION_CHECKING;
     } else if (state == ST_STATE_CLOUDMANAGER_PROCESSING) {
-      st_status_item = ST_STATUS_CLOUD_MANAGER_PROGRESSING;
+      st_status_item = ST_STATUS_CLOUD_MANAGER_START;
     } else { // currently, (state == ST_STATE_READY)
       st_status_item = ST_STATUS_STOP;
     }
