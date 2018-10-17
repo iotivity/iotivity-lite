@@ -42,6 +42,7 @@ typedef struct
   uint8_t status;
 } st_cloud_store_t;
 
+#ifdef STORE_ENCRYPT
 typedef struct
 {
   oc_string_t salt;
@@ -49,15 +50,16 @@ typedef struct
   int data_len;
   int encrypted_len;
 } st_security_store_t;
+#endif /* STORE_ENCRYPT */
 
 typedef struct
 {
   bool status;
   st_ap_store_t accesspoint;
   st_cloud_store_t cloudinfo;
-#ifdef OC_SECURITY
+#ifdef STORE_ENCRYPT
   st_security_store_t securityinfo;
-#endif /* OC_SECURITY */
+#endif /* STORE_ENCRYPT */
 } st_store_t;
 
 int st_store_load(void);

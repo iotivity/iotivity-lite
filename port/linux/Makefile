@@ -153,6 +153,11 @@ ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
 endif
 
+ifeq ($(ST_STORE_ENCRYPT),1)
+#enable st-store data info file encrypt logic
+CFLAGS += -DSTORE_ENCRYPT
+endif
+
 ifeq ($(ST_APP_FW),1)
 ifneq ($(EASYSETUP),1)
 $(error To use ST_APP_FW you should include EASYSETUP flag also.)
