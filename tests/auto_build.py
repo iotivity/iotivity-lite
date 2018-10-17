@@ -55,6 +55,7 @@ def call_make(build_options, extra_option_str):
 def build_all(flag, extra_option_str):
     if platform.system() == "Linux":
         build_linux(flag, extra_option_str)
+        build_linux_state(flag, extra_option_str)
         build_linux_test(flag, extra_option_str)
         build_linux_unsecured(flag, extra_option_str)
         build_linux_unsecured_test(flag, extra_option_str)
@@ -67,11 +68,17 @@ def build_linux(flag, extra_option_str):
     extra_option_str += ' SECURE=1';
     call_make(build_options, extra_option_str)
 
+def build_linux_state(flag, extra_option_str):
+    print ("*********** Build for linux ************")
+    build_options = build_option_param
+    extra_option_str += ' SECURE=1';
+    extra_option_str += ' STATE_MODEL=1';
+    call_make(build_options, extra_option_str)
+
 def build_linux_test(flag, extra_option_str):
     print ("*********** Build for linux ************")
     extra_option_str += ' JENKINS_BLOCK=1';
     build_linux("true", "test" + extra_option_str)
-
 
 def build_linux_unsecured(flag, extra_option_str):
     print ("*********** Build for linux ************")
@@ -122,6 +129,9 @@ elif arg_num == 2:
 
     elif str(sys.argv[1]) == "linux":
         build_linux("true", "")
+
+    elif str(sys.argv[1]) == "linux_state":
+        build_linux_state("true", "")
 
     elif str(sys.argv[1]) == "linux_test":
         build_linux_test("true", "")
