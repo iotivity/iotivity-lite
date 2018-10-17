@@ -1,0 +1,89 @@
+<configuration>
+  <endpoint>
+    <ip>%IP%</ip>
+    <port>%PORT%</port>
+  </endpoint>
+  <deviceClass>OCFServer</deviceClass>
+  <profiles>
+    <profile>OCF Server</profile>
+  </profiles>
+  <testCases>
+    <testCase>CT1.1.1</testCase>
+    <testCase>CT1.1.2</testCase>
+    <testCase>CT1.1.4</testCase> - NA
+    <testCase>CT1.1.5</testCase> - warning
+    <testCase>CT1.2.2</testCase>
+    <testCase>CT1.2.3</testCase> 
+    <testCase>CT1.2.6</testCase>
+    <testCase>CT1.2.7</testCase> - NA
+    <testCase>CT1.2.8</testCase>
+    <testCase>CT1.2.9</testCase>
+    <testCase>CT1.3.1</testCase>
+    <testCase>CT1.7.2.1-1</testCase> - NA
+    <testCase>CT1.7.2.1-2</testCase>
+    <testCase>CT1.7.2.2-1</testCase> - NA
+    <testCase>CT1.7.2.2-2</testCase> - NA
+    <testCase>CT1.7.2.3-1</testCase> - NA
+    <testCase>CT1.7.2.3-2</testCase> - NA
+    <testCase>CT1.7.3.1</testCase> - NA
+    <testCase>CT1.7.4.1</testCase>
+    <testCase>CT1.7.5.1</testCase>
+    <testCase>CT1.7.7.1</testCase>
+    <testCase>CT1.7.8.1</testCase>
+    <testCase>CT1.7.8.2</testCase> 
+    <testCase>CT1.7.8.3</testCase>
+    <testCase>CT1.7.9.1</testCase> - WARNING
+    <testCase>CT1.7.9.2</testCase>
+    <testCase>CT1.7.9.3</testCase>
+    <testCase>CT1.7.9.4</testCase>
+    <testCase>CT1.7.10.3</testCase>
+    <testCase>CT1.7.10.4</testCase>
+    <testCase>CT1.7.10.5</testCase>
+    <testCase>CT1.2.10</testCase> - BATCH - NA
+    <testCase>CT1.2.11</testCase> - BATCH - NA
+    <testCase>CT1.2.12</testCase> - BATCH - NA
+    <testCase>CT1.2.13</testCase> - BATCH - NA
+    <testCase>CT1.2.14</testCase> - BATCH - NA
+    <testCase>CT1.7.3.2</testCase> - WARNINGS
+    <testCase>CT1.7.8.11</testCase> - known issue
+    <testCase>CT1.7.12.1</testCase>
+    <testCase>CT1.7.12.2</testCase>
+    <testCase>CT1.7.12.3</testCase>
+    <testCase>CT1.7.12.4</testCase>
+    <testCase>CT1.7.12.5</testCase> - WARNING
+    <testCase>CT1.7.11.1</testCase>
+    <testCase>CT1.7.11.2</testCase>
+    <testCase>CT1.7.8.4</testCase>
+    <testCase>CT1.7.4.2</testCase>
+    <testCase>CT1.7.4.3</testCase>
+    <testCase>CT1.7.4.4</testCase>
+    <testCase>CT1.7.4.5</testCase>
+    <testCase>CT1.7.8.5</testCase>
+    <testCase>CT1.7.8.7</testCase>
+    <testCase>CT1.7.8.9</testCase>
+    <testCase>CT1.1.6</testCase>
+    <testCase>CT1.1.3</testCase>
+    <testCase>CT1.3.3-1</testCase> - WES - NA
+    <testCase>CT1.3.3-2</testCase> - WES - NA
+    <testCase>CT1.3.4</testCase>
+    <testCase>CT1.3.5</testCase>
+    <testCase>CT1.3.6</testCase> - warning
+    <testCase>CT1.3.7</testCase> - warning
+   <testCase>CT1.3.2-1</testCase>
+   <testCase>CT1.3.2-2</testCase>
+  </testCases>
+  <pics>{
+    "role": "Server",
+    "supportedVerticalProfile": ["Smart Home"],
+    "supportedDeviceTypes": ["oic.d.airpurifier"],
+    "icv": "ocf.1.0.0",
+    "dmv": "ocf.res.1.3.0, ocf.sh.1.3.0",
+    "jurisdictionSwitch": false,
+    "OTM":["oic.sec.doxm.jw"],
+    "acceptVersion": ["1.0.0"],
+    "contentFormatVersion": ["1.0.0"],
+    "resources": ["oic.r.crl", "oic.r.switch.binary", "oic.wk.rd", "oic.r.csr", "oic.r.roles"],
+    "persistentDeviceuuid": false,
+    "sct": 9
+}</pics>
+</configuration>
