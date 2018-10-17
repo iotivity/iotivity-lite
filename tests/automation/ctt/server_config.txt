@@ -1,0 +1,72 @@
+<configuration>
+  <endpoint>
+    <ip>%IP%</ip>
+    <port>%PORT%</port>
+  </endpoint>
+  <deviceClass>OCFServer</deviceClass>
+  <profiles>
+    <profile>OCF Server</profile>
+  </profiles>
+  <testCases>  
+    <testCase>CT1.1.2</testCase>
+    <testCase>CT1.1.3</testCase>
+    <testCase>CT1.1.4</testCase>
+    <testCase>CT1.1.5</testCase> 
+    <testCase>CT1.2.6</testCase>
+    <testCase>CT1.2.7</testCase> 
+    <testCase>CT1.2.8</testCase>
+    <testCase>CT1.2.9</testCase>
+    <testCase>CT1.2.10</testCase>
+    <testCase>CT1.2.14</testCase> 
+    <testCase>CT1.2.15</testCase> 
+    <testCase>CT1.2.16</testCase> 
+    <testCase>CT1.2.17</testCase> 
+    <testCase>CT1.2.18</testCase> 
+    <testCase>CT1.2.19</testCase> 
+    <testCase>CT1.2.20</testCase> 
+    <testCase>CT1.3.1</testCase>
+    <testCase>CT1.3.3-1</testCase> 
+    <testCase>CT1.3.3-2</testCase> 
+    <testCase>CT1.3.4</testCase>
+    <testCase>CT1.3.5</testCase>
+    <testCase>CT1.3.6</testCase> 
+    <testCase>CT1.3.7</testCase> 
+    <testCase>CT1.7.2.1-1</testCase> 
+    <testCase>CT1.7.2.1-2</testCase> 
+    <testCase>CT1.7.2.2-1</testCase> 
+    <testCase>CT1.7.2.2-2</testCase> 
+    <testCase>CT1.7.2.3-1</testCase>
+    <testCase>CT1.7.2.3-2</testCase>
+    <testCase>CT1.7.3.1</testCase> 
+    <testCase>CT1.7.3.2</testCase> 
+    <testCase>CT1.7.4.1</testCase>
+    <testCase>CT1.7.5.1</testCase>
+    <testCase>CT1.7.7.1</testCase>
+    <testCase>CT1.7.8.1</testCase>
+    <testCase>CT1.7.9.2</testCase> 
+    <testCase>CT1.7.9.3</testCase> 
+    <testCase>CT1.7.9.4</testCase> 
+    <testCase>CT1.7.10.3</testCase>
+    <testCase>CT1.7.10.4</testCase>
+    <testCase>CT1.7.10.5</testCase>
+    <testCase>CT1.7.11.1</testCase>
+    <testCase>CT1.7.11.2</testCase>   
+    <testCase>CT1.7.12.3</testCase>
+    <testCase>CT1.7.12.4</testCase>
+    <testCase>CT1.7.12.5</testCase> 
+    </testCases>
+  <pics>{
+    "role": "Server",
+    "supportedVerticalProfile": ["Smart Home"],
+    "supportedDeviceTypes": ["oic.d.dehumidifier"],
+    "icv": "ocf.1.0.0",
+    "dmv": "ocf.res.1.3.0, ocf.sh.1.3.0",
+    "jurisdictionSwitch": false,
+    "OTM":["oic.sec.doxm.jw"],
+    "acceptVersion": ["1.0.0"],
+    "contentFormatVersion": ["1.0.0"],
+    "resources": ["oic.r.switch.binary", "oic.r.humidity", "oic.wk.col"],
+    "persistentDeviceuuid": false,
+    "sct": 9
+}</pics>
+</configuration>
