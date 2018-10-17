@@ -116,6 +116,121 @@
       "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_a8085f2e",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-17T05:12:31Z",
+      "side": 1,
+      "message": "How about temp_data allocating logic exteranl if statement?\nif and allocation is duplicated in every socket.",
+      "range": {
+        "startLine": 829,
+        "startChar": 8,
+        "endLine": 830,
+        "endChar": 24
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0806ab20",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 966,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-17T05:12:31Z",
+      "side": 1,
+      "message": "we can use \u0027message-\u003elength \u003e 0\u0027 instead of temp_data.",
+      "range": {
+        "startLine": 966,
+        "startChar": 10,
+        "endLine": 966,
+        "endChar": 19
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_53ffc401",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-17T05:12:31Z",
+      "side": 1,
+      "message": "we need to handle message-\u003edata is null in case.\nhow about change logic like below?\nif (!message-\u003edata) {\n  /* Error orrur */\n}\nmemcpy(message-\u003edata, temp_data, message-\u003elength);",
+      "range": {
+        "startLine": 971,
+        "startChar": 10,
+        "endLine": 973,
+        "endChar": 11
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_93094c2f",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-17T05:12:31Z",
+      "side": 1,
+      "message": "if we always use temp_data and replace it, how about just use oc_allocate_message() function (not execpt_data) and replace it to temp_data?\nIf we need to change size, message-\u003edata will be freed and temp_data is replaced. I think that is more simple and we can handle same logic with tcp also.",
+      "range": {
+        "startLine": 966,
+        "startChar": 6,
+        "endLine": 983,
+        "endChar": 7
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_3304c014",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-10-17T05:12:31Z",
+      "side": 1,
+      "message": "Actually pipe data is not used in anywhere. I think we don\u0027t need this logic for pipe data. (received pipe data is just garbage data to use only wake up receive thread)",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 391,
+        "endChar": 35
+      },
+      "revId": "243ac5eea219e8caadf22c8ca7935590b992ca1e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
