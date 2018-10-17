@@ -84,7 +84,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+SAMPLES = CertificationApp discover_device server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 OBT = onboarding_tool
@@ -268,6 +268,14 @@ server_multithread_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/serv
 client_multithread_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+CertificationApp: libiotivity-constrained-server.a $(ROOT_DIR)/apps/CertificationApp.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/device_builder_server.c ../../apps/CertificationApp.c libiotivity-constrained-client-server.a -DOC_SERVER -DOC_CLIENT  ${CFLAGS} ${LIBS}
+
+discover_device: libiotivity-constrained-client.a $(ROOT_DIR)/apps/discover_device.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/discover_device.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
