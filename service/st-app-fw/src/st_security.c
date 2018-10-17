@@ -19,6 +19,16 @@
 #include "st_security.h"
 #include "st_port.h"
 
+#include "mbedtls/aes.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/pkcs5.h"
+#include "st_store.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef STORE_ENCRYPT
+
 #define ST_SECURITY_DEBUG
 #ifdef ST_SECURITY_DEBUG
 static void
@@ -29,8 +39,8 @@ print_binary_to_hex(const char* name, const unsigned char* buffer, int buffer_le
   int j;
 
   st_print_log("%s(%d) = \n", name, buffer_len);
-  for (i=1, j=0; i<=buffer_len; i++, j++) {
-    sprintf(buffer_hex + 2*j, "%02x", buffer[i-1]);
+  for (i = 1, j = 0; i <= buffer_len; i++, j++) {
+    sprintf(buffer_hex + 2 * j, "%02x", buffer[i - 1]);
     if (i % 40 == 0) {
       st_print_log(" - %s\n", buffer_hex);
       memset(buffer_hex, 0, sizeof(buffer_hex));
@@ -57,20 +67,23 @@ gen_random(unsigned char* random, unsigned int random_len)
     goto cleanup;
   }
 
-  ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)mac, 6);
+  ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                              (const unsigned char *)mac, 6);
   if (ret != 0) {
-    st_print_log("[ST_SEC]failed in mbedtls_ctr_drbg_seed: %d\n", ret );
+    st_print_log("[ST_SEC] failed in mbedtls_ctr_drbg_seed: %d\n", ret);
     goto cleanup;
   }
 
-  mbedtls_ctr_drbg_set_prediction_resistance( &ctr_drbg, MBEDTLS_CTR_DRBG_PR_OFF );
+  mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg,
+                                             MBEDTLS_CTR_DRBG_PR_OFF);
   ret = mbedtls_ctr_drbg_random(&ctr_drbg, random, random_len);
   if (ret != 0) {
-    st_print_log("[ST_SEC]failed in mbedtls_ctr_drbg_random: %d\n", ret);
+    st_print_log("[ST_SEC] failed in mbedtls_ctr_drbg_random: %d\n", ret);
     goto cleanup;
   }
 #ifdef ST_SECURITY_DEBUG
-  print_binary_to_hex("random on initial(encrypt)", random, random_len);
+  print_binary_to_hex("[ST_SEC] random on initial(encrypt)", random,
+                      random_len);
 #endif
 
 cleanup:
@@ -80,7 +93,7 @@ cleanup:
 }
 
 static int
-pbkdf2(const unsigned char *password, unsigned char* key,unsigned char * salt)
+pbkdf2(const unsigned char *password, unsigned char *key, unsigned char *salt)
 {
   int ret = 0;
   mbedtls_md_context_t ctx;
@@ -89,20 +102,20 @@ pbkdf2(const unsigned char *password, unsigned char* key,unsigned char * salt)
 
   info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
   if (info == NULL) {
-    st_print_log("[ST_SEC]failed in mbedtls_md_info_from_type\n");
+    st_print_log("[ST_SEC] failed in mbedtls_md_info_from_type\n");
     goto cleanup;
   }
 
   ret = mbedtls_md_setup(&ctx, info, 1);
   if (ret != 0) {
-    st_print_log("[ST_SEC]failed in mbedtls_md_setup: %d\n", ret);
+    st_print_log("[ST_SEC] failed in mbedtls_md_setup: %d\n", ret);
     goto cleanup;
   }
 
   ret = mbedtls_pkcs5_pbkdf2_hmac(
     &ctx, password, strlen((const char *)password), salt, 32, 1000, 32, key);
   if (ret != 0) {
-    st_print_log("[ST_SEC]failed in mbedtls_pkcs5_pbkdf2_hmac: %d", ret);
+    st_print_log("[ST_SEC] failed in mbedtls_pkcs5_pbkdf2_hmac: %d", ret);
     goto cleanup;
   }
 
@@ -173,24 +186,26 @@ aes_decrypt_internal(const unsigned char* key, const unsigned char* iv,
   mbedtls_aes_setkey_dec(&aes_ctx, key, 256);
   ret = mbedtls_aes_crypt_cbc(&aes_ctx, MBEDTLS_AES_DECRYPT, encrypted_data_len, temp_iv, encrypted_data, decrypted_data);
   if (ret != 0) {
-    st_print_log("[ST_SEC]failed in mbedtls_aes_crypt_cbc during aes_decrypt(): %d\n", ret);
+    st_print_log(
+      "[ST_SEC] failed in mbedtls_aes_crypt_cbc during aes_decrypt(): %d\n",
+      ret);
     goto cleanup;
   }
 
   padding_len = decrypted_data[encrypted_data_len - 1];
-  st_print_log("[ST_SEC]padding len = 0x%02x\n", padding_len);
+  st_print_log("[ST_SEC] padding len %d\n", padding_len);
 
   // Checking PKCS7 padding
   for (i = 1; i<= padding_len; i++) {
     if (padding_len != decrypted_data[encrypted_data_len - i]) {
-      st_print_log("Invalid padding\n");
+      st_print_log("[ST_SEC] Invalid padding\n");
       ret = -1;
       goto cleanup;
       break;
     }
   }
 
-  st_print_log("Remove padding\n");
+  st_print_log("[ST_SEC] Remove padding\n");
   *decrypted_data_len = encrypted_data_len - padding_len;
 
 cleanup:
@@ -209,19 +224,19 @@ st_security_encrypt(const unsigned char* data, const unsigned int data_len,
   int ret = 0;
 
   st_store_t *store_info = st_store_get_info();
-  //Check if already exists
-  if (oc_string_len(store_info->securityinfo.iv) == 0
-     && oc_string_len(store_info->securityinfo.salt)==0) {
+  // Check if already exists
+  if (oc_string_len(store_info->securityinfo.iv) == 0 &&
+      oc_string_len(store_info->securityinfo.salt) == 0) {
     ret = gen_random(salt_internal, 32);
     if (ret != 0) {
-      st_print_log("[ST_SEC]failed in gen_random: %d\n", ret);
+      st_print_log("[ST_SEC] failed in gen_random: %d\n", ret);
       return -1;
     }
 
     // Use random 16 byte for iv
     ret = gen_random(iv_internal, 16);
     if (ret != 0) {
-      st_print_log("[ST_SEC]failed in gen_random: %d\n", ret);
+      st_print_log("[ST_SEC] failed in gen_random: %d\n", ret);
       return -1;
     }
     // Dumping security info
@@ -244,9 +259,9 @@ st_security_encrypt(const unsigned char* data, const unsigned int data_len,
   pbkdf2(mac, key, salt_internal);
 
 #ifdef ST_SECURITY_DEBUG
-  print_binary_to_hex("iv on initial(encrypt)", iv_internal, 16);
-  print_binary_to_hex("salt on initial(encrypt)", salt_internal, 32);
-  print_binary_to_hex("key on initial(encrypt)", key, 32);
+  print_binary_to_hex("[ST_SEC] iv on initial(encrypt)", iv_internal, 16);
+  print_binary_to_hex("[ST_SEC] salt on initial(encrypt)", salt_internal, 32);
+  print_binary_to_hex("[ST_SEC] key on initial(encrypt)", key, 32);
 #endif
 
   ret = aes_encrypt_internal(key, iv_internal, data, data_len, encrypted_data, encrypted_data_len);
@@ -259,8 +274,8 @@ st_security_decrypt(unsigned char *salt,unsigned char *iv, unsigned char* encryp
                         unsigned int encrypted_data_len, unsigned char* decrypted_data,
                         unsigned int* decrypted_data_len)
 {
-  unsigned char key[32] = {0};
-  unsigned char mac[6+1] = { 0 };
+  unsigned char key[32] = { 0 };
+  unsigned char mac[6 + 1] = { 0 };
   int ret = 0;
 
   if (!oc_get_mac_addr(mac)) {
@@ -272,14 +287,15 @@ st_security_decrypt(unsigned char *salt,unsigned char *iv, unsigned char* encryp
   pbkdf2(mac, key,salt);
 
 #ifdef ST_SECURITY_DEBUG
-  print_binary_to_hex("iv on decrypt", iv, 16);
-  print_binary_to_hex("salt on decrypt", salt, 32);
-  print_binary_to_hex("key on decrypt", key, 32);
-  st_print_log("[ST_ES] decrypted data length %d \n",*decrypted_data_len);
+  print_binary_to_hex("[ST_SEC] iv on decrypt", iv, 16);
+  print_binary_to_hex("[ST_SEC] salt on decrypt", salt, 32);
+  print_binary_to_hex("[ST_SEC] key on decrypt", key, 32);
+  st_print_log("[ST_SEC] decrypted data length %d\n", *decrypted_data_len);
 #endif
 
   ret = aes_decrypt_internal(key, iv, encrypted_data, encrypted_data_len,
                              decrypted_data, decrypted_data_len);
   return ret;
 }
-#endif /* OC_SECURITY*/
+#endif /* STORE_ENCRYPT */
+#endif /* OC_SECURITY */

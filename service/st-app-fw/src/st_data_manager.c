@@ -19,7 +19,6 @@
 #include "st_data_manager.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
-#include "port/oc_storage.h"
 #include "st_port.h"
 #include "util/oc_mem.h"
 #ifdef OC_SECURITY

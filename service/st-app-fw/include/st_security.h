@@ -19,20 +19,11 @@
 #ifndef ST_SECURITY_H
 #define ST_SECURITY_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#ifdef OC_SECURITY
-#include "mbedtls/aes.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/pkcs5.h"
-#endif /* OC_SECURITY*/
-#include "st_store.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef STORE_ENCRYPT
 int st_security_encrypt(const unsigned char *data, const unsigned int data_len,
                         unsigned char *encrypted_data,
                         unsigned int *encrypted_data_len);
@@ -41,6 +32,7 @@ int st_security_decrypt(unsigned char *salt, unsigned char *iv,
                         unsigned int encrypted_data_len,
                         unsigned char *decrypted_data,
                         unsigned int *decrypted_data_len);
+#endif /* STORE_ENCRYPT */
 
 #ifdef __cplusplus
 }
