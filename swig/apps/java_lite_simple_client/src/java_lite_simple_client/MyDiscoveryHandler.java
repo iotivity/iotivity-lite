@@ -91,41 +91,16 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
             if(type.equals("core.light")) {
                 Light.serverEndpoint = endpoint;
                 Light.serverUri = uri;
-                System.out.println("\tResource " + Light.serverUri + " hosted at endpoints:");
-                System.out.println("\t\tendpoint.device " + endpoint.getDevice());
-                System.out.println("\t\tendpoint.flags " + endpoint.getFlags());
-                System.out.println("\t\tendpoint.interfaceIndex " + endpoint.getInterfaceIndex());
-                System.out.println("\t\tendpoint.version " + endpoint.getVersion().toString());
+                System.out.println("\tResource " + Light.serverUri + " hosted at endpoint(s):");
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
-                    if ((ep.getFlags() & OCTransportFlags.IPV4) > 0) {
-                        System.out.println("\t\tendpoint.IPv4Address [" + ep.getAddr().getIpv4().getAddress()[0] + "." +
-                                ep.getAddr().getIpv4().getAddress()[1] + "." +
-                                ep.getAddr().getIpv4().getAddress()[2] + "." +
-                                ep.getAddr().getIpv4().getAddress()[3] + "]:" +
-                                ep.getAddr().getIpv4().getPort());
-                    } else if ((ep.getFlags() & OCTransportFlags.IPV6) > 0) {
-                        System.out.println(String.format("\t\tendpoint.IPv6Address [%02x%02x:%02x%02x:%02x%02x:%02x%02x:"
-                                                       + "%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d",
-                                                       ep.getAddr().getIpv6().getAddress()[0],
-                                                       ep.getAddr().getIpv6().getAddress()[1],
-                                                       ep.getAddr().getIpv6().getAddress()[2],
-                                                       ep.getAddr().getIpv6().getAddress()[3],
-                                                       ep.getAddr().getIpv6().getAddress()[4],
-                                                       ep.getAddr().getIpv6().getAddress()[5],
-                                                       ep.getAddr().getIpv6().getAddress()[6],
-                                                       ep.getAddr().getIpv6().getAddress()[7],
-                                                       ep.getAddr().getIpv6().getAddress()[8],
-                                                       ep.getAddr().getIpv6().getAddress()[9],
-                                                       ep.getAddr().getIpv6().getAddress()[10],
-                                                       ep.getAddr().getIpv6().getAddress()[11],
-                                                       ep.getAddr().getIpv6().getAddress()[12],
-                                                       ep.getAddr().getIpv6().getAddress()[13],
-                                                       ep.getAddr().getIpv6().getAddress()[14],
-                                                       ep.getAddr().getIpv6().getAddress()[15],
-                                                       ep.getAddr().getIpv6().getPort()
-                                                       ));
-                    }
+                    String[] endpointStr = new String[1];
+                    OCMain.endpointToString(ep, endpointStr);
+                    System.out.println("\t\tendpoint: " + endpointStr[0]);
+                    System.out.println("\t\t\tendpoint.device " + ep.getDevice());
+                    System.out.println("\t\t\tendpoint.flags " + ep.getFlags());
+                    System.out.println("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex());
+                    System.out.println("\t\t\tendpoint.version " + ep.getVersion().toString());
                     ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
