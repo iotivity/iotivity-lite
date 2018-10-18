@@ -61,6 +61,7 @@ OC_LIST(tls_peers);
 static mbedtls_ctr_drbg_context *ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx *cookie_ctx;
 static mbedtls_ssl_config *server_conf;
+static mbedtls_entropy_context *entropy_ctx;
 #ifdef OC_TCP
 static mbedtls_ssl_config *server_conf_tls;
 #endif /* OC_TCP */
@@ -553,6 +554,10 @@ oc_tls_shutdown(void)
   if (cookie_ctx) {
     oc_mem_free(cookie_ctx);
   }
+  mbedtls_entropy_free(entropy_ctx);
+  if (entropy_ctx) {
+    oc_mem_free(entropy_ctx);
+  }
 #ifdef OC_TCP
   if (server_conf_tls) {
     oc_mem_free(server_conf_tls);
@@ -568,9 +573,6 @@ oc_tls_shutdown(void)
 int
 oc_tls_init_context(void)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  mbedtls_entropy_context *entropy_ctx = NULL;
-#endif /* OC_DYNAMIC_ALLOCATION */
   if (oc_core_get_num_devices() < 1) {
     goto dtls_init_err;
   }
@@ -746,12 +748,6 @@ oc_tls_init_context(void)
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (entropy_ctx) {
-    mbedtls_entropy_free(entropy_ctx);
-    oc_mem_free(entropy_ctx);
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
   OC_ERR("oc_tls: TLS initialization error");
   oc_tls_shutdown();
   return -1;
