@@ -568,16 +568,10 @@ oc_tls_shutdown(void)
 int
 oc_tls_init_context(void)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  mbedtls_entropy_context *entropy_ctx = NULL;
-#endif /* OC_DYNAMIC_ALLOCATION */
   if (oc_core_get_num_devices() < 1) {
     goto dtls_init_err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  entropy_ctx = oc_mem_malloc(sizeof(mbedtls_entropy_context));
-  if (!entropy_ctx)
-    goto dtls_init_err;
   ctr_drbg_ctx = oc_mem_malloc(sizeof(mbedtls_ctr_drbg_context));
   if (!ctr_drbg_ctx)
     goto dtls_init_err;
@@ -614,10 +608,11 @@ oc_tls_init_context(void)
     goto dtls_init_err;
   }
 #else
-  mbedtls_entropy_init(entropy_ctx);
+  mbedtls_entropy_context entropy_ctx;
+  mbedtls_entropy_init(&entropy_ctx);
   mbedtls_ssl_cookie_init(cookie_ctx);
   mbedtls_ctr_drbg_init(ctr_drbg_ctx);
-  if (mbedtls_ctr_drbg_seed(ctr_drbg_ctx, mbedtls_entropy_func, entropy_ctx,
+  if (mbedtls_ctr_drbg_seed(ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
                             (const unsigned char *)PERSONALIZATION_STR,
                             strlen(PERSONALIZATION_STR)) != 0) {
     goto dtls_init_err;
@@ -746,12 +741,6 @@ oc_tls_init_context(void)
 #endif /* OC_CLIENT */
   return 0;
 dtls_init_err:
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (entropy_ctx) {
-    mbedtls_entropy_free(entropy_ctx);
-    oc_mem_free(entropy_ctx);
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
   OC_ERR("oc_tls: TLS initialization error");
   oc_tls_shutdown();
   return -1;
