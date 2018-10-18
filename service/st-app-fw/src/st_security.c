@@ -151,6 +151,9 @@ aes_encrypt_internal(const unsigned char* key, unsigned char* iv, const unsigned
   st_print_log("[ST_SEC] encrypted_data_len %d \n",*encrypted_data_len);
 
 cleanup:
+  if (padded_data) {
+    free(padded_data);
+  }
   mbedtls_aes_free(&aes_ctx);
   return ret;
 }
