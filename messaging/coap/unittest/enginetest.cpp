@@ -47,4 +47,5 @@ TEST_F(TestEngine, CoapReceiveTest_P)
     coap_init_engine();
     oc_message_t *message = oc_internal_allocate_outgoing_message();
     ASSERT_NO_THROW(coap_receive(message));
+    oc_message_unref(message);
 }

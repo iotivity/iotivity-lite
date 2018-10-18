@@ -119,7 +119,7 @@ TEST_F(TestSTEasySetup, st_easy_setup_stop_reset_sc_properties)
     set_sc_properties(&g_scprop);
     st_easy_setup_stop();
     g_scprop_ptr = get_sc_properties();
-
+    oc_free_string(&g_scprop.model);
     EXPECT_EQ(NULL, g_scprop_ptr);
 }
 

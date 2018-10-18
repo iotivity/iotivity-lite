@@ -144,7 +144,7 @@ TEST_F(TestESEnrolleeAPI, SetDeviceProperty_P)
     oc_new_string(&device_property.DevConf.device_name, DEVICE_NAME, strlen(DEVICE_NAME));
 
     es_result_e ret = es_set_device_property(&device_property);
-
+    oc_free_string(&device_property.DevConf.device_name);
     EXPECT_TRUE((ES_OK == ret));
 }
 
