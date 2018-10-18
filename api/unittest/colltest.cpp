@@ -144,6 +144,18 @@ TEST_F(TestCollectionRequest, SetLinkInstanceTest_P)
 }
 
 /*
+ * @API             : oc_delete_link()
+ * @Description     : delete link in a positive way
+ * @PassCondition   : api should not throw any exception
+ * @PreCondition    : create a link
+ * @PostCondition   : N/A
+*/
+TEST_F(TestCollectionRequest, DeleteLink_P)
+{
+    ASSERT_NO_THROW(oc_delete_link(s_pLink));
+}
+
+/*
  * @API             : oc_collection_add_link(oc_resource_t s_pCol, oc_link_t s_pLink)
  * @Description     : add link
  * @PassCondition   : should not throw any exception
@@ -190,4 +202,14 @@ TEST_F(TestCollectionRequest, GetCollectionFromLinkTest_P)
     EXPECT_TRUE(link != NULL) << "Failed to get collection links ";
 }
 
-
+/*
+ * @API             : oc_delete_resource()
+ * @Description     : delete resource in a positive way
+ * @PassCondition   : api should not throw any exception
+ * @PreCondition    : create a resource
+ * @PostCondition   : N/A
+*/
+TEST_F(TestCollectionRequest, DeleteResource_P)
+{
+    ASSERT_NO_THROW(oc_delete_resource(s_pResource));
+}
