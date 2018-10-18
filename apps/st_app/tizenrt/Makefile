@@ -50,7 +50,7 @@ CFLAGS += -D__TIZENRT__ -DOC_SECURITY -DOC_CLIENT -DOC_IPV4 -DOC_DEBUG -DOC_SERV
 ASRCS =
 CSRCS =
 
-MAINSRC = tizenrt/st_ref_app_tizenrt.c tizenrt/port_tinyara.c
+MAINSRC = tizenrt/st_ref_app.c tizenrt/port_tinyara.c
 
 ifeq ($(CONFIG_IOTLITE_ST_APP_FW),y)
 	ST_DEVICE_DEF= ./json/st_device_def
