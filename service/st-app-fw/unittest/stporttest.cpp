@@ -176,6 +176,8 @@ TEST_F(TestSTPort, st_cond_signal)
     sleep(1);
     int ret = st_cond_signal(cv);
     int ret_join = pthread_join(tid, 0);
+    st_cond_destroy(cv);
+    st_mutex_destroy(st_mutex);
     EXPECT_EQ(0, ret);
     EXPECT_EQ(0, ret_join);
 }

@@ -31,6 +31,7 @@ TEST_F(TestObserve, CreateTransactionTest_P)
 {
     oc_endpoint_t *endpoint = oc_new_endpoint();
     int ret = coap_remove_observer_by_client(endpoint);
+    oc_free_endpoint(endpoint);
     EXPECT_TRUE(ret == 0) << "Failed to remove observer";
 }
 
@@ -46,6 +47,7 @@ TEST_F(TestObserve, RemoveObserverByTokenTest_P)
     oc_endpoint_t *endpoint = oc_new_endpoint();
     uint8_t token = 255;
     int ret = coap_remove_observer_by_token(endpoint, &token, 3);
+    oc_free_endpoint(endpoint);    
     EXPECT_TRUE(ret == 0) << "Failed to remove observer by token";
 }
 
@@ -61,6 +63,7 @@ TEST_F(TestObserve, RemoveObserverByMidTest_P)
     oc_endpoint_t *endpoint = oc_new_endpoint();
     int mid = coap_get_mid();
     int ret = coap_remove_observer_by_mid(endpoint, mid);
+    oc_free_endpoint(endpoint);
     EXPECT_TRUE(ret == 0) << "Failed to remove observer by mid";
 }
 

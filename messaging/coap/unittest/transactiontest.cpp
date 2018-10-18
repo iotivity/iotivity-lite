@@ -76,6 +76,7 @@ TEST_F(TestCoapTransaction, CreateTransactionTest_P)
     uint16_t mid = coap_get_mid();;
     coap_transaction_t *transaction = NULL;
     transaction = coap_new_transaction(mid, endpoint);
+    oc_free_endpoint(endpoint);
     EXPECT_TRUE(NULL != transaction) << "Failed to create transaction";
 }
 
@@ -93,6 +94,7 @@ TEST_F(TestCoapTransaction, GetTransactionTest_P)
     uint16_t mid = coap_get_mid();;
     coap_transaction_t *transaction = coap_new_transaction(mid, endpoint);
     coap_transaction_t *retrievedTransaction = coap_get_transaction_by_mid(mid);
+    oc_free_endpoint(endpoint);
     EXPECT_EQ(retrievedTransaction, transaction) << "Failed to get transaction";
 }
 

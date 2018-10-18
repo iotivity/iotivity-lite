@@ -119,6 +119,15 @@ TEST_F(TestSCEasySetupAPI, SetScProperties_P)
     es_result_e ret = set_sc_properties(&sc_properties_setter);
 
     EXPECT_TRUE((ES_OK == ret));
+
+    oc_free_string(&sc_properties_setter.device_type);
+    oc_free_string(&sc_properties_setter.device_sub_type);
+    oc_free_string(&sc_properties_setter.reg_set_dev);
+    oc_free_string(&sc_properties_setter.net_prov_info);
+    oc_free_string(&sc_properties_setter.pnp_pin);
+    oc_free_string(&sc_properties_setter.model);
+    oc_free_string(&sc_properties_setter.es_protocol_ver);
+
     reset_sc_properties();
 }
 
@@ -158,6 +167,13 @@ TEST_F(TestSCEasySetupAPI, GetScProperties_P)
     EXPECT_TRUE((strcmp(modelNumber,oc_string(sc_properties_getter->model))==0));
     EXPECT_TRUE((strcmp(esProtocolVersion,oc_string(sc_properties_getter->es_protocol_ver))==0));
 
+    oc_free_string(&sc_properties_setter.device_type);
+    oc_free_string(&sc_properties_setter.device_sub_type);
+    oc_free_string(&sc_properties_setter.reg_set_dev);
+    oc_free_string(&sc_properties_setter.net_prov_info);
+    oc_free_string(&sc_properties_setter.pnp_pin);
+    oc_free_string(&sc_properties_setter.model);
+    oc_free_string(&sc_properties_setter.es_protocol_ver);
 
     reset_sc_properties();
 }
@@ -194,6 +210,13 @@ TEST_F(TestSCEasySetupAPI, SetSecProvInfo_P)
     es_result_e ret = set_sec_prov_info(&provisioninginfo_resource);
 
     EXPECT_TRUE((ES_OK == ret));
+
+    oc_free_string(&provisioninginfo_resource.easysetup_di);
+    for (int i = 0; i < 1; i++) {
+        oc_free_string(&provisioninginfo_resource.targets[i].target_di);
+        oc_free_string(&provisioninginfo_resource.targets[i].target_rt);
+    }
+    free(provisioninginfo_resource.targets);
     deinit_provisioning_info_resource();
 }
 
