@@ -25,7 +25,7 @@
 #include "oc_store.h"
 #include <stddef.h>
 #include <string.h>
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__TIZENRT__)
 #include <strings.h>
 #endif
 
