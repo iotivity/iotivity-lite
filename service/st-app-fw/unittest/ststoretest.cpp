@@ -19,24 +19,43 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
+#include "oc_api.h"
 #include "st_manager.h"
 #include "st_store.h"
 #include "st_cloud_manager.h"
 #include <oc_random.h>
 
+static void
+signal_event_loop(void)
+{
+}
+
+static int
+app_init(void)
+{
+  int ret = oc_init_platform("Samsung", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
+  return ret;
+}
+
 class TestSTStore: public testing::Test
 {
     protected:
+        oc_handler_t handler = {.init = app_init,
+                            .signal_event_loop = signal_event_loop,
+                            .register_resources = NULL };
+
         virtual void SetUp()
         {
-            oc_random_init();
+            oc_main_init(&handler);
 
         }
 
         virtual void TearDown()
         {
             st_store_info_initialize();
-            oc_random_destroy();
+            oc_main_shutdown();
         }
 };
 
@@ -49,7 +68,6 @@ TEST_F(TestSTStore, st_store_load)
 
 TEST_F(TestSTStore, st_store_dump)
 {
-    st_manager_initialize();
     st_store_t *store_info = st_store_get_info();
     store_info->status = true;
     oc_new_string(&store_info->accesspoint.ssid, "ssid", strlen("ssid"));
@@ -64,8 +82,6 @@ TEST_F(TestSTStore, st_store_dump)
     st_store_load();
 
     EXPECT_TRUE(store_info->status);
-
-    st_manager_deinitialize();
 }
 
 TEST_F(TestSTStore, st_store_dump_async)
