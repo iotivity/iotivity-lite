@@ -884,6 +884,7 @@ int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
 /* TODO check if any of these ignored functions and data types are needed */
 %rename(OCQos) oc_qos_t;
 %rename(OCClientResponse) oc_client_response_t;
+%ignore client_cb;
 %rename(OCDiscoveryFlags) oc_discovery_flags_t;
 %ignore oc_client_handler_s;
 %ignore oc_client_handler_t;
