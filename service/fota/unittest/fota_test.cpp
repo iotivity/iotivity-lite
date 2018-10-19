@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "fota.h"
-#include "oc_ri.h"
+#include "oc_api.h"
 
 static int
 fota_cmd_handler(fota_cmd_t cmd)
@@ -28,17 +28,37 @@ fota_cmd_handler(fota_cmd_t cmd)
   return 0;
 }
 
+static void
+signal_event_loop(void)
+{
+}
+
+static int
+app_init(void)
+{
+  int ret = oc_init_platform("Samsung", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
+  return ret;
+}
+
 class TestFota: public testing::Test
 {
   protected:
+    oc_handler_t handler = {.init = app_init,
+                            .signal_event_loop = signal_event_loop,
+                            .register_resources = NULL };
+
     virtual void SetUp()
     {
+      oc_main_init(&handler);
       fota_init(fota_cmd_handler);
     }
 
     virtual void TearDown()
     {
       fota_deinit();
+      oc_main_shutdown();
     }
 };
 
