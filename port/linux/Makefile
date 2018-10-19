@@ -153,7 +153,7 @@ ifeq ($(EASYSETUP),1)
 SAMPLES += easysetup_linux sc_easysetup_linux
 endif
 
-ifeq ($(ST_STORE_ENCRYPT),1)
+ifneq ($(ST_STORE_ENCRYPT),0)
 #enable st-store data info file encrypt logic
 CFLAGS += -DSTORE_ENCRYPT
 endif
