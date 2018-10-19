@@ -45,17 +45,33 @@ void cloud_manager_handler_test(st_cloud_manager_status_t status)
     (void) status;
 }
 
+static void signal_event_loop(void)
+{
+}
+
+static int app_init(void)
+{
+  int ret = oc_init_platform("Samsung", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
+  return ret;
+}
+
 class TestSTCloudManager: public testing::Test
 {
     protected:
+        oc_handler_t handler = {.init = app_init,
+                            .signal_event_loop = signal_event_loop,
+                            .register_resources = NULL };
+
         virtual void SetUp()
         {
-
+            oc_main_init(&handler);
         }
 
         virtual void TearDown()
         {
-
+            oc_main_shutdown();
         }
 };
 
