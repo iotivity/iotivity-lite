@@ -25,7 +25,7 @@ typedef struct
   st_mutex_t app_mutex;
   st_cond_t cv;
   st_thread_t thread;
-  int quit;
+  bool quit;
 } st_process_data_t;
 
 static st_process_data_t g_process_data;
@@ -56,7 +56,7 @@ st_process_init(void)
     return -1;
   }
 
-  g_process_data.quit = 0;
+  g_process_data.quit = true;
   return 0;
 }
 
@@ -64,8 +64,8 @@ int
 st_process_start(void)
 {
   st_print_log("[ST_PROC] st_process_start IN\n");
+  g_process_data.quit = false;
 #ifdef STATE_MODEL
-  g_process_data.quit = 0;
   g_process_data.thread =
     st_thread_create(st_process_func, "MAIN", 0, &g_process_data);
   if (!g_process_data.thread) {
@@ -82,12 +82,12 @@ st_process_start(void)
 int
 st_process_stop(void)
 {
-  if (g_process_data.quit == 1) {
+  if (g_process_data.quit) {
     st_print_log("[ST_PROC] st_process already stop.\n");
     return 0;
   }
 
-  g_process_data.quit = 1;
+  g_process_data.quit = true;
   st_process_signal();
 
 #ifdef STATE_MODEL
@@ -104,7 +104,7 @@ st_process_stop(void)
 int
 st_process_destroy(void)
 {
-  if (g_process_data.quit != 1) {
+  if (g_process_data.quit != true) {
     st_print_log("[ST_PROC] please stop process first.\n");
     return -1;
   }
@@ -131,13 +131,13 @@ st_process_func(void *data)
   st_process_data_t *process_data = (st_process_data_t *)data;
   oc_clock_time_t next_event;
 
-  while (process_data->quit != 1) {
+  while (process_data->quit != true) {
 
     st_mutex_lock(process_data->app_mutex);
     next_event = oc_main_poll();
     st_mutex_unlock(process_data->app_mutex);
 
-    if (process_data->quit == 1)
+    if (process_data->quit)
       break;
 
     st_mutex_lock(process_data->mutex);
