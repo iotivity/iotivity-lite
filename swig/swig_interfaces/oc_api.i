@@ -1,11 +1,9 @@
 /* File oc_api.i */
 %module OCMain
-%include <oc_clock.i>
 %include "arrays_java.i"
 %include "stdint.i"
 %include <oc_ri.i>
 %include "iotivity.swg"
-
 %{
 #include "oc_api.h"
 #include "oc_rep.h"
@@ -180,6 +178,8 @@ static oc_handler_t jni_handler = {
 }
 
 %rename(mainInit) oc_main_init;
+/* typedef needed for oc_main_pool */
+typedef uint64_t oc_clock_time_t;
 %rename(mainPoll) oc_main_poll;
 %rename(mainShutdown) oc_main_shutdown;
 

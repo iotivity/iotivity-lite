@@ -121,6 +121,11 @@ structs from oc_coap
 // replace all instances of oc_separate_response_s with oc_separate_response_t since parser
 // seems to have a problem with typedef that tells the code they are both the same
 %rename(OCSeparateResponse) oc_separate_response_t;
+/*
+ * Currently no known use case that the end user will access this buffer
+ * of this must be exposed then work must be done to convert buffer to a java byte[]
+ */
+%ignore buffer;
 typedef struct
 {
   OC_LIST_STRUCT(requests);
@@ -133,6 +138,12 @@ typedef struct
 } oc_separate_response_t;
 
 %rename(OCResponseBuffer) oc_response_buffer_t;
+/*
+ * Currently no known use case that the end user will access this buffer
+ * of this must be exposed then work must be done to convert buffer and buffer_size to a java byte[]
+ */
+%ignore buffer;
+%ignore buffer_size;
 typedef struct
 {
   uint8_t *buffer;
