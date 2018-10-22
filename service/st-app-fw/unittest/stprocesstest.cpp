@@ -21,6 +21,12 @@
 
 #include "st_process.h"
 
+static void waitforstable(void)
+{
+    //it needs time to be stable to run st_process_func() at st_process.c
+    sleep(3);
+}
+
 class TestSTProcess: public testing::Test
 {
     protected:
@@ -36,12 +42,10 @@ class TestSTProcess: public testing::Test
 };
 
 static void *
-st_process_func(void *data)
+thread_func(void *data)
 {
     (void)data;
     int ret = st_process_start();
-    EXPECT_EQ(0, ret);
-
     return NULL;
 }
 
@@ -55,7 +59,9 @@ TEST_F(TestSTProcess, st_process_init)
 TEST_F(TestSTProcess, st_process_start)
 {
     st_process_init();
-    st_thread_t t = st_thread_create(st_process_func, "TEST", 0, NULL);
+    st_thread_t t = st_thread_create(thread_func, "TEST", 0, NULL);
+    waitforstable();
+    EXPECT_NE(NULL, t);
     st_process_stop();
     st_thread_destroy(t);
     st_process_destroy();
@@ -64,7 +70,8 @@ TEST_F(TestSTProcess, st_process_start)
 TEST_F(TestSTProcess, st_process_stop)
 {
     st_process_init();
-    st_thread_t t = st_thread_create(st_process_func, "TEST", 0, NULL);
+    st_thread_t t = st_thread_create(thread_func, "TEST", 0, NULL);
+    waitforstable();
     int ret = st_process_stop();
     EXPECT_EQ(0, ret);
     st_thread_destroy(t);
@@ -74,9 +81,6 @@ TEST_F(TestSTProcess, st_process_stop)
 TEST_F(TestSTProcess, st_process_already_stopped)
 {
     st_process_init();
-    st_thread_t t = st_thread_create(st_process_func, "TEST", 0, NULL);
-    st_process_stop();
-    st_thread_destroy(t);
     int ret = st_process_stop();
     EXPECT_EQ(0, ret);
     st_process_destroy();
@@ -85,7 +89,8 @@ TEST_F(TestSTProcess, st_process_already_stopped)
 TEST_F(TestSTProcess, st_process_destroy)
 {
     st_process_init();
-    st_thread_t t = st_thread_create(st_process_func, "TEST", 0, NULL);
+    st_thread_t t = st_thread_create(thread_func, "TEST", 0, NULL);
+    waitforstable();
     st_process_stop();
     st_thread_destroy(t);
     int ret = st_process_destroy();
@@ -95,7 +100,8 @@ TEST_F(TestSTProcess, st_process_destroy)
 TEST_F(TestSTProcess, st_process_destroy_fail)
 {
     st_process_init();
-    st_thread_t t = st_thread_create(st_process_func, "TEST", 0, NULL);
+    st_thread_t t = st_thread_create(thread_func, "TEST", 0, NULL);
+    waitforstable();
     int ret = st_process_destroy();
     EXPECT_EQ(-1, ret);
     st_process_stop();
