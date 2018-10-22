@@ -57,7 +57,7 @@ public class Client {
                         long next_event_secs = (next_event / CLOCK_TICKS_PER_SECOND);
                         long next_event_nanos = (next_event % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
 
-                        long now = OCMain.oc_clock_time().longValue();
+                        long now = OCClock.clockTime().longValue();
                         long now_secs = (now / CLOCK_TICKS_PER_SECOND);
                         long now_nanos = (now % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
 
