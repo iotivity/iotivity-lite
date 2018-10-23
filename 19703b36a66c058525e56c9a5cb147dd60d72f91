@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_2e8d7732",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-10-23T06:18:09Z",
+      "side": 1,
+      "message": "from the readability perspective, bool is good, but I\u0027m not sure there is memory usage gain.",
+      "range": {
+        "startLine": 15,
+        "startChar": 6,
+        "endLine": 15,
+        "endChar": 31
+      },
+      "revId": "19703b36a66c058525e56c9a5cb147dd60d72f91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_4e88bb22",
+        "filename": "service/st-app-fw/unittest/stprocesstest.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-10-23T06:18:09Z",
+      "side": 1,
+      "message": "use pthread_cond_wait() to wait signal from thread_func to make sure st_process_start() executed.",
+      "range": {
+        "startLine": 63,
+        "startChar": 4,
+        "endLine": 63,
+        "endChar": 17
+      },
+      "revId": "19703b36a66c058525e56c9a5cb147dd60d72f91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
