@@ -35,7 +35,7 @@ class TestSTDataManager: public testing::Test
 
         virtual void TearDown()
         {
-
+            st_free_device_profile();
         }
 };
 
@@ -66,7 +66,7 @@ TEST_F(TestSTDataManager, st_data_mgr_get_spec_info_fail)
 
 TEST_F(TestSTDataManager, st_data_mgr_get_resource_info)
 {
-     st_set_device_profile(st_device_def, st_device_def_len);
+    st_set_device_profile(st_device_def, st_device_def_len);
     st_data_mgr_info_load();
     st_resource_info_t *ret;
     ret = st_data_mgr_get_resource_info();
