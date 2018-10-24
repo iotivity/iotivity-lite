@@ -184,3 +184,57 @@
   jstring jvalue = JCALL1(NewStringUTF, jenv, oc_string(temp$argnum));
   JCALL3(SetObjectArrayElement, jenv, $input, 0, jvalue);
 }
+
+/********************************************************************
+ * oc_string_array_t                                                *
+ ********************************************************************/
+%typemap(jni) oc_string_array_t "jobjectArray"
+%typemap(jni) oc_string_array_t "jobjectArray"
+%typemap(jtype) oc_string_array_t "String[]"
+%typemap(jstype) oc_string_array_t "String[]"
+%typemap(in) oc_string_array_t (jint jsize) {
+  int i = 0;
+  if ($input) {
+    jsize = JCALL1(GetArrayLength, jenv, $input);
+    oc_new_string_array(&$1, jsize);
+    for (i = 0; i<jsize; i++) {
+      jstring j_string = (jstring)JCALL2(GetObjectArrayElement, jenv, $input, i);
+      const char *c_string = JCALL2(GetStringUTFChars, jenv, j_string, 0);
+      oc_string_array_add_item($1, c_string);
+      JCALL2(ReleaseStringUTFChars, jenv, j_string, c_string);
+      JCALL1(DeleteLocalRef, jenv, j_string);
+    }
+  } else {
+    $1.ptr = 0;
+    $1.size = 0;
+    jsize = 0;
+  }
+}
+
+%typemap(freearg) oc_string_array_t {
+  //oc_free_string_array(&$1);
+}
+
+%typemap(out) oc_string_array_t {
+  if ($1.ptr) {
+    int i;
+    jsize len=0;
+    jstring temp_string;
+    const jclass clazz = JCALL1(FindClass, jenv, "java/lang/String");
+    len = (jsize)oc_string_array_get_allocated_size($1);
+    $result = JCALL3(NewObjectArray, jenv, len, clazz, NULL);
+    /* exception checking omitted */
+
+    for (i=0; i<len; i++) {
+      //temp_string = JCALL1(NewStringUTF, jenv, *$1++);
+      temp_string = JCALL1(NewStringUTF, jenv, oc_string_array_get_item($1, i));
+      JCALL3(SetObjectArrayElement, jenv, $result, i, temp_string);
+      JCALL1(DeleteLocalRef, jenv, temp_string);
+    }
+  }
+}
+
+%typemap(javain) oc_string_array_t "$javainput"
+%typemap(javaout) oc_string_array_t {
+    return $jnicall;
+}
