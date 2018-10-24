@@ -22,6 +22,30 @@
       "revId": "8d8a9885193946baebe99033f209ccaf0d889ca8",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8ed123d0",
+        "filename": "security/oc_doxm.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-24T05:35:07Z",
+      "side": 1,
+      "message": "yes its required as Tizen RT build system don\u0027t seem to located this file - \u003cstring.h\u003e and excluding this makes no harm.",
+      "parentUuid": "9a3d3df0_6e9e5f58",
+      "range": {
+        "startLine": 28,
+        "startChar": 21,
+        "endLine": 28,
+        "endChar": 45
+      },
+      "revId": "8d8a9885193946baebe99033f209ccaf0d889ca8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
