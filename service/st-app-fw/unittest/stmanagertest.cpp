@@ -158,7 +158,6 @@ TEST_F(TestSTManager, st_manager_reset)
     st_error_t st_error_ret = st_manager_initialize();
     ASSERT_EQ(ST_ERROR_NONE, st_error_ret);
 
-    int ret = 0;
 #ifdef STATE_MODEL
     st_register_status_handler(st_status_handler_reset_test);
     st_manager_start();
@@ -170,7 +169,7 @@ TEST_F(TestSTManager, st_manager_reset)
         EXPECT_TRUE(bReset);
     }
     else{
-        ret = test_wait_until(mutex, cv, 5);
+        int ret = test_wait_until(mutex, cv, 5);
         EXPECT_EQ(0, ret);
     }
 #else
