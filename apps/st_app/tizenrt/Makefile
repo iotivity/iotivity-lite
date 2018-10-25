@@ -27,6 +27,7 @@ FUNCNAME = $(APPNAME)_main
 PRIORITY = SCHED_PRIORITY_DEFAULT
 STACKSIZE = 8192
 THREADEXEC = TASH_EXECMD_ASYNC
+ARCH = $(shell arch)
 
 # Hello, World! Example
 
@@ -56,7 +57,7 @@ ifeq ($(CONFIG_IOTLITE_ST_APP_FW),y)
 	ST_DEVICE_DEF= ./json/st_device_def
 	ST_JSON_FILE := $(wildcard ./json/*.json)
 	ST_DEVICE_DEF_HEADER=./tizenrt/st_device_def.h
-ifeq ($(CONFIG_IOTLITE_ARCH), x86_64)
+ifeq ($(ARCH), x86_64)
 	JSON_TO_CBOR=$(IOTCON_BASE_DIR)/tools/json/json2cbor
 else
 	JSON_TO_CBOR=$(IOTCON_BASE_DIR)/tools/json/json2cbor_32
@@ -76,7 +77,7 @@ ifneq ($(words $(ST_JSON_FILE)), 1)
 endif
 endif
 
-prep_st_app_fw_create_device_def:
+prep_st_app_fw_create_device_def: prep_st_app_fw_json_present
 	$(info make new st_device_def file using $(ST_JSON_FILE))
 	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
 	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
@@ -124,7 +125,7 @@ all: .built
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c prep_st_app_fw_json_present prep_st_app_fw_create_device_def
+$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 .built: $(OBJS)
@@ -159,15 +160,19 @@ endif
 	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
 	@touch $@
 
-depend: .depend
+depend: json_file_create .depend
 
 clean:
 	$(call DELFILE, .built)
 	$(call CLEAN)
+	rm ./tizenrt/*.o
 
 distclean: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+
+json_file_create: prep_st_app_fw_create_device_def
+	echo "json file created"
 
 -include Make.dep
 .PHONY: preconfig
