@@ -48,6 +48,23 @@ class TestCollectionRequest: public testing::Test
         virtual void TearDown()
         {
         }
+
+        static void SetUpTestCase()
+        {
+            s_pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
+            oc_resource_bind_resource_type(s_pResource, RESOURCE_TYPE);
+            oc_resource_bind_resource_interface(s_pResource, OC_IF_RW);
+            oc_resource_set_default_interface(s_pResource, OC_IF_RW);
+            oc_resource_set_discoverable(s_pResource, true);
+            oc_resource_set_periodic_observable(s_pResource, 1);
+            oc_process_baseline_interface(s_pResource);
+            oc_add_resource(s_pResource);
+        }
+
+        static void TearDownTestCase()
+        {
+            oc_delete_resource(s_pResource);
+        }
 };
 
 
@@ -68,6 +85,7 @@ TEST_F(TestCollectionRequest, AddCollectionTest_P)
     s_pCol = oc_new_collection(RESOURCE_COLLECTION_NAME_ROOM,
                                RESOURCE_COLLECTION_TYPE_LIGHT, 1, 0);
     EXPECT_TRUE(TestCollectionRequest::s_pCol != NULL) << "Failed to make new collection";
+    oc_delete_collection(TestCollectionRequest::s_pCol);
 }
 
 /*
@@ -79,6 +97,8 @@ TEST_F(TestCollectionRequest, AddCollectionTest_P)
 */
 TEST_F(TestCollectionRequest, DeleteCollectionTest_P)
 {
+    s_pCol = oc_new_collection(RESOURCE_COLLECTION_NAME_ROOM,
+                               RESOURCE_COLLECTION_TYPE_LIGHT, 1, 0);
     ASSERT_NO_THROW(oc_delete_collection(TestCollectionRequest::s_pCol));
 }
 
@@ -91,18 +111,9 @@ TEST_F(TestCollectionRequest, DeleteCollectionTest_P)
 */
 TEST_F(TestCollectionRequest, AddLinkTest_P)
 {
-
-    s_pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
-    oc_resource_bind_resource_type(s_pResource, RESOURCE_TYPE);
-    oc_resource_bind_resource_interface(s_pResource, OC_IF_RW);
-    oc_resource_set_default_interface(s_pResource, OC_IF_RW);
-    oc_resource_set_discoverable(s_pResource, true);
-    oc_resource_set_periodic_observable(s_pResource, 1);
-    oc_process_baseline_interface(s_pResource);
-    oc_add_resource(s_pResource);
-
     s_pLink = oc_new_link(s_pResource);
     EXPECT_TRUE(s_pLink != NULL) << "Failed to make new link";
+    oc_delete_link(s_pLink);
 }
 
 /*
@@ -114,6 +125,7 @@ TEST_F(TestCollectionRequest, AddLinkTest_P)
 */
 TEST_F(TestCollectionRequest, DeleteLinkTest_P)
 {
+    s_pLink = oc_new_link(s_pResource);
     ASSERT_NO_THROW(oc_delete_link(s_pLink));
 }
 
@@ -129,6 +141,7 @@ TEST_F(TestCollectionRequest, AddLinkRelationTest_P)
 
     s_pLink = oc_new_link(s_pResource);
     ASSERT_NO_THROW(oc_link_add_rel(s_pLink, RESOURCE_COLLECTION_RELATION));
+    oc_delete_link(s_pLink);
 }
 
 /*
@@ -140,19 +153,9 @@ TEST_F(TestCollectionRequest, AddLinkRelationTest_P)
 */
 TEST_F(TestCollectionRequest, SetLinkInstanceTest_P)
 {
+    s_pLink = oc_new_link(s_pResource);
     ASSERT_NO_THROW(oc_link_set_ins(s_pLink, RESOURCE_COLLECTION_RELATION));
-}
-
-/*
- * @API             : oc_delete_link()
- * @Description     : delete link in a positive way
- * @PassCondition   : api should not throw any exception
- * @PreCondition    : create a link
- * @PostCondition   : N/A
-*/
-TEST_F(TestCollectionRequest, DeleteLink_P)
-{
-    ASSERT_NO_THROW(oc_delete_link(s_pLink));
+    oc_delete_link(s_pLink);
 }
 
 /*
@@ -169,20 +172,9 @@ TEST_F(TestCollectionRequest, AddCollectionLinkTest_P)
     oc_resource_set_discoverable(s_pCol, true);
     s_pLink = oc_new_link(s_pResource);
     ASSERT_NO_THROW(oc_collection_add_link(s_pCol, s_pLink));
-}
-
-/*
- * @API             : oc_delete_collection(void *user_data);
- * @Description     : delete collection
- * @PassCondition   : should not throw any exception
- * @PreCondition    : N/A
- * @PostCondition   : N/A
-*/
-TEST_F(TestCollectionRequest, RemoveCollectionLinkTest_P)
-{
-    ASSERT_NO_THROW(oc_collection_remove_link(s_pCol, s_pLink));
-    ASSERT_NO_THROW(oc_delete_link(s_pLink));
-    ASSERT_NO_THROW(oc_delete_collection(TestCollectionRequest::s_pCol));
+    oc_collection_remove_link(s_pCol, s_pLink);
+    oc_delete_link(s_pLink);
+    oc_delete_collection(TestCollectionRequest::s_pCol);
 }
 
 /*
@@ -200,16 +192,7 @@ TEST_F(TestCollectionRequest, GetCollectionFromLinkTest_P)
     oc_collection_add_link(s_pCol, s_pLink);
     oc_link_t *link =  oc_collection_get_links(s_pCol);
     EXPECT_TRUE(link != NULL) << "Failed to get collection links ";
-}
-
-/*
- * @API             : oc_delete_resource()
- * @Description     : delete resource in a positive way
- * @PassCondition   : api should not throw any exception
- * @PreCondition    : create a resource
- * @PostCondition   : N/A
-*/
-TEST_F(TestCollectionRequest, DeleteResource_P)
-{
-    ASSERT_NO_THROW(oc_delete_resource(s_pResource));
+    oc_collection_remove_link(s_pCol, s_pLink);
+    oc_delete_link(s_pLink);
+    oc_delete_collection(TestCollectionRequest::s_pCol);
 }
