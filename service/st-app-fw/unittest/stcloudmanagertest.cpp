@@ -61,8 +61,9 @@ class TestSTCloudManager: public testing::Test
 {
     protected:
         oc_handler_t handler = {.init = app_init,
-                            .signal_event_loop = signal_event_loop,
-                            .register_resources = NULL };
+                                .signal_event_loop = signal_event_loop,
+                                .register_resources = NULL,
+                                .requests_entry = NULL };
 
         virtual void SetUp()
         {
