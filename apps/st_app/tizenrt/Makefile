@@ -64,7 +64,13 @@ endif
 	HEADER_DIR +=-I./tizenrt/
 endif
 
-prep_st_app_fw_json_present:
+prep_st_app_fw_create_device_def:
+	$(info make new st_device_def file using $(ST_JSON_FILE))
+	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
+	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
+	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
+
+prep_st_app_fw_json_present: prep_st_app_fw_create_device_def
 ifneq ("$(wildcard $(ST_DEVICE_DEF_HEADER))","")
 else
 ifneq ("$(wildcard $(ST_JSON_FILE))", "")
@@ -75,12 +81,6 @@ ifneq ($(words $(ST_JSON_FILE)), 1)
 	$(error please use 1 json file in apps/st_app/json)
 endif
 endif
-
-prep_st_app_fw_create_device_def:
-	$(info make new st_device_def file using $(ST_JSON_FILE))
-	$(shell $(JSON_TO_CBOR) $(ST_JSON_FILE) > $(ST_DEVICE_DEF))
-	$(shell xxd -i $(ST_DEVICE_DEF) > $(ST_DEVICE_DEF_HEADER))
-	$(shell sed -i 's/_.*st_device_def/st_device_def/g' $(ST_DEVICE_DEF_HEADER))
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
 COBJS = $(CSRCS:.c=$(OBJEXT))
@@ -124,7 +124,7 @@ all: .built
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
 
-$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c prep_st_app_fw_json_present prep_st_app_fw_create_device_def
+$(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 .built: $(OBJS)
@@ -159,7 +159,7 @@ endif
 	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
 	@touch $@
 
-depend: .depend
+depend: json_file_create .depend
 
 clean:
 	$(call DELFILE, .built)
@@ -168,6 +168,9 @@ clean:
 distclean: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+
+json_file_create: prep_st_app_fw_json_present
+	echo "json file created"
 
 -include Make.dep
 .PHONY: preconfig
