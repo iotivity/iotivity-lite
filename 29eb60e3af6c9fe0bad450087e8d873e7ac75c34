@@ -45,6 +45,29 @@
       "revId": "29eb60e3af6c9fe0bad450087e8d873e7ac75c34",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_b9c0af7d",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-10-26T07:45:17Z",
+      "side": 1,
+      "message": "How about changing into oc_message_t for all build case.",
+      "range": {
+        "startLine": 216,
+        "startChar": 44,
+        "endLine": 216,
+        "endChar": 52
+      },
+      "revId": "29eb60e3af6c9fe0bad450087e8d873e7ac75c34",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
