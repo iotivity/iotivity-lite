@@ -1,6 +1,6 @@
-From f6af4c4e910268d8c473a220f50b2de97ae6a07d Mon Sep 17 00:00:00 2001
+From 4358e01265005f069bd5b1f43d85a2bdfd1ea50c Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Mon, 17 Sep 2018 14:09:28 +0300
+Date: Fri, 26 Oct 2018 13:16:25 +0300
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -12,15 +12,15 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  include/mbedtls/config.h | 19 +++++++++++++++----
  include/mbedtls/sha512.h | 18 ------------------
  library/asn1parse.c      | 18 ++++++++++++++++++
- library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++++++---
+ library/bignum.c         | 45 ++++++++++++++++++++++++++++++++++++++++++---
  library/ecdsa.c          | 20 ++++++++++++++++++++
  library/pk.c             | 20 ++++++++++++++++++++
  library/pkparse.c        | 20 ++++++++++++++++++++
  library/ssl_cli.c        | 15 +++++++++++++++
- 8 files changed, 149 insertions(+), 25 deletions(-)
+ 8 files changed, 150 insertions(+), 25 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 45143a5..f766ab6 100644
+index 48400e5..a30b259 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -49,17 +49,25 @@
@@ -177,7 +177,7 @@ index 4dd65c0..e2e1a96 100644
  
  #endif /* MBEDTLS_ASN1_PARSE_C */
 diff --git a/library/bignum.c b/library/bignum.c
-index 6fdf317..8834ffe 100644
+index 6fdf317..d6fca3a 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
 @@ -286,6 +286,7 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
@@ -312,21 +312,23 @@ index 6fdf317..8834ffe 100644
  static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
                           const mbedtls_mpi *T )
  {
-+#ifndef ST_MBEDTLS_OPT
++#if defined(__TIZENRT__) || !defined(ST_MBEDTLS_OPT)
      size_t i, n, m;
      mbedtls_mpi_uint u0, u1, *d;
  
-@@ -1592,7 +1619,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1592,8 +1619,10 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      else
          /* prevent timing attacks */
          mpi_sub_hlp( n, A->p, T->p );
 -
-+#endif
++#else
 +    oc_abort(__func__);
      return( 0 );
++#endif
  }
  
-@@ -1601,6 +1629,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+ /*
+@@ -1601,6 +1630,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
   */
  static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
  {
@@ -334,7 +336,7 @@ index 6fdf317..8834ffe 100644
      mbedtls_mpi_uint z = 1;
      mbedtls_mpi U;
  
-@@ -1608,6 +1637,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1608,6 +1638,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
      U.p = &z;
  
      return( mpi_montmul( A, &U, N, mm, T ) );
@@ -345,7 +347,7 @@ index 6fdf317..8834ffe 100644
  }
  
  /*
-@@ -1615,6 +1648,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1615,6 +1649,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
   */
  int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR )
  {
@@ -353,7 +355,7 @@ index 6fdf317..8834ffe 100644
      int ret;
      size_t wbits, wsize, one = 1;
      size_t i, j, nblimbs;
-@@ -1816,6 +1850,10 @@ cleanup:
+@@ -1816,6 +1851,10 @@ cleanup:
          mbedtls_mpi_free( &RR );
  
      return( ret );
