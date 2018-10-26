@@ -1,5 +1,6 @@
 package java_lite_simple_client;
 
+import org.iotivity.CborEncoder;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
@@ -34,9 +35,9 @@ public class GetLightResponseHandler implements OCResponseHandler {
 
         PutLightResponseHandler putLight = new PutLightResponseHandler();
         if (OCMain.initPut(Light.serverUri, Light.serverEndpoint, null, putLight, OCQos.LOW_QOS)) {
-            OCMain.repStartRootObject();
-            OCMain.repSetBoolean("state", true);
-            OCMain.repSetInt("power", 15);
+            CborEncoder root = OCMain.repBeginRootObject();
+            OCMain.repSetBoolean(root, "state", true);
+            OCMain.repSetInt(root, "power", 15);
             OCMain.repEndRootObject();
 
             if (OCMain.doPut()) {
