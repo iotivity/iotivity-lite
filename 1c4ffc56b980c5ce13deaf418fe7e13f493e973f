@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_b9926f9d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-10-26T00:22:07Z",
+      "side": 1,
+      "message": "jave -\u003e java",
+      "revId": "1c4ffc56b980c5ce13deaf418fe7e13f493e973f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
