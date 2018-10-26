@@ -6,10 +6,6 @@ import org.iotivity.OCRepresentation.OCValue;
 import org.junit.Test;
 
 public class OCRepresentationTest {
-    static {
-        System.loadLibrary("iotivity-lite-java");
-    }
-
     @Test
     public void testType() {
         OCRepresentation req = new OCRepresentation();
