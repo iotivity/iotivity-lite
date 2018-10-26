@@ -6,10 +6,6 @@ import org.junit.Test;
 
 
 public class OCResourceTest {
-    static {
-        System.loadLibrary("iotivity-lite-jni");
-    }
-
     @Test
     public void testDevice() {
         OCResource r = new OCResource();
@@ -40,10 +36,9 @@ public class OCResourceTest {
     public void testTypes() {
         OCResource r = new OCResource();
         assertNotNull(r);
-        //TODO properly encode/decode the OCResource oc_string_array_t types.
-        //r.setTypes(value);
-        // failure purposely done till the setTypes/getProperties methods are updated with non SWIG type values.
-        fail("Not yet implemented");
+        String[] typesArray = {"oic.r.light.dimming", "oic.r.switch.binary"};
+        r.setTypes(typesArray);
+        org.junit.Assert.assertArrayEquals(typesArray, r.getTypes());
     }
 
     @Test
@@ -66,10 +61,12 @@ public class OCResourceTest {
     public void testProperties(){
         OCResource r = new OCResource();
         assertNotNull(r);
-        //TODO properly encode/decode the OCResource oc_resource_properties_t types.
-        //r.setTypes(value);
-        // failure purposely done till the setProperties/getProperties methods are updated with non SWIG type values.
-        fail("Not yet implemented");
+        fail("setProperties implementation crashes VM");
+        r.setProperties((OCResourcePropertiesMask.OC_DISCOVERABLE | OCResourcePropertiesMask.OC_OBSERVABLE));
+        assertTrue((r.getProperties() & OCResourcePropertiesMask.OC_DISCOVERABLE) == OCResourcePropertiesMask.OC_DISCOVERABLE);
+        assertTrue((r.getProperties() & OCResourcePropertiesMask.OC_OBSERVABLE) == OCResourcePropertiesMask.OC_OBSERVABLE);
+        assertFalse((r.getProperties() & OCResourcePropertiesMask.OC_PERIODIC) == OCResourcePropertiesMask.OC_PERIODIC);
+        assertFalse((r.getProperties() & OCResourcePropertiesMask.OC_SECURE) == OCResourcePropertiesMask.OC_SECURE);
     }
 
     @Test

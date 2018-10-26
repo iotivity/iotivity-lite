@@ -1,5 +1,6 @@
 package java_lite_simple_client;
 
+import org.iotivity.CborEncoder;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
@@ -21,9 +22,9 @@ public class PostLightResponseHandler implements OCResponseHandler {
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler();
         if (OCMain.initPost(Light.serverUri, Light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
-            OCMain.repStartRootObject();
-            OCMain.repSetBoolean("state", true);
-            OCMain.repSetInt("power", 55);
+            CborEncoder root = OCMain.repBeginRootObject();
+            OCMain.repSetBoolean(root, "state", true);
+            OCMain.repSetInt(root, "power", 55);
             OCMain.repEndRootObject();
 
             if (OCMain.doPost()) {

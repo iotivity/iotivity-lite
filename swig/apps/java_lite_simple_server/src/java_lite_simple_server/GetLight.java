@@ -1,5 +1,6 @@
 package java_lite_simple_server;
 
+import org.iotivity.CborEncoder;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCRequest;
@@ -14,7 +15,7 @@ public class GetLight implements OCRequestHandler {
 
         Light.power++;
         System.out.println("GET LIGHT:");
-        OCMain.repStartRootObject();
+        CborEncoder root = OCMain.repBeginRootObject();
         switch(interfaces) {
         case OCInterfaceMask.BASELINE:
         {
@@ -23,9 +24,9 @@ public class GetLight implements OCRequestHandler {
         }
         case OCInterfaceMask.RW:
         {
-            OCMain.repSetBoolean("state", Light.state);
-            OCMain.repSetInt("power", Light.power);
-            OCMain.repSetTextString("name", Light.name);
+            OCMain.repSetBoolean(root, "state", Light.state);
+            OCMain.repSetInt(root, "power", Light.power);
+            OCMain.repSetTextString(root, "name", Light.name);
             break;
         }
         default:

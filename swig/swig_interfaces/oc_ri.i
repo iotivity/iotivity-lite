@@ -4,6 +4,18 @@
 %javaconst(1);
 %include "iotivity.swg"
 %include "oc_api.i"
+
+%pragma(java) jniclasscode=%{
+  static {
+    try {
+        System.loadLibrary("iotivity-lite-jni");
+    } catch (UnsatisfiedLinkError e) {
+      System.err.println("Native code library failed to load. \n" + e);
+      System.exit(1);
+    }
+  }
+%}
+
 %{
 #include "../../messaging/coap/oc_coap.h"
 #include "../../include/oc_ri.h"
