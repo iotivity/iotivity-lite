@@ -823,6 +823,20 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 void jni_oc_remove_delayed_callback(jobject callback);
 %include "oc_api.h"
 
+/*******************Begin cbor.h******************************/
+/* CborEncoder from cbor.h  needed to process oc_rep.h*/
+struct CborEncoder
+{
+    union {
+        uint8_t *ptr;
+        ptrdiff_t bytes_needed;
+    } data;
+    const uint8_t *end;
+    size_t remaining;
+    int flags;
+};
+/*******************End cbor.h********************************/
+/*******************Begin oc_rep.h****************************/
 %rename(OCRepresentation) oc_rep_s;
 %rename(OCType) oc_rep_value_type_t;
 %rename(OCValue) oc_rep_value;
@@ -835,6 +849,174 @@ void jni_oc_remove_delayed_callback(jobject callback);
 %ignore g_err;
 %ignore oc_rep_new;
 %ignore oc_rep_finalize;
+%{
+/* Alt implementation of oc_rep_set_double macro*/
+void jni_rep_set_double(CborEncoder * object, const char* key, bool value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_double(object, value);
+}
+%}
+%rename (repSetDouble) jni_rep_set_double;
+void jni_rep_set_double(CborEncoder * object, const char* key, bool value);
+%{
+/* Alt implementation of oc_rep_set_int macro */
+void jni_rep_set_int(CborEncoder * object, const char* key, int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_int(object, value);
+}
+%}
+%rename (repSetInt) jni_rep_set_int;
+void jni_rep_set_int(CborEncoder * object, const char* key, int value);
+%{
+/* Alt implementation of oc_rep_set_uint macro */
+void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_uint(object, value);
+}
+%}
+%rename (repSetUnsignedInt) jni_rep_set_uint;
+void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value);
+%{
+/* Alt implementation of oc_rep_set_boolean macro */
+void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_boolean(object, value);
+}
+%}
+%rename (repSetBoolean) jni_rep_set_boolean;
+void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value);
+%{
+/* Alt implementation of oc_rep_set_text_string macro */
+void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_text_string(object, value, strlen(value));
+}
+%}
+%rename (repSetTextString) jni_rep_set_text_string;
+void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* value);
+%{
+/* Alt implementation of oc_rep_set_byte_string macro */
+void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char* value, size_t length) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_byte_string(object, value, length);
+}
+%}
+%rename (repSetByteString) jni_rep_set_byte_string;
+void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char* value, size_t length);
+%{
+/* Alt implementation of oc_rep_start_array macro */
+CborEncoder * jni_rep_start_array(CborEncoder *parent) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  CborEncoder *cbor_encoder_array = (CborEncoder *)malloc(sizeof(struct CborEncoder));
+  g_err |= cbor_encoder_create_array(parent, cbor_encoder_array, CborIndefiniteLength);
+  return cbor_encoder_array;
+}
+%}
+%rename (repBeginArray) jni_rep_start_array;
+CborEncoder * jni_rep_start_array(CborEncoder *parent);
+%{
+/* Alt implementation of oc_rep_end_array macro */
+void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encoder_close_container(parent, arrayObject);
+  free(arrayObject);
+  arrayObject = NULL;
+}
+%}
+%rename (repEndArray) jni_rep_end_array;
+void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject);
+%{
+/* Alt implementation of oc_rep_start_links_array macro */
+CborEncoder * jni_rep_start_links_array() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  cbor_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength);
+  return &links_array;
+}
+%}
+%rename (repBeginLinksArray) jni_rep_start_links_array;
+CborEncoder * jni_rep_start_links_array();
+%{
+/* Alt implementation of oc_rep_end_links_array macro */
+void jni_rep_end_links_array() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  oc_rep_end_links_array();
+}
+%}
+%rename (repEndLinksArray) jni_rep_end_links_array;
+void jni_rep_end_links_array();
+%{
+/* Alt implementation of oc_rep_start_root_object macro */
+CborEncoder * jni_start_root_object() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
+  return &root_map;
+}
+%}
+%rename(repBeginRootObject) jni_start_root_object;
+CborEncoder * jni_start_root_object();
+%{
+void jni_rep_end_root_object() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  oc_rep_end_root_object();
+}
+%}
+%rename(repEndRootObject) jni_rep_end_root_object;
+void jni_rep_end_root_object();
+%{
+/* Alt implementation of oc_rep_add_byte_string macro */
+void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* value, const size_t length) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  if (value != NULL) {
+    g_err |= cbor_encode_byte_string(arrayObject, value, length);
+  }
+}
+%}
+%rename(repAddByteString) jni_rep_add_byte_string;
+void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* value, const size_t length);
+%{
+/* Alt implementation of oc_rep_add_text_string macro */
+void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  if (value != NULL) {
+    g_err |= cbor_encode_text_string(arrayObject, value, strlen(value));
+  }
+}
+%}
+%rename(repAddTextString) jni_rep_add_text_string;
+void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value);
+%{
+/* Alt implementation of oc_rep_add_double macro */
+void jni_rep_add_double(CborEncoder *arrayObject, const double value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_double(arrayObject, value);
+}
+%}
+%rename(repAddDouble) jni_rep_add_double;
+void jni_rep_add_double(CborEncoder *arrayObject, const double value);
+%{
+/* Alt implementation of oc_rep_add_int macro */
+void jni_rep_add_int(CborEncoder *arrayObject, const int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_int(arrayObject, value);
+}
+%}
+%rename(repAddInt) jni_rep_add_int;
+void jni_rep_add_int(CborEncoder *arrayObject, const int value);
+%{
+/* Alt implementation of oc_rep_add_boolean macro */
+void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value) {
+  g_err |= cbor_encode_boolean(arrayObject, value);
+}
+%}
+%rename(repAddBoolean) jni_rep_add_boolean;
+void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value);
+
 %ignore oc_rep_get_cbor_errno;
 %ignore oc_rep_set_pool;
 %ignore oc_parse_rep;
@@ -851,8 +1033,16 @@ void jni_oc_remove_delayed_callback(jobject callback);
 %ignore oc_rep_get_string_array;
 %ignore oc_rep_get_object;
 %ignore oc_rep_get_object_array;
+%{
+int jni_get_rep_error() {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  return g_err;
+}
+%}
+%rename (getRepError) jni_get_rep_error;
+int jni_get_rep_error();
 %include "oc_rep.h"
-
+/*******************End oc_rep.h****************************/
 %rename(OCEndpoint) oc_endpoint_t;
 // transport flags are pulled from hand generated class as `int` not `enum`
 %ignore transport_flags;
@@ -900,84 +1090,6 @@ int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
 %ignore oc_ri_remove_client_cb_by_mid;
 %ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
-
-%{
-/* from oc_rep.h */
-void rep_start_root_object() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  oc_rep_start_root_object();
-}
-%}
-%rename(repStartRootObject) rep_start_root_object;
-void rep_start_root_object();
-
-%{
-void rep_end_root_object() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  oc_rep_end_root_object();
-}
-%}
-%rename(repEndRootObject) rep_end_root_object;
-void rep_end_root_object();
-
-%{
-int jni_get_rep_error() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  return g_err;
-}
-%}
-%rename (getRepError) jni_get_rep_error;
-int jni_get_rep_error();
-
-%{
-void jni_rep_set_double(const char* key, double value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-  g_err |= cbor_encode_double(&root_map, value);
-}
-%}
-%rename (repSetDouble) jni_rep_set_double;
-void jni_rep_set_double(const char* key, double value);
-
-%{
-void jni_rep_set_int(const char* key, int value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-  g_err |= cbor_encode_int(&root_map, value);
-}
-%}
-%rename (repSetInt) jni_rep_set_int;
-void jni_rep_set_int(const char* key, int value);
-
-%{
-void jni_rep_set_uint(const char* key, unsigned int value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-  g_err |= cbor_encode_uint(&root_map, value);
-}
-%}
-%rename (repSetUnsignedInt) jni_rep_set_int;
-void jni_rep_set_uint(const char* key, unsigned int value);
-
-%{
-void jni_rep_set_boolean(const char* key, bool value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-  g_err |= cbor_encode_boolean(&root_map, value);
-}
-%}
-%rename (repSetBoolean) jni_rep_set_boolean;
-void jni_rep_set_boolean(const char* key, bool value);
-
-%{
-void jni_rep_set_text_string(const char* key, const char* value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(&root_map, key, strlen(key));
-  g_err |= cbor_encode_text_string(&root_map, value, strlen(value));
-}
-%}
-%rename (repSetTextString) jni_rep_set_text_string;
-void jni_rep_set_text_string(const char* key, const char* value);
 
 /**************************************************************
 Add OCCollection and OCList to the output
