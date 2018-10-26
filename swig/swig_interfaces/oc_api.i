@@ -851,56 +851,6 @@ void jni_oc_remove_delayed_callback(jobject callback);
 %ignore oc_rep_get_string_array;
 %ignore oc_rep_get_object;
 %ignore oc_rep_get_object_array;
-%include "oc_rep.h"
-
-%rename(OCEndpoint) oc_endpoint_t;
-// transport flags are pulled from hand generated class as `int` not `enum`
-%ignore transport_flags;
-//%rename (OCTransportFlags) transport_flags;
-%rename(DevAddr) dev_addr;
-//if uncommented the following apply lines will cause the output to be byte[] vs short[]
-//%apply signed char[ANY] { uint8_t address[4] };
-//%apply signed char[ANY] { uint8_t address[16] };
-%rename(OCIPv6Addr) oc_ipv6_addr_t;
-%rename(OCIPv4Addr) oc_ipv4_addr_t;
-%rename(OCLEAddr) oc_le_addr_t;
-%rename(addrLocal) addr_local;
-%rename(OCFVersion) ocf_version_t;
-%rename(interfaceIndex) interface_index;
-// look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
-%rename(newEndpoint) oc_new_endpoint;
-%rename(freeEndpoint) oc_free_endpoint;
-%apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
-%rename(endpointToString) oc_endpoint_to_string;
-int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
-%apply oc_string_t *INPUT { oc_string_t *endpoint_str };
-%apply oc_string_t *OUTPUT { oc_string_t *uri };
-%rename(stringToEndpoint) oc_string_to_endpoint;
-%rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
-%rename(endpointCompare) oc_endpoint_compare;
-%rename(endpointCompareAddress) oc_endpoint_compare_address;
-%include "oc_endpoint.h"
-
-/* TODO check if any of these ignored functions and data types are needed */
-%rename(OCQos) oc_qos_t;
-%rename(OCClientResponse) oc_client_response_t;
-%ignore client_cb;
-%rename(OCDiscoveryFlags) oc_discovery_flags_t;
-%ignore oc_client_handler_s;
-%ignore oc_client_handler_t;
-%ignore oc_response_handler_t;
-%ignore oc_discovery_handler_t;
-%rename (OCClientCallback) oc_client_cb_s;
-%ignore handler; /*part of the oc_client_cb_s */
-%ignore oc_ri_invoke_client_cb;
-%ignore oc_ri_alloc_client_cb;
-%ignore oc_ri_get_client_cb;
-%ignore oc_ri_find_client_cb_by_token;
-%ignore oc_ri_find_client_cb_by_mid;
-%ignore oc_ri_remove_client_cb_by_mid;
-%ignore oc_ri_process_discovery_payload;
-%include "oc_client_state.h"
-
 %{
 /* from oc_rep.h */
 void rep_start_root_object() {
@@ -978,6 +928,120 @@ void jni_rep_set_text_string(const char* key, const char* value) {
 %}
 %rename (repSetTextString) jni_rep_set_text_string;
 void jni_rep_set_text_string(const char* key, const char* value);
+/***********************************************************
+ * Testing an IDEA *
+ ***********************************************************/
+struct CborEncoder
+{
+    union {
+        uint8_t *ptr;
+        ptrdiff_t bytes_needed;
+    } data;
+    const uint8_t *end;
+    size_t remaining;
+    int flags;
+};
+
+%{
+CborEncoder * jni_start_root_object() {
+  g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
+  return &root_map;
+}
+%}
+%rename(repStartRootObjectA) jni_start_root_object;
+CborEncoder * jni_start_root_object();
+
+%{
+void jni_stop_root_object(CborEncoder * root) {
+  g_err |= cbor_encoder_close_container(&g_encoder, root);
+}
+%}
+%rename (repStopRootObjectA) jni_stop_root_object;
+void jni_stop_root_object(CborEncoder * root);
+
+%{
+void jni_rep_set_booleanA(CborEncoder * object, const char* key, bool value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_boolean(object, value);
+}
+%}
+%rename (repSetBooleanA) jni_rep_set_booleanA;
+void jni_rep_set_booleanA(CborEncoder * object, const char* key, bool value);
+
+%{
+void jni_rep_set_intA(CborEncoder * object, const char* key, int value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_int(object, value);
+}
+%}
+%rename (repSetIntA) jni_rep_set_intA;
+void jni_rep_set_intA(CborEncoder * object, const char* key, int value);
+
+%{
+void jni_rep_set_text_stringA(CborEncoder * object, const char* key, const char* value) {
+  OC_DBG("JNI: %s\n", __FUNCTION__);
+  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= cbor_encode_text_string(object, value, strlen(value));
+}
+%}
+%rename (repSetTextStringA) jni_rep_set_text_stringA;
+void jni_rep_set_text_stringA(CborEncoder * object, const char* key, const char* value);
+
+/***********************************************************
+ * End Testing an IDEA *
+ ***********************************************************/
+
+%include "oc_rep.h"
+
+%rename(OCEndpoint) oc_endpoint_t;
+// transport flags are pulled from hand generated class as `int` not `enum`
+%ignore transport_flags;
+//%rename (OCTransportFlags) transport_flags;
+%rename(DevAddr) dev_addr;
+//if uncommented the following apply lines will cause the output to be byte[] vs short[]
+//%apply signed char[ANY] { uint8_t address[4] };
+//%apply signed char[ANY] { uint8_t address[16] };
+%rename(OCIPv6Addr) oc_ipv6_addr_t;
+%rename(OCIPv4Addr) oc_ipv4_addr_t;
+%rename(OCLEAddr) oc_le_addr_t;
+%rename(addrLocal) addr_local;
+%rename(OCFVersion) ocf_version_t;
+%rename(interfaceIndex) interface_index;
+// look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
+%rename(newEndpoint) oc_new_endpoint;
+%rename(freeEndpoint) oc_free_endpoint;
+%apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
+%rename(endpointToString) oc_endpoint_to_string;
+int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
+%apply oc_string_t *INPUT { oc_string_t *endpoint_str };
+%apply oc_string_t *OUTPUT { oc_string_t *uri };
+%rename(stringToEndpoint) oc_string_to_endpoint;
+%rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
+%rename(endpointCompare) oc_endpoint_compare;
+%rename(endpointCompareAddress) oc_endpoint_compare_address;
+%include "oc_endpoint.h"
+
+/* TODO check if any of these ignored functions and data types are needed */
+%rename(OCQos) oc_qos_t;
+%rename(OCClientResponse) oc_client_response_t;
+%ignore client_cb;
+%rename(OCDiscoveryFlags) oc_discovery_flags_t;
+%ignore oc_client_handler_s;
+%ignore oc_client_handler_t;
+%ignore oc_response_handler_t;
+%ignore oc_discovery_handler_t;
+%rename (OCClientCallback) oc_client_cb_s;
+%ignore handler; /*part of the oc_client_cb_s */
+%ignore oc_ri_invoke_client_cb;
+%ignore oc_ri_alloc_client_cb;
+%ignore oc_ri_get_client_cb;
+%ignore oc_ri_find_client_cb_by_token;
+%ignore oc_ri_find_client_cb_by_mid;
+%ignore oc_ri_remove_client_cb_by_mid;
+%ignore oc_ri_process_discovery_payload;
+%include "oc_client_state.h"
 
 /**************************************************************
 Add OCCollection and OCList to the output
