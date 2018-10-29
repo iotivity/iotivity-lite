@@ -16,6 +16,24 @@
       "revId": "2adffb62e42c40d06c42917b7a142da1312c722c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1920bbf6",
+        "filename": "swig/swig_interfaces/iotivity.swg",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-10-29T18:51:37Z",
+      "side": 1,
+      "message": "When referencing other implementation the memory was freed. When testing I found that freeing the memory made the strings invalid.\n\nWhen testing I found I could not free the string array or the java array would become invalid.\n\nI just left the commented out code in. I will remove.",
+      "parentUuid": "9a3d3df0_7981074a",
+      "revId": "2adffb62e42c40d06c42917b7a142da1312c722c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
