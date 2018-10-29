@@ -84,6 +84,7 @@
 #define SC_RSRVD_ES_ACCESSPOINT_LIST_SSID "ssid"
 
 #define SC_MAX_ES_ATTR_NAME_LEN 50
+#define MAX_AP_LIST_COUNT 30
 
 typedef struct
 {
@@ -616,7 +617,6 @@ construct_response_of_sec_aplist(sec_accesspoint *ap_list)
   if (!ap_list) {
     return;
   }
-
   sec_accesspoint *wifi_ap = ap_list;
   char key_name[SC_MAX_ES_ATTR_NAME_LEN] = { 0 };
 
@@ -625,9 +625,13 @@ construct_response_of_sec_aplist(sec_accesspoint *ap_list)
                            SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS);
   oc_rep_set_key(root_map, key_name);
   oc_rep_start_array(root_map, ap_items);
+#ifdef __TIZENRT__
+  int cnt =0;
+  while (wifi_ap && cnt < MAX_AP_LIST_COUNT) {
+    oc_rep_object_array_start_item(ap_items);
+#else
   while (wifi_ap) {
     oc_rep_object_array_start_item(ap_items);
-
     OC_DBG("Channel - %s", oc_string(wifi_ap->channel));
     construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
                              SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL);
@@ -640,17 +644,24 @@ construct_response_of_sec_aplist(sec_accesspoint *ap_list)
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->enc_type));
 
-    OC_DBG("Mac address - %s", oc_string(wifi_ap->mac_address));
-    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
-                             SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
-    es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(wifi_ap->mac_address));
-
     OC_DBG("Max rate - %s", oc_string(wifi_ap->max_rate));
     construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
                              SC_RSRVD_ES_ACCESSPOINT_LIST_MAX_RATE);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->max_rate));
+
+    OC_DBG("Security type - %s", oc_string(wifi_ap->security_type));
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(wifi_ap->security_type));
+#endif
+    printf("enter in ssid spe\n");
+    OC_DBG("Mac address - %s", oc_string(wifi_ap->mac_address));
+    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                             SC_RSRVD_ES_ACCESSPOINT_LIST_MAC_ADDRESS);
+    es_rep_set_text_string_with_keystr(ap_items, key_name,
+                                       oc_string(wifi_ap->mac_address));
 
     OC_DBG("RSSI - %s", oc_string(wifi_ap->rssi));
     construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
@@ -658,19 +669,15 @@ construct_response_of_sec_aplist(sec_accesspoint *ap_list)
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->rssi));
 
-    OC_DBG("Security type - %s", oc_string(wifi_ap->security_type));
-    construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
-                             SC_RSRVD_ES_ACCESSPOINT_LIST_SECURITY_TYPE);
-    es_rep_set_text_string_with_keystr(ap_items, key_name,
-                                       oc_string(wifi_ap->security_type));
-
     OC_DBG("SSID - %s", oc_string(wifi_ap->ssid));
     construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
                              SC_RSRVD_ES_ACCESSPOINT_LIST_SSID);
     es_rep_set_text_string_with_keystr(ap_items, key_name,
                                        oc_string(wifi_ap->ssid));
-
     oc_rep_object_array_end_item(ap_items);
+#ifdef __TIZENRT__
+    cnt++;
+#endif
     wifi_ap = wifi_ap->next;
   }
   oc_rep_close_array(root, ap_items);
@@ -681,6 +688,7 @@ static void
 get_sec_aplist(oc_request_t *request, oc_interface_mask_t interface,
                void *user_data)
 {
+  printf("[Sc_easysetup] GET request recieved\n");
   (void)user_data;
   OC_DBG("GET request received");
 
@@ -697,7 +705,6 @@ get_sec_aplist(oc_request_t *request, oc_interface_mask_t interface,
 
   sec_accesspoint *ap_list = NULL;
   g_sec_aplist->cb(&ap_list);
-
   construct_response_of_sec_aplist(ap_list);
   oc_send_response(request, OC_STATUS_OK);
 
