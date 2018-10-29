@@ -1,0 +1,7 @@
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+2: Rick Bell <richard.s.bell@intel.com>
+Submitted-by: Rick Bell <richard.s.bell@intel.com>
+Submitted-at: Mon, 29 Oct 2018 21:56:10 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/27307
+Project: iotivity-constrained
+Branch: refs/heads/swig
