@@ -74,6 +74,7 @@ void st_turn_on_soft_AP(const char *ssid, const char *pwd, int channel);
 void st_turn_off_soft_AP(void);
 int st_connect_wifi(const char *ssid, const char *pwd);
 
+static void  wm_scan(void);
 void st_wifi_scan(st_wifi_ap_t **ap_list);
 void st_wifi_free_scan_list(st_wifi_ap_t *ap_list);
 #ifndef WIFI_SCAN_IN_SOFT_AP_SUPPORTED
