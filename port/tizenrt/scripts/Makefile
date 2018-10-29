@@ -27,23 +27,30 @@ WIFI_HEADER := $(TOPDIR)/../framework/include
 SLSI_HEADER := $(TOPDIR)/../external/include
 
 DTLS_TAG ?= mbedtls-2.7.0
-DTLS=   aes.c       aesni.c     arc4.c      asn1parse.c asn1write.c base64.c    \
-	bignum.c    blowfish.c  camellia.c  ccm.c       cipher.c    cipher_wrap.c   \
+DTLS=   aes.c       aesni.c     asn1parse.c asn1write.c base64.c    \
+	bignum.c    ccm.c       cipher.c    cipher_wrap.c   \
 	cmac.c      ctr_drbg.c  des.c       dhm.c       ecdh.c      ecdsa.c     \
 	ecjpake.c   ecp.c       ecp_curves.c    entropy.c   entropy_poll.c  error.c     \
 	gcm.c       havege.c    hmac_drbg.c md.c        md2.c       md4.c       \
 	md5.c       md_wrap.c   oid.c       padlock.c   \
 	pem.c       pk.c        pk_wrap.c   pkcs12.c    pkcs5.c     pkparse.c   \
-	pkwrite.c   platform.c  ripemd160.c rsa.c       sha1.c      sha256.c    \
+	pkwrite.c   platform.c  ripemd160.c sha1.c      sha256.c    \
 	sha512.c    threading.c timing.c    version.c   version_features.c      \
 	xtea.c      pkcs11.c    x509.c      x509_crt.c  debug.c     net_sockets.c   \
 	ssl_cache.c ssl_ciphersuites.c      ssl_cli.c   ssl_cookie.c            \
-	ssl_srv.c   ssl_ticket.c    ssl_tls.c   rsa_internal.c
+	ssl_srv.c   ssl_ticket.c    ssl_tls.c
 
+ifneq ($(CONFIG_IOTLITE_CODE_SIZE_OPT),y)
+DTLS += arc4.c blowfish.c camellia.c rsa.c rsa_internal.c
+endif
 DTLSFLAGS=-I$(MBEDTLS_DIR)/include/ -D__OC_RANDOM
 
 ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
 	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
+
+ifeq ($(CONFIG_IOTLITE_CODE_SIZE_OPT),y)
+SRC +=../../port/oc_log.c
 endif
 
 ifeq ($(CONFIG_IOTLITE_SECURE),y)
@@ -59,7 +66,7 @@ ifeq ($(CONFIG_IOTLITE_SECURE),y)
 
 	CSRCS	+= $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
-ifeq ($(CONFIG_IOTLITE_DYNAMIC),y)
+ifeq ($(CONFIG_IOTLITE_DYNAMIC)$(CONFIG_IOTLITE_CODE_SIZE_OPT),yn)
 	CSRCS += $(IOTCONS_ROOT_DIR)/security/oc_obt.c
 	OSRCS_C += iotivity-constrained/security/oc_obt.o
 else
