@@ -518,7 +518,7 @@ st_manager_initialize(void)
     st_print_log("[ST_MGR] st_process_init failed.\n");
     return ST_ERROR_OPERATION_FAILED;
   }
-
+  /* Wificallback initialize function call */
   if (st_port_specific_init() != 0) {
     st_print_log("[ST_MGR] st_port_specific_init failed!\n");
     st_process_destroy();
@@ -582,8 +582,6 @@ st_manager_stack_init(void)
     st_wifi_scan(&ap_list);
     st_wifi_set_cache(ap_list);
 #endif
-
-    // Turn on soft-ap
     st_print_log("[ST_MGR] Soft AP turn on.\n");
 
     char ssid[MAX_SSID_LEN + 1];
