@@ -450,7 +450,8 @@ static void
 get_ap_list(sec_accesspoint **ap_list) {
   st_wifi_ap_t *scanlist = NULL;
   sec_accesspoint *list_tail = NULL;
-
+  sec_accesspoint *tmp;
+  int list_cnt = 0;
   if (!ap_list) {
     return;
   }
@@ -463,7 +464,6 @@ get_ap_list(sec_accesspoint **ap_list) {
 #else
   scanlist = st_wifi_get_cache();
 #endif
-
   st_wifi_ap_t *cur = scanlist;
   int cnt = 0;
   while(cur) {
@@ -496,6 +496,14 @@ get_ap_list(sec_accesspoint **ap_list) {
     list_tail = ap;
     cur = cur->next;
     cnt++;
+  }
+  tmp = *ap_list;
+  st_print_log("[ST_ES] print sec_accesspoint ap_list result\n");
+  st_print_log("[ST_ES] Found %d neighbouring sec_accesspoints\n", cnt);
+
+  while (tmp!=NULL) {
+    st_print_log("[ST_ES] ssid=%s mac=%s\n", oc_string(tmp->ssid), oc_string(tmp->mac_address));
+    tmp = tmp->next;
   }
 
 exit:
