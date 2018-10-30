@@ -1,6 +1,6 @@
-From 4358e01265005f069bd5b1f43d85a2bdfd1ea50c Mon Sep 17 00:00:00 2001
+From f67e95d6a36b07a8c52c4a8738449bd8711b1a3e Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Fri, 26 Oct 2018 13:16:25 +0300
+Date: Tue, 30 Oct 2018 16:29:05 +0200
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -9,21 +9,21 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 19 +++++++++++++++----
+ include/mbedtls/config.h | 18 ++++++++++++++----
  include/mbedtls/sha512.h | 18 ------------------
  library/asn1parse.c      | 18 ++++++++++++++++++
- library/bignum.c         | 45 ++++++++++++++++++++++++++++++++++++++++++---
+ library/bignum.c         | 44 +++++++++++++++++++++++++++++++++++++++++---
  library/ecdsa.c          | 20 ++++++++++++++++++++
  library/pk.c             | 20 ++++++++++++++++++++
  library/pkparse.c        | 20 ++++++++++++++++++++
  library/ssl_cli.c        | 15 +++++++++++++++
- 8 files changed, 150 insertions(+), 25 deletions(-)
+ 8 files changed, 148 insertions(+), 25 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 48400e5..a30b259 100644
+index 48400e5..10ee619 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -49,17 +49,25 @@
+@@ -49,8 +49,6 @@
  /* mbed TLS modules */
  #define MBEDTLS_AES_C
  #define MBEDTLS_CIPHER_C
@@ -31,9 +31,8 @@ index 48400e5..a30b259 100644
 -#define MBEDTLS_ENTROPY_C
  #define MBEDTLS_MD_C
  #define MBEDTLS_SHA256_C
-+#define MBEDTLS_SHA512_C
  #define MBEDTLS_SSL_COOKIE_C
- #define MBEDTLS_SSL_CLI_C
+@@ -58,8 +56,17 @@
  #define MBEDTLS_SSL_SRV_C
  #define MBEDTLS_SSL_TLS_C
  
@@ -51,7 +50,7 @@ index 48400e5..a30b259 100644
  
  /* Save some RAM by adjusting to your exact needs */
  #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
-@@ -82,12 +90,13 @@
+@@ -82,12 +89,13 @@
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
@@ -67,7 +66,7 @@ index 48400e5..a30b259 100644
  #define MBEDTLS_X509_USE_C
  
  #define MBEDTLS_ASN1_PARSE_C
-@@ -98,7 +107,9 @@
+@@ -98,7 +106,9 @@
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -177,7 +176,7 @@ index 4dd65c0..e2e1a96 100644
  
  #endif /* MBEDTLS_ASN1_PARSE_C */
 diff --git a/library/bignum.c b/library/bignum.c
-index 6fdf317..d6fca3a 100644
+index 6fdf317..9e97619 100644
 --- a/library/bignum.c
 +++ b/library/bignum.c
 @@ -286,6 +286,7 @@ int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char sw
@@ -316,19 +315,17 @@ index 6fdf317..d6fca3a 100644
      size_t i, n, m;
      mbedtls_mpi_uint u0, u1, *d;
  
-@@ -1592,8 +1619,10 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1592,7 +1619,8 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
      else
          /* prevent timing attacks */
          mpi_sub_hlp( n, A->p, T->p );
 -
-+#else
++#endif
 +    oc_abort(__func__);
      return( 0 );
-+#endif
  }
  
- /*
-@@ -1601,6 +1630,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
+@@ -1601,6 +1629,7 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
   */
  static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint mm, const mbedtls_mpi *T )
  {
@@ -336,7 +333,7 @@ index 6fdf317..d6fca3a 100644
      mbedtls_mpi_uint z = 1;
      mbedtls_mpi U;
  
-@@ -1608,6 +1638,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1608,6 +1637,10 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
      U.p = &z;
  
      return( mpi_montmul( A, &U, N, mm, T ) );
@@ -347,7 +344,7 @@ index 6fdf317..d6fca3a 100644
  }
  
  /*
-@@ -1615,6 +1649,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
+@@ -1615,6 +1648,7 @@ static int mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N, mbedtls_mpi_uint m
   */
  int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi *E, const mbedtls_mpi *N, mbedtls_mpi *_RR )
  {
@@ -355,7 +352,7 @@ index 6fdf317..d6fca3a 100644
      int ret;
      size_t wbits, wsize, one = 1;
      size_t i, j, nblimbs;
-@@ -1816,6 +1851,10 @@ cleanup:
+@@ -1816,6 +1850,10 @@ cleanup:
          mbedtls_mpi_free( &RR );
  
      return( ret );
