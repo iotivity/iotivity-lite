@@ -1,0 +1,302 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_b9738fe6",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "its recommended to use a macro with reasonable name instead of using magic number.\n\nalso, is the limit of more than 30 ap count tizen rt specific ? If so please wrap this specific check under __TIZENRT__ per-processor macro..",
+      "range": {
+        "startLine": 628,
+        "startChar": 17,
+        "endLine": 628,
+        "endChar": 30
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1981db8f",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "why these blocks of code are commented ?",
+      "range": {
+        "startLine": 630,
+        "startChar": 1,
+        "endLine": 641,
+        "endChar": 5
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_f97d17b3",
+        "filename": "service/st-app-fw/include/st_port.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "are these additional APIs need only for Tizen RT ? \n\nIf they are required in general case, implementation for linux, freertos ports also need to be added. Otherwise please update existing tizen rt specific API implementation to accommodate the additional logic for AP scan.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 16
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_99b68b89",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "use log API: \"st_print_log\" instead of printf.",
+      "range": {
+        "startLine": 89,
+        "startChar": 2,
+        "endLine": 89,
+        "endChar": 9
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_39c13fe5",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "use log API: \"st_print_log\" instead of printf.",
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_79bbc772",
+        "filename": "service/st-app-fw/src/port/tizenrt/st_port.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "use log API: \"st_print_log\" instead of printf.",
+      "range": {
+        "startLine": 510,
+        "startChar": 4,
+        "endLine": 510,
+        "endChar": 10
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d9af732a",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "same header is included in \"wifi_soft_ap_util.h\" so we can remove it from this .c file right ?",
+      "range": {
+        "startLine": 20,
+        "startChar": 14,
+        "endLine": 20,
+        "endChar": 37
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_b9ac2f37",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "remove unused code ..",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 24
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_19aa7b19",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "update the logic to use values from device_def json file.",
+      "range": {
+        "startLine": 34,
+        "startChar": 2,
+        "endLine": 38,
+        "endChar": 35
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_f9a6b752",
+        "filename": "service/st-app-fw/src/port/tizenrt/wifi_soft_ap_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "prefer loggin api instead of printf.",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 27
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_39681ff5",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "cleanup unused code",
+      "range": {
+        "startLine": 421,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 6
+      },
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_5963631a",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "remove tabs",
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_7972a7e6",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "i think this call is required for tizen rt specific AP Scan logic.. so can be we move it under st_port_specific_init() ?",
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_996deb07",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-10-30T06:55:43Z",
+      "side": 1,
+      "message": "add a comment to explain why this sleep is needed ..?",
+      "revId": "e81db69535390f54a95afdc6b7836d70653cd906",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
