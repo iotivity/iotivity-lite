@@ -76,7 +76,11 @@ int oc_handler_init_callback(void)
   int attachCurrentThreadResult = 0;
   getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
   if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
+#else
       attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
+#endif
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
@@ -98,14 +102,18 @@ void oc_handler_signal_event_loop_callback(void)
   int attachCurrentThreadResult = 0;
   getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
   if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
+#else
       attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
+#endif
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
   assert(cls_OCMainInitHandler);
   const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
   assert(mid_signalEventLoop);
-  jenv->CallIntMethod(jinit_obj, mid_signalEventLoop);
+  jenv->CallVoidMethod(jinit_obj, mid_signalEventLoop);
   if (JNI_EDETACHED == getEnvResult) {
       jvm->DetachCurrentThread();
   }
@@ -119,7 +127,11 @@ void oc_handler_register_resource_callback(void)
   int attachCurrentThreadResult = 0;
   getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
   if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
+#else
       attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
+#endif
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
@@ -140,7 +152,11 @@ void oc_handler_requests_entry_callback(void)
   int attachCurrentThreadResult = 0;
   getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
   if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
+#else
       attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
+#endif
       assert(JNI_OK == attachCurrentThreadResult);
   }
   assert(jenv);
