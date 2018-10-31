@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_f4b51e32",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-31T04:46:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_59d08353",
+      "range": {
+        "startLine": 861,
+        "startChar": 0,
+        "endLine": 861,
+        "endChar": 35
+      },
+      "revId": "29eb60e3af6c9fe0bad450087e8d873e7ac75c34",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_f9e35731",
         "filename": "messaging/coap/coap.h",
         "patchSetId": 18
@@ -59,6 +83,54 @@
       "writtenOn": "2018-10-26T07:45:17Z",
       "side": 1,
       "message": "How about changing into oc_message_t for all build case.",
+      "range": {
+        "startLine": 216,
+        "startChar": 44,
+        "endLine": 216,
+        "endChar": 52
+      },
+      "revId": "29eb60e3af6c9fe0bad450087e8d873e7ac75c34",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_34878663",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-31T04:46:42Z",
+      "side": 1,
+      "message": "Currently, I think better point to resize buffer is in the coap_serialize_message, because coap_serialize_message knows the exact size to be changed.\notherwise , otherwise each reallocating after calling coap_serialize_message\n\nif I find the better way  .. I will make it better",
+      "parentUuid": "9a3d3df0_f9e35731",
+      "range": {
+        "startLine": 216,
+        "startChar": 7,
+        "endLine": 216,
+        "endChar": 55
+      },
+      "revId": "29eb60e3af6c9fe0bad450087e8d873e7ac75c34",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_54820a53",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-10-31T04:46:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_b9c0af7d",
       "range": {
         "startLine": 216,
         "startChar": 44,
