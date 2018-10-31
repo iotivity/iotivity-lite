@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_b4ab96d5",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-10-31T04:20:21Z",
+      "side": 1,
+      "message": "This should be replaced by ifeq ($(SKIP_CERT),1) also?",
+      "range": {
+        "startLine": 627,
+        "startChar": 0,
+        "endLine": 629,
+        "endChar": 5
+      },
+      "revId": "812d8b707a65dcb247ecce908d12597729ed36da",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
