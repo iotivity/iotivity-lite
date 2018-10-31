@@ -859,7 +859,24 @@ struct CborEncoder
 %ignore root_map;
 %ignore links_array;
 %ignore g_err;
-%ignore oc_rep_new;
+
+%typemap(in) (uint8_t *payload, int size) (jbyte * temp){
+  temp = JCALL2(GetByteArrayElements, jenv, $input, NULL);
+  $1 = (uint8_t *) temp;
+  $2 = (int)JCALL1(GetArrayLength, jenv, $input);
+}
+%typemap(jni)       (uint8_t *payload, int size) "jbyteArray"
+%typemap(jtype)     (uint8_t *payload, int size) "byte[]"
+%typemap(jstype)    (uint8_t *payload, int size) "byte[]"
+%typemap(javain)    (uint8_t *payload, int size) "$javainput"
+%typemap(javaout)   (uint8_t *payload, int size) {
+    return $jnicall;
+}
+%typemap(freearg) (uint8_t *payload, int size) {
+  JCALL3(ReleaseByteArrayElements, jenv, $input, temp$argnum, 0);
+}
+
+%rename(repNew) oc_rep_new;
 %ignore oc_rep_get_encoded_payload_size;
 %ignore oc_rep_get_encoder_buf;
 %rename (repSetDouble) jni_rep_set_double;
@@ -1241,8 +1258,42 @@ void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_strin
 }
 %}
 
+%rename(repGetOCRepresentaionFromRootObject) jni_rep_get_rep_from_root_object;
+%newobject jni_rep_get_rep_from_root_object;
+%inline %{
+/*
+ * Java only helper function to convert the root CborEncoder object to an oc_rep_t this is needed
+ * to enable encode/decode unit testing. This function is not expected to be used in typical
+ * use case. It should only be called after calling oc_rep_end_root_object.
+ */
+oc_rep_t * jni_rep_get_rep_from_root_object() {
+//  struct oc_memb* rep_objects  = (struct oc_memb*)malloc(sizeof(struct oc_memb));
+//  *rep_objects = {sizeof(oc_rep_t), 0, 0, 0, 0};
+//  oc_rep_set_pool(rep_objects);
+  oc_rep_t * rep = (oc_rep_t *)malloc(sizeof(oc_rep_t));
+  const uint8_t *payload = oc_rep_get_encoder_buf();
+  int payload_len = oc_rep_get_encoded_payload_size();
+  oc_parse_rep(payload, payload_len, &rep);
+  return rep;
+}
+%}
 %ignore oc_rep_get_cbor_errno;
-%ignore oc_rep_set_pool;
+//%ignore oc_rep_set_pool;
+
+%rename (OCMemoryBuffer) oc_memb;
+struct oc_memb
+{
+// commented out all the data type for oc_memb this will be an opaque data type to language bindings
+/*
+  unsigned short size;
+  unsigned short num;
+  char *count;
+  void *mem;
+  oc_memb_buffers_avail_callback_t buffers_avail_cb;
+*/
+};
+%rename(repSetPool) oc_rep_set_pool;
+
 %ignore oc_parse_rep;
 %ignore oc_free_rep;
 

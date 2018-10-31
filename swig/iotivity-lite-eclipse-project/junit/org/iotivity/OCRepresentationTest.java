@@ -119,4 +119,68 @@ public class OCRepresentationTest {
     public void testValueObjectArray() {
         fail("Not yet implemented");
     }
+
+    @Test
+    public void testRepInt() {
+        byte buffer[] = new byte[1024];
+        OCMain.repNew(buffer);
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertNotNull(root);
+        OCMain.repSetInt(root, "ultimat_answer", 42);
+        OCMain.repEndRootObject();
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        int[] outValue = new int[1];
+        OCMain.repGetInt(rep, "ultimat_answer", outValue);
+        assertEquals(42, outValue[0]);
+    }
+
+    @Test
+    public void testRepBool() {
+        byte buffer[] = new byte[1024];
+        OCMain.repNew(buffer);
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertNotNull(root);
+        OCMain.repSetBoolean(root, "true_flag", true);
+        OCMain.repEndRootObject();
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        boolean[] outValue = new boolean[1];
+        OCMain.repGetBool(rep, "true_flag", outValue);
+        assertEquals(true, outValue[0]);
+    }
+
+    @Test
+    public void testRepDouble() {
+        byte buffer[] = new byte[1024];
+        OCMain.repNew(buffer);
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertNotNull(root);
+        OCMain.repSetDouble(root, "pi", 3.14);
+        OCMain.repEndRootObject();
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        double[] outValue = new double[1];
+        OCMain.repGetDouble(rep, "pi", outValue);
+        assertEquals(3.14, outValue[0], 0.001);
+    }
+
+    @Test
+    public void testRepString() {
+        byte buffer[] = new byte[1024];
+        OCMain.repNew(buffer);
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertNotNull(root);
+        OCMain.repSetTextString(root, "hello", "world");
+        OCMain.repEndRootObject();
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        String[] outValue = new String[1];
+        OCMain.repGetString(rep, "hello", outValue);
+        assertEquals("world", outValue[0]);
+    }
 }
