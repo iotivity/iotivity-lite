@@ -15,4 +15,4 @@ gcc -c -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestand
 
 
 # create shared library
-gcc -shared ./obj/*.o ../../port/linux/obj/*.o ../../port/linux/obj/client_server/*.o  -lm -pthread -lrt -lstdc++ -o libiotivity-lite-jni.so
+gcc -shared ./obj/*.o ../../port/linux/obj/*.o ../../port/linux/obj/client_server/*.o  -lm -lpthread -lrt -lstdc++  -o libiotivity-lite-jni.so
