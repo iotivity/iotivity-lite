@@ -2,6 +2,7 @@
 %module OCMain
 %include "arrays_java.i"
 %include "stdint.i"
+%include "carrays.i"
 %include <oc_ri.i>
 %include "typemaps.i"
 %include "iotivity.swg"
@@ -860,7 +861,18 @@ struct CborEncoder
 %ignore root_map;
 %ignore links_array;
 %ignore g_err;
-%ignore oc_rep_new;
+%typemap(in) (uint8_t *payload, int size) {
+  $1 = (uint8_t *)JCALL1(GetDirectBufferAddress, jenv, $input);
+  $2 = (int)JCALL1(GetDirectBufferCapacity, jenv, $input);
+}
+%typemap(jni)       (uint8_t *payload, int size) "jobject"
+%typemap(jtype)     (uint8_t *payload, int size) "java.nio.ByteBuffer"
+%typemap(jstype)    (uint8_t *payload, int size) "java.nio.ByteBuffer"
+%typemap(javain)    (uint8_t *payload, int size) "$javainput"
+%typemap(javaout)   (uint8_t *payload, int size) {
+    return $jnicall;
+}
+%rename(repNew) oc_rep_new;
 %ignore oc_rep_finalize;
 %rename (repSetDouble) jni_rep_set_double;
 %inline %{
@@ -1187,6 +1199,21 @@ void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_strin
 }
 %}
 
+%rename(repGetOCRepresentaionFromRootObject) jni_rep_get_rep_from_root_object;
+%inline %{
+/*
+ * Java only helper function to convert the root CborEncoder object to an oc_rep_t this is needed
+ * to enable encode/decode unit testing. This function is not expected to be used in typical
+ * use case. It should only be called after calling oc_rep_end_root_object.
+ */
+oc_rep_t * jni_rep_get_rep_from_root_object() {
+  uint8_t *payload = g_encoder.data.ptr;
+  int payload_len = oc_rep_finalize();
+  oc_rep_t *rep;
+  oc_parse_rep(payload, payload_len, &rep);
+  return rep;
+}
+%}
 %ignore oc_rep_get_cbor_errno;
 %ignore oc_rep_set_pool;
 %ignore oc_parse_rep;
