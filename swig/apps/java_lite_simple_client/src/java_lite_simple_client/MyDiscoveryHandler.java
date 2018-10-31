@@ -9,7 +9,6 @@ import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCResourcePropertiesMask;
-import org.iotivity.OCTransportFlags;
 
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
