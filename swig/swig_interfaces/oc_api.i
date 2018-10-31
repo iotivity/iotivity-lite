@@ -105,7 +105,7 @@ void oc_handler_signal_event_loop_callback(void)
   assert(cls_OCMainInitHandler);
   const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
   assert(mid_signalEventLoop);
-  jenv->CallIntMethod(jinit_obj, mid_signalEventLoop);
+  jenv->CallVoidMethod(jinit_obj, mid_signalEventLoop);
   if (JNI_EDETACHED == getEnvResult) {
       jvm->DetachCurrentThread();
   }
