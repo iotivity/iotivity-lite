@@ -119,4 +119,19 @@ public class OCRepresentationTest {
     public void testValueObjectArray() {
         fail("Not yet implemented");
     }
+
+    @Test
+    public void testRepInt() {
+        java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(100000);
+        OCMain.repNew(bb);
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertNotNull(root);
+        OCMain.repSetInt(root, "hal", 42);
+        OCMain.repEndRootObject();
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        int[] outValue = new int[1];
+        OCMain.repGetInt(rep, "hal", outValue);
+        assertEquals(42, outValue[0]);
+    }
 }
