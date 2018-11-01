@@ -16,6 +16,24 @@
       "revId": "8b491cba97724aa6c554e2ff1867687e12dc7068",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_3465c645",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-11-01T17:16:27Z",
+      "side": 1,
+      "message": "These are runtime errors... Android ART seems to be not as forgiving as linux/windows jvm when it comes to JNI method signatures returning void matching the jenv-\u003eCall\u003cReturnType\u003eMethod() invocations.",
+      "parentUuid": "9a3d3df0_1477e203",
+      "revId": "8b491cba97724aa6c554e2ff1867687e12dc7068",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
