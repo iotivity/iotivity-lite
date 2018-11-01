@@ -580,7 +580,7 @@ void jni_oc_response_handler(oc_client_response_t *response) {
                                                          "handler",
                                                          "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
-  (data->jenv)->CallObjectMethod(data->jcb_obj, mid_handler, jresponse);
+  (data->jenv)->CallVoidMethod(data->jcb_obj, mid_handler, jresponse);
 }
 
 bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
