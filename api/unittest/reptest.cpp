@@ -29,3 +29,30 @@ TEST(TestRep, OCRepFinalizeTest_P)
     int repSize = oc_rep_finalize();
     EXPECT_NE(repSize, -1);
 }
+
+TEST(TestRep, OCRepSetGetInt)
+{
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add int value "ultimate_answer":42 to root object */
+    oc_rep_start_root_object();
+    oc_rep_set_int(root, ultimate_answer, 42);
+    oc_rep_end_root_object();
+
+    /* convert CborEncoder to oc_rep_t */
+    uint8_t *payload = g_encoder.data.ptr;
+    int payload_len = oc_rep_finalize();
+    EXPECT_NE(payload_len, -1);
+    oc_rep_t *rep = NULL;
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the ultimate_answer from  the oc_rep_t */
+    int ultimate_answer_out = 0;
+    oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out);
+    EXPECT_EQ(42, ultimate_answer_out);
+    oc_free_rep(rep);
+}
