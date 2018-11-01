@@ -630,7 +630,7 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
-ifeq ($(AUTH_OPTION),0)
+ifeq ($(SKIP_CERT),1)
 MBEDTLS_PATCHES += $(sort $(wildcard ../../patches/*.off))
 endif
 ${MBEDTLS_DIR}/.git:
