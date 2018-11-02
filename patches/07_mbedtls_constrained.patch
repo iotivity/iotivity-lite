@@ -1,19 +1,20 @@
-From be05da25ded4a4cb33dcb47167807a4fd175b131 Mon Sep 17 00:00:00 2001
-From: "ol.beketov" <ol.beketov@samsung.com>
-Date: Thu, 3 May 2018 13:03:13 +0300
+From 5823ef0bcdb0fae35217a1adacadae91dfc01f09 Mon Sep 17 00:00:00 2001
+From: Oleksii Beketov <ol.beketov@samsung.com>
+Date: Fri, 2 Nov 2018 16:57:27 +0200
 Subject: [PATCH] ocf constrained
 
 Signed-off-by: ol.beketov <ol.beketov@samsung.com>
+Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 2846 ++--------------------------------------------
+ include/mbedtls/config.h | 2847 ++--------------------------------------------
  library/entropy_poll.c   |   24 +-
- 2 files changed, 95 insertions(+), 2775 deletions(-)
+ 2 files changed, 96 insertions(+), 2775 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedff..45143a5 100644
+index 79eedff..ec00023 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2817 +1,117 @@
+@@ -1,2817 +1,118 @@
 -/**
 - * \file config.h
 - *
@@ -585,10 +586,7 @@ index 79eedff..45143a5 100644
 - * Uncomment this macro to remove RC4 ciphersuites by default.
 - */
 -#define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
-+#include <oc_config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
- 
+-
 -/**
 - * \def MBEDTLS_ECP_DP_SECP192R1_ENABLED
 - *
@@ -609,9 +607,9 @@ index 79eedff..45143a5 100644
 -#define MBEDTLS_ECP_DP_BP384R1_ENABLED
 -#define MBEDTLS_ECP_DP_BP512R1_ENABLED
 -#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-+/* System support */
-+#define MBEDTLS_PLATFORM_C
-+#define MBEDTLS_PLATFORM_MEMORY
++#include <oc_config.h>
++#include "port/oc_connectivity.h"
++#include "port/oc_assert.h"
  
 -/**
 - * \def MBEDTLS_ECP_NIST_OPTIM
@@ -622,14 +620,10 @@ index 79eedff..45143a5 100644
 - *
 - * Comment this macro to disable NIST curves optimisation.
 - */
--#define MBEDTLS_ECP_NIST_OPTIM
-+#ifdef OC_DYNAMIC_ALLOCATION
-+#include <stdlib.h>
-+#define MBEDTLS_PLATFORM_STD_CALLOC calloc
-+#define MBEDTLS_PLATFORM_STD_FREE free
-+#else /* OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
-+#endif /* !OC_DYNAMIC_ALLOCATION */
++/* System support */
++#define MBEDTLS_PLATFORM_C
++#define MBEDTLS_PLATFORM_MEMORY
+ #define MBEDTLS_ECP_NIST_OPTIM
  
 -/**
 - * \def MBEDTLS_ECDSA_DETERMINISTIC
@@ -644,10 +638,7 @@ index 79eedff..45143a5 100644
 - * Comment this macro to disable deterministic ECDSA.
 - */
 -#define MBEDTLS_ECDSA_DETERMINISTIC
-+#define MBEDTLS_PLATFORM_EXIT_ALT
-+#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
-+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
- 
+-
 -/**
 - * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 - *
@@ -668,8 +659,7 @@ index 79eedff..45143a5 100644
 - *      MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA
 - *      MBEDTLS_TLS_PSK_WITH_RC4_128_SHA
 - */
-+/* mbed TLS feature support */
- #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+-#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 -
 -/**
 - * \def MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
@@ -1262,7 +1252,14 @@ index 79eedff..45143a5 100644
 - * Uncomment this macro to enable support for SSLv2 Client Hello messages.
 - */
 -//#define MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO
--
++#ifdef OC_DYNAMIC_ALLOCATION
++#include <stdlib.h>
++#define MBEDTLS_PLATFORM_STD_CALLOC calloc
++#define MBEDTLS_PLATFORM_STD_FREE free
++#else /* OC_DYNAMIC_ALLOCATION */
++#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
++#endif /* !OC_DYNAMIC_ALLOCATION */
+ 
 -/**
 - * \def MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
 - *
@@ -1272,7 +1269,10 @@ index 79eedff..45143a5 100644
 - * Uncomment this macro to respect client's ciphersuite order
 - */
 -//#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
--
++#define MBEDTLS_PLATFORM_EXIT_ALT
++#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
++#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+ 
 -/**
 - * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 - *
@@ -1280,6 +1280,8 @@ index 79eedff..45143a5 100644
 - *
 - * Comment this macro to disable support for the max_fragment_length extension
 - */
++/* mbed TLS feature support */
++#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
  #define MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 -
 -/**
@@ -2580,9 +2582,7 @@ index 79eedff..45143a5 100644
 - * This module is used by the HAVEGE random number generator.
 - */
 -#define MBEDTLS_TIMING_C
-+/* Save RAM at the expense of ROM */
-+#define MBEDTLS_AES_ROM_TABLES
- 
+-
 -/**
 - * \def MBEDTLS_VERSION_C
 - *
@@ -2654,9 +2654,7 @@ index 79eedff..45143a5 100644
 - * This module is used for reading X.509 certificate request.
 - */
 -#define MBEDTLS_X509_CSR_PARSE_C
-+/* Save some RAM by adjusting to your exact needs */
-+#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
- 
+-
 -/**
 - * \def MBEDTLS_X509_CREATE_C
 - *
@@ -2705,9 +2703,13 @@ index 79eedff..45143a5 100644
 - * Caller:
 - */
 -#define MBEDTLS_XTEA_C
--
++/* Save RAM at the expense of ROM */
++#define MBEDTLS_AES_ROM_TABLES
+ 
 -/* \} name SECTION: mbed TLS modules */
--
++/* Save some RAM by adjusting to your exact needs */
++#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
+ 
 -/**
 - * \name SECTION: Module configuration options
 - *
@@ -2738,22 +2740,22 @@ index 79eedff..45143a5 100644
 -//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
--
++#ifndef OC_DYNAMIC_ALLOCATION
++#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
++#endif /* !OC_DYNAMIC_ALLOCATION */
+ 
 -/* HMAC_DRBG options */
 -//#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000 /**< Interval before reseed is performed by default */
 -//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
-+#ifndef OC_DYNAMIC_ALLOCATION
-+#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
-+#endif /* !OC_DYNAMIC_ALLOCATION */
++#define MBEDTLS_SSL_BUFFER_MIN 512
  
 -/* ECP options */
 -//#define MBEDTLS_ECP_MAX_BITS             521 /**< Maximum bit size of groups */
 -//#define MBEDTLS_ECP_WINDOW_SIZE            6 /**< Maximum window size used */
 -//#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
-+#define MBEDTLS_SSL_BUFFER_MIN 512
- 
+-
 -/* Entropy options */
 -//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
 -//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
