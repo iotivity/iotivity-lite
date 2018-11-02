@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_f47d1eb3",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1666,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-02T05:02:21Z",
+      "side": 1,
+      "message": "at least this should follow the previous update.\n#ifdef OC_DYNAMIC_ALLOCATION\n      int ret \u003d mbedtls_ssl_read_dynamic(\u0026peer-\u003essl_ctx, \u0026(message-\u003edata), OC_PDU_SIZE);\n#else\n      int ret \u003d mbedtls_ssl_read(\u0026peer-\u003essl_ctx, message-\u003edata, OC_PDU_SIZE);\n#endif /* !OC_DYNAMIC_ALLOCATION */",
+      "range": {
+        "startLine": 1666,
+        "startChar": 6,
+        "endLine": 1666,
+        "endChar": 78
+      },
+      "revId": "84a87495977bc58669858c279cd9ccf9103eec16",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
