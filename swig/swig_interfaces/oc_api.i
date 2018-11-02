@@ -85,9 +85,9 @@ int oc_handler_init_callback(void)
   }
   assert(jenv);
   assert(cls_OCMainInitHandler);
-  const jmethodID mid_initilize = jenv->GetMethodID(cls_OCMainInitHandler, "initilize", "()I");
-  assert(mid_initilize);
-  jint ret_value = jenv->CallIntMethod(jinit_obj, mid_initilize);
+  const jmethodID mid_initialize = jenv->GetMethodID(cls_OCMainInitHandler, "initialize", "()I");
+  assert(mid_initialize);
+  jint ret_value = jenv->CallIntMethod(jinit_obj, mid_initialize);
   if (JNI_EDETACHED == getEnvResult) {
       jvm->DetachCurrentThread();
   }
