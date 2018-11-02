@@ -5,7 +5,7 @@ import org.iotivity.OCMainInitHandler;
 
 public class MyInitHandler implements OCMainInitHandler {
     @Override
-    public int initilize() {
+    public int initialize() {
         System.out.println("inside MyInitHandler.initiliaze()");
         int ret = OCMain.initPlatform("Intel");
         ret |= OCMain.addDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
