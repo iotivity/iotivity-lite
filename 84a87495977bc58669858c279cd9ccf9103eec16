@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9a3d3df0_74490e8b",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1664,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-11-02T05:24:36Z",
+      "side": 1,
+      "message": "in order to save memory usage,  message-\u003edata is supposed to be NULL then mbedtls_ssl_read_dynamic should be called.\n\nhow about considering oc_reallocate_message_by_size(mssage, 0) before using mbedtls_ssl_read_dynamic  in OC_DYNAMIC_ALLOCATION?",
+      "revId": "84a87495977bc58669858c279cd9ccf9103eec16",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_f47d1eb3",
         "filename": "security/oc_tls.c",
         "patchSetId": 7
