@@ -689,7 +689,6 @@ send_message:
   }
 
 #ifdef OC_BLOCK_WISE
-exit:
   oc_blockwise_scrub_buffers();
 #endif /* OC_BLOCK_WISE */
 
