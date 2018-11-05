@@ -22,6 +22,30 @@
       "revId": "3a13e85927fd59b7a35ce0d233b2b68ed3fbfba5",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_085226dd",
+        "filename": "patches/07_mbedtls_constrained.patch",
+        "patchSetId": 1
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2018-11-05T14:19:05Z",
+      "side": 1,
+      "message": "Currently oc_exit() and oc_abort() from oc_assert.h are used in mbedtls and oc_connectivity.h and oc_config.h are redundant here.\nThese headers were added with the patch #22769.",
+      "parentUuid": "9a3d3df0_08b6a63d",
+      "range": {
+        "startLine": 610,
+        "startChar": 0,
+        "endLine": 612,
+        "endChar": 28
+      },
+      "revId": "3a13e85927fd59b7a35ce0d233b2b68ed3fbfba5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
