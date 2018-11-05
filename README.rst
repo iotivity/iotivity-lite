@@ -177,6 +177,37 @@ Add ``TCP=1`` to include support for TCP endpoints and CoAP over TCP (RFC 8323).
 Add ``IPV4=1`` to include IPv4 support in the build. Excluding ``IPV4=1``
 produces an IPv6-only build.
 
+Building sample applications on Windows
+---------------------------------------
+
+A Visual Studio project file can be found in
+``port/windows/vs2015/IoTivity-Constrained.sln``. Open the solution file in
+Visual Studio 2015 or newer. If the version of Visual Studio is newer a prompt
+should pop up asking if you would like to upgrade the visual studio project
+files. Agree to upgrade the files.
+
+Select the version of the samples you would like to build. Debug/Release,
+x86/x64. From the ``build`` menu select ``Build Solution``.
+
+The samples can be run from Visual Studio by right clicking on the
+``SimpleServer`` or ``SimpleClient`` project from the Solution Explorer and
+select ``Debug`` > ``Start new instance``. Or the binaries can be run from the
+output folder ``port/windows/vs2015/{Debug|Release}/{Win32|x64}/``.
+
+The build options are hard coded into the visual studio project. The project
+defaults to using: dynamic memory allocation, OCF security layer is enabled and
+built, and IPv4 support is included in the build.
+
+To change the build options the properties page for each project must be modified
+Right click on the project select ``Properties`` find 
+``C/C++`` > ``Preprocessor`` > ``Preprocessor Definitions`` find the macro
+associated with the feature you wish to enable or disable. For example to
+disable the OCF security layer find and delete ``OC_SECURITY`` from the 
+``Preprocessor Definitions``. The ``Preprocessor Definitions`` must match for
+all projects for them to build and run. Due to the difficulty keeping all the
+projects matching it is recommended to avoid modifying the
+``Preprocessor Definitions`` unless necessary.
+
 Note: The Linux, Windows, and native Android ports are the only adaptation layers
 that are actively maintained as of this writing (July 2018). The other ports
 will be updated imminently. Please watch for further updates on this matter.
