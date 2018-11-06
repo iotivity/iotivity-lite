@@ -142,7 +142,10 @@ coap_set_option_header(unsigned int delta, size_t length, uint8_t *buffer)
       buffer[written] = (uint8_t)(length - 13);
     }
   }
-  OC_DBG("WRITTEN %zu B opt header", 1 + written);
+
+  if (buffer) {
+    OC_DBG("WRITTEN %zu B opt header", 1 + written);
+  }
 
   return ++written;
 }
@@ -165,7 +168,9 @@ coap_serialize_int_option(unsigned int number, unsigned int current_number,
   if (0xFFFFFFFF & value) {
     ++i;
   }
-  OC_DBG("OPTION %u (delta %u, len %zu)", number, number - current_number, i);
+  if (buffer) {
+    OC_DBG("OPTION %u (delta %u, len %zu)", number, number - current_number, i);
+  }
 
   i = coap_set_option_header(number - current_number, i, buffer);
 
@@ -203,8 +208,10 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
 {
   size_t i = 0;
 
-  OC_DBG("ARRAY type %u, len %zu, full [%.*s]", number, length, (int)length,
-         array);
+  if (buffer) {
+    OC_DBG("ARRAY type %u, len %zu, full [%.*s]", number, length, (int)length,
+           array);
+  }
 
   if (split_char != '\0') {
     size_t j;
@@ -213,7 +220,10 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
     size_t temp_length;
 
     for (j = 0; j <= length + 1; ++j) {
-      OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
+      if (buffer) {
+        OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
+      }
+
       if (array[j] == split_char || j == length) {
         part_end = array + j;
         temp_length = part_end - part_start;
@@ -230,8 +240,10 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
 
         i += temp_length;
 
-        OC_DBG("OPTION type %u, delta %u, len %zu, part [%.*s]", number,
-               number - current_number, i, (int)temp_length, part_start);
+        if (buffer) {
+          OC_DBG("OPTION type %u, delta %u, len %zu, part [%.*s]", number,
+                 number - current_number, i, (int)temp_length, part_start);
+        }
 
         ++j; /* skip the splitter */
         current_number = number;
@@ -250,8 +262,10 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
 
     i += length;
 
-    OC_DBG("OPTION type %u, delta %u, len %zu", number,
-           number - current_number, length);
+    if (buffer) {
+      OC_DBG("OPTION type %u, delta %u, len %zu", number,
+             number - current_number, length);
+    }
   }
 
   return i;
@@ -324,10 +338,9 @@ coap_serialize_options(void *packet, uint8_t *option_array)
   unsigned int current_number = 0;
   size_t option_length = 0;
 
-  if(option){
+  if (option) {
     OC_DBG("Serializing options at %p", option);
-  }
-  else{
+  } else {
     OC_DBG("Caculating size of options");
   }
 #if 0
@@ -349,7 +362,9 @@ coap_serialize_options(void *packet, uint8_t *option_array)
                                '/', "Location-Path");
 #endif
   COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_PATH, uri_path, '/', "Uri-Path");
-  OC_DBG("Serialize content format: %d", coap_pkt->content_format);
+  if (option) {
+    OC_DBG("Serialize content format: %d", coap_pkt->content_format);
+  }
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_CONTENT_FORMAT, content_format,
                             "Content-Format");
 #if 0
@@ -416,7 +431,7 @@ coap_serialize_options(void *packet, uint8_t *option_array)
     current_number = OCF_OPTION_CONTENT_FORMAT_VER;
   }
 
-  if(option){
+  if (option) {
     OC_DBG("-Done serializing at %p----", option);
   }
 
