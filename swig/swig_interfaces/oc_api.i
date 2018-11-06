@@ -1401,7 +1401,47 @@ const double* jni_rep_get_double_array(oc_rep_t *rep, const char *key, size_t *d
 }
 %}
 %rename(repGetByteStringArray) oc_rep_get_byte_string_array;
-%rename(repGetStringArray) oc_rep_get_string_array;
+
+%typemap(in, numinputs=0, noblock=1) size_t *string_array_size {
+  size_t temp_string_array_size;
+  $1 = &temp_string_array_size;
+}
+%typemap(jstype) const oc_string_array_t * jni_rep_get_string_array "String[]"
+%typemap(jtype) const oc_string_array_t * jni_rep_get_string_array "String[]"
+%typemap(jni) const oc_string_array_t * jni_rep_get_string_array "jobjectArray"
+%typemap(javaout) const oc_string_array_t * jni_rep_get_string_array {
+  return $jnicall;
+}
+%typemap(out) const oc_string_array_t * jni_rep_get_string_array {
+  if($1 != NULL) {
+    jstring temp_string;
+    const jclass clazz = JCALL1(FindClass, jenv, "java/lang/String");
+    $result = JCALL3(NewObjectArray, jenv, (jsize)temp_string_array_size, clazz, 0);
+    /* exception checking omitted */
+    for (size_t i=0; i<temp_string_array_size; i++) {
+      temp_string = JCALL1(NewStringUTF, jenv, oc_string_array_get_item(*$1, i));
+      JCALL3(SetObjectArrayElement, jenv, $result, (jsize)i, temp_string);
+      JCALL1(DeleteLocalRef, jenv, temp_string);
+    }
+    /* free the oc_string_array_t that was allocated in the jni_rep_get_string_array function */
+    free($1);
+    //JCALL4(SetDoubleArrayRegion, jenv, $result, 0, (jsize)temp_string_array_size, (const jdouble *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%ignore oc_rep_get_string_array;
+%rename(repGetStringArray) jni_rep_get_string_array;
+%inline %{
+const oc_string_array_t * jni_rep_get_string_array(oc_rep_t *rep, const char *key, size_t *string_array_size) {
+  oc_string_array_t * c_string_array = (oc_string_array_t *)malloc(sizeof(oc_string_array_t));
+  if (oc_rep_get_string_array(rep, key, c_string_array, string_array_size)) {
+    return c_string_array;
+  }
+  return NULL;
+}
+%}
+//%rename(repGetStringArray) oc_rep_get_string_array;
 %rename(repGetObject) oc_rep_get_object;
 %rename(repGetObjectArray) oc_rep_get_object_array;
 %{
