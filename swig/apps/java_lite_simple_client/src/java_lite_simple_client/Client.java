@@ -44,7 +44,7 @@ public class Client {
         }
 
         while (!quit) {
-            long next_event = OCMain.mainPoll().longValue();
+            long next_event = OCMain.mainPoll();
             lock.lock();
             try {
                 if (next_event == 0) {
@@ -57,7 +57,7 @@ public class Client {
                         long next_event_secs = (next_event / CLOCK_TICKS_PER_SECOND);
                         long next_event_nanos = (next_event % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
 
-                        long now = OCClock.clockTime().longValue();
+                        long now = OCClock.clockTime();
                         long now_secs = (now / CLOCK_TICKS_PER_SECOND);
                         long now_nanos = (now % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
 

@@ -194,8 +194,7 @@ static oc_handler_t jni_handler = {
 }
 
 %rename(mainInit) oc_main_init;
-/* typedef needed for oc_main_pool */
-typedef uint64_t oc_clock_time_t;
+typedef long long oc_clock_time_t;
 %rename(mainPoll) oc_main_poll;
 %rename(mainShutdown) oc_main_shutdown;
 
@@ -499,6 +498,19 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)user_data;
 
+  int getEnvResult = 0;
+  int attachCurrentThreadResult = 0;
+  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
+  if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
+#else
+      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
+#endif
+      assert(JNI_OK == attachCurrentThreadResult);
+  }
+  assert(data->jenv);
+
   jstring janchor = (data->jenv)->NewStringUTF(anchor);
   jstring juri = (data->jenv)->NewStringUTF(uri);
   jobjectArray jtypes = (data->jenv)->NewObjectArray((jsize)oc_string_array_get_allocated_size(types),
@@ -531,6 +543,11 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   const jmethodID mid_OCDiscoveryFlags_swigValue = (data->jenv)->GetMethodID(cls_DiscoveryFlags, "swigValue", "()I");
   assert(mid_OCDiscoveryFlags_swigValue);
   jint return_value = (data->jenv)->CallIntMethod(jDiscoveryFlag, mid_OCDiscoveryFlags_swigValue);
+
+  if (JNI_EDETACHED == getEnvResult) {
+    jvm->DetachCurrentThread();
+  }
+
   return (oc_discovery_flags_t) return_value;
 }
 %}
