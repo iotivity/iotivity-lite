@@ -917,9 +917,11 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_ace_wildcard_t wc = OC_ACE_NO_WC;
           oc_rep_t *resource = resources->value.object;
           const char *href = 0;
-#ifdef OC_SERVER
+          /*
+      #ifdef OC_SERVER
           oc_resource_properties_t wc_r = 0;
-#endif /* OC_SERVER */
+      #endif
+          */
           oc_interface_mask_t interfaces = 0;
           oc_string_array_t *rt = 0;
           int i;
@@ -934,21 +936,27 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                          memcmp(oc_string(resource->name), "wc", 2) == 0) {
                 if (oc_string(resource->value.string)[0] == '*') {
                   wc = OC_ACE_WC_ALL;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~0;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
                 if (oc_string(resource->value.string)[0] == '+') {
                   wc = OC_ACE_WC_ALL_DISCOVERABLE;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~0;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
                 if (oc_string(resource->value.string)[0] == '-') {
                   wc = OC_ACE_WC_ALL_NON_DISCOVERABLE;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~OC_DISCOVERABLE;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
               }
               break;
@@ -983,26 +991,31 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
                                 wc, rt, interfaces, device);
 
-#ifdef OC_SERVER
-          if (subject_type == OC_SUBJECT_CONN &&
-              subject.conn == OC_CONN_ANON_CLEAR) {
-            if (href) {
-              oc_resource_t *r =
-                oc_ri_get_app_resource_by_uri(href, strlen(href), device);
-              if (r) {
-                oc_resource_make_public(r);
-              }
-            } else {
-              oc_resource_t *r = oc_ri_get_app_resources();
-              while (r != NULL) {
-                if ((r->properties & wc_r) == r->properties) {
-                  oc_resource_make_public(r);
+          /* The following code block attaches "coap" endpoints to
+                   resources linked to an anon-clear ACE. This logic is being
+                   currently disabled to comply with the SH spec which requires
+                   that all vertical resources not expose a "coap" endpoint.
+      #ifdef OC_SERVER
+                if (subject_type == OC_SUBJECT_CONN &&
+                    subject.conn == OC_CONN_ANON_CLEAR) {
+                  if (href) {
+                    oc_resource_t *r =
+                      oc_ri_get_app_resource_by_uri(href, strlen(href), device);
+                    if (r) {
+                      oc_resource_make_public(r);
+                    }
+                  } else {
+                    oc_resource_t *r = oc_ri_get_app_resources();
+                    while (r != NULL) {
+                      if ((r->properties & wc_r) == r->properties) {
+                        oc_resource_make_public(r);
+                      }
+                      r = r->next;
+                    }
+                  }
                 }
-                r = r->next;
-              }
-            }
-          }
-#endif /* OC_SERVER */
+      #endif
+          */
           resources = resources->next;
         }
 
