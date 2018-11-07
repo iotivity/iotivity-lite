@@ -24,10 +24,25 @@
 
 #include "oc_rep.h"
 
-TEST(TestRep, OCRepFinalizeTest_P)
+TEST(TestRep, OCRepEncodedPayloadSize_P)
 {
     int repSize = oc_rep_get_encoded_payload_size();
     EXPECT_NE(repSize, -1);
+}
+
+TEST(TestRep, OCRepEncodedPayloadSizeTooSmall) {
+    /* buffer for oc_rep_t */
+    uint8_t buf[10]; //Purposely small buffer
+    oc_rep_new(&buf[0], 10);
+
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(root, "hello", "world");
+    EXPECT_EQ(CborErrorOutOfMemory, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborErrorOutOfMemory, oc_rep_get_cbor_errno());
+
+    EXPECT_EQ(-1, oc_rep_get_encoded_payload_size());
 }
 
 /*
@@ -35,111 +50,431 @@ TEST(TestRep, OCRepFinalizeTest_P)
  * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
  * and oc_parse_rep
  */
-TEST(TestRep, OCRepSetGetInt)
+TEST(TestRep, OCRepSetGetDouble)
 {
 
-    /*
-     * intilize everything needed to call 'oc_parse_rep
-     * calling oc_rep_new and getting the payload pointer must be done before
-     * calling oc_rep_start_root_object.
-     */
+    /*buffer for oc_rep_t */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
 
-    /* add int value "ultimate_answer":42 to root object */
+    /* add int values to root object */
     oc_rep_start_root_object();
-    oc_rep_set_int(root, ultimate_answer, 42);
+    oc_rep_set_double(root, pi, 3.14159);
     oc_rep_end_root_object();
 
     /* convert CborEncoder to oc_rep_t */
     const uint8_t *payload = oc_rep_get_encoder_buf();
-
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
     int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read values from  the oc_rep_t */
+    double pi_out = 0;
+    oc_rep_get_double(rep, "pi", &pi_out);
+    EXPECT_EQ(3.14159, pi_out);
+    /* error handling */
+    EXPECT_FALSE(oc_rep_get_double(NULL, "pi", &pi_out));
+    EXPECT_FALSE(oc_rep_get_double(rep, NULL, &pi_out));
+    EXPECT_FALSE(oc_rep_get_double(rep, "pi", NULL));
+    EXPECT_FALSE(oc_rep_get_double(rep, "no_a_key", &pi_out));
+    oc_free_rep(rep);
+}
+
+TEST(TestRep, OCRepSetGetInt)
+{
+
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_int(root, ultimate_answer, 42);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_int(root, negative, -1024);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_int(root, zero, 0);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from  the oc_rep_t */
+    int ultimate_answer_out = 0;
+    EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
+    EXPECT_EQ(42, ultimate_answer_out);
+    int negative_out = 0;
+    EXPECT_TRUE(oc_rep_get_int(rep, "negative", &negative_out));
+    EXPECT_EQ(-1024, negative_out);
+    int zero_out = -1;
+    EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
+    EXPECT_EQ(0, zero_out);
+    /* check error handling */
+    EXPECT_FALSE(oc_rep_get_int(NULL, "zero", &zero_out));
+    EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
+    EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
+    EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+    oc_free_rep(rep);
+}
+
+/*
+ * Working with uint is a little unusual there is a macro to set the uint type
+ * but no function to get the uint type.  In addition the type uint is encoded
+ * to use is OC_REP_INT. You can successfully pass a number larger than int but
+ * must cast it to uint after reading from the value. This requires the client
+ * to know that the service it encoding the uint with no over the wire indication
+ * of the fact.
+ *
+ * Should there be a oc_rep_get_uint() function?
+ * Should there be a OC_REP_UINT type?
+ * Should the oc_rep_set_uint macro be removed?
+ */
+TEST(TestRep, OCRepSetGetUint)
+{
+
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_uint(root, ultimate_answer, 42);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    /*
+     * Assuming 32 bit int, which should be true for systems the gtest will
+     * be running on, the largest value for 32 bit int is 2,147,483,647 or
+     * 0x7FFFFFFF
+     */
+    oc_rep_set_uint(root, larger_than_int, 3000000000);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_uint(root, zero, 0);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from  the oc_rep_t */
+    EXPECT_EQ(OC_REP_INT, rep->type);
+    int ultimate_answer_out = 0;
+    EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
+    EXPECT_EQ(42u, (uint)ultimate_answer_out);
+    int larger_than_int_out = 0;
+    EXPECT_TRUE(oc_rep_get_int(rep, "larger_than_int", &larger_than_int_out));
+    EXPECT_EQ(3000000000u, (uint)larger_than_int_out);
+    int zero_out = -1;
+    EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
+    EXPECT_EQ(0u, (uint)zero_out);
+    /* check error handling */
+    EXPECT_FALSE(oc_rep_get_int(NULL, "zero", &zero_out));
+    EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
+    EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
+    EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+    oc_free_rep(rep);
+}
+
+/* why do we have set_boolean but get_bool shouldn't the function names match */
+TEST(TestRep, OCRepSetGetBool)
+{
+
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_boolean(root, true_flag, true);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_boolean(root, false_flag, false);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);
     ASSERT_TRUE(rep != NULL);
 
     /* read the ultimate_answer from  the oc_rep_t */
-    int ultimate_answer_out = 0;
-    oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out);
-    EXPECT_EQ(42, ultimate_answer_out);
+    bool true_flag_out = false;
+    EXPECT_TRUE(oc_rep_get_bool(rep, "true_flag", &true_flag_out));
+    EXPECT_TRUE(true_flag_out);
+    bool false_flag_out = true;
+    EXPECT_TRUE(oc_rep_get_bool(rep, "false_flag", &false_flag_out));
+    EXPECT_FALSE(false_flag_out);
+    /* check error handling */
+    EXPECT_FALSE(oc_rep_get_bool(NULL, "true_flag", &true_flag_out));
+    EXPECT_FALSE(oc_rep_get_bool(rep, NULL, &true_flag_out));
+    EXPECT_FALSE(oc_rep_get_bool(rep, "true_flag", NULL));
+    EXPECT_FALSE(oc_rep_get_bool(rep, "not_a_key", &true_flag_out));
     oc_free_rep(rep);
 }
 
+/*
+ * This test assumes text in this file is saved using a utf8 format. This is
+ * generally a safe assumption since it is the default format use by git.
+ *
+ * If the test is run on a terminal that does not support utf8 it should still
+ * pass the tests.  However, if the test should fail the printed error may be
+ * gibberish when read from the terminal. Only place this is a known problem
+ * is Windows CMD terminal.
+ *
+ * TODO Is there a max string length? If so consider adding test that equals and
+ * exceeds max sting length.
+ */
 TEST(TestRep, OCRepSetGetTextString)
 {
-
-    /*
-     * intilize everything needed to call 'oc_parse_rep
-     * calling oc_rep_new and getting the payload pointer must be done before
-     * calling oc_rep_start_root_object.
-     */
+    /*buffer for oc_rep_t */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
 
     /* add text string value "hal9000":"Dave" to root object */
     oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_set_text_string(root, hal9000, "Dave");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    /* test utf8 character support "hello world" in russian */
+    oc_rep_set_text_string(root, ru_character_set, "Привет, мир");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
     /* convert CborEncoder to oc_rep_t */
     const uint8_t *payload = oc_rep_get_encoder_buf();
-
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
     int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);
     ASSERT_TRUE(rep != NULL);
 
     /* read the hal9000 from  the oc_rep_t */
-    char* hal9000_out = 0;
+    char* hal9000_out = NULL;
     size_t str_len;
-    oc_rep_get_string(rep, "hal9000", &hal9000_out, &str_len);
+    EXPECT_TRUE(oc_rep_get_string(rep, "hal9000", &hal9000_out, &str_len));
     EXPECT_STREQ("Dave", hal9000_out);
     EXPECT_EQ(4, str_len);
+    char* ru_character_set_out = NULL;
+    EXPECT_TRUE(oc_rep_get_string(rep, "ru_character_set", &ru_character_set_out, &str_len));
+    EXPECT_STREQ("Привет, мир", ru_character_set_out);
+    /*
+     * to encode Привет, мир takes more bytes than the number of characters so
+     * calculate the the number of bytes using the strlen function.
+     */
+    EXPECT_EQ(strlen("Привет, мир"), str_len);
+    /* check error handling */
+    EXPECT_FALSE(oc_rep_get_string(NULL, "hal9000", &hal9000_out, &str_len));
+    EXPECT_FALSE(oc_rep_get_string(rep, NULL, &hal9000_out, &str_len));
+    EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", NULL, &str_len));
+    EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", &hal9000_out, NULL));
+    EXPECT_FALSE(oc_rep_get_string(rep, "not_a_key", &hal9000_out, &str_len));
+    oc_free_rep(rep);
+}
+
+/*
+ * TODO is there a max byte array length? If so consider adding a test that equals
+ * and exceeds the max array length.
+ */
+TEST(TestRep, OCRepSetGetByteString)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add text string value "hal9000":"Dave" to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    const uint8_t test_byte_string[] = {0x01, 0x02, 0x03, 0x04, 0x02, 0x00};
+    oc_rep_set_byte_string(root, test_byte_string, test_byte_string, 6u);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the hal9000 from  the oc_rep_t */
+    char* test_byte_string_out = NULL;
+    size_t str_len;
+    EXPECT_TRUE(oc_rep_get_byte_string(rep, "test_byte_string", &test_byte_string_out, &str_len));
+    EXPECT_EQ(6, str_len);
+    /*
+     * cast the array and use STREQ to compare this only works because the
+     * test_byte_string was nul terminated other wise we would have to loop
+     * through the array.
+     */
+    EXPECT_STREQ((const char *)test_byte_string, test_byte_string_out);
+    /* error handling */
+    EXPECT_FALSE(oc_rep_get_byte_string(NULL, "test_byte_string", &test_byte_string_out, &str_len));
+    EXPECT_FALSE(oc_rep_get_byte_string(rep, NULL, &test_byte_string_out, &str_len));
+    EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string", NULL, &str_len));
+    EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string", &test_byte_string_out, NULL));
+    EXPECT_FALSE(oc_rep_get_byte_string(rep, "not_a_key", &test_byte_string_out, &str_len));
     oc_free_rep(rep);
 }
 
 TEST(TestRep, OCRepSetGetIntArray)
 {
-
-    /*
-     * intilize everything needed to call 'oc_parse_rep
-     * calling oc_rep_new and getting the payload pointer must be done before
-     * calling oc_rep_start_root_object.
-     */
+    /*buffer for oc_rep_t */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
 
-    /* add int array to root object */
-    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    /* add values to root object */
     oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
     oc_rep_set_int_array(root, fibonacci, fib, (int)(sizeof(fib)/ sizeof(fib[0]) ) );
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
     /* convert CborEncoder to oc_rep_t */
     const uint8_t *payload = oc_rep_get_encoder_buf();
-
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
     int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);
     ASSERT_TRUE(rep != NULL);
 
-    /* read the 'fibonacci' array from  the oc_rep_t */
+    /* read the values from the oc_rep_t */
     int* fib_out = 0;
     size_t fib_len;
-    oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len);
+    EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
     ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
     for (size_t i = 0; i < fib_len; ++i ) {
       EXPECT_EQ(fib[i], fib_out[i]);
     }
+
+    /* Error handling */
+    EXPECT_FALSE(oc_rep_get_int_array(NULL, "fibonacci", &fib_out, &fib_len));
+    EXPECT_FALSE(oc_rep_get_int_array(rep, NULL, &fib_out, &fib_len));
+    EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", NULL, &fib_len));
+    EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, NULL));
+    EXPECT_FALSE(oc_rep_get_int_array(rep, "not_a_key", &fib_out, &fib_len));
+    oc_free_rep(rep);
+}
+
+TEST(TestRep, OCRepSetGetBoolArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    bool flip[] = {false, false, true, false, false };
+    oc_rep_set_bool_array(root, flip, flip, (int)(sizeof(flip)/ sizeof(flip[0]) ) );
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    bool* flip_out = 0;
+    size_t flip_len;
+    EXPECT_TRUE(oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len));
+    ASSERT_EQ(sizeof(flip)/sizeof(flip[0]), flip_len);
+    for (size_t i = 0; i < flip_len; ++i ) {
+      EXPECT_EQ(flip[i], flip_out[i]);
+    }
+
+    /* Error handling */
+    EXPECT_FALSE(oc_rep_get_bool_array(NULL, "flip", &flip_out, &flip_len));
+    EXPECT_FALSE(oc_rep_get_bool_array(rep, NULL, &flip_out, &flip_len));
+    EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", NULL, &flip_len));
+    EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", &flip_out, NULL));
+    EXPECT_FALSE(oc_rep_get_bool_array(rep, "not_a_key", &flip_out, &flip_len));
+    oc_free_rep(rep);
+}
+
+TEST(TestRep, OCRepSetGetDoubleArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+    oc_rep_set_double_array(root, math_constants, math_constants, (int)(sizeof(math_constants)/ sizeof(math_constants[0]) ) );
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    double* math_constants_out = 0;
+    size_t math_constants_len;
+    EXPECT_TRUE(oc_rep_get_double_array(rep, "math_constants", &math_constants_out, &math_constants_len));
+    ASSERT_EQ(sizeof(math_constants)/sizeof(math_constants[0]), math_constants_len);
+    for (size_t i = 0; i < math_constants_len; ++i ) {
+      EXPECT_EQ(math_constants[i], math_constants_out[i]);
+    }
+
+    /* Error handling */
+    EXPECT_FALSE(oc_rep_get_double_array(NULL, "math_constants", &math_constants_out, &math_constants_len));
+    EXPECT_FALSE(oc_rep_get_double_array(rep, NULL, &math_constants_out, &math_constants_len));
+    EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", NULL, &math_constants_len));
+    EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", &math_constants_out, NULL));
+    EXPECT_FALSE(oc_rep_get_double_array(rep, "not_a_key", &math_constants_out, &math_constants_len));
     oc_free_rep(rep);
 }
