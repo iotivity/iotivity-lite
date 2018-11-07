@@ -8,13 +8,13 @@ for the Internet of Things (IoT).
 It was designed to build secure and interoperable IoT applications in full
 compliance with the
 `OCF specifications <https://openconnectivity.org/developer/specifications>`_
-with a minimal footprint not exceeding the needs of the specifications. The
+with a limited footprint not exceeding the needs of the specifications. The
 stack architecture lends itself to be ported rapidly to any chosen hardware/OS
 environment.
 
 IoT applications may be built for a wide variety of rich and resource-constrained
 devices across the IoT landscape. As a general guideline, it should be feasible
-to deploy applications on class 2 constrained devices (>256KB Flash, >50KB RAM),
+to deploy applications on class 2 constrained devices (>256KB Flash, >64KB RAM),
 or better.
 
 The project is open-source, and its code is distributed under the
@@ -43,7 +43,7 @@ IoTivity-Constrained's design presents the following features:
   encompasses the APIs, OCF resource model, protocol, security features,
   memory management and event loop. The core interacts
   with lower level platform-specific functionality via a very limited
-  collection of abstract interfaces. Such a  decoupling of the common
+  collection of abstract interfaces. Such a decoupling of the common
   OCF standards related functionality from adaptations to any OS/target
   facilitates greater ease of long-term maintenance and evolution of
   the stack through successive releases of the OCF specifications.
@@ -61,7 +61,7 @@ IoTivity-Constrained's design presents the following features:
 - **Support for static OR dynamic allocation of internal structures**:
   On environments with a C library that supports heap allocation functions,
   the stack can be configured at build-time to use dynamic memory allocation
-  to operate without any pre-determined set of resource constraints.
+  to operate without any pre-configured set of memory constraints.
 
   Alternatively, the stack may be configured to statically allocate all
   internal structures by setting a number of build-time parameters that
@@ -149,12 +149,6 @@ Grab source and dependencies using:
 
 ``git clone --recursive https://github.com/iotivity/iotivity-constrained.git``
 
-Apply mbedTLS patches into deps/mbedtls using:
-
-``patch -p1 < ../../patches/mbedtls_ocf_patch_1``
-
-``patch -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2``
-
 Building sample applications on Linux
 -------------------------------------
 
@@ -162,10 +156,7 @@ The entire build is specified in ``port/linux/Makefile``. The output of the
 build consists of all static and dynamic libraries, and sample application
 binaries which are stored under ``port/linux``.
 
-Run ``make`` for a release mode build without debug output, or support for
-dynamic memory allocation.
-
-Add ``DYNAMIC=1`` to support dynamic memory allocation.
+Run ``make`` for a release mode build without debug output.
 
 Add ``SECURE=0`` to exclude the OCF security layer and mbedTLS. The security
 layer is built by default.
@@ -209,8 +200,7 @@ projects matching it is recommended to avoid modifying the
 ``Preprocessor Definitions`` unless necessary.
 
 Note: The Linux, Windows, and native Android ports are the only adaptation layers
-that are actively maintained as of this writing (July 2018). The other ports
-will be updated imminently. Please watch for further updates on this matter.
+that are actively maintained as of this writing.
 
 Framework configuration
 -----------------------
