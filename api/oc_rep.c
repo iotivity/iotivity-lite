@@ -465,80 +465,100 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
 bool
 oc_rep_get_int(oc_rep_t *rep, const char *key, int *value)
 {
-  if (!value)
+  if (!value) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
 oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
 {
-  if (!value)
+  if (!value) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
 oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
 {
-  if (!value)
+  if (!value) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value, (size_t *)NULL);
 }
 
 bool
 oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
 {
-  if (!size)
+  if (!size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_BYTE_STRING, key, (void **)value, size);
 }
 
 bool
 oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
 {
-  if (!size)
+  if (!size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_STRING, key, (void **)value, size);
 }
 
 bool
 oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, size_t *size)
 {
-  if (!size)
+  if (!size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_INT_ARRAY, key, (void **)value, size);
 }
 
 bool
 oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size)
 {
-  if (!size)
+  if (!size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_BOOL_ARRAY, key, (void **)value, size);
 }
 
 bool
 oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size)
 {
-  if (!size)
+  if (!size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_DOUBLE_ARRAY, key, (void **)value, size);
 }
 
 bool
 oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
 {
-  if (!value || !size)
+  if (!value || !size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_BYTE_STRING_ARRAY, key, (void **)&value, size);
 }
 
 bool
 oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
 {
-  if (!value || !size)
+  if (!value || !size) {
+    OC_ERR("Error of input parameters");
     return false;
+  }
   return oc_rep_get_value(rep, OC_REP_STRING_ARRAY, key, (void **)&value, size);
 }
 
