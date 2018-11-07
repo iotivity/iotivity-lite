@@ -788,6 +788,7 @@ oc_tls_send_message(oc_message_t *message)
       oc_tls_free_peer(peer, false);
     } else {
       length = message->length;
+      message->encrypted = 1;
     }
   }
   oc_message_unref(message);
@@ -979,6 +980,7 @@ read_application_data(oc_tls_peer_t *peer)
         return;
       }
       message->length = ret;
+      message->encrypted = 0;
       oc_recv_message(message);
       OC_DBG("oc_tls: Decrypted incoming message");
     }
