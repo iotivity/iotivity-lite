@@ -285,12 +285,3 @@ TEST_F(TestSTManager, st_register_status_handler)
     st_unregister_status_handler();
 }
 
-#ifdef OC_SECURITY
-TEST_F(TestSTManager, st_register_rpk_handler)
-{
-    bool ret = st_register_rpk_handler(rpk_cpubkey_and_token_handler,
-                                       rpk_priv_key_handler);
-    EXPECT_TRUE(ret);
-    st_unregister_rpk_handler();
-}
-#endif
