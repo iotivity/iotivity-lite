@@ -843,6 +843,7 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV6 | SECURED;
+          message->decrypted = 0;
           goto common;
         }
 #ifdef OC_IPV4
@@ -855,6 +856,7 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV4 | SECURED;
+          message->decrypted = 0;
         }
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
