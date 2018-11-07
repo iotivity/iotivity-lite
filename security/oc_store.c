@@ -223,7 +223,7 @@ oc_sec_dump_pstat(size_t device)
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_pstat(device);
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded pstat size %d", size);
     char svr_tag[SVR_TAG_MAX];
@@ -249,7 +249,7 @@ oc_sec_dump_cred(size_t device)
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_cred(true, device);
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d", size);
     char svr_tag[SVR_TAG_MAX];
@@ -276,7 +276,7 @@ oc_sec_dump_doxm(size_t device)
   /* doxm */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_doxm(device);
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d", size);
     char svr_tag[SVR_TAG_MAX];
@@ -302,7 +302,7 @@ oc_sec_dump_acl(size_t device)
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_sec_encode_acl(device);
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d", size);
     char svr_tag[SVR_TAG_MAX];
@@ -398,7 +398,7 @@ oc_sec_dump_unique_ids(size_t device)
   oc_rep_set_text_string(root, piid, piid);
   oc_rep_end_root_object();
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded unique identifiers: size %d", size);
     char svr_tag[SVR_TAG_MAX];

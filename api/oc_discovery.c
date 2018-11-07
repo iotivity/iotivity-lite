@@ -393,7 +393,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     break;
   }
 
-  int response_length = oc_rep_finalize();
+  int response_length = oc_rep_get_encoded_payload_size();
 
   if (matches && response_length) {
     request->response->response_buffer->response_length =
@@ -443,7 +443,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
   default:
     break;
   }
-  int response_length = oc_rep_finalize();
+  int response_length = oc_rep_get_encoded_payload_size();
   if (matches && response_length > 0) {
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
