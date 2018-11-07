@@ -108,7 +108,6 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
-
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
@@ -209,7 +208,16 @@ ifeq ($(ST_APP_FW),1)
 	SRC_ST=$(wildcard ../../service/st-app-fw/src/*.c ../../service/st-app-fw/src/port/linux/*.c)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
+ifeq ($(RPK),1)
+	CFLAGS_ST+=-I../../deps/cJSON/
+	SRC_ST+=../../deps/cJSON/cJSON.c
+endif
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
+endif
+
+ifeq ($(RPK),1)
+	CFLAGS_ST+=-DOC_RPK
+	VPATH += ../../deps/cJSON/:
 endif
 
 ifeq ($(DEBUG),1)
