@@ -23,7 +23,7 @@
 
 static bool
 _oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
-            const char *auth_code, const char *uid, const char *access_token,
+            const char *auth_code, const char *uid, const char *access_token, const char *jwt_payload,
             size_t device_index, oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || ((!auth_provider || !auth_code) && !access_token) ||
@@ -48,6 +48,12 @@ _oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider,
         oc_rep_set_text_string(root, uid, uid);
       oc_rep_set_text_string(root, accesstoken, access_token);
     }
+    if (jwt_payload) {
+      oc_rep_set_text_string(root, haaf, "true");
+      oc_rep_set_object(root, aaf);
+      oc_rep_set_text_string(aaf, jwt, jwt_payload);
+      oc_rep_close_object(root, aaf);
+    }
     oc_rep_set_text_string(root, devicetype, "device");
     oc_rep_end_root_object();
   } else {
@@ -63,9 +69,20 @@ oc_sign_up(oc_endpoint_t *endpoint, const char *auth_provider, const char *uid,
            const char *access_token, size_t device_index,
            oc_response_handler_t handler, void *user_data)
 {
-  return _oc_sign_up(endpoint, auth_provider, NULL, uid, access_token,
+  return _oc_sign_up(endpoint, auth_provider, NULL, uid, access_token, NULL,
                      device_index, handler, user_data);
 }
+
+#ifdef OC_RPK
+bool
+oc_sign_up_with_jwt(oc_endpoint_t *endpoint, const char *auth_provider, const char *uid, const char *jwt,
+           const char *access_token, int device_index,
+           oc_response_handler_t handler, void *user_data)
+{
+  return _oc_sign_up(endpoint, auth_provider, NULL, uid, access_token, jwt,
+                     device_index, handler, user_data);
+}
+#endif
 
 #ifndef ST_APP_OPTIMIZATION
 bool
@@ -73,14 +90,14 @@ oc_sign_up_with_auth(oc_endpoint_t *endpoint, const char *auth_provider,
                      const char *auth_code, size_t device_index,
                      oc_response_handler_t handler, void *user_data)
 {
-  return _oc_sign_up(endpoint, auth_provider, auth_code, NULL, NULL,
+  return _oc_sign_up(endpoint, auth_provider, auth_code, NULL, NULL, NULL,
                      device_index, handler, user_data);
 }
 #endif /* ST_APP_OPTIMIZATION */
 
 static bool
 oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
-              const char *access_token, size_t device_index, bool is_sign_in,
+              const char *access_token, const char * jwt_payload, size_t device_index, bool is_sign_in,
               oc_response_handler_t handler, void *user_data)
 {
   if (!endpoint || (is_sign_in && !uid) || !access_token || !handler) {
@@ -99,6 +116,12 @@ oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
     oc_rep_set_text_string(root, di, uuid);
     oc_rep_set_text_string(root, accesstoken, access_token);
     oc_rep_set_boolean(root, login, is_sign_in);
+    if (jwt_payload) {
+      oc_rep_set_text_string(root, haaf, "true");
+      oc_rep_set_object(root, aaf);
+      oc_rep_set_text_string(aaf, jwt, jwt_payload);
+      oc_rep_close_object(root, aaf);
+    }
     oc_rep_end_root_object();
   } else {
     OC_ERR("Could not init POST request for sign in/out");
@@ -108,19 +131,29 @@ oc_sign_inout(oc_endpoint_t *endpoint, const char *uid,
   return oc_do_post();
 }
 
+#ifdef OC_RPK
+bool
+oc_sign_in_with_jwt(oc_endpoint_t *endpoint, const char *uid, const char *access_token,
+           const char *jwt, size_t device_index, oc_response_handler_t handler, void *user_data)
+{
+  return oc_sign_inout(endpoint, uid, access_token, jwt, device_index, true, handler,
+                       user_data);
+}
+#endif
+
 bool
 oc_sign_in(oc_endpoint_t *endpoint, const char *uid, const char *access_token,
            size_t device_index, oc_response_handler_t handler, void *user_data)
 {
-  return oc_sign_inout(endpoint, uid, access_token, device_index, true, handler,
+  return oc_sign_inout(endpoint, uid, access_token, NULL, device_index, true, handler,
                        user_data);
 }
 
 bool
-oc_sign_out(oc_endpoint_t *endpoint, const char *access_token,
-            size_t device_index, oc_response_handler_t handler, void *user_data)
+oc_sign_out(oc_endpoint_t *endpoint, const char *access_token, size_t device_index,
+            oc_response_handler_t handler, void *user_data)
 {
-  return oc_sign_inout(endpoint, NULL, access_token, device_index, false,
+  return oc_sign_inout(endpoint, NULL, access_token, NULL, device_index, false,
                        handler, user_data);
 }
 

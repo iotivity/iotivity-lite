@@ -384,6 +384,38 @@ exit:
 }
 #endif /* !STATE_MODEL */
 
+#ifdef OC_RPK
+static void
+get_rpk_cpubkey_and_token(uint8_t *cpubkey, int *cpubkey_len,
+  uint8_t *token, int *token_len)
+{
+  if (!g_prov_resource.cpub_len)
+    st_print_log("[ST_MGR] Wrong cpub_len(zero) for %s!!!\n",
+      __func__);
+
+  memcpy(cpubkey, &g_prov_resource.cpub, g_prov_resource.cpub_len);
+  *cpubkey_len = g_prov_resource.cpub_len;
+
+  if (!g_prov_resource.token_hash_len)
+    st_print_log("[ST_MGR] Wrong token_hash_len(zero) for %s!!!\n",
+      __func__);
+
+  memcpy(token, &g_prov_resource.token_hash, g_prov_resource.token_hash_len);
+  *token_len = g_prov_resource.token_hash_len;
+}
+
+static void
+get_rpk_own_key(uint8_t *priv_key, int *priv_key_len)
+{
+  if (!g_prov_resource.seckey_len)
+    st_print_log("[ST_MGR] Wrong seckey_len(zero) for %s!!!\n",
+      __func__);
+
+  memcpy(priv_key, &g_prov_resource.seckey, g_prov_resource.seckey_len);
+  *priv_key_len = g_prov_resource.seckey_len;
+}
+#endif /*OC_RPK*/
+
 static void
 set_sc_prov_info(void)
 {
@@ -391,6 +423,71 @@ set_sc_prov_info(void)
   int target_size = 1;
   char uuid[OC_UUID_LEN];
   int i = 0;
+
+#ifdef OC_RPK
+  st_configuration_t *conf = st_data_mgr_get_config_info();
+  oc_doxm_method_t otm_method = conf->easy_setup.ownership_transfer_method;
+
+  if (otm_method == OC_RPK) {
+
+    st_rpk_profile_t *rpk_profile = st_data_get_rpk_profile();
+
+    uint8_t otm_hash_seed[16]; /* we assume that sn(12bytes) + nonce(4bytes) */
+    int ret = 0;
+
+    ret = mbedtls_sha256_ret((unsigned char*)rpk_profile->sn, rpk_profile->sn_len,
+          g_prov_resource.sn, 0);
+    if (ret != 0) {
+      st_print_log("%s: Faild to convert sha256(str:%s, len:%d)",
+      __func__, rpk_profile->sn, rpk_profile->sn_len);
+      goto rpk_finish;
+    }
+
+    /* SHA256 returns 32bytes hex values */
+    g_prov_resource.sn_len = 32;
+
+    memcpy(g_prov_resource.seckey, rpk_profile->seckey, sizeof(rpk_profile->seckey));
+    g_prov_resource.seckey_len = sizeof(rpk_profile->seckey);
+    memcpy(g_prov_resource.pubkey, rpk_profile->pubkey, sizeof(rpk_profile->pubkey));
+    g_prov_resource.pubkey_len = sizeof(rpk_profile->pubkey);
+
+    if (rpk_profile->sn_len == 0) {
+      st_print_log("%s: orig_sn length zero!!", __func__);
+      st_print_log("%s: sha256_sn(len:%d) dump", __func__, g_prov_resource.sn_len);
+      //hex_dump_data(g_prov_resource.sn, g_prov_resource.sn_len);
+
+      st_print_log("%s: seckey(len:%d) dump", __func__, sizeof(rpk_profile->seckey));
+      //hex_dump_data(g_prov_resource.seckey, sizeof(rpk_profile->seckey));
+
+      st_print_log("%s: pubkey(len:%d) dump", __func__, sizeof(rpk_profile->pubkey));
+      //hex_dump_data(g_prov_resource.pubkey, sizeof(rpk_profile->pubkey));
+    }
+
+    g_prov_resource.nonce = oc_random_value();
+
+    /* Update thing's supported otm features status
+     * It depends on Mobile side process - Samsung's ST_APP's features
+     * We assume that rpk_profile->sn is 12bytes string.
+     */
+    memcpy(otm_hash_seed, rpk_profile->sn, 12);
+    otm_hash_seed[15] = (g_prov_resource.nonce & 0xFF);
+    otm_hash_seed[14] = ((g_prov_resource.nonce >> 8) & 0xFF);
+    otm_hash_seed[13] = ((g_prov_resource.nonce >> 16) & 0xFF);
+    otm_hash_seed[12] = ((g_prov_resource.nonce >> 24) & 0xFF);
+
+    ret = mbedtls_sha256_ret(otm_hash_seed, 16,
+          g_prov_resource.otm_own_hash, 0);
+    if (ret != 0) 
+      st_print_log("[ST_MGR] %s: Faild to convert sha256 for otm_hash(%d)\n",
+        __func__, ret);
+
+    g_prov_resource.otmsupportfeature = rpk_profile->otmsupf;
+
+    oc_sec_set_cpubkey_and_token_load((oc_sec_get_cpubkey_and_token)get_rpk_cpubkey_and_token);
+    oc_sec_set_own_key_load((oc_sec_get_own_key)get_rpk_own_key);
+  }
+:rpk_finish
+#endif /*OC_RPK*/
 
   g_prov_resource.targets = (sec_provisioning_info_targets *)calloc(
     target_size, sizeof(sec_provisioning_info_targets));
@@ -778,37 +875,6 @@ void
 st_unregister_status_handler(void)
 {
   g_st_status_cb = NULL;
-}
-
-bool
-st_register_rpk_handler(st_rpk_handle_cpubkey_and_token_cb_t pubkey_cb,
-                        st_rpk_handle_priv_key_cb_t privkey_cb)
-{
-  if (!pubkey_cb || !privkey_cb) {
-    st_print_log(
-      "[ST_MGR] Failed to register RPK handler - invalid parameter\n");
-    return false;
-  }
-
-#ifdef OC_SECURITY
-  oc_sec_set_cpubkey_and_token_load((oc_sec_get_cpubkey_and_token)pubkey_cb);
-  oc_sec_set_own_key_load((oc_sec_get_own_key)privkey_cb);
-  return true;
-#else  /* OC_SECURITY */
-  st_print_log("[ST_MGR] Un-secured build can't handle RPK\n");
-  return false;
-#endif /* !OC_SECURITY */
-}
-
-void
-st_unregister_rpk_handler(void)
-{
-#ifdef OC_SECURITY
-  oc_sec_unset_cpubkey_and_token_load();
-  oc_sec_unset_own_key_load();
-#else  /* OC_SECURITY */
-  st_print_log("[ST_MGR] Un-secured build can't handle RPK\n");
-#endif /* !OC_SECURITY */
 }
 
 #ifndef STATE_MODEL

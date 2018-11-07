@@ -108,7 +108,6 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
-
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CA=$(wildcard ../../service/cloud-access/src/*.c)
@@ -139,7 +138,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CA=$(addprefix obj/ca/,$(notdir $(SRC_CA:.c=.o)))
 OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
 OBJ_FOTA=$(addprefix obj/fota/,$(notdir $(SRC_FOTA:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../port/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../service/fota/src/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../port/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../service/easy-setup/enrollee/:../../service/easy-setup/enrollee/samsung/:../../service/cloud-access/src/:../../service/resource-directory/client/src/:../../service/fota/src/:../../service/st-app-fw/src/:../../service/st-app-fw/src/port/linux:../../deps/cjson/
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server simpleserver \
@@ -209,7 +208,15 @@ ifeq ($(ST_APP_FW),1)
 	SRC_ST=$(wildcard ../../service/st-app-fw/src/*.c ../../service/st-app-fw/src/port/linux/*.c)
 	CFLAGS_ST=-I../../service/st-app-fw/include
 	CFLAGS_ST+= -DST_APP_FW
+ifeq ($(RPK),1)
+	CFLAGS_ST+=-I../../deps/cjson/
+	SRC_ST+=../../deps/cjson/cJSON.c
+endif
 	OBJ_ST=$(addprefix obj/st/,$(notdir $(SRC_ST:.c=.o)))
+endif
+
+ifeq ($(RPK),1)
+	CFLAGS_ST+=-DOC_RPK
 endif
 
 ifeq ($(DEBUG),1)
