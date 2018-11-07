@@ -226,15 +226,15 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 }
 
 static uint16_t
-oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
+oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
+                      oc_interface_mask_t interface)
 {
   uint16_t permission = 0;
   oc_ace_wildcard_t wc = (resource->properties & OC_DISCOVERABLE)
                            ? OC_ACE_WC_ALL_DISCOVERABLE
                            : OC_ACE_WC_ALL_NON_DISCOVERABLE;
-  oc_ace_res_t *res =
-    oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri),
-                             &resource->types, resource->interfaces, wc);
+  oc_ace_res_t *res = oc_sec_ace_find_resource(
+    NULL, ace, oc_string(resource->uri), &resource->types, interface, wc);
   while (res != NULL) {
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
@@ -253,7 +253,7 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
     }
 
     res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri),
-                                   &resource->types, resource->interfaces, wc);
+                                   &resource->types, interface, wc);
   }
 
   return permission;
@@ -322,7 +322,7 @@ dump_acl(size_t device)
 
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_endpoint_t *endpoint)
+                 oc_interface_mask_t interface, oc_endpoint_t *endpoint)
 {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
@@ -364,7 +364,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       endpoint->device);
 
       if (match) {
-        permission |= oc_ace_get_permission(match, resource);
+        permission |= oc_ace_get_permission(match, resource, interface);
         OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
@@ -378,10 +378,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                         -1, 0, endpoint->device);
 
         if (match) {
-          permission |= oc_ace_get_permission(match, resource);
-          OC_DBG(
-            "oc_check_acl: Found ACE with permission %d for matching role",
-            permission);
+          permission |= oc_ace_get_permission(match, resource, interface);
+          OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
+                 permission);
         }
       } while (match);
     }
@@ -395,7 +394,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, -1,
                                       0, endpoint->device);
       if (match) {
-        permission |= oc_ace_get_permission(match, resource);
+        permission |= oc_ace_get_permission(match, resource, interface);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
                "connection",
                permission);
@@ -410,7 +409,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
                                     endpoint->device);
     if (match) {
-      permission |= oc_ace_get_permission(match, resource);
+      permission |= oc_ace_get_permission(match, resource, interface);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
              "connection",
              permission);

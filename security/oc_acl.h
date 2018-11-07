@@ -105,7 +105,7 @@ void get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                      oc_endpoint_t *endpoint);
+                      oc_interface_mask_t interface, oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(size_t device);
 
 #ifdef __cplusplus
