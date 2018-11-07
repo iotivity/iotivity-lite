@@ -765,3 +765,45 @@ st_free_device_profile(void)
 #endif
   g_device_def_len = 0;
 }
+
+#ifdef OC_RPK
+
+static st_rpk_profile_t *g_st_rpk_profile;
+OC_MEMB(st_rpk_profile_s, st_rpk_profile_t, 1);
+
+int
+st_data_load_rpk_profile(st_rpk_profile_t *rpk_profile)
+{
+  int ret = 0;
+  if (!rpk_profile) {
+    st_print_log("[ST_DM] err: invalid args\n");
+    return -1;
+  }
+  if (!g_st_rpk_profile) {
+    g_st_rpk_profile = oc_memb_alloc(&st_rpk_profile_s);
+    if (!g_st_rpk_profile) {
+	  st_print_log("[ST_DM] alloc failed\n");
+	  return -1;
+    }
+  }
+  memcpy(g_st_rpk_profile, rpk_profile, sizeof(st_rpk_profile_t));
+  return ret;
+}
+
+void
+st_free_rpk_profile(void) {
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_st_rpk_profile) {
+    oc_mem_free(g_st_rpk_profile);
+    g_st_rpk_profile = NULL;
+  }
+#endif
+}
+
+st_rpk_profile_t
+*st_data_get_rpk_profile(void)
+{
+  return g_st_rpk_profile;
+}
+
+#endif /*OC_RPK*/
