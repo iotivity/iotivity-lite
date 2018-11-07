@@ -25,9 +25,19 @@
 #include "st_port.h"
 #include "st_store.h"
 
-#include <stdlib.h>
-
 #define EASYSETUP_TAG "E1"
+
+#if defined(OC_RPK) && defined(OC_SECURITY)
+#include "security/oc_otm_state.h"
+#include "security/oc_doxm.h"
+#include "st_data_manager.h"
+#include "mbedtls/sha256.h"
+#include "mbedtls/base64.h"
+
+#define EASYSETUP_TAG_2 "E2"
+#define E2_SSID_POST (8) 
+#endif /*OC_RPK && OC_SECURITY*/
+
 #define EASYSETUP_TIMEOUT (60)
 typedef enum {
   ST_EASY_SETUP_DEV_PROV = 1 << 0,
@@ -172,15 +182,53 @@ int
 st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
             const char *setup_id)
 {
-  unsigned char mac[6] = { 0 };
+#if defined(OC_RPK) && defined(OC_SECURITY) 
+#define BASE64_URI_SIZE 50
+  oc_sec_doxm_t *curr_doxm = oc_sec_get_doxm(0);
+  if (curr_doxm && curr_doxm->oxmsel && (curr_doxm->oxmsel == OC_DOXM_RPK)) {
+    st_rpk_profile_t *profile = st_data_get_rpk_profile();
+    unsigned char base64_url[BASE64_URI_SIZE] = {0,};
+    unsigned char hash[32] = {0};
+    char ssid_sn[E2_SSID_POST + 1] = {0,};
+    size_t base64_url_wz;
 
-  if (!oc_get_mac_addr(mac)) {
-    st_print_log("[ST_ES] oc_get_mac_addr failed!\n");
-    return -1;
-  }
+	if (!profile || !profile->sn || !profile->sn_len) {
+      return -1;
+    }
+    int ret = mbedtls_sha256_ret((unsigned char*)profile->sn, profile->sn_len, hash, 0);
+    if (ret != 0) {
+      st_print_log("%s: Faild to convert sha256(str: %s, len:%d)",
+        __func__, profile->sn, profile->sn_len);
+      return -1;
+    }
 
-  snprintf(ssid, MAX_SSID_LEN, "%s_%s%s%s%d%02X%02X", device_name,
+    ret = mbedtls_base64_urlsafe_encode(base64_url, BASE64_URI_SIZE,
+            &base64_url_wz, hash, sizeof(hash));
+    if (ret != 0) {
+      st_print_log("%s: Faild to convert by base64_url_safe\n",
+        __func__);
+      return -1;
+    }
+
+    memcpy(ssid_sn, base64_url, E2_SSID_POST);
+    ssid_sn[E2_SSID_POST] = '\0';
+	//Oven_E21MNID001abcdefgh
+    snprintf(ssid, MAX_SSID_LEN, "%s_%s%d%s%s%s",
+        device_name, EASYSETUP_TAG_2, 1, mnid, setup_id, ssid_sn);
+  } else
+#endif /*OC_RPK && OC_SECURITY*/
+  {
+    unsigned char mac[6] = { 0 };
+
+    if (!oc_get_mac_addr(mac)) {
+      st_print_log("[ST_ES] oc_get_mac_addr failed!\n");
+      return -1;
+    }
+	//Oven_E1MNID0010AABB
+    snprintf(ssid, MAX_SSID_LEN, "%s_%s%s%s%d%02X%02X", device_name,
            EASYSETUP_TAG, mnid, setup_id, 0, mac[4], mac[5]);
+    ssid[strlen(ssid)] = '\0';
+  }
 
   st_print_log("[ST_ES] ssid : %s\n", ssid);
   return 0;

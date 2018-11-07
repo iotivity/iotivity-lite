@@ -148,6 +148,42 @@ st_resource_info_t *st_data_mgr_get_resource_info(void);
 st_resource_type_t *st_data_mgr_get_rsc_type_info(const char *rt);
 st_configuration_t *st_data_mgr_get_config_info(void);
 
+
+#ifdef OC_RPK
+
+#define ST_SECURE_KEY_LEN  (32)
+
+/**
+  @brief A data structure of RPK profile data.
+*/
+typedef struct st_rpk_profile {
+  char sign_seckey[ST_SECURE_KEY_LEN]; /* ecc based DSA private key */
+  char sign_pubkey[ST_SECURE_KEY_LEN]; /* ecc based DSA public key */
+  char seckey[ST_SECURE_KEY_LEN];      /* ecc based key-exchange private key */
+  char pubkey[ST_SECURE_KEY_LEN];      /* ecc based key-exchange public key */
+  char sn[64];                         /* serial number of device */
+  int  sn_len;
+  unsigned char otmsupf;               /* Things's own supported features */
+} st_rpk_profile_t;
+
+/**
+  @brief A function for getting RPK profile data.
+  @return st_rpk_profile_t The pointer of RPK profile data which is declared in the framework
+*/
+st_rpk_profile_t *st_data_get_rpk_profile(void);
+
+/**
+  @brief A function for setting RPK profile data
+    RPK profile data is expected to be retrived from the private section from the device.
+    This function will copy the data into the framework area.
+    No need to maintain this data from the application after this function call
+  @param profile RPK profile data
+*/
+void st_data_load_rpk_profile(st_rpk_profile_t *profile);
+
+#endif /*OC_RPK*/
+
+
 #ifdef __cplusplus
 }
 #endif

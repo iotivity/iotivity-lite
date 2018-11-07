@@ -765,3 +765,24 @@ st_free_device_profile(void)
 #endif
   g_device_def_len = 0;
 }
+
+#ifdef OC_RPK
+
+static st_rpk_profile_t g_st_rpk_profile;
+
+void st_data_load_rpk_profile(st_rpk_profile_t *rpk_profile)
+{
+  if (!rpk_profile) {
+    st_print_log("[ST_DM] err: invalid args\n");
+    return;
+  }
+
+  memcpy(&g_st_rpk_profile, rpk_profile, sizeof(*rpk_profile));
+}
+
+st_rpk_profile_t *st_data_get_rpk_profile(void)
+{
+  return &g_st_rpk_profile;
+}
+
+#endif /*OC_RPK*/
