@@ -24,6 +24,9 @@
 #include "oc_rep.h"
 #include "security/oc_acl.h"
 #include "util/oc_mem.h"
+#ifdef OC_RPK
+#include "mbedtls/base64.h"
+#endif
 
 #define SC_RSRVD_ES_URI_PROVISIONING_INFO "/sec/provisioninginfo"
 #define SC_RSRVD_ES_RES_TYPE_PROVISIONING_INFO "x.com.samsung.provisioninginfo"
@@ -73,6 +76,24 @@
 #define SC_RSRVD_ES_PROVISIONING_INFO_TARGETDI "targetDi"
 #define SC_RSRVD_ES_PROVISIONING_INFO_TARGETRT "targetRt"
 #define SC_RSRVD_ES_PROVISIONING_INFO_PUBLISHED "published"
+
+#ifdef OC_RPK
+/* for ED25519 supporting */
+#define SC_RSRVD_ES_PROVISIONING_INFO_SN "provisioning.sn"
+#define SC_RSRVD_ES_PROVISIONING_INFO_NONCE "provisioning.nonce"
+#define SC_RSRVD_ES_PROVISIONINGINFO_CPUB "x.com.samsung.provisioning.cpub"
+#define SC_RSRVD_ES_PROVISIONINGINFO_TOKEN_HASH "x.com.samsung.provisioning.tokenhash"
+
+/* for otmfeature handling */
+#define SC_RSRVD_ES_PROVISIONINGINFO_HASH "x.com.samsung.provisioning.hash"
+#define SC_RSRVD_ES_PROVISIONINGINFO_OTMSUPF "x.com.samsung.provisioning.otmsupportfeature"
+
+/* Assume that mobile sends only 0xFF ~ 0x00 values for OTMSUPF */
+#define THING_OTMSUPF_MSK         (0x000000FF)
+#define REQ_OTMSUPF_SHIFT         (8)
+#define OTMSUP_FEATURE_QR         (0x10)
+#define OTMSUP_FEATURE_BUTTEN     (0x20)
+#endif /*OC_RPK*/
 
 #define SC_RSRVD_ES_ACCESSPOINT_LIST_AP_ITEMS "accesspoint.items"
 #define SC_RSRVD_ES_ACCESSPOINT_LIST_CHANNEL "channel"
@@ -459,11 +480,127 @@ sc_free_userdata(void *user_data, char *resource_type)
 }
 
 // --- "/sec/provisioninginfo" resource related code -----
-static void
+static oc_status_t
 update_provisioning_info_resource(oc_request_t *request)
 {
-  (void)request;
-  // TODO - Add update when more write properties are added
+#ifdef OC_RPK
+  sec_provisioning_info *info = g_sec_prov->info;
+  oc_rep_t *p;
+  char buf[256] = {0, };
+  char *str_val;
+  int len, ret, size;
+  int i, str_val_len;
+  uint32_t req_otmsupf;
+  uint16_t curr_otmsupf;
+  unsigned char otm_hash_val;
+
+  OC_DBG("%s: start", __func__);
+
+  p = request->request_payload;
+
+  while (p) {
+    len = oc_string_len(p->name);
+    memset(buf, 0, sizeof(buf));
+    OC_DBG("%s: name: %s (%d), type: %d\n", __func__, oc_string(p->name), len, p->type);
+
+    switch (p->type) {
+      case OC_REP_INT:
+        if (len && memcmp(oc_string(p->name), SC_RSRVD_ES_PROVISIONINGINFO_OTMSUPF,
+                          strlen(SC_RSRVD_ES_PROVISIONINGINFO_OTMSUPF)) == 0) {
+          OC_DBG("%s: req_otmsupportf: 0x%x, curr: 0x%x\n", __func__,
+                  p->value.integer, info->otmsupportfeature);
+          req_otmsupf = (p->value.integer & THING_OTMSUPF_MSK);
+          if (req_otmsupf & (info->otmsupportfeature & THING_OTMSUPF_MSK)) {
+            OC_DBG("%s: otmsupportf matched!!");
+            info->otmsupportfeature &= THING_OTMSUPF_MSK;
+            info->otmsupportfeature |= (req_otmsupf << REQ_OTMSUPF_SHIFT);
+          } else {
+            OC_DBG("%s: otmsupportf un-matched!!");
+            return OC_STATUS_BAD_REQUEST;
+          }
+        }
+        break;
+
+      case OC_REP_STRING:
+        /* for RPK handling */
+        if (len && memcmp(oc_string(p->name), SC_RSRVD_ES_PROVISIONINGINFO_CPUB,
+                          strlen(SC_RSRVD_ES_PROVISIONINGINFO_CPUB)) == 0) {
+          OC_DBG("%s: cpub: %s\n", __func__, oc_string(p->value.string));
+          if ((ret = mbedtls_base64_urlsafe_decode((unsigned char *)buf, sizeof(buf), &size,
+                  (const unsigned char *)oc_string(p->value.string), oc_string_len(p->value.string))) != 0) {
+            OC_ERR("%s: failed to decode key: -0x%x", __func__, -ret);
+            break;
+          }
+          OC_DBG("%s: decode [urlsafe] %d -> %d\n", __func__, oc_string_len(p->value.string), size);
+          memcpy(info->cpub, buf, size);
+          info->cpub_len = size;
+          hex_dump_data(info->cpub, size);
+        } else if (len && memcmp(oc_string(p->name), SC_RSRVD_ES_PROVISIONINGINFO_TOKEN_HASH,
+                   strlen(SC_RSRVD_ES_PROVISIONINGINFO_TOKEN_HASH)) == 0) {
+          str_val = oc_string(p->value.string);
+          str_val_len = strlen(str_val);
+
+          OC_DBG("%s: token_hash: %s (len:%d)\n", __func__, str_val, str_val_len);
+
+          size = 0;
+          /* Assume that 'token_hash' is plain text of sha256 values */
+          for (i = 0; i < str_val_len; i+=2) {
+            memcpy(buf, (str_val + i), 2);
+            buf[2] = '\0';
+            info->token_hash[size] = (unsigned char)strtoul(buf, NULL, 16);
+            size++;
+          }
+
+          OC_DBG("%s: token_hash: decode [plain text] %d -> %d\n", __func__, str_val_len, size);
+          info->token_hash_len = size;
+          hex_dump_data(info->token_hash, size);
+
+        /* for otmfeature handling */
+        } else if (len && memcmp(oc_string(p->name), SC_RSRVD_ES_PROVISIONINGINFO_HASH, strlen(SC_RSRVD_ES_PROVISIONINGINFO_HASH)) == 0) {
+          str_val = oc_string(p->value.string);
+          str_val_len = strlen(str_val);
+
+          OC_DBG("%s: otm_hash: %s (len:%d)\n", __func__, str_val, str_val_len);
+          curr_otmsupf = (info->otmsupportfeature >> REQ_OTMSUPF_SHIFT);
+
+          if ((curr_otmsupf & OTMSUP_FEATURE_QR) && (str_val_len != 0)) {
+	          /* QR handling condition : otmsupf == 0x10, "hash" has string */
+            OC_DBG("%s: QR hash triggered\n", __func__);
+
+            /* Assume that 'otm_hash' is plain text of sha256 values */
+            size = 0;
+            for (i = 0; i < str_val_len; i+=2) {
+              memcpy(buf, (str_val + i), 2);
+              buf[2] = '\0';
+              otm_hash_val = (unsigned char)strtoul(buf, NULL, 16);
+              if (info->otm_own_hash[size] != otm_hash_val) {
+                OC_DBG("%s: WARNING QR hash mis-matched!!, idx:%d, own:0x%x, get:0x%x\n",
+                  __func__, i, info->otm_own_hash[size], otm_hash_val);
+                return OC_STATUS_BAD_REQUEST;
+              }
+              size++;
+            }
+
+          } else if ((curr_otmsupf & OTMSUP_FEATURE_BUTTEN) && (str_val_len == 0)) {
+            /* Butten handling condition : otmsupf == 0x20, "hash" has NULL */
+            OC_DBG("%s: User Butten hash triggered\n", __func__);
+            /* TO DO : Need to implement user confirm with 2 min timeout */
+
+          } else {
+            /* Unsupported hash values */
+            OC_DBG("%s: Unsupported otmsupportf req & hash\n", __func__);
+            hex_dump_data(str_val, str_val_len);
+            return OC_STATUS_BAD_REQUEST;
+          }
+        }
+        break;
+    }
+
+    p = p->next;
+  }
+  OC_DBG("%s: done", __func__);
+#endif /*OC_RPK*/
+  return OC_STATUS_OK;
 }
 
 static void
@@ -509,6 +646,38 @@ construct_response_of_sec_provisioning(void)
   es_rep_set_text_string_with_keystr(root, key_name,
                                      oc_string(info->easysetup_di));
 
+#ifdef OC_RPK
+  char val_str[65] = {0, };
+  int wz = 0;
+  for (int i = 0; i < 32; i++) {
+    wz += sprintf(val_str + wz, "%02X", info->sn[i]);
+    if (wz >= 64)
+      break;
+  }
+  val_str[wz] = '\0';
+  OC_DBG("Current SN str: %s\n", val_str);
+
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                          SC_RSRVD_ES_PROVISIONING_INFO_SN);
+  es_rep_set_text_string_with_keystr(root, key_name, val_str);
+
+  wz = sizeof(info->nonce) * 2 + 1;
+  snprintf(val_str, wz, "%08X", info->nonce);
+  OC_DBG("Current nonce str: %s\n", val_str);
+
+  construct_vnd_attr_name(key_name, SC_MAX_ES_ATTR_NAME_LEN,
+                          SC_RSRVD_ES_PROVISIONING_INFO_NONCE);
+  es_rep_set_text_string_with_keystr(root, key_name, val_str);
+
+  oc_rep_set_byte_string(root, x.com.samsung.provisioning.cpub,
+                         info->cpub, info->cpub_len);
+  oc_rep_set_byte_string(root, x.com.samsung.provisioning.tokenhash, 
+                         info->token_hash, info->token_hash_len);
+
+  oc_rep_set_int(root, x.com.samsung.provisioning.otmsupportfeature,
+      ((info->otmsupportfeature) & 0xFF));
+#endif /*OC_RPK*/
+
   oc_rep_end_root_object();
 }
 
@@ -533,6 +702,7 @@ static void
 post_sec_provisioning(oc_request_t *request, oc_interface_mask_t interface,
                       void *user_data)
 {
+  oc_status_t rep_code;
   (void)user_data;
   OC_DBG("GET request received");
 
@@ -542,9 +712,13 @@ post_sec_provisioning(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
-  update_provisioning_info_resource(request);
-  construct_response_of_sec_provisioning();
-  oc_send_response(request, OC_STATUS_CHANGED);
+  rep_code = update_provisioning_info_resource(request);
+  if (rep_code != OC_STATUS_OK) {
+    oc_send_response(request, rep_code);
+  } else {
+    construct_response_of_sec_provisioning();
+    oc_send_response(request, OC_STATUS_CHANGED);
+  }
 }
 
 es_result_e
