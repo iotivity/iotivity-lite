@@ -1239,10 +1239,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       size_t uri_len = oc_string_len(cb->uri);
 
       while (dup_cb != NULL) {
-        if (dup_cb != cb &&
+        if (dup_cb != cb && dup_cb->observe_seq != -1 &&
             oc_string_len(dup_cb->uri) == uri_len &&
-            strncmp(oc_string(dup_cb->uri), oc_string(cb->uri),
-                    uri_len) == 0 &&
+            strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
             oc_endpoint_compare(dup_cb->endpoint, endpoint) == 0) {
           OC_DBG("Freeing cb %s, token 0x%02X%02X",
                  oc_string(dup_cb->uri), dup_cb->token[0], dup_cb->token[1]);
