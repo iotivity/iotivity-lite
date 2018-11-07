@@ -55,6 +55,9 @@ allocate_message(struct oc_memb *pool)
     message->next = 0;
     message->ref_count = 1;
     message->endpoint.interface_index = -1;
+#ifdef OC_SECURITY
+    message->encrypted = 0;
+#endif /* OC_SECURITY */
 #ifndef OC_DYNAMIC_ALLOCATION
     OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
            oc_memb_numfree(pool));
@@ -148,8 +151,8 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 
     if (ev == oc_events[INBOUND_NETWORK_EVENT]) {
 #ifdef OC_SECURITY
-      uint8_t b = (uint8_t)((oc_message_t *)data)->data[0];
-      if (b > 19 && b < 64) {
+      if (((oc_message_t *)data)->endpoint.flags & SECURED &&
+          ((oc_message_t *)data)->encrypted == 1) {
         OC_DBG("Inbound network event: encrypted request");
         oc_process_post(&oc_tls_handler, oc_events[UDP_TO_TLS_EVENT], data);
       } else {
@@ -173,6 +176,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 #ifdef OC_SECURITY
           if (message->endpoint.flags & SECURED) {
         OC_DBG("Outbound network event: forwarding to TLS");
+        message->encrypted = 1;
 
 #ifdef OC_CLIENT
         if (!oc_tls_connected(&message->endpoint)) {

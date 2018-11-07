@@ -903,6 +903,7 @@ network_event_thread(void *data)
         }
         message->length = (size_t)count;
         message->endpoint.flags = IPV6 | SECURED;
+        message->encrypted = 1;
         FD_CLR(dev->secure_sock, &setfds);
         goto common;
       }
@@ -916,6 +917,7 @@ network_event_thread(void *data)
         }
         message->length = (size_t)count;
         message->endpoint.flags = IPV4 | SECURED;
+        message->encrypted = 1;
         FD_CLR(dev->secure4_sock, &setfds);
         goto common;
       }

@@ -105,6 +105,9 @@ struct oc_message_s
 #ifdef OC_TCP
   size_t read_offset;
 #endif /* OC_TCP */
+#ifdef OC_SECURITY
+  uint8_t encrypted;
+#endif
 };
 
 int oc_send_buffer(oc_message_t *message);
