@@ -60,13 +60,13 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
 
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
 #define MAX_WAIT_TIME 1
 
 static int cv_wait_need;
 static pthread_cond_t cv;
 static pthread_mutex_t buffer_mutex;
-#endif /* RISTRICT_INCOMING_REQUESTS */
+#endif /* RESTRICT_INCOMING_REQUESTS */
 static pthread_mutex_t mutex;
 struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
@@ -204,7 +204,7 @@ remove_all_session_event_cbs(void)
 
 #endif /* OC_SESSION_EVENTS */
 
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
 void
 oc_network_event_handler_wait_request(void)
 {
@@ -243,7 +243,7 @@ oc_network_incoming_buffer_avail_cb(int numfree)
   OC_DBG("Incoming buffer is now available.(%d)", numfree);
   oc_network_event_handler_cv_signal();
 }
-#endif /* RISTRICT_INCOMING_REQUESTS */
+#endif /* RESTRICT_INCOMING_REQUESTS */
 
 void
 oc_network_event_handler_mutex_init(void)
@@ -252,7 +252,7 @@ oc_network_event_handler_mutex_init(void)
     oc_abort("error initializing network event handler mutex");
   }
 
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
   if (pthread_mutex_init(&buffer_mutex, NULL) != 0) {
     oc_abort("error initializing network event handler buffer_mutex");
   }
@@ -264,7 +264,7 @@ oc_network_event_handler_mutex_init(void)
   cv_wait_need = 1;
 
   oc_set_buffers_avail_cb(oc_network_incoming_buffer_avail_cb);
-#endif /* RISTRICT_INCOMING_REQUESTS */
+#endif /* RESTRICT_INCOMING_REQUESTS */
 }
 
 void
@@ -291,11 +291,11 @@ oc_network_event_handler_mutex_destroy(void)
 #ifdef OC_SESSION_EVENTS
   remove_all_session_event_cbs();
 #endif /* OC_SESSION_EVENTS */
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
   oc_set_buffers_avail_cb(NULL);
   pthread_cond_destroy(&cv);
   pthread_mutex_destroy(&buffer_mutex);
-#endif /* RISTRICT_INCOMING_REQUESTS */
+#endif /* RESTRICT_INCOMING_REQUESTS */
   pthread_mutex_destroy(&mutex);
 }
 
@@ -886,7 +886,7 @@ network_event_thread(void *data)
       oc_message_t *message = oc_allocate_message();
 
       if (!message) {
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
         OC_DBG("No available Incoming buffer Now.");
         oc_network_event_handler_cv_wait();
         message = oc_allocate_message();
@@ -894,9 +894,9 @@ network_event_thread(void *data)
           OC_ERR("oc_allocate_message error");
           break;
         }
-#else  /* RISTRICT_INCOMING_REQUESTS */
+#else  /* RESTRICT_INCOMING_REQUESTS */
         break;
-#endif /* !RISTRICT_INCOMING_REQUESTS */
+#endif /* !RESTRICT_INCOMING_REQUESTS */
       }
 
       message->endpoint.device = dev->device;
@@ -1685,9 +1685,9 @@ oc_connectivity_shutdown(size_t device)
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-#ifdef RISTRICT_INCOMING_REQUESTS
+#ifdef RESTRICT_INCOMING_REQUESTS
   oc_network_event_handler_cv_signal();
-#endif /* RISTRICT_INCOMING_REQUESTS */
+#endif /* RESTRICT_INCOMING_REQUESTS */
 
   pthread_join(dev->event_thread, NULL);
 
