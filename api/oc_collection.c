@@ -339,7 +339,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               oc_rep_set_key(*oc_rep_object(links), "rep");
               memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
 
-              int size_before = oc_rep_finalize();
+              int size_before = oc_rep_get_encoded_payload_size();
               rest_request.resource = link->resource;
               response_buffer.code = 0;
               response_buffer.response_length = 0;
@@ -389,7 +389,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               } else {
                 if (code < oc_status_code(OC_STATUS_BAD_REQUEST))
                   code = response_buffer.code;
-                int size_after = oc_rep_finalize();
+                int size_after = oc_rep_get_encoded_payload_size();
                 if (size_before == size_after) {
                   oc_rep_start_root_object();
                   oc_rep_end_root_object();
@@ -423,7 +423,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     break;
   }
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   size = (size <= 2) ? 0 : size;
 
   request->response->response_buffer->response_length = (uint16_t)size;

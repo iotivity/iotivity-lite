@@ -26,7 +26,7 @@
 
 TEST(TestRep, OCRepFinalizeTest_P)
 {
-    int repSize = oc_rep_finalize();
+    int repSize = oc_rep_get_encoded_payload_size();
     EXPECT_NE(repSize, -1);
 }
 
@@ -45,9 +45,6 @@ TEST(TestRep, OCRepSetGetInt)
      */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
-    uint8_t *payload = g_encoder.data.ptr;
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
 
     /* add int value "ultimate_answer":42 to root object */
     oc_rep_start_root_object();
@@ -55,7 +52,11 @@ TEST(TestRep, OCRepSetGetInt)
     oc_rep_end_root_object();
 
     /* convert CborEncoder to oc_rep_t */
-    int payload_len = oc_rep_finalize();
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);
@@ -78,9 +79,6 @@ TEST(TestRep, OCRepSetGetTextString)
      */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
-    uint8_t *payload = g_encoder.data.ptr;
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
 
     /* add text string value "hal9000":"Dave" to root object */
     oc_rep_start_root_object();
@@ -88,7 +86,11 @@ TEST(TestRep, OCRepSetGetTextString)
     oc_rep_end_root_object();
 
     /* convert CborEncoder to oc_rep_t */
-    int payload_len = oc_rep_finalize();
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);
@@ -113,9 +115,6 @@ TEST(TestRep, OCRepSetGetIntArray)
      */
     uint8_t buf[1024];
     oc_rep_new(&buf[0], 1024);
-    uint8_t *payload = g_encoder.data.ptr;
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
-    oc_rep_set_pool(&rep_objects);
 
     /* add int array to root object */
     int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
@@ -124,7 +123,11 @@ TEST(TestRep, OCRepSetGetIntArray)
     oc_rep_end_root_object();
 
     /* convert CborEncoder to oc_rep_t */
-    int payload_len = oc_rep_finalize();
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    int payload_len = oc_rep_get_encoded_payload_size();
     EXPECT_NE(payload_len, -1);
     oc_rep_t *rep = NULL;
     oc_parse_rep(payload, payload_len, &rep);

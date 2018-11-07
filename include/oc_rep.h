@@ -33,7 +33,8 @@ extern CborEncoder g_encoder, root_map, links_array;
 extern int g_err;
 
 void oc_rep_new(uint8_t *payload, int size);
-int oc_rep_finalize(void);
+int oc_rep_get_encoded_payload_size(void);
+const uint8_t *oc_rep_get_encoder_buf(void);
 
 #define oc_rep_object(name) &name##_map
 #define oc_rep_array(name) &name##_array

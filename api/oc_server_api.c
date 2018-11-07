@@ -62,7 +62,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 static int
 response_length(void)
 {
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   return (size <= 2) ? 0 : size;
 }
 

@@ -45,8 +45,14 @@ oc_rep_get_cbor_errno(void)
   return g_err;
 }
 
+const uint8_t *
+oc_rep_get_encoder_buf(void)
+{
+  return g_buf;
+}
+
 int
-oc_rep_finalize(void)
+oc_rep_get_encoded_payload_size(void)
 {
   size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
   if (g_err == CborErrorOutOfMemory) {
