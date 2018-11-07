@@ -110,15 +110,19 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   } else {
     res = res->next;
   }
+
   while (res != NULL) {
-    bool match = true;
+    bool positive = false, match = true;
     if (href && oc_string_len(res->href) > 0) {
       if ((strlen(href) + skip) != oc_string_len(res->href) ||
           memcmp(oc_string(res->href) + skip, href,
                  oc_string_len(res->href) - skip) != 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
+
     if (match && rt && oc_string_array_get_allocated_size(res->types) > 0) {
       size_t i, j;
       bool rt_match = false;
@@ -137,21 +141,28 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
       }
       if (!rt_match) {
         match = false;
+      } else {
+        positive = true;
       }
     }
+
     if (match && interfaces != 0 && res->interfaces != 0) {
       if ((interfaces & res->interfaces) == 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
 
     if (match && wildcard != 0 && res->wildcard != 0) {
       if ((wildcard & res->wildcard) == 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
 
-    if (match) {
+    if (match && positive) {
       return res;
     }
 
@@ -535,8 +546,9 @@ oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
 
 got_ace:
   res = oc_sec_ace_find_resource(NULL, ace, href, rt, interfaces, wildcard);
-  if (!res && create)
+  if (!res && create) {
     goto new_res;
+  }
 
   goto done;
 
@@ -590,9 +602,11 @@ new_ace:
 
 new_res:
   res = oc_memb_alloc(&res_l);
-
   if (res) {
-    res->wildcard = wildcard;
+    res->wildcard = 0;
+    if (wildcard != OC_ACE_NO_WC) {
+      res->wildcard = wildcard;
+    }
 #ifdef OC_DEBUG
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
