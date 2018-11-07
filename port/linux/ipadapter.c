@@ -840,6 +840,7 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV6 | SECURED;
+    message->encrypted = 1;
     FD_CLR(dev->secure_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
@@ -852,6 +853,7 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV4 | SECURED;
+    message->encrypted = 1;
     FD_CLR(dev->secure4_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
