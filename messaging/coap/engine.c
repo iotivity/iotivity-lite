@@ -101,10 +101,14 @@ coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
   oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
   if (ack_message) {
     memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
-    ack_message->length = coap_serialize_message(ack, ack_message->data);
-    coap_send_message(ack_message);
-    if (ack_message->ref_count == 0)
+    size_t len = coap_serialize_message(ack, ack_message->data);
+    if (len > 0) {
+      ack_message->length = len;
+      coap_send_message(ack_message);
+    }
+    if (ack_message->ref_count == 0) {
       oc_message_unref(ack_message);
+    }
   }
 }
 
@@ -671,7 +675,7 @@ send_message:
       }
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
-      if (transaction->message->length) {
+      if (transaction->message->length > 0) {
         coap_send_transaction(transaction);
       } else {
         coap_clear_transaction(transaction);
