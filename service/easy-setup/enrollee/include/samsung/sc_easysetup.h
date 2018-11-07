@@ -297,6 +297,25 @@ typedef struct
   int targets_size;
   bool owned;
   oc_string_t easysetup_di;
+
+#ifdef OC_RPK
+  uint8_t cpub[64];       /* ecc-based peer's public key */
+  int cpub_len;
+  uint8_t token_hash[64]; /* ecc-based hashed access token */
+  int token_hash_len;
+  uint8_t seckey[32];     /* ecc-based device private key */
+  int seckey_len;
+  uint8_t pubkey[32];     /* ecc-based device public key */
+  int pubkey_len;
+  uint8_t sn[32];
+  int sn_len;
+  uint32_t nonce;
+
+  /* Upper 8bit(0xFF00) used for mobile (req), lower 8bit(0x00FF) used for things (own) */
+  uint16_t otmsupportfeature;
+  uint8_t otm_own_hash[32];
+#endif /*OC_RPK*/
+
 } sec_provisioning_info;
 
 /**
