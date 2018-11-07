@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_0855061d",
+        "filename": "api/unittest/reptest.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-07T23:13:08Z",
+      "side": 1,
+      "message": "when testing double does anyone see a reason to test NaN or positive/negative infinity? What about +/- zero?",
+      "revId": "065f403b4299fe5b740feb505836376cc56d3cac",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
