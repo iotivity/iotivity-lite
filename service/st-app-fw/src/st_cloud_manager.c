@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "st_cloud_manager.h"
+#include "st_data_manager.h"
 #include "cloud_access.h"
 #include "easysetup.h"
 #include "oc_api.h"
@@ -362,9 +363,19 @@ sign_up(void *data)
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
     if (0 ==
         oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
-      oc_sign_up(&context->cloud_ep, oc_string(cloudinfo.auth_provider),
+#ifdef OC_JWT
+      char *jwt;
+      st_rpk_profile_t *profile = st_data_get_rpk_profile();
+      st_sign_jwt_getter(&jwt, profile->sign_pubkey, profile->sign_seckey, profile->sn);
+      oc_sign_up_with_jwt (&context->cloud_ep, oc_string(cloudinfo.auth_provider),
+                 oc_string(cloudinfo.uid), (const char *)jwt, oc_string(cloudinfo.access_token),
+                 context->device_index, sign_up_handler, context);
+      oc_mem_free(jwt);
+#else
+      oc_sign_up (&context->cloud_ep, oc_string(cloudinfo.auth_provider),
                  oc_string(cloudinfo.uid), oc_string(cloudinfo.access_token),
                  context->device_index, sign_up_handler, context);
+#endif
     }
     oc_set_delayed_callback(context, sign_up,
                             session_timeout[context->retry_count]);
@@ -415,9 +426,19 @@ sign_in(void *data)
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
     if (0 ==
         oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
+#ifdef OC_JWT
+      char *jwt;
+      st_rpk_profile *profile = st_manager_get_profile();
+      st_sign_jwt_getter(&jwt, profile->sign_pubkey, profile->sign_seckey, profile->sn);
+      oc_sign_in_with_jwt(&context->cloud_ep, oc_string(cloudinfo.uid),
+                 oc_string(cloudinfo.access_token), jwt, 0, sign_in_handler,
+                 context);
+      oc_mem_free(jwt);
+#else
       oc_sign_in(&context->cloud_ep, oc_string(cloudinfo.uid),
                  oc_string(cloudinfo.access_token), 0, sign_in_handler,
                  context);
+#endif
     }
     oc_set_delayed_callback(context, sign_in,
                             session_timeout[context->retry_count]);
