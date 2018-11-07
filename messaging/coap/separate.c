@@ -143,9 +143,18 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
       message->length = coap_serialize_message(ack, message->data);
-      coap_send_message(message);
-      if (message->ref_count == 0)
+      bool success = false;
+      if (message->length > 0) {
+        coap_send_message(message);
+        success = true;
+      }
+      if (message->ref_count == 0) {
         oc_message_unref(message);
+      }
+      if (!success) {
+        coap_separate_clear(separate_response, separate_store);
+        return 0;
+      }
     } else {
       coap_separate_clear(separate_response, separate_store);
       return 0;

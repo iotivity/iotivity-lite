@@ -456,8 +456,11 @@ coap_notify_observers(oc_resource_t *resource,
           notification->mid = transaction->mid;
           transaction->message->length =
             coap_serialize_message(notification, transaction->message->data);
-
-          coap_send_transaction(transaction);
+          if (transaction->message->length > 0) {
+            coap_send_transaction(transaction);
+          } else {
+            coap_clear_transaction(transaction);
+          }
         }
       }
     }

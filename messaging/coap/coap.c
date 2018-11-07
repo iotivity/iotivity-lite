@@ -717,7 +717,7 @@ coap_tcp_compute_message_length(void *packet, size_t option_length,
   *extended_len = 0;
 
   size_t total_length = option_length;
-  if (coap_pkt->payload && coap_pkt->payload_len > 0) {
+  if (coap_pkt->payload_len > 0) {
     total_length += COAP_PAYLOAD_MARKER_LEN + coap_pkt->payload_len;
   }
 
@@ -753,8 +753,11 @@ coap_tcp_compute_message_length(void *packet, size_t option_length,
   *extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
 
 exit:
-  OC_DBG("-Totel length %ld option len : %ld ", total_length, option_length);
-  OC_DBG("-TCP length field %u Extended length header len : %ld ", *len, *extended_len);
+  OC_DBG("-Size of options : %ld Total length of CoAP_TCP message "
+         "(Options+Payload) : %ld ",
+         option_length, total_length);
+  OC_DBG("-COAP_TCP header len field : %u Extended length : %ld ", *len,
+         *extended_len);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -877,7 +880,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 
   /* accoridng to spec  COAP_PAYLOAD_MARKER_LEN should be included
      if payload  exists */
-  if (coap_pkt->payload && coap_pkt->payload_len) {
+  if (coap_pkt->payload_len > 0) {
     header_length_calculation += COAP_PAYLOAD_MARKER_LEN;
   }
   header_length_calculation += coap_pkt->token_len;
@@ -905,8 +908,6 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   } else
 #endif /* OC_TCP */
   {
-    OC_DBG("-Serializing MID %u to %p", coap_pkt->mid, coap_pkt->buffer);
-
     /* set header fields */
     token_location = COAP_HEADER_LEN;
     header_length_calculation += token_location;
@@ -917,6 +918,7 @@ coap_serialize_message(void *packet, uint8_t *buffer)
       goto exit;
     }
 
+    OC_DBG("-Serializing MID %u to %p", coap_pkt->mid, coap_pkt->buffer);
     coap_udp_set_header_fields(coap_pkt);
   }
 
@@ -936,17 +938,12 @@ coap_serialize_message(void *packet, uint8_t *buffer)
   }
 
   option_length = coap_serialize_options(packet, option);
-  if (option_length != option_length_calculation){
-    OC_ERR("expecting header length is different. expected:%u, actual:%u",
-           (unsigned int)option_length_calculation, (unsigned int)option_length);
-    goto exit;
-  }
   option += option_length;
 
   /* Pack payload */
   if ((option - coap_pkt->buffer) <= COAP_MAX_HEADER_SIZE) {
     /* Payload marker */
-    if (coap_pkt->payload_len) {
+    if (coap_pkt->payload_len > 0) {
       *option = 0xFF;
       ++option;
     }
