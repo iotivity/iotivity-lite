@@ -408,6 +408,11 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } while (total_length > message->length);
 
   memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_SECURITY
+  if (message->endpoint.flags & SECURED) {
+    message->encrypted = 1;
+  }
+#endif /* OC_SECURITY */
 
   FD_CLR(session->sock, fds);
   ret = ADAPTER_STATUS_RECEIVE;

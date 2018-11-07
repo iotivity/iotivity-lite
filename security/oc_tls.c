@@ -243,6 +243,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
   size_t send_len = (len < (unsigned)OC_PDU_SIZE) ? len : (unsigned)OC_PDU_SIZE;
   memcpy(message.data, buf, send_len);
   message.length = send_len;
+  message.encrypted = 1;
   int ret = oc_send_buffer(&message);
 #ifdef OC_DYNAMIC_ALLOCATION
   free(message.data);
@@ -979,6 +980,7 @@ read_application_data(oc_tls_peer_t *peer)
         return;
       }
       message->length = ret;
+      message->encrypted = 0;
       oc_recv_message(message);
       OC_DBG("oc_tls: Decrypted incoming message");
     }
