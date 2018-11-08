@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_0b8d007c",
+        "filename": "tests/automation/ctt/Readme.rst",
+        "patchSetId": 38
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 13535
+      },
+      "writtenOn": "2018-11-08T05:36:00Z",
+      "side": 1,
+      "message": "Please revamp the entire \"ReadMe\" text and upload.\nIts not conveying the meaning.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 98
+      },
+      "revId": "ee7c48a3296db8997ac3cda7ac934a6f65b1d4b5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
