@@ -17,7 +17,7 @@
 #ifndef OC_RI_H
 #define OC_RI_H
 
-#include "config.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"

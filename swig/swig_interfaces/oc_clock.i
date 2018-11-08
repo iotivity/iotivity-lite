@@ -6,7 +6,7 @@
 %ignore oc_clock_time_t;
 typedef long long oc_clock_time_t;
 
-%include "../../port/windows/config.h"
+%include "../../port/windows/oc_config.h"
 
 %pragma(java) jniclasscode=%{
   static {

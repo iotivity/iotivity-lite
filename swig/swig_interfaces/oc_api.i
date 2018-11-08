@@ -860,7 +860,8 @@ struct CborEncoder
 %ignore links_array;
 %ignore g_err;
 %ignore oc_rep_new;
-%ignore oc_rep_finalize;
+%ignore oc_rep_get_encoded_payload_size;
+%ignore oc_rep_get_encoder_buf;
 %rename (repSetDouble) jni_rep_set_double;
 %inline %{
 /* Alt implementation of oc_rep_set_double macro*/

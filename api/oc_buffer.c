@@ -28,8 +28,8 @@
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
-#include "config.h"
 #include "oc_buffer.h"
+#include "oc_config.h"
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
