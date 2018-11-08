@@ -2,6 +2,80 @@
   "comments": [
     {
       "key": {
+        "uuid": "9a3d3df0_ab57b401",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Is it right? RPK in makefile.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 8
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8b5c7027",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char number is 100 in a line.",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_eb409c37",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char number is 100 in a line.",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_cb92f89e",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char number is 100 in a line.",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_481d4e73",
         "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
         "patchSetId": 1
@@ -18,6 +92,103 @@
         "startChar": 22,
         "endLine": 497,
         "endChar": 30
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_cbd95885",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please refer jaehyun\u0027s comment.",
+      "range": {
+        "startLine": 504,
+        "startChar": 44,
+        "endLine": 504,
+        "endChar": 53
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ebdc1c77",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char number is 100 in a line.",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8bf8f0e6",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char number is 100 in a line.",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_abf33409",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please remove tab",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_2be72442",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please more clearly",
+      "range": {
+        "startLine": 651,
+        "startChar": 6,
+        "endLine": 651,
+        "endChar": 8
       },
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
@@ -42,6 +213,103 @@
         "endLine": 674,
         "endChar": 69
       },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0be4e039",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "It is confused. Why not OC_STATUS_CHANGED?",
+      "range": {
+        "startLine": 716,
+        "startChar": 18,
+        "endLine": 716,
+        "endChar": 30
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_4bd54842",
+        "filename": "service/st-app-fw/include/st_cloud_security.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please add the doxygen",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_abca149f",
+        "filename": "service/st-app-fw/include/st_data_manager.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please add doxygen",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 57
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8bcf50b0",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please add doxygen",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ebc37c88",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Max char is 100 in a line",
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -94,6 +362,63 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_cbc0387f",
+        "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Is it fixed value?",
+      "range": {
+        "startLine": 69,
+        "startChar": 47,
+        "endLine": 69,
+        "endChar": 59
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_2bbe0400",
+        "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Why do you free two times?",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0bbb400f",
+        "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "How about add NULL end of the line?",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_c8083e30",
         "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
         "patchSetId": 1
@@ -111,6 +436,40 @@
         "endLine": 88,
         "endChar": 2
       },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_6b376cb1",
+        "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "100 char in a line",
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_4b3c2894",
+        "filename": "service/st-app-fw/src/port/linux/st_jwt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "100 char in a line.",
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -157,6 +516,46 @@
         "endLine": 434,
         "endChar": 58
       },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ab41740d",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please remove comment",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 20
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8b463022",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "is is not require null check?",
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -324,6 +723,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_eb4a5c26",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "how about move to line 118 instead goto out;",
+      "parentUuid": "9a3d3df0_ab20549c",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 2
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_8b2590ad",
         "filename": "service/st-app-fw/src/st_data_manager.c",
         "patchSetId": 1
@@ -347,6 +770,29 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_cb47981c",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please define",
+      "range": {
+        "startLine": 167,
+        "startChar": 45,
+        "endLine": 167,
+        "endChar": 46
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_eb39bcd9",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 1
@@ -363,6 +809,29 @@
         "startChar": 0,
         "endLine": 176,
         "endChar": 2
+      },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_2b5564c6",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "please define",
+      "range": {
+        "startLine": 191,
+        "startChar": 52,
+        "endLine": 191,
+        "endChar": 54
       },
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
@@ -433,6 +902,23 @@
         "endLine": 226,
         "endChar": 45
       },
+      "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0b5220dd",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-08T07:27:04Z",
+      "side": 1,
+      "message": "Please remove comment",
       "revId": "dc8033872bec174f189ca89ab253ed7d36ce2ee4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
