@@ -1,6 +1,6 @@
-From 4358e01265005f069bd5b1f43d85a2bdfd1ea50c Mon Sep 17 00:00:00 2001
+From 102ef9500a3d1d3a21c68b8e553fbd8c46d31db5 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Fri, 26 Oct 2018 13:16:25 +0300
+Date: Thu, 8 Nov 2018 14:11:09 +0200
 Subject: [PATCH] Reduce MbedTLS
 
 Reduce MbedTLS routines due memory optimization
@@ -9,7 +9,7 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 Signed-off-by: Aleksey Volkov <a.volkov@samsung.com>
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
 ---
- include/mbedtls/config.h | 19 +++++++++++++++----
+ include/mbedtls/config.h | 20 ++++++++++++++++----
  include/mbedtls/sha512.h | 18 ------------------
  library/asn1parse.c      | 18 ++++++++++++++++++
  library/bignum.c         | 45 ++++++++++++++++++++++++++++++++++++++++++---
@@ -17,13 +17,13 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  library/pk.c             | 20 ++++++++++++++++++++
  library/pkparse.c        | 20 ++++++++++++++++++++
  library/ssl_cli.c        | 15 +++++++++++++++
- 8 files changed, 150 insertions(+), 25 deletions(-)
+ 8 files changed, 151 insertions(+), 25 deletions(-)
 
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 48400e5..a30b259 100644
+index d9e5427..f791c54 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -49,17 +49,25 @@
+@@ -51,17 +51,26 @@
  /* mbed TLS modules */
  #define MBEDTLS_AES_C
  #define MBEDTLS_CIPHER_C
@@ -43,6 +43,7 @@ index 48400e5..a30b259 100644
 +#define MBEDTLS_ENTROPY_C
 +#define MBEDTLS_CTR_DRBG_C
 +#define MBEDTLS_PKCS5_C
++#define MBEDTLS_BASE64_C
 +
  /* Save RAM at the expense of ROM */
 +#ifndef ST_MBEDTLS_OPT
@@ -51,7 +52,7 @@ index 48400e5..a30b259 100644
  
  /* Save some RAM by adjusting to your exact needs */
  #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
-@@ -82,12 +90,13 @@
+@@ -84,12 +93,13 @@
  #define MBEDTLS_BIGNUM_C
  #define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
  #define MBEDTLS_ECDH_C
@@ -67,7 +68,7 @@ index 48400e5..a30b259 100644
  #define MBEDTLS_X509_USE_C
  
  #define MBEDTLS_ASN1_PARSE_C
-@@ -98,7 +107,9 @@
+@@ -100,7 +110,9 @@
  #define MBEDTLS_ASN1_WRITE_C
  #define MBEDTLS_ECDSA_C
  #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED

@@ -1,6 +1,6 @@
-From f657b91162fa012f5ce5ce62b875d2341108551a Mon Sep 17 00:00:00 2001
+From d1bd1a88cb68f8f353c0192ba26cc4b211d6361f Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Tue, 16 Oct 2018 18:59:41 +0300
+Date: Thu, 8 Nov 2018 14:36:07 +0200
 Subject: [PATCH] ocf Samsung
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
@@ -10,12 +10,13 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  include/mbedtls/config.h           |  18 +-
  include/mbedtls/ssl.h              |   6 +-
  include/mbedtls/ssl_ciphersuites.h |   6 +-
+ library/base64.c                   |  77 +++++++-
  library/ssl_ciphersuites.c         |  18 ++
  library/ssl_cli.c                  | 133 ++++++++++----
  library/ssl_srv.c                  |  33 +++-
  library/ssl_tls.c                  | 351 ++++++++++++++++++++++++++++++++++++-
  library/version_features.c         |   3 +
- 10 files changed, 529 insertions(+), 49 deletions(-)
+ 11 files changed, 597 insertions(+), 58 deletions(-)
 
 diff --git a/include/mbedtls/check_config.h b/include/mbedtls/check_config.h
 index 1143aa2..984d289 100644
@@ -161,6 +162,132 @@ index 545468a..e24c1b7 100644
  #define MBEDTLS_KEY_EXCHANGE__SOME__ECDHE_ENABLED
  #endif
  
+diff --git a/library/base64.c b/library/base64.c
+index f06b57b..62cdc91 100644
+--- a/library/base64.c
++++ b/library/base64.c
+@@ -41,7 +41,7 @@
+ #endif /* MBEDTLS_PLATFORM_C */
+ #endif /* MBEDTLS_SELF_TEST */
+ 
+-static const unsigned char base64_enc_map[64] =
++static unsigned char base64_enc_map[64] =
+ {
+     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+@@ -52,7 +52,7 @@ static const unsigned char base64_enc_map[64] =
+     '8', '9', '+', '/'
+ };
+ 
+-static const unsigned char base64_dec_map[128] =
++static unsigned char base64_dec_map[128] =
+ {
+     127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
+     127, 127, 127, 127, 127, 127, 127, 127, 127, 127,
+@@ -71,16 +71,24 @@ static const unsigned char base64_dec_map[128] =
+ 
+ #define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
+ 
+-/*
+- * Encode a buffer into base64 format
+- */
+-int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
+-                   const unsigned char *src, size_t slen )
++int mbedtls_base64_encode_internal( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen, int urlsafe )
+ {
+     size_t i, n;
+     int C1, C2, C3;
+     unsigned char *p;
+ 
++    if( urlsafe == 0)
++    {
++        base64_enc_map[62] = '+';
++        base64_enc_map[63] = '/';
++    }
++    else if( urlsafe == 1)
++    {
++        base64_enc_map[62] = '-';
++        base64_enc_map[63] = '_';
++    }
++
+     if( slen == 0 )
+     {
+         *olen = 0;
+@@ -141,13 +149,28 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
+ /*
+  * Decode a base64-formatted buffer
+  */
+-int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
+-                   const unsigned char *src, size_t slen )
++int mbedtls_base64_decode_internal( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen, int urlsafe )
+ {
+     size_t i, n;
+     uint32_t j, x;
+     unsigned char *p;
+ 
++    if( urlsafe == 0)
++    {
++        base64_dec_map[43] = 62;
++        base64_dec_map[45] = 127;
++        base64_dec_map[47] = 63;
++        base64_dec_map[95] = 127;
++    }
++    else if( urlsafe == 1)
++    {
++        base64_dec_map[43] = 127;
++        base64_dec_map[45] = 62;
++        base64_dec_map[47] = 127;
++        base64_dec_map[95] = 63;
++    }
++
+     /* First pass: check for validity and get output length */
+     for( i = n = j = 0; i < slen; i++ )
+     {
+@@ -227,6 +250,42 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
+     return( 0 );
+ }
+ 
++/*
++ * Encode a buffer into base64 format
++ */
++int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen )
++{
++    return mbedtls_base64_encode_internal(dst, dlen, olen, src, slen, 0);
++}
++
++/*
++ * Decode a base64-formatted buffer
++ */
++int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen )
++{
++    return mbedtls_base64_decode_internal(dst, dlen, olen, src, slen, 0);
++}
++
++/*
++ * Encode a buffer into base64 URL safe format
++ */
++int mbedtls_base64_urlsafe_encode( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen )
++{
++    return mbedtls_base64_encode_internal(dst, dlen, olen, src, slen, 1);
++}
++
++/*
++ * Decode a base64 URL safe-formatted buffer
++ */
++int mbedtls_base64_urlsafe_decode( unsigned char *dst, size_t dlen, size_t *olen,
++                   const unsigned char *src, size_t slen )
++{
++    return mbedtls_base64_decode_internal(dst, dlen, olen, src, slen, 1);
++}
++
+ #if defined(MBEDTLS_SELF_TEST)
+ 
+ static const unsigned char base64_test_dec[64] =
 diff --git a/library/ssl_ciphersuites.c b/library/ssl_ciphersuites.c
 index 95e6163..ceacd94 100644
 --- a/library/ssl_ciphersuites.c
@@ -538,7 +665,7 @@ index 7ebe567..70888d5 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index b916cb0..deab60e 100644
+index b916cb0..27b3753 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
 @@ -53,6 +53,10 @@
