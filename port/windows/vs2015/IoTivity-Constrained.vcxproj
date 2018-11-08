@@ -266,7 +266,7 @@
     <ClInclude Include="..\..\oc_network_events_mutex.h" />
     <ClInclude Include="..\..\oc_random.h" />
     <ClInclude Include="..\..\oc_storage.h" />
-    <ClInclude Include="..\config.h" />
+    <ClInclude Include="..\oc_config.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\api\oc_base64.c" />

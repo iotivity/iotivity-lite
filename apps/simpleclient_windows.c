@@ -274,8 +274,11 @@ main(void)
     if (next_event == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
     } else {
-      SleepConditionVariableCS(&cv, &cs,
-                               (DWORD)(next_event / (1000 * OC_CLOCK_SECOND)));
+      oc_clock_time_t now = oc_clock_time();
+      if (now < next_event) {
+          SleepConditionVariableCS(&cv, &cs,
+              (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+      }
     }
   }
 

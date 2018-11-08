@@ -8,13 +8,13 @@ for the Internet of Things (IoT).
 It was designed to build secure and interoperable IoT applications in full
 compliance with the
 `OCF specifications <https://openconnectivity.org/developer/specifications>`_
-with a minimal footprint not exceeding the needs of the specifications. The
+with a limited footprint not exceeding the needs of the specifications. The
 stack architecture lends itself to be ported rapidly to any chosen hardware/OS
 environment.
 
 IoT applications may be built for a wide variety of rich and resource-constrained
 devices across the IoT landscape. As a general guideline, it should be feasible
-to deploy applications on class 2 constrained devices (>256KB Flash, >50KB RAM),
+to deploy applications on class 2 constrained devices (>256KB Flash, >64KB RAM),
 or better.
 
 The project is open-source, and its code is distributed under the
@@ -43,7 +43,7 @@ IoTivity-Constrained's design presents the following features:
   encompasses the APIs, OCF resource model, protocol, security features,
   memory management and event loop. The core interacts
   with lower level platform-specific functionality via a very limited
-  collection of abstract interfaces. Such a  decoupling of the common
+  collection of abstract interfaces. Such a decoupling of the common
   OCF standards related functionality from adaptations to any OS/target
   facilitates greater ease of long-term maintenance and evolution of
   the stack through successive releases of the OCF specifications.
@@ -61,7 +61,7 @@ IoTivity-Constrained's design presents the following features:
 - **Support for static OR dynamic allocation of internal structures**:
   On environments with a C library that supports heap allocation functions,
   the stack can be configured at build-time to use dynamic memory allocation
-  to operate without any pre-determined set of resource constraints.
+  to operate without any pre-configured set of memory constraints.
 
   Alternatively, the stack may be configured to statically allocate all
   internal structures by setting a number of build-time parameters that
@@ -149,12 +149,6 @@ Grab source and dependencies using:
 
 ``git clone --recursive https://github.com/iotivity/iotivity-constrained.git``
 
-Apply mbedTLS patches into deps/mbedtls using:
-
-``patch -p1 < ../../patches/mbedtls_ocf_patch_1``
-
-``patch -p1 < ../../patches/mbedtls_iotivity_constrained_patch_2``
-
 Building sample applications on Linux
 -------------------------------------
 
@@ -162,10 +156,7 @@ The entire build is specified in ``port/linux/Makefile``. The output of the
 build consists of all static and dynamic libraries, and sample application
 binaries which are stored under ``port/linux``.
 
-Run ``make`` for a release mode build without debug output, or support for
-dynamic memory allocation.
-
-Add ``DYNAMIC=1`` to support dynamic memory allocation.
+Run ``make`` for a release mode build without debug output.
 
 Add ``SECURE=0`` to exclude the OCF security layer and mbedTLS. The security
 layer is built by default.
@@ -177,15 +168,45 @@ Add ``TCP=1`` to include support for TCP endpoints and CoAP over TCP (RFC 8323).
 Add ``IPV4=1`` to include IPv4 support in the build. Excluding ``IPV4=1``
 produces an IPv6-only build.
 
+Building sample applications on Windows
+---------------------------------------
+
+A Visual Studio project file can be found in
+``port/windows/vs2015/IoTivity-Constrained.sln``. Open the solution file in
+Visual Studio 2015 or newer. If the version of Visual Studio is newer a prompt
+should pop up asking if you would like to upgrade the visual studio project
+files. Agree to upgrade the files.
+
+Select the version of the samples you would like to build. Debug/Release,
+x86/x64. From the ``build`` menu select ``Build Solution``.
+
+The samples can be run from Visual Studio by right clicking on the
+``SimpleServer`` or ``SimpleClient`` project from the Solution Explorer and
+select ``Debug`` > ``Start new instance``. Or the binaries can be run from the
+output folder ``port/windows/vs2015/{Debug|Release}/{Win32|x64}/``.
+
+The build options are hard coded into the visual studio project. The project
+defaults to using: dynamic memory allocation, OCF security layer is enabled and
+built, and IPv4 support is included in the build.
+
+To change the build options the properties page for each project must be modified
+Right click on the project select ``Properties`` find 
+``C/C++`` > ``Preprocessor`` > ``Preprocessor Definitions`` find the macro
+associated with the feature you wish to enable or disable. For example to
+disable the OCF security layer find and delete ``OC_SECURITY`` from the 
+``Preprocessor Definitions``. The ``Preprocessor Definitions`` must match for
+all projects for them to build and run. Due to the difficulty keeping all the
+projects matching it is recommended to avoid modifying the
+``Preprocessor Definitions`` unless necessary.
+
 Note: The Linux, Windows, and native Android ports are the only adaptation layers
-that are actively maintained as of this writing (July 2018). The other ports
-will be updated imminently. Please watch for further updates on this matter.
+that are actively maintained as of this writing.
 
 Framework configuration
 -----------------------
 
-Build-time configuration options for an application are set in ``config.h``.
+Build-time configuration options for an application are set in ``oc_config.h``.
 This needs to be present in one of the include paths.
 
 Pre-populated (sample) configurations for the sample applications for all
-targets are present in ``port/<OS>/config.h``.
+targets are present in ``port/<OS>/oc_config.h``.

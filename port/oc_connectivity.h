@@ -17,8 +17,8 @@
 #ifndef OC_CONNECTIVITY_H
 #define OC_CONNECTIVITY_H
 
-#include "config.h"
 #include "messaging/coap/conf.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
@@ -33,7 +33,7 @@ extern "C"
 
 #ifndef OC_DYNAMIC_ALLOCATION
 #ifndef OC_MAX_APP_DATA_SIZE
-#error "Set OC_MAX_APP_DATA_SIZE in config.h"
+#error "Set OC_MAX_APP_DATA_SIZE in oc_config.h"
 #endif /* !OC_MAX_APP_DATA_SIZE */
 
 #ifdef OC_BLOCK_WISE_SET_MTU

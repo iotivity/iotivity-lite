@@ -35,7 +35,7 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 static bool
 dispatch_coap_request(void)
 {
-  int payload_size = oc_rep_finalize();
+  int payload_size = oc_rep_get_encoded_payload_size();
 
   if ((client_cb->method == OC_PUT || client_cb->method == OC_POST) &&
       payload_size > 0) {
@@ -76,10 +76,26 @@ dispatch_coap_request(void)
     }
   }
 
+  bool success = false;
   transaction->message->length =
     coap_serialize_message(request, transaction->message->data);
+  if (transaction->message->length > 0) {
+    coap_send_transaction(transaction);
 
-  coap_send_transaction(transaction);
+    if (client_cb->observe_seq == -1) {
+      if (client_cb->qos == LOW_QOS)
+        oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
+                                OC_NON_LIFETIME);
+      else
+        oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
+                                OC_EXCHANGE_LIFETIME);
+    }
+
+    success = true;
+  } else {
+    coap_clear_transaction(transaction);
+    oc_ri_remove_client_cb(client_cb);
+  }
 
 #ifdef OC_BLOCK_WISE
   if (request_buffer && request_buffer->ref_count == 0) {
@@ -88,19 +104,10 @@ dispatch_coap_request(void)
   request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
-  if (client_cb->observe_seq == -1) {
-    if (client_cb->qos == LOW_QOS)
-      oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
-                              OC_NON_LIFETIME);
-    else
-      oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
-                              OC_EXCHANGE_LIFETIME);
-  }
+  transaction = NULL;
+  client_cb = NULL;
 
-  transaction = 0;
-  client_cb = 0;
-
-  return true;
+  return success;
 }
 
 static bool

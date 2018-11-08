@@ -15,7 +15,7 @@
 */
 
 #include "oc_session_events.h"
-#include "config.h"
+#include "oc_config.h"
 
 #include "oc_api.h"
 #include "oc_buffer.h"

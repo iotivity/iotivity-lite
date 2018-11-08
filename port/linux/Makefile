@@ -68,7 +68,7 @@ SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
-HEADERS += ../../port/linux/config.h
+HEADERS += ../../port/linux/oc_config.h
 
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)

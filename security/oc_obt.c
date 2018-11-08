@@ -230,7 +230,7 @@ oc_obt_dump_state(void)
   oc_rep_set_int(root, id, id);
   oc_rep_end_root_object();
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_obt: dumped current state: size %d", size);
     oc_storage_write("obt_state", buf, size);

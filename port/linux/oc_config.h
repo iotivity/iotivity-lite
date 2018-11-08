@@ -1,13 +1,12 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef OC_CONFIG_H
+#define OC_CONFIG_H
 
 /* Time resolution */
 #include <stdint.h>
 #include <time.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef uint64_t oc_clock_time_t;
@@ -16,6 +15,9 @@ typedef uint64_t oc_clock_time_t;
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
+
+/* Maximum wait time for select function */
+#define SELECT_TIMEOUT_SEC (1)
 
 /* Add support for passing network up/down events to the app */
 #define OC_NETWORK_MONITOR
@@ -76,8 +78,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_TCP_PEERS (2)
 
 /* Maximum number of interfaces for IP adapter */
-/* Warning: Android has often over 10 interfaces. */
-#define OC_MAX_IP_INTERFACES (20)
+#define OC_MAX_IP_INTERFACES (2)
 
 /* Maximum number of callbacks for Network interface event monitoring */
 #define OC_MAX_NETWORK_INTERFACE_CBS (2)
@@ -91,4 +92,4 @@ typedef uint64_t oc_clock_time_t;
 }
 #endif
 
-#endif /* CONFIG_H */
+#endif /* OC_CONFIG_H */

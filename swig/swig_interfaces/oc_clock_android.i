@@ -6,7 +6,7 @@
 %ignore oc_clock_time_t;
 typedef long long oc_clock_time_t;
 
-%include "../../port/android/config.h"
+%include "../../port/android/oc_config.h"
 %{
 #include "../../port/oc_clock.h"
 %}

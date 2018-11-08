@@ -99,7 +99,7 @@ ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
 endif
 
 HEADERS = $(wildcard ../../include/*.h)
-HEADERS += ../../port/android/config.h
+HEADERS += ../../port/android/oc_config.h
 
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)

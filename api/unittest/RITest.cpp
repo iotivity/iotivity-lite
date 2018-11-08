@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 
-#include "port/linux/config.h"
+#include "port/linux/oc_config.h"
 #include "oc_api.h"
 #include "oc_ri.h"
 #include "oc_helpers.h"
