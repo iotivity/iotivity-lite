@@ -207,8 +207,7 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
 }
 
 static int
-accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
-                   oc_endpoint_t *endpoint)
+accept_new_session(ip_context_t *dev, int fd, oc_endpoint_t *endpoint)
 {
   struct sockaddr_storage receive_from;
   socklen_t receive_len = sizeof(receive_from);
@@ -234,8 +233,6 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
     endpoint->addr.ipv4.port = ntohs(r->sin_port);
 #endif /* !OC_IPV4 */
   }
-
-  FD_CLR(fd, setfds);
 
   if (add_new_session(new_socket, dev, endpoint, CSM_NONE) < 0) {
     OC_ERR("could not record new TCP session");
@@ -308,6 +305,8 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
 
+  int target_sock = -1;
+
 #define ret_with_code(status)                                                  \
   ret = status;                                                                \
   goto oc_tcp_receive_message_done
@@ -316,18 +315,18 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   message->endpoint.device = dev->device;
 
   if (FD_ISSET(dev->tcp.server_sock, fds)) {
+    target_sock = dev->tcp.server_sock;
     message->endpoint.flags = IPV6 | TCP;
-    if (accept_new_session(dev, dev->tcp.server_sock, fds, &message->endpoint) <
-        0) {
+    if (accept_new_session(dev, dev->tcp.server_sock, &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure_sock, fds)) {
+    target_sock = dev->tcp.secure_sock;
     message->endpoint.flags = IPV6 | SECURED | TCP;
-    if (accept_new_session(dev, dev->tcp.secure_sock, fds, &message->endpoint) <
-        0) {
+    if (accept_new_session(dev, dev->tcp.secure_sock, &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
@@ -335,18 +334,20 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
   } else if (FD_ISSET(dev->tcp.server4_sock, fds)) {
+    target_sock = dev->tcp.server4_sock;
     message->endpoint.flags = IPV4 | TCP;
-    if (accept_new_session(dev, dev->tcp.server4_sock, fds,
-                           &message->endpoint) < 0) {
+    if (accept_new_session(dev, dev->tcp.server4_sock, &message->endpoint) <
+        0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure4_sock, fds)) {
+    target_sock = dev->tcp.secure4_sock;
     message->endpoint.flags = IPV4 | SECURED | TCP;
-    if (accept_new_session(dev, dev->tcp.secure4_sock, fds,
-                           &message->endpoint) < 0) {
+    if (accept_new_session(dev, dev->tcp.secure4_sock, &message->endpoint) <
+        0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
@@ -359,7 +360,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       OC_ERR("read error! %d", errno);
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
-    FD_CLR(dev->tcp.connect_pipe[0], fds);
+    target_sock = dev->tcp.connect_pipe[0];
     ret_with_code(ADAPTER_STATUS_NONE);
   }
 
@@ -369,6 +370,8 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     OC_DBG("could not find TCP session socket in fd set");
     ret_with_code(ADAPTER_STATUS_NONE);
   }
+
+  target_sock = session->sock;
 
   // receive message.
   size_t total_length = 0;
@@ -417,10 +420,12 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   }
 #endif /* OC_SECURITY */
 
-  FD_CLR(session->sock, fds);
   ret = ADAPTER_STATUS_RECEIVE;
 
 oc_tcp_receive_message_done:
+  if (target_sock != -1) {
+    FD_CLR(target_sock, fds);
+  }
   pthread_mutex_unlock(&dev->tcp.mutex);
 #undef ret_with_code
   return ret;
