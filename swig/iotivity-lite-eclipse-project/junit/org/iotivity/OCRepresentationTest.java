@@ -125,9 +125,12 @@ public class OCRepresentationTest {
         OCMain.repNewBuffer(1024);
 
         CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
         OCMain.repSetInt(root, "ultimat_answer", 42);
+        assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
 
         OCMain.repSetPool(new OCMemoryBuffer());
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
@@ -140,20 +143,23 @@ public class OCRepresentationTest {
     }
 
     @Test
-    public void testRepBool() {
+    public void testRepBoolean() {
         OCMain.repNewBuffer(1024);
 
         CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
         OCMain.repSetBoolean(root, "true_flag", true);
+        assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
 
         OCMain.repSetPool(new OCMemoryBuffer());
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
         boolean[] outValue = new boolean[1];
-        OCMain.repGetBool(rep, "true_flag", outValue);
+        OCMain.repGetBoolean(rep, "true_flag", outValue);
         assertEquals(true, outValue[0]);
         OCMain.repDeleteBuffer();
     }
@@ -162,10 +168,12 @@ public class OCRepresentationTest {
     public void testRepDouble() {
         OCMain.repNewBuffer(1024);
         CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
-
         OCMain.repSetDouble(root, "pi", 3.14);
+        assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
 
         OCMain.repSetPool(new OCMemoryBuffer());
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
@@ -182,9 +190,14 @@ public class OCRepresentationTest {
         OCMain.repNewBuffer(1024);
 
         CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
         OCMain.repSetTextString(root, "hello", "world");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(root, "empty", "");
+        assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
 
         OCMain.repSetPool(new OCMemoryBuffer());
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
@@ -193,6 +206,105 @@ public class OCRepresentationTest {
         String[] outValue = new String[1];
         OCMain.repGetString(rep, "hello", outValue);
         assertEquals("world", outValue[0]);
+        OCMain.repGetString(rep, "empty", outValue);
+        assertEquals("", outValue[0]);
+        OCMain.repDeleteBuffer();
+    }
+
+    @Test
+    public void testRepBooleanArray() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        boolean barray[] = {false, false, true, false, false};
+        OCMain.repSetBooleanArray(root, "flips", barray);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        boolean outValue[] = OCMain.repGetBooleanArray(rep, "flips");
+        assertNotNull(outValue);
+        assertEquals(barray.length, outValue.length);
+        assertArrayEquals(barray, outValue);
+        OCMain.repDeleteBuffer();
+    }
+
+    @Test
+    public void testRepDoubleArray() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
+        OCMain.repSetDoubleArray(root, "math_constants", mathConstants);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        double outValue[] = OCMain.repGetDoubleArray(rep, "math_constants");
+        assertNotNull(outValue);
+        assertEquals(mathConstants.length, outValue.length);
+        assertArrayEquals(mathConstants, outValue, 0.000001);
+        OCMain.repDeleteBuffer();
+    }
+
+    @Test
+    public void testRepIntArray() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        OCMain.repSetIntArray(root, "fibonacci", fib);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        int outValue[] = OCMain.repGetIntArray(rep, "fibonacci");
+        assertNotNull(outValue);
+        assertEquals(fib.length, outValue.length);
+        assertArrayEquals(fib, outValue);
+        OCMain.repDeleteBuffer();
+    }
+
+    @Test
+    public void testRepStringArray() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing",
+                "elit.", "Sed", "nec", "feugiat", "odio.", "Donec."};
+        OCMain.repSetStringArray(root, "lorem_ipsum", lorem_ipsum);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        String outValue[] = OCMain.repGetStringArray(rep, "lorem_ipsum");
+        assertNotNull(outValue);
+        assertEquals(lorem_ipsum.length, outValue.length);
+        assertArrayEquals(lorem_ipsum, outValue);
         OCMain.repDeleteBuffer();
     }
 }

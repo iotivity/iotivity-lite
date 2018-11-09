@@ -861,8 +861,10 @@ struct CborEncoder
 %ignore g_err;
 
 %ignore oc_rep_new;
-%inline %{
+%{
 uint8_t *g_new_rep_buffer = NULL;
+%}
+%inline %{
 void repDeleteBuffer() {
   free(g_new_rep_buffer);
   g_new_rep_buffer = NULL;
@@ -1274,6 +1276,12 @@ oc_rep_t * jni_rep_get_rep_from_root_object() {
 }
 %}
 %ignore oc_rep_get_cbor_errno;
+%rename(repGetCborErrno) jni_rep_get_cbor_errno;
+%inline %{
+int jni_rep_get_cbor_errno() {
+  return (int)oc_rep_get_cbor_errno();
+}
+%}
 //%ignore oc_rep_set_pool;
 
 %rename (OCMemoryBuffer) oc_memb;
@@ -1296,7 +1304,7 @@ struct oc_memb
 %apply int *OUTPUT { int *value }
 %rename(repGetInt) oc_rep_get_int;
 %apply bool *OUTPUT { bool *value }
-%rename(repGetBool) oc_rep_get_bool;
+%rename(repGetBoolean) oc_rep_get_bool;
 %apply double *OUTPUT { double *value }
 %rename(repGetDouble) oc_rep_get_double;
 //%apply(char **STRING, size_t *LENGTH) { (char **key, size_t *value) };
