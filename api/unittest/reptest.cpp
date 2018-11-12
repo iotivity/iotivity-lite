@@ -642,3 +642,62 @@ TEST(TestRep, OCRepSetGetObjectArray)
     EXPECT_STREQ("AI computer", job_out);
     oc_free_rep(rep);
 }
+
+TEST(TestRep, OCRepSetGetByteStringArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* jagged arrays for testing */
+    uint8_t ba1[] = {0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+    uint8_t ba2[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, 0x89};
+    uint8_t ba3[] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+                     0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42};
+    //at lease on byte array not nul terminated.
+    uint8_t ba4[] = {0x00, 0x00, 0xff, 0x00, 0x00};
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_array(root, barray);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_byte_string(barray, ba1, sizeof(ba1));
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_byte_string(barray, ba2, sizeof(ba2));
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_byte_string(barray, ba3, sizeof(ba3));
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_byte_string(barray, ba4, sizeof(ba4));
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_close_array(root, barray);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    oc_string_array_t barray_out;
+    size_t barray_len;
+    EXPECT_TRUE(oc_rep_get_byte_string_array(rep, "barray", &barray_out, &barray_len));
+    ASSERT_EQ(4, barray_len);
+
+    EXPECT_EQ(sizeof(ba1), oc_byte_string_array_get_item_size(barray_out, 0));
+    EXPECT_EQ(memcmp(ba1, oc_byte_string_array_get_item(barray_out, 0), oc_byte_string_array_get_item_size(barray_out, 0)), 0);
+    EXPECT_EQ(sizeof(ba2), oc_byte_string_array_get_item_size(barray_out, 1));
+    EXPECT_EQ(memcmp(ba2, oc_byte_string_array_get_item(barray_out, 1), oc_byte_string_array_get_item_size(barray_out, 1)), 0);
+    EXPECT_EQ(sizeof(ba3), oc_byte_string_array_get_item_size(barray_out, 2));
+    EXPECT_EQ(memcmp(ba3, oc_byte_string_array_get_item(barray_out, 2), oc_byte_string_array_get_item_size(barray_out, 2)), 0);
+    EXPECT_EQ(sizeof(ba4), oc_byte_string_array_get_item_size(barray_out, 3));
+    EXPECT_EQ(memcmp(ba4, oc_byte_string_array_get_item(barray_out, 3), oc_byte_string_array_get_item_size(barray_out, 3)), 0);
+    oc_free_rep(rep);
+}
