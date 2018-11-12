@@ -131,12 +131,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_end_root_object()                                               \
   g_err |= cbor_encoder_close_container(&g_encoder, &root_map)
 
-#define oc_rep_add_byte_string(parent, value)                                  \
-  if ((const char *)value != NULL)                                                           \
-  g_err |= cbor_encode_byte_string(&parent##_array, value, strlen(value))
+#define oc_rep_add_byte_string(parent, value, length)                          \
+  if ((const char *)value != NULL)                                             \
+  g_err |= cbor_encode_byte_string(&parent##_array, value, length)
 
 #define oc_rep_add_text_string(parent, value)                                  \
-  if ((const char *)value != NULL)                                                           \
+  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 #define oc_rep_add_double(parent, value)                                       \
