@@ -5,6 +5,7 @@
 %include "stdint.i"
 %include <oc_ri.i>
 %include "typemaps.i"
+%include "various.i"
 %include "iotivity.swg"
 
 %pragma(java) jniclasscode=%{
@@ -922,7 +923,7 @@ void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
 
 %rename (repSetTextString) jni_rep_set_text_string;
 %inline %{
-/* Alt implementation of oc_rep_set_text_string macro */
+/* Alt implementation of oc_rep_set_text_string macro */ 
 void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* value) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
@@ -930,10 +931,22 @@ void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* 
 }
 %}
 
+%typemap(in)     (const unsigned char * BYTE, size_t LENGTH) {
+/* Functions from jni.h */
+$1 = (unsigned char *) JCALL2(GetByteArrayElements, jenv, $input, 0);
+$2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
+}
+%typemap(jni)    (const unsigned char * BYTE, size_t LENGTH) "jbyteArray"
+%typemap(jtype)  (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(jstype) (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(javain) (const unsigned char * BYTE, size_t LENGTH) "$javainput"
+
+/* Specify signature of method to handle */
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *value, size_t length) };
 %rename (repSetByteString) jni_rep_set_byte_string;
 %inline %{
 /* Alt implementation of oc_rep_set_byte_string macro */
-void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char* value, size_t length) {
+void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char *value, size_t length) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_byte_string(object, value, length);
@@ -1307,8 +1320,37 @@ struct oc_memb
 %rename(repGetBoolean) oc_rep_get_bool;
 %apply double *OUTPUT { double *value }
 %rename(repGetDouble) oc_rep_get_double;
-//%apply(char **STRING, size_t *LENGTH) { (char **key, size_t *value) };
-%rename(repGetByteString) oc_rep_get_byte_string;
+
+%typemap(in, numinputs=0, noblock=1) size_t *byte_string_size {
+  size_t temp_byte_string_size;
+  $1 = &temp_byte_string_size;
+}
+%typemap(jstype) const char * jni_rep_get_byte_string "byte[]"
+%typemap(jtype) const char * jni_rep_get_byte_string "byte[]"
+%typemap(jni) const char * jni_rep_get_byte_string "jbyteArray"
+%typemap(javaout) const char * jni_rep_get_byte_string {
+  return $jnicall;
+}
+%typemap(out) const char * jni_rep_get_byte_string {
+  if($1 != NULL) {
+    $result = JCALL1(NewByteArray, jenv, (jsize)temp_byte_string_size);
+    JCALL4(SetByteArrayRegion, jenv, $result, 0, (jsize)temp_byte_string_size, (const jbyte *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%ignore oc_rep_get_byte_string;
+%rename(repGetByteString) jni_rep_get_byte_string;
+%inline %{
+const char * jni_rep_get_byte_string(oc_rep_t *rep, const char *key, size_t *byte_string_size) {
+  char * c_byte_string = NULL;
+  if (oc_rep_get_byte_string(rep, key, &c_byte_string, byte_string_size)) {
+    return c_byte_string;
+  }
+  return NULL;
+}
+%}
+
 %typemap(jni) (char **value, size_t *size) "jobjectArray"
 %typemap(jtype) (char **value, size_t *size) "String[]"
 %typemap(jstype) (char **value, size_t *size) "String[]"
