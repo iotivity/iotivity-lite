@@ -290,8 +290,9 @@ public class OCRepresentationTest {
         CborEncoder root = OCMain.repBeginRootObject();
         assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
-        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing",
-                "elit.", "Sed", "nec", "feugiat", "odio.", "Donec."};
+        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
+                                "consectetur", "adipiscing", "elit.", "Sed",
+                                "nec", "feugiat", "odio.", "Donec."};
         OCMain.repSetStringArray(root, "lorem_ipsum", lorem_ipsum);
         assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
@@ -305,6 +306,30 @@ public class OCRepresentationTest {
         assertNotNull(outValue);
         assertEquals(lorem_ipsum.length, outValue.length);
         assertArrayEquals(lorem_ipsum, outValue);
+        OCMain.repDeleteBuffer();
+    }
+
+    @Test
+    public void testRepByteString() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        byte fibBytes[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
+        OCMain.repSetByteString(root, "fib_bytes", fibBytes);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        byte outValue[] = OCMain.repGetByteString(rep, "fib_bytes");
+        assertNotNull(outValue);
+        assertEquals(fibBytes.length, outValue.length);
+        assertArrayEquals(fibBytes, outValue);
         OCMain.repDeleteBuffer();
     }
 }
