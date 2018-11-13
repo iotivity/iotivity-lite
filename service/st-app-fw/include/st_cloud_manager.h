@@ -30,6 +30,11 @@
 extern "C" {
 #endif
 
+/**
+  @brief Cloud Connection Status.
+    All status can be set exclusively except CLOUD_MANAGER_RE_CONNECTING 
+    ,which requires OR/AND bitwise operation
+*/
 typedef enum {
   CLOUD_MANAGER_INITIALIZE = 0,
   CLOUD_MANAGER_SIGNED_UP = 1 << 0,
