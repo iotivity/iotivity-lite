@@ -120,17 +120,16 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     context = context->next;
   }
 
-  if (!context ||
-      context->cloud_manager_status == CLOUD_MANAGER_RE_CONNECTING ||
+  if (!context || context->cloud_manager_status & CLOUD_MANAGER_RE_CONNECTING ||
       0 != oc_endpoint_compare(endpoint, &context->cloud_ep))
     return;
 
   if (state == OC_SESSION_DISCONNECTED) {
     if (context->cloud_manager_status == CLOUD_MANAGER_FINISH) {
       oc_remove_delayed_callback(context, send_ping);
-      context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
       oc_set_delayed_callback(context, callback_handler, 0);
     }
+    context->cloud_manager_status |= CLOUD_MANAGER_RE_CONNECTING;
 
     cloud_start_process(context);
   }
@@ -221,6 +220,7 @@ is_retry_over(st_cloud_context_t *context)
   oc_connectivity_end_session(&context->cloud_ep);
 #endif /* OC_TCP */
   context->retry_count = 0;
+  context->cloud_manager_status |= CLOUD_MANAGER_RE_CONNECTING;
   cloud_start_process(context);
   return true;
 }
@@ -269,9 +269,9 @@ error_handler(st_cloud_context_t *context, oc_rep_t* res_payload,
   switch (code) {
   case CI_TOKEN_EXPIRED:
     oc_remove_delayed_callback(context, callback);
-    if (context->cloud_manager_status != CLOUD_MANAGER_RE_CONNECTING)
+    if (!(context->cloud_manager_status & CLOUD_MANAGER_RE_CONNECTING))
       context->retry_count = 0;
-    context->cloud_manager_status = CLOUD_MANAGER_RE_CONNECTING;
+    context->cloud_manager_status |= CLOUD_MANAGER_RE_CONNECTING;
     oc_set_delayed_callback(context, refresh_token,
                             session_timeout[context->retry_count]);
     break;
@@ -385,6 +385,7 @@ sign_in_handler(oc_client_response_t *data)
 
   oc_remove_delayed_callback(context, sign_in);
   context->retry_count = 0;
+  context->cloud_manager_status &= ~CLOUD_MANAGER_RE_CONNECTING;
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP ||
       context->cloud_manager_status == CLOUD_MANAGER_SIGNED_IN) {
