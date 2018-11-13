@@ -71,6 +71,7 @@ static pthread_mutex_t mutex;
 struct sockaddr_nl ifchange_nl;
 int ifchange_sock;
 bool ifchange_initialized;
+static unsigned char cached_mac[OC_MAC_SIZE] = { 0 };
 
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
@@ -1765,6 +1766,15 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 bool
 oc_get_mac_addr(unsigned char *mac)
 {
+  if (!mac) {
+    OC_ERR("Error of input parameter");
+    return false;
+  }
+  if (strlen((const char *)cached_mac)) {
+    memcpy(mac, cached_mac, OC_MAC_SIZE);
+    return true;
+  }
+
   struct ifaddrs *ifaddr = NULL;
   struct ifaddrs *ifa = NULL;
 
@@ -1779,6 +1789,7 @@ oc_get_mac_addr(unsigned char *mac)
 
     if ((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET)) {
       struct sockaddr_ll *addr = (struct sockaddr_ll *)(ifa->ifa_addr);
+      memcpy(cached_mac, addr->sll_addr, OC_MAC_SIZE);
       memcpy(mac, addr->sll_addr, OC_MAC_SIZE);
       break;
     }
