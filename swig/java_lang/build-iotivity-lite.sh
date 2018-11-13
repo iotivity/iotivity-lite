@@ -13,5 +13,6 @@ javac -source 1.7 -target 1.7 -sourcepath ../iotivity-lite-eclipse-project/src  
 jar -cfv iotivity-lite.jar -C ../iotivity-lite-eclipse-project/bin  .
 
 # if building for Android, copy jar to Android libs directory
+#cp -v iotivity-lite.jar ../apps/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
 #cp -v iotivity-lite.jar ../apps/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
 

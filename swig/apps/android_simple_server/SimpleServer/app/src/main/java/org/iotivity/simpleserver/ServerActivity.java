@@ -1,7 +1,7 @@
-package org.iotivity.simpleclient;
+package org.iotivity.simpleserver;
 
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ClientActivity extends AppCompatActivity {
+public class ServerActivity extends AppCompatActivity {
 
     static {
         System.loadLibrary("c++_shared");
@@ -28,7 +28,7 @@ public class ClientActivity extends AppCompatActivity {
     public TextView mConsoleTextView;
     public ScrollView mScrollView;
 
-    private static final String TAG = ClientActivity.class.getSimpleName();
+    private static final String TAG = ServerActivity.class.getSimpleName();
 
     private boolean quit;
 
