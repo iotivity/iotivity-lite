@@ -13,11 +13,11 @@ public class PostLightResponseHandler implements OCResponseHandler {
     public void handler(OCClientResponse response) {
         System.out.println("POST light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            System.out.println("\tPUT responce: CHANGED");
+            System.out.println("\tPOST response: CHANGED");
         } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            System.out.println("\tPUT responce: CREATED");
+            System.out.println("\tPOST response: CREATED");
         } else {
-            System.out.println("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            System.out.println("\tPOST response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler();
@@ -28,12 +28,12 @@ public class PostLightResponseHandler implements OCResponseHandler {
             OCMain.repEndRootObject();
 
             if (OCMain.doPost()) {
-                System.out.println("\tSent POST request");
+                System.out.println("\tSent POST2 request");
             } else {
-                System.out.println("\tCould not send POST request");
+                System.out.println("\tCould not send POST2 request");
             }
         } else {
-            System.out.println("\tCould not init POST request");
+            System.out.println("\tCould not init POST2 request");
         }
     }
 }

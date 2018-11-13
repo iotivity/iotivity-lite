@@ -24,7 +24,7 @@ public class PutLightResponseHandler implements OCResponseHandler {
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
             activity.msg("\tPUT response: CHANGED");
         } else {
-            activity.msg("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            activity.msg("\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
         activity.printLine();
 

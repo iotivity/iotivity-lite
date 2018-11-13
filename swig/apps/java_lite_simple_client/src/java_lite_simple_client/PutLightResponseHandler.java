@@ -15,7 +15,7 @@ public class PutLightResponseHandler implements OCResponseHandler {
         if ( response.getCode() == OCStatus.OC_STATUS_CHANGED) {
             System.out.println("\tPUT response: CHANGED");
         } else {
-            System.out.println("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            System.out.println("\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
 
         PostLightResponseHandler postLight = new PostLightResponseHandler();

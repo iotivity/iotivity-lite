@@ -12,11 +12,11 @@ public class Post2LightResponseHandler implements OCResponseHandler {
     public void handler(OCClientResponse response) {
         System.out.println("POST2 light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            System.out.println("\tPUT response: CHANGED");
+            System.out.println("\tPOST2 response: CHANGED");
         } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            System.out.println("\tPUT response: CREATED");
+            System.out.println("\tPOST2 response: CREATED");
         } else {
-            System.out.println("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            System.out.println("\tPOST2 response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
 
         ObserveLightResponseHandler observerLight = new ObserveLightResponseHandler();

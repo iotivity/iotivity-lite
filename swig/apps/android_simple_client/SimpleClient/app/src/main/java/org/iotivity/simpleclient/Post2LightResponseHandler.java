@@ -21,11 +21,11 @@ public class Post2LightResponseHandler implements OCResponseHandler {
         Light light = (Light) response.getUser_data();
         activity.msg("POST2 light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            activity.msg("\tPUT response: CHANGED");
+            activity.msg("\tPOST2 response: CHANGED");
         } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            activity.msg("\tPUT response: CREATED");
+            activity.msg("\tPOST2 response: CREATED");
         } else {
-            activity.msg("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            activity.msg("\tPOST2 response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
         activity.printLine();
 
