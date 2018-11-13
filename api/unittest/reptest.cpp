@@ -478,3 +478,167 @@ TEST(TestRep, OCRepSetGetDoubleArray)
     EXPECT_FALSE(oc_rep_get_double_array(rep, "not_a_key", &math_constants_out, &math_constants_len));
     oc_free_rep(rep);
 }
+
+TEST(TestRep, OCRepSetGetObject)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /*
+     * {
+     *   "my_object": {
+     *     "a": 1
+     *     "b": false
+     *     "c": "three"
+     *   }
+     * }
+     */
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_object(root, my_object);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_int(my_object, a, 1);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_boolean(my_object, b, false);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(my_object, c, "three");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_close_object(root, my_object);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    oc_rep_t * my_object_out = NULL;
+    EXPECT_TRUE(oc_rep_get_object(rep, "my_object", &my_object_out));
+    ASSERT_TRUE(my_object_out != NULL);
+    int a_out;
+    EXPECT_TRUE(oc_rep_get_int(my_object_out, "a", &a_out));
+    EXPECT_EQ(1, a_out);
+    bool b_out = true;
+    EXPECT_TRUE(oc_rep_get_bool(my_object_out, "b", &b_out));
+    EXPECT_FALSE(b_out);
+    char * c_out = NULL;
+    size_t c_out_size = 0;
+    EXPECT_TRUE(oc_rep_get_string(my_object_out, "c", &c_out, &c_out_size));
+    EXPECT_EQ(5, c_out_size);
+    EXPECT_STREQ("three", c_out);
+
+    oc_free_rep(rep);
+}
+
+TEST(TestRep, OCRepSetGetObjectArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /*
+     * {
+     *   "space_2001": [
+     *     {"name": "Dave Bowman", "job": "astronaut"},
+     *     {"name": "Frank Poole", "job": "astronaut"},
+     *     {"name": "Hal 9000", "job": "AI computer"}
+     *   ]
+     */
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_array(root, space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_object_array_start_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, name, "Dave Bowman");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, job, "astronaut");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_object_array_end_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_object_array_start_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, name, "Frank Poole");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, job, "astronaut");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_object_array_end_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_object_array_start_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, name, "Hal 9000");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_text_string(space_2001, job, "AI computer");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_object_array_end_item(space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_close_array(root, space_2001);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    /* calling this an object_array is a bit of a misnomer internally it is a linked list */
+    oc_rep_t * space_2001_out = NULL;
+    EXPECT_TRUE(oc_rep_get_object_array(rep, "space_2001", &space_2001_out));
+    ASSERT_TRUE(space_2001_out != NULL);
+
+    char * name_out = NULL;
+    size_t name_out_size = 0;
+
+    char * job_out = NULL;
+    size_t job_out_size = 0;
+
+    EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out, &name_out_size));
+    EXPECT_EQ(strlen("Dave Bowman"), name_out_size);
+    EXPECT_STREQ("Dave Bowman", name_out);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "job", &job_out, &job_out_size));
+    EXPECT_EQ(strlen("astronaut"), job_out_size);
+    EXPECT_STREQ("astronaut", job_out);
+
+    space_2001_out = space_2001_out->next;
+    ASSERT_TRUE(space_2001_out != NULL);
+    EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out, &name_out_size));
+    EXPECT_EQ(strlen("Frank Poole"), name_out_size);
+    EXPECT_STREQ("Frank Poole", name_out);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "job", &job_out, &job_out_size));
+    EXPECT_EQ(strlen("astronaut"), job_out_size);
+    EXPECT_STREQ("astronaut", job_out);
+
+    space_2001_out = space_2001_out->next;
+    ASSERT_TRUE(space_2001_out != NULL);
+    EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out, &name_out_size));
+    EXPECT_EQ(strlen("Hal 9000"), name_out_size);
+    EXPECT_STREQ("Hal 9000", name_out);
+    EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "job", &job_out, &job_out_size));
+    EXPECT_EQ(strlen("AI computer"), job_out_size);
+    EXPECT_STREQ("AI computer", job_out);
+    oc_free_rep(rep);
+}
