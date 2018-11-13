@@ -22,11 +22,11 @@ public class PostLightResponseHandler implements OCResponseHandler {
         Light light = (Light) response.getUser_data();
         activity.msg("POST light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            activity.msg("\tPUT response: CHANGED");
+            activity.msg("\tPOST response: CHANGED");
         } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            activity.msg("\tPUT response: CREATED");
+            activity.msg("\tPOST response: CREATED");
         } else {
-            activity.msg("\tPUT response code " + response.getCode().toString() + "(" + response.getCode() + ")");
+            activity.msg("\tPOST response code " + response.getCode().toString() + " (" + response.getCode() + ")");
         }
         activity.printLine();
 
@@ -38,12 +38,12 @@ public class PostLightResponseHandler implements OCResponseHandler {
             OCMain.repEndRootObject();
 
             if (OCMain.doPost()) {
-                activity.msg("\tSent POST request");
+                activity.msg("\tSent POST2 request");
             } else {
-                activity.msg("\tCould not send POST request");
+                activity.msg("\tCould not send POST2 request");
             }
         } else {
-            activity.msg("\tCould not init POST request");
+            activity.msg("\tCould not init POST2 request");
         }
         activity.printLine();
     }
