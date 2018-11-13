@@ -350,6 +350,20 @@ int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platf
 void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)user_data;
+
+  int getEnvResult = 0;
+  int attachCurrentThreadResult = 0;
+  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
+  if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
+#else
+      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
+#endif
+      assert(JNI_OK == attachCurrentThreadResult);
+  }
+  assert(data->jenv);
+
   const jclass callbackInterfaceClass = (data->jenv)->FindClass("org/iotivity/OCRequestHandler");
   assert(callbackInterfaceClass);
   const jmethodID mid_handler = (data->jenv)->GetMethodID(callbackInterfaceClass, "handler", "(Lorg/iotivity/OCRequest;ILjava/lang/Object;)V");
@@ -360,6 +374,10 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   const jmethodID mid_OCRequest_init = (data->jenv)->GetMethodID(cls_OCRequest, "<init>", "(JZ)V");
   assert(mid_OCRequest_init);
   (data->jenv)->CallVoidMethod(data->jcb_obj, mid_handler, (data->jenv)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, data->juser_data);
+
+  if (JNI_EDETACHED == getEnvResult) {
+    jvm->DetachCurrentThread();
+  }
 }
 %}
 %typemap(jni)    oc_request_callback_t callback "jobject";
