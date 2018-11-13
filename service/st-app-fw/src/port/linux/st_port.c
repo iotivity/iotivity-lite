@@ -379,6 +379,7 @@ str_dup(char *str)
     return NULL;
   }
   strncpy(dup_str, str, len);
+  dup_str[len] = '\0';
   return dup_str;
 }
 
@@ -449,16 +450,17 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
   wireless_scan *result = head.result;
   st_wifi_ap_t *tail = NULL;
   *ap_list = NULL;
-  int cnt = 0;
+  int cnt = 0, len = 0;
   // TODO: Restricting to 10 as failed to send response with more wifi aps.
   // Is there a priority to select wifi aps to include in response ?
   while (result && cnt < 10) {
     st_wifi_ap_t *ap = (st_wifi_ap_t*) calloc(1, sizeof(st_wifi_ap_t));
 
     // ssid
-    int len = strlen(result->b.essid);
-    ap->ssid = (char*) calloc(len+1, sizeof(char));
+    len = strlen(result->b.essid);
+    ap->ssid = (char *)calloc(len + 1, sizeof(char));
     strncpy(ap->ssid, result->b.essid, len);
+    ap->ssid[len] = '\0';
 
     // mac address
     ap->mac_addr = (char*) calloc(18, sizeof(char));
@@ -480,8 +482,10 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
       if (sig_start) {
         sig_start += strlen("Signal level=");
         char *sig_end = strstr(sig_start, " ");
-        ap->rssi = (char*) calloc((sig_end - sig_start)+1, sizeof(char));
-        strncpy(ap->rssi, sig_start, sig_end-sig_start);
+        len = sig_end - sig_start;
+        ap->rssi = (char *)calloc(len + 1, sizeof(char));
+        strncpy(ap->rssi, sig_start, len);
+        ap->rssi[len] = '\0';
       }
     }
 
@@ -490,12 +494,16 @@ st_wifi_scan(st_wifi_ap_t **ap_list)
       // TODO: Getting security type is tough, thus using hardcode value
       // as of now
       const char *sec_type = "WPA2";
-      ap->sec_type = (char*) calloc(strlen(sec_type)+1, sizeof(char));
-      strncpy(ap->sec_type, sec_type, strlen(sec_type));
+      len = strlen(sec_type);
+      ap->sec_type = (char *)calloc(len + 1, sizeof(char));
+      strncpy(ap->sec_type, sec_type, len);
+      ap->sec_type[len] = '\0';
 
       const char *enc_type = "AES";
-      ap->enc_type = (char*) calloc(strlen(enc_type)+1, sizeof(char));
-      strncpy(ap->enc_type, enc_type, strlen(enc_type));
+      len = strlen(enc_type);
+      ap->enc_type = (char *)calloc(len + 1, sizeof(char));
+      strncpy(ap->enc_type, enc_type, len);
+      ap->enc_type[len] = '\0';
     }
 
     if (!*ap_list) {
