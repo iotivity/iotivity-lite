@@ -128,6 +128,14 @@ void handle_network_interface_event_callback(oc_interface_event_t event);
 void handle_session_event_callback(const oc_endpoint_t *endpoint,
                                    oc_session_state_t state);
 
+#ifdef OC_TCP
+/* TCP CSM states */
+typedef enum { CSM_NONE, CSM_SENT, CSM_DONE, CSM_ERROR = 255 } tcp_csm_state_t;
+
+tcp_csm_state_t oc_tcp_get_csm_state(oc_endpoint_t *endpoint);
+int oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm);
+#endif /* OC_TCP */
+
 #ifdef __cplusplus
 }
 #endif
