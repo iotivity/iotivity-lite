@@ -90,6 +90,26 @@ stop_observe(void)
 }
 
 static void
+pong_received_handler(oc_client_response_t *data)
+{
+  printf("PONG received:\n");
+  PRINTipaddr(*data->endpoint);
+  printf("\n");
+}
+
+static void
+send_ping(void)
+{
+  if (!is_resource_found())
+    return;
+
+  printf("Send PING\n");
+  if (!oc_send_ping(0, &target_ep, 10, pong_received_handler)) {
+    printf("oc_send_ping failed\n");
+  }
+}
+
+static void
 parse_payload(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
@@ -306,6 +326,7 @@ print_menu(void)
   printf("4. Post request\n");
   printf("5. Observe request\n");
   printf("6. Observe cancel request\n");
+  printf("7. Send Ping\n");
   printf("0. Quit\n");
   printf("=====================================\n");
   pthread_mutex_unlock(&app_mutex);
@@ -330,6 +351,7 @@ main(void)
   oc_new_string(&address_str, address, strlen(address));
 
   oc_string_to_endpoint(&address_str, &set_ep, NULL);
+  set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
   static const oc_handler_t handler = {.init = app_init,
@@ -399,6 +421,9 @@ main(void)
       break;
     case 6:
       stop_observe();
+      break;
+    case 7:
+      send_ping();
       break;
     case 0:
       quit = 1;

@@ -132,3 +132,67 @@ TEST_F(TestConnectivity, handle_session_event_callback)
     handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
     EXPECT_EQ(true, is_callback_received);
 }
+
+#ifdef OC_TCP
+TEST_F(TestConnectivity, oc_tcp_get_csm_state_P)
+{
+    oc_endpoint_t ep;
+    tcp_csm_state_t ret = oc_tcp_get_csm_state(&ep);
+
+    EXPECT_EQ(CSM_NONE, ret);
+}
+
+TEST_F(TestConnectivity, oc_tcp_get_csm_state_N)
+{
+    tcp_csm_state_t ret = oc_tcp_get_csm_state(NULL);
+
+    EXPECT_EQ(CSM_ERROR, ret);
+}
+
+TEST_F(TestConnectivity, oc_tcp_update_csm_state_P)
+{
+    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+    oc_endpoint_t *tcp_ep = ep;
+    while (tcp_ep) {
+        if (tcp_ep->flags & TCP && !(tcp_ep->flags & SECURED) &&
+            tcp_ep->flags & IPV4)
+            break;
+        tcp_ep = tcp_ep->next;
+    }
+
+    ASSERT_NE(NULL, tcp_ep);
+
+    oc_message_t message;
+    uint8_t *data = (uint8_t *)"connect";
+    memcpy(&message.endpoint, tcp_ep, sizeof(oc_endpoint_t));
+    message.data = data;
+    message.length = 7;
+    oc_send_buffer(&message);
+
+    oc_tcp_update_csm_state(tcp_ep, CSM_DONE);
+
+    tcp_csm_state_t ret = oc_tcp_get_csm_state(tcp_ep);
+
+    EXPECT_EQ(CSM_DONE, ret);
+}
+
+TEST_F(TestConnectivity, oc_tcp_update_csm_state_N)
+{
+    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+    oc_endpoint_t *tcp_ep = ep;
+    while (tcp_ep) {
+        if (tcp_ep->flags & TCP && !(tcp_ep->flags & SECURED) &&
+            tcp_ep->flags & IPV4)
+            break;
+        tcp_ep = tcp_ep->next;
+    }
+
+    ASSERT_NE(NULL, tcp_ep);
+
+    oc_tcp_update_csm_state(tcp_ep, CSM_DONE);
+
+    tcp_csm_state_t ret = oc_tcp_get_csm_state(tcp_ep);
+
+    EXPECT_NE(CSM_DONE, ret);
+}
+#endif /* OC_TCP */
