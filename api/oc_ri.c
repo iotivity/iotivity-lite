@@ -26,6 +26,9 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#ifdef OC_TCP
+#include "messaging/coap/coap_signal.h"
+#endif /* OC_TCP */
 
 #include "port/oc_random.h"
 
@@ -72,6 +75,10 @@ OC_MEMB(event_callbacks_s, oc_event_callback_t,
           OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
+
+#ifdef OC_TCP
+oc_event_callback_retval_t oc_remove_ping_handler(void *data);
+#endif /* OC_TCP */
 
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
@@ -1266,6 +1273,12 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       handler(&client_response);
     }
   }
+
+#ifdef OC_TCP
+  if (pkt->code == PONG_7_03) {
+    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
+  }
+#endif /* OC_TCP */
 
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
     if (cb->multicast) {

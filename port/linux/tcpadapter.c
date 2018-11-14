@@ -53,6 +53,7 @@ typedef struct tcp_session
   ip_context_t *dev;
   oc_endpoint_t endpoint;
   int sock;
+  tcp_csm_state_t csm_state;
 } tcp_session_t;
 
 OC_LIST(session_list);
@@ -182,7 +183,8 @@ free_tcp_session(tcp_session_t *session)
 }
 
 static int
-add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
+add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
+                tcp_csm_state_t state)
 {
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
@@ -196,6 +198,7 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
   session->sock = sock;
+  session->csm_state = state;
 
   oc_list_add(session_list, session);
 
@@ -240,7 +243,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   FD_CLR(fd, setfds);
 
-  if (add_new_session(new_socket, dev, endpoint) < 0) {
+  if (add_new_session(new_socket, dev, endpoint, CSM_NONE) < 0) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -563,7 +566,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
 
   OC_DBG("successfully initiated TCP connection");
 
-  if (add_new_session(sock, dev, endpoint) < 0) {
+  if (add_new_session(sock, dev, endpoint, CSM_SENT) < 0) {
     OC_ERR("could not record new TCP session");
     close(sock);
     return -1;
@@ -817,4 +820,34 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
   OC_DBG("oc_tcp_connectivity_shutdown for device %d", dev->device);
 }
 
+tcp_csm_state_t
+oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
+{
+  if (!endpoint) {
+    return CSM_ERROR;
+  }
+
+  tcp_session_t *session = find_session_by_endpoint(endpoint);
+  if (!session) {
+    return CSM_NONE;
+  }
+
+  return session->csm_state;
+}
+
+int
+oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm)
+{
+  if (!endpoint) {
+    return -1;
+  }
+
+  tcp_session_t *session = find_session_by_endpoint(endpoint);
+  if (!session) {
+    return -1;
+  }
+
+  session->csm_state = csm;
+  return 0;
+}
 #endif /* OC_TCP */

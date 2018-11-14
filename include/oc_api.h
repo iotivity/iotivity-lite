@@ -368,6 +368,11 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 void oc_close_session(oc_endpoint_t *endpoint);
 
+#ifdef OC_TCP
+bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
+                  uint16_t timeout_seconds, oc_response_handler_t handler);
+#endif /* OC_TCP */
+
 /** Common operations */
 
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
