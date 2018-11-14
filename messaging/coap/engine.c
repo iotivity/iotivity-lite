@@ -62,6 +62,10 @@
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
+#ifdef OC_TCP
+#include "coap_signal.h"
+#endif
+
 OC_PROCESS(coap_engine, "CoAP Engine");
 
 #ifdef OC_BLOCK_WISE
@@ -177,6 +181,10 @@ coap_receive(oc_message_t *msg)
       break;
     }
 #endif
+
+    if (coap_check_signal_message(message)) {
+      coap_status_code = handle_coap_signal_message(message, &msg->endpoint);
+    }
 
     /* extract block options */
     if (coap_get_header_block1(message, &block1_num, &block1_more, &block1_size,
