@@ -50,6 +50,10 @@ static oc_string_t name;
 static char address[OC_IPV6_ADDRSTRLEN + 8];
 static oc_endpoint_t set_ep;
 
+#define PING_RETRY_COUNT (4)
+static size_t ping_count = 0;
+static uint16_t ping_timeout = 1;
+
 typedef void (*custom_func_t)(oc_endpoint_t *);
 
 typedef struct
@@ -86,6 +90,51 @@ stop_observe(void)
   printf("Stopping OBSERVE\n");
   if (!oc_stop_observe(a_light, &target_ep)) {
     printf("Please observe start first!\n");
+  }
+}
+
+static void send_ping(uint16_t timeout_seconds);
+
+#ifdef OC_TCP
+static void
+pong_received_handler(oc_client_response_t *data)
+{
+  if (data->code == OC_PING_TIMEOUT) {
+    printf("PING timeout!\n");
+    ping_count++;
+    if (ping_count > PING_RETRY_COUNT) {
+      printf("retry over. close connection.\n");
+      oc_connectivity_end_session(data->endpoint);
+    } else {
+      ping_timeout <<= 1;
+      printf("PING send again.[retry: %d, time: %u]\n", ping_count,
+             ping_timeout);
+      send_ping(ping_timeout);
+    }
+  } else {
+    printf("PONG received:\n");
+    PRINTipaddr(*data->endpoint);
+    printf("\n");
+    ping_count = 0;
+  }
+}
+#endif /* OC_TCP */
+
+static void
+send_ping(uint16_t timeout_seconds)
+{
+  if (!is_resource_found())
+    return;
+
+#ifdef OC_TCP
+  if (target_ep.flags & TCP) {
+    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler)) {
+      printf("oc_send_ping failed\n");
+    }
+  } else
+#endif /* !OC_TCP */
+  {
+    printf("PING message is not supported\n");
   }
 }
 
@@ -306,6 +355,7 @@ print_menu(void)
   printf("4. Post request\n");
   printf("5. Observe request\n");
   printf("6. Observe cancel request\n");
+  printf("7. Send Ping\n");
   printf("0. Quit\n");
   printf("=====================================\n");
   pthread_mutex_unlock(&app_mutex);
@@ -330,6 +380,7 @@ main(void)
   oc_new_string(&address_str, address, strlen(address));
 
   oc_string_to_endpoint(&address_str, &set_ep, NULL);
+  set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
   static const oc_handler_t handler = {.init = app_init,
@@ -399,6 +450,12 @@ main(void)
       break;
     case 6:
       stop_observe();
+      break;
+    case 7:
+      ping_count = 0;
+      ping_timeout = 1;
+      printf("Send PING\n");
+      send_ping(ping_timeout);
       break;
     case 0:
       quit = 1;
