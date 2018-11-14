@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_be1c1015",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/AndroidManifest.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-14T18:38:46Z",
+      "side": 1,
+      "message": "are we using bluetooth?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 72
+      },
+      "revId": "44f40f6f1b02be2cd2e19113c3e695377865968e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1e1a5c17",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/AndroidManifest.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-14T18:38:46Z",
+      "side": 1,
+      "message": "are we using NFC?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 60
+      },
+      "revId": "44f40f6f1b02be2cd2e19113c3e695377865968e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
