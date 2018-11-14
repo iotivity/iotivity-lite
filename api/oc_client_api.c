@@ -16,6 +16,9 @@
 
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
+#ifdef OC_TCP
+#include "messaging/coap/coap_signal.h"
+#endif /* OC_TCP */
 #include "oc_api.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
@@ -320,6 +323,43 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
 
   return status;
 }
+
+#ifdef OC_TCP
+oc_event_callback_retval_t
+oc_remove_ping_handler(void *data)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)data;
+
+  oc_client_response_t timeout_response;
+  timeout_response.code = OC_PING_TIMEOUT;
+  timeout_response.endpoint = cb->endpoint;
+  cb->handler.response(&timeout_response);
+
+  return oc_ri_remove_client_cb(cb);
+}
+
+bool
+oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+             oc_response_handler_t handler)
+{
+  oc_client_handler_t client_handler;
+  client_handler.response = handler;
+
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/ping", endpoint, 0, NULL,
+                                             client_handler, LOW_QOS, NULL);
+  if (!cb)
+    return false;
+
+  if (!coap_send_ping_message(endpoint, custody ? 1 : 0, cb->token,
+                              cb->token_len)) {
+    oc_ri_remove_client_cb(cb);
+    return false;
+  }
+
+  oc_set_delayed_callback(cb, oc_remove_ping_handler, timeout_seconds);
+  return true;
+}
+#endif /* OC_TCP */
 
 #ifdef OC_IPV4
 static bool
