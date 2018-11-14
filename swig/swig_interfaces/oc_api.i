@@ -882,6 +882,7 @@ struct CborEncoder
 %ignore oc_rep_new;
 %{
 uint8_t *g_new_rep_buffer = NULL;
+struct oc_memb g_rep_objects;
 %}
 %inline %{
 void repDeleteBuffer() {
@@ -894,6 +895,8 @@ void repNewBuffer(int size) {
   }
   g_new_rep_buffer = (uint8_t *)malloc(size);
   oc_rep_new(g_new_rep_buffer, size);
+  g_rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+  oc_rep_set_pool(&g_rep_objects);
 }
 %}
 
@@ -1091,7 +1094,7 @@ void jni_rep_set_key(CborEncoder *parent, const char* key) {
 
 // TODO revisit this will add an array object to the parent object under key value. The CborEncoder*
 // returned is the array object. The `object` parameter may make more since to be named `parent`.
-%rename(repSetArray) jni_rep_set_array;
+%rename(repOpenArray) jni_rep_set_array;
 %inline %{
 /* Alt implementation of oc_rep_set_array macro */
 CborEncoder * jni_rep_set_array(CborEncoder *object, const char* key) {
@@ -1150,22 +1153,22 @@ void jni_rep_object_array_end_item(CborEncoder *parentArrayObject, CborEncoder *
 }
 %}
 
-%rename(repSetObject) jni_rep_set_object;
+%rename(repOpenObject) jni_rep_set_object;
 %inline %{
 /* Alt implementation of oc_rep_set_object macro */
-CborEncoder * jni_rep_set_object(CborEncoder *object, const char* key) {
+CborEncoder * jni_rep_set_object(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  return jni_rep_start_object(object);
+  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  return jni_rep_start_object(parent);
 }
 %}
 
 %rename(repCloseObject) jni_rep_close_object;
 %inline %{
 /* Alt implementation of oc_rep_close_object macro */
-void jni_rep_close_object(CborEncoder *object, CborEncoder *arrayObject) {
+void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  jni_rep_end_object(object, arrayObject);
+  jni_rep_end_object(parent, object);
 }
 %}
 
@@ -1313,22 +1316,7 @@ int jni_rep_get_cbor_errno() {
   return (int)oc_rep_get_cbor_errno();
 }
 %}
-//%ignore oc_rep_set_pool;
-
-%rename (OCMemoryBuffer) oc_memb;
-struct oc_memb
-{
-/* commented out all the data types for oc_memb this will be an opaque data type to language bindings */
-/*
-  unsigned short size;
-  unsigned short num;
-  char *count;
-  void *mem;
-  oc_memb_buffers_avail_callback_t buffers_avail_cb;
-*/
-};
-%rename(repSetPool) oc_rep_set_pool;
-
+%ignore oc_rep_set_pool;
 %ignore oc_parse_rep;
 %ignore oc_free_rep;
 
@@ -1539,9 +1527,30 @@ const oc_string_array_t * jni_rep_get_string_array(oc_rep_t *rep, const char *ke
   return NULL;
 }
 %}
-//%rename(repGetStringArray) oc_rep_get_string_array;
-%rename(repGetObject) oc_rep_get_object;
-%rename(repGetObjectArray) oc_rep_get_object_array;
+
+%ignore oc_rep_get_object;
+%rename(repGetObject) jni_rep_get_object;
+%inline %{
+oc_rep_t * jni_rep_get_object(oc_rep_t* rep, const char *key) {
+  oc_rep_t *value;
+  if(oc_rep_get_object(rep, key, &value)) {
+    return value;
+  }
+  return NULL;
+}
+%}
+%ignore oc_rep_get_object_array;
+%rename(repGetObjectArray) jni_rep_get_object_array;
+%inline %{
+oc_rep_t * jni_rep_get_object_array(oc_rep_t* rep, const char *key) {
+  oc_rep_t *value;
+  if(oc_rep_get_object_array(rep, key, &value)) {
+    return value;
+  }
+  return NULL;
+}
+%}
+//%rename(repGetObjectArray) oc_rep_get_object_array;
 %{
 int jni_get_rep_error() {
   OC_DBG("JNI: %s\n", __FUNCTION__);
