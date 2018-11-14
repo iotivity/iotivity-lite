@@ -112,7 +112,73 @@ public class OCRepresentationTest {
 
     @Test
     public void testValueObject() {
-        fail("Not yet implemented");
+        OCMain.repNewBuffer(1024);
+
+        /*
+         * {
+         *   "my_object": {
+         *     "a": 1,
+         *     "b": false,
+         *     "c": "three"
+         *   }
+         * }
+         */
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder myObject = OCMain.repSetObject(root, "my_object");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetInt(myObject, "a", 1);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetBoolean(myObject, "b", false);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(myObject, "c", "three");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repCloseObject(root, myObject);
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        OCValue v = new OCValue();
+        assertNotNull(v);
+
+        v.setObject(rep);
+
+        OCRepresentation outerObject = v.getObject();
+        assertNotNull(outerObject);
+        assertEquals(OCType.OC_REP_OBJECT, outerObject.getType());
+
+        OCRepresentation innerObject = outerObject.getValue().getObject();
+        assertNotNull(innerObject);
+        assertEquals(OCType.OC_REP_INT, innerObject.getType());
+        assertTrue(innerObject.getName().equals("a"));
+        assertEquals(1, innerObject.getValue().getInteger());
+
+        innerObject = innerObject.getNext();
+        assertNotNull(innerObject);
+        assertTrue(innerObject.getName().equals("b"));
+        assertEquals(OCType.OC_REP_BOOL, innerObject.getType());
+        assertFalse(innerObject.getValue().getBool());
+
+        innerObject = innerObject.getNext();
+        assertNotNull(innerObject);
+        assertTrue(innerObject.getName().equals("c"));
+        assertEquals(OCType.OC_REP_STRING, innerObject.getType());
+        assertEquals("three", innerObject.getValue().getString());
+
+        int a[] = new int[1];
+        OCMain.repGetInt(outerObject.getValue().getObject(), "a", a);
+        assertEquals(1, a[0]);
+        boolean b[] = new boolean[1];
+        OCMain.repGetBoolean(outerObject.getValue().getObject(), "b", b);
+        assertEquals(false, b[0]);
+        String c[] = new String[1];
+        OCMain.repGetString(outerObject.getValue().getObject(), "c", c);
+        assertEquals("three", c[0]);
+
+        OCMain.repDeleteBuffer();
     }
 
     @Test
@@ -205,9 +271,9 @@ public class OCRepresentationTest {
 
         String[] outValue = new String[1];
         OCMain.repGetString(rep, "hello", outValue);
-        assertEquals("world", outValue[0]);
+        assertTrue(outValue[0].equals("world"));
         OCMain.repGetString(rep, "empty", outValue);
-        assertEquals("", outValue[0]);
+        assertTrue(outValue[0].equals(""));
         OCMain.repDeleteBuffer();
     }
 
@@ -330,6 +396,53 @@ public class OCRepresentationTest {
         assertNotNull(outValue);
         assertEquals(fibBytes.length, outValue.length);
         assertArrayEquals(fibBytes, outValue);
+        OCMain.repDeleteBuffer();
+    }
+    
+    @Test
+    public void testRepObject() {
+        OCMain.repNewBuffer(1024);
+
+        /*
+         * {
+         *   "my_object": {
+         *     "a": 1,
+         *     "b": false,
+         *     "c": "three"
+         *   }
+         * }
+         */
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder myObject = OCMain.repSetObject(root, "my_object");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetInt(myObject, "a", 1);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetBoolean(myObject, "b", false);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(myObject, "c", "three");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repCloseObject(root, myObject);
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repSetPool(new OCMemoryBuffer());
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        OCRepresentation myObjectOut = OCMain.repGetObject(rep, "my_object");
+        assertNotNull(myObjectOut);
+
+        int a[] = new int[1];
+        OCMain.repGetInt(myObjectOut, "a", a);
+        assertEquals(1, a[0]);
+        boolean b[] = new boolean[1];
+        OCMain.repGetBoolean(myObjectOut, "b", b);
+        assertEquals(false, b[0]);
+        String c[] = new String[1];
+        OCMain.repGetString(myObjectOut, "c", c);
+        assertEquals("three", c[0]);
+
         OCMain.repDeleteBuffer();
     }
 }

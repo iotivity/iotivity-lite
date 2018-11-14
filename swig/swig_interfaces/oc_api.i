@@ -1135,19 +1135,19 @@ void jni_rep_object_array_end_item(CborEncoder *parentArrayObject, CborEncoder *
 %rename(repSetObject) jni_rep_set_object;
 %inline %{
 /* Alt implementation of oc_rep_set_object macro */
-CborEncoder * jni_rep_set_object(CborEncoder *object, const char* key) {
+CborEncoder * jni_rep_set_object(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  return jni_rep_start_object(object);
+  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  return jni_rep_start_object(parent);
 }
 %}
 
 %rename(repCloseObject) jni_rep_close_object;
 %inline %{
 /* Alt implementation of oc_rep_close_object macro */
-void jni_rep_close_object(CborEncoder *object, CborEncoder *arrayObject) {
+void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  jni_rep_end_object(object, arrayObject);
+  jni_rep_end_object(parent, object);
 }
 %}
 
@@ -1521,8 +1521,21 @@ const oc_string_array_t * jni_rep_get_string_array(oc_rep_t *rep, const char *ke
   return NULL;
 }
 %}
-//%rename(repGetStringArray) oc_rep_get_string_array;
-%rename(repGetObject) oc_rep_get_object;
+
+%ignore oc_rep_get_object;
+%rename(repGetObject) jni_rep_get_object;
+//%newobject jni_rep_get_object;
+%inline %{
+oc_rep_t * jni_rep_get_object(oc_rep_t* rep, const char *key) {
+  //oc_rep_t * value = (oc_rep_t *)malloc(sizeof(oc_rep_t));
+  oc_rep_t *value;
+  if(oc_rep_get_object(rep, key, &value)) {
+    return value;
+  }
+  return NULL;
+}
+%}
+
 %rename(repGetObjectArray) oc_rep_get_object_array;
 %{
 int jni_get_rep_error() {
