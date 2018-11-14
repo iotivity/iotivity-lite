@@ -51,6 +51,10 @@
 #include "coap.h"
 #include "transactions.h"
 
+#ifdef OC_TCP
+#include "coap_signal.h"
+#endif /* OC_TCP */
+
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #endif
@@ -329,7 +333,55 @@ coap_get_variable(const char *buffer, size_t length, const char *name,
 }
 #endif
 /*---------------------------------------------------------------------------*/
-/* It just calculates size of option when option_array is NULL */
+#ifdef OC_TCP
+size_t
+coap_serialize_signal_options(void *packet, uint8_t *option_array)
+{
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+  uint8_t *option = option_array;
+  unsigned int current_number = 0;
+  size_t option_length = 0;
+
+  switch (coap_pkt->code) {
+  case CSM_7_01:
+    COAP_SERIALIZE_INT_OPTION(COAP_SIGNAL_OPTION_MAX_MSG_SIZE, max_msg_size,
+                              "Max-Message-Size");
+    if (coap_pkt->bert) {
+      COAP_SERIALIZE_INT_OPTION(COAP_SIGNAL_OPTION_BERT, bert - coap_pkt->bert,
+                                "Bert");
+    }
+    break;
+  case PING_7_02:
+  case PONG_7_03:
+    if (coap_pkt->custody) {
+      COAP_SERIALIZE_INT_OPTION(COAP_SIGNAL_OPTION_CUSTODY,
+                                custody - coap_pkt->custody, "Custody");
+    }
+    break;
+  case RELEASE_7_04:
+    COAP_SERIALIZE_STRING_OPTION(COAP_SIGNAL_OPTION_ALT_ADDR, alt_addr, '\0',
+                                 "Alternative-Address");
+    COAP_SERIALIZE_INT_OPTION(COAP_SIGNAL_OPTION_HOLD_OFF, hold_off,
+                              "Hold-off");
+    break;
+  case ABORT_7_05:
+    COAP_SERIALIZE_INT_OPTION(COAP_SIGNAL_OPTION_BAD_CSM, bad_csm_opt,
+                              "Bad-CSM-Option");
+    break;
+  default:
+    OC_ERR("unknown signal message.[%u]", coap_pkt->code);
+    return 0;
+  }
+
+  if (option) {
+    OC_DBG("-Done serializing at %p----", option);
+  }
+
+  return option_length;
+}
+#endif /* OC_TCP */
+/*---------------------------------------------------------------------------*/
+/* It just caculates size of option when option_array is NULL */
 static size_t
 coap_serialize_options(void *packet, uint8_t *option_array)
 {
@@ -343,6 +395,13 @@ coap_serialize_options(void *packet, uint8_t *option_array)
   } else {
     OC_DBG("Caculating size of options");
   }
+
+#ifdef OC_TCP
+  if (coap_check_signal_message(packet)) {
+    return coap_serialize_signal_options(packet, option_array);
+  }
+#endif /* OC_TCP */
+
 #if 0
   /* The options must be serialized in the order of their number */
   COAP_SERIALIZE_BYTE_OPTION(COAP_OPTION_IF_MATCH, if_match, "If-Match");
@@ -438,11 +497,63 @@ coap_serialize_options(void *packet, uint8_t *option_array)
   return option_length;
 }
 /*---------------------------------------------------------------------------*/
+#ifdef OC_TCP
+coap_status_t
+coap_parse_signal_options(void *packet, unsigned int option_number,
+                          uint8_t *current_option, size_t option_length)
+{
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+
+  switch (coap_pkt->code) {
+  case CSM_7_01:
+    if (option_number == COAP_SIGNAL_OPTION_MAX_MSG_SIZE) {
+      coap_pkt->max_msg_size =
+        coap_parse_int_option(current_option, option_length);
+      OC_DBG("  Max-Message-Size [%u]", coap_pkt->max_msg_size);
+    } else if (option_number == COAP_SIGNAL_OPTION_BERT) {
+      coap_pkt->bert = 1;
+      OC_DBG("  Bert [%u]", coap_pkt->bert);
+    }
+    break;
+  case PING_7_02:
+  case PONG_7_03:
+    if (option_number == COAP_SIGNAL_OPTION_CUSTODY) {
+      coap_pkt->custody = 1;
+      OC_DBG("  Custody [%u]", coap_pkt->custody);
+    }
+    break;
+  case RELEASE_7_04:
+    if (option_number == COAP_SIGNAL_OPTION_ALT_ADDR) {
+      coap_pkt->alt_addr = (char *)current_option;
+      coap_pkt->alt_addr_len = option_length;
+      OC_DBG("  Alternative-Address [%.*s]", (int)coap_pkt->alt_addr_len,
+             coap_pkt->alt_addr);
+    } else if (option_number == COAP_SIGNAL_OPTION_HOLD_OFF) {
+      coap_pkt->hold_off = coap_parse_int_option(current_option, option_length);
+      OC_DBG("  Hold-Off [%u]", coap_pkt->hold_off);
+    }
+    break;
+  case ABORT_7_05:
+    if (option_number == COAP_SIGNAL_OPTION_BAD_CSM) {
+      coap_pkt->bad_csm_opt =
+        (uint16_t)coap_parse_int_option(current_option, option_length);
+      OC_DBG("  Bad-CSM-Option [%u]", coap_pkt->bad_csm_opt);
+    }
+    break;
+  default:
+    OC_ERR("unknown signal message.[%u]", coap_pkt->code);
+    return BAD_REQUEST_4_00;
+  }
+
+  return COAP_NO_ERROR;
+}
+#endif /* OC_TCP */
+/*---------------------------------------------------------------------------*/
 static coap_status_t
 coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
                         uint8_t *current_option)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *) packet;
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   memcpy(coap_pkt->token, current_option, coap_pkt->token_len);
   OC_DBG("Token (len %u)", coap_pkt->token_len);
@@ -511,6 +622,14 @@ coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
       return BAD_OPTION_4_02;
     }
 
+#ifdef OC_TCP
+    if (coap_check_signal_message(packet)) {
+      coap_parse_signal_options(packet, option_number, current_option,
+                                option_length);
+      current_option += option_length;
+      continue;
+    }
+#endif /* OC_TCP */
     switch (option_number) {
     case COAP_OPTION_CONTENT_FORMAT:
       coap_pkt->content_format =
@@ -972,6 +1091,16 @@ exit:
 void
 coap_send_message(oc_message_t *message)
 {
+#ifdef OC_TCP
+  if (message->endpoint.flags & TCP &&
+      message->endpoint.version == OCF_VER_1_0_0) {
+    tcp_csm_state_t state = oc_tcp_get_csm_state(&message->endpoint);
+    if (state == CSM_NONE) {
+      coap_send_csm_message(&message->endpoint, 0);
+    }
+  }
+#endif /* OC_TCP */
+
   OC_DBG("-sending OCF message (%u)-", (unsigned int)message->length);
 
   oc_send_message(message);
