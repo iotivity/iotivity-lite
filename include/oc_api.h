@@ -379,6 +379,10 @@ oc_role_t *oc_get_all_roles(void);
 
 bool oc_assert_role(const char *role, const char *authority,
                     oc_endpoint_t *endpoint, oc_response_handler_t handler);
+#ifdef OC_TCP
+bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
+                  uint16_t timeout_seconds, oc_response_handler_t handler);
+#endif /* OC_TCP */
 
 /** Common operations */
 
