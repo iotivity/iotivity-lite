@@ -146,6 +146,17 @@ typedef struct
   const char *uri_query;
   uint8_t if_none_match;
 
+#ifdef OC_TCP
+  // Signal option values
+  uint32_t max_msg_size;
+  uint8_t bert;
+  uint8_t custody;
+  const char *alt_addr;
+  size_t alt_addr_len;
+  uint32_t hold_off;
+  uint16_t bad_csm_opt;
+#endif /* OC_TCP */
+
   uint32_t payload_len;
   uint8_t *payload;
 } coap_packet_t;
@@ -314,7 +325,8 @@ void coap_tcp_init_message(void *packet, uint8_t code);
 
 size_t coap_tcp_get_packet_size(const uint8_t *data);
 
-coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len);
+coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data,
+                                     uint32_t data_len);
 #endif /* OC_TCP */
 
 #ifdef __cplusplus
