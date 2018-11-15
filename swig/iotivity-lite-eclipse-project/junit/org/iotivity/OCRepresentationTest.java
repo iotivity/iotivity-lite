@@ -174,7 +174,128 @@ public class OCRepresentationTest {
 
     @Test
     public void testValueObjectArray() {
-        fail("Not yet implemented");
+        OCMain.repNewBuffer(1024);
+        /*
+         * NOTE Object Array is a misnomer when represented in json/cbor it
+         * is an array of objects. It is represented in code as a
+         * linked list of OCRepresentation objects. When used in code
+         * it has the same limitations as a singly-linked-list
+         */
+        /* 
+         * The first part of this test is copy/paste from later test
+         * testRepObjectArray (see below) this is the easiest way to
+         * to build an object array to place into the OCValue
+         */
+
+        /*
+         * {
+         *   "space_2001": [
+         *     {"name": "Dave Bowman", "job": "astronaut"},
+         *     {"name": "Frank Poole", "job": "astronaut"},
+         *     {"name": "Hal 9000", "job": "AI computer"}
+         *   ]
+         */
+        /* add values to root object */
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder space2001 = OCMain.repOpenArray(root, "space_2001");
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        CborEncoder arrayItemObject;
+
+        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "name", "Dave Bowman");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "name", "Frank Poole");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "name", "Hal 9000");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repSetTextString(arrayItemObject, "job", "AI computer");
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCMain.repCloseArray(root, space2001);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+        System.out.println(rep.getType());
+        System.out.println(rep.getName());
+        OCRepresentation space2001Out = OCMain.repGetObjectArray(rep, "space_2001");
+        assertNotNull(space2001Out);
+
+        OCValue v = new OCValue();
+        assertNotNull(v);
+        v.setObjectArray(space2001Out);
+
+        assertNull(v.getObjectArray().getName());
+        assertEquals(OCType.OC_REP_OBJECT, v.getObjectArray().getType());
+
+        OCRepresentation arrayObject;
+        /* 1st object item in the array */
+        arrayObject = v.getObjectArray().getValue().getObject();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("name"));
+        assertTrue(arrayObject.getValue().getString().equals("Dave Bowman"));
+        arrayObject = arrayObject.getNext();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("job"));
+        assertTrue(arrayObject.getValue().getString().equals("astronaut"));
+        assertNull(arrayObject.getNext());
+
+        /* 2nd object item in the array */
+        assertNotNull(v.getObjectArray().getNext());
+        assertEquals(OCType.OC_REP_OBJECT, v.getObjectArray().getNext().getType());
+        arrayObject = v.getObjectArray().getNext().getValue().getObject();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("name"));
+        assertTrue(arrayObject.getValue().getString().equals("Frank Poole"));
+        arrayObject = arrayObject.getNext();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("job"));
+        assertTrue(arrayObject.getValue().getString().equals("astronaut"));
+        assertNull(arrayObject.getNext());
+
+        /* 3rd object item in the array */
+        assertNotNull(v.getObjectArray().getNext().getNext());
+        assertEquals(OCType.OC_REP_OBJECT, v.getObjectArray().getNext().getNext().getType());
+        arrayObject = v.getObjectArray().getNext().getNext().getValue().getObject();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("name"));
+        assertTrue(arrayObject.getValue().getString().equals("Hal 9000"));
+        arrayObject = arrayObject.getNext();
+        assertNotNull(arrayObject);
+        assertEquals(OCType.OC_REP_STRING, arrayObject.getType());
+        assertTrue(arrayObject.getName().equals("job"));
+        assertTrue(arrayObject.getValue().getString().equals("AI computer"));
+        assertNull(arrayObject.getNext());
+
+        /* 4th object item in the array */
+        assertNull(v.getObjectArray().getNext().getNext().getNext());
+        OCMain.repDeleteBuffer();
     }
 
     @Test
@@ -431,7 +552,12 @@ public class OCRepresentationTest {
     @Test
     public void testRepObjectArray() {
         OCMain.repNewBuffer(1024);
-
+        /*
+         * NOTE Object Array is a misnomer when represented in json/cbor it
+         * is an array of objects. It is represented in code as a
+         * linked list of OCRepresentation objects. When used in code
+         * it has the same limitations as a singly-linked-list
+         */
         /*
          * {
          *   "space_2001": [
