@@ -141,7 +141,9 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   if (interface & OC_IF_S) {
     oc_rep_add_text_string(if, "oic.if.s");
   }
-  oc_rep_add_text_string(if, "oic.if.baseline");
+  if (interface & OC_IF_BASELINE) {
+    oc_rep_add_text_string(if, "oic.if.baseline");
+  }
   oc_rep_end_array((*parent), if);
 }
 

@@ -112,8 +112,9 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   } else {
     res = res->next;
   }
+
   while (res != NULL) {
-    bool match = true;
+    bool positive = false, match = true;
 #if defined(OC_SPEC_VER_OIC)
     if (res->href.size == 2 && *oc_string(res->href) == '*')
       return res;
@@ -123,8 +124,11 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
           memcmp(oc_string(res->href) + skip, href,
                  oc_string_len(res->href) - skip) != 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
+
     if (match && rt && oc_string_array_get_allocated_size(res->types) > 0) {
       size_t i, j;
       bool rt_match = false;
@@ -143,21 +147,28 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
       }
       if (!rt_match) {
         match = false;
+      } else {
+        positive = true;
       }
     }
+
     if (match && interfaces != 0 && res->interfaces != 0) {
       if ((interfaces & res->interfaces) == 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
 
     if (match && wildcard != 0 && res->wildcard != 0) {
       if ((wildcard & res->wildcard) == 0) {
         match = false;
+      } else {
+        positive = true;
       }
     }
 
-    if (match) {
+    if (match && positive) {
       return res;
     }
 
@@ -221,15 +232,15 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 }
 
 static uint16_t
-oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
+oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
+                      oc_interface_mask_t interface)
 {
   uint16_t permission = 0;
   oc_ace_wildcard_t wc = (resource->properties & OC_DISCOVERABLE)
                            ? OC_ACE_WC_ALL_DISCOVERABLE
                            : OC_ACE_WC_ALL_NON_DISCOVERABLE;
-  oc_ace_res_t *res =
-    oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri),
-                             &resource->types, resource->interfaces, wc);
+  oc_ace_res_t *res = oc_sec_ace_find_resource(
+    NULL, ace, oc_string(resource->uri), &resource->types, interface, wc);
   while (res != NULL) {
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
@@ -248,7 +259,7 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource)
     }
 
     res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri),
-                                   &resource->types, resource->interfaces, wc);
+                                   &resource->types, interface, wc);
   }
 
   return permission;
@@ -317,7 +328,7 @@ dump_acl(size_t device)
 
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_endpoint_t *endpoint)
+                 oc_interface_mask_t interface, oc_endpoint_t *endpoint)
 {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
@@ -365,7 +376,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       endpoint->device);
 
       if (match) {
-        permission |= oc_ace_get_permission(match, resource);
+        permission |= oc_ace_get_permission(match, resource, interface);
         OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
@@ -379,10 +390,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                         -1, 0, endpoint->device);
 
         if (match) {
-          permission |= oc_ace_get_permission(match, resource);
-          OC_DBG(
-            "oc_check_acl: Found ACE with permission %d for matching role",
-            permission);
+          permission |= oc_ace_get_permission(match, resource, interface);
+          OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
+                 permission);
         }
       } while (match);
     }
@@ -396,7 +406,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, -1,
                                       0, endpoint->device);
       if (match) {
-        permission |= oc_ace_get_permission(match, resource);
+        permission |= oc_ace_get_permission(match, resource, interface);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
                "connection",
                permission);
@@ -411,7 +421,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
                                     endpoint->device);
     if (match) {
-      permission |= oc_ace_get_permission(match, resource);
+      permission |= oc_ace_get_permission(match, resource, interface);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
              "connection",
              permission);
@@ -620,8 +630,9 @@ oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
 
 got_ace:
   res = oc_sec_ace_find_resource(NULL, ace, href, rt, interfaces, wildcard);
-  if (!res && create)
+  if (!res && create) {
     goto new_res;
+  }
 
   goto done;
 
@@ -675,9 +686,11 @@ new_ace:
 
 new_res:
   res = oc_memb_alloc(&res_l);
-
   if (res) {
-    res->wildcard = wildcard;
+    res->wildcard = 0;
+    if (wildcard != OC_ACE_NO_WC) {
+      res->wildcard = wildcard;
+    }
 #ifdef OC_DEBUG
     switch (res->wildcard) {
     case OC_ACE_WC_ALL_DISCOVERABLE:
@@ -1130,9 +1143,11 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_ace_wildcard_t wc = OC_ACE_NO_WC;
           oc_rep_t *resource = resources->value.object;
           const char *href = 0;
-#ifdef OC_SERVER
+          /*
+      #ifdef OC_SERVER
           oc_resource_properties_t wc_r = 0;
-#endif /* OC_SERVER */
+      #endif
+          */
           oc_interface_mask_t interfaces = 0;
           oc_string_array_t *rt = 0;
           int i;
@@ -1147,21 +1162,27 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                          memcmp(oc_string(resource->name), "wc", 2) == 0) {
                 if (oc_string(resource->value.string)[0] == '*') {
                   wc = OC_ACE_WC_ALL;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~0;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
                 if (oc_string(resource->value.string)[0] == '+') {
                   wc = OC_ACE_WC_ALL_DISCOVERABLE;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~0;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
                 if (oc_string(resource->value.string)[0] == '-') {
                   wc = OC_ACE_WC_ALL_NON_DISCOVERABLE;
-#ifdef OC_SERVER
+                  /*
+            #ifdef OC_SERVER
                   wc_r = ~OC_DISCOVERABLE;
-#endif /* OC_SERVER */
+            #endif
+                  */
                 }
               }
               break;
@@ -1196,26 +1217,31 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
                                 wc, rt, interfaces, device);
 
-#ifdef OC_SERVER
-          if (subject_type == OC_SUBJECT_CONN &&
-              subject.conn == OC_CONN_ANON_CLEAR) {
-            if (href) {
-              oc_resource_t *r =
-                oc_ri_get_app_resource_by_uri(href, strlen(href), device);
-              if (r) {
-                oc_resource_make_public(r);
-              }
-            } else {
-              oc_resource_t *r = oc_ri_get_app_resources();
-              while (r != NULL) {
-                if ((r->properties & wc_r) == r->properties) {
-                  oc_resource_make_public(r);
+          /* The following code block attaches "coap" endpoints to
+                   resources linked to an anon-clear ACE. This logic is being
+                   currently disabled to comply with the SH spec which requires
+                   that all vertical resources not expose a "coap" endpoint.
+      #ifdef OC_SERVER
+                if (subject_type == OC_SUBJECT_CONN &&
+                    subject.conn == OC_CONN_ANON_CLEAR) {
+                  if (href) {
+                    oc_resource_t *r =
+                      oc_ri_get_app_resource_by_uri(href, strlen(href), device);
+                    if (r) {
+                      oc_resource_make_public(r);
+                    }
+                  } else {
+                    oc_resource_t *r = oc_ri_get_app_resources();
+                    while (r != NULL) {
+                      if ((r->properties & wc_r) == r->properties) {
+                        oc_resource_make_public(r);
+                      }
+                      r = r->next;
+                    }
+                  }
                 }
-                r = r->next;
-              }
-            }
-          }
-#endif /* OC_SERVER */
+      #endif
+          */
           resources = resources->next;
         }
 

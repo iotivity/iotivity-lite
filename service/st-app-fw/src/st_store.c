@@ -141,7 +141,7 @@ st_store_dump_internal(char *store_name, st_store_dump_handler_t encode_handler)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   encode_handler(buf);
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
 #ifdef OC_SECURITY
   if (size > 0) {
     oc_storage_write(store_name, buf, size);
@@ -172,7 +172,7 @@ st_encode_data_info(uint8_t *buf)
 #ifdef STORE_ENCRYPT
   // Dumping cloud and accesspoint information.
   st_encode_cloud_accesspoint_info();
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   if (size <= 0 || size == 2)
     return;
 
