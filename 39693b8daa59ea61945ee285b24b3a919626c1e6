@@ -1,0 +1,124 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_9ee78ce4",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "COAP_TOKEN_LEN",
+      "range": {
+        "startLine": 27,
+        "startChar": 22,
+        "endLine": 27,
+        "endChar": 23
+      },
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ded0f4f9",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "Is it not require null check about params?",
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_becd3060",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "In my opinion, check_is too long. How about select only one?",
+      "range": {
+        "startLine": 196,
+        "startChar": 0,
+        "endLine": 196,
+        "endChar": 28
+      },
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_5edd0414",
+        "filename": "messaging/coap/unittest/coaptest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 576,
+        "startChar": 16,
+        "endLine": 576,
+        "endChar": 17
+      },
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_fec0582c",
+        "filename": "port/linux/tcpadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "How about CSM_ERROR instead NONE?",
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_dec9145c",
+        "filename": "port/unittest/connectivitytest.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-11-15T11:02:31Z",
+      "side": 1,
+      "message": "Why not use ep directly?",
+      "revId": "39693b8daa59ea61945ee285b24b3a919626c1e6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
