@@ -76,19 +76,79 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif /* !OC_BLOCK_WISE */
 
 #define OC_REQUEST_HISTORY_SIZE (250)
-static uint16_t history[OC_REQUEST_HISTORY_SIZE];
-static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
-static uint8_t idx;
+// According to RFC 7253, EXCHANGE_LIFE_TIME is 247 seconds
+#define EXCHANGE_LIFE_TIME  247
+#define EXCHANGE_LIFE_TICK_COUNT  (EXCHANGE_LIFE_TIME*OC_CLOCK_CONF_TICKS_PER_SECOND)
+
+typedef struct oc_saved_mid_s
+{
+  struct oc_saved_mid_s *next;
+  uint32_t saved_mid_dev;
+  oc_clock_time_t saved_time;
+} oc_saved_mid_t;
+
+OC_LIST(saved_mid_list);
+OC_MEMB(saved_mid_memb, oc_saved_mid_t, OC_REQUEST_HISTORY_SIZE);
+
+static uint32_t
+create_mid_dev(uint16_t mid, uint8_t device)
+{
+  return ((uint32_t)mid<<16 | device);
+}
+
+static void
+remove_invaild_saved_mid(void)
+{
+  oc_saved_mid_t *next,
+    *saved_item = (oc_saved_mid_t *)oc_list_head(saved_mid_list);
+
+  if(!saved_item){
+    OC_DBG("no saved mids");
+    return ;
+  }
+
+  oc_clock_time_t curtime = oc_clock_time();
+
+  while(saved_item){
+    next=saved_item->next;
+    if(( curtime -  saved_item->saved_time ) > EXCHANGE_LIFE_TICK_COUNT){
+      oc_list_remove(saved_mid_list, saved_item);
+      oc_memb_free(&saved_mid_memb, saved_item);
+      OC_DBG("Saved mid is removed because it is out of date");
+    }
+    saved_item = next;
+  }
+}
+
+static void
+add_saved_id(uint16_t mid, uint8_t device)
+{
+  oc_saved_mid_t *o = oc_memb_alloc(&saved_mid_memb);
+  if(o){
+    o->saved_mid_dev = create_mid_dev(mid, device);
+    o->saved_time = oc_clock_time();
+    oc_list_add(saved_mid_list, o);
+  }
+  else{
+    OC_ERR("allocating saved mid : failure ");
+  }
+}
 
 static bool
 check_if_duplicate(uint16_t mid, uint8_t device)
 {
-  size_t i;
-  for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
-    if (history[i] == mid && history_dev[i] == device) {
+  oc_saved_mid_t *saved_item=(oc_saved_mid_t *)oc_list_head(saved_mid_list), *next;
+  if(!saved_item)
+    return false;
+
+  uint32_t mid_dev = create_mid_dev(mid, device);
+  while(saved_item){
+    next=saved_item->next;
+    if( saved_item->saved_mid_dev == mid_dev){
       OC_DBG("dropping duplicate request");
       return true;
     }
+    saved_item = next;
   }
   return false;
 }
@@ -139,6 +199,9 @@ coap_receive(oc_message_t *msg)
            block2_size = (uint16_t)OC_BLOCK_SIZE;
   uint8_t block1_more = 0, block2_more = 0;
   bool block1 = false, block2 = false;
+
+  /* if it has saved mid, check then remove invalid save ones */
+  remove_invaild_saved_mid();
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *request_buffer = NULL, *response_buffer = NULL;
@@ -237,9 +300,8 @@ coap_receive(oc_message_t *msg)
           if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
             return 0;
           }
-          history[idx] = message->mid;
-          history_dev[idx] = (uint8_t)msg->endpoint.device;
-          idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
+          add_saved_id(message->mid,(uint8_t)msg->endpoint.device);
+
           coap_udp_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
                             coap_get_mid());
         }
