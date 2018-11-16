@@ -859,13 +859,13 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 /* CborEncoder from cbor.h  needed to process oc_rep.h*/
 struct CborEncoder
 {
-    union {
+/*    union {
         uint8_t *ptr;
         ptrdiff_t bytes_needed;
     } data;
     const uint8_t *end;
     size_t remaining;
-    int flags;
+    int flags;*/
 };
 /*******************End cbor.h********************************/
 /*******************Begin oc_rep.h****************************/
@@ -1321,12 +1321,94 @@ int jni_rep_get_cbor_errno() {
 %ignore oc_parse_rep;
 %ignore oc_free_rep;
 
-%apply int *OUTPUT { int *value }
-%rename(repGetInt) oc_rep_get_int;
-%apply bool *OUTPUT { bool *value }
-%rename(repGetBoolean) oc_rep_get_bool;
-%apply double *OUTPUT { double *value }
-%rename(repGetDouble) oc_rep_get_double;
+%typemap(in, numinputs=0, noblock=1) bool *jni_rep_get_error_flag {
+  bool temp_jni_rep_get_error_flag;
+  $1 = &temp_jni_rep_get_error_flag;
+}
+
+%typemap(jstype) int jni_rep_get_int "Integer"
+%typemap(jtype) int jni_rep_get_int "Integer"
+%typemap(jni) int jni_rep_get_int "jobject"
+%typemap(javaout) int jni_rep_get_int {
+  return $jnicall;
+}
+%typemap(out, noblock=1) int jni_rep_get_int {
+  if(temp_jni_rep_get_error_flag) {
+    const jclass cls_Integer = JCALL1(FindClass, jenv, "java/lang/Integer");
+    assert(cls_Integer);
+    const jmethodID mid_Integer_init = JCALL3(GetMethodID, jenv, cls_Integer, "<init>", "(I)V");
+    assert(mid_Integer_init);
+    $result = JCALL3(NewObject, jenv, cls_Integer, mid_Integer_init, $1);
+  } else {
+    $result = NULL;
+  }
+}
+
+%ignore oc_rep_get_int;
+%rename(repGetInt) jni_rep_get_int;
+%inline %{
+int jni_rep_get_int(oc_rep_t *rep, const char *key, bool *jni_rep_get_error_flag) {
+  int retValue;
+  *jni_rep_get_error_flag = oc_rep_get_int(rep, key, &retValue);
+  return retValue;
+}
+%}
+
+%typemap(jstype) bool jni_rep_get_bool "Boolean"
+%typemap(jtype) bool jni_rep_get_bool "Boolean"
+%typemap(jni) bool jni_rep_get_bool "jobject"
+%typemap(javaout) bool jni_rep_get_bool {
+  return $jnicall;
+}
+%typemap(out, noblock=1) bool jni_rep_get_bool {
+  if(temp_jni_rep_get_error_flag) {
+    const jclass cls_Boolean = JCALL1(FindClass, jenv, "java/lang/Boolean");
+    assert(cls_Boolean);
+    const jmethodID mid_Boolean_init = JCALL3(GetMethodID, jenv, cls_Boolean, "<init>", "(Z)V");
+    assert(mid_Boolean_init);
+    $result = JCALL3(NewObject, jenv, cls_Boolean, mid_Boolean_init, $1);
+  } else {
+    $result = NULL;
+  }
+}
+
+%ignore oc_rep_get_bool;
+%rename(repGetBoolean) jni_rep_get_bool;
+%inline %{
+bool jni_rep_get_bool(oc_rep_t *rep, const char *key, bool *jni_rep_get_error_flag) {
+  bool retValue;
+  *jni_rep_get_error_flag = oc_rep_get_bool(rep, key, &retValue);
+  return retValue;
+}
+%}
+
+%typemap(jstype) double jni_rep_get_double "Double"
+%typemap(jtype) double jni_rep_get_double "Double"
+%typemap(jni) double jni_rep_get_double "jobject"
+%typemap(javaout) double jni_rep_get_double {
+  return $jnicall;
+}
+%typemap(out, noblock=1) double jni_rep_get_double {
+  if(temp_jni_rep_get_error_flag) {
+    const jclass cls_Double = JCALL1(FindClass, jenv, "java/lang/Double");
+    assert(cls_Double);
+    const jmethodID mid_Double_init = JCALL3(GetMethodID, jenv, cls_Double, "<init>", "(D)V");
+    assert(mid_Double_init);
+    $result = JCALL3(NewObject, jenv, cls_Double, mid_Double_init, $1);
+  } else {
+    $result = NULL;
+  }
+}
+
+%ignore oc_rep_get_double;
+%rename(repGetDouble) jni_rep_get_double;
+%inline %{
+double jni_rep_get_double(oc_rep_t *rep, const char *key, bool *jni_rep_get_error_flag) {
+  double retValue;
+  *jni_rep_get_error_flag = oc_rep_get_double(rep, key, &retValue);
+  return retValue;
+}
+%}
 
 %typemap(in, numinputs=0, noblock=1) size_t *byte_string_size {
   size_t temp_byte_string_size;
@@ -1358,45 +1440,19 @@ const char * jni_rep_get_byte_string(oc_rep_t *rep, const char *key, size_t *byt
 }
 %}
 
-%typemap(jni) (char **value, size_t *size) "jobjectArray"
-%typemap(jtype) (char **value, size_t *size) "String[]"
-%typemap(jstype) (char **value, size_t *size) "String[]"
-%typemap(javain) (char **value, size_t *size) "$javainput"
-%typemap(javadirectorin) (char **value, size_t *size) "$javainput"
-%typemap(javadirectorout) (char **value, size_t *size) "$javacall"
-
-%typemap(in) (char **value, size_t *size) ($*1_ltype temp_value, $*2_ltype temp_size) {
-  if (!$input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
-    return $null;
-  }
-  if (JCALL1(GetArrayLength, jenv, $input) == 0) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaIndexOutOfBoundsException, "Array must contain at least 1 element");
-    return $null;
-  }
-  temp_value = ($*1_ltype)0;
-  $1 = &temp_value;
-  $2 = &temp_size;
-}
-
-%typemap(freearg) (char **value, size_t *size) ""
-
-
-/* TODO figureout a way to free the string that is returned in the array
-%typemap(freearg) (char **value, size_t *size) {
-  if ($1 && $1->ptr) {
-    jstring jvalue = (jstring)JCALL2(GetObjectArrayElement, jenv, $input, 0);
-    JCALL2(ReleaseStringUTFChars, jenv, jvalue, temp_value$argnum);
+%ignore oc_rep_get_string;
+%rename(repGetString) jni_rep_get_string;
+%inline %{
+char * jni_rep_get_string(oc_rep_t *rep, const char *key) {
+  char * retValue;
+  size_t size;
+  if(oc_rep_get_string(rep, key, &retValue, &size)) {
+    return retValue;
+  } else {
+    return NULL;
   }
 }
-*/
-
-%typemap(argout) (char **value, size_t *size) {
-  temp_value$argnum = *$1;
-  jstring jvalue = JCALL1(NewStringUTF, jenv, temp_value$argnum);
-  JCALL3(SetObjectArrayElement, jenv, $input, 0, jvalue);
-}
-%rename(repGetString) oc_rep_get_string;
+%}
 
 %typemap(in, numinputs=0, noblock=1) size_t *int_array_size {
   size_t temp_int_array_size;
