@@ -107,7 +107,72 @@ public class OCRepresentationTest {
 
     @Test
     public void testValueArray() {
-        fail("Not yet implemented");
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        OCMain.repSetIntArray(root, "fibonacci", fib);
+        assertEquals(0, OCMain.repGetCborErrno());
+        boolean barray[] = {false, false, true, false, false};
+        OCMain.repSetBooleanArray(root, "flips", barray);
+        assertEquals(0, OCMain.repGetCborErrno());
+        double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
+        OCMain.repSetDoubleArray(root, "math_constants", mathConstants);
+        assertEquals(0, OCMain.repGetCborErrno());
+        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
+                "consectetur", "adipiscing", "elit.", "Sed",
+                "nec", "feugiat", "odio.", "Donec."};
+        OCMain.repSetStringArray(root, "lorem_ipsum", lorem_ipsum);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        //OCArray to int array
+        assertEquals(OCType.OC_REP_INT_ARRAY, rep.getType());
+        assertTrue(rep.getName().equals("fibonacci"));
+        assertNotNull(rep.getValue().getArray());
+        assertEquals(fib.length, OCMain.ocArrayToIntArray(rep.getValue().getArray()).length);
+        assertArrayEquals(fib, OCMain.ocArrayToIntArray(rep.getValue().getArray()));
+
+        rep = rep.getNext();
+        assertNotNull(rep);
+
+        //OCArray to boolean array
+        assertEquals(OCType.OC_REP_BOOL_ARRAY, rep.getType());
+        assertTrue(rep.getName().equals("flips"));
+        assertNotNull(rep.getValue().getArray());
+        assertEquals(barray.length, OCMain.ocArrayToBooleanArray(rep.getValue().getArray()).length);
+        assertArrayEquals(barray, OCMain.ocArrayToBooleanArray(rep.getValue().getArray()));
+
+        rep = rep.getNext();
+        assertNotNull(rep);
+
+        //OCArray to double array
+        assertEquals(OCType.OC_REP_DOUBLE_ARRAY, rep.getType());
+        assertTrue(rep.getName().equals("math_constants"));
+        assertNotNull(rep.getValue().getArray());
+        assertEquals(mathConstants.length, OCMain.ocArrayToDoubleArray(rep.getValue().getArray()).length);
+        assertArrayEquals(mathConstants, OCMain.ocArrayToDoubleArray(rep.getValue().getArray()), 0.0000001);
+        OCMain.repDeleteBuffer();
+
+        rep = rep.getNext();
+        assertNotNull(rep);
+
+        //OCArray to string array
+        assertEquals(OCType.OC_REP_STRING_ARRAY, rep.getType());
+        assertTrue(rep.getName().equals("lorem_ipsum"));
+        assertNotNull(rep.getValue().getArray());
+        assertEquals(lorem_ipsum.length, OCMain.ocArrayToStringArray(rep.getValue().getArray()).length);
+        assertArrayEquals(lorem_ipsum, OCMain.ocArrayToStringArray(rep.getValue().getArray()));
+
+        // TODO solve how to pass arrays of bytes.
+        // Note Object arrays not covered by the OCArray type
+        OCMain.repDeleteBuffer();
     }
 
     @Test
