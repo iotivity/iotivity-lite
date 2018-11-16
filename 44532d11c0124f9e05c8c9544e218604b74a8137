@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_fef8584b",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-11-16T02:41:24Z",
+      "side": 1,
+      "message": "in order to reduce memory consumption.\n\nuint16_t :   32bit , if it is 32 bit processor\nuint8_t :    32bit , if it is 32 bit processor\n\n\nso I merge them into one 32bit variable",
+      "parentUuid": "9a3d3df0_3ebbe0c5",
+      "range": {
+        "startLine": 85,
+        "startChar": 2,
+        "endLine": 85,
+        "endChar": 25
+      },
+      "revId": "44532d11c0124f9e05c8c9544e218604b74a8137",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_5eb6a4dd",
         "filename": "messaging/coap/engine.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-15T09:28:40Z",
       "side": 1,
       "message": "how about use OC_REQUEST_HISTORY_SIZE ?",
+      "range": {
+        "startLine": 90,
+        "startChar": 40,
+        "endLine": 90,
+        "endChar": 41
+      },
+      "revId": "44532d11c0124f9e05c8c9544e218604b74a8137",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_fe8fb8ca",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-11-16T02:41:24Z",
+      "side": 1,
+      "message": "I don\u0027t have no idea why it needs to work  concurrent about 250.\n\nWould you please let me know the reason in detail?",
+      "parentUuid": "9a3d3df0_5eb6a4dd",
       "range": {
         "startLine": 90,
         "startChar": 40,
