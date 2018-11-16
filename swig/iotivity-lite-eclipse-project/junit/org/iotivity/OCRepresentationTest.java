@@ -225,15 +225,15 @@ public class OCRepresentationTest {
         assertEquals("three", outObject.getValue().getString());
 
         // Access values indirectly using repGet functions
-        int a[] = new int[1];
-        OCMain.repGetInt(v.getObject(), "a", a);
-        assertEquals(1, a[0]);
-        boolean b[] = new boolean[1];
-        OCMain.repGetBoolean(v.getObject(), "b", b);
-        assertEquals(false, b[0]);
-        String c[] = new String[1];
-        OCMain.repGetString(v.getObject(), "c", c);
-        assertEquals("three", c[0]);
+        Integer a = OCMain.repGetInt(v.getObject(), "a");
+        assertNotNull(a);
+        assertEquals(1, a.intValue());
+        Boolean b = OCMain.repGetBoolean(v.getObject(), "b");
+        assertNotNull(b);
+        assertEquals(false, b.booleanValue());
+        String c = OCMain.repGetString(v.getObject(), "c");
+        assertNotNull(c);
+        assertTrue(c.equals("three"));
         OCMain.repDeleteBuffer();
     }
 
@@ -378,9 +378,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        int[] outValue = new int[1];
-        OCMain.repGetInt(rep, "ultimat_answer", outValue);
-        assertEquals(42, outValue[0]);
+        Integer outValue = OCMain.repGetInt(rep, "ultimat_answer");
+        assertNotNull(outValue);
+        assertEquals(42, outValue.intValue());
+        outValue = OCMain.repGetInt(rep, "not_a_key");
+        assertNull(outValue);
         OCMain.repDeleteBuffer();
     }
 
@@ -399,9 +401,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        boolean[] outValue = new boolean[1];
-        OCMain.repGetBoolean(rep, "true_flag", outValue);
-        assertEquals(true, outValue[0]);
+        Boolean outValue = OCMain.repGetBoolean(rep, "true_flag");
+        assertNotNull(outValue);
+        assertEquals(true, outValue.booleanValue());
+        outValue = OCMain.repGetBoolean(rep, "not_a_key");
+        assertNull(outValue);
         OCMain.repDeleteBuffer();
     }
 
@@ -419,9 +423,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        double[] outValue = new double[1];
-        OCMain.repGetDouble(rep, "pi", outValue);
-        assertEquals(3.14, outValue[0], 0.001);
+        Double outValue = OCMain.repGetDouble(rep, "pi");
+        assertNotNull(outValue);
+        assertEquals(3.14, outValue.doubleValue(), 0.001);
+        outValue = OCMain.repGetDouble(rep, "not_a_key");
+        assertNull(outValue);
         OCMain.repDeleteBuffer();
     }
 
@@ -442,11 +448,14 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        String[] outValue = new String[1];
-        assertTrue(OCMain.repGetString(rep, "hello", outValue));
-        assertTrue(outValue[0].equals("world"));
-        assertTrue(OCMain.repGetString(rep, "empty", outValue));
-        assertTrue(outValue[0].equals(""));
+        String outValue = OCMain.repGetString(rep, "hello");
+        assertNotNull(outValue);
+        assertTrue(outValue.equals("world"));
+        outValue = OCMain.repGetString(rep, "empty");
+        assertNotNull(outValue);
+        assertTrue(outValue.equals(""));
+        outValue = OCMain.repGetString(rep, "not_a_key");
+        assertNull(outValue);
         OCMain.repDeleteBuffer();
     }
 
@@ -601,15 +610,15 @@ public class OCRepresentationTest {
         OCRepresentation myObjectOut = OCMain.repGetObject(rep, "my_object");
         assertNotNull(myObjectOut);
 
-        int a[] = new int[1];
-        OCMain.repGetInt(myObjectOut, "a", a);
-        assertEquals(1, a[0]);
-        boolean b[] = new boolean[1];
-        OCMain.repGetBoolean(myObjectOut, "b", b);
-        assertEquals(false, b[0]);
-        String c[] = new String[1];
-        OCMain.repGetString(myObjectOut, "c", c);
-        assertEquals("three", c[0]);
+        Integer a = OCMain.repGetInt(myObjectOut, "a");
+        assertNotNull(a);
+        assertEquals(1, a.intValue());
+        Boolean b = OCMain.repGetBoolean(myObjectOut, "b");
+        assertNotNull(b);
+        assertEquals(false, b.booleanValue());
+        String c = OCMain.repGetString(myObjectOut, "c");
+        assertNotNull(c);
+        assertTrue(c.equals("three"));
 
         OCMain.repDeleteBuffer();
     }
@@ -678,32 +687,38 @@ public class OCRepresentationTest {
         OCRepresentation space2001Out = OCMain.repGetObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);
 
-        String nameOut[] = new String[1];
-        String jobOut[] = new String[1];
+        String nameOut;
+        String jobOut;
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        OCMain.repGetString(space2001Out.getValue().getObject(), "name", nameOut);
-        assertTrue(nameOut[0].equals("Dave Bowman"));
-        OCMain.repGetString(space2001Out.getValue().getObject(), "job", jobOut);
-        assertTrue(jobOut[0].equals("astronaut"));
+        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        assertNotNull(nameOut);
+        assertTrue(nameOut.equals("Dave Bowman"));
+        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        assertNotNull(jobOut);
+        assertTrue(jobOut.equals("astronaut"));
 
         space2001Out = space2001Out.getNext();
         assertNotNull(space2001Out);
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        OCMain.repGetString(space2001Out.getValue().getObject(), "name", nameOut);
-        assertTrue(nameOut[0].equals("Frank Poole"));
-        OCMain.repGetString(space2001Out.getValue().getObject(), "job", jobOut);
-        assertTrue(jobOut[0].equals("astronaut"));
+        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        assertNotNull(nameOut);
+        assertTrue(nameOut.equals("Frank Poole"));
+        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        assertNotNull(jobOut);
+        assertTrue(jobOut.equals("astronaut"));
 
         space2001Out = space2001Out.getNext();
         assertNotNull(space2001Out);
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        OCMain.repGetString(space2001Out.getValue().getObject(), "name", nameOut);
-        assertTrue(nameOut[0].equals("Hal 9000"));
-        OCMain.repGetString(space2001Out.getValue().getObject(), "job", jobOut);
-        assertTrue(jobOut[0].equals("AI computer"));
+        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        assertNotNull(nameOut);
+        assertTrue(nameOut.equals("Hal 9000"));
+        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        assertNotNull(jobOut);
+        assertTrue(jobOut.equals("AI computer"));
 
         OCMain.repDeleteBuffer();
     }
