@@ -23,6 +23,7 @@
 #include "oc_api.h"
 #include "oc_rep.h"
 #include "oc_collection.h"
+#include "oc_helpers.h"
 #include <vector>
 #include <assert.h>
 
@@ -1550,15 +1551,127 @@ oc_rep_t * jni_rep_get_object_array(oc_rep_t* rep, const char *key) {
   return NULL;
 }
 %}
-//%rename(repGetObjectArray) oc_rep_get_object_array;
-%{
+%rename (getRepError) jni_get_rep_error;
+%inline %{
 int jni_get_rep_error() {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   return g_err;
 }
 %}
-%rename (getRepError) jni_get_rep_error;
-int jni_get_rep_error();
+
+// Expose oc_array_t this will be exposed as a class that has no usage without helper functions
+%rename (OCArray) oc_array_t;
+typedef struct oc_array_t {};
+
+%typemap(in, numinputs=0, noblock=1) size_t *oc_array_int_array_len {
+  size_t temp_oc_array_int_array_len;
+  $1 = &temp_oc_array_int_array_len;
+}
+%typemap(jstype)  const int * ocArrayToIntArray "int[]"
+%typemap(jtype)   const int * ocArrayToIntArray "int[]"
+%typemap(jni)     const int * ocArrayToIntArray "jintArray"
+%typemap(javaout) const int * ocArrayToIntArray {
+  return $jnicall;
+}
+%typemap(out) const int * ocArrayToIntArray {
+  if($1 != NULL) {
+    $result = JCALL1(NewIntArray, jenv, (jsize)temp_oc_array_int_array_len);
+    JCALL4(SetIntArrayRegion, jenv, $result, 0, (jsize)temp_oc_array_int_array_len, (const jint *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%inline %{
+const int * ocArrayToIntArray(oc_array_t array, size_t *oc_array_int_array_len) {
+  *oc_array_int_array_len = (size_t)oc_int_array_size(array);
+  return oc_int_array(array);
+}
+%}
+
+%typemap(in, numinputs=0, noblock=1) size_t *oc_array_bool_array_len {
+  size_t temp_oc_array_bool_array_len;
+  $1 = &temp_oc_array_bool_array_len;
+}
+%typemap(jstype) const bool* ocArrayToBooleanArray "boolean[]"
+%typemap(jtype) const bool* ocArrayToBooleanArray "boolean[]"
+%typemap(jni) const bool* ocArrayToBooleanArray "jbooleanArray"
+%typemap(javaout) const bool* ocArrayToBooleanArray {
+  return $jnicall;
+}
+%typemap(out) const bool* ocArrayToBooleanArray {
+  if($1 != NULL) {
+    $result = JCALL1(NewBooleanArray, jenv, (jsize)temp_oc_array_bool_array_len);
+    JCALL4(SetBooleanArrayRegion, jenv, $result, 0, (jsize)temp_oc_array_bool_array_len, (const jboolean *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%inline %{
+const bool* ocArrayToBooleanArray(oc_array_t array, size_t *oc_array_bool_array_len) {
+  *oc_array_bool_array_len = (size_t)oc_bool_array_size(array);
+  return oc_bool_array(array);
+}
+%}
+
+%typemap(in, numinputs=0, noblock=1) size_t *oc_array_double_array_len {
+  size_t temp_oc_array_double_array_len;
+  $1 = &temp_oc_array_double_array_len;
+}
+%typemap(jstype)  const double* ocArrayToDoubleArray "double[]"
+%typemap(jtype)   const double* ocArrayToDoubleArray "double[]"
+%typemap(jni)     const double* ocArrayToDoubleArray "jdoubleArray"
+%typemap(javaout) const double* ocArrayToDoubleArray {
+  return $jnicall;
+}
+%typemap(out) const double* ocArrayToDoubleArray {
+  if($1 != NULL) {
+    $result = JCALL1(NewDoubleArray, jenv, (jsize)temp_oc_array_double_array_len);
+    JCALL4(SetDoubleArrayRegion, jenv, $result, 0, (jsize)temp_oc_array_double_array_len, (const jdouble *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%ignore oc_rep_get_double_array;
+%rename(repGetDoubleArray) jni_rep_get_double_array;
+%inline %{
+const double* ocArrayToDoubleArray(oc_array_t array, size_t *oc_array_double_array_len) {
+  *oc_array_double_array_len = (size_t)oc_double_array_size(array);
+  return oc_double_array(array);
+}
+%}
+
+%typemap(in, numinputs=0, noblock=1) size_t *oc_array_text_string_array_len {
+  size_t temp_oc_array_text_string_array_len;
+  $1 = &temp_oc_array_text_string_array_len;
+}
+%typemap(jstype)  const oc_string_array_t * ocArrayToStringArray "String[]"
+%typemap(jtype)   const oc_string_array_t * ocArrayToStringArray "String[]"
+%typemap(jni)     const oc_string_array_t * ocArrayToStringArray "jobjectArray"
+%typemap(javaout) const oc_string_array_t * ocArrayToStringArray {
+  return $jnicall;
+}
+%typemap(out) const oc_string_array_t * ocArrayToStringArray {
+  if($1 != NULL) {
+    jstring temp_string;
+    const jclass clazz = JCALL1(FindClass, jenv, "java/lang/String");
+    $result = JCALL3(NewObjectArray, jenv, (jsize)temp_oc_array_text_string_array_len, clazz, 0);
+    /* exception checking omitted */
+    for (size_t i=0; i<temp_oc_array_text_string_array_len; i++) {
+      temp_string = JCALL1(NewStringUTF, jenv, oc_string_array_get_item(*$1, i));
+      JCALL3(SetObjectArrayElement, jenv, $result, (jsize)i, temp_string);
+      JCALL1(DeleteLocalRef, jenv, temp_string);
+    }
+  } else {
+    $result = NULL;
+  }
+}
+%inline %{
+const oc_string_array_t * ocArrayToStringArray(oc_array_t array, size_t *oc_array_text_string_array_len) {
+  *oc_array_text_string_array_len = (size_t)oc_string_array_get_allocated_size(array);
+  return (oc_string_array_t *)&array;
+}
+%}
+
 %include "oc_rep.h"
 /*******************End oc_rep.h****************************/
 /*******************Begin oc_endpoint.h*********************/

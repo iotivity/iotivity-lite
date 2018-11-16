@@ -61,7 +61,7 @@ public class OCResourceTest {
     public void testProperties(){
         OCResource r = new OCResource();
         assertNotNull(r);
-        fail("setProperties implementation crashes VM");
+        fail("Not properly implemented\nsetProperties implementation crashes VM");
         r.setProperties((OCResourcePropertiesMask.OC_DISCOVERABLE | OCResourcePropertiesMask.OC_OBSERVABLE));
         assertTrue((r.getProperties() & OCResourcePropertiesMask.OC_DISCOVERABLE) == OCResourcePropertiesMask.OC_DISCOVERABLE);
         assertTrue((r.getProperties() & OCResourcePropertiesMask.OC_OBSERVABLE) == OCResourcePropertiesMask.OC_OBSERVABLE);
