@@ -18,6 +18,7 @@
 
 #include "resourcehandler.h"
 #include "es_utils.h"
+#include "es_resource_utils.h"
 #include "oc_collection.h"
 #include "oc_log.h"
 #include "util/oc_mem.h"
@@ -156,6 +157,8 @@ update_wifi_conf_resource(oc_request_t *request)
   }
 
   {
+#ifdef OC_SPEC_VER_OIC
+    // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
     int int_val = 0;
     if (oc_rep_get_int(request->request_payload, OC_RSRVD_ES_AUTHTYPE,
                        &int_val)) {
@@ -168,6 +171,22 @@ update_wifi_conf_resource(oc_request_t *request)
       wifi_res->data.enc_type = int_val;
       changed = true;
     }
+#else
+    // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+    char *str_val = NULL;
+    size_t str_len = 0;
+    if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_AUTHTYPE, &str_val,
+                          &str_len)) {
+      wifi_authtype_string_toenum(str_val, &wifi_res->data.auth_type);
+      changed = true;
+    }
+
+    if (oc_rep_get_string(request->request_payload, OC_RSRVD_ES_ENCTYPE, &str_val,
+                          &str_len)) {
+      wifi_enctype_string_toenum(str_val, &wifi_res->data.enc_type);
+      changed = true;
+    }
+#endif  // OC_SPEC_VER_OIC
   }
 
   // Invoke callback for user defined attributes
@@ -362,15 +381,65 @@ construct_response_of_wificonf(void)
 
   oc_rep_set_array(root, swmt);
   for (int i = 0; i < wifi_res->data.num_mode; i++) {
+#ifdef OC_SPEC_VER_OIC
+    // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
     oc_rep_add_int(swmt, (int)wifi_res->data.supported_mode[i]);
+#else
+    // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+    oc_rep_add_text_string(swmt, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_mode[i])));
+#endif  // OC_SPEC_VER_OIC
   }
 
   oc_rep_close_array(root, swmt);
+
+#ifdef OC_SPEC_VER_OIC
+  // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
   es_rep_set_int(root, swf, (int)wifi_res->data.supported_freq);
+#else
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  oc_rep_set_array(root, swf);
+
+  switch(wifi_res->data.supported_freq) {
+     case WIFI_24G:
+     case WIFI_5G :
+       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(wifi_res->data.supported_freq)));
+       break;
+     case WIFI_BOTH:
+       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(WIFI_24G)));
+       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(WIFI_5G)));
+       break;
+     case WIFI_FREQ_NONE:
+       break;
+  }
+
+  oc_rep_close_array(root, swf);
+#endif  // OC_SPEC_VER_OIC
+
   es_rep_set_text_string(root, tnn, oc_string(wifi_res->data.ssid));
   es_rep_set_text_string(root, cd, oc_string(wifi_res->data.cred));
+
+#ifdef OC_SPEC_VER_OIC
+  // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
   es_rep_set_int(root, wat, (int)wifi_res->data.auth_type);
   es_rep_set_int(root, wet, (int)wifi_res->data.enc_type);
+#else
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  es_rep_set_text_string(root, wat, oc_string(wifi_authtype_enum_tostring(wifi_res->data.auth_type)));
+  es_rep_set_text_string(root, wet, oc_string(wifi_enctype_enum_tostring(wifi_res->data.enc_type)));
+
+  // new properties in OCF 1.3 - swat and swet.
+  oc_rep_set_array(root, swat);
+  for (int i = 0; i < wifi_res->data.num_supported_authtype; i++) {
+    oc_rep_add_text_string(swat, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_authtype[i])));
+  }
+  oc_rep_close_array(root, swat);
+
+  oc_rep_set_array(root, swet);
+  for (int i = 0; i < wifi_res->data.num_supported_enctype; i++) {
+    oc_rep_add_text_string(swet, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_enctype[i])));
+  }
+  oc_rep_close_array(root, swet);
+#endif  // OC_SPEC_VER_OIC
 
   // Invoke callback for user defined attributes
   if (g_enrollee->write_cb) {
@@ -692,6 +761,23 @@ init_wifi_conf_resource(bool is_secured, es_wifi_conf_cb cb)
   wifi_res->data.num_mode = 4;
   wifi_res->data.auth_type = NONE_AUTH;
   wifi_res->data.enc_type = NONE_ENC;
+
+#ifndef OC_SPEC_VER_OIC  // Spec Version is OCF 1.3 or more.
+  wifi_res->data.num_supported_authtype = NUM_WIFIAUTHTYPE;
+  wifi_res->data.supported_authtype[0] = NONE_AUTH;
+  wifi_res->data.supported_authtype[1] = WEP;
+  wifi_res->data.supported_authtype[2] = WPA_PSK;
+  wifi_res->data.supported_authtype[3] = WPA2_PSK;
+
+  wifi_res->data.num_supported_enctype = NUM_WIFIENCTYPE;
+  wifi_res->data.supported_enctype[0] = NONE_ENC;
+  wifi_res->data.supported_enctype[1] = WEP_64;
+  wifi_res->data.supported_enctype[2] = WEP_128;
+  wifi_res->data.supported_enctype[3] = TKIP;
+  wifi_res->data.supported_enctype[4] = AES;
+  wifi_res->data.supported_enctype[5] = TKIP_AES;
+#endif  // OC_SPEC_VER_OIC
+
   wifi_res->wifi_prov_cb = cb;
 
   oc_resource_t *res = oc_new_resource("wifi", OC_RSRVD_ES_URI_WIFICONF, 1, 0);
