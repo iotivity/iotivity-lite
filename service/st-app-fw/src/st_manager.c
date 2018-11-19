@@ -233,7 +233,7 @@ easy_setup_handler(st_easy_setup_status_t status)
 {
   if (status == EASY_SETUP_FINISH) {
     st_print_log("[ST_MGR] Easy setup succeed!!!\n");
-    set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
+    set_st_manager_status(ST_STATUS_EASY_SETUP_DONE);
   } else if (status == EASY_SETUP_RESET) {
     st_print_log("[ST_MGR] Easy setup reset!!!\n");
     set_st_manager_status(ST_STATUS_RESET);
@@ -317,6 +317,10 @@ oc_define_interrupt_handler(st_manager)
           EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
         }
       }
+      break;
+    case ST_STATUS_EASY_SETUP_DONE:
+      st_easy_setup_stop();
+      set_st_manager_status(ST_STATUS_WIFI_CONNECTING);
       break;
     case ST_STATUS_WIFI_CONNECTING: {
       st_turn_off_soft_AP();
