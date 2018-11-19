@@ -32,8 +32,8 @@ extern "C" {
  */
 typedef struct
 {
-  es_connect_type connect[NUM_CONNECT_TYPE];
-  int num_request;
+  es_connect_type connect[NUM_CONNECT_TYPE]; /**< Connection type(s) sent by Mediator. */
+  int num_request;                           /**< Size of connect array. */
 } es_connect_request;
 
 /**
@@ -42,11 +42,11 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t ssid;       // ssid of the Enroller
-  oc_string_t pwd;        // pwd of the Enroller
-  wifi_authtype authtype; // auth type of the Enroller
-  wifi_enctype enctype;   // encryption type of the Enroller
-  void *userdata;         // vender-specific data
+  oc_string_t ssid;       /**< SSID of the Enroller. */
+  oc_string_t pwd;        /**< Passphrase of the Enroller. */
+  wifi_authtype authtype; /**< Auth Type of the Enroller. */
+  wifi_enctype enctype;   /**< Encryption Type of the Enroller. */
+  void *userdata;         /**< Vender Specific data. */
 } es_wifi_conf_data;
 
 /**
@@ -55,7 +55,7 @@ typedef struct
  */
 typedef struct
 {
-  void *userdata; // vender-specific data
+  void *userdata; /**< Vender Specific data. */
 } es_dev_conf_data;
 
 /**
@@ -64,16 +64,13 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t auth_code;             // auth code issued by
-                                     // OAuth2.0-compatible account server
-  oc_string_t access_token;          // access token resolved with an auth
-                                     // code
-  oauth_tokentype access_token_type; // access token type
-  oc_string_t auth_provider;         // auth provider ID
-  oc_string_t ci_server;             // cloud interface server URL which
-                                     // an Enrollee is
-                                     // going to registered
-  void *userdata;                    // vender-specific data
+  oc_string_t auth_code;             /**< Auth Code issued by OAuth2.0-compatible account server. */
+  oc_string_t access_token;          /**< Access Token resolved with an auth code. */
+  oauth_tokentype access_token_type; /**< Access Token Type */
+  oc_string_t auth_provider;         /**< Auth Provider ID*/
+  oc_string_t ci_server;             /**< Cloud Interface Server URL which an Enrollee is going to registered. */
+  oc_string_t sid;                   /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
+  void *userdata;                    /**< Vender Specific data. */
 } es_coap_cloud_conf_data;
 
 /**
@@ -87,8 +84,8 @@ typedef struct
    */
   struct
   {
-    wifi_mode supported_mode[NUM_WIFIMODE];
-    wifi_freq supported_freq;
+    wifi_mode supported_mode[NUM_WIFIMODE];  /**< Supported Wi-Fi modes e.g. 802.11 A / B / G / N etc. */
+    wifi_freq supported_freq;                /**< supported Wi-Fi frequency e.g. 2.4G, 5G etc. */
   } WiFi;
 
   /**
@@ -96,21 +93,20 @@ typedef struct
    */
   struct
   {
-    oc_string_t device_name;
+    oc_string_t device_name;                 /**< Device friendly name. */
   } DevConf;
 } es_device_property;
 
 /**
  * A set of functions pointers for callback functions which are called after
- * provisioning data is
- * received from Mediator.
+ * provisioning data is received from Mediator.
  */
 typedef struct
 {
-  void (*connect_request_cb)(es_connect_request *);
-  void (*wifi_prov_cb)(es_wifi_conf_data *);
-  void (*dev_conf_prov_cb)(es_dev_conf_data *);
-  void (*cloud_data_prov_cb)(es_coap_cloud_conf_data *);
+  void (*connect_request_cb)(es_connect_request *);  /**< Callback to direct Enrollee for initiating connection. */
+  void (*wifi_prov_cb)(es_wifi_conf_data *);         /**< Callback to receive wifi configuaration. */
+  void (*dev_conf_prov_cb)(es_dev_conf_data *);      /**< Callback to receive device configuaration. */
+  void (*cloud_data_prov_cb)(es_coap_cloud_conf_data *); /**< Callback to receive cloud configuaration. */
 } es_provisioning_callbacks_s;
 
 #ifdef __cplusplus
