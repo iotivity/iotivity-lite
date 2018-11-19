@@ -275,7 +275,7 @@ static void
 st_status_handler(st_status_t status)
 {
     if (status == ST_STATUS_EASY_SETUP_START ||
-        status == ST_STATUS_WIFI_CONNECTING) {
+        status == ST_STATUS_EASY_SETUP_DONE) {
         st_mutex_lock(mutex);
         st_cond_signal(cv);
         st_mutex_unlock(mutex);

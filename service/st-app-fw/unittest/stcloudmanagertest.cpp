@@ -188,7 +188,7 @@ st_status_handler(st_status_t status)
 static void
 st_status_handler(st_status_t status)
 {
-    if (status <= ST_STATUS_WIFI_CONNECTING && !is_stack_ready) {
+    if (status <= ST_STATUS_EASY_SETUP_DONE && !is_stack_ready) {
         ASSERT_TRUE(find_tcp_endpoint());
         is_stack_ready = true;
     } else {
