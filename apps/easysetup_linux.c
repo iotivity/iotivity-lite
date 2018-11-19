@@ -29,7 +29,7 @@
 
 /** Note: Comment below line to test without Soft AP and automatic Wi-Fi
  * Connection. */
-#define WITH_SOFTAP
+//#define WITH_SOFTAP
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -337,6 +337,18 @@ static void post_temp(oc_request_t *request, oc_interface_mask_t interface,
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
+void connect_prov_cb_in_app(es_connect_request *event_data) {
+    printf("[ES App] wifi_prov_cb_in_app in\n");
+
+    if (event_data == NULL) {
+      printf("[ES App] es_connect_request is NULL\n");
+      return;
+    }
+
+    printf("Connect Req Count: %d\n", event_data->num_request);
+    printf("[ES App] wifi_prov_cb_in_app out\n");
+}
+
 void wifi_prov_cb_in_app(es_wifi_conf_data *event_data) {
   printf("[ES App] wifi_prov_cb_in_app in\n");
 
@@ -345,8 +357,8 @@ void wifi_prov_cb_in_app(es_wifi_conf_data *event_data) {
     return;
   }
 
-  printf("SSID : %s\n", event_data->ssid);
-  printf("Password : %s\n", event_data->pwd);
+  printf("SSID : %s\n", oc_string(event_data->ssid));
+  printf("Password : %s\n", oc_string(event_data->pwd));
   printf("AuthType : %d\n", event_data->authtype);
   printf("EncType : %d\n", event_data->enctype);
 
@@ -386,25 +398,27 @@ void cloud_conf_prov_cb_in_app(es_coap_cloud_conf_data *event_data) {
   }
 
   if (oc_string(event_data->auth_code)) {
-    printf("AuthCode : %s\n", event_data->auth_code);
+    printf("AuthCode : %s\n", oc_string(event_data->auth_code));
   }
 
   if (oc_string(event_data->access_token)) {
-    printf("Access Token : %s\n", event_data->access_token);
+    printf("Access Token : %s\n", oc_string(event_data->access_token));
+    printf("Access Token Type: %d\n", event_data->access_token_type);
   }
 
   if (oc_string(event_data->auth_provider)) {
-    printf("AuthProvider : %s\n", event_data->auth_provider);
+    printf("AuthProvider : %s\n", oc_string(event_data->auth_provider));
   }
 
   if (oc_string(event_data->ci_server)) {
-    printf("CI Server : %s\n", event_data->ci_server);
+    printf("CI Server : %s\n", oc_string(event_data->ci_server));
   }
 
   printf("[ES App] cloud_conf_prov_cb_in_app out\n");
 }
 
 es_provisioning_callbacks_s g_callbacks = {
+    .connect_request_cb = &connect_prov_cb_in_app,
     .wifi_prov_cb = &wifi_prov_cb_in_app,
     .dev_conf_prov_cb = &dev_conf_prov_cb_in_app,
     .cloud_data_prov_cb = &cloud_conf_prov_cb_in_app};
