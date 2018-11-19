@@ -73,6 +73,8 @@ typedef struct
   oc_string_t ci_server;             // cloud interface server URL which
                                      // an Enrollee is
                                      // going to registered
+  oc_string_t sid;                   // OCF Cloud Identity as defined in
+                                     // OCF CNC 2.0 Spec.
   void *userdata;                    // vender-specific data
 } es_coap_cloud_conf_data;
 
@@ -87,8 +89,8 @@ typedef struct
    */
   struct
   {
-    wifi_mode supported_mode[NUM_WIFIMODE];
-    wifi_freq supported_freq;
+    wifi_mode supported_mode[NUM_WIFIMODE];  // supported Wi-Fi modes e.g. 802.11 A / B / G / N etc.
+    wifi_freq supported_freq;                // supported Wi-Fi frequency e.g. 2.4G, 5G etc.
   } WiFi;
 
   /**
