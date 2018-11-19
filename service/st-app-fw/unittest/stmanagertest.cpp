@@ -57,8 +57,8 @@ rpk_priv_key_handler(uint8_t *priv_key, int *priv_key_len)
 
 static void st_status_handler_test(st_status_t status)
 {
-    if (status == ST_STATUS_WIFI_CONNECTING ||
-        status == ST_STATUS_EASY_SETUP_START) {
+    if (status == ST_STATUS_EASY_SETUP_START ||
+        status == ST_STATUS_EASY_SETUP_DONE) {
         st_mutex_lock(mutex);
         is_started = true;
         st_cond_signal(cv);
