@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_815c5127",
+        "filename": "apps/client_multithread_linux.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-19T06:31:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_5e31840a",
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_7e40c856",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2018-11-16T11:40:53Z",
       "side": 1,
       "message": "I am not sure whether the first param works well or not.\nactually, I think the first param should be identical because it affects options[] of coap_packet_t\n\n\nhowever your definitions of coap_signal_option_t look different, \n\nFor example, COAP_SIGNAL_OPTION_BERT and COAP_SIGNAL_OPTION_HOLD_OFF are \u00274\u0027. in addition, COAP_OPTION_ETAG is \u00274\u0027 too.\n\nall of above enum may access same bit of options[] of coap_packet_t.\n\n\nWould you please check SET_OPTION and IS_OPTION ?",
+      "range": {
+        "startLine": 346,
+        "startChar": 30,
+        "endLine": 346,
+        "endChar": 62
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_e140bd37",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-19T06:31:53Z",
+      "side": 1,
+      "message": "all option numbers are difined in RFC8323, And these are not overlaped in the same signal packet code.\n\nSo it will not happen what you worrying situation.",
+      "parentUuid": "9a3d3df0_7e40c856",
       "range": {
         "startLine": 346,
         "startChar": 30,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_214bc55a",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-19T06:31:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_9e3b0ceb",
+      "range": {
+        "startLine": 227,
+        "startChar": 40,
+        "endLine": 227,
+        "endChar": 43
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_3e364004",
         "filename": "messaging/coap/engine.c",
         "patchSetId": 4
@@ -76,6 +142,24 @@
       "writtenOn": "2018-11-16T11:40:53Z",
       "side": 1,
       "message": "\"#ifdef OC_TCP\" maybe needed",
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0148415a",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-19T06:31:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_3e364004",
       "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
