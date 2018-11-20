@@ -84,6 +84,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_41d88953",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-11-20T05:48:31Z",
+      "side": 1,
+      "message": "I bet you use right numbers of signal options  from RFC8323.\n\nAs you understood, my concern is the way referring same position of options[] due to same numbers\n\n\n\nMy concern comes from following sentence\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\nRFC8323\n\"5.3.2.  Block-Wise-Transfer Capability Option\"\nimplementation may want to (1) choose a particular BERT block size it wants to encourage and (2) add a delta for the header and any options  that may also need to be included in the message with a BERT block of that size\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\nFor example.\ncode is \"CSM_7_01\"\nCOAP_SIGNAL_OPTION_MAX_MSG_SIZE (2) is set\nCOAP_SIGNAL_OPTION_BERT (4) isn\u0027t set\nAND\nCOAP_OPTION_ETAG (4) is set\n\nI think above example will think COAP_SIGNAL_OPTION_BERT is set although it isn\u0027t.\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\n\nif the \u0027options\u0027 described above is not options from RFC7252, I don\u0027t have any discussing point about it.",
+      "parentUuid": "9a3d3df0_e140bd37",
+      "range": {
+        "startLine": 346,
+        "startChar": 30,
+        "endLine": 346,
+        "endChar": 62
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_9e3b0ceb",
         "filename": "messaging/coap/coap_signal.c",
         "patchSetId": 4
