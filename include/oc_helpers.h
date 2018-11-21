@@ -29,7 +29,8 @@ extern "C"
 {
 #endif
 
-typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
+typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
+  oc_byte_string_array_t;
 
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
 #define oc_string(ocstring) (oc_cast(ocstring, char))
@@ -60,6 +61,12 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
 #define oc_free_string_array(ocstringarray)                                    \
   (_oc_free_string(__func__, ocstringarray))
 
+#define oc_new_byte_string_array(ocstringarray, size)                          \
+  (_oc_alloc_string_array(__func__, ocstringarray, size))
+
+#define oc_free_byte_string_array(ocstringarray)                               \
+  (__func__, _oc_free_string(ocstringarray))
+
 #else /* OC_MEMORY_TRACE */
 
 #define oc_alloc_string(ocstring, size) _oc_alloc_string((ocstring), (size))
@@ -82,6 +89,12 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t;
 
 #define oc_free_string_array(ocstringarray) (_oc_free_string(ocstringarray))
 
+#define oc_new_byte_string_array(ocstringarray, size)                          \
+  (_oc_alloc_string_array(ocstringarray, size))
+
+#define oc_free_byte_string_array(ocstringarray)                               \
+  (_oc_free_string(ocstringarray))
+
 #endif /* !OC_MEMORY_TRACE */
 
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
@@ -100,22 +113,41 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #define STRING_ARRAY_ITEM_MAX_LEN 32
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-bool _oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                     const char str[], size_t index);
+bool _oc_copy_string_to_array(oc_string_array_t *ocstringarray,
+                              const char str[], size_t index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[]);
 void oc_join_string_array(oc_string_array_t *ocstringarray,
                           oc_string_t *ocstring);
 
+bool _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
+                                   const char str[], size_t str_len,
+                                   size_t index);
+bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
+                                    const char str[], size_t str_len);
+
+/* Arrays of text strings */
 #define oc_string_array_add_item(ocstringarray, str)                           \
   (_oc_string_array_add_item(&(ocstringarray), str))
 #define oc_string_array_get_item(ocstringarray, index)                         \
   (oc_string(ocstringarray) + index * STRING_ARRAY_ITEM_MAX_LEN)
 #define oc_string_array_set_item(ocstringarray, str, index)                    \
-  (_oc_copy_string_to_string_array(&(ocstringarray), str, index))
+  (_oc_copy_string_to_array(&(ocstringarray), str, index))
 #define oc_string_array_get_item_size(ocstringarray, index)                    \
   (strlen((const char *)oc_string_array_get_item(ocstringarray, index)))
 #define oc_string_array_get_allocated_size(ocstringarray)                      \
+  ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)
+
+/* Arrays of byte strings */
+#define oc_byte_string_array_add_item(ocstringarray, str, str_len)             \
+  (_oc_byte_string_array_add_item(&(ocstringarray), str, str_len))
+#define oc_byte_string_array_get_item(ocstringarray, index)                    \
+  (oc_string(ocstringarray) + index * STRING_ARRAY_ITEM_MAX_LEN + 1)
+#define oc_byte_string_array_set_item(ocstringarray, str, str_len, index)      \
+  (_oc_copy_byte_string_to_array(&(ocstringarray), str, str_len, index))
+#define oc_byte_string_array_get_item_size(ocstringarray, index)               \
+  (*(oc_string(ocstringarray) + index * STRING_ARRAY_ITEM_MAX_LEN))
+#define oc_byte_string_array_get_allocated_size(ocstringarray)                 \
   ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)
 
 void _oc_new_string(
