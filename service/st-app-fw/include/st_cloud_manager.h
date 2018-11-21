@@ -31,19 +31,18 @@ extern "C" {
 #endif
 
 /**
-  @brief Cloud Connection Status.
-    All status can be set exclusively except CLOUD_MANAGER_RE_CONNECTING
-    ,which requires OR/AND bitwise operation
+  @brief Cloud connection status.
 */
 typedef enum {
   CLOUD_MANAGER_INITIALIZE = 0,
   CLOUD_MANAGER_SIGNED_UP = 1 << 0,
   CLOUD_MANAGER_SIGNED_IN = 1 << 1,
-  CLOUD_MANAGER_PUBLISHED = 1 << 2,
-  CLOUD_MANAGER_FINISH = 1 << 3,
-  CLOUD_MANAGER_FAIL = 1 << 4,
-  CLOUD_MANAGER_RE_CONNECTING = 1 << 5,
-  CLOUD_MANAGER_RESET = 1 << 6
+  CLOUD_MANAGER_DEVPROFILED = 1 << 2,
+  CLOUD_MANAGER_PUBLISHED = 1 << 3,
+  CLOUD_MANAGER_FINISH = 1 << 4,
+  CLOUD_MANAGER_FAIL = 1 << 5,
+  CLOUD_MANAGER_RECONNECTING = 1 << 6,
+  CLOUD_MANAGER_RESETTING = 1 << 7
 } st_cloud_manager_status_t;
 
 /**
