@@ -169,8 +169,38 @@ _oc_alloc_string_array(
 }
 
 bool
-_oc_copy_string_to_string_array(oc_string_array_t *ocstringarray,
-                                const char str[], size_t index)
+_oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
+                              const char str[], size_t str_len, size_t index)
+{
+  if (strlen(str) >= STRING_ARRAY_ITEM_MAX_LEN) {
+    return false;
+  }
+  size_t pos = index * STRING_ARRAY_ITEM_MAX_LEN;
+  oc_string(*ocstringarray)[pos] = str_len;
+  pos++;
+  memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, str_len);
+  return true;
+}
+
+bool
+_oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
+                               const char str[], size_t str_len)
+{
+  bool success = false;
+  size_t i;
+  for (i = 0; i < oc_byte_string_array_get_allocated_size(*ocstringarray);
+       i++) {
+    if (oc_byte_string_array_get_item_size(*ocstringarray, i) == 0) {
+      success = oc_byte_string_array_set_item(*ocstringarray, str, str_len, i);
+      break;
+    }
+  }
+  return success;
+}
+
+bool
+_oc_copy_string_to_array(oc_string_array_t *ocstringarray, const char str[],
+                         size_t index)
 {
   if (strlen(str) >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;

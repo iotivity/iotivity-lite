@@ -261,24 +261,27 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         *err |=
           cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
         break;
-      case CborByteStringType:
+      case CborByteStringType: {
         if (k == 0) {
-          oc_new_string_array(&cur->value.array, len);
+          oc_new_byte_string_array(&cur->value.array, len);
           cur->type = OC_REP_BYTE_STRING | OC_REP_ARRAY;
-        } else if ((cur->type & OC_REP_BYTE_STRING) != OC_REP_BYTE_STRING){
+        } else if ((cur->type & OC_REP_BYTE_STRING) != OC_REP_BYTE_STRING) {
           *err |= CborErrorIllegalType;
           return;
         }
 
         *err |= cbor_value_calculate_string_length(&array, &len);
-        len++;
-        if (len > STRING_ARRAY_ITEM_MAX_LEN) {
-          len = STRING_ARRAY_ITEM_MAX_LEN;
+        if (len >= STRING_ARRAY_ITEM_MAX_LEN) {
+          len = STRING_ARRAY_ITEM_MAX_LEN - 1;
         }
+        uint8_t *size =
+          (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k);
+        size -= 1;
+        *size = len;
         *err |= cbor_value_copy_byte_string(
-          &array, (uint8_t *)oc_string_array_get_item(cur->value.array, k),
+          &array, (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k),
           &len, NULL);
-        break;
+      } break;
       case CborTextStringType:
         if (k == 0) {
           oc_new_string_array(&cur->value.array, len);
