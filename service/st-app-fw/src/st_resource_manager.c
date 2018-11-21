@@ -196,27 +196,34 @@ st_register_resource_handler(st_resource_handler get_handler,
   return ST_ERROR_NONE;
 }
 
+static oc_event_callback_retval_t
+st_notify_back_event_handler(void *data)
+{
+  const char *uri = (const char *)data;
+  oc_resource_t *resource =
+    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+  if (!resource) {
+    st_print_log("[ST_RM] %s is not registered resource.\n", uri);
+    return OC_EVENT_DONE;
+  }
+
+  oc_notify_observers(resource);
+  return OC_EVENT_DONE;
+}
+
 st_error_t
 st_notify_back(const char *uri)
 {
-  int ret = 0;
   if (!uri) {
     st_print_log("[ST_RM] invalid parameter.\n");
     return ST_ERROR_INVALID_PARAMETER;
   }
 
-  st_process_app_sync_lock();
-  oc_resource_t *resource =
-    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
-  if (!resource) {
-    st_print_log("[ST_RM] %s is not registered resource.\n", uri);
-    st_process_app_sync_unlock();
-    return ST_ERROR_OPERATION_FAILED;
-  }
-
-  ret = oc_notify_observers(resource);
-  st_process_app_sync_unlock();
+  // TODO: need recursive lock mechanism to un-comments lock
+  // st_process_app_sync_lock();
+  oc_set_delayed_callback(uri, st_notify_back_event_handler, 0);
+  // st_process_app_sync_unlock();
   _oc_signal_event_loop();
 
-  return (ret >= 0) ? ST_ERROR_NONE : ST_ERROR_OPERATION_FAILED;
+  return ST_ERROR_NONE;
 }
