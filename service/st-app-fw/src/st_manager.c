@@ -247,18 +247,18 @@ easy_setup_handler(st_easy_setup_status_t status)
 void
 cloud_manager_handler(st_cloud_manager_status_t status)
 {
-  if (status == CLOUD_MANAGER_FINISH) {
+  if (status == CLOUD_MANAGER_FINISHED) {
     st_print_log("[ST_MGR] Cloud manager succeed!!!\n");
     set_st_manager_status(ST_STATUS_DONE);
-  } else if (status == CLOUD_MANAGER_FAIL) {
+  } else if (status == CLOUD_MANAGER_FAILED) {
     st_print_log("[ST_MGR] Cloud manager failed!!!\n");
     g_start_fail = true;
     set_st_manager_status(ST_STATUS_STOP);
-  } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
-    st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
+  } else if (status == CLOUD_MANAGER_RECONNECTING) {
+    st_print_log("[ST_MGR] Cloud manager reconnecting!!!\n");
     set_st_manager_status(ST_STATUS_CLOUD_MANAGER_RE_CONNECTING);
-  } else if (status == CLOUD_MANAGER_RESET) {
-    st_print_log("[ST_MGR] Cloud manager reset!!!\n");
+  } else if (status == CLOUD_MANAGER_RESETTING) {
+    st_print_log("[ST_MGR] Cloud manager resetting!!!\n");
     set_st_manager_status(ST_STATUS_RESET);
   }
 }
@@ -1062,17 +1062,17 @@ state_easy_setup_handler(st_easy_setup_status_t status)
 void
 state_cloud_manager_handler(st_cloud_manager_status_t status)
 {
-  if (status == CLOUD_MANAGER_FINISH) {
+  if (status == CLOUD_MANAGER_FINISHED) {
     st_print_log("[ST_MGR] Cloud manager succeed!!!\n");
     st_manager_evt_with_signal(ST_EVT_RUN);
-  } else if (status == CLOUD_MANAGER_FAIL) {
+  } else if (status == CLOUD_MANAGER_FAILED) {
     st_print_log("[ST_MGR] Cloud manager failed!!!\n");
     st_manager_evt_with_signal(ST_EVT_STOP);
-  } else if (status == CLOUD_MANAGER_RE_CONNECTING) {
-    st_print_log("[ST_MGR] Cloud manager re connecting!!!\n");
+  } else if (status == CLOUD_MANAGER_RECONNECTING) {
+    st_print_log("[ST_MGR] Cloud manager reconnecting!!!\n");
     // nothing.. just waiting
-  } else if (status == CLOUD_MANAGER_RESET) {
-    st_print_log("[ST_MGR] Cloud manager reset!!!\n");
+  } else if (status == CLOUD_MANAGER_RESETTING) {
+    st_print_log("[ST_MGR] Cloud manager resetting!!!\n");
     st_manager_evt_with_signal(ST_EVT_RESET);
   }
 }
