@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_2176253f",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-21T09:51:53Z",
+      "side": 1,
+      "message": "looks redundant",
+      "range": {
+        "startLine": 205,
+        "startChar": 20,
+        "endLine": 205,
+        "endChar": 21
+      },
+      "revId": "7816d0d7dfeff30feff9608a0d91e5d669f62fb1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
