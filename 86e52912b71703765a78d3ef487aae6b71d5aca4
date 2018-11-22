@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "9a3d3df0_dc647ce7",
+        "filename": "api/oc_client_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-22T11:36:28Z",
+      "side": 1,
+      "message": "Session ending by single response fail is too strict considering cloud server may not respond somehow even though spec guide it. It looks better to call the cb-\u003eclient_handler.response(self creating oc_client_response_t) for user handle the error case. For example consecutive two or three time ping/pong no response, then let the application to close connection. Otherwise define one more callback parameter from oc_send_ping(..., timeout_cb)",
+      "range": {
+        "startLine": 330,
+        "startChar": 2,
+        "endLine": 330,
+        "endChar": 44
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_5e31840a",
         "filename": "apps/client_multithread_linux.c",
         "patchSetId": 4
@@ -101,6 +124,75 @@
         "startChar": 30,
         "endLine": 346,
         "endChar": 62
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1c5f0410",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-22T11:36:28Z",
+      "side": 1,
+      "message": "How about break the while loop after execution of coap_parse_signal_options(..) then we can remove else { } below. In case of extra option value exist in signal message, coap_parse_signal_options(..) will be executed again in while loop.",
+      "range": {
+        "startLine": 609,
+        "startChar": 0,
+        "endLine": 612,
+        "endChar": 10
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_9caaf4d2",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-22T11:36:28Z",
+      "side": 1,
+      "message": "How about moving these into coap_signal.c?",
+      "range": {
+        "startLine": 1197,
+        "startChar": 0,
+        "endLine": 1354,
+        "endChar": 1
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_fcaea0e6",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-22T11:36:28Z",
+      "side": 1,
+      "message": "Could you explain why you handle this signal message sending from separate path beyond from dispath_coap_request().",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 24
       },
       "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
