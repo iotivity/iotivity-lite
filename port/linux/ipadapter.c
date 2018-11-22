@@ -823,6 +823,150 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   return ret;
 }
 
+static void
+oc_udp_add_socks_to_fd_set(ip_context_t *dev)
+{
+  FD_SET(dev->server_sock, &dev->rfds);
+  FD_SET(dev->mcast_sock, &dev->rfds);
+#ifdef OC_SECURITY
+  FD_SET(dev->secure_sock, &dev->rfds);
+#endif /* OC_SECURITY */
+
+#ifdef OC_IPV4
+  FD_SET(dev->server4_sock, &dev->rfds);
+  FD_SET(dev->mcast4_sock, &dev->rfds);
+#ifdef OC_SECURITY
+  FD_SET(dev->secure4_sock, &dev->rfds);
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+}
+
+static adapter_receive_state_t
+oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
+{
+  if (FD_ISSET(dev->server_sock, fds)) {
+    int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6;
+    FD_CLR(dev->server_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+  if (FD_ISSET(dev->mcast_sock, fds)) {
+    int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | MULTICAST;
+    FD_CLR(dev->mcast_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->server4_sock, fds)) {
+    int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4;
+    FD_CLR(dev->server4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+  if (FD_ISSET(dev->mcast4_sock, fds)) {
+    int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | MULTICAST;
+    FD_CLR(dev->mcast4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#endif /* OC_IPV4 */
+
+#ifdef OC_SECURITY
+  if (FD_ISSET(dev->secure_sock, fds)) {
+    int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | SECURED;
+    FD_CLR(dev->secure_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->secure4_sock, fds)) {
+    int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | SECURED;
+    FD_CLR(dev->secure4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#endif /* OC_IPV4 */
+#endif /* OC_SECURITY */
+
+  return ADAPTER_STATUS_NONE;
+}
+
+static oc_message_t *
+get_intitialized_message(void)
+{
+  oc_message_t *msg=NULL;
+#ifdef OC_DYNAMIC_ALLOCATION
+  msg = oc_allocate_message_by_size(0);
+#else
+  msg = oc_allocate_message();
+#endif
+
+#ifdef RESTRICT_INCOMING_REQUESTS
+  if(!msg){
+    OC_DBG("No available Incoming buffer Now.");
+    oc_network_event_handler_cv_wait();
+#ifdef OC_DYNAMIC_ALLOCATION
+    msg = oc_allocate_message_by_size(0);
+#else
+    msg = oc_allocate_message();
+#endif
+  }
+#endif
+
+  return msg;
+}
+
+static oc_message_t *
+set_modified_message(oc_message_t * msg, size_t size )
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if(!msg){
+    OC_ERR("Param NULL.");
+  }
+
+  msg->length=0;
+  msg = oc_reallocate_message_by_size(msg, size);
+
+  if (!msg) {
+    OC_ERR("realloc message failure.");
+  }
+#endif
+  return msg;
+}
+
 static void *
 network_event_thread(void *data)
 {
@@ -837,20 +981,8 @@ network_event_thread(void *data)
     FD_SET(ifchange_sock, &dev->rfds);
   }
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
-  FD_SET(dev->server_sock, &dev->rfds);
-  FD_SET(dev->mcast_sock, &dev->rfds);
-#ifdef OC_SECURITY
-  FD_SET(dev->secure_sock, &dev->rfds);
-#endif /* OC_SECURITY */
 
-#ifdef OC_IPV4
-  FD_SET(dev->server4_sock, &dev->rfds);
-  FD_SET(dev->mcast4_sock, &dev->rfds);
-#ifdef OC_SECURITY
-  FD_SET(dev->secure4_sock, &dev->rfds);
-#endif /* OC_SECURITY */
-#endif /* OC_IPV4 */
-
+  oc_udp_add_socks_to_fd_set(dev);
 #ifdef OC_TCP
   oc_tcp_add_socks_to_fd_set(dev);
 #endif /* OC_TCP */
@@ -884,147 +1016,50 @@ network_event_thread(void *data)
         }
       }
 
-      oc_message_t *message = oc_allocate_message();
-
+      oc_message_t *message = get_intitialized_message();
       if (!message) {
-#ifdef RESTRICT_INCOMING_REQUESTS
-        OC_DBG("No available Incoming buffer Now.");
-        oc_network_event_handler_cv_wait();
-        message = oc_allocate_message();
-        if (!message) {
-          OC_ERR("oc_allocate_message error");
-          break;
-        }
-#else  /* RESTRICT_INCOMING_REQUESTS */
+        OC_ERR("alloc message failure.");
         break;
-#endif /* !RESTRICT_INCOMING_REQUESTS */
       }
 
       message->endpoint.device = dev->device;
 
-      if (FD_ISSET(dev->server_sock, &setfds)) {
-        int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6;
-        FD_CLR(dev->server_sock, &setfds);
-        goto common;
-      }
-
-      if (FD_ISSET(dev->mcast_sock, &setfds)) {
-        int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | MULTICAST;
-        FD_CLR(dev->mcast_sock, &setfds);
-        goto common;
-      }
-
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->server4_sock, &setfds)) {
-        int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4;
-        FD_CLR(dev->server4_sock, &setfds);
-        goto common;
-      }
-
-      if (FD_ISSET(dev->mcast4_sock, &setfds)) {
-        int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | MULTICAST;
-        FD_CLR(dev->mcast4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-
-#ifdef OC_SECURITY
-      if (FD_ISSET(dev->secure_sock, &setfds)) {
-        int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | SECURED;
-        FD_CLR(dev->secure_sock, &setfds);
-        goto common;
-      }
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->secure4_sock, &setfds)) {
-        int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | SECURED;
-        FD_CLR(dev->secure4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-#endif /* OC_SECURITY */
-
 #ifdef OC_TCP
-#ifdef OC_DYNAMIC_ALLOCATION
-      message->length=0;
-      message = oc_reallocate_message_by_size(message, 0);
+      /* TCP */
+      message = set_modified_message(message, 0);
       if (!message) {
-        OC_ERR("oc_reallocate_message_by_size failure");
         continue;
+      }
+
+      if (oc_tcp_receive_message(dev, &setfds, message) ==
+          ADAPTER_STATUS_RECEIVE) {
+        goto common;
       }
 #endif
-      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
-                                                              &setfds,
-                                                              message);
-      if (tcp_status == TCP_STATUS_RECEIVE) {
-        goto common_tcp;
-      } else {
-        oc_message_unref(message);
+
+      /* UDP */
+      message = set_modified_message(message, OC_PDU_SIZE);
+      if (!message) {
         continue;
       }
-#endif /* OC_TCP */
+      if (oc_udp_receive_message(dev, &setfds, message) ==
+          ADAPTER_STATUS_RECEIVE) {
+        goto common;
+      }
+
+      oc_message_unref(message);
+      continue;
 
     common:
-#ifdef OC_DYNAMIC_ALLOCATION
-      if ((size_t)(OC_PDU_SIZE >> 1) > message->length) {
-        message = oc_reallocate_message_by_size(message, message->length);
-        if (!message) {
-          OC_ERR("oc_reallocate_message_by_size failure");
-          continue;
-        }
-      }
-#endif
-    common_tcp:
 #ifdef OC_DEBUG
       PRINT("Incoming message of size %d bytes from ", message->length);
       PRINTipaddr(message->endpoint);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
-
       oc_network_event(message);
     }
   }
+
   pthread_exit(NULL);
 }
 
