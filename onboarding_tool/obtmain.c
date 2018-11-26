@@ -22,9 +22,23 @@
 #include <signal.h>
 #include <stdio.h>
 
-#define MAX_OWNED_DEVICES (50)
+#define MAX_NUM_DEVICES (50)
 #define MAX_NUM_RESOURCES (100)
 #define MAX_NUM_RT (50)
+
+/* Structure in app to track currently discovered owned/unowned devices */
+typedef struct device_handle_t
+{
+  struct device_handle_t *next;
+  oc_uuid_t uuid;
+} device_handle_t;
+/* Pool of device handles */
+OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
+/* List of known owned devices */
+OC_LIST(owned_devices);
+/* List of known un-owned devices */
+OC_LIST(unowned_devices);
+
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
@@ -115,43 +129,88 @@ ocf_event_thread(void *data)
   return NULL;
 }
 
-/* Handles to lists of oc_device_t objects, one each for
-   every discovered device.
-*/
-static oc_device_t *unowned_devices, *my_devices;
+/* App utility functions */
+static bool
+remove_device_from_list(oc_uuid_t *uuid, oc_list_t list)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_head(list);
+  while (device != NULL) {
+    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+      oc_list_remove(list, device);
+      oc_memb_free(&device_handles, device);
+      return true;
+    }
+    device = device->next;
+  }
+  return false;
+}
 
+static bool
+is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_head(list);
+  while (device != NULL) {
+    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+      return true;
+    }
+    device = device->next;
+  }
+  return false;
+}
+
+static bool
+add_device_to_list(oc_uuid_t *uuid, oc_list_t list)
+{
+  if (is_device_in_list(uuid, list)) {
+    return true;
+  }
+
+  device_handle_t *device = oc_memb_alloc(&device_handles);
+  if (!device) {
+    return false;
+  }
+
+  memcpy(device->uuid.id, uuid->id, 16);
+
+  oc_list_add(list, device);
+
+  return true;
+}
+/* End of app utility functions */
+
+/* App invocations of oc_obt APIs */
 static void
-unowned_device_cb(oc_device_t *devices, void *data)
+unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
-  int i = 0;
-  unowned_devices = devices;
-  PRINT("\nUnowned devices:\n");
-  while (devices != NULL) {
-    char di[OC_UUID_LEN];
-    oc_uuid_to_str(&devices->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
-    i++;
-    devices = devices->next;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  PRINT("\nDiscovered unowned device: %s at:\n", di);
+  while (eps != NULL) {
+    PRINTipaddr(*eps);
+    PRINT("\n");
+    eps = eps->next;
   }
-  display_menu();
+
+  add_device_to_list(uuid, unowned_devices);
 }
 
 static void
-owned_device_cb(oc_device_t *devices, void *data)
+owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
-  int i = 0;
-  my_devices = devices;
-  PRINT("\nMy devices:\n");
-  while (devices != NULL) {
-    char di[OC_UUID_LEN];
-    oc_uuid_to_str(&devices->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
-    i++;
-    devices = devices->next;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  PRINT("\nDiscovered owned device: %s at:\n", di);
+  while (eps != NULL) {
+    PRINTipaddr(*eps);
+    PRINT("\n");
+    eps = eps->next;
   }
-  display_menu();
+
+  add_device_to_list(uuid, owned_devices);
 }
 
 static void
@@ -160,7 +219,6 @@ discover_owned_devices(void)
   pthread_mutex_lock(&app_sync_lock);
   oc_obt_discover_owned_devices(owned_device_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
-  signal_event_loop();
 }
 
 static void
@@ -173,33 +231,37 @@ discover_unowned_devices(void)
 }
 
 static void
-otm_just_works_cb(int status, void *data)
+otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
   if (status >= 0) {
-    PRINT("\nSuccessfully performed ownership transfer\n");
+    PRINT("\nSuccessfully performed OTM on device %s\n", di);
   } else {
-    PRINT("\nERROR performing ownership transfer\n");
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
-  display_menu();
 }
 
 static void
 take_ownership_of_device(void)
 {
-  if (unowned_devices == NULL) {
-    PRINT("\n\nPlease Re-Discover Un-Owned devices\n");
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
     return;
   }
-  oc_device_t *devices[MAX_OWNED_DEVICES];
-  oc_device_t *device = unowned_devices;
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
   int i = 0, c;
+
   PRINT("\nUnowned Devices:\n");
   while (device != NULL) {
-    devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s\n", i, di);
+    devices[i] = device;
     i++;
     device = device->next;
   }
@@ -209,39 +271,52 @@ take_ownership_of_device(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
+
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_obt_perform_just_works_otm(devices[c], otm_just_works_cb, NULL);
+
+  int ret =
+    oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
   } else {
     PRINT("\nERROR issuing request to perform ownership transfer\n");
   }
+
+  /* Having issued an OTM request, remove this item from the unowned device list
+   */
+  remove_device_from_list(&devices[c]->uuid, unowned_devices);
+
   pthread_mutex_unlock(&app_sync_lock);
-  signal_event_loop();
 }
 
 static void
-reset_device_cb(int status, void *data)
+reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  remove_device_from_list(uuid, owned_devices);
+
   if (status >= 0) {
-    PRINT("\nSuccessfully performed hard RESET\n");
+    PRINT("\nSuccessfully performed hard RESET to device %s\n", di);
   } else {
-    PRINT("\nERROR performing hard RESET\n");
+    PRINT("\nERROR performing hard RESET to device %s\n", di);
   }
-  display_menu();
 }
 
 static void
 reset_device(void)
 {
-  if (my_devices == NULL) {
+  if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
-  oc_device_t *devices[MAX_OWNED_DEVICES];
-  oc_device_t *device = my_devices;
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
+
   PRINT("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -257,15 +332,15 @@ reset_device(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
+
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_obt_device_hard_reset(devices[c], reset_device_cb, NULL);
+  int ret = oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform hard RESET\n");
   } else {
     PRINT("\nERROR issuing request to perform hard RESET\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
-  signal_event_loop();
 }
 
 static void
@@ -277,19 +352,20 @@ provision_credentials_cb(int status, void *data)
   } else {
     PRINT("\nERROR provisioning pair-wise credentials\n");
   }
-  display_menu();
 }
 
 static void
 provision_credentials(void)
 {
-  if (my_devices == NULL) {
+  if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
-  oc_device_t *devices[MAX_OWNED_DEVICES];
-  oc_device_t *device = my_devices;
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1, c2;
+
   PRINT("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -311,34 +387,37 @@ provision_credentials(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
+
   pthread_mutex_lock(&app_sync_lock);
   int ret = oc_obt_provision_pairwise_credentials(
-    devices[c1], devices[c2], provision_credentials_cb, NULL);
+    &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision credentials\n");
   } else {
     PRINT("\nERROR issuing request to provision credentials\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
-  signal_event_loop();
 }
 
 static void
-provision_ace2_cb(int status, void *data)
+provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned ACE\n");
+    PRINT("\nSuccessfully provisioned ACE to device %s\n", di);
   } else {
-    PRINT("\nERROR provisioning ACE\n");
+    remove_device_from_list(uuid, owned_devices);
+    PRINT("\nERROR provisioning ACE to device %s\n", di);
   }
-  display_menu();
 }
 
 static void
 provision_ace2(void)
 {
-  if (my_devices == NULL) {
+  if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
@@ -346,9 +425,10 @@ provision_ace2(void)
   const char *conn_types[2] = { "anon-clear", "auth-crypt" };
   int num_resources = 0;
 
-  oc_device_t *devices[MAX_OWNED_DEVICES];
-  oc_device_t *device = my_devices;
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev, sub;
+
   PRINT("\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -360,7 +440,7 @@ provision_ace2(void)
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover owned devices.\n");
+    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -372,7 +452,7 @@ provision_ace2(void)
   }
 
   PRINT("\nSubjects:");
-  device = my_devices;
+  device = (device_handle_t *)oc_list_head(owned_devices);
   PRINT("\n[0]: %s\n", conn_types[0]);
   PRINT("[1]: %s\n", conn_types[1]);
   i = 0;
@@ -545,7 +625,8 @@ provision_ace2(void)
   }
 
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_obt_provision_ace(devices[dev], ace, provision_ace2_cb, NULL);
+  int ret =
+    oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision ACE\n");
