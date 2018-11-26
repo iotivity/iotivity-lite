@@ -499,6 +499,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 {
   return dispatch_ip_discovery(rt, handler, endpoint, user_data) ? true : false;
 }
+#endif /* ST_OC_CLIENT_OPT */
 
 void
 oc_close_session(oc_endpoint_t *endpoint)
@@ -513,5 +514,4 @@ oc_close_session(oc_endpoint_t *endpoint)
 #endif /* OC_TCP */
   }
 }
-#endif /*.ST_OC_CLIENT_OPT */
 #endif /* OC_CLIENT */
