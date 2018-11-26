@@ -18,111 +18,35 @@
 #ifndef STATE_MODEL
 
 #include "st_status_queue.h"
-#include "oc_clock.h"
-#include "oc_helpers.h"
-#include "st_port.h"
+#include "st_queue.h"
 #include "util/oc_memb.h"
 
-#define MAX_WAIT_WIME (1)
+#define MAX_STATUS_COUNT 10
 
-// signaling is disabled due to some environment doesn't work.
-#define STATUS_Q_SIGNAL_DISABLE
-
-OC_LIST(g_main_status_queue);
+static st_queue_t *g_status_queue = NULL;
 OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
-
-static st_mutex_t status_queue_mutex = NULL;
-#ifndef STATUS_Q_SIGNAL_DISABLE
-static st_cond_t status_queue_cv = NULL;
-#endif /* STATUS_Q_SIGNAL_DISABLE */
 
 int
 st_status_queue_initialize(void)
 {
-  if (status_queue_mutex) {
-    st_print_log("[ST_Q] status_queue_mutex already initialized!\n");
+  g_status_queue = st_queue_initialize();
+  if (!g_status_queue) {
+    st_print_log("[ST_SQ] st_queue_initialize failed\n");
     return -1;
   }
-
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  if (status_queue_cv) {
-    st_print_log("[ST_Q] status_queue_cv already initialized!\n");
-    return -1;
-  }
-#endif /* STATUS_Q_SIGNAL_DISABLE */
-
-  status_queue_mutex = st_mutex_init();
-  if (!status_queue_mutex) {
-    st_print_log("[ST_Q] st_mutex_init failed!\n");
-    return -1;
-  }
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  status_queue_cv = st_cond_init();
-  if (!status_queue_cv) {
-    st_print_log("[ST_Q] st_cond_init failed!\n");
-    st_mutex_destroy(status_queue_mutex);
-    return -1;
-  }
-#endif /* STATUS_Q_SIGNAL_DISABLE */
 
   return 0;
 }
 
-static bool
-is_initialized(void)
-{
-  if (!status_queue_mutex) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return false;
-  }
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  if (!status_queue_mutex) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return false;
-  }
-#endif /* STATUS_Q_SIGNAL_DISABLE */
-  return true;
-}
-
-#ifndef STATUS_Q_SIGNAL_DISABLE
-static void
-status_queue_send_signal(void)
-{
-  if (!is_initialized()) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return;
-  }
-
-  st_mutex_lock(status_queue_mutex);
-  st_cond_signal(status_queue_cv);
-  st_mutex_unlock(status_queue_mutex);
-}
-#endif /* STATUS_Q_SIGNAL_DISABLE */
-
 int
 st_status_queue_wait_signal(void)
 {
-  int ret = 0;
-#ifdef STATUS_Q_SIGNAL_DISABLE
-  st_sleep(MAX_WAIT_WIME);
-#else  /* STATUS_Q_SIGNAL_DISABLE */
-  st_mutex_lock(status_queue_mutex);
-  oc_clock_time_t wait_time = oc_clock_time() + MAX_WAIT_WIME * OC_CLOCK_SECOND;
-  ret = st_cond_timedwait(status_queue_cv, status_queue_mutex, wait_time);
-  st_mutex_unlock(status_queue_mutex);
-#endif /* !STATUS_Q_SIGNAL_DISABLE */
-
-  return ret;
+  return st_queue_wait(g_status_queue);
 }
 
 int
 st_status_queue_add(st_status_t status)
 {
-  if (!is_initialized()) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return -1;
-  }
-
   st_status_item_t *queue_item = oc_memb_alloc(&st_status_item_s);
   if (!queue_item) {
     st_print_log("[ST_Q] oc_memb_alloc failed!\n");
@@ -130,12 +54,12 @@ st_status_queue_add(st_status_t status)
   }
 
   queue_item->status = status;
-  st_mutex_lock(status_queue_mutex);
-  oc_list_add(g_main_status_queue, queue_item);
-  st_mutex_unlock(status_queue_mutex);
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  status_queue_send_signal();
-#endif /* STATUS_Q_SIGNAL_DISABLE */
+
+  if (st_queue_push(g_status_queue, queue_item) == -1) {
+    st_print_log("[ST_SQ] st_queue_push failed!\n");
+    oc_memb_free(&st_status_item_s, queue_item);
+    return -1;
+  }
 
   return 0;
 }
@@ -143,22 +67,13 @@ st_status_queue_add(st_status_t status)
 st_status_item_t *
 st_status_queue_pop(void)
 {
-  if (!is_initialized()) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return NULL;
-  }
-
-  st_mutex_lock(status_queue_mutex);
-  st_status_item_t *item = (st_status_item_t *)oc_list_pop(g_main_status_queue);
-  st_mutex_unlock(status_queue_mutex);
-
-  return item;
+  return st_queue_pop(g_status_queue);
 }
 
 st_status_item_t *
 st_status_queue_get_head(void)
 {
-  return (st_status_item_t *)oc_list_head(g_main_status_queue);
+  return (st_status_item_t *)st_queue_get_head(g_status_queue);
 }
 
 int
@@ -200,19 +115,7 @@ st_status_queue_remove_all_items_without_stop(void)
 void
 st_status_queue_deinitialize(void)
 {
-  if (!is_initialized()) {
-    st_print_log("[ST_Q] status queue not initialized!\n");
-    return;
-  }
-
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  status_queue_send_signal();
-#endif /* STATUS_Q_SIGNAL_DISABLE */
-  st_mutex_destroy(status_queue_mutex);
-  status_queue_mutex = NULL;
-#ifndef STATUS_Q_SIGNAL_DISABLE
-  st_cond_destroy(status_queue_cv);
-  status_queue_cv = NULL;
-#endif /* STATUS_Q_SIGNAL_DISABLE */
+  st_queue_deinitialize(g_status_queue);
+  g_status_queue = NULL;
 }
 #endif /* !STATE_MODEL */

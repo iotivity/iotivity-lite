@@ -16,41 +16,39 @@
  *
  ****************************************************************************/
 
-/**
-  @brief Status queue managing APIs.
-  @file
-*/
+#ifndef ST_QUEUE_H
+#define ST_QUEUE_H
 
-#ifndef ST_STATUS_QUEUE_H
-#define ST_STATUS_QUEUE_H
-
-#include "st_manager.h"
+#include "st_port.h"
+#include "util/oc_list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * Structure to manage st_status_t queue.
- */
-typedef struct st_status_item
-{
-  struct st_status_item *next;
-  st_status_t status;
-} st_status_item_t;
+// signaling is disabled due to some environment doesn't work.
+#ifndef Q_SIGNAL_DISABLE
+#define Q_SIGNAL_DISABLE
+#endif /* Q_SIGNAL_DISABLE */
 
-int st_status_queue_initialize(void);
-int st_status_queue_wait_signal(void);
-int st_status_queue_add(st_status_t status);
-st_status_item_t *st_status_queue_pop(void);
-st_status_item_t *st_status_queue_get_head(void);
-int st_status_queue_free_item(st_status_item_t *item);
-void st_status_queue_remove_all_items(void);
-void st_status_queue_remove_all_items_without_stop(void);
-void st_status_queue_deinitialize(void);
+typedef struct st_queue
+{
+  OC_LIST_STRUCT(queue);
+  st_mutex_t mutex;
+#ifndef Q_SIGNAL_DISABLE
+  st_cond_t cv;
+#endif /* Q_SIGNAL_DISABLE */
+} st_queue_t;
+
+st_queue_t *st_queue_initialize(void);
+int st_queue_deinitialize(st_queue_t *queue);
+int st_queue_push(st_queue_t *queue, void *item);
+void *st_queue_pop(st_queue_t *queue);
+void *st_queue_get_head(st_queue_t *queue);
+int st_queue_wait(st_queue_t *queue);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* ST_STATUS_QUEUE_H */
+#endif /* ST_QUEUE_H */
