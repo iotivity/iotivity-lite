@@ -1076,6 +1076,10 @@ oc_sec_get_rpk_hmac(oc_endpoint_t *endpoint, unsigned char *hmac, int *hmac_len)
     OC_ERR("%s: unable to get peer", __func__);
     return false;
   }
+  if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
+    OC_ERR("wrong session state");
+    return false;
+  }
   memcpy(session_master, peer->ssl_ctx.session->master, 48);
   mbedtls_md_init(&ctx);
   if ((ret = mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1)) != 0) {
