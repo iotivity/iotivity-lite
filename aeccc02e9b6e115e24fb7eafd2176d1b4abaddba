@@ -16,6 +16,47 @@
       "revId": "aeccc02e9b6e115e24fb7eafd2176d1b4abaddba",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1c7ee4ae",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-11-26T20:27:26Z",
+      "side": 1,
+      "message": "You don\u0027t need to check flags \u0026 SECURED here again. \n\nYou can just check if (message-\u003eencrypted \u003d\u003d 1).\nThat serves to replace the existing (b \u003e 19 \u0026\u0026 b \u003c 64) logic.\n\nmessage-\u003eencrypted couldn\u0027t have been 1 unless message-\u003eendpoint had the SECURED flag set.\nBut message-\u003eendpoint can have the SECURED flag set with message-\u003eencrypted \u003d 0 that is the case of the oc_message_t following decryption where it passes through the else {} below.",
+      "parentUuid": "9a3d3df0_214905d1",
+      "revId": "aeccc02e9b6e115e24fb7eafd2176d1b4abaddba",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_7c4a9084",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2018-11-26T20:27:26Z",
+      "side": 1,
+      "message": "I think you were right. You probably don\u0027t need to set message-\u003eencrypted here as message-\u003edata is currently cleartext.",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 31
+      },
+      "revId": "aeccc02e9b6e115e24fb7eafd2176d1b4abaddba",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
