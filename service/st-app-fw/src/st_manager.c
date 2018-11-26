@@ -38,7 +38,7 @@
 #ifdef STATE_MODEL
 #include "st_evt_manager.h"
 #else
-#include "st_status_queue.h"
+#include "st_queue.h"
 #endif
 #include "st_store.h"
 
@@ -58,6 +58,17 @@ extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 
 #ifndef STATE_MODEL
+#define MAX_STATUS_COUNT 10
+
+/**
+ * Structure to manage st_status_t queue.
+ */
+typedef struct st_status_item
+{
+  struct st_status_item *next;
+  st_status_t status;
+} st_status_item_t;
+
 #define AP_CONNECT_RETRY_LIMIT (10)
 #define CONN_CHECK_WAIT_TIME (3)
 typedef struct
@@ -124,6 +135,9 @@ oc_define_interrupt_handler(st_manager)
 static bool g_start_fail = false;
 
 static bool g_retry_connect = false;
+
+static st_queue_t *g_status_queue = NULL;
+OC_MEMB(st_status_item_s, st_status_item_t, MAX_STATUS_COUNT);
 
 static void set_st_manager_status(st_status_t status);
 
@@ -300,12 +314,12 @@ oc_define_interrupt_handler(st_manager)
 {
   st_error_t st_err_ret = ST_ERROR_NONE;
   st_status_item_t *item = NULL;
-  while ((item = st_status_queue_pop())) {
+  while ((item = (st_status_item_t *)st_queue_pop(g_status_queue))) {
     if (g_st_status_cb)
       g_st_status_cb(item->status);
 
     g_main_status = item->status;
-    st_status_queue_free_item(item);
+    st_queue_free_item(g_status_queue, item);
 
     switch (g_main_status) {
     case ST_STATUS_EASY_SETUP_START:
@@ -383,7 +397,7 @@ exit:
   }
   st_process_stop();
   st_manager_evt_stop_handler();
-  st_status_queue_remove_all_items();
+  st_queue_free_all_items(g_status_queue);
   g_main_status = ST_STATUS_INIT;
 }
 #endif /* !STATE_MODEL */
@@ -484,8 +498,8 @@ st_main_reset(void)
 static void
 set_st_manager_status(st_status_t status)
 {
-  if (st_status_queue_add(status) != 0) {
-    st_print_log("[ST_MGR] st_status_queue_add failed\n");
+  if (st_queue_push(g_status_queue, &status) != 0) {
+    st_print_log("[ST_MGR] st_queue_push failed\n");
   }
 
   oc_signal_interrupt_handler(st_manager);
@@ -497,6 +511,33 @@ set_main_status_sync(st_status_t status)
   st_process_app_sync_lock();
   set_st_manager_status(status);
   st_process_app_sync_unlock();
+}
+
+static void *
+st_status_add_handler(void *value)
+{
+  if (!value) {
+    return NULL;
+  }
+
+  st_status_t *status = (st_status_t *)value;
+  st_status_item_t *queue_item = oc_memb_alloc(&st_status_item_s);
+  if (!queue_item) {
+    st_print_log("[ST_MGR] oc_memb_alloc failed!\n");
+    return NULL;
+  }
+
+  queue_item->status = *status;
+  return queue_item;
+}
+
+static void
+st_status_free_handler(void *item)
+{
+  if (!item)
+    return;
+
+  oc_memb_free(&st_status_item_s, item);
 }
 
 st_error_t
@@ -529,8 +570,10 @@ st_manager_initialize(void)
     return ST_ERROR_OPERATION_FAILED;
   }
 
-  if (st_status_queue_initialize() != 0) {
-    st_print_log("[ST_MGR] st_status_queue_initialize failed!\n");
+  g_status_queue =
+    st_queue_initialize(st_status_add_handler, st_status_free_handler);
+  if (!g_status_queue) {
+    st_print_log("[ST_MGR] st_queue_initialize failed\n");
     st_process_destroy();
     st_port_specific_destroy();
     return ST_ERROR_OPERATION_FAILED;
@@ -640,9 +683,10 @@ st_manager_stack_init(void)
 st_error_t
 st_manager_start(void)
 {
-  st_status_item_t *item = st_status_queue_get_head();
+  st_status_item_t *item =
+    (st_status_item_t *)st_queue_get_head(g_status_queue);
   if (item) {
-    st_status_queue_remove_all_items();
+    st_queue_free_all_items(g_status_queue);
   }
 
   if (g_main_status == ST_STATUS_IDLE) {
@@ -653,7 +697,7 @@ st_manager_start(void)
 
   if (st_manager_stack_init() < 0) {
     st_manager_evt_stop_handler();
-    st_status_queue_remove_all_items();
+    st_queue_free_all_items(g_status_queue);
     g_main_status = ST_STATUS_INIT;
     return ST_ERROR_OPERATION_FAILED;
   }
@@ -725,7 +769,8 @@ st_manager_deinitialize(void)
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
-  st_status_queue_deinitialize();
+  st_queue_deinitialize(g_status_queue);
+  g_status_queue = NULL;
   st_port_specific_destroy();
   st_process_destroy();
 
@@ -839,16 +884,34 @@ st_manager_evt_stop_handler(void)
   free_platform_cb_data();
 }
 
+static void
+st_status_remove_all_items_without_stop(void)
+{
+  st_status_item_t *item = NULL;
+  bool stop_flag = false;
+
+  while ((item = (st_status_item_t *)st_queue_pop(g_status_queue)) != NULL) {
+    if (!stop_flag && item->status == ST_STATUS_STOP) {
+      stop_flag = true;
+    }
+    st_queue_free_item(g_status_queue, item);
+  }
+  if (stop_flag) {
+    st_status_t stop_status = ST_STATUS_STOP;
+    st_queue_push(g_status_queue, &stop_status);
+  }
+}
+
 static int
 st_manager_evt_reset_handler(void)
 {
   st_main_reset();
   st_manager_evt_stop_handler();
-  st_status_queue_remove_all_items_without_stop();
+  st_status_remove_all_items_without_stop();
 
   if (st_manager_stack_init() < 0) {
     st_manager_evt_stop_handler();
-    st_status_queue_remove_all_items();
+    st_queue_free_all_items(g_status_queue);
     g_main_status = ST_STATUS_INIT;
     return -1;
   }
