@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_f7407b37",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T01:31:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_1c7ee4ae",
+      "revId": "aeccc02e9b6e115e24fb7eafd2176d1b4abaddba",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_7c4a9084",
         "filename": "api/oc_buffer.c",
         "patchSetId": 5
@@ -48,6 +66,30 @@
       "writtenOn": "2018-11-26T20:27:26Z",
       "side": 1,
       "message": "I think you were right. You probably don\u0027t need to set message-\u003eencrypted here as message-\u003edata is currently cleartext.",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 31
+      },
+      "revId": "aeccc02e9b6e115e24fb7eafd2176d1b4abaddba",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d73d77bd",
+        "filename": "api/oc_buffer.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T01:31:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_7c4a9084",
       "range": {
         "startLine": 179,
         "startChar": 0,
