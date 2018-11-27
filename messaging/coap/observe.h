@@ -95,9 +95,11 @@ int coap_notify_observers(oc_resource_t *resource,
                           oc_endpoint_t *endpoint);
 
 #ifdef OC_BLOCK_WISE
+//@request.uri_path should not have the prefix with '/', otherwise crash may happen.
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          uint16_t block2_size, oc_endpoint_t *endpoint);
 #else  /* OC_BLOCK_WISE */
+//@request.uri_path should not have the prefix with '/', otherwise crash may happen.
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */

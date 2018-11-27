@@ -63,17 +63,17 @@ class TestSTResourceManager: public testing::Test
 
         static void signalEventLoop(void)
         {
-            return;
         }
 
     protected:
         virtual void SetUp()
         {
-            st_set_device_profile(st_device_def, st_device_def_len);
+            bool devResult = st_set_device_profile(st_device_def, st_device_def_len);
+            ASSERT_TRUE(devResult);
             s_handler.init = appInit;
             s_handler.signal_event_loop = signalEventLoop;
             int initResult = oc_main_init(&s_handler);
-            ASSERT_TRUE((initResult == 0));
+            ASSERT_TRUE(initResult == 0);
         }
 
         virtual void TearDown()
@@ -128,7 +128,7 @@ TEST_F(TestSTResourceManager, st_notify_back)
 {
     // Given
     request_handled = false;
-    char uri[26] = "/capability/test/main/0";
+    char uri[18] = "capability/switch";
     oc_resource_t *resource = oc_new_resource(NULL, uri, 1, 0);
 
     oc_resource_bind_resource_type(resource, "core.light");
@@ -149,7 +149,8 @@ TEST_F(TestSTResourceManager, st_notify_back)
     request.observe = 0;
     response.code = COAP_NO_ERROR;
 #ifdef OC_BLOCK_WISE
-    int observe = coap_observe_handler(&request, &response, resource, 10, endpoint);
+    int observe = coap_observe_handler(&request, &response, resource,
+                                       (uint16_t)OC_BLOCK_SIZE, endpoint);
 #else  /* OC_BLOCK_WISE */
     int observe = coap_observe_handler(&request, &response, resource, endpoint);
 #endif /* !OC_BLOCK_WISE */
