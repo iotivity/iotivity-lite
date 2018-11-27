@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_97464f22",
+        "filename": "api/oc_client_api.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T09:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_dc647ce7",
+      "range": {
+        "startLine": 330,
+        "startChar": 2,
+        "endLine": 330,
+        "endChar": 44
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_5e31840a",
         "filename": "apps/client_multithread_linux.c",
         "patchSetId": 4
@@ -154,6 +178,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_d747371c",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T09:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_1c5f0410",
+      "range": {
+        "startLine": 609,
+        "startChar": 0,
+        "endLine": 612,
+        "endChar": 10
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_9caaf4d2",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 4
@@ -177,6 +225,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_17523fdd",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T09:51:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_9caaf4d2",
+      "range": {
+        "startLine": 1197,
+        "startChar": 0,
+        "endLine": 1354,
+        "endChar": 1
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_fcaea0e6",
         "filename": "messaging/coap/coap_signal.c",
         "patchSetId": 4
@@ -188,6 +260,30 @@
       "writtenOn": "2018-11-22T11:36:28Z",
       "side": 1,
       "message": "Could you explain why you handle this signal message sending from separate path beyond from dispath_coap_request().",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 24
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_775e2beb",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-27T09:51:46Z",
+      "side": 1,
+      "message": "Except ping mesage, other signal messages dosen\u0027t need client_cb which is essential for dispatch_coap_request().\nShould I use dispatch_coap_request function? I think it is focused to send client messages(GET/PUT/POST/DELETE).",
+      "parentUuid": "9a3d3df0_fcaea0e6",
       "range": {
         "startLine": 38,
         "startChar": 0,
