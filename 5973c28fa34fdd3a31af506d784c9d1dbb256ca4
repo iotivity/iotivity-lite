@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_d79f374f",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-27T18:32:51Z",
+      "side": 1,
+      "message": "I am a little worried about putting the extern \"C\" without C++ guards.\n\nIf we remove the C++ need this will also need to be removed.",
+      "range": {
+        "startLine": 484,
+        "startChar": 0,
+        "endLine": 484,
+        "endChar": 10
+      },
+      "revId": "5973c28fa34fdd3a31af506d784c9d1dbb256ca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
