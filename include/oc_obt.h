@@ -18,6 +18,7 @@
 #define OC_OBT_H
 
 #include "oc_api.h"
+#include "oc_uuid.h"
 #include "security/oc_acl.h"
 
 #ifdef __cplusplus
@@ -25,36 +26,27 @@ extern "C"
 {
 #endif
 
-typedef struct oc_device_t
-{
-  struct oc_device_t *next;
-  oc_endpoint_t *endpoint;
-  oc_uuid_t uuid;
-  void *ctx;
-} oc_device_t;
-
-typedef void (*oc_obt_devicelist_cb_t)(oc_device_t *, void *);
-
+typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *, oc_endpoint_t *, void *);
+typedef void (*oc_obt_device_status_cb_t)(oc_uuid_t *, int, void *);
 typedef void (*oc_obt_status_cb_t)(int, void *);
 
 /* Call once at startup for OBT initialization */
 void oc_obt_init(void);
 
 /* Device discovery */
-int oc_obt_discover_unowned_devices(oc_obt_devicelist_cb_t cb, void *data);
-int oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data);
+int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
+int oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data);
 
 /* Perform ownership transfer */
-int oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
+int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);
 
 /* RESET device state */
-int oc_obt_device_hard_reset(oc_device_t *device, oc_obt_status_cb_t cb,
+int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                              void *data);
 
 /* Provision pair-wise 128-bit shared keys */
-int oc_obt_provision_pairwise_credentials(oc_device_t *device1,
-                                          oc_device_t *device2,
+int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
 /* Provision access-control entries (ace2) */
@@ -71,8 +63,8 @@ void oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc);
 void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
                                oc_ace_permissions_t permission);
 
-int oc_obt_provision_ace(oc_device_t *device, oc_sec_ace_t *ace,
-                         oc_obt_status_cb_t cb, void *data);
+int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
+                         oc_obt_device_status_cb_t cb, void *data);
 void oc_obt_free_ace(oc_sec_ace_t *ace);
 
 #ifdef __cplusplus

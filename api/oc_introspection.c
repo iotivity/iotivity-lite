@@ -220,10 +220,10 @@ oc_create_introspection_resource(size_t device)
 {
   OC_DBG("oc_introspection: Initializing introspection resource");
 
-  oc_core_populate_resource(OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
-                            OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_DISCOVERABLE,
-                            oc_core_introspection_wk_handler, 0, 0, 0, 1,
-                            "oic.wk.introspection");
+  oc_core_populate_resource(
+    OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
+    OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_SECURE | OC_DISCOVERABLE,
+    oc_core_introspection_wk_handler, 0, 0, 0, 1, "oic.wk.introspection");
   oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
                             OC_IF_BASELINE, OC_IF_BASELINE, 0,
                             oc_core_introspection_data_handler, 0, 0, 0, 1,
