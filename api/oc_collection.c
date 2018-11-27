@@ -216,6 +216,21 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_endpoint_t *eps =
           oc_connectivity_get_endpoints(link->resource->device);
         while (eps != NULL) {
+          /*  If this resource has been explicitly tagged as SECURE on the
+           *  application layer, skip all coap:// endpoints, and only include
+           *  coaps:// endpoints.
+           *  Also, exclude all endpoints that are not associated with the
+           * interface
+           *  through which this request arrived. This is achieved by checking
+           * if the
+           *  interface index matches.
+           */
+          if ((link->resource->properties & OC_SECURE &&
+               !(eps->flags & SECURED)) ||
+              (request->origin && request->origin->interface_index != -1 &&
+               request->origin->interface_index != eps->interface_index)) {
+            goto next_eps1;
+          }
           oc_rep_object_array_start_item(eps);
           oc_string_t ep;
           if (oc_endpoint_to_string(eps, &ep) == 0) {
@@ -223,6 +238,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
             oc_free_string(&ep);
           }
           oc_rep_object_array_end_item(eps);
+        next_eps1:
           eps = eps->next;
         }
         oc_rep_close_array(links, eps);
@@ -257,6 +273,21 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_endpoint_t *eps =
           oc_connectivity_get_endpoints(link->resource->device);
         while (eps != NULL) {
+          /*  If this resource has been explicitly tagged as SECURE on the
+           *  application layer, skip all coap:// endpoints, and only include
+           *  coaps:// endpoints.
+           *  Also, exclude all endpoints that are not associated with the
+           * interface
+           *  through which this request arrived. This is achieved by checking
+           * if the
+           *  interface index matches.
+           */
+          if ((link->resource->properties & OC_SECURE &&
+               !(eps->flags & SECURED)) ||
+              (request->origin && request->origin->interface_index != -1 &&
+               request->origin->interface_index != eps->interface_index)) {
+            goto next_eps2;
+          }
           oc_rep_object_array_start_item(eps);
           oc_string_t ep;
           if (oc_endpoint_to_string(eps, &ep) == 0) {
@@ -264,6 +295,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
             oc_free_string(&ep);
           }
           oc_rep_object_array_end_item(eps);
+        next_eps2:
           eps = eps->next;
         }
         oc_rep_close_array(links, eps);
