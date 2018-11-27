@@ -66,9 +66,9 @@ public class Server {
                         //System.out.println("Calling cv.awaitNanos " + timeToWait);
                         cv.awaitNanos(timeToWait);
                     } else {
-                        // For Windows next_event is the number of nanoseconds to wait
                         //System.out.println("Calling cv.awaitNanos " + next_event);
-                        cv.awaitNanos(next_event);
+                        long now = OCClock.clockTime();
+                        cv.awaitNanos((next_event - now) * 1000000 / OCClock.OC_CLOCK_SECOND);
                     }
                 }
             } catch (InterruptedException e) {
