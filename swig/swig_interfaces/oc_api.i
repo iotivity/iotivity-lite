@@ -3,10 +3,12 @@
 %include "carrays.i"
 %include "arrays_java.i"
 %include "stdint.i"
-%include <oc_ri.i>
 %include "typemaps.i"
 %include "various.i"
 %include "iotivity.swg"
+
+%import "oc_clock.i"
+%include <oc_ri.i>
 
 %pragma(java) jniclasscode=%{
   static {
@@ -210,7 +212,6 @@ static oc_handler_t jni_handler = {
 }
 
 %rename(mainInit) oc_main_init;
-typedef long long oc_clock_time_t;
 %rename(mainPoll) oc_main_poll;
 %rename(mainShutdown) oc_main_shutdown;
 
@@ -468,10 +469,71 @@ void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
 }
 %rename(setConWriteHandler) oc_set_con_write_cb;
 
-%rename(initQueryIterator) oc_init_query_iterator;
-%rename(iterateQuery) oc_iterate_query;
-%rename(iterateQueryGetValues) oc_iterate_query_get_values;
-%rename(getQueryValue) oc_get_query_value;
+%ignore oc_init_query_iterator;
+%ignore oc_iterate_query;
+%ignore oc_get_query_value;
+%ignore oc_iterate_query_get_values;
+
+%typemap(jni)    jobject getQueryValues "jobject";
+%typemap(jtype)  jobject getQueryValues "java.util.List<OCQueryValue>";
+%typemap(jstype) jobject getQueryValues "java.util.List<OCQueryValue>";
+%typemap(javain) jobject getQueryValues "$javainput";
+%pragma(java) jniclassimports="import java.util.List;"
+%native (getQueryValues) jobject getQueryValues(oc_request_t *request);
+%{
+#ifdef __cplusplus
+extern "C"
+#endif
+SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *jenv, jclass jcls, jlong jrequest, jobject jrequest_) {
+  jobject jresult = 0;
+  oc_request_t *request = (oc_request_t *)0;
+  jobject result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jrequest_;
+  request = *(oc_request_t **)&jrequest;
+
+  jclass cls_ArrayList = jenv->FindClass("java/util/ArrayList");
+  jmethodID mid_arrayListConstructor = jenv->GetMethodID(cls_ArrayList, "<init>", "()V");
+  jmethodID mid_add = jenv->GetMethodID(cls_ArrayList, "add", "(Ljava/lang/Object;)Z");
+
+  jclass cls_OCQueryValue = jenv->FindClass("org/iotivity/OCQueryValue");
+  jmethodID mid_OCQueryConstructor = jenv->GetMethodID(cls_OCQueryValue, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+
+  result = jenv->NewObject(cls_ArrayList, mid_arrayListConstructor);
+
+  char *current_key = 0;
+  size_t key_len = 0;
+  char *current_value;
+  size_t value_len = 0;
+  char temp_buffer[512];
+  int pos = 0;
+
+  oc_init_query_iterator();
+  do {
+    pos = oc_iterate_query(request, &current_key, &key_len, &current_value, &value_len);
+    // check that a value was found and it will fit in the temp_buffer with room for the '\0' char
+    if (pos != -1 && key_len < 512 && value_len < 512) {
+      strncpy(temp_buffer, current_key, key_len);
+      temp_buffer[key_len] = '\0';
+      jstring jkey = jenv->NewStringUTF(temp_buffer);
+
+      strncpy(temp_buffer, current_value, value_len);
+      temp_buffer[value_len] = '\0';
+      jstring jvalue = jenv->NewStringUTF(temp_buffer);
+
+      jobject jQueryValue = jenv->NewObject(cls_OCQueryValue, mid_OCQueryConstructor, jkey, jvalue);
+      jenv->CallBooleanMethod(result, mid_add, jQueryValue);
+    }
+  } while (pos != -1);
+
+  jresult = result;
+  return jresult;
+}
+%}
+
+
 %rename(sendResponse) oc_send_response;
 %rename(ignoreRequest) oc_ignore_request;
 %rename(indicateSeparateResponse) oc_indicate_separate_response;
@@ -1543,7 +1605,10 @@ const double* jni_rep_get_double_array(oc_rep_t *rep, const char *key, size_t *d
   return NULL;
 }
 %}
-%rename(repGetByteStringArray) oc_rep_get_byte_string_array;
+// TODO solve how to expose oc_rep_get_byte_string_array currently unable to use this function
+// in C code. I have contacted the original developer for feedback.
+%ignore oc_rep_get_byte_string_array;
+//%rename(repGetByteStringArray) oc_rep_get_byte_string_array;
 
 %typemap(in, numinputs=0, noblock=1) size_t *string_array_size {
   size_t temp_string_array_size;

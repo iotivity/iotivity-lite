@@ -11,8 +11,10 @@ public class TestRunner {
     public static void main(String args[]) {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TextListener(System.out));
-        Result result = junit.run(OCRepresentationTest.class,
-                                  OCResourceTest.class);
+        Result result = junit.run(
+                OCMainTest.class,
+                OCRepresentationTest.class,
+                OCResourceTest.class);
         if (result.getFailureCount() > 0) {
           System.out.println("Test failed.");
           System.exit(1);
