@@ -127,8 +127,9 @@ static void onGetRequest(oc_request_t *request,
 TEST_F(TestSTResourceManager, st_notify_back)
 {
     // Given
+    st_print_log("st_notify_back test Entered\n");
     request_handled = false;
-    char uri[26] = "/capability/test/main/0";
+    char uri[18] = "/capability/light";
     oc_resource_t *resource = oc_new_resource(NULL, uri, 1, 0);
 
     oc_resource_bind_resource_type(resource, "core.light");
@@ -149,7 +150,8 @@ TEST_F(TestSTResourceManager, st_notify_back)
     request.observe = 0;
     response.code = COAP_NO_ERROR;
 #ifdef OC_BLOCK_WISE
-    int observe = coap_observe_handler(&request, &response, resource, 10, endpoint);
+    int observe = coap_observe_handler(&request, &response, resource,
+                                       (uint16_t)OC_BLOCK_SIZE, endpoint);
 #else  /* OC_BLOCK_WISE */
     int observe = coap_observe_handler(&request, &response, resource, endpoint);
 #endif /* !OC_BLOCK_WISE */
@@ -158,10 +160,12 @@ TEST_F(TestSTResourceManager, st_notify_back)
     oc_free_endpoint(endpoint);
 
     // When
+    st_print_log("st_notify_back Call\n");
     st_error_t ret = st_notify_back(uri);
     EXPECT_EQ(true, request_handled);
     EXPECT_EQ(ST_ERROR_NONE, ret);
     oc_delete_resource(resource);
+    st_print_log("st_notify_back test Finished\n");
 }
 
 TEST_F(TestSTResourceManager, st_notify_back_fail_null)
