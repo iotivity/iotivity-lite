@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_5287b561",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:33:57Z",
+      "side": 1,
+      "message": "better to apply samely across all platforms.",
+      "range": {
+        "startLine": 630,
+        "startChar": 17,
+        "endLine": 630,
+        "endChar": 43
+      },
+      "revId": "95821a4e8f968ca8ab8219875f9be3672bef756e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_b27c4174",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:33:57Z",
+      "side": 1,
+      "message": "why this is not required for TizenRT?",
+      "range": {
+        "startLine": 635,
+        "startChar": 0,
+        "endLine": 657,
+        "endChar": 74
+      },
+      "revId": "95821a4e8f968ca8ab8219875f9be3672bef756e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_7282b953",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:33:57Z",
+      "side": 1,
+      "message": "not used",
+      "range": {
+        "startLine": 454,
+        "startChar": 2,
+        "endLine": 454,
+        "endChar": 19
+      },
+      "revId": "95821a4e8f968ca8ab8219875f9be3672bef756e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
