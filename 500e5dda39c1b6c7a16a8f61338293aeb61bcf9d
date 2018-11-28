@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_37aae319",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-28T05:45:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_5717a7a3",
+      "revId": "500e5dda39c1b6c7a16a8f61338293aeb61bcf9d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_7760eb35",
         "filename": "service/st-app-fw/src/st_queue.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-28T01:49:42Z",
       "side": 1,
       "message": "checking  queue_is_initialized() would be good just in case calling st_queue_initialize() several times",
+      "revId": "500e5dda39c1b6c7a16a8f61338293aeb61bcf9d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_17a7df50",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-28T05:45:26Z",
+      "side": 1,
+      "message": "st_queue_initialize will make new st_queue_t variable so it will never happen initialize several times.",
+      "parentUuid": "9a3d3df0_7760eb35",
       "revId": "500e5dda39c1b6c7a16a8f61338293aeb61bcf9d",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_7763cb1a",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-28T05:45:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_5765e743",
+      "revId": "500e5dda39c1b6c7a16a8f61338293aeb61bcf9d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_77790bfc",
         "filename": "service/st-app-fw/src/st_queue.c",
         "patchSetId": 1
@@ -64,6 +118,30 @@
       "writtenOn": "2018-11-28T01:49:42Z",
       "side": 1,
       "message": "How about considering oc_clock_seconds() instead of oc_clock_time()?\n\nif possible, \nit is not only saving memory usage(8bytes-\u003e4bytes) but also \navoiding using additional define(OC_CLOCK_SECOND) here",
+      "range": {
+        "startLine": 187,
+        "startChar": 30,
+        "endLine": 187,
+        "endChar": 45
+      },
+      "revId": "500e5dda39c1b6c7a16a8f61338293aeb61bcf9d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_b76d5307",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-28T05:45:26Z",
+      "side": 1,
+      "message": "oc_clock_seconds can give just current value for seconds. this is not I want to use. and OC_CLOCK_SECOND is not additionally defined. It is defined in oc_clock.h file.",
+      "parentUuid": "9a3d3df0_77790bfc",
       "range": {
         "startLine": 187,
         "startChar": 30,
