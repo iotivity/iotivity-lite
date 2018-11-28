@@ -320,6 +320,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_d26465e7",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-28T07:41:30Z",
+      "side": 1,
+      "message": "I don\u0027t think signal message is like GET/POST. GET/POST and other coap requests are client regarding methods and it always need response. But, signal message is not required response except ping message. dispatch_coap_request is fit on client request logic, so I think it is better to saparate send logic when send signal messages.",
+      "parentUuid": "9a3d3df0_9273fdb0",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 24
+      },
+      "revId": "86e52912b71703765a78d3ef487aae6b71d5aca4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_9e3b0ceb",
         "filename": "messaging/coap/coap_signal.c",
         "patchSetId": 4
