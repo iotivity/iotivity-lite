@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_7c0570c1",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "Can you explain why return in this case?\nif you intend to avoid duplication of cloud_start_process(..), error case during sign_up try is not considered.",
+      "range": {
+        "startLine": 123,
+        "startChar": 18,
+        "endLine": 123,
+        "endChar": 77
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_3c03e8b9",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "in case of session close during sign_in or re_pud, is it right to remove send_ping?",
+      "range": {
+        "startLine": 129,
+        "startChar": 6,
+        "endLine": 129,
+        "endChar": 53
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_9c2b1430",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "Why do you exclude CLOUD_MANAGER_INITIALIZED case?\nRECONNECTING and INTIALIZED are different status.",
+      "range": {
+        "startLine": 218,
+        "startChar": 39,
+        "endLine": 218,
+        "endChar": 64
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_bc0ff8e0",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "is_retry should be only check logic but this includes reconnection logic also. please separate this as additional function such as reconnect_cloud()..or so.",
+      "range": {
+        "startLine": 214,
+        "startChar": 0,
+        "endLine": 223,
+        "endChar": 14
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_fc1fc007",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "RECONNECTING should guarantee the cloud_start_process(context) or so. but error_handler with RECONNECTING status does not execute it.",
+      "range": {
+        "startLine": 294,
+        "startChar": 6,
+        "endLine": 294,
+        "endChar": 65
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_dc1c7c16",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T08:42:17Z",
+      "side": 1,
+      "message": "why do you handle error case for this step. No error check in signup and signin before.\nWhose fault for this case?\nif it happens, go out without cloud_start again?\nThen what happen next?",
+      "range": {
+        "startLine": 497,
+        "startChar": 0,
+        "endLine": 498,
+        "endChar": 11
+      },
+      "revId": "e4e7afeabdb2a233e11bb413e063b78ce5cb5abf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
