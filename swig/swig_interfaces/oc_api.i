@@ -1787,9 +1787,9 @@ const double* ocArrayToDoubleArray(oc_array_t array, size_t *oc_array_double_arr
   }
 }
 %inline %{
-const oc_string_array_t * ocArrayToStringArray(oc_array_t array, size_t *oc_array_text_string_array_len) {
-  *oc_array_text_string_array_len = (size_t)oc_string_array_get_allocated_size(array);
-  return (oc_string_array_t *)&array;
+const oc_string_array_t * ocArrayToStringArray(oc_array_t *array, size_t *oc_array_text_string_array_len) {
+  *oc_array_text_string_array_len = (size_t)oc_string_array_get_allocated_size(*array);
+  return (oc_string_array_t *)array;
 }
 %}
 
