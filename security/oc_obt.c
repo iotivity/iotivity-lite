@@ -29,34 +29,58 @@
 #include "security/oc_tls.h"
 #include <stdlib.h>
 
-#define DISCOVERY_CB_DELAY (5)
+#define DISCOVERY_CB_PERIOD (5)
 /* Worst case timeout for all onboarding/provisioning sequences */
-#define OBT_CB_TIMEOUT (100)
+#define OBT_CB_TIMEOUT (15)
 
-typedef struct
+/* Used for tracking owned/unowned devices in oc_obt's internal caches */
+typedef struct oc_device_t
 {
-  oc_obt_devicelist_cb_t cb;
+  struct oc_device_t *next;
+  oc_endpoint_t *endpoint;
+  oc_uuid_t uuid;
+  void *ctx;
+} oc_device_t;
+
+/* Context for oc_obt_discover_owned/unowned cbs */
+typedef struct oc_discovery_cb_t
+{
+  struct oc_discovery_cb_t *next;
+  oc_obt_discovery_cb_t cb;
   void *data;
-} oc_devicelist_cb_t;
+} oc_discovery_cb_t;
 
-OC_MEMB(oc_devicelist_s, oc_devicelist_cb_t, 1);
+OC_MEMB(oc_discovery_s, oc_discovery_cb_t, 1);
+OC_LIST(oc_discovery_cbs);
 
+/* Context for oc_obt_provision_pairwise_credentials and switch_dos  cb */
 typedef struct
 {
   oc_obt_status_cb_t cb;
   void *data;
 } oc_status_cb_t;
 
+/* Context for oc_obt_perform_just_works_otm, oc_obt_provision_ace, and
+ * oc_obt_device_hard_reset cbs
+ */
+typedef struct
+{
+  oc_obt_device_status_cb_t cb;
+  void *data;
+} oc_device_status_cb_t;
+
+/* Context to be maintained over OTM sequence */
 typedef struct oc_otm_ctx_t
 {
   struct oc_otm_ctx_t *next;
-  oc_status_cb_t cb;
+  oc_device_status_cb_t cb;
   oc_device_t *device;
 } oc_otm_ctx_t;
 
 OC_MEMB(oc_otm_ctx_m, oc_otm_ctx_t, 1);
 OC_LIST(oc_otm_ctx_l);
 
+/* Context to be maintained over dos transition sequence */
 typedef struct oc_switch_dos_ctx_t
 {
   struct oc_switch_dos_ctx_t *next;
@@ -68,15 +92,19 @@ typedef struct oc_switch_dos_ctx_t
 OC_MEMB(oc_switch_dos_ctx_m, oc_switch_dos_ctx_t, 1);
 OC_LIST(oc_switch_dos_ctx_l);
 
+/* Context to be maintained over hard RESET sequence */
 typedef struct
 {
-  oc_status_cb_t cb;
+  oc_device_status_cb_t cb;
   oc_device_t *device;
   oc_switch_dos_ctx_t *switch_dos;
 } oc_hard_reset_ctx_t;
 
 OC_MEMB(oc_hard_reset_ctx_m, oc_hard_reset_ctx_t, 1);
 
+/* Context to be maintained over pair-wise credential provisioning
+ * sequence
+ */
 typedef struct oc_credprov_ctx_t
 {
   struct oc_credprov_ctx_t *next;
@@ -90,10 +118,11 @@ typedef struct oc_credprov_ctx_t
 OC_MEMB(oc_credprov_ctx_m, oc_credprov_ctx_t, 1);
 OC_LIST(oc_credprov_ctx_l);
 
+/* Context to be maintained over ACE provisioning sequence */
 typedef struct oc_acl2prov_ctx_t
 {
   struct oc_acl2prov_ctx_t *next;
-  oc_status_cb_t cb;
+  oc_device_status_cb_t cb;
   oc_device_t *device;
   oc_sec_ace_t *ace;
   oc_switch_dos_ctx_t *switch_dos;
@@ -105,6 +134,7 @@ OC_LIST(oc_acl2prov_l);
 OC_MEMB(oc_aces_m, oc_sec_ace_t, 1);
 OC_MEMB(oc_res_m, oc_ace_res_t, 1);
 
+/* Owned/unowned device caches */
 OC_MEMB(oc_devices_s, oc_device_t, 1);
 OC_LIST(oc_devices);
 OC_LIST(oc_cache);
@@ -112,14 +142,7 @@ OC_LIST(oc_cache);
 /* Persisted state */
 static int id = 1000;
 
-enum
-{
-  OC_OBT_UNOWNED_DISCOVERY = 1,
-  OC_OBT_OWNED_DISCOVERY
-};
-
-/* Helper functions */
-
+/* Internal utility functions */
 static oc_endpoint_t *
 get_secure_endpoint(oc_endpoint_t *endpoint)
 {
@@ -127,6 +150,19 @@ get_secure_endpoint(oc_endpoint_t *endpoint)
     endpoint = endpoint->next;
   }
   return endpoint;
+}
+
+static oc_device_t *
+get_device_handle(oc_uuid_t *uuid, oc_list_t list)
+{
+  oc_device_t *device = (oc_device_t *)oc_list_head(list);
+  while (device) {
+    if (memcmp(uuid->id, device->uuid.id, 16) == 0) {
+      return device;
+    }
+    device = device->next;
+  }
+  return NULL;
 }
 
 static bool
@@ -304,10 +340,9 @@ is_item_in_list(oc_list_t list, void *item)
   return false;
 }
 
-/* End of helper functions */
+/* End of utility functions */
 
 /* Just-works ownership transfer */
-
 static void
 free_otm_state(oc_otm_ctx_t *o, int status)
 {
@@ -318,9 +353,13 @@ free_otm_state(oc_otm_ctx_t *o, int status)
     char suuid[OC_UUID_LEN];
     oc_uuid_to_str(&o->device->uuid, suuid, OC_UUID_LEN);
     oc_cred_remove_subject(suuid, 0);
+    o->cb.cb(&o->device->uuid, status, o->cb.data);
+    free_device(o->device);
+  } else {
+    o->cb.cb(&o->device->uuid, status, o->cb.data);
+    oc_list_remove(oc_cache, o->device);
+    oc_list_add(oc_devices, o->device);
   }
-  free_device(o->device);
-  o->cb.cb(status, o->cb.data);
   oc_list_remove(oc_otm_ctx_l, o);
   oc_memb_free(&oc_otm_ctx_m, o);
 }
@@ -528,6 +567,8 @@ obt_jw_7(oc_client_response_t *data)
     goto err_obt_jw_7;
   }
 
+  oc_sec_dump_cred(0);
+
   /**  7) post pstat rowneruuid
    */
   oc_device_t *device = o->device;
@@ -610,7 +651,6 @@ obt_jw_6(oc_client_response_t *data)
     oc_rep_set_text_string(root, rowneruuid, uuid);
     oc_rep_end_root_object();
     if (oc_do_post()) {
-      oc_sec_dump_cred(0);
       return;
     }
   }
@@ -782,12 +822,17 @@ err_obt_jw_2:
   13) <close DTLS>
 */
 int
-oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
+oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                               void *data)
 {
   OC_DBG("In oc_obt_perform_just_works_otm");
 
-  if (owned_device(&device->uuid)) {
+  if (owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = get_device_handle(uuid, oc_cache);
+  if (!device) {
     return -1;
   }
 
@@ -824,13 +869,24 @@ oc_obt_perform_just_works_otm(oc_device_t *device, oc_obt_status_cb_t cb,
 }
 
 /* Device discovery */
+/* Owned/Unowned discovery timeout */
+static oc_event_callback_retval_t
+free_discovery_cb(void *data)
+{
+  oc_discovery_cb_t *c = (oc_discovery_cb_t *)data;
+  oc_list_remove(oc_discovery_cbs, c);
+  oc_memb_free(&oc_discovery_s, c);
+  return OC_EVENT_DONE;
+}
+
 static void
 get_endpoints(oc_client_response_t *data)
 {
   oc_device_t *device = (oc_device_t *)data->user_data;
+
   oc_rep_t *links = data->payload;
 
-  oc_free_endpoint(device->endpoint);
+  oc_free_server_endpoints(device->endpoint);
 
   oc_endpoint_t *eps_cur = NULL;
 
@@ -885,6 +941,12 @@ get_endpoints(oc_client_response_t *data)
     }
     links = links->next;
   }
+
+  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)device->ctx;
+  if (!is_item_in_list(oc_discovery_cbs, cb) || !device->endpoint) {
+    return;
+  }
+  cb->cb(&device->uuid, device->endpoint, cb->data);
 }
 
 static void
@@ -941,72 +1003,65 @@ obt_check_owned(oc_client_response_t *data)
   }
 
   if (new_device) {
+    new_device->ctx = data->user_data;
     oc_do_get("/oic/res", new_device->endpoint, "rt=oic.r.doxm", &get_endpoints,
               HIGH_QOS, new_device);
+  } else {
+    oc_discovery_cb_t *cb = (oc_discovery_cb_t *)data->user_data;
+    if (!is_item_in_list(oc_discovery_cbs, cb)) {
+      return;
+    }
+    oc_device_t *device = (owned == 0) ? get_device_handle(&uuid, oc_cache)
+                                       : get_device_handle(&uuid, oc_devices);
+    if (!device) {
+      return;
+    }
+    cb->cb(&uuid, device->endpoint, cb->data);
   }
 }
 
 /* Unowned device discovery */
-static oc_event_callback_retval_t
-trigger_unowned_device_cb(void *data)
-{
-  oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)data;
-  oc_device_t *device_list = (oc_device_t *)oc_list_head(oc_cache);
-  c->cb(device_list, c->data);
-  oc_memb_free(&oc_devicelist_s, c);
-  return OC_EVENT_DONE;
-}
-
 int
-oc_obt_discover_unowned_devices(oc_obt_devicelist_cb_t cb, void *data)
+oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data)
 {
-  oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)oc_memb_alloc(&oc_devicelist_s);
+  oc_discovery_cb_t *c = (oc_discovery_cb_t *)oc_memb_alloc(&oc_discovery_s);
   if (!c) {
     return -1;
   }
   c->cb = cb;
   c->data = data;
 
-  if (oc_do_ip_multicast("/oic/sec/doxm", "owned=FALSE", &obt_check_owned,
-                         NULL)) {
-    oc_set_delayed_callback(c, trigger_unowned_device_cb, DISCOVERY_CB_DELAY);
+  if (oc_do_ip_multicast("/oic/sec/doxm", "owned=FALSE", &obt_check_owned, c)) {
+    oc_list_add(oc_discovery_cbs, c);
+    oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
     return 0;
   }
 
-  oc_memb_free(&oc_devicelist_s, c);
+  oc_memb_free(&oc_discovery_s, c);
   return -1;
 }
 
 /* Owned device disvoery */
-static oc_event_callback_retval_t
-trigger_owned_device_cb(void *data)
-{
-  oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)data;
-  oc_device_t *device_list = (oc_device_t *)oc_list_head(oc_devices);
-  c->cb(device_list, c->data);
-  oc_memb_free(&oc_devicelist_s, c);
-  return OC_EVENT_DONE;
-}
-
 int
-oc_obt_discover_owned_devices(oc_obt_devicelist_cb_t cb, void *data)
+oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 {
-  oc_devicelist_cb_t *c = (oc_devicelist_cb_t *)oc_memb_alloc(&oc_devicelist_s);
+  oc_discovery_cb_t *c = (oc_discovery_cb_t *)oc_memb_alloc(&oc_discovery_s);
   if (!c) {
     return -1;
   }
   c->cb = cb;
   c->data = data;
 
-  if (oc_do_ip_multicast("/oic/sec/doxm", "owned=TRUE", &obt_check_owned,
-                         NULL)) {
-    oc_set_delayed_callback(c, trigger_owned_device_cb, DISCOVERY_CB_DELAY);
+  if (oc_do_ip_multicast("/oic/sec/doxm", "owned=TRUE", &obt_check_owned, c)) {
+    oc_list_add(oc_discovery_cbs, c);
+    oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
     return 0;
   }
 
-  oc_memb_free(&oc_devicelist_s, c);
+  oc_memb_free(&oc_discovery_s, c);
   return -1;
 }
+/* End of device discovery */
 
 /* Helper sequence to switch between pstat device states */
 static void
@@ -1104,29 +1159,29 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   oc_memb_free(&oc_switch_dos_ctx_m, d);
   return NULL;
 }
+/* End of switch dos sequence */
 
-/* Perform hard RESET */
+/* Hard RESET sequence */
 static void
 free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
 {
-  oc_status_cb_t cb = ctx->cb;
+  oc_device_status_cb_t cb = ctx->cb;
   oc_endpoint_t *ep = get_secure_endpoint(ctx->device->endpoint);
   char subjectuuid[OC_UUID_LEN];
   oc_uuid_to_str(&ctx->device->uuid, subjectuuid, OC_UUID_LEN);
   oc_tls_close_connection(ep);
+  if (status == 0) {
+    /* Remove device's credential from OBT's credential store */
+    oc_cred_remove_subject(subjectuuid, 0);
+    cb.cb(&ctx->device->uuid, 0, cb.data);
+  } else {
+    cb.cb(&ctx->device->uuid, -1, cb.data);
+  }
   free_device(ctx->device);
   if (ctx->switch_dos) {
     free_switch_dos_state(ctx->switch_dos);
   }
   oc_memb_free(&oc_hard_reset_ctx_m, ctx);
-  if (status >= 0) {
-    /* Remove device's credential from OBT's credential store */
-    if (oc_cred_remove_subject(subjectuuid, 0)) {
-      cb.cb(0, cb.data);
-      return;
-    }
-  }
-  cb.cb(-1, cb.data);
 }
 
 static oc_event_callback_retval_t
@@ -1146,11 +1201,21 @@ hard_reset_cb(int status, void *data)
 }
 
 int
-oc_obt_device_hard_reset(oc_device_t *device, oc_obt_status_cb_t cb, void *data)
+oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                         void *data)
 {
   oc_hard_reset_ctx_t *d =
     (oc_hard_reset_ctx_t *)oc_memb_alloc(&oc_hard_reset_ctx_m);
   if (!d) {
+    return -1;
+  }
+
+  if (!owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = get_device_handle(uuid, oc_devices);
+  if (!device) {
     return -1;
   }
 
@@ -1168,8 +1233,9 @@ oc_obt_device_hard_reset(oc_device_t *device, oc_obt_status_cb_t cb, void *data)
 
   return 0;
 }
+/* End of hard RESET sequence */
 
-/* Provision pairwise credentials */
+/* Provision pairwise credentials sequence */
 static void
 free_credprov_state(oc_credprov_ctx_t *p, int status)
 {
@@ -1371,12 +1437,29 @@ device1_RFPRO(int status, void *data)
 }
 
 int
-oc_obt_provision_pairwise_credentials(oc_device_t *device1,
-                                      oc_device_t *device2,
+oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
 {
   oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
   if (!p) {
+    return -1;
+  }
+
+  if (!owned_device(uuid1)) {
+    return -1;
+  }
+
+  if (!owned_device(uuid2)) {
+    return -1;
+  }
+
+  oc_device_t *device1 = get_device_handle(uuid1, oc_devices);
+  if (!device1) {
+    return -1;
+  }
+
+  oc_device_t *device2 = get_device_handle(uuid2, oc_devices);
+  if (!device2) {
     return -1;
   }
 
@@ -1396,6 +1479,7 @@ oc_obt_provision_pairwise_credentials(oc_device_t *device1,
 
   return 0;
 }
+/* End of provision pair-wise credentials sequence */
 
 /* Provision access-control entries */
 static oc_sec_ace_t *
@@ -1530,7 +1614,7 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
   if (request->switch_dos) {
     free_switch_dos_state(request->switch_dos);
   }
-  request->cb.cb(status, request->cb.data);
+  request->cb.cb(&request->device->uuid, status, request->cb.data);
   oc_list_remove(oc_acl2prov_l, request);
   oc_memb_free(&oc_acl2prov_m, request);
 }
@@ -1682,11 +1766,20 @@ provision_ace(int status, void *data)
 }
 
 int
-oc_obt_provision_ace(oc_device_t *device, oc_sec_ace_t *ace,
-                     oc_obt_status_cb_t cb, void *data)
+oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
+                     oc_obt_device_status_cb_t cb, void *data)
 {
   oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_m);
   if (!r) {
+    return -1;
+  }
+
+  if (!owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = get_device_handle(uuid, oc_devices);
+  if (!device) {
     return -1;
   }
 
@@ -1707,7 +1800,9 @@ oc_obt_provision_ace(oc_device_t *device, oc_sec_ace_t *ace,
 
   return 0;
 }
+/* End of provision ACE sequence */
 
+/* OBT initialization */
 void
 oc_obt_init(void)
 {

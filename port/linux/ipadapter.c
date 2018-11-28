@@ -714,9 +714,13 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
                * address of a multicast response.
                */
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV6)) {
+        while (dst != NULL &&
+               (dst->interface_index != endpoint->interface_index ||
+               !(dst->flags & IPV6))) {
           dst = dst->next;
+        }
+        if (dst == NULL) {
+          return -1;
         }
         memcpy(endpoint->addr_local.ipv6.address, dst->addr.ipv6.address, 16);
       }
@@ -738,9 +742,13 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
         memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
       } else {
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV4)) {
+        while (dst != NULL &&
+               (dst->interface_index != endpoint->interface_index ||
+               !(dst->flags & IPV4))) {
           dst = dst->next;
+        }
+        if (dst == NULL) {
+          return -1;
         }
         memcpy(endpoint->addr_local.ipv4.address, dst->addr.ipv4.address, 4);
       }
@@ -750,6 +758,109 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   }
 
   return ret;
+}
+
+static void
+oc_udp_add_socks_to_fd_set(ip_context_t *dev)
+{
+  FD_SET(dev->server_sock, &dev->rfds);
+  FD_SET(dev->mcast_sock, &dev->rfds);
+#ifdef OC_SECURITY
+  FD_SET(dev->secure_sock, &dev->rfds);
+#endif /* OC_SECURITY */
+
+#ifdef OC_IPV4
+  FD_SET(dev->server4_sock, &dev->rfds);
+  FD_SET(dev->mcast4_sock, &dev->rfds);
+#ifdef OC_SECURITY
+  FD_SET(dev->secure4_sock, &dev->rfds);
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+}
+
+static adapter_receive_state_t
+oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
+{
+  if (FD_ISSET(dev->server_sock, fds)) {
+    int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6;
+    FD_CLR(dev->server_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+  if (FD_ISSET(dev->mcast_sock, fds)) {
+    int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | MULTICAST;
+    FD_CLR(dev->mcast_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->server4_sock, fds)) {
+    int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4;
+    FD_CLR(dev->server4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+
+  if (FD_ISSET(dev->mcast4_sock, fds)) {
+    int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | MULTICAST;
+    FD_CLR(dev->mcast4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#endif /* OC_IPV4 */
+
+#ifdef OC_SECURITY
+  if (FD_ISSET(dev->secure_sock, fds)) {
+    int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | SECURED;
+    message->encrypted = 1;
+    FD_CLR(dev->secure_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->secure4_sock, fds)) {
+    int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      return ADAPTER_STATUS_ERROR;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | SECURED;
+    message->encrypted = 1;
+    FD_CLR(dev->secure4_sock, fds);
+    return ADAPTER_STATUS_RECEIVE;
+  }
+#endif /* OC_IPV4 */
+#endif /* OC_SECURITY */
+
+  return ADAPTER_STATUS_NONE;
 }
 
 static void *
@@ -766,20 +877,8 @@ network_event_thread(void *data)
     FD_SET(ifchange_sock, &dev->rfds);
   }
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
-  FD_SET(dev->server_sock, &dev->rfds);
-  FD_SET(dev->mcast_sock, &dev->rfds);
-#ifdef OC_SECURITY
-  FD_SET(dev->secure_sock, &dev->rfds);
-#endif /* OC_SECURITY */
 
-#ifdef OC_IPV4
-  FD_SET(dev->server4_sock, &dev->rfds);
-  FD_SET(dev->mcast4_sock, &dev->rfds);
-#ifdef OC_SECURITY
-  FD_SET(dev->secure4_sock, &dev->rfds);
-#endif /* OC_SECURITY */
-#endif /* OC_IPV4 */
-
+  oc_udp_add_socks_to_fd_set(dev);
 #ifdef OC_TCP
   oc_tcp_add_socks_to_fd_set(dev);
 #endif /* OC_TCP */
@@ -821,100 +920,19 @@ network_event_thread(void *data)
 
       message->endpoint.device = dev->device;
 
-      if (FD_ISSET(dev->server_sock, &setfds)) {
-        int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6;
-        FD_CLR(dev->server_sock, &setfds);
+      if (oc_udp_receive_message(dev, &setfds, message) ==
+          ADAPTER_STATUS_RECEIVE) {
         goto common;
       }
-
-      if (FD_ISSET(dev->mcast_sock, &setfds)) {
-        int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | MULTICAST;
-        FD_CLR(dev->mcast_sock, &setfds);
-        goto common;
-      }
-
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->server4_sock, &setfds)) {
-        int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4;
-        FD_CLR(dev->server4_sock, &setfds);
-        goto common;
-      }
-
-      if (FD_ISSET(dev->mcast4_sock, &setfds)) {
-        int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | MULTICAST;
-        FD_CLR(dev->mcast4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-
-#ifdef OC_SECURITY
-      if (FD_ISSET(dev->secure_sock, &setfds)) {
-        int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | SECURED;
-        FD_CLR(dev->secure_sock, &setfds);
-        goto common;
-      }
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->secure4_sock, &setfds)) {
-        int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | SECURED;
-        FD_CLR(dev->secure4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-#endif /* OC_SECURITY */
-
 #ifdef OC_TCP
-      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
-                                                              &setfds,
-                                                              message);
-      if (tcp_status == TCP_STATUS_RECEIVE) {
+      if (oc_tcp_receive_message(dev, &setfds, message) ==
+          ADAPTER_STATUS_RECEIVE) {
         goto common;
-      } else {
-        oc_message_unref(message);
-        continue;
       }
 #endif /* OC_TCP */
+
+      oc_message_unref(message);
+      continue;
 
     common:
 #ifdef OC_DEBUG

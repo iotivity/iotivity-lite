@@ -32,8 +32,38 @@ extern "C"
 extern CborEncoder g_encoder, root_map, links_array;
 extern int g_err;
 
+/**
+ * Initialize the buffer used to hold the cbor encoded data
+ *
+ * It is unlikely to be used by outside the IoTivity-lite library.
+ *
+ * @param[in] payload  pointer to payload buffer
+ * @param[in] size     size of the payload buffer
+ */
 void oc_rep_new(uint8_t *payload, int size);
+/**
+ * Used to get the size of the cbor encoded data.
+ *
+ * This can be used to check if the cbor encode data will fit inside the payload
+ * buffer. If the payload buffer is too small -1 is returned.
+ *
+ * @return
+ *  - the size of the cbor encoded data.
+ *  - returns -1 if the cbor encoded data will not fit in the oc_rep_t payload
+ *
+ * @see oc_rep_new
+ */
 int oc_rep_get_encoded_payload_size(void);
+/**
+ * Get the buffer pointer at the start of the encoded cbor data.
+ *
+ * This is used when parsing the encoded cbor data to an oc_rep_t. It is unlikely
+ * to be used outside the IoTivity-lite library.
+ *
+ * @return pointer to the start of the cbor encoded buffer
+ *
+ * @see oc_parse_rep
+ */
 const uint8_t *oc_rep_get_encoder_buf(void);
 
 #define oc_rep_object(name) &name##_map
@@ -101,12 +131,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_end_root_object()                                               \
   g_err |= cbor_encoder_close_container(&g_encoder, &root_map)
 
-#define oc_rep_add_byte_string(parent, value)                                  \
-  if ((const char *)value != NULL)                                                           \
-  g_err |= cbor_encode_byte_string(&parent##_array, value, strlen(value))
+#define oc_rep_add_byte_string(parent, value, value_len)                       \
+  if ((const char *)value != NULL)                                             \
+  g_err |= cbor_encode_byte_string(&parent##_array, value, value_len)
 
 #define oc_rep_add_text_string(parent, value)                                  \
-  if ((const char *)value != NULL)                                                           \
+  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 #define oc_rep_add_double(parent, value)                                       \

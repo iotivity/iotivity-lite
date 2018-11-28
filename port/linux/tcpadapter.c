@@ -300,7 +300,7 @@ get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
   return total_length;
 }
 
-tcp_receive_state_t
+adapter_receive_state_t
 oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
@@ -309,7 +309,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   ret = status;                                                                \
   goto oc_tcp_receive_message_done
 
-  tcp_receive_state_t ret = TCP_STATUS_ERROR;
+  adapter_receive_state_t ret = ADAPTER_STATUS_ERROR;
   message->endpoint.device = dev->device;
 
   if (FD_ISSET(dev->tcp.server_sock, fds)) {
@@ -317,18 +317,18 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     if (accept_new_session(dev, dev->tcp.server_sock, fds, &message->endpoint) <
         0) {
       OC_ERR("accept new session fail");
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     }
-    ret_with_code(TCP_STATUS_ACCEPT);
+    ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure_sock, fds)) {
     message->endpoint.flags = IPV6 | SECURED | TCP;
     if (accept_new_session(dev, dev->tcp.secure_sock, fds, &message->endpoint) <
         0) {
       OC_ERR("accept new session fail");
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     }
-    ret_with_code(TCP_STATUS_ACCEPT);
+    ret_with_code(ADAPTER_STATUS_ACCEPT);
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
   } else if (FD_ISSET(dev->tcp.server4_sock, fds)) {
@@ -336,35 +336,35 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     if (accept_new_session(dev, dev->tcp.server4_sock, fds,
                            &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     }
-    ret_with_code(TCP_STATUS_ACCEPT);
+    ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure4_sock, fds)) {
     message->endpoint.flags = IPV4 | SECURED | TCP;
     if (accept_new_session(dev, dev->tcp.secure4_sock, fds,
                            &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     }
-    ret_with_code(TCP_STATUS_ACCEPT);
+    ret_with_code(ADAPTER_STATUS_ACCEPT);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   } else if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
     if (len < 0) {
       OC_ERR("read error! %d", errno);
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     }
     FD_CLR(dev->tcp.connect_pipe[0], fds);
-    ret_with_code(TCP_STATUS_NONE);
+    ret_with_code(ADAPTER_STATUS_NONE);
   }
 
   // find session.
   tcp_session_t *session = get_ready_to_read_session(fds);
   if (!session) {
     OC_DBG("could not find TCP session socket in fd set");
-    ret_with_code(TCP_STATUS_NONE);
+    ret_with_code(ADAPTER_STATUS_NONE);
   }
 
   // receive message.
@@ -379,13 +379,13 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
       free_tcp_session(session);
 
-      ret_with_code(TCP_STATUS_ERROR);
+      ret_with_code(ADAPTER_STATUS_ERROR);
     } else if (count == 0) {
       OC_DBG("peer closed TCP session\n");
 
       free_tcp_session(session);
 
-      ret_with_code(TCP_STATUS_NONE);
+      ret_with_code(ADAPTER_STATUS_NONE);
     }
 
     OC_DBG("recv(): %d bytes.", count);
@@ -399,7 +399,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)",
                total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         OC_ERR("It may occur buffer overflow.");
-        ret_with_code(TCP_STATUS_ERROR);
+        ret_with_code(ADAPTER_STATUS_ERROR);
       }
       OC_DBG("tcp packet total length : %ld bytes.", total_length);
 
@@ -408,9 +408,14 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } while (total_length > message->length);
 
   memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_SECURITY
+  if (message->endpoint.flags & SECURED) {
+    message->encrypted = 1;
+  }
+#endif /* OC_SECURITY */
 
   FD_CLR(session->sock, fds);
-  ret = TCP_STATUS_RECEIVE;
+  ret = ADAPTER_STATUS_RECEIVE;
 
 oc_tcp_receive_message_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
