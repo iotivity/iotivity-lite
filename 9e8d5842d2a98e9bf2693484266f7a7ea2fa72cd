@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_f2408937",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T07:16:33Z",
+      "side": 1,
+      "message": "How about alloc_handler corresponding to free_handler looks better and not to handle the member of items here. This is associated with comment on st_queue_push(...value).",
+      "range": {
+        "startLine": 517,
+        "startChar": 0,
+        "endLine": 517,
+        "endChar": 21
+      },
+      "revId": "9e8d5842d2a98e9bf2693484266f7a7ea2fa72cd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1231adec",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-11-28T07:16:33Z",
+      "side": 1,
+      "message": "how about passing as item. value and items are mixed used from queue API which increase complexity to understand API usage even though one more line of app code is required.",
+      "range": {
+        "startLine": 125,
+        "startChar": 39,
+        "endLine": 125,
+        "endChar": 44
+      },
+      "revId": "9e8d5842d2a98e9bf2693484266f7a7ea2fa72cd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
