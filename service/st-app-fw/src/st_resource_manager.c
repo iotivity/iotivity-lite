@@ -24,6 +24,19 @@
 #include "st_port.h"
 #include "st_process.h"
 
+#include "st_queue.h"
+
+#define MAX_NOTIFY_COUNT 5
+
+typedef struct st_notify_item
+{
+  struct st_notify_item *next;
+  char *uri;
+} st_notify_item_t;
+
+static st_queue_t *g_notify_queue = NULL;
+OC_MEMB(st_notify_item_s, st_notify_item_t, MAX_NOTIFY_COUNT);
+
 static st_resource_handler g_resource_get_handler = NULL;
 static st_resource_handler g_resource_set_handler = NULL;
 
@@ -196,27 +209,104 @@ st_register_resource_handler(st_resource_handler get_handler,
   return ST_ERROR_NONE;
 }
 
+oc_define_interrupt_handler(st_notify)
+{
+  st_notify_item_t *item = NULL;
+  while ((item = (st_notify_item_t *)st_queue_pop(g_notify_queue))) {
+    oc_resource_t *resource =
+      oc_ri_get_app_resource_by_uri(item->uri, strlen(item->uri), device_index);
+    if (!resource) {
+      st_print_log("[ST_RM] %s is not registered resource.\n", item->uri);
+    } else {
+      oc_notify_observers(resource);
+    }
+
+    st_queue_free_item(g_notify_queue, item);
+  }
+}
+
 st_error_t
 st_notify_back(const char *uri)
 {
-  int ret = 0;
   if (!uri) {
     st_print_log("[ST_RM] invalid parameter.\n");
     return ST_ERROR_INVALID_PARAMETER;
   }
 
-  st_process_app_sync_lock();
-  oc_resource_t *resource =
-    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
-  if (!resource) {
-    st_print_log("[ST_RM] %s is not registered resource.\n", uri);
-    st_process_app_sync_unlock();
+  if (st_queue_push(g_notify_queue, (void *)uri) != 0) {
+    st_print_log("[ST_RM] st_queue_push failed\n");
     return ST_ERROR_OPERATION_FAILED;
   }
+  oc_signal_interrupt_handler(st_notify);
+  return ST_ERROR_NONE;
+}
 
-  ret = oc_notify_observers(resource);
-  st_process_app_sync_unlock();
-  _oc_signal_event_loop();
+static void *
+notify_add_handler(void *value)
+{
+  if (!value) {
+    return NULL;
+  }
 
-  return (ret >= 0) ? ST_ERROR_NONE : ST_ERROR_OPERATION_FAILED;
+  char *uri = (char *)value;
+  st_notify_item_t *notify_item = oc_memb_alloc(&st_notify_item_s);
+  if (!notify_item) {
+    st_print_log("[ST_MGR] oc_memb_alloc failed!\n");
+    return NULL;
+  }
+
+  int len = strlen(uri) + 1;
+  notify_item->uri = (char *)malloc(sizeof(char) * len);
+  strncpy(notify_item->uri, uri, len);
+  notify_item->uri[len] = '\0';
+
+  return notify_item;
+}
+
+static void
+notify_free_handler(void *item)
+{
+  if (!item)
+    return;
+
+  st_notify_item_t *notify_item = (st_notify_item_t *)item;
+  free(notify_item->uri);
+  oc_memb_free(&st_notify_item_s, item);
+}
+
+int
+st_notify_initialize(void)
+{
+  if (g_notify_queue) {
+    st_print_log("[ST_RM] notify queue is already initialized\n");
+    return -1;
+  }
+
+  g_notify_queue = st_queue_initialize(notify_add_handler, notify_free_handler);
+
+  if (!g_notify_queue) {
+    st_print_log("[ST_RM] st_queue_initialize failed\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+void
+st_notify_activate(void)
+{
+  oc_activate_interrupt_handler(st_notify);
+  st_print_log("[ST_RM] notify_queue activated.\n");
+}
+
+void
+st_notify_deinitialize(void)
+{
+  if (!g_notify_queue) {
+    st_print_log("[ST_RM] notify queue is not initialized\n");
+    return;
+  }
+
+  st_queue_deinitialize(g_notify_queue);
+  g_notify_queue = NULL;
 }
