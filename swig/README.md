@@ -73,7 +73,7 @@ tested against Oracle Java 8 and OpenJDK 1.8.
 Oracle Java 8 JDK can be
 [downloaded here](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
 
-On Ubuntu Linux OpenJDK can be downloade using the following command. 
+On Ubuntu Linux OpenJDK can be downloade using the following command.
 
     apt-get search openjdk
     sudo apt-get install openjdk-8-jdk
@@ -100,7 +100,7 @@ have been found to work. Visual studio IDE Community edition and Visual
 Studio Code should work but have not personally been tested. If you find that
 the compiler does not work please give us feed back.
 
-Download Visual Studio [here](https://visualstudio.microsoft.com/). 
+Download Visual Studio [here](https://visualstudio.microsoft.com/).
 
 #### Linux
 For Ubuntu Linux GCC compiler was used
@@ -222,14 +222,29 @@ Build the JNI shared library `libiotivity-lite-jni.so`:
 
     ./build-jni-so.sh
 
-
-
 Build `iotivity-lite.jar`:
 
     ./build-iotivity-lite.sh
 
 ### Building for Android
-<!-- TODO -->
+Follow the steps for Linux to generate the Java and JNI code and build the
+`iotivity-lite.jar` i.e.
+
+    ./build_swig.sh
+
+    ./build-iotivity-lite.sh
+
+Now copy the `iotivity-lite.jar` to the Android app libs directory:
+
+    cp -v iotivity-lite.jar ../apps/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
+    cp -v iotivity-lite.jar ../apps/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
+
+Note that these commands are in the file `build-iotivity-lite.sh` and can be
+uncommented-out.
+
+
+To build the `libiotivity-lite-jni.so` shared object library for Android cd to
+`<iotivity-lite>/android/port` and see the instructions in Makefile-swig.
 
 Testing and Verifying
 =================================================
@@ -247,7 +262,7 @@ execute the following commands.
 
     sh build-simple-client-lite.sh
     run-simple-client-lite.cmd
-    
+
 ### Building and Running Samples Linux
 A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
 
@@ -264,7 +279,21 @@ execute the following commands.
     ./run-simple-client-lite.sh
 
 ### Building and Running Samples Android
-<!-- TODO -->
+A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
+
+Note that gradlew will require a `local.properties` to exist or ANDROID_HOME
+to be defined. An installation of Android Studio should create the
+`local.properties` file.
+
+The server sample is in `android_simple_server/SimpleServer`. To build and
+install the sample execute the following command:
+
+    ./gradlew installDebug
+
+The client sample is in `android_simple_client/SimpleClient`. To build and
+install the sample execute the following command:
+
+    ./gradlew installDebug
 
 Layout of swig folder
 =================================================
@@ -326,7 +355,7 @@ advantage of this powerful IDE if they wish.
 To open the project files:
  - Open Eclipse
  - select `File->Import..`
- - select `General->Existin Projects into Workspace`
+ - select `General->Existing Projects into Workspace`
  - click `Next>` button
  - click the `Browse..` button next to the `Select root directory:` text box
  - browse to the `<iotivity-lite>\swig` directory click `OK`
@@ -352,6 +381,12 @@ command line version of the unit tests.
 
 Run samples by right clicking on the sample select
 `Run As -> Java Application`.
+
+If the code was previously built using the command-line build scripts you may
+get build warnings indicating some class files can not be found. Select
+`Project -> Clean...`. Then right click on the `iotivity-lite` project and
+select `Refresh`. This should force the project to rebuild the all the class
+files associated with the `iotivity-lite.jar` file.
 
 Send Feedback
 =================================================
