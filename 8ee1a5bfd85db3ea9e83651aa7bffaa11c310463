@@ -22,6 +22,30 @@
       "revId": "8ee1a5bfd85db3ea9e83651aa7bffaa11c310463",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d2c62549",
+        "filename": "service/st-app-fw/src/st_queue.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-29T08:19:36Z",
+      "side": 1,
+      "message": "This functions is used after pop queue item. This item should be freed after finish to use.\nYou can see the usecase of this in st_manager.c(line 322)",
+      "parentUuid": "9a3d3df0_32add189",
+      "range": {
+        "startLine": 211,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 49
+      },
+      "revId": "8ee1a5bfd85db3ea9e83651aa7bffaa11c310463",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
