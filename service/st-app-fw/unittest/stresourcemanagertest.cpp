@@ -34,6 +34,9 @@
 
 extern "C" {
     int st_register_resources(size_t device);
+    int st_notify_initialize(void);
+    void st_notify_deinitialize(void);
+    void st_notify_activate(void);
 };
 
 extern unsigned char st_device_def[];
@@ -69,15 +72,18 @@ class TestSTResourceManager: public testing::Test
     protected:
         virtual void SetUp()
         {
+            st_notify_initialize();
             st_set_device_profile(st_device_def, st_device_def_len);
             s_handler.init = appInit;
             s_handler.signal_event_loop = signalEventLoop;
             int initResult = oc_main_init(&s_handler);
             ASSERT_TRUE((initResult == 0));
+            st_notify_activate();
         }
 
         virtual void TearDown()
         {
+            st_notify_deinitialize();
             st_free_device_profile();
             oc_main_shutdown();
         }
@@ -159,6 +165,8 @@ TEST_F(TestSTResourceManager, st_notify_back)
 
     // When
     st_error_t ret = st_notify_back(uri);
+    oc_main_poll();
+
     EXPECT_EQ(true, request_handled);
     EXPECT_EQ(ST_ERROR_NONE, ret);
     oc_delete_resource(resource);
@@ -174,18 +182,6 @@ TEST_F(TestSTResourceManager, st_notify_back_fail_null)
 
     // Then
     EXPECT_EQ(ST_ERROR_INVALID_PARAMETER, ret);
-}
-
-TEST_F(TestSTResourceManager, st_notify_back_fail)
-{
-    // Given
-    char uri[26] = "/capability/switch/main/1";
-
-    // When
-    st_error_t ret = st_notify_back(uri);
-
-    // Then
-    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
 }
 
 #define RESOURCE_URI "/capability/switch/main/0"

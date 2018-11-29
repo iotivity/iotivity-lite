@@ -54,6 +54,9 @@
 #define ST_BUFFER_SIZE (3072)
 
 extern int st_register_resources(size_t device);
+extern int st_notify_initialize(void);
+extern void st_notify_activate(void);
+extern void st_notify_deinitialize(void);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
 
@@ -579,6 +582,14 @@ st_manager_initialize(void)
     return ST_ERROR_OPERATION_FAILED;
   }
 
+  if (st_notify_initialize() != 0) {
+    st_print_log("[ST_MGR] st_notify_initialize failed!\n");
+    st_process_destroy();
+    st_port_specific_destroy();
+    st_queue_deinitialize(g_status_queue);
+    return ST_ERROR_OPERATION_FAILED;
+  }
+
   oc_set_max_app_data_size(ST_BUFFER_SIZE);
 
   st_unregister_status_handler();
@@ -676,6 +687,7 @@ st_manager_stack_init(void)
   }
 
   oc_activate_interrupt_handler(st_manager);
+  st_notify_activate();
 
   return 0;
 }
@@ -769,6 +781,7 @@ st_manager_deinitialize(void)
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
+  st_notify_deinitialize();
   st_queue_deinitialize(g_status_queue);
   g_status_queue = NULL;
   st_port_specific_destroy();
