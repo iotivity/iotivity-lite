@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_b25a8181",
+        "filename": "swig/apps/android_simple_client/SimpleClient/local.properties",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-29T18:27:16Z",
+      "side": 1,
+      "message": "I would suggest not committing the local.properties file then. A it states on line 4\n\n\u003e This file should *NOT* be checked into Version Control Systems",
+      "parentUuid": "9a3d3df0_7260f935",
+      "range": {
+        "startLine": 10,
+        "startChar": 8,
+        "endLine": 10,
+        "endChar": 32
+      },
+      "revId": "0f191af8d8e3d51973eb8608ec956547b06cce78",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_32779104",
         "filename": "swig/apps/android_simple_server/SimpleServer/local.properties",
         "patchSetId": 2
