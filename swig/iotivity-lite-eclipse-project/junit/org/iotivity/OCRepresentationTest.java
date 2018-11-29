@@ -527,6 +527,52 @@ public class OCRepresentationTest {
         assertArrayEquals(fib, outValue);
         OCMain.repDeleteBuffer();
     }
+    
+    @Test
+    public void testRepByteStringArray() {
+        OCMain.repNewBuffer(1024);
+
+        CborEncoder root = OCMain.repBeginRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(root);
+        /* jagged arrays for testing */
+        byte ba0[] = {0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+        byte ba1[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
+        byte ba2[] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+                         0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42};
+        byte ba3[] = {0x00, 0x00, (byte)0xff, 0x00, 0x00};
+        CborEncoder barray = OCMain.repOpenArray(root, "barray");
+        assertEquals(0, OCMain.repGetCborErrno());
+        assertNotNull(barray);
+        OCMain.repAddByteString(barray, ba0);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repAddByteString(barray, ba1);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repAddByteString(barray, ba2);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repAddByteString(barray, ba3);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repCloseArray(root, barray);
+        assertEquals(0, OCMain.repGetCborErrno());
+        OCMain.repEndRootObject();
+        assertEquals(0, OCMain.repGetCborErrno());
+
+        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        assertNotNull(rep);
+
+        byte outValue[][] = OCMain.repGetByteStringArray(rep, "barray");
+        assertNotNull(outValue);
+        assertEquals(4, outValue.length);
+        assertEquals(ba0.length, outValue[0].length);
+        assertArrayEquals(ba0, outValue[0]);
+        assertEquals(ba1.length, outValue[1].length);
+        assertArrayEquals(ba1, outValue[1]);
+        assertEquals(ba2.length, outValue[2].length);
+        assertArrayEquals(ba2, outValue[2]);
+        assertEquals(ba3.length, outValue[3].length);
+        assertArrayEquals(ba3, outValue[3]);
+        OCMain.repDeleteBuffer();
+    }
 
     @Test
     public void testRepStringArray() {

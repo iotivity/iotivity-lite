@@ -1154,16 +1154,13 @@ void jni_rep_set_key(CborEncoder *parent, const char* key) {
 }
 %}
 
-
-// TODO revisit this will add an array object to the parent object under key value. The CborEncoder*
-// returned is the array object. The `object` parameter may make more since to be named `parent`.
 %rename(repOpenArray) jni_rep_set_array;
 %inline %{
 /* Alt implementation of oc_rep_set_array macro */
-CborEncoder * jni_rep_set_array(CborEncoder *object, const char* key) {
+CborEncoder * jni_rep_set_array(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  return jni_rep_start_array(object);
+  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  return jni_rep_start_array(parent);
 }
 %}
 
@@ -1605,10 +1602,48 @@ const double* jni_rep_get_double_array(oc_rep_t *rep, const char *key, size_t *d
   return NULL;
 }
 %}
-// TODO solve how to expose oc_rep_get_byte_string_array currently unable to use this function
-// in C code. I have contacted the original developer for feedback.
+
+%typemap(in, numinputs=0, noblock=1) size_t *byte_string_array_size {
+  size_t temp_byte_string_array_size;
+  $1 = &temp_byte_string_array_size;
+}
+%typemap(jstype) const oc_string_array_t * jni_rep_get_byte_string_array "byte[][]"
+%typemap(jtype) const oc_string_array_t * jni_rep_get_byte_string_array "byte[][]"
+%typemap(jni) const oc_string_array_t * jni_rep_get_byte_string_array "jobjectArray"
+%typemap(javaout) const oc_string_array_t * jni_rep_get_byte_string_array {
+  return $jnicall;
+}
+%typemap(out) const oc_string_array_t * jni_rep_get_byte_string_array {
+  if($1 != NULL) {
+    jbyteArray temp_byte_string;
+    const jclass clazz = JCALL1(FindClass, jenv, "[B");
+    $result = JCALL3(NewObjectArray, jenv, (jsize)temp_byte_string_array_size, clazz, 0);
+    /* exception checking omitted */
+    for (size_t i=0; i<temp_byte_string_array_size; i++) {
+      jsize jbyte_array_size = oc_byte_string_array_get_item_size(*$1, i);
+      temp_byte_string = JCALL1(NewByteArray, jenv, jbyte_array_size);
+      JCALL4(SetByteArrayRegion, jenv, temp_byte_string, 0, jbyte_array_size,
+             (const jbyte *)oc_byte_string_array_get_item(*$1, i));
+      JCALL3(SetObjectArrayElement, jenv, $result, (jsize)i, temp_byte_string);
+      JCALL1(DeleteLocalRef, jenv, temp_byte_string);
+    }
+    /* free the oc_string_array_t that was allocated in the jni_rep_get_byte_string_array function */
+    free($1);
+  } else {
+    $result = NULL;
+  }
+}
 %ignore oc_rep_get_byte_string_array;
-//%rename(repGetByteStringArray) oc_rep_get_byte_string_array;
+%rename(repGetByteStringArray) jni_rep_get_byte_string_array;
+%inline %{
+const oc_string_array_t * jni_rep_get_byte_string_array(oc_rep_t *rep, const char *key, size_t *byte_string_array_size) {
+  oc_string_array_t * c_byte_string_array = (oc_string_array_t *)malloc(sizeof(oc_string_array_t));
+  if (oc_rep_get_byte_string_array(rep, key, c_byte_string_array, byte_string_array_size)) {
+    return c_byte_string_array;
+  }
+  return NULL;
+}
+%}
 
 %typemap(in, numinputs=0, noblock=1) size_t *string_array_size {
   size_t temp_string_array_size;
