@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_52369504",
+        "filename": "swig/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-11-29T22:51:27Z",
+      "side": 1,
+      "message": "in this case the trailing white space was put in place on purpose and should not be removed. It forces a line break when run through a markdown interpreter.",
+      "revId": "5c56a4bb7c0993606af05c96d125afb1a5c39f37",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
