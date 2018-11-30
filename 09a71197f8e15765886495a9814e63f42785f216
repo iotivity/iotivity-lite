@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_8d5c8027",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-30T00:51:50Z",
+      "side": 1,
+      "message": "notify_queue need to run in other interrupt handler.\nthis method will activate that handler. (It should be called after oc_main_init())",
+      "parentUuid": "9a3d3df0_f2a24999",
+      "range": {
+        "startLine": 690,
+        "startChar": 2,
+        "endLine": 690,
+        "endChar": 20
+      },
+      "revId": "09a71197f8e15765886495a9814e63f42785f216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_72b639de",
         "filename": "service/st-app-fw/src/st_resource_manager.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-29T07:55:43Z",
       "side": 1,
       "message": "Why do you wrap these logic with additional API against status_queue? Wrapping API providing policy is not inconsistent.",
+      "range": {
+        "startLine": 277,
+        "startChar": 0,
+        "endLine": 312,
+        "endChar": 1
+      },
+      "revId": "09a71197f8e15765886495a9814e63f42785f216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ad57c401",
+        "filename": "service/st-app-fw/src/st_resource_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-11-30T00:51:50Z",
+      "side": 1,
+      "message": "g_notify_queue is used to notify regarding registered resource uri. status_queue is used in st_manager, so we can easily erase wrapped functions. But, I think st_notify_* functions are not wrapping api but sub-module functionality.\nIf we want to use it without wrapping, we have to implement all the logic for notifying in st_manager. I think that is not good design although small code lines are increased.",
+      "parentUuid": "9a3d3df0_72b639de",
       "range": {
         "startLine": 277,
         "startChar": 0,
