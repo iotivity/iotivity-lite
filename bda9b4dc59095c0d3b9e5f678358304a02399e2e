@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_cd3de8bd",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-11-30T01:32:55Z",
+      "side": 1,
+      "message": "CR, space, or tab",
+      "range": {
+        "startLine": 307,
+        "startChar": 8,
+        "endLine": 307,
+        "endChar": 10
+      },
+      "revId": "bda9b4dc59095c0d3b9e5f678358304a02399e2e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_2d4bb45a",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-11-30T01:32:55Z",
+      "side": 1,
+      "message": "CR, space, or tab",
+      "range": {
+        "startLine": 312,
+        "startChar": 33,
+        "endLine": 312,
+        "endChar": 35
+      },
+      "revId": "bda9b4dc59095c0d3b9e5f678358304a02399e2e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0d48705a",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-11-30T01:32:55Z",
+      "side": 1,
+      "message": "CR, space, or tab",
+      "range": {
+        "startLine": 317,
+        "startChar": 13,
+        "endLine": 317,
+        "endChar": 15
+      },
+      "revId": "bda9b4dc59095c0d3b9e5f678358304a02399e2e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_6d749c9c",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-11-30T01:32:55Z",
+      "side": 1,
+      "message": "CR, space, or tab",
+      "range": {
+        "startLine": 322,
+        "startChar": 11,
+        "endLine": 322,
+        "endChar": 13
+      },
+      "revId": "bda9b4dc59095c0d3b9e5f678358304a02399e2e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_4d79d892",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 2847
+      },
+      "writtenOn": "2018-11-30T01:32:55Z",
+      "side": 1,
+      "message": "CR, space, or tab",
+      "range": {
+        "startLine": 326,
+        "startChar": 19,
+        "endLine": 326,
+        "endChar": 21
+      },
+      "revId": "bda9b4dc59095c0d3b9e5f678358304a02399e2e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
