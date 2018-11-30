@@ -46,7 +46,9 @@
  * of seconds since startup.
  *
  */
-
+/**
+  @file
+*/
 #ifndef OC_CLOCK_H
 #define OC_CLOCK_H
 

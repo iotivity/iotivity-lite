@@ -15,7 +15,9 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
-
+/**
+  @file
+*/
 #ifndef OC_NETWORK_HELPERS_H
 #define OC_NETWORK_HELPERS_H
 
