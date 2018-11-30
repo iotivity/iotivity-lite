@@ -31,6 +31,9 @@
  * This file is part of the Contiki operating system.
  *
  */
+/**
+  @file
+*/
 #ifndef OC_RANDOM_H
 #define OC_RANDOM_H
 
