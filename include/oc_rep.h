@@ -14,6 +14,9 @@
 // limitations under the License.
 */
 
+/**
+  @file
+*/
 #ifndef OC_REP_H
 #define OC_REP_H
 
@@ -66,27 +69,106 @@ int oc_rep_get_encoded_payload_size(void);
  */
 const uint8_t *oc_rep_get_encoder_buf(void);
 
+/**
+ * get a pointer to the cbor object with the given `name`
+ *
+ * @return cbor object pointer
+ */
 #define oc_rep_object(name) &name##_map
-#define oc_rep_array(name) &name##_array
 
+/**
+ * get a pointer to the cbor array object with the given `name`
+ *
+ * @return cbor array object pointer
+ */
+#define oc_rep_array(name) &name##_array
+/**
+ * Add a double value to the cbor `object` under the `key` name
+ * Example:
+ *
+ * To build the an object with the following cbor value
+ *
+ *     {
+ *       "pi": 3.14159
+ *     }
+ *
+ * The following code could be used:
+ *
+ *     oc_rep_start_root_object();
+ *     oc_rep_set_double(root, pi, 3.14159);
+ *     oc_rep_end_root_object();
+ */
 #define oc_rep_set_double(object, key, value)                                  \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     g_err |= cbor_encode_double(&object##_map, value);                         \
   } while (0)
 
+/**
+ * Add an integer value to the cbor `object` under the `key` name
+ * Example:
+ *
+ * To build the an object with the following cbor value
+ *
+ *     {
+ *       "power": 42
+ *     }
+ *
+ * The following code could be used:
+ *
+ *     oc_rep_start_root_object();
+ *     oc_rep_set_int(root, power, 42);
+ *     oc_rep_end_root_object();
+ */
 #define oc_rep_set_int(object, key, value)                                     \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     g_err |= cbor_encode_int(&object##_map, value);                            \
   } while (0)
 
+/**
+ * Add an unsigned integer value to the cbor `object` under the `key` name
+ * Example:
+ *
+ * To build the an object with the following cbor value
+ *
+ *     {
+ *       "power": 42
+ *     }
+ *
+ * The following code could be used:
+ *
+ *     oc_rep_start_root_object();
+ *     oc_rep_set_uint(root, power, 42);
+ *     oc_rep_end_root_object();
+ *
+ * Note: when the cbor object is converted to a oc_rep_the data
+ * type will be encoded as an OC_REP_INT. There is no way for
+ * a client to know that the server sent the INT as an unsigned
+ * value.
+ */
 #define oc_rep_set_uint(object, key, value)                                    \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     g_err |= cbor_encode_uint(&object##_map, value);                           \
   } while (0)
 
+/**
+ * Add an boolean value to the cbor `object` under the `key` name
+ * Example:
+ *
+ * To build the an object with the following cbor value
+ *
+ *     {
+ *       "door_open": false
+ *     }
+ *
+ * The following code could be used:
+ *
+ *     oc_rep_start_root_object();
+ *     oc_rep_set_boolean(root, door_open, false);
+ *     oc_rep_end_root_object();
+ */
 #define oc_rep_set_boolean(object, key, value)                                 \
   do {                                                                         \
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
@@ -95,7 +177,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
-    if ((const char *)value != NULL) {                                                       \
+    if ((const char *)value != NULL) {                                         \
       g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
       g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
     }                                                                          \
@@ -140,7 +222,22 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
 
 #define oc_rep_add_double(parent, value)                                       \
-  g_err |= cbor_encode_double(&parent##_array, value)
+  g_err |= cbor_encode_double(&parent##_array, value)/**
+   * Add an integer value to the cbor `object` under the `key` name
+   * Example:
+   *
+   * To build the an object with the following cbor value
+   *
+   *     {
+   *       "power": 42
+   *     }
+   *
+   * The following code could be used:
+   *
+   *     oc_rep_start_root_object();
+   *     oc_rep_set_int(root, power, 42);
+   *     oc_rep_end_root_object();
+   */
 
 #define oc_rep_add_int(parent, value)                                          \
   g_err |= cbor_encode_int(&parent##_array, value)
@@ -230,7 +327,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
       if (oc_string_array_get_item_size(values, i) > 0) {                      \
         g_err |= cbor_encode_text_string(                                      \
           &key##_value_array, oc_string_array_get_item(values, i),             \
-          oc_string_array_get_item_size(values, i));                           \
+          oc_string_array_get_item_size(values, i));                           \oc_rep_value_type_t
       }                                                                        \
     }                                                                          \
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
