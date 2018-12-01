@@ -26,7 +26,6 @@
 #include "oc_rep.h"
 #include "oc_store.h"
 #include "oc_tls.h"
-#include "oc_otm_state.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -371,7 +370,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       }
     } while (match);
 
-    oc_sec_cred_t *role_cred = oc_sec_find_cred(uuid, endpoint->device);
+    oc_sec_cred_t *role_cred = oc_sec_find_cred(
+      uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
     if (role_cred && oc_string_len(role_cred->role.role) > 0) {
       do {
         match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
@@ -762,7 +762,7 @@ oc_sec_acl_default(size_t device)
         OC_SUBJECT_CONN, &_anon_clear, 1, 2, oc_string(resource->uri), -1,
         &resource->types, resource->interfaces, device);
     }
-    if (i >= OCF_SEC_DOXM && i <= OCF_SEC_CRED) {
+    if (i >= OCF_SEC_DOXM && i < OCF_D) {
       success &= oc_sec_ace_update_res(
         OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
         &resource->types, resource->interfaces, device);
@@ -1048,7 +1048,6 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
     oc_sec_dump_acl(request->resource->device);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
-    oc_sec_otm_err(request->resource->device, OC_SEC_ERR_ACL);
   }
 }
 
