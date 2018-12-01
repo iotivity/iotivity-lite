@@ -1,0 +1,13 @@
+diff --git a/library/ssl_tls.c b/library/ssl_tls.c
+index d51230dfa..dee3c4093 100644
+--- a/library/ssl_tls.c
++++ b/library/ssl_tls.c
+@@ -2290,7 +2290,7 @@ int mbedtls_ssl_fetch_input( mbedtls_ssl_context *ssl, size_t nb_want )
+     }
+ 
+     ret = mbedtls_ssl_confirm_content_len( ssl, &ssl->in, nb_want +
+-		              (size_t)( ssl->in.hdr - ssl->in.buf ) + 1024 );
++		              (size_t)( ssl->in.hdr - ssl->in.buf ) + 2048 );
+     if( ret )
+ 	    return( ret );
+ 
