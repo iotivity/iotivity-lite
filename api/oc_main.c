@@ -36,6 +36,9 @@
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
+#ifdef OC_PKI
+#include "security/oc_sp.h"
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
 #ifdef OC_MEMORY_TRACE
@@ -195,6 +198,9 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_doxm(device);
     oc_sec_load_cred(device);
     oc_sec_load_acl(device);
+#ifdef OC_PKI
+    oc_sec_load_sp(device);
+#endif /* OC_PKI */
     oc_sec_load_unique_ids(device);
   }
 #endif
@@ -237,6 +243,9 @@ oc_main_shutdown(void)
   oc_sec_cred_free();
   oc_sec_doxm_free();
   oc_sec_pstat_free();
+#ifdef OC_PKI
+  oc_sec_sp_free();
+#endif /* OC_PKI */
   oc_tls_shutdown();
 #endif /* OC_SECURITY */
 
