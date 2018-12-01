@@ -93,7 +93,10 @@ typedef enum {
   OCF_SEC_PSTAT,
   OCF_SEC_ACL,
   OCF_SEC_CRED,
-#endif
+#ifdef OC_PKI
+  OCF_SEC_SP,
+#endif /* OC_PKI */
+#endif /* OC_SECURITY */
   OCF_D
 } oc_core_resource_t;
 
