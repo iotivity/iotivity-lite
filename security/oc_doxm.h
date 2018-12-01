@@ -30,6 +30,12 @@ extern "C"
 {
 #endif
 
+typedef enum oc_sec_doxmtype_t {
+  OC_OXMTYPE_JW = 0,
+  OC_OXMTYPE_RDP = 1,
+  OC_OXMTYPE_MFG_CERT = 2
+} oc_sec_oxmtype_t;
+
 typedef struct
 {
   int oxmsel;
@@ -40,8 +46,6 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
-typedef bool (*oc_sec_change_owner_cb_t)(void);
-
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
@@ -51,7 +55,6 @@ void oc_sec_doxm_default(size_t device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
-void oc_sec_set_owner_cb(oc_sec_change_owner_cb_t cb);
 
 #ifdef __cplusplus
 }
