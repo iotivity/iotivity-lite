@@ -156,8 +156,6 @@ oc_core_regen_unique_ids(size_t device)
   memcpy(d->di.id, doxm->deviceuuid.id, 16);
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
-
-  oc_tls_update_psk_identity(device);
 }
 #endif /* OC_SECURITY */
 
