@@ -26,18 +26,53 @@ extern "C"
 {
 #endif
 
-typedef struct oc_sec_cred_s
+typedef enum oc_sec_credtype_t {
+  OC_CREDTYPE_NULL = 0,
+  OC_CREDTYPE_PSK = 1,
+  OC_CREDTYPE_CERT = 8
+} oc_sec_credtype_t;
+
+typedef enum oc_sec_credusage_t {
+  OC_CREDUSAGE_NULL = 0,
+  OC_CREDUSAGE_TRUSTCA = 1 << 1,
+  OC_CREDUSAGE_IDENTITY_CERT = 1 << 2,
+  OC_CREDUSAGE_ROLE_CERT = 1 << 3,
+  OC_CREDUSAGE_MFG_TRUSTCA = 1 << 4,
+  OC_CREDUSAGE_MFG_CERT = 1 << 5
+} oc_sec_credusage_t;
+
+typedef enum oc_sec_encoding_t {
+  OC_ENCODING_UNSUPPORTED = 0,
+  OC_ENCODING_BASE64,
+  OC_ENCODING_RAW,
+  OC_ENCODING_PEM,
+  OC_ENCODING_DER
+} oc_sec_encoding_t;
+
+typedef struct oc_cred_data_t
 {
-  struct oc_sec_cred_s *next;
-  int credid;
-  int credtype;
-  oc_uuid_t subjectuuid;
+  oc_string_t data;
+  oc_sec_encoding_t encoding;
+} oc_cred_data_t;
+
+typedef struct oc_sec_cred_t
+{
+  struct oc_sec_cred_t *next;
   struct
   {
     oc_string_t role;
     oc_string_t authority;
   } role;
-  uint8_t key[16]; // Supports only 128-bit keys
+  oc_cred_data_t privatedata;
+#ifdef OC_PKI
+  oc_cred_data_t publicdata;
+  oc_sec_credusage_t credusage;
+  struct oc_sec_cred_t *chain;
+  struct oc_sec_cred_t *child;
+#endif /* OC_PKI */
+  int credid;
+  oc_sec_credtype_t credtype;
+  oc_uuid_t subjectuuid;
 } oc_sec_cred_t;
 
 typedef struct
@@ -46,6 +81,14 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_creds_t;
 
+int oc_sec_add_new_cred(size_t device, int credid, oc_sec_credtype_t credtype,
+                        oc_sec_credusage_t credusage, const char *subject,
+                        oc_sec_encoding_t privatedata_encoding,
+                        size_t privatedata_size, const uint8_t *privatedata,
+                        oc_sec_encoding_t publicdata_encoding,
+                        size_t publicdata_size, const uint8_t *publicdata,
+                        const char *role, const char *authority);
+
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
 void oc_sec_cred_free(void);
@@ -53,9 +96,19 @@ void oc_sec_encode_cred(bool persist, size_t device);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                         size_t device);
 bool oc_cred_remove_subject(const char *subjectuuid, size_t device);
-oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid, size_t device);
+void oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device);
+oc_sec_cred_t *oc_sec_find_creds_for_subject(oc_uuid_t *subjectuuid,
+                                             oc_sec_cred_t *start,
+                                             size_t device);
+oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid,
+                                oc_sec_credtype_t credtype,
+                                oc_sec_credusage_t credusage, size_t device);
 oc_sec_creds_t *oc_sec_get_creds(size_t device);
-oc_sec_cred_t *oc_sec_get_cred(oc_uuid_t *subjectuuid, size_t device);
+oc_sec_cred_t *oc_sec_get_cred_by_credid(int credid, size_t device);
+oc_sec_cred_t *oc_sec_allocate_cred(oc_uuid_t *subjectuuid,
+                                    oc_sec_credtype_t credtype,
+                                    oc_sec_credusage_t credusage,
+                                    size_t device);
 void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
 void post_cred(oc_request_t *request, oc_interface_mask_t interface,
                void *data);
