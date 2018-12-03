@@ -194,9 +194,6 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     st_print_log("[ST_ES] New session CONNECTED\n");
     if (!g_cur_session_ep) {
       g_cur_session_ep = (oc_endpoint_t *)calloc(1, sizeof(oc_endpoint_t));
-    } else if (g_is_connected &&
-               oc_endpoint_compare(g_cur_session_ep, endpoint) != 0) {
-      oc_close_session(g_cur_session_ep);
     }
     memcpy(g_cur_session_ep, endpoint, sizeof(oc_endpoint_t));
     g_is_connected = true;
