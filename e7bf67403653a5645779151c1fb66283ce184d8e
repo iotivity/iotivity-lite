@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_ad8224fe",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T07:28:09Z",
+      "side": 1,
+      "message": "please check file mode.(old one(755) -\u003e new one(644))",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 2
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8d87600f",
+        "filename": "service/easy-setup/enrollee/include/es_enrollee_common.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T07:28:09Z",
+      "side": 1,
+      "message": "How about wrapping this member variable to OIC define?\n#ifndef OC_SPEC_VER_OIC\n  oc_string_t sid;\n#endif /* OC_SPEC_VER_OIC */",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 18
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_ed7b8c27",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T07:28:09Z",
+      "side": 1,
+      "message": "Why another struct is defined seperately not using es_coap_cloud_conf_data structure?",
+      "range": {
+        "startLine": 95,
+        "startChar": 2,
+        "endLine": 103,
+        "endChar": 9
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_cd78482e",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T07:28:09Z",
+      "side": 1,
+      "message": "can we make this logic to handle both version(OIC \u0026 OCF) using ocf_version_t ? (especially in case of OCF 2.0)\nbelow logics also.",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 26
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
