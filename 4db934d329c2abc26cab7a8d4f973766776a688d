@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_2df2949a",
+        "filename": "apps/easysetup_linux.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:47:23Z",
+      "side": 1,
+      "message": "ok. i will update doxygen in next patch. however as \"cn\" is a mandatory property with Read, Write allowed in easy setup spec, it needs handling of same needs to be carefully checked when doing CTT test for OCF 2.0 in future (if compliance is desired for Lite stack based devices).",
+      "parentUuid": "9a3d3df0_728f5924",
+      "range": {
+        "startLine": 340,
+        "startChar": 0,
+        "endLine": 350,
+        "endChar": 1
+      },
+      "revId": "4db934d329c2abc26cab7a8d4f973766776a688d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_d2abc5d4",
         "filename": "service/easy-setup/enrollee/include/es_enrollee_common.h",
         "patchSetId": 8
@@ -132,6 +156,30 @@
       "side": 1,
       "message": "From the existing model, mobile is provisioning into things with cloud uid for cloud to access to things already. I don\u0027t know why this is required in easy setup resource spec. If this is for verify, there is no logic to compare the my ACE list with posted sid from the iotivity perspective.",
       "parentUuid": "9a3d3df0_723759b1",
+      "range": {
+        "startLine": 76,
+        "startChar": 14,
+        "endLine": 76,
+        "endChar": 17
+      },
+      "revId": "4db934d329c2abc26cab7a8d4f973766776a688d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_0defd0b1",
+        "filename": "service/easy-setup/enrollee/include/es_enrollee_common.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:47:23Z",
+      "side": 1,
+      "message": "I agree however this property was added in OCF 2.0 Spec in final rounds of dissuasion during F2F. I am not aware all rational of adding it as I didn\u0027t participate in F2F at that time. \n\nFrom \"OCF 2.0 CNC Spec\" --\u003e\n\n\"The publishing Device authorises the request as specified in the OCF Security Specification, using the UUID of the OCF Cloud configured in the \"sid\" Property of \"oic.r.coapcloudconf\".\"\n\n\nMay be security team can clarify further on sid usage. (Adding @Aleksiy in reviewer list to comment on same).",
+      "parentUuid": "9a3d3df0_d278e52d",
       "range": {
         "startLine": 76,
         "startChar": 14,
