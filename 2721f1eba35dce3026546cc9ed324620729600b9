@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_adb4e4f2",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 960,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T02:22:06Z",
+      "side": 1,
+      "message": "msg-\u003elength \u003d 0;",
+      "range": {
+        "startLine": 960,
+        "startChar": 2,
+        "endLine": 960,
+        "endChar": 16
+      },
+      "revId": "2721f1eba35dce3026546cc9ed324620729600b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_8db920ec",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-03T02:22:06Z",
+      "side": 1,
+      "message": "add space",
+      "range": {
+        "startLine": 1019,
+        "startChar": 27,
+        "endLine": 1019,
+        "endChar": 28
+      },
+      "revId": "2721f1eba35dce3026546cc9ed324620729600b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
