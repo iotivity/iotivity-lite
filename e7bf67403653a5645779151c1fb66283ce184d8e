@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_4d09d894",
+        "filename": "apps/sc_easysetup_linux.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:32:17Z",
+      "side": 1,
+      "message": "644 is the correct mode . i changed to make this file consistent with other files which have mode \u003d 644.",
+      "parentUuid": "9a3d3df0_ad8224fe",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 2
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_8d87600f",
         "filename": "service/easy-setup/enrollee/include/es_enrollee_common.h",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-03T07:28:09Z",
       "side": 1,
       "message": "How about wrapping this member variable to OIC define?\n#ifndef OC_SPEC_VER_OIC\n  oc_string_t sid;\n#endif /* OC_SPEC_VER_OIC */",
+      "range": {
+        "startLine": 72,
+        "startChar": 2,
+        "endLine": 72,
+        "endChar": 18
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_adfea469",
+        "filename": "service/easy-setup/enrollee/include/es_enrollee_common.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:32:17Z",
+      "side": 1,
+      "message": "I thought about too and i did same in earlier patches. \n\nHowever, I realized that this file is exposed to external applications and structure size can vary depending on macro defines used by the apps. Apps may not have knowledge of iotivity config and it may be possible to miss out correct macros to be used. In that case it cause random run time issues to struct size mismatch. Hence I removed macro define. It may use few extra bytes but hope that modern compilations would be able to strip out the unused symbols from the final binary in a more reliable way so it won\u0027t cause the extra binary footprint.",
+      "parentUuid": "9a3d3df0_8d87600f",
       "range": {
         "startLine": 72,
         "startChar": 2,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9a3d3df0_8d03e072",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:32:17Z",
+      "side": 1,
+      "message": "es_coap_cloud_conf_data is used to used to send easysetup prov data to application whereas this one (es_cloud_conf_resource_t) is used store the values internally. \n\nI acknoledge that there is opportunity to do some refactoring so that same struct can be re-used. I suggest that it can be done as a separate patch (given this is existing behavior and not introduced by this patch).",
+      "parentUuid": "9a3d3df0_ed7b8c27",
+      "range": {
+        "startLine": 95,
+        "startChar": 2,
+        "endLine": 103,
+        "endChar": 9
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a3d3df0_cd78482e",
         "filename": "service/easy-setup/enrollee/resourcehandler.c",
         "patchSetId": 10
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-03T07:28:09Z",
       "side": 1,
       "message": "can we make this logic to handle both version(OIC \u0026 OCF) using ocf_version_t ? (especially in case of OCF 2.0)\nbelow logics also.",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 190,
+        "endChar": 26
+      },
+      "revId": "e7bf67403653a5645779151c1fb66283ce184d8e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_edf70c8b",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 111
+      },
+      "writtenOn": "2018-12-03T12:32:17Z",
+      "side": 1,
+      "message": "you mean doing it on run time rather than compile time ? \n\nI agree, that doing this on run time can make enrollee device dual version capable but it would cause extra ROM size.\n\nPlease let me know if this use-case must be enabled, then we can make the change.",
+      "parentUuid": "9a3d3df0_cd78482e",
       "range": {
         "startLine": 161,
         "startChar": 0,
