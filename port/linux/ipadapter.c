@@ -357,16 +357,56 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
   return ret;
 }
 
-static void
-get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
-                        bool secure, bool tcp)
+static int
+get_response_len(int sock)
+{
+  int guess = 512, response_len;
+
+  do {
+    guess <<= 1;
+    uint8_t dummy[guess];
+    response_len = recv(sock, dummy, guess, MSG_PEEK);
+    if (response_len < 0) {
+      return response_len;
+    }
+  } while (response_len == guess);
+
+  return response_len;
+}
+
+static bool
+is_attr_available(struct rtattr *attr, int att_len, uint8_t *addr,
+                  unsigned char family)
+{
+  bool ret = true;
+  while (RTA_OK(attr, att_len)) {
+    if (attr->rta_type == IFA_ADDRESS) {
+#ifdef OC_IPV4
+      if (family == AF_INET) {
+        memcpy(addr, RTA_DATA(attr), 4);
+      } else
+#endif /* OC_IPV4 */
+        if (family == AF_INET6) {
+        memcpy(addr, RTA_DATA(attr), 16);
+      }
+    } else if (attr->rta_type == IFA_FLAGS) {
+      if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+        ret = false;
+      }
+    }
+    attr = RTA_NEXT(attr, att_len);
+  }
+  return ret;
+}
+
+static bool
+send_request(int sock, unsigned char family)
 {
   struct
   {
     struct nlmsghdr nlhdr;
     struct ifaddrmsg addrmsg;
   } request;
-  struct nlmsghdr *response;
 
   memset(&request, 0, sizeof(request));
   request.nlhdr.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
@@ -374,14 +414,79 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
   request.nlhdr.nlmsg_type = RTM_GETADDR;
   request.addrmsg.ifa_family = family;
 
+  if (send(sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
+    return false;
+  }
+
+  return true;
+}
+
+static enum transport_flags
+get_flags(unsigned char family, bool secure, bool tcp)
+{
+  enum transport_flags flags = 0;
+  if (secure) {
+    flags |= SECURED;
+  }
+#ifdef OC_IPV4
+  if (family == AF_INET) {
+    flags |= IPV4;
+  } else
+#endif /* OC_IPV4 */
+    if (family == AF_INET6) {
+    flags |= IPV6;
+  }
+#ifdef OC_TCP
+  if (tcp) {
+    flags |= TCP;
+  }
+#else
+  (void)tcp;
+#endif /* OC_TCP */
+  return flags;
+}
+
+static oc_endpoint_t *
+get_available_ep(struct ifaddrmsg *addrmsg, uint8_t *addr, unsigned char family,
+                 uint16_t port, bool secure, bool tcp)
+{
+  oc_endpoint_t *ep = oc_memb_alloc(&device_eps);
+  if (!ep) {
+    return NULL;
+  }
+
+  memset(ep, 0, sizeof(oc_endpoint_t));
+  ep->flags = get_flags(family, secure, tcp);
+  ep->interface_index = addrmsg->ifa_index;
+  if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
+    ep->addr.ipv6.scope = addrmsg->ifa_index;
+  }
+
+#ifdef OC_IPV4
+  if (family == AF_INET) {
+    ep->addr.ipv4.port = port;
+    memcpy(ep->addr.ipv4.address, addr, 4);
+  } else
+#endif /* OC_IPV4 */
+    if (family == AF_INET6) {
+    ep->addr.ipv6.port = port;
+    memcpy(ep->addr.ipv6.address, addr, 16);
+  }
+  return ep;
+}
+
+static void
+get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
+                        bool secure, bool tcp)
+{
+
   int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
   if (nl_sock < 0) {
     return;
   }
 
-  if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
-    close(nl_sock);
-    return;
+  if (!send_request(nl_sock, family)) {
+    goto end;
   }
 
   fd_set rfds;
@@ -389,35 +494,28 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
   FD_SET(nl_sock, &rfds);
 
   if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
-    close(nl_sock);
-    return;
+    goto end;
   }
 
+  struct nlmsghdr *response;
   int prev_interface_index = -1;
   bool done = false;
   while (!done) {
-    int guess = 512, response_len;
-    do {
-      guess <<= 1;
-      uint8_t dummy[guess];
-      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
-      if (response_len < 0) {
-        close(nl_sock);
-        return;
-      }
-    } while (response_len == guess);
+
+    int response_len = get_response_len(nl_sock);
+    if (response_len < 0) {
+      goto end;
+    }
 
     uint8_t buffer[response_len];
     response_len = recv(nl_sock, buffer, response_len, 0);
     if (response_len < 0) {
-      close(nl_sock);
-      return;
+      goto end;
     }
 
     response = (struct nlmsghdr *)buffer;
     if (response->nlmsg_type == NLMSG_ERROR) {
-      close(nl_sock);
-      return;
+      goto end;
     }
 
     while (NLMSG_OK(response, response_len)) {
@@ -425,74 +523,32 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
         done = true;
         break;
       }
-      oc_endpoint_t ep;
-      memset(&ep, 0, sizeof(oc_endpoint_t));
-      bool include = false;
+
       struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
         if ((int)addrmsg->ifa_index == prev_interface_index) {
           goto next_ifaddr;
         }
-        ep.interface_index = addrmsg->ifa_index;
-        include = true;
+
         struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
         int att_len = IFA_PAYLOAD(response);
-        while (RTA_OK(attr, att_len)) {
-          if (attr->rta_type == IFA_ADDRESS) {
-#ifdef OC_IPV4
-            if (family == AF_INET) {
-              memcpy(ep.addr.ipv4.address, RTA_DATA(attr), 4);
-              ep.flags = IPV4;
-            } else
-#endif /* OC_IPV4 */
-              if (family == AF_INET6) {
-              memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-              ep.flags = IPV6;
-            }
-          } else if (attr->rta_type == IFA_FLAGS) {
-            if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
-              include = false;
-            }
-          }
-          attr = RTA_NEXT(attr, att_len);
-        }
-      }
-      if (include) {
-        prev_interface_index = addrmsg->ifa_index;
-        if (addrmsg->ifa_scope == RT_SCOPE_LINK && family == AF_INET6) {
-          ep.addr.ipv6.scope = addrmsg->ifa_index;
-        }
-        if (secure) {
-          ep.flags |= SECURED;
-        }
-#ifdef OC_IPV4
-        if (family == AF_INET) {
-          ep.addr.ipv4.port = port;
-        } else
-#endif /* OC_IPV4 */
-          if (family == AF_INET6) {
-          ep.addr.ipv6.port = port;
-        }
-#ifdef OC_TCP
-        if (tcp) {
-          ep.flags |= TCP;
-        }
-#else
-        (void)tcp;
-#endif /* OC_TCP */
-        oc_endpoint_t *new_ep = oc_memb_alloc(&device_eps);
-        if (!new_ep) {
-          close(nl_sock);
-          return;
-        }
-        memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
-        oc_list_add(dev->eps, new_ep);
-      }
+        uint8_t addr[16];
 
+        if (is_attr_available(attr, att_len, addr, family)) {
+          prev_interface_index = addrmsg->ifa_index;
+          oc_endpoint_t *new_ep =
+            get_available_ep(addrmsg, addr, family, port, secure, tcp);
+          if (!new_ep) {
+            goto end;
+          }
+          oc_list_add(dev->eps, new_ep);
+        }
+      }
     next_ifaddr:
       response = NLMSG_NEXT(response, response_len);
     }
   }
+end:
   close(nl_sock);
 }
 
@@ -1509,6 +1565,8 @@ int oc_connectivity_init(size_t device) {
 
   dev->dtls_port = ntohs(sm->sin6_port);
 #endif /* OC_SECURITY */
+
+//=========================================================
 
 #ifdef OC_IPV4
   if (connectivity_ipv4_init(dev) != 0) {
