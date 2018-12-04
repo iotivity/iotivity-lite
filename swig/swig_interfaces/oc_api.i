@@ -26,7 +26,6 @@
 #include "oc_rep.h"
 #include "oc_collection.h"
 #include "oc_helpers.h"
-#include <vector>
 #include <assert.h>
 
 /*
@@ -47,6 +46,7 @@
  * function as the C void *user_data pointer.
  */
 struct jni_callback_data {
+  struct jni_callback_data *next;
   JNIEnv *jenv;
   jobject jcb_obj;
   jobject juser_data;
@@ -59,7 +59,7 @@ struct jni_callback_data {
  * is removed or unregistered. This can all so be used to clean
  * up the allocated memory when shutting down the stack.
  */
-std::vector <jni_callback_data*> jni_callbacks_vector;
+OC_LIST(jni_callbacks);
 %}
 
 %typemap(jni)    void *user_data "jobject";
@@ -247,7 +247,7 @@ void jni_oc_resource_make_public(oc_resource_t *resource) {
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_add_device_callback;
   $2 = user_data;
 }
@@ -300,7 +300,7 @@ void jni_oc_init_platform_callback(void *user_data)
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_init_platform_callback;
   $2 = user_data;
 }
@@ -392,7 +392,7 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_request_callback;
   $2 = user_data;
 }
@@ -616,7 +616,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
 }
@@ -669,6 +669,20 @@ bool jni_oc_do_ip_discovery_at_endpoint1(const char *rt,
 void jni_oc_response_handler(oc_client_response_t *response) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)response->user_data;
+
+  int getEnvResult = 0;
+  int attachCurrentThreadResult = 0;
+  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
+  if (JNI_EDETACHED == getEnvResult) {
+#ifdef __ANDROID__
+      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
+#else
+      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
+#endif
+      assert(JNI_OK == attachCurrentThreadResult);
+  }
+  assert(data->jenv);
+
   const jclass cls_OCClientResponce = (data->jenv)->FindClass("org/iotivity/OCClientResponse");
   assert(cls_OCClientResponce);
   const jmethodID mid_OCClientResponce_init = (data->jenv)->GetMethodID(cls_OCClientResponce, "<init>", "(JZ)V");
@@ -682,6 +696,10 @@ void jni_oc_response_handler(oc_client_response_t *response) {
                                                          "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
   (data->jenv)->CallVoidMethod(data->jcb_obj, mid_handler, jresponse);
+
+  if (JNI_EDETACHED == getEnvResult) {
+    jvm->DetachCurrentThread();
+  }
 }
 %}
 %typemap(jni)    oc_response_handler_t handler "jobject";
@@ -693,7 +711,7 @@ void jni_oc_response_handler(oc_client_response_t *response) {
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_response_handler;
   $2 = user_data;
 }
@@ -863,7 +881,7 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   JCALL1(DeleteLocalRef, jenv, $input);
-  jni_callbacks_vector.push_back(user_data);
+  oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_trigger_handler;
   $2 = user_data;
 }
@@ -898,20 +916,19 @@ void jni_oc_set_delayed_callback1(void *user_data, oc_trigger_t callback, jni_ca
 %inline %{
 void jni_oc_remove_delayed_callback(jobject callback) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  auto it = jni_callbacks_vector.begin();
-  for (it = jni_callbacks_vector.begin(); it != jni_callbacks_vector.end(); ++it) {
-    if ((*it)->jenv->IsSameObject(callback, (*it)->jcb_obj)) {
-      oc_remove_delayed_callback(*it, jni_oc_trigger_handler);
-      (*it)->jenv->DeleteGlobalRef((*it)->jcb_obj);
-      (*it)->jenv->DeleteGlobalRef((*it)->juser_data);
+  jni_callback_data *item = (jni_callback_data *)oc_list_head(jni_callbacks);
+  while (item) {
+    if ((item)->jenv->IsSameObject(callback, (item)->jcb_obj)) {
+      oc_remove_delayed_callback(item, jni_oc_trigger_handler);
+      (item)->jenv->DeleteGlobalRef((item)->jcb_obj);
+      (item)->jenv->DeleteGlobalRef((item)->juser_data);
       break;
     }
+    item = (jni_callback_data *)oc_list_item_next(item);
   }
-  if (it != jni_callbacks_vector.end()) {
-    free(*it);
-    jni_callbacks_vector.erase(it);
-    //Prevent the jni_callback_vector from using un-needed memory.
-    jni_callbacks_vector.shrink_to_fit();
+  if (item) {
+    oc_list_remove(jni_callbacks, item);
+    free(item);
   }
 }
 %}
