@@ -53,6 +53,8 @@
 
 #define ST_BUFFER_SIZE (3072)
 
+#define WIFI_CONNECTION_RETRY (3)
+
 extern int st_register_resources(size_t device);
 extern int st_fota_manager_start(void);
 extern void st_fota_manager_stop(void);
@@ -329,9 +331,17 @@ oc_define_interrupt_handler(st_manager)
         st_print_log("[ST_MGR] could not get cloud informations.\n");
         EXIT_WITH_ERROR(ST_ERROR_OPERATION_FAILED);
       }
-      st_connect_wifi(oc_string(store_info->accesspoint.ssid),
-                      oc_string(store_info->accesspoint.pwd));
-      set_st_manager_status(ST_STATUS_WIFI_CONNECTION_CHECKING);
+      int wifi_connect_retry = 0;
+      int ret = 0;
+      do {
+        ret = st_connect_wifi(oc_string(store_info->accesspoint.ssid),
+                              oc_string(store_info->accesspoint.pwd));
+      } while (ret != 0 && (++wifi_connect_retry < WIFI_CONNECTION_RETRY));
+      if (ret != 0) {
+        set_st_manager_status(ST_STATUS_STOP);
+      } else {
+        set_st_manager_status(ST_STATUS_WIFI_CONNECTION_CHECKING);
+      }
       break;
     }
     case ST_STATUS_WIFI_CONNECTION_CHECKING: {
