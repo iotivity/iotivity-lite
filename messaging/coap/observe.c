@@ -85,7 +85,8 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
   while (obs) {
     next = obs->next;
     if (((oc_endpoint_compare(&obs->endpoint, endpoint) == 0)) &&
-        (obs->url == uri || memcmp(obs->url, uri, uri_len) == 0)) {
+        (oc_string_len(obs->url) == uri_len &&
+         memcmp(oc_string(obs->url), uri, uri_len) == 0)) {
       obs->resource->num_observers--;
       oc_list_remove(observers_list, obs);
       oc_memb_free(&observers_memb, obs);
@@ -114,15 +115,7 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
   if (o) {
-    size_t max = sizeof(o->url) - 1;
-    if (max > uri_len) {
-      max = uri_len;
-    }
-    else {
-      OC_WRN("Truncating observer URL");
-    }
-    memcpy(o->url, uri, max);
-    o->url[max] = 0;
+    oc_new_string(&o->url, uri, uri_len);
     memcpy(&o->endpoint, endpoint, sizeof(oc_endpoint_t));
     o->token_len = (uint8_t)token_len;
     memcpy(o->token, token, token_len);
@@ -135,12 +128,12 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     resource->num_observers++;
 #ifdef OC_DYNAMIC_ALLOCATION
     OC_DBG("Adding observer (%u) for /%s [0x%02X%02X]",
-           oc_list_length(observers_list) + 1, o->url, o->token[0],
+           oc_list_length(observers_list) + 1, oc_string(o->url), o->token[0],
            o->token[1]);
 #else  /* OC_DYNAMIC_ALLOCATION */
     OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]",
-           oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS, o->url,
-           o->token[0], o->token[1]);
+           oc_list_length(observers_list) + 1, COAP_MAX_OBSERVERS,
+           oc_string(o->url), o->token[0], o->token[1]);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_list_add(observers_list, o);
     return dup;
@@ -154,8 +147,8 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 void
 coap_remove_observer(coap_observer_t *o)
 {
-  OC_DBG("Removing observer for /%s [0x%02X%02X]", o->url, o->token[0],
-         o->token[1]);
+  OC_DBG("Removing observer for /%s [0x%02X%02X]", oc_string(o->url),
+         o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
@@ -166,6 +159,7 @@ coap_remove_observer(coap_observer_t *o)
   }
 #endif /* OC_BLOCK_WISE */
 
+  oc_free_string(&o->url);
   oc_list_remove(observers_list, o);
   oc_memb_free(&observers_memb, o);
 }
@@ -255,9 +249,11 @@ coap_remove_observer_by_resource(const oc_resource_t *rsc)
 
   while (obs) {
     next = obs->next;
-    if ((obs->resource == rsc) && (oc_string(rsc->uri) &&
-                                   memcmp(obs->url, oc_string(rsc->uri) + 1,
-                                          oc_string_len(rsc->uri) - 1) == 0)) {
+    if ((obs->resource == rsc) &&
+        (oc_string(rsc->uri) &&
+         oc_string_len(obs->url) - 1 == oc_string_len(rsc->uri) &&
+         memcmp(oc_string(obs->url), oc_string(rsc->uri) + 1,
+                oc_string_len(rsc->uri) - 1) == 0)) {
       obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;

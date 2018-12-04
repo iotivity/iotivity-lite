@@ -58,15 +58,13 @@ extern "C"
 {
 #endif
 
-#define COAP_OBSERVER_URL_LEN 20
-
 typedef struct coap_observer
 {
   struct coap_observer *next; /* for LIST */
 
   oc_resource_t *resource;
 
-  char url[COAP_OBSERVER_URL_LEN];
+  oc_string_t url;
   oc_endpoint_t endpoint;
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
