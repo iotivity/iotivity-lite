@@ -365,6 +365,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\..\security\oc_doxm.c" />
+    <ClCompile Include="..\..\..\security\oc_obt.c" />
     <ClCompile Include="..\..\..\security\oc_pstat.c" />
     <ClCompile Include="..\..\..\security\oc_store.c" />
     <ClCompile Include="..\..\..\security\oc_svr.c" />
