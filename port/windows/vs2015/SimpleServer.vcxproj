@@ -86,12 +86,12 @@
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -107,10 +107,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -174,10 +174,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
