@@ -81,110 +81,149 @@ OC_LIST(jni_callbacks);
 
 /* Code and typemaps for mapping the oc_main_init to the java OCMainInitHandler */
 %{
-/* Callback handlers for oc_main_init */
+#define JNI_CURRENT_VERSION JNI_VERSION_1_6
+
 static JavaVM *jvm;
 static jobject jinit_obj;
 static jclass cls_OCMainInitHandler;
 
+static JNIEnv* GetJNIEnv(jint* getEnvResult)
+{
+    JNIEnv *env = nullptr;
+#ifdef __cplusplus
+    *getEnvResult = jvm->GetEnv((void **)&env, JNI_CURRENT_VERSION);
+    switch (*getEnvResult)
+    {
+        case JNI_OK:
+            return env;
+        case JNI_EDETACHED:
+#ifdef __ANDROID__
+            if (jvm->AttachCurrentThread(&env, nullptr) < 0)
+#else
+            if (jvm->AttachCurrentThread((void **)&env, nullptr) < 0)
+#endif
+            {
+                OC_DBG("Failed to get the environment");
+                return nullptr;
+            }
+            else
+            {
+                return env;
+            }
+        case JNI_EVERSION:
+            OC_DBG("JNI version not supported");
+            break;
+        default:
+            OC_DBG("Failed to get the environment");
+            return nullptr;
+    }
+#else
+    *getEnvResult = (*jvm)->GetEnv(jvm, (void**)&jenv, JNI_CURRENT_VERSION);
+    switch (*getEnvResult)
+    {
+        case JNI_OK:
+            return env;
+        case JNI_EDETACHED:
+#ifdef __ANDROID__
+      if((*jvm)->AttachCurrentThread(jvm, &jenv, NULL) < 0)
+#else
+      if((*jvm)->AttachCurrentThread(jvm, (void**)&jenv, NULL) < 0)
+#endif
+            {
+                OC_DBG("Failed to get the environment");
+                return nullptr;
+            }
+            else
+            {
+                return env;
+            }
+        case JNI_EVERSION:
+            OC_DBG("JNI version not supported");
+            break;
+        default:
+            OC_DBG("Failed to get the environment");
+            return nullptr;
+    }
+#endif
+    return nullptr;
+}
+
+void ReleaseJNIEnv(jint getEnvResult) {
+#ifdef __cplusplus
+if (JNI_EDETACHED == getEnvResult) {
+      jvm->DetachCurrentThread();
+  }
+#else
+if (JNI_EDETACHED == getEnvResult) {
+      (*jvm)->DetachCurrentThread(jvm);
+  }
+#endif
+}
+
+/* Callback handlers for oc_main_init */
 int oc_handler_init_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
   assert(jenv);
   assert(cls_OCMainInitHandler);
+#ifdef __cplusplus
   const jmethodID mid_initialize = jenv->GetMethodID(cls_OCMainInitHandler, "initialize", "()I");
   assert(mid_initialize);
   jint ret_value = jenv->CallIntMethod(jinit_obj, mid_initialize);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+#else
+  const jmethodID mid_initialize = (*jenv)->GetMethodID(jenv, cls_OCMainInitHandler, "initialize", "()I");
+  assert(mid_initialize);
+  jint ret_value = (*jenv)->CallIntMethod(jenv, jinit_obj, mid_initialize);
+#endif
+  ReleaseJNIEnv(getEnvResult);
   return (int)ret_value;
 }
 
 void oc_handler_signal_event_loop_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+
   assert(jenv);
   assert(cls_OCMainInitHandler);
   const jmethodID mid_signalEventLoop = jenv->GetMethodID(cls_OCMainInitHandler, "signalEventLoop", "()V");
   assert(mid_signalEventLoop);
   jenv->CallVoidMethod(jinit_obj, mid_signalEventLoop);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+
+  ReleaseJNIEnv(getEnvResult);
 }
 
 void oc_handler_register_resource_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+
   assert(jenv);
   assert(cls_OCMainInitHandler);
   const jmethodID mid_registerResources = jenv->GetMethodID(cls_OCMainInitHandler, "registerResources", "()V");
   assert(mid_registerResources);
   jenv->CallVoidMethod(jinit_obj, mid_registerResources);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+
+  ReleaseJNIEnv(getEnvResult);
 }
 
 void oc_handler_requests_entry_callback(void)
 {
   OC_DBG("JNI: %s\n", __FUNCTION__);
-  JNIEnv *jenv = 0;
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+
   assert(jenv);
   assert(cls_OCMainInitHandler);
   const jmethodID mid_requestEntry_method = jenv->GetMethodID(cls_OCMainInitHandler, "requestEntry", "()V");
   assert(mid_requestEntry_method);
   jenv->CallVoidMethod(jinit_obj, mid_requestEntry_method);
-  if (JNI_EDETACHED == getEnvResult) {
-      jvm->DetachCurrentThread();
-  }
+  
+  ReleaseJNIEnv(getEnvResult);
 }
 
 static oc_handler_t jni_handler = {
@@ -353,18 +392,8 @@ int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platf
 void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)user_data;
-
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
   const jclass callbackInterfaceClass = (data->jenv)->FindClass("org/iotivity/OCRequestHandler");
@@ -378,9 +407,7 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   assert(mid_OCRequest_init);
   (data->jenv)->CallVoidMethod(data->jcb_obj, mid_handler, (data->jenv)->NewObject(cls_OCRequest, mid_OCRequest_init, (jlong)request, false), (jint)interfaces, data->juser_data);
 
-  if (JNI_EDETACHED == getEnvResult) {
-    jvm->DetachCurrentThread();
-  }
+  ReleaseJNIEnv(getEnvResult);
 }
 %}
 %typemap(jni)    oc_request_callback_t callback "jobject";
@@ -554,17 +581,8 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)user_data;
 
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
   jstring janchor = (data->jenv)->NewStringUTF(anchor);
@@ -600,9 +618,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   assert(mid_OCDiscoveryFlags_swigValue);
   jint return_value = (data->jenv)->CallIntMethod(jDiscoveryFlag, mid_OCDiscoveryFlags_swigValue);
 
-  if (JNI_EDETACHED == getEnvResult) {
-    jvm->DetachCurrentThread();
-  }
+  ReleaseJNIEnv(getEnvResult);
 
   return (oc_discovery_flags_t) return_value;
 }
@@ -670,17 +686,8 @@ void jni_oc_response_handler(oc_client_response_t *response) {
   OC_DBG("JNI: %s\n", __FUNCTION__);
   struct jni_callback_data *data = (jni_callback_data *)response->user_data;
 
-  int getEnvResult = 0;
-  int attachCurrentThreadResult = 0;
-  getEnvResult = jvm->GetEnv((void**)&data->jenv, JNI_VERSION_1_6);
-  if (JNI_EDETACHED == getEnvResult) {
-#ifdef __ANDROID__
-      attachCurrentThreadResult = jvm->AttachCurrentThread(&data->jenv, NULL);
-#else
-      attachCurrentThreadResult = jvm->AttachCurrentThread((void**)&data->jenv, NULL);
-#endif
-      assert(JNI_OK == attachCurrentThreadResult);
-  }
+  jint getEnvResult = 0;
+  data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
   const jclass cls_OCClientResponce = (data->jenv)->FindClass("org/iotivity/OCClientResponse");
@@ -697,9 +704,8 @@ void jni_oc_response_handler(oc_client_response_t *response) {
   assert(mid_handler);
   (data->jenv)->CallVoidMethod(data->jcb_obj, mid_handler, jresponse);
 
-  if (JNI_EDETACHED == getEnvResult) {
-    jvm->DetachCurrentThread();
-  }
+
+  ReleaseJNIEnv(getEnvResult);
 }
 %}
 %typemap(jni)    oc_response_handler_t handler "jobject";
