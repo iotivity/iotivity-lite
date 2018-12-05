@@ -94,7 +94,7 @@ typedef struct
   oc_response_t *response;
 } oc_request_t;
 
-%rename(OCResource) oc_resource_t;
+%rename(OCResource) oc_resource_s;
 %rename("%(lowercamelcase)s") default_interface;
 // handlers are added to the code using the mainInit function and are not expected to be read by Java code
 %ignore get_handler;
@@ -103,9 +103,9 @@ typedef struct
 %ignore delete_handler;
 %rename("%(lowercamelcase)s") observe_period_seconds;
 %rename("%(lowercamelcase)s") num_observers;
-typedef struct
+typedef struct oc_resource_s
 {
-  struct oc_resource_t *next;
+  struct oc_resource_s *next;
   size_t device;
   oc_string_t name;
   oc_string_t uri;
@@ -119,7 +119,7 @@ typedef struct
   oc_request_handler_t delete_handler;
   uint16_t observe_period_seconds;
   uint8_t num_observers;
-}oc_resource_t;
+} oc_resource_t;
 
 %rename(OCEventCallbackResult) oc_event_callback_retval_t;
 typedef enum {
