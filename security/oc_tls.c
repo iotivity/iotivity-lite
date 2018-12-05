@@ -1530,6 +1530,12 @@ read_application_data(oc_tls_peer_t *peer)
     int ret = 0;
     do {
       ret = mbedtls_ssl_handshake_step(&peer->ssl_ctx);
+      if (ret == MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO &&
+          peer->ssl_ctx.state != MBEDTLS_SSL_HELLO_REQUEST &&
+          peer->ssl_ctx.state !=  MBEDTLS_SSL_CLIENT_HELLO) {
+        mbedtls_ssl_session_reset(&peer->ssl_ctx);
+        return;
+      }
       if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC ||
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
         memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
