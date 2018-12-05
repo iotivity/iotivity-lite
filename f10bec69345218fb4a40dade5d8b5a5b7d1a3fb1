@@ -22,6 +22,30 @@
       "revId": "f10bec69345218fb4a40dade5d8b5a5b7d1a3fb1",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_f11c0616",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2018-12-05T01:15:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a3d3df0_912c9a4c",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 38
+      },
+      "revId": "f10bec69345218fb4a40dade5d8b5a5b7d1a3fb1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
