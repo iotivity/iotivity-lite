@@ -171,7 +171,7 @@ ${OBJDIR}/swig/oc_api_wrap.o: ${SWIG_DIR}/oc_api_wrap.cxx
 	${CCXX} -c -o $@ $< ${CXXFLAGS} -Wno-unused-function -Wno-pointer-bool-conversion -DOC_CLIENT -DOC_SERVER
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_SWIG)
-	${CC} -shared $(OBJ_SWIG) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) ${LIBS} -lc++_shared -o libiotivity-lite-jni.so
+	${CC} -shared $(OBJ_SWIG) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) ${LIBS} -lc++_shared -llog -o libiotivity-lite-jni.so
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))

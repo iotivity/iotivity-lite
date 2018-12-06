@@ -19,12 +19,21 @@
 
 #include <stdio.h>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+#ifdef __ANDROID__
+#define TAG "OC-JNI"
+#define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#else
 #define PRINT(...) printf(__VA_ARGS__)
+#endif
 
 #define PRINTipaddr(endpoint)                                                  \
   do {                                                                         \
