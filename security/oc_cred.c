@@ -350,13 +350,16 @@ oc_sec_add_new_cred(size_t device, int credid, oc_sec_credtype_t credtype,
 
   /* privatedata */
   if (privatedata && privatedata_size > 0) {
-    uint8_t key[24];
     if (credtype == OC_CREDTYPE_PSK &&
         privatedata_encoding == OC_ENCODING_BASE64) {
+      if (privatedata_size != 24) {
+        oc_sec_remove_cred(cred, device);
+        return -1;
+      }
+      uint8_t key[24];
       memcpy(key, privatedata, 24);
-      oc_base64_decode(key, 24);
-      oc_new_string(&cred->privatedata.data, (const char *)privatedata,
-                    privatedata_size);
+      int key_size = oc_base64_decode(key, 24);
+      oc_new_string(&cred->privatedata.data, (const char *)key, key_size);
       privatedata_encoding = OC_ENCODING_RAW;
     } else {
       oc_new_string(&cred->privatedata.data, (const char *)privatedata,
@@ -479,9 +482,15 @@ oc_sec_encode_cred(bool persist, size_t device)
     /* privatedata */
     oc_rep_set_object(creds, privatedata);
     if (persist) {
-      oc_rep_set_byte_string(privatedata, data,
-                             oc_cast(cr->privatedata.data, const uint8_t),
-                             oc_string_len(cr->privatedata.data));
+      if (cr->privatedata.encoding == OC_ENCODING_RAW ||
+          cr->privatedata.encoding == OC_ENCODING_DER) {
+        oc_rep_set_byte_string(privatedata, data,
+                               oc_cast(cr->privatedata.data, const uint8_t),
+                               oc_string_len(cr->privatedata.data));
+      } else {
+        oc_rep_set_text_string(privatedata, data,
+                               oc_string(cr->privatedata.data));
+      }
     } else {
       oc_rep_set_byte_string(privatedata, data,
                              oc_cast(cr->privatedata.data, const uint8_t), 0);
@@ -499,20 +508,23 @@ oc_sec_encode_cred(bool persist, size_t device)
       oc_rep_set_text_string(creds, credusage, credusage_string);
     }
     /* publicdata */
-    oc_rep_set_object(creds, publicdata);
-    if (cr->publicdata.encoding == OC_ENCODING_PEM) {
-      oc_rep_set_text_string(publicdata, data, oc_string(cr->publicdata.data));
-    } else {
-      oc_rep_set_byte_string(publicdata, data,
-                             oc_cast(cr->publicdata.data, const uint8_t),
-                             oc_string_len(cr->publicdata.data));
+    if (oc_string_len(cr->publicdata.data) > 0) {
+      oc_rep_set_object(creds, publicdata);
+      if (cr->publicdata.encoding == OC_ENCODING_PEM) {
+        oc_rep_set_text_string(publicdata, data,
+                               oc_string(cr->publicdata.data));
+      } else {
+        oc_rep_set_byte_string(publicdata, data,
+                               oc_cast(cr->publicdata.data, const uint8_t),
+                               oc_string_len(cr->publicdata.data));
+      }
+      const char *encoding_string =
+        return_encoding_string(cr->publicdata.encoding);
+      if (encoding_string) {
+        oc_rep_set_text_string(publicdata, encoding, encoding_string);
+      }
+      oc_rep_close_object(creds, publicdata);
     }
-    const char *encoding_string =
-      return_encoding_string(cr->publicdata.encoding);
-    if (encoding_string) {
-      oc_rep_set_text_string(publicdata, encoding, encoding_string);
-    }
-    oc_rep_close_object(creds, publicdata);
 #endif /* OC_PKI */
     oc_rep_object_array_end_item(creds);
     cr = cr->next;
