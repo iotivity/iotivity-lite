@@ -1,5 +1,7 @@
 package java_lite_simple_server;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +38,20 @@ public class Server {
         boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
         System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
 
-        OCStorage.storage_config("./simpleserver_creds");
+        try {
+            String path = Server.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            String decodedPath = URLDecoder.decode(path, "UTF-8");
+            String creds_path = decodedPath + "simpleserver_creds/";
+            java.io.File directory = new java.io.File(creds_path);
+            if (! directory.exists()) {
+                directory.mkdir();
+            }
+            System.out.println("Storage Config PATH : " + creds_path);
+            OCStorage.storage_config(creds_path);
+        } catch (UnsupportedEncodingException e1) {
+            System.err.println("Failed to find path for security data.");
+            e1.printStackTrace();
+        }
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {
