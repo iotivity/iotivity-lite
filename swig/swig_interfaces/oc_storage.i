@@ -15,11 +15,14 @@
 
 %{
 #include "oc_storage.h"
+#include "oc_log.h"
 
-int swig_oc_storage_config(const char *store) {
+int jni_storage_config(const char *store) {
 #ifdef OC_SECURITY
+    OC_DBG("JNI: %s with path %s\n", __FUNCTION__, store);
     return oc_storage_config(store);
 #else
+    OC_DBG("JNI: OC_SECURITY disabled ignoring %s with path %s\n", __FUNCTION__, store);
     return 0;
 #endif /* OC_SECURITY */
 }
@@ -44,12 +47,12 @@ $2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input);
 %apply (uint8_t *BYTE, size_t LENGTH) { (uint8_t *buf, size_t size) }; 
 #endif 
 
-%rename (storage_config) swig_oc_storage_config;
-int swig_oc_storage_config(const char *store);
+%rename (storageConfig) jni_storage_config;
+int jni_storage_config(const char *store);
 /*
-%rename (storage_read) oc_storage_read;
+%rename (storageRead) oc_storage_read;
 long oc_storage_read(const char *store, uint8_t *buf, size_t size);
 
-%rename (storage_write) oc_storage_write;
+%rename (storageWrite) oc_storage_write;
 long oc_storage_write(const char *store, uint8_t *buf, size_t size);
 */
