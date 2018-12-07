@@ -1,5 +1,7 @@
 package java_lite_simple_server;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +38,14 @@ public class Server {
         boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
         System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
 
-        OCStorage.storage_config("./simpleserver_creds");
+        String creds_path =  "./simpleserver_creds/";
+        java.io.File directory = new java.io.File(creds_path);
+        if (! directory.exists()) {
+            directory.mkdir();
+        }
+        System.out.println("Storage Config PATH : " + directory.getPath());
+        OCStorage.storage_config(directory.getPath());
+
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {

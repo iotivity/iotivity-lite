@@ -1,5 +1,8 @@
 package java_lite_simple_client;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +39,17 @@ public class Client {
         boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
         System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
 
-        OCStorage.storage_config("./simpleclient_creds");
+
+        String creds_path = "./simpleclient_creds/";
+        java.io.File directory = new java.io.File(creds_path);
+        if (! directory.exists()) {
+            directory.mkdir();
+        }
+        System.out.println("Storage Config PATH : " + directory.getPath());
+        if (0 != OCStorage.storage_config(directory.getPath())) {
+            System.err.println("Failed to setup Storage Config.");
+        }
+
         MyInitHandler h = new MyInitHandler();
         int init_ret = OCMain.mainInit(h);
         if (init_ret < 0) {
