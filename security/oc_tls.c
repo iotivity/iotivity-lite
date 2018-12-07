@@ -1530,6 +1530,9 @@ read_application_data(oc_tls_peer_t *peer)
     int ret = 0;
     do {
       ret = mbedtls_ssl_handshake_step(&peer->ssl_ctx);
+      if (ret == MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE) {
+        return;
+      }
       if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC ||
           peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
         memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
@@ -1661,6 +1664,12 @@ read_application_data(oc_tls_peer_t *peer)
       int ret = mbedtls_ssl_read(&peer->ssl_ctx, decrypt_data, OC_PDU_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
       if (ret <= 0) {
+        if (ret == MBEDTLS_ERR_SSL_WANT_READ &&
+            peer->ssl_ctx.in.msgtype == MBEDTLS_SSL_MSG_HANDSHAKE) {
+          mbedtls_ssl_session_reset(&peer->ssl_ctx);
+          oc_tls_free_peer(peer, false);
+          return;
+        }
         oc_message_unref(message);
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
             ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
