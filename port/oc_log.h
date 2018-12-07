@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 #ifdef __ANDROID__
-#include <android/log.h>
+#include "android/oc_log_android.h"
 #endif
 
 #ifdef __cplusplus
@@ -62,15 +62,17 @@ extern "C"
   } while (0)
 
 #ifdef OC_DEBUG
+#ifdef __ANDROID__
+#define OC_LOG(level, ...)          android_log(level, __FILE__, __func__, __LINE__, __VA_ARGS__)
+#define OC_LOGipaddr(endpoint)      android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
+#define OC_LOGbytes(bytes, length)  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
+#else  /* ! __ANDROID */
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \
     PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
     PRINT(__VA_ARGS__);                                                        \
     PRINT("\n");                                                               \
   } while (0)
-#define OC_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
-#define OC_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
-#define OC_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
     PRINT("DEBUG: %s <%s:%d>: ", __FILE__, __func__, __LINE__);                \
@@ -85,6 +87,10 @@ extern "C"
       PRINT(" %02X", bytes[i]);                                                \
     PRINT("\n");                                                               \
   } while (0)
+#endif /* __ANDROID__ */
+#define OC_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
+#define OC_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
+#define OC_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
 #else
 #define OC_LOG(...)
 #define OC_DBG(...)
