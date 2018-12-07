@@ -185,11 +185,6 @@ This will build
 Copy the `iotivity-lite-jni.dll` file to the `<iotivity-lite>/swig/java_lang` directory.  We have
 scripts that will look for that library in that location.
 
-NOTE: At the time of this writing the Debug variant of the build has security disabled.  This has
-been done to enable testing and development.  Security can be enabled by building the release
-build or by opening the project properties and adding OC_SECURITY to the preprocessor
-definitions for the Debug build.
-
 On success the Output window should show:
 
     ========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
@@ -238,6 +233,11 @@ To build the `libiotivity-lite-jni.so` shared object library for Android cd to
 
 Testing and Verifying
 =================================================
+All samples have the default out of the box behavior of IoTivity which means they are are not 
+onboarded or provisioned.  The default security will prevent the samples from communicating with
+one another.  See the following section **Onboarding and Provisioning** for instructions on using
+the onboarding tool that is part of iotivity-lite.
+
 ### Building and Running Samples Windows
 A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
 
@@ -284,6 +284,130 @@ execute the following command:
 
     ./gradlew installDebug
 
+Onboarding and Provisioning
+=================================================
+If the libraries have been built using security the will need to be onboarded and provisioned
+before they can be used.
+
+At the time of this writing the onboarding tool is only built on Linux.  It can be used to
+onboard and provision samples even if they are running on a remote device. The only requirement is
+that the onboarding tool can discover the sample.
+
+Step-by-step guide for onboarding and provisioning the simple server and simple client samples.
+This assumes you are starting one discoverable device at a time. If multiple devices can be
+discovered at the same time the user will have to figure out which UUID belongs to which device.
+
+### (Step 1) Onboard and Provision the Server
+
+ - start the server sample
+ - start onboarding tool it will print the following menu:
+```
+    ################################################
+    OCF 1.3 Onboarding Tool
+    ################################################
+    [0] Display this menu
+    -----------------------------------------------
+    [1] Discover un-owned devices
+    [2] Discover owned devices
+    -----------------------------------------------
+    [3] Take ownership of device (Just-works)
+    [4] Provision pair-wise credentials
+    [5] Provision ACE2
+    -----------------------------------------------
+    [6] RESET device
+    -----------------------------------------------
+    [9] Exit
+    ################################################
+
+    Select option:
+```
+
+ - Type `1` **Enter** to _Discover un-owned devices_ this should display a something similar to
+   this
+
+    Discovered unowned device: c3e5c231-9f95-4859-6d11-87f40b1977d5 at:
+    [fe80:0000:0000:0000:05a8:81bd:23cf:3882]:59584
+    [fe80:0000:0000:0000:05a8:81bd:23cf:3882]:59585
+
+ - Type `3` **Enter** to _Take ownership of device_
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.  The following should be displayed
+
+    Successfully issued request to perform ownership transfer
+
+ - Type `2` **Enter** to _Discover owned devices_ the device you just took ownership of should be
+   listed.
+ - Type `5` **Enter** to _Provision ACE2_. There are many ways to properly provision the device.
+   This will give instruction for using wildcard provisioning.
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+   - Type `0` **Enter** for an _auth-crypt_ ACE
+   - Type `1` **Enter** in response to `Enter number of resources in this ACE:`
+   - Type `0` **Enter** in response to `Have resource href? [0-No, 1-Yes]:`
+   - Type `1` **Enter** in response to `Set wildcard resource? [0-No, 1-Yes]:`
+   - Type `2` **Enter** to select the `[2]: All discoverable resources` option
+   - Type `0` **Enter** in response to `Enter number of resource types [0-None]:`
+   - Type `0` **Enter** in response to `Enter number of interfaces [0-None]`
+   - Type `0` **Enter** for CREATE, `1` **Enter** for RETRIEVE, `1` **Enter** for UPDATE, `0`
+     **Enter** for DELETE, and `1` **Enter** for NOTIFY.
+   - `Successfully issued request to provision ACE` should be printed on the screen upon success
+
+Example output from following the above listed commands:
+
+    Provision ACL2
+    My Devices:
+    [0]: 33cd6782-00f3-49db-624e-fda26e945c8d
+
+
+    Select device for provisioning: 0
+
+    Subjects:
+    [0]: anon-clear
+    [1]: auth-crypt
+    [2]: 33cd6782-00f3-49db-624e-fda26e945c8d
+
+    Select subject: 1
+
+    Enter number of resources in this ACE: 1
+
+    Resource properties
+    Have resource href? [0-No, 1-Yes]: 0
+
+    Set wildcard resource? [0-No, 1-Yes]: 1
+    [1]: All resources
+    [2]: All discoverable resources
+    [3]: All non-discoverable resources
+
+    Select wildcard resource: 2
+    Enter number of resource types [0-None]: 0
+    Enter number of interfaces [0-None]0
+
+    Set ACE2 permissions
+    CREATE [0-No, 1-Yes]: 0
+    RETRIEVE [0-No, 1-Yes]: 1
+    UPDATE [0-No, 1-Yes]: 1
+    DELETE [0-No, 1-Yes]: 0
+    NOTIFY [0-No, 1-Yes]: 1
+
+    Successfully issued request to provision ACE
+
+### (Step 2) Onboard the client
+ - start the client sample
+ - Type `1` **Enter** to _Discover un-owned devices_
+ - Type `3` **Enter** to _Take ownership of device_
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+  - Type `2` **Enter** to _Discover owned devices_ the server and client should be listed
+
+### (Step 3) Pair Server and Client
+  - Type `4` **Enter** to _Provision pair-wise credentials_
+  - Type `0` **Enter** `1` **Enter** to pair the client and server. If you have multiple owned
+    devices you will have to select the correct devices from the list.
+
+### (Step 4) Restart and Test
+The samples should be onboarded and provisioned. Restart the server and client they should discover
+each other and run without difficulty.
+
 Layout of swig folder
 =================================================
 This contains an overview of the contents of the `<iotivity-lite>/swig` directory.  With a
@@ -304,26 +428,26 @@ summary of the contents of each directory.
     +-- oc_java
     +-- swig_interfaces
 
-- `apps`  
+- `apps`<br />
   Contains to client server samples.  The `java_lite` samples have been run and tested on Windows
   and Linux.  The `android` samples are the same samples with a really light UI for Android OS.
   The `java_lite` samples also contain project files for the Eclipse IDE if users wish to import
   the samples into that IDE.
-- `iotivity-lite-eclipes-project`  
+- `iotivity-lite-eclipes-project`<br />
   Contains unit test code in the `junit` directory as well as an empty `src` directory.  The
   `src` directory will be populated with `*.java` files when the SWIG build commands are run.
   This also contains project files for the Eclipse IDE if user wishes to import the
   iotivity-lite code into Eclipse.
-- `java_lang`  
+- `java_lang`<br />
   Contains build scripts needed to generate the Java language binding using SWIG.  Some of the
   files generated by SWIG will be placed in this directory as well as the
   `iotivity-lite-eclipse-project` directory.  With the exception of the scripts for building and
   running the samples all commands given in this README are run from the `java_lang` directory.
-- `oc_java`  
+- `oc_java`<br />
   Contains Java files that are used by the SWIG output but not not generated as part of the SWIG
   build process.  Most of the files are Java interfaces used to handle callbacks and bitmask
   values.
-- `swig_interfaces`  
+- `swig_interfaces`<br />
   Contains the input files for the swig builder.  These files contain instructions for the SWIG
   builder.  It tells it which header files are being processed.  It instructs swig how to rename
   files from a C style name with underscores to a Java like lower camel case name.  It also
@@ -346,18 +470,9 @@ To open the project files:
  - browse to the `<iotivity-lite>\swig` directory click `OK`
  - make sure the checkbox for the three projects is checked.  Click `Finish`
 
-Now you must tell eclipse the location of the `iotivity-lite-jni` shared object file.  This is
-not by default since the location will differ on each developers machine.
-
- - Right click on `iotivity-lite` project select `Properties`.
- - select `Java Build Path`
- - select `Libraries` tab
- - expand the `JRE System Library` option
- - select `Native library location` click `Edit..`
- - select `External Folder...`
- - browse to the location of the folder containing the `iotivity-lite-jni`
-   click `OK`
- - Repeat the steps for `java_lite_sample_client` and `java_lite_sample_server`
+Copy the `iotivity-lite-jni` shared object file into the
+`<iotivity-lite>/swig/iotivity-lite-eclipse-project/libs` directory.  The eclipse has been setup
+to search for the library in that location.
 
 Run the unit tests by right clicking on `iotivity-lite` project select `Run As -> JUnit Test`.
 Selecting `Run As -> Java Application` will run the command line version of the unit tests.
