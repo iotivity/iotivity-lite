@@ -107,7 +107,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\util;$(SolutionDir)..\..\..\port;$(SolutionDir)..\..\..\port\windows;$(JAVA_HOME)\include;$(JAVA_HOME)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
