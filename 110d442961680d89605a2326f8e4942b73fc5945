@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_948f6823",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-12-10T03:17:56Z",
+      "side": 1,
+      "message": "#endif /* OC_IPV4 */",
+      "revId": "110d442961680d89605a2326f8e4942b73fc5945",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_74946437",
+        "filename": "port/linux/ipadapter.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2018-12-10T03:17:56Z",
+      "side": 1,
+      "message": "how about add OC_ERR log?",
+      "revId": "110d442961680d89605a2326f8e4942b73fc5945",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
