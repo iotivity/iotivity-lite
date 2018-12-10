@@ -18,7 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ServerActivity extends AppCompatActivity {
 
     static {
-        System.loadLibrary("c++_shared");
         System.loadLibrary("iotivity-lite-jni");
     }
 
