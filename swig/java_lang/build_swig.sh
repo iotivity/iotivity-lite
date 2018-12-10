@@ -6,6 +6,8 @@ rm ../iotivity-lite-eclipse-project/src/org/iotivity/*.java
 
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_api.i
 
+swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_obt.i
+
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
 then
   echo Building wrapper for linux clock
@@ -21,5 +23,6 @@ fi
 
 #swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ ../swig_interfaces/oc_ri.i
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../port/ ../swig_interfaces/oc_storage.i
+
 
 cp ../oc_java/*.java ../iotivity-lite-eclipse-project/src/org/iotivity/
