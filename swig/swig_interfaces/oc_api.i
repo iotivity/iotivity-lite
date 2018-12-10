@@ -156,7 +156,7 @@ void ReleaseJNIEnv(jint getEnvResult) {
 /* Callback handlers for oc_main_init */
 int oc_handler_init_callback(void)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
   JNIEnv *jenv = GetJNIEnv(&getEnvResult);
 
@@ -172,7 +172,7 @@ int oc_handler_init_callback(void)
 
 void oc_handler_signal_event_loop_callback(void)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
   JNIEnv *jenv = GetJNIEnv(&getEnvResult);
 
@@ -187,7 +187,7 @@ void oc_handler_signal_event_loop_callback(void)
 
 void oc_handler_register_resource_callback(void)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
   JNIEnv *jenv = GetJNIEnv(&getEnvResult);
 
@@ -202,7 +202,7 @@ void oc_handler_register_resource_callback(void)
 
 void oc_handler_requests_entry_callback(void)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
   JNIEnv *jenv = GetJNIEnv(&getEnvResult);
 
@@ -247,7 +247,7 @@ static oc_handler_t jni_handler = {
 %{
 void jni_oc_add_device_callback(void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
 
   const jclass cls_OCAddDeviceHandler = JCALL1(FindClass, (data->jenv), "org/iotivity/OCAddDeviceHandler");
@@ -262,7 +262,7 @@ void jni_oc_add_device_callback(void *user_data)
 }
 
 void jni_oc_resource_make_public(oc_resource_t *resource) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_resource_make_public(resource);
 #endif /* OC_SECURITY */
@@ -286,7 +286,7 @@ void jni_oc_resource_make_public(oc_resource_t *resource) {
 %inline %{
 int jni_oc_add_device0(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
 }
 %}
@@ -298,7 +298,7 @@ int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
                   oc_add_device_cb_t add_device_cb, jni_callback_data *jcb,
                   void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_add_device(uri, rt, name, spec_version, data_model_version, add_device_cb, jcb);
 }
@@ -308,7 +308,7 @@ int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
 %{
 void jni_oc_init_platform_callback(void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
 
   const jclass cls_OCInitPlatformHandler = JCALL1(FindClass, (data->jenv), "org/iotivity/OCInitPlatformHandler");
@@ -341,7 +341,7 @@ void jni_oc_init_platform_callback(void *user_data)
 %rename(initPlatform) jni_oc_init_platform0;
 %inline %{
 int jni_oc_init_platform0(const char *mfg_name) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   return oc_init_platform(mfg_name, NULL, NULL);
 }
 %}
@@ -352,7 +352,7 @@ int jni_oc_init_platform1(const char *mfg_name,
                           jni_callback_data *jcb,
                           void *user_data)
 {
- OC_DBG("JNI: %s\n", __FUNCTION__);
+ OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_init_platform(mfg_name, init_platform_cb, jcb);
 }
@@ -388,7 +388,7 @@ int jni_oc_init_platform1(const char *mfg_name,
 %{
 void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
   data->jenv = GetJNIEnv(&getEnvResult);
@@ -440,7 +440,7 @@ void jni_oc_resource_set_request_handler0(oc_resource_t *resource,
                                           oc_request_callback_t callback,
                                           jni_callback_data *jcb)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   oc_resource_set_request_handler(resource, method, callback, jcb);
 }
@@ -453,7 +453,7 @@ void jni_oc_resource_set_request_handler1(oc_resource_t *resource,
                                           jni_callback_data *jcb,
                                           void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   oc_resource_set_request_handler(resource, method, callback, jcb);
 }
@@ -472,7 +472,7 @@ static struct jni_callback_data_s oc_con_write_cb_data;
 
 void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   const jclass cls_OCConWriteHandler = JCALL1(FindClass,
                                               (oc_con_write_cb_data.jenv),
                                               "org/iotivity/OCConWriteHandler");
@@ -627,7 +627,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                                                         oc_resource_properties_t bm,
                                                         void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
 
   jint getEnvResult = 0;
@@ -719,7 +719,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
 %inline %{
 bool jni_oc_do_ip_discovery0(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_ip_discovery(rt, handler, jcb);
 }
@@ -728,7 +728,7 @@ bool jni_oc_do_ip_discovery0(const char *rt, oc_discovery_handler_t handler, jni
 %inline %{
 bool jni_oc_do_ip_discovery1(const char *rt, oc_discovery_handler_t handler, jni_callback_data *jcb, void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_ip_discovery(rt, handler, jcb);
 }
@@ -740,7 +740,7 @@ bool jni_oc_do_ip_discovery_at_endpoint0(const char *rt,
                                          oc_discovery_handler_t handler, jni_callback_data *jcb,
                                          oc_endpoint_t *endpoint)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_ip_discovery_at_endpoint(rt, handler, endpoint, jcb);
 }
@@ -751,7 +751,7 @@ bool jni_oc_do_ip_discovery_at_endpoint1(const char *rt,
                                          oc_discovery_handler_t handler, jni_callback_data *jcb,
                                          oc_endpoint_t *endpoint, void *user_data)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_ip_discovery_at_endpoint(rt, handler, endpoint, jcb);
 }
@@ -762,7 +762,7 @@ bool jni_oc_do_ip_discovery_at_endpoint1(const char *rt,
 %{
 void jni_oc_response_handler(oc_client_response_t *response)
 {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)response->user_data;
 
   jint getEnvResult = 0;
@@ -820,7 +820,7 @@ void jni_oc_response_handler(oc_client_response_t *response)
 bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler,  jni_callback_data *jcb,
                    oc_qos_t qos) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_get(uri, endpoint, query, handler, qos, jcb);
 }
@@ -830,7 +830,7 @@ bool jni_oc_do_get0(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool jni_oc_do_get1(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler, jni_callback_data *jcb,
                    oc_qos_t qos, void *user_data) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_get(uri, endpoint, query, handler, qos, jcb);
 }
@@ -842,7 +842,7 @@ bool jni_oc_do_get1(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool jni_oc_do_delete0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos){
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_delete(uri, endpoint, query, handler, qos, jcb);
 }
@@ -852,7 +852,7 @@ bool jni_oc_do_delete0(const char *uri, oc_endpoint_t *endpoint, const char *que
 bool jni_oc_do_delete1(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos, void *user_data){
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_delete(uri, endpoint, query, handler, qos, jcb);
 }
@@ -864,7 +864,7 @@ bool jni_oc_do_delete1(const char *uri, oc_endpoint_t *endpoint, const char *que
 bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                      oc_response_handler_t handler, jni_callback_data *jcb,
                      oc_qos_t qos) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_init_put(uri, endpoint, query, handler, qos, jcb);
 }
@@ -874,7 +874,7 @@ bool jni_oc_init_put0(const char *uri, oc_endpoint_t *endpoint, const char *quer
 bool jni_oc_init_put1(const char *uri, oc_endpoint_t *endpoint, const char *query,
                      oc_response_handler_t handler, jni_callback_data *jcb,
                      oc_qos_t qos, void *user_data) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_init_put(uri, endpoint, query, handler, qos, jcb);
 }
@@ -886,7 +886,7 @@ bool jni_oc_init_put1(const char *uri, oc_endpoint_t *endpoint, const char *quer
 bool jni_oc_init_post0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_init_post(uri, endpoint, query, handler, qos, jcb);
 }
@@ -896,7 +896,7 @@ bool jni_oc_init_post0(const char *uri, oc_endpoint_t *endpoint, const char *que
 bool jni_oc_init_post1(const char *uri, oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos, void *user_data) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_init_post(uri, endpoint, query, handler, qos, jcb);
 }
@@ -908,7 +908,7 @@ bool jni_oc_init_post1(const char *uri, oc_endpoint_t *endpoint, const char *que
 bool jni_oc_do_observe0(const char *uri, oc_endpoint_t *endpoint, const char *query,
                        oc_response_handler_t handler, jni_callback_data *jcb,
                        oc_qos_t qos) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_observe(uri, endpoint, query, handler, qos, jcb);
 }
@@ -918,7 +918,7 @@ bool jni_oc_do_observe0(const char *uri, oc_endpoint_t *endpoint, const char *qu
 bool jni_oc_do_observe1(const char *uri, oc_endpoint_t *endpoint, const char *query,
                        oc_response_handler_t handler, jni_callback_data *jcb,
                        oc_qos_t qos, void *user_data) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_observe(uri, endpoint, query, handler, qos, jcb);
 }
@@ -929,7 +929,7 @@ bool jni_oc_do_observe1(const char *uri, oc_endpoint_t *endpoint, const char *qu
 %inline %{
 bool jni_oc_do_ip_multicast0(const char *uri, const char *query,
                         oc_response_handler_t handler, jni_callback_data *jcb) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   return oc_do_ip_multicast(uri, query, handler, jcb);
 }
@@ -938,7 +938,7 @@ bool jni_oc_do_ip_multicast0(const char *uri, const char *query,
 %inline %{
 bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
                         oc_response_handler_t handler, jni_callback_data *jcb, void *user_data){
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   return oc_do_ip_multicast(uri, query, handler, jcb);
 }
@@ -952,7 +952,7 @@ bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
 /* Code and typemaps for mapping the oc_set_delayed_callback to the java OCTriggerHandler */
 %{
 oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)cb_data;
 
   const jclass cls_OCTriggerHandler = JCALL1(FindClass,
@@ -1003,7 +1003,7 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
 %rename(setDelayedHandler) jni_oc_set_delayed_callback0;
 %inline %{
 void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb, uint16_t seconds) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
   oc_set_delayed_callback(jcb, callback, seconds);
 }
@@ -1011,7 +1011,7 @@ void jni_oc_set_delayed_callback0(oc_trigger_t callback, jni_callback_data *jcb,
 %rename(setDelayedHandler) jni_oc_set_delayed_callback1;
 %inline %{
 void jni_oc_set_delayed_callback1(void *user_data, oc_trigger_t callback, jni_callback_data *jcb, uint16_t seconds) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
   oc_set_delayed_callback(jcb, callback, seconds);
 }
@@ -1029,7 +1029,7 @@ void jni_oc_set_delayed_callback1(void *user_data, oc_trigger_t callback, jni_ca
  */
 %inline %{
 void jni_oc_remove_delayed_callback(jobject callback) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *item = (jni_callback_data *)oc_list_head(jni_callbacks);
   while (item) {
     if (JCALL2(IsSameObject, (item->jenv), callback, item->jcb_obj)) {
@@ -1104,7 +1104,7 @@ void repNewBuffer(int size) {
 %inline %{
 /* Alt implementation of oc_rep_set_double macro*/
 void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_double(object, value);
 }
@@ -1114,7 +1114,7 @@ void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
 %inline %{
 /* Alt implementation of oc_rep_set_int macro */
 void jni_rep_set_int(CborEncoder * object, const char* key, int value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_int(object, value);
 }
@@ -1124,7 +1124,7 @@ void jni_rep_set_int(CborEncoder * object, const char* key, int value) {
 %inline %{
 /* Alt implementation of oc_rep_set_uint macro */
 void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_uint(object, value);
 }
@@ -1134,7 +1134,7 @@ void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value)
 %inline %{
 /* Alt implementation of oc_rep_set_boolean macro */
 void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_boolean(object, value);
 }
@@ -1144,7 +1144,7 @@ void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
 %inline %{
 /* Alt implementation of oc_rep_set_text_string macro */
 void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_text_string(object, value, strlen(value));
 }
@@ -1166,7 +1166,7 @@ $2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
 %inline %{
 /* Alt implementation of oc_rep_set_byte_string macro */
 void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char *value, size_t length) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_byte_string(object, value, length);
 }
@@ -1176,7 +1176,7 @@ void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsign
 %inline %{
 /* Alt implementation of oc_rep_start_array macro */
 CborEncoder * jni_rep_start_array(CborEncoder *parent) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   CborEncoder *cbor_encoder_array = (CborEncoder *)malloc(sizeof(struct CborEncoder));
   g_err |= cbor_encoder_create_array(parent, cbor_encoder_array, CborIndefiniteLength);
   return cbor_encoder_array;
@@ -1187,7 +1187,7 @@ CborEncoder * jni_rep_start_array(CborEncoder *parent) {
 %inline %{
 /* Alt implementation of oc_rep_end_array macro */
 void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encoder_close_container(parent, arrayObject);
   free(arrayObject);
   arrayObject = NULL;
@@ -1198,7 +1198,7 @@ void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
 %inline %{
 /* Alt implementation of oc_rep_start_links_array macro */
 CborEncoder * jni_rep_start_links_array() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   cbor_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength);
   return &links_array;
 }
@@ -1208,7 +1208,7 @@ CborEncoder * jni_rep_start_links_array() {
 %inline %{
 /* Alt implementation of oc_rep_end_links_array macro */
 void jni_rep_end_links_array() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   oc_rep_end_links_array();
 }
 %}
@@ -1217,7 +1217,7 @@ void jni_rep_end_links_array() {
 %inline %{
 /* Alt implementation of oc_rep_start_root_object macro */
 CborEncoder * jni_start_root_object() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
   return &root_map;
 }
@@ -1226,7 +1226,7 @@ CborEncoder * jni_start_root_object() {
 %rename(repEndRootObject) jni_rep_end_root_object;
 %inline %{
 void jni_rep_end_root_object() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   oc_rep_end_root_object();
 }
 %}
@@ -1235,7 +1235,7 @@ void jni_rep_end_root_object() {
 %inline %{
 /* Alt implementation of oc_rep_add_byte_string macro */
 void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* value, const size_t length) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   if (value != NULL) {
     g_err |= cbor_encode_byte_string(arrayObject, value, length);
   }
@@ -1246,7 +1246,7 @@ void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* valu
 %inline %{
 /* Alt implementation of oc_rep_add_text_string macro */
 void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   if (value != NULL) {
     g_err |= cbor_encode_text_string(arrayObject, value, strlen(value));
   }
@@ -1257,7 +1257,7 @@ void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value) {
 %inline %{
 /* Alt implementation of oc_rep_add_double macro */
 void jni_rep_add_double(CborEncoder *arrayObject, const double value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_double(arrayObject, value);
 }
 %}
@@ -1266,7 +1266,7 @@ void jni_rep_add_double(CborEncoder *arrayObject, const double value) {
 %inline %{
 /* Alt implementation of oc_rep_add_int macro */
 void jni_rep_add_int(CborEncoder *arrayObject, const int value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_int(arrayObject, value);
 }
 %}
@@ -1275,7 +1275,7 @@ void jni_rep_add_int(CborEncoder *arrayObject, const int value) {
 %inline %{
 /* Alt implementation of oc_rep_add_boolean macro */
 void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_boolean(arrayObject, value);
 }
 %}
@@ -1284,7 +1284,7 @@ void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value) {
 %inline %{
 /* Alt implementation of oc_rep_set_key macro */
 void jni_rep_set_key(CborEncoder *parent, const char* key) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(parent, key, strlen(key));
 }
 %}
@@ -1293,7 +1293,7 @@ void jni_rep_set_key(CborEncoder *parent, const char* key) {
 %inline %{
 /* Alt implementation of oc_rep_set_array macro */
 CborEncoder * jni_rep_set_array(CborEncoder *parent, const char* key) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(parent, key, strlen(key));
   return jni_rep_start_array(parent);
 }
@@ -1303,7 +1303,7 @@ CborEncoder * jni_rep_set_array(CborEncoder *parent, const char* key) {
 %inline %{
 /* Alt implementation of oc_rep_close_array macro */
 void jni_rep_close_array(CborEncoder *object, CborEncoder *arrayObject) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_rep_end_array(object, arrayObject);
 }
 %}
@@ -1312,7 +1312,7 @@ void jni_rep_close_array(CborEncoder *object, CborEncoder *arrayObject) {
 %inline %{
 /* Alt implementation of oc_rep_start_object macro */
 CborEncoder * jni_rep_start_object(CborEncoder *parent) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   CborEncoder *cbor_encoder_map = (CborEncoder *)malloc(sizeof(struct CborEncoder));
   g_err |= cbor_encoder_create_map(parent, cbor_encoder_map, CborIndefiniteLength);
   return cbor_encoder_map;
@@ -1323,7 +1323,7 @@ CborEncoder * jni_rep_start_object(CborEncoder *parent) {
 %inline %{
 /* Alt implementation of oc_rep_end_object macro */
 void jni_rep_end_object(CborEncoder *parent, CborEncoder *object) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encoder_close_container(parent, object);
   free(object);
   object = NULL;
@@ -1334,7 +1334,7 @@ void jni_rep_end_object(CborEncoder *parent, CborEncoder *object) {
 %inline %{
 /* Alt implementation of oc_rep_object_array_start_item macro */
 CborEncoder * jni_rep_object_array_start_item(CborEncoder *arrayObject) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   return jni_rep_start_object(arrayObject);
 }
 %}
@@ -1343,7 +1343,7 @@ CborEncoder * jni_rep_object_array_start_item(CborEncoder *arrayObject) {
 %inline %{
 /* Alt implementation of oc_rep_object_array_end_item macro */
 void jni_rep_object_array_end_item(CborEncoder *parentArrayObject, CborEncoder *arrayObject) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_rep_end_object(parentArrayObject, arrayObject);
 }
 %}
@@ -1352,7 +1352,7 @@ void jni_rep_object_array_end_item(CborEncoder *parentArrayObject, CborEncoder *
 %inline %{
 /* Alt implementation of oc_rep_set_object macro */
 CborEncoder * jni_rep_set_object(CborEncoder *parent, const char* key) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(parent, key, strlen(key));
   return jni_rep_start_object(parent);
 }
@@ -1362,7 +1362,7 @@ CborEncoder * jni_rep_set_object(CborEncoder *parent, const char* key) {
 %inline %{
 /* Alt implementation of oc_rep_close_object macro */
 void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   jni_rep_end_object(parent, object);
 }
 %}
@@ -1389,7 +1389,7 @@ void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
 %inline %{
 /* Alt implementation of oc_rep_set_int_array macro */
 void jni_rep_set_int_array(CborEncoder *object, const char* key, int *values, int length) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
   g_err |= cbor_encoder_create_array(object, &value_array, length);
@@ -1423,7 +1423,7 @@ void jni_rep_set_int_array(CborEncoder *object, const char* key, int *values, in
 %inline %{
 /* Alt implementation of oc_rep_set_bool_array macro */
 void jni_rep_set_bool_array(CborEncoder *object, const char* key, bool *values, int length) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
   g_err |= cbor_encoder_create_array(object, &value_array, length);
@@ -1457,7 +1457,7 @@ void jni_rep_set_bool_array(CborEncoder *object, const char* key, bool *values, 
 %inline %{
 /* Alt implementation of oc_rep_set_double_array macro */
 void jni_rep_set_double_array(CborEncoder *object, const char* key, double *values, int length) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
   g_err |= cbor_encoder_create_array(object, &value_array, length);
@@ -1473,7 +1473,7 @@ void jni_rep_set_double_array(CborEncoder *object, const char* key, double *valu
 %inline %{
 /* Alt implementation of oc_rep_set_string_array macro */
 void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_string_array_t values) {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
   g_err |= cbor_encoder_create_array(object, &value_array, CborIndefiniteLength);
@@ -1845,7 +1845,7 @@ oc_rep_t * jni_rep_get_object_array(oc_rep_t* rep, const char *key) {
 %rename(getRepError) jni_get_rep_error;
 %inline %{
 int jni_get_rep_error() {
-  OC_DBG("JNI: %s\n", __FUNCTION__);
+  OC_DBG("JNI: %s\n", __func__);
   return g_err;
 }
 %}
