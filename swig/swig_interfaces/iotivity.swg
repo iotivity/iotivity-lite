@@ -4,6 +4,95 @@
  * iotivity-lite typemaps
  * ----------------------------------------------------------------------------- */
 
+/*********************************************************************
+ * collection of code need across the project
+ *********************************************************************/
+%{
+#include "oc_collection.h"
+
+/*
+ * JNI function calls require different calling conventions for C and C++. These JCALL macros are used so
+ * that the same typemaps can be used for generating code for both C and C++. These macros are originaly from
+ * the SWIG javahead.swg. They placed here because the SWIG preprocessor does not expand macros that are
+ * within the SWIG header code insertion blocks.
+ */
+#ifdef __cplusplus
+#   define JCALL0(func, jenv) jenv->func()
+#   define JCALL1(func, jenv, ar1) jenv->func(ar1)
+#   define JCALL2(func, jenv, ar1, ar2) jenv->func(ar1, ar2)
+#   define JCALL3(func, jenv, ar1, ar2, ar3) jenv->func(ar1, ar2, ar3)
+#   define JCALL4(func, jenv, ar1, ar2, ar3, ar4) jenv->func(ar1, ar2, ar3, ar4)
+#   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) jenv->func(ar1, ar2, ar3, ar4, ar5)
+#   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6)
+#   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#else
+#   define JCALL0(func, jenv) (*jenv)->func(jenv)
+#   define JCALL1(func, jenv, ar1) (*jenv)->func(jenv, ar1)
+#   define JCALL2(func, jenv, ar1, ar2) (*jenv)->func(jenv, ar1, ar2)
+#   define JCALL3(func, jenv, ar1, ar2, ar3) (*jenv)->func(jenv, ar1, ar2, ar3)
+#   define JCALL4(func, jenv, ar1, ar2, ar3, ar4) (*jenv)->func(jenv, ar1, ar2, ar3, ar4)
+#   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5)
+#   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6)
+#   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#endif
+
+/*
+ * This struct used to hold information needed for java callbacks.
+ * When registering a callback handler from java the `JNIEnv`
+ * and the java callback handler object must be stored so they
+ * can later be used when the callback comes from C this is
+ * the `jcb_obj`.
+ *
+ * If the function used to register the callback also accepts
+ * user_data in the form of a void* the `jni_callback_data`
+ * can be passed up to the C layer so it can be used in the
+ * callback function.
+ *
+ * The `juser_data` is used to hold a java object that is passed
+ * in when registering a callback handler. This value can then be
+ * passed back upto the java callback class. Serving the same
+ * function as the C void *user_data pointer.
+ */
+typedef struct jni_callback_data_s {
+  struct jni_callback_data_s *next;
+  JNIEnv *jenv;
+  jobject jcb_obj;
+  jobject juser_data;
+} jni_callback_data;
+
+/*
+ * Container used to hold all `jni_callback_data` that is
+ * allocated dynamically. This can be used to find the
+ * memory allocated for the `jni_callback_data` if the callback
+ * is removed or unregistered. This can all so be used to clean
+ * up the allocated memory when shutting down the stack.
+ */
+OC_LIST(jni_callbacks);
+%}
+
+%typemap(jni)    void *user_data "jobject";
+%typemap(jtype)  void *user_data "Object";
+%typemap(jstype) void *user_data "Object";
+%typemap(javain) void *user_data "$javainput";
+%typemap(in)     void *user_data {
+  jobject juser_data = JCALL1(NewGlobalRef, jenv, $input);
+  JCALL1(DeleteLocalRef, jenv, $input);
+  $1 = (void*)&juser_data;
+}
+%typemap(javaout) void *user_data {
+   return $jnicall;
+}
+%typemap(out) void *user_data {
+    jni_callback_data *data = (jni_callback_data *)result;
+    jresult = data->juser_data;
+}
+
+/*********************************************************************
+ * change enums being used as bitmaps to integers for Java enums do
+ * not work as bitmaps in Java due to language constraints.
+ ********************************************************************/
 
 %typemap(jni)     oc_interface_mask_t "jint";
 %typemap(jtype)   oc_interface_mask_t "int";
@@ -24,7 +113,7 @@
 %typemap(javaout) enum transport_flags { return $jnicall; }
 
 /********************************************************************
- * oc_string_t input param - treat as String                        *
+ * oc_string_t input param - treat as String
  ********************************************************************/
 %typemap(javain) oc_string_t "$javainput"
 %typemap(javaout) oc_string_t {
@@ -84,7 +173,7 @@
 %typemap(javadirectorout) oc_string_t "$javacall"
 
 /********************************************************************
- * oc_string* as INPUT parameter                                    *
+ * oc_string* as INPUT parameter
  ********************************************************************/
 %typemap(javain) oc_string_t *INPUT "$javainput"
 %typemap(javaout) oc_string_t *INPUT{
@@ -146,7 +235,7 @@
 %typemap(javadirectorout) oc_string_t *INPUT"$javacall"
 
 /********************************************************************
- * oc_string* as OUTPUT parameter                                   *
+ * oc_string* as OUTPUT parameter
  ********************************************************************/
 %typemap(jni) oc_string_t *OUTPUT "jobjectArray"
 %typemap(jtype) oc_string_t *OUTPUT "String[]"
@@ -186,7 +275,7 @@
 }
 
 /********************************************************************
- * oc_string_array_t                                                *
+ * oc_string_array_t
  ********************************************************************/
 %typemap(jni) oc_string_array_t "jobjectArray"
 %typemap(jni) oc_string_array_t "jobjectArray"
