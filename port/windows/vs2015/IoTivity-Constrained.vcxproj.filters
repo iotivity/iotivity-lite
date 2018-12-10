@@ -325,6 +325,9 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\rsa_internal.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
