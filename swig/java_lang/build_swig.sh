@@ -4,7 +4,7 @@ rm *.c
 rm *.cxx
 rm ../iotivity-lite-eclipse-project/src/org/iotivity/*.java
 
-swig -c++ -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_api.i
+swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_api.i
 
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
 then
