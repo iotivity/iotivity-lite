@@ -19,10 +19,10 @@
 
 int jni_storage_config(const char *store) {
 #ifdef OC_SECURITY
-    OC_DBG("JNI: %s with path %s\n", __FUNCTION__, store);
+    OC_DBG("JNI: %s with path %s\n", __func__, store);
     return oc_storage_config(store);
 #else
-    OC_DBG("JNI: OC_SECURITY disabled ignoring %s with path %s\n", __FUNCTION__, store);
+    OC_DBG("JNI: OC_SECURITY disabled ignoring %s with path %s\n", __func__, store);
     return 0;
 #endif /* OC_SECURITY */
 }

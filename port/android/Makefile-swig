@@ -166,9 +166,9 @@ ${OBJDIR}/swig/oc_storage_wrap.o: ${SWIG_DIR}/oc_storage_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
 
-${OBJDIR}/swig/oc_api_wrap.o: ${SWIG_DIR}/oc_api_wrap.cxx
+${OBJDIR}/swig/oc_api_wrap.o: ${SWIG_DIR}/oc_api_wrap.c
 	@mkdir -p ${@D}
-	${CCXX} -c -o $@ $< ${CXXFLAGS} -Wno-unused-function -Wno-pointer-bool-conversion -DOC_CLIENT -DOC_SERVER
+	${CC} -c -o $@ $< ${CFLAGS} -Wno-unused-function -Wno-pointer-bool-conversion -DOC_CLIENT -DOC_SERVER
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_SWIG)
 	${CC} -shared $(OBJ_SWIG) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) ${LIBS} -lc++_shared -llog -o libiotivity-lite-jni.so
