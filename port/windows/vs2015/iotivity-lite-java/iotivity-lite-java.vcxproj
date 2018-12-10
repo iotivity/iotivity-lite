@@ -169,7 +169,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_api_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_clock_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\java_lang\oc_obt_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_storage_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\java_lang\oc_uuid_wrap.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
