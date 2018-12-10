@@ -167,7 +167,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_api_wrap.cxx" />
+    <ClCompile Include="..\..\..\..\swig\java_lang\oc_api_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_clock_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_storage_wrap.c" />
   </ItemGroup>
