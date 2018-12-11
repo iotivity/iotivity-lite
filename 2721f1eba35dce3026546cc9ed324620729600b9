@@ -139,6 +139,30 @@
       "revId": "2721f1eba35dce3026546cc9ed324620729600b9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d4d1f0ce",
+        "filename": "port/linux/ipcontext.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2018-12-11T08:17:35Z",
+      "side": 1,
+      "message": "yes. \nalthough it receives some data, it isn\u0027t meaningful\nit comes  from previous TCP_STATUS_ACCEPT",
+      "parentUuid": "9a3d3df0_34aadc70",
+      "range": {
+        "startLine": 33,
+        "startChar": 40,
+        "endLine": 33,
+        "endChar": 58
+      },
+      "revId": "2721f1eba35dce3026546cc9ed324620729600b9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
