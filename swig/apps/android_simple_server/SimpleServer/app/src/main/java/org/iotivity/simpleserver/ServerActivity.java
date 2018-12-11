@@ -1,7 +1,7 @@
 package org.iotivity.simpleserver;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -10,7 +10,9 @@ import android.widget.TextView;
 
 import org.iotivity.OCClock;
 import org.iotivity.OCMain;
+import org.iotivity.OCStorage;
 
+import java.io.File;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -44,7 +46,18 @@ public class ServerActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-//            OCStorage.storage_config("./simpleclient_creds"); // TODO: no security yet
+            File credsDir = new File(getExternalFilesDir(null), "simpleserver_creds");
+            Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
+            if (!credsDir.exists()) {
+                boolean mkDirResult = credsDir.mkdir();
+                if (mkDirResult) {
+                    Log.i(TAG, "Created credentials directory " + credsDir.getAbsolutePath());
+                } else {
+                    Log.e(TAG, "Failed to create credentials directory " + credsDir.getAbsolutePath());
+                }
+            }
+            OCStorage.storageConfig(credsDir.getAbsolutePath());
+
             MyInitHandler handler = new MyInitHandler(this);
             int initReturn = OCMain.mainInit(handler);
             if (initReturn < 0) {
