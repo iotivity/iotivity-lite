@@ -341,7 +341,7 @@ discovered at the same time the user will have to figure out which UUID belongs 
    This will give instruction for using wildcard provisioning.
    - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
      device from the list.
-   - Type `0` **Enter** for an _auth-crypt_ ACE
+   - Type `1` **Enter** for an _auth-crypt_ ACE
    - Type `1` **Enter** in response to `Enter number of resources in this ACE:`
    - Type `0` **Enter** in response to `Have resource href? [0-No, 1-Yes]:`
    - Type `1` **Enter** in response to `Set wildcard resource? [0-No, 1-Yes]:`
