@@ -113,3 +113,24 @@ index 359748037..dd53c99e8 100644
                  while ( name_cur != NULL )
                  {
                      name_prv = name_cur;
+diff --git a/library/x509write_crt.c b/library/x509write_crt.c
+index da9a4b4b6..0be3ea1f7 100644
+--- a/library/x509write_crt.c
++++ b/library/x509write_crt.c
+@@ -279,13 +279,13 @@ static int x509write_crt_set_subject_alt_name( unsigned char **c, unsigned char
+     switch ( name->name_type )
+     {
+     case MBEDTLS_X509_GENERALNAME_DNSNAME:
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_raw_buffer( c, buf, name->dns_name.p, name->dns_name.len ) );
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, name->dns_name.len ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_raw_buffer( c, buf, name->name.dns_name.p, name->name.dns_name.len ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, name->name.dns_name.len ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( c, buf, MBEDTLS_ASN1_CONTEXT_SPECIFIC | 2 ) );
+         break;
+ 
+     case MBEDTLS_X509_GENERALNAME_DIRECTORYNAME:
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_names( c, buf, name->directory_name ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_names( c, buf, name->name.directory_name ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, len ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( c, buf,
+                                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 4 ) );

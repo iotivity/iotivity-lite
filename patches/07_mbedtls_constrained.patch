@@ -1,8 +1,8 @@
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedffdd..e4861dba6 100644
+index 79eedffdd..cb25c6620 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2817 +1,143 @@
+@@ -1,2817 +1,148 @@
 -/**
 - * \file config.h
 - *
@@ -58,7 +58,10 @@ index 79eedffdd..e4861dba6 100644
 - * This section sets system specific settings.
 - * \{
 - */
--
++#include <oc_config.h>
++#include "port/oc_connectivity.h"
++#include "port/oc_assert.h"
+ 
 -/**
 - * \def MBEDTLS_HAVE_ASM
 - *
@@ -125,7 +128,20 @@ index 79eedffdd..e4861dba6 100644
 - *
 - * Comment if your system does not support time functions
 - */
--#define MBEDTLS_HAVE_TIME
++/* System support */
++#define MBEDTLS_PLATFORM_C
++#define MBEDTLS_PLATFORM_MEMORY
++
++#ifdef OC_DYNAMIC_ALLOCATION
++#include <stdlib.h>
++#define MBEDTLS_PLATFORM_STD_CALLOC calloc
++#define MBEDTLS_PLATFORM_STD_FREE free
++#else /* OC_DYNAMIC_ALLOCATION */
++#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
++#endif /* !OC_DYNAMIC_ALLOCATION */
++#ifdef OC_PKI
++#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__) || defined(__linux) || defined(__ANDROID__)
+ #define MBEDTLS_HAVE_TIME
 -
 -/**
 - * \def MBEDTLS_HAVE_TIME_DATE
@@ -137,8 +153,13 @@ index 79eedffdd..e4861dba6 100644
 - *
 - * Comment if your system does not have a correct clock.
 - */
--#define MBEDTLS_HAVE_TIME_DATE
--
+ #define MBEDTLS_HAVE_TIME_DATE
++#endif /* One of the major OSs */
++#endif /* OC_PKI */
++#define MBEDTLS_PLATFORM_EXIT_ALT
++#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
++#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
+ 
 -/**
 - * \def MBEDTLS_PLATFORM_MEMORY
 - *
@@ -543,10 +564,7 @@ index 79eedffdd..e4861dba6 100644
 -#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
 -#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
 -#define MBEDTLS_CIPHER_PADDING_ZEROS
-+#include <oc_config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
- 
+-
 -/**
 - * \def MBEDTLS_ENABLE_WEAK_CIPHERSUITES
 - *
@@ -598,10 +616,7 @@ index 79eedffdd..e4861dba6 100644
 -#define MBEDTLS_ECP_DP_BP384R1_ENABLED
 -#define MBEDTLS_ECP_DP_BP512R1_ENABLED
 -#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-+/* System support */
-+#define MBEDTLS_PLATFORM_C
-+#define MBEDTLS_PLATFORM_MEMORY
- 
+-
 -/**
 - * \def MBEDTLS_ECP_NIST_OPTIM
 - *
@@ -612,14 +627,7 @@ index 79eedffdd..e4861dba6 100644
 - * Comment this macro to disable NIST curves optimisation.
 - */
 -#define MBEDTLS_ECP_NIST_OPTIM
-+#ifdef OC_DYNAMIC_ALLOCATION
-+#include <stdlib.h>
-+#define MBEDTLS_PLATFORM_STD_CALLOC calloc
-+#define MBEDTLS_PLATFORM_STD_FREE free
-+#else /* OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C
-+#endif /* !OC_DYNAMIC_ALLOCATION */
- 
+-
 -/**
 - * \def MBEDTLS_ECDSA_DETERMINISTIC
 - *
@@ -633,10 +641,7 @@ index 79eedffdd..e4861dba6 100644
 - * Comment this macro to disable deterministic ECDSA.
 - */
 -#define MBEDTLS_ECDSA_DETERMINISTIC
-+#define MBEDTLS_PLATFORM_EXIT_ALT
-+#define MBEDTLS_PLATFORM_STD_EXIT oc_exit
-+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
- 
+-
 -/**
 - * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 - *
@@ -2654,9 +2659,7 @@ index 79eedffdd..e4861dba6 100644
 - * This module is the basis for creating X.509 certificates and CSRs.
 - */
 -#define MBEDTLS_X509_CREATE_C
-+/* Save RAM at the expense of ROM */
-+#define MBEDTLS_AES_ROM_TABLES
- 
+-
 -/**
 - * \def MBEDTLS_X509_CRT_WRITE_C
 - *
@@ -2669,9 +2672,7 @@ index 79eedffdd..e4861dba6 100644
 - * This module is required for X.509 certificate creation.
 - */
 -#define MBEDTLS_X509_CRT_WRITE_C
-+/* Save some RAM by adjusting to your exact needs */
-+#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
- 
+-
 -/**
 - * \def MBEDTLS_X509_CSR_WRITE_C
 - *
@@ -2684,7 +2685,9 @@ index 79eedffdd..e4861dba6 100644
 - * This module is required for X.509 certificate request writing.
 - */
 -#define MBEDTLS_X509_CSR_WRITE_C
--
++/* Save RAM at the expense of ROM */
++#define MBEDTLS_AES_ROM_TABLES
+ 
 -/**
 - * \def MBEDTLS_XTEA_C
 - *
@@ -2696,7 +2699,9 @@ index 79eedffdd..e4861dba6 100644
 -#define MBEDTLS_XTEA_C
 -
 -/* \} name SECTION: mbed TLS modules */
--
++/* Save some RAM by adjusting to your exact needs */
++#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
+ 
 -/**
 - * \name SECTION: Module configuration options
 - *
