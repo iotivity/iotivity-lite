@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_b45f0c72",
+        "filename": "swig/java_lang/build-jni-so.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-11T00:46:26Z",
+      "side": 1,
+      "message": "If -std\u003dgnu99 is not required above, it should be deleted here also and the line below.",
+      "revId": "b389529de436db6bd8f5f2008dfeb019460ed449",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
