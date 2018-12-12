@@ -95,6 +95,7 @@ typedef enum {
   OCF_SEC_CRED,
 #ifdef OC_PKI
   OCF_SEC_SP,
+  OCF_SEC_CSR,
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
   OCF_D
