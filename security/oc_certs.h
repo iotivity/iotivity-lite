@@ -42,6 +42,8 @@ int oc_certs_validate_end_entity_cert(mbedtls_x509_crt *ee_cert);
 int oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
                                    mbedtls_x509_crt *child);
 
+int oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len);
+
 #ifdef __cplusplus
 }
 #endif

@@ -17,8 +17,14 @@
 #ifdef OC_PKI
 
 #include "oc_certs.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
 #include "mbedtls/oid.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/x509_csr.h"
+#include "oc_core_res.h"
 #include "oc_helpers.h"
+#include "oc_keypair.h"
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
@@ -64,7 +70,7 @@ oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
 
   oc_alloc_string(subjectuuid, OC_UUID_LEN);
   memcpy(oc_string(*subjectuuid), uuid, OC_UUID_LEN - 1);
-  memcpy(oc_string(*subjectuuid) + subject->val.len, "\0", 1);
+  oc_string(*subjectuuid)[OC_UUID_LEN - 1] = '\0';
 
   return 0;
 }
@@ -408,6 +414,101 @@ oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
              child->issuer_raw.len) == 0) {
     return 0;
   }
+  return -1;
+}
+
+int
+oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
+{
+  oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
+  if (!kp) {
+    OC_ERR("could not find public/private key pair on device %d", device);
+    return -1;
+  }
+
+  oc_uuid_t *uuid = oc_core_get_device_id(device);
+  if (!uuid) {
+    OC_ERR("could not obtain UUID for device %d", device);
+    return -1;
+  }
+
+  char subject[50];
+  sprintf(subject, "CN=" UUID_PREFIX);
+  oc_uuid_to_str(uuid, subject + UUID_PREFIX_LEN + 3, 37);
+
+  mbedtls_ctr_drbg_context ctr_drbg;
+  mbedtls_ctr_drbg_init(&ctr_drbg);
+
+  mbedtls_entropy_context entropy;
+  mbedtls_entropy_init(&entropy);
+
+  mbedtls_pk_context pk;
+  mbedtls_pk_init(&pk);
+
+  int ret =
+    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_KEYPAIR_PUBKEY_SIZE);
+  if (ret != 0) {
+    OC_ERR("could not parse public key for device %d", device);
+    goto generate_csr_error;
+  }
+
+  ret = mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0);
+  if (ret != 0) {
+    OC_ERR("could not parse private key for device %d", device);
+    goto generate_csr_error;
+  }
+
+#define PERSONALIZATION_STRING "IoTivity-Lite-CSR-Generation"
+
+  ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                              (const unsigned char *)PERSONALIZATION_STRING,
+                              sizeof(PERSONALIZATION_STRING));
+
+#undef PERSONALIZATION_STRING
+
+  if (ret < 0) {
+    OC_ERR("error initializing source of entropy");
+    goto generate_csr_error;
+  }
+
+  mbedtls_x509write_csr request;
+  memset(&request, 0, sizeof(mbedtls_x509write_csr));
+  mbedtls_x509write_csr_init(&request);
+  mbedtls_x509write_csr_set_md_alg(&request, MBEDTLS_MD_SHA256);
+  mbedtls_x509write_csr_set_key(&request, &pk);
+
+  ret = mbedtls_x509write_csr_set_subject_name(&request, subject);
+  if (ret != 0) {
+    OC_ERR("could not write subject name into CSR for device %d", device);
+    goto generate_csr_error;
+  }
+
+  mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
+
+  ret = mbedtls_x509write_csr_der(&request, csr, csr_len,
+                                  mbedtls_ctr_drbg_random, &ctr_drbg);
+
+  if (ret <= 0) {
+    OC_ERR("could not write CSR for device %d into buffer", device);
+    goto generate_csr_error;
+  }
+  memmove(csr, csr + csr_len - ret, ret);
+
+  mbedtls_pk_free(&pk);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  mbedtls_entropy_free(&entropy);
+  mbedtls_x509write_csr_free(&request);
+
+  OC_DBG("successfully generated CSR for device %d", device);
+
+  return ret;
+
+generate_csr_error:
+  mbedtls_pk_free(&pk);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  mbedtls_entropy_free(&entropy);
+  mbedtls_x509write_csr_free(&request);
+
   return -1;
 }
 
