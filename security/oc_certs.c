@@ -246,7 +246,7 @@ oc_certs_validate_root_cert(mbedtls_x509_crt *cert)
 
   /* keyCertSign (5) & cRLSign (6) bits SHALL be the only bits enabled */
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
+    (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -291,7 +291,7 @@ oc_certs_validate_intermediate_cert(mbedtls_x509_crt *cert)
 
   /* keyCertSign (5) & cRLSign (6) bits SHALL be the only bits enabled */
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
+    (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
