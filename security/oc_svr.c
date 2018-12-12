@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
+#include "oc_csr.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
@@ -59,6 +60,9 @@ oc_sec_create_svr(void)
     oc_core_populate_resource(OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_BASELINE,
                               OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
                               get_sp, 0, post_sp, 0, 1, "oic.r.sp");
+    oc_core_populate_resource(OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
+                              get_csr, 0, 0, 0, 1, "oic.r.csr");
 #endif /* OC_PKI */
   }
 }
