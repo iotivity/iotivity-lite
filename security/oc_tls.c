@@ -614,16 +614,16 @@ oc_tls_refresh_identity_certs(void)
 }
 
 void
-oc_tls_remove_identity_cert(oc_sec_cred_t *cred, size_t device)
+oc_tls_remove_identity_cert(oc_sec_cred_t *cred)
 {
   oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(identity_certs);
-  while (cert != NULL && cert->cred != cred && cert->device != device) {
+  while (cert != NULL && cert->cred != cred) {
     cert = cert->next;
   }
   if (cert) {
+    oc_list_remove(identity_certs, cert);
     mbedtls_x509_crt_free(&cert->cert);
     mbedtls_pk_free(&cert->pk);
-    oc_list_remove(identity_certs, cert);
     oc_memb_free(&identity_certs_s, cert);
   }
 }
@@ -875,12 +875,12 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
    * chain for this device based on device ownership status.
    */
   if (doxm->owned &&
-      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) != 0) {
-    OC_WRN("could not configure identity cert chain");
+      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
   } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) != 0) {
     OC_WRN("could not configure mfg cert chain");
   }
   selected_mfg_cred = -1;
+  selected_id_cred = -1;
 #endif /* OC_PKI */
   return 0;
 }
