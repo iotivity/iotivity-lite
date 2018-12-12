@@ -524,8 +524,8 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
     type = OCF_INTROSPECTION_DATA;
   }
 #ifdef OC_SECURITY
-  else if ((strlen(uri) - skip) == 11 &&
-           memcmp(uri + skip, "oic/sec/doxm", 11) == 0) {
+  else if ((strlen(uri) - skip) == 12 &&
+           memcmp(uri + skip, "oic/sec/doxm", 12) == 0) {
     type = OCF_SEC_DOXM;
   } else if ((strlen(uri) - skip) == 12 &&
              memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
@@ -533,10 +533,19 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   } else if ((strlen(uri) - skip) == 12 &&
              memcmp(uri + skip, "oic/sec/acl2", 12) == 0) {
     type = OCF_SEC_ACL;
-  } else if ((strlen(uri) - skip) == 11 &&
-             strncmp(uri + skip, "oic/sec/cred", 11) == 0) {
+  } else if ((strlen(uri) - skip) == 12 &&
+             strncmp(uri + skip, "oic/sec/cred", 12) == 0) {
     type = OCF_SEC_CRED;
   }
+#ifdef OC_PKI
+  else if ((strlen(uri) - skip) == 10 &&
+           strncmp(uri + skip, "oic/sec/sp", 10) == 0) {
+    type = OCF_SEC_SP;
+  } else if ((strlen(uri) - skip) == 11 &&
+             strncmp(uri + skip, "oic/sec/csr", 11) == 0) {
+    type = OCF_SEC_CSR;
+  }
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
   else {
     return NULL;
