@@ -22,6 +22,7 @@
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_doxm.h"
+#include "oc_keypair.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
 #include "oc_tls.h"
@@ -119,7 +120,7 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
   if (cred->credtype == OC_CREDTYPE_CERT) {
     if (cred->credusage != OC_CREDUSAGE_TRUSTCA &&
         cred->credusage != OC_CREDUSAGE_MFG_TRUSTCA) {
-      oc_tls_remove_identity_cert(cred, device);
+      oc_tls_remove_identity_cert(cred);
     } else {
       oc_tls_remove_trust_anchor(cred);
     }
@@ -264,17 +265,32 @@ oc_sec_add_new_cred(size_t device, int credid, oc_sec_credtype_t credtype,
     return -1;
   }
 
-  /* remove duplicate cred, if one exists.  */
-  if (!unique_credid(credid, device)) {
-    oc_sec_remove_cred_by_credid(credid, device);
-  }
-
   oc_uuid_t subject;
   if (subjectuuid[0] == '*') {
     memset(&subject, 0, sizeof(oc_uuid_t));
     subject.id[0] = '*';
   } else {
     oc_str_to_uuid(subjectuuid, &subject);
+  }
+
+#ifdef OC_PKI
+  oc_ecdsa_keypair_t *kp = NULL;
+
+  if (credusage == OC_CREDUSAGE_IDENTITY_CERT && privatedata_size == 0) {
+    oc_uuid_t *uuid = oc_core_get_device_id(device);
+    if (memcmp(uuid->id, subject.id, 16) != 0) {
+      return -1;
+    }
+    kp = oc_sec_get_ecdsa_keypair(device);
+    if (!kp) {
+      return -1;
+    }
+  }
+#endif /* OC_PKI */
+
+  /* remove duplicate cred, if one exists.  */
+  if (!unique_credid(credid, device)) {
+    oc_sec_remove_cred_by_credid(credid, device);
   }
 
 #ifdef OC_PKI
@@ -359,6 +375,10 @@ oc_sec_add_new_cred(size_t device, int credid, oc_sec_credtype_t credtype,
       uint8_t key[24];
       memcpy(key, privatedata, 24);
       int key_size = oc_base64_decode(key, 24);
+      if (key_size < 0) {
+        oc_sec_remove_cred(cred, device);
+        return -1;
+      }
       oc_new_string(&cred->privatedata.data, (const char *)key, key_size);
       privatedata_encoding = OC_ENCODING_RAW;
     } else {
@@ -367,6 +387,13 @@ oc_sec_add_new_cred(size_t device, int credid, oc_sec_credtype_t credtype,
     }
     cred->privatedata.encoding = privatedata_encoding;
   }
+#ifdef OC_PKI
+  else if (kp) {
+    oc_new_string(&cred->privatedata.data, (const char *)kp->private_key,
+                  kp->private_key_size);
+    cred->privatedata.encoding = OC_ENCODING_DER;
+  }
+#endif /* OC_PKI */
 
   /* roleid */
   if (role) {
