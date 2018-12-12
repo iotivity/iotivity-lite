@@ -56,7 +56,7 @@ void oc_tls_select_identity_cert_chain(int credid);
 
 /* Internal interface for refreshing identity certficate chains */
 void oc_tls_refresh_identity_certs(void);
-void oc_tls_remove_identity_cert(oc_sec_cred_t *cred, size_t device);
+void oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
 
 /* Internal interface for refreshing trust anchor credentials */
 void oc_tls_refresh_trust_anchors(void);
