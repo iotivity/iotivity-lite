@@ -22,6 +22,30 @@
       "revId": "7ef1a5529238d41daf27cb8fd603c668308f830c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d7ca92a0",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/java/org/iotivity/simpleserver/ServerActivity.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-13T21:05:37Z",
+      "side": 1,
+      "message": "i changed the define in storage.c from 64 to 128.\non the device i was testing the path is\n\n/storage/emulated/0/Android/data/org.iotivity.simpleserver/files/simpleserver_creds/",
+      "parentUuid": "9a3d3df0_57e7a240",
+      "range": {
+        "startLine": 58,
+        "startChar": 36,
+        "endLine": 58,
+        "endChar": 62
+      },
+      "revId": "7ef1a5529238d41daf27cb8fd603c668308f830c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
