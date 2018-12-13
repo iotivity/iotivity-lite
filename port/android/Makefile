@@ -51,7 +51,7 @@
 # or invoke like this: make NDK_HOME=/opt/android-ndk ANDROID_API=24
 
 # Location of the installation directory and the API level.
-ANDROID_API := 19
+ANDROID_API := 23
 ifeq (${NDK_HOME},)
 ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
 else
@@ -107,7 +107,7 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
-CFLAGS?=-fPIE -pie -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -D__ANDROID_API__=${ANDROID_API}
+CFLAGS?=-fPIE -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -D__ANDROID_API__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o,$(notdir $(SRC:.c=.o))))
@@ -152,6 +152,8 @@ endif
 ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
+
+CFLAGS += -DLONG_BIT=64
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		    libiotivity-constrained-client-server.a
