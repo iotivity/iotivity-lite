@@ -170,7 +170,7 @@ st_easy_setup_stop(void)
 
 int
 st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
-            const char *sid)
+            const char *setup_id)
 {
   unsigned char mac[6] = { 0 };
 
@@ -180,7 +180,7 @@ st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
   }
 
   snprintf(ssid, MAX_SSID_LEN, "%s_%s%s%s%d%02X%02X", device_name,
-           EASYSETUP_TAG, mnid, sid, 0, mac[4], mac[5]);
+           EASYSETUP_TAG, mnid, setup_id, 0, mac[4], mac[5]);
 
   st_print_log("[ST_ES] ssid : %s\n", ssid);
   return 0;

@@ -654,9 +654,12 @@ st_manager_stack_init(void)
 
     char ssid[MAX_SSID_LEN + 1];
     st_specification_t *spec = st_data_mgr_get_spec_info();
+    st_configuration_t *conf = st_data_mgr_get_config_info();
     if (st_gen_ssid(ssid, oc_string(spec->device.device_name),
                     oc_string(spec->platform.manufacturer_name),
-                    oc_string(spec->platform.model_number)) != 0) {
+                    oc_string(conf->easy_setup.connectivity.soft_ap.setup_id))
+        != 0) 
+    {
       return -1;
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
@@ -986,9 +989,12 @@ st_manager_stack_start(void)
 
     char ssid[MAX_SSID_LEN + 1];
     st_specification_t *spec = st_data_mgr_get_spec_info();
+    st_configuration_t *conf = st_data_mgr_get_config_info();
     if (st_gen_ssid(ssid, oc_string(spec->device.device_name),
                     oc_string(spec->platform.manufacturer_name),
-                    oc_string(spec->platform.model_number)) != 0) {
+                    oc_string(conf->easy_setup.connectivity.soft_ap.setup_id))
+        != 0)
+    {
       return -1;
     }
     st_turn_on_soft_AP(ssid, SOFT_AP_PWD, SOFT_AP_CHANNEL);
