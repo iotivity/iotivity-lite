@@ -23,16 +23,19 @@
 extern "C" {
 #endif
 
-int oc_pki_add_mfg_cert(size_t device, const char *cert, size_t cert_size,
-                        const char *key, size_t key_size);
+int oc_pki_add_mfg_cert(size_t device, const unsigned char *cert,
+                        size_t cert_size, const unsigned char *key,
+                        size_t key_size);
 
 int oc_pki_add_mfg_intermediate_cert(size_t device, int credid,
-                                     const char *cert, size_t cert_size);
+                                     const unsigned char *cert,
+                                     size_t cert_size);
 
-int oc_pki_add_mfg_trust_anchor(size_t device, const char *cert,
+int oc_pki_add_mfg_trust_anchor(size_t device, const unsigned char *cert,
                                 size_t cert_size);
 
-int oc_pki_add_trust_anchor(size_t device, const char *cert, size_t cert_size);
+int oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
+                            size_t cert_size);
 
 void oc_pki_set_security_profile(size_t device,
                                  oc_sp_types_t supported_profiles,
