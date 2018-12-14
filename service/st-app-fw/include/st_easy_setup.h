@@ -43,7 +43,7 @@ int st_is_easy_setup_finish(void);
 int st_easy_setup_start(sc_properties *vendor_props, st_easy_setup_cb_t cb);
 void st_easy_setup_stop(void);
 int st_gen_ssid(char *ssid, const char *device_name, const char *mnid,
-                const char *sid);
+                const char *setup_id);
 
 #ifdef __cplusplus
 }

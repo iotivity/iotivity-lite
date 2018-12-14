@@ -112,7 +112,6 @@ typedef struct
 {
   struct st_easy_setup_info_t
   {
-#ifdef ST_CONF_ENABLED
     struct st_conn_info_t
     {
       int type;
@@ -122,7 +121,6 @@ typedef struct
         bool artik;
       } soft_ap;
     } connectivity;
-#endif /* ST_CONF_ENABLED */
     int ownership_transfer_method;
   } easy_setup;
 #ifdef ST_CONF_ENABLED

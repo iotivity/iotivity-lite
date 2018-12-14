@@ -590,7 +590,6 @@ st_decode_configuration(oc_rep_t *conf_rep)
     st_print_log("[ST_DM] can't get easy setup data\n");
     goto error;
   }
-#ifdef ST_CONF_ENABLED
   oc_rep_t *conn_rep = NULL, *softap_rep = NULL;
   char *str_value = NULL;
   size_t size = 0;
@@ -614,7 +613,6 @@ st_decode_configuration(oc_rep_t *conf_rep)
   if (oc_rep_get_bool(softap_rep, ST_CONF_SOFTAP_ARTIK_KEY, &bool_value)) {
     conf->easy_setup.connectivity.soft_ap.artik = bool_value;
   }
-#endif /* ST_CONF_ENABLED */
   if (oc_rep_get_int(conf_es_rep, ST_CONF_ES_OTM_KEY, &int_value)) {
 #ifdef OC_SECURITY
     if (!check_valid_otm_method(int_value)) {
