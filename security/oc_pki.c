@@ -25,7 +25,7 @@
 #include "port/oc_connectivity.h"
 
 static int
-pki_add_intermediate_cert(size_t device, int credid, const char *cert,
+pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
                           size_t cert_size, oc_sec_credusage_t credusage)
 {
   OC_DBG("attempting to add an intermediate certificate");
@@ -47,7 +47,7 @@ pki_add_intermediate_cert(size_t device, int credid, const char *cert,
   const char *pem_begin = "-----BEGIN ";
   if (cert_size > strlen(pem_begin) &&
       memcmp(cert, pem_begin, strlen(pem_begin)) == 0) {
-    cert_size = strlen(cert) + 1;
+    cert_size = strlen((const char *)cert) + 1;
   }
   ret = mbedtls_x509_crt_parse(&int_ca, (const unsigned char *)cert, cert_size);
   if (ret < 0) {
@@ -128,9 +128,9 @@ pki_add_intermediate_cert(size_t device, int credid, const char *cert,
 }
 
 static int
-pki_add_identity_cert(size_t device, const char *cert, size_t cert_size,
-                      const char *key, size_t key_size,
-                      oc_sec_credusage_t credusage)
+pki_add_identity_cert(size_t device, const unsigned char *cert,
+                      size_t cert_size, const unsigned char *key,
+                      size_t key_size, oc_sec_credusage_t credusage)
 {
   OC_DBG("attempting to add an identity certificate chain");
 
@@ -140,11 +140,11 @@ pki_add_identity_cert(size_t device, const char *cert, size_t cert_size,
   const char *pem_begin = "-----BEGIN ";
   if (cert_size > strlen(pem_begin) &&
       memcmp(cert, pem_begin, strlen(pem_begin)) == 0) {
-    cert_size = strlen(cert) + 1;
+    cert_size = strlen((const char *)cert) + 1;
   }
   if (key_size > strlen(pem_begin) &&
       memcmp(key, pem_begin, strlen(pem_begin)) == 0) {
-    key_size = strlen(key) + 1;
+    key_size = strlen((const char *)key) + 1;
   }
 
   /* Parse identity cert's private key */
@@ -234,23 +234,23 @@ pki_add_identity_cert(size_t device, const char *cert, size_t cert_size,
 }
 
 int
-oc_pki_add_mfg_cert(size_t device, const char *cert, size_t cert_size,
-                    const char *key, size_t key_size)
+oc_pki_add_mfg_cert(size_t device, const unsigned char *cert, size_t cert_size,
+                    const unsigned char *key, size_t key_size)
 {
   return pki_add_identity_cert(device, cert, cert_size, key, key_size,
                                OC_CREDUSAGE_MFG_CERT);
 }
 
 int
-oc_pki_add_mfg_intermediate_cert(size_t device, int credid, const char *cert,
-                                 size_t cert_size)
+oc_pki_add_mfg_intermediate_cert(size_t device, int credid,
+                                 const unsigned char *cert, size_t cert_size)
 {
   return pki_add_intermediate_cert(device, credid, cert, cert_size,
                                    OC_CREDUSAGE_MFG_CERT);
 }
 
 static int
-pki_add_trust_anchor(size_t device, const char *cert, size_t cert_size,
+pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
                      oc_sec_credusage_t credusage)
 {
   OC_DBG("attempting to add a trust anchor");
@@ -263,7 +263,7 @@ pki_add_trust_anchor(size_t device, const char *cert, size_t cert_size,
   const char *pem_begin = "-----BEGIN ";
   if (cert_size > strlen(pem_begin) &&
       memcmp(cert, pem_begin, strlen(pem_begin)) == 0) {
-    cert_size = strlen(cert) + 1;
+    cert_size = strlen((const char *)cert) + 1;
   }
   int ret =
     mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert, cert_size);
@@ -319,14 +319,16 @@ pki_add_trust_anchor(size_t device, const char *cert, size_t cert_size,
 }
 
 int
-oc_pki_add_mfg_trust_anchor(size_t device, const char *cert, size_t cert_size)
+oc_pki_add_mfg_trust_anchor(size_t device, const unsigned char *cert,
+                            size_t cert_size)
 {
   return pki_add_trust_anchor(device, cert, cert_size,
                               OC_CREDUSAGE_MFG_TRUSTCA);
 }
 
 int
-oc_pki_add_trust_anchor(size_t device, const char *cert, size_t cert_size)
+oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
+                        size_t cert_size)
 {
   return pki_add_trust_anchor(device, cert, cert_size, OC_CREDUSAGE_TRUSTCA);
 }
