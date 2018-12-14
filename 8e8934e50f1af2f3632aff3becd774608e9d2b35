@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a3d3df0_54fcc03e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "If it happen during refresh_token, no more connection again and this will skip remove_delayed_callback.",
+      "range": {
+        "startLine": 126,
+        "startChar": 18,
+        "endLine": 126,
+        "endChar": 77
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_541de065",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "move to cloud_start_process()",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 56
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_54e5e0a6",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "why context is changed into signed_up status?\nPrevious success status and current status are used in single value, better to separate them with different status set.",
+      "range": {
+        "startLine": 180,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 60
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_34e2dc9f",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "move down after all logic in this function.",
+      "range": {
+        "startLine": 182,
+        "startChar": 2,
+        "endLine": 182,
+        "endChar": 31
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_57fcc23e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "large actions are not matched with function name \"is_retry_over\".",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 245,
+        "endChar": 31
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_d4e8d07e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "Does it require oc_set_delayed_callback(context, callback_handler, 0); ?",
+      "range": {
+        "startLine": 295,
+        "startChar": 6,
+        "endLine": 295,
+        "endChar": 65
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_f4feb437",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "This function is confused with st_cloud_manager_start. Please rename process_init_status to match with Initialized_status.",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 19
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_94ee488a",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "Is it related with session_timeout which means server response waiting? better to define separately with proper name.",
+      "range": {
+        "startLine": 328,
+        "startChar": 46,
+        "endLine": 328,
+        "endChar": 64
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_b4ed4c8e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "why is reconnecting status checked?",
+      "range": {
+        "startLine": 344,
+        "startChar": 6,
+        "endLine": 344,
+        "endChar": 66
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_74f3c473",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "Why do we check these here? Any error report for this check? or Just double check?\nBTW, If statement is true and return, what is the next step? is it right action?",
+      "range": {
+        "startLine": 343,
+        "startChar": 0,
+        "endLine": 345,
+        "endChar": 11
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3d3df0_1402383e",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2018-12-14T05:40:45Z",
+      "side": 1,
+      "message": "why it does not check the status as like sign_up and other handler?",
+      "range": {
+        "startLine": 471,
+        "startChar": 0,
+        "endLine": 471,
+        "endChar": 0
+      },
+      "revId": "8e8934e50f1af2f3632aff3becd774608e9d2b35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
