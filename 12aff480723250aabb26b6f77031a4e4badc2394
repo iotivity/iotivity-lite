@@ -157,6 +157,24 @@
       "revId": "12aff480723250aabb26b6f77031a4e4badc2394",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_3d5e4fea",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 23
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T22:05:13Z",
+      "side": 1,
+      "message": "i sent you an email with the little bit of discovery that i did",
+      "parentUuid": "5a3f45e8_7d41f70a",
+      "revId": "12aff480723250aabb26b6f77031a4e4badc2394",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
