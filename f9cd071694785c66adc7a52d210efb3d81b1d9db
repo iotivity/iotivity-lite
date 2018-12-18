@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_9d6e8395",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ResetDeviceHandler.java",
+        "patchSetId": 24
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T23:17:22Z",
+      "side": 1,
+      "message": "Should be under success case below",
+      "revId": "f9cd071694785c66adc7a52d210efb3d81b1d9db",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
