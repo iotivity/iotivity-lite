@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_bd953f8a",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtInitHandler.java",
+        "patchSetId": 20
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T18:03:58Z",
+      "side": 1,
+      "message": "initilize -\u003e initialize",
+      "revId": "8ede669108b8298639f5b5f06b0bf6113add93c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
