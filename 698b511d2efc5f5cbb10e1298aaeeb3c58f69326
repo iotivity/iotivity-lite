@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_1d871363",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 19
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T18:00:58Z",
+      "side": 1,
+      "message": "On ubuntu, I still got unsatisfied link error at runtime... The static call\n CLOCK_TICKS_PER_SECOND \u003d OCClock.OC_CLOCK_SECOND;\nmust be getting called before any of the OCMainJNI.java methods are.",
+      "parentUuid": "5a3f45e8_9dab23d6",
+      "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_7da57703",
         "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
         "patchSetId": 19
