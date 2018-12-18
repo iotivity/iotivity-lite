@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_bdaedfe5",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtInitHandler.java",
+        "patchSetId": 19
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-12-18T17:52:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_fd4a2754",
+      "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_1da0b3f3",
         "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
         "patchSetId": 19
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_9dab23d6",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 19
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-12-18T17:52:32Z",
+      "side": 1,
+      "message": "Actually this is no longer needed since we do the system.loadLibrary in the generated code from swig.\n\nGo to the iotivity-lite java code output by swig open up\n\n\"OCMainJNI.java\" you will see the loadLibrary there another in clock and other generated files.",
+      "parentUuid": "5a3f45e8_1da0b3f3",
+      "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_7da57703",
         "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
         "patchSetId": 19
@@ -47,6 +83,24 @@
       "writtenOn": "2018-12-18T17:29:13Z",
       "side": 1,
       "message": "With the threaded nature of the callbacks, the menu display can be interlaced with debug output...  Better to build the menu in a StringBuilder and have a single print.  ie\n\n\n        StringBuilder menu \u003d new StringBuilder();\n        menu.append(\"\\n################################################\\n\")\n            .append(\"OCF 1.3 Onboarding Tool\\n\")\n            .append(\"################################################\\n\")\n            .append(\"[0] Display this menu\\n\")\n            .append(\"------------------------------------------------\\n\")\n            .append(\"[1] Discover un-owned devices\\n\")\n            .append(\"[2] Discover owned devices\\n\")\n            .append(\"------------------------------------------------\\n\")\n            .append(\"[3] Take ownership of device (Just-works)\\n\")\n            .append(\"[4] Provision pair-wise credentials\\n\")\n            .append(\"[5] Provision ACE2\\n\")\n            .append(\"------------------------------------------------\\n\")\n            .append(\"[6] RESET device\\n\")\n            .append(\"------------------------------------------------\\n\")\n            .append(\"[9] Exit\\n\")\n            .append(\"################################################\\n\")\n            .append(\"\\nSelect option: \");\n        System.out.println(menu);",
+      "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_fdb8672c",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 19
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-12-18T17:52:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_7da57703",
       "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
