@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_1deef322",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 19
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2018-12-18T18:08:43Z",
+      "side": 1,
+      "message": "I missed putting the change in the oc_clock_linux and oc_clock_android it should work with commit 21 thanks for pointing the problem out on your system.  Odd that I didn\u0027t see the same error on Fedora.",
+      "parentUuid": "5a3f45e8_1d871363",
+      "revId": "698b511d2efc5f5cbb10e1298aaeeb3c58f69326",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_7da57703",
         "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
         "patchSetId": 19
