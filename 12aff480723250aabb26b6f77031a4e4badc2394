@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a3f45e8_9dc0437e",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 23
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T21:23:40Z",
+      "side": 1,
+      "message": "For thread safety\n\npublic static Set\u003cOCUuid\u003e unownedDevices \u003d Collections.synchronizedSet(new LinkedHashSet\u003cOCUuid\u003e());\npublic static Set\u003cOCUuid\u003e ownedDevices \u003d Collections.synchronizedSet(new LinkedHashSet\u003cOCUuid\u003e());\n\nalso requires\n\nimport java.util.Collections;",
+      "revId": "12aff480723250aabb26b6f77031a4e4badc2394",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_5dcfdbb0",
         "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
         "patchSetId": 23
