@@ -137,24 +137,28 @@ static void ReleaseJNIEnv(jint getEnvResult) {
  * not work as bitmaps in Java due to language constraints.
  ********************************************************************/
 
+%typemap(out)     oc_interface_mask_t "$result = (jint)$1;"
 %typemap(jni)     oc_interface_mask_t "jint";
 %typemap(jtype)   oc_interface_mask_t "int";
 %typemap(jstype)  oc_interface_mask_t "int";
 %typemap(javain)  oc_interface_mask_t "$javainput"
 %typemap(javaout) oc_interface_mask_t { return $jnicall; }
 
+%typemap(out)     oc_resource_properties_t "$result = (jint)$1;"
 %typemap(jni)     oc_resource_properties_t "jint";
 %typemap(jtype)   oc_resource_properties_t "int";
 %typemap(jstype)  oc_resource_properties_t "int";
 %typemap(javain)  oc_resource_properties_t "$javainput"
 %typemap(javaout) oc_resource_properties_t { return $jnicall; }
 
+%typemap(out)     enum transport_flags "$result = (jint)$1;"
 %typemap(jni)     enum transport_flags "jint";
 %typemap(jtype)   enum transport_flags "int";
 %typemap(jstype)  enum transport_flags "int";
 %typemap(javain)  enum transport_flags "$javainput"
 %typemap(javaout) enum transport_flags { return $jnicall; }
 
+%typemap(out)     oc_ace_permissions_t "$result = (jint)$1;"
 %typemap(jni)     oc_ace_permissions_t "jint";
 %typemap(jtype)   oc_ace_permissions_t "int";
 %typemap(jstype)  oc_ace_permissions_t "int";
