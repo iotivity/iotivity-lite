@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_7d573703",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-18T00:52:13Z",
+      "side": 1,
+      "message": "waring -\u003e warning",
+      "revId": "33a4d35b81bf5e3dd54523277326845a4f3b9a01",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
