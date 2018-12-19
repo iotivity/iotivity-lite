@@ -243,11 +243,11 @@ TEST(Security, AclGetPermission)
   EXPECT_TRUE(ace);
   oc_resource_t *r = oc_ri_get_app_resources();
   EXPECT_TRUE(r);
-  EXPECT_FALSE(oc_ace_get_permission(ace, r) != 0);
+  EXPECT_FALSE(oc_ace_get_permission(ace, r, r->interfaces) != 0);
 
   oc_resource_t *res = oc_new_resource("cooler", "/coller/1", 1, dev);
   EXPECT_TRUE(res);
-  EXPECT_TRUE(oc_ace_get_permission(ace, res) == 0);
+  EXPECT_TRUE(oc_ace_get_permission(ace, res, r->interfaces) == 0);
 
   oc_resource_t *res1 = oc_new_resource("p", "/oic/p", 1, dev);
   oc_ace_wildcard_t wc = (r->properties & OC_DISCOVERABLE)
@@ -261,9 +261,9 @@ TEST(Security, AclCheck)
 {
   oc_endpoint_t *endpoint = oc_connectivity_get_endpoints(dev);
   oc_resource_t *resource = oc_ri_get_app_resources();
-  EXPECT_FALSE(oc_sec_check_acl(OC_GET, resource, endpoint));
-  EXPECT_FALSE(oc_sec_check_acl(OC_POST, resource, endpoint));
-  EXPECT_FALSE(oc_sec_check_acl(OC_PUT, resource, endpoint));
+  EXPECT_FALSE(oc_sec_check_acl(OC_GET, resource, resource->interfaces, endpoint));
+  EXPECT_FALSE(oc_sec_check_acl(OC_POST, resource, resource->interfaces, endpoint));
+  EXPECT_FALSE(oc_sec_check_acl(OC_PUT, resource, resource->interfaces, endpoint));
 }
 TEST(Security, AclSetPostOtm)
 {
@@ -597,7 +597,7 @@ TEST(Security, CredDecode3)
 
   EXPECT_NO_THROW(add_cred3(suuid));
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   EXPECT_GT(size, 0);
   oc_rep_t *rep;
 
@@ -630,7 +630,7 @@ TEST(Security, CredDecode2)
 
   EXPECT_NO_THROW(add_cred2(suuid));
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   EXPECT_GT(size, 0);
   oc_rep_t *rep;
 
@@ -663,7 +663,7 @@ TEST(Security, CredDecode1)
 
   EXPECT_NO_THROW(add_cred1(suuid));
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   EXPECT_GT(size, 0);
   oc_rep_t *rep;
 
@@ -696,7 +696,7 @@ TEST(Security, CredDecode)
 
   EXPECT_NO_THROW(add_cred(suuid));
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   EXPECT_GT(size, 0);
   oc_rep_t *rep;
 
@@ -978,7 +978,7 @@ TEST(Security, PstatDecode)
   EXPECT_NO_THROW(oc_rep_set_text_string(root, rowneruuid, suuid));
   EXPECT_NO_THROW(oc_rep_end_root_object());
 
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   EXPECT_GT(size, 0);
   char rep_objects_alloc[150];
   oc_rep_t rep_objects_pool[150];

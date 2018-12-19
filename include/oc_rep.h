@@ -52,7 +52,13 @@ void oc_rep_reset(void);
   @brief A function to finalize the encoded CBOR buffer.
   @return int Size of encoded CBOR buffer.
 */
-int oc_rep_finalize(void);
+int oc_rep_get_encoded_payload_size(void);
+
+/**
+  @brief A function to get encoded CBOR buffer.
+  @return encoded CBOR buffer.
+*/
+const uint8_t *oc_rep_get_encoder_buf(void);
 
 #define oc_rep_object(name) &name##_map
 #define oc_rep_array(name) &name##_array

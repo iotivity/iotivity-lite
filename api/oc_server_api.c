@@ -68,7 +68,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 static int
 response_length(void)
 {
-  int size = oc_rep_finalize();
+  int size = oc_rep_get_encoded_payload_size();
   return (size <= 2) ? 0 : size;
 }
 
@@ -418,7 +418,11 @@ oc_send_separate_response(oc_separate_response_t *handle,
       coap_transaction_t *t = coap_new_transaction(cur_mid, &cur->endpoint);
       if (t) {
         t->message->length = coap_serialize_message(response, t->message);
-        coap_send_transaction(t);
+        if (t->message->length > 0) {
+          coap_send_transaction(t);
+        } else {
+          coap_clear_transaction(t);
+        }
       }
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
