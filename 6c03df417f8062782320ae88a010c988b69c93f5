@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_1d943336",
+        "filename": "swig/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2018-12-20T22:11:10Z",
+      "side": 1,
+      "message": "make_standalone_toolchain",
+      "revId": "6c03df417f8062782320ae88a010c988b69c93f5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
