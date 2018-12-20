@@ -29,11 +29,11 @@ To use this code you will need the following:
   - C and C++ build tool for your desired system
 
 ### Get git
-Git can be obtained for Windows [here](https://git-scm.com/download/win).
-
 It can be installed on Ubuntu Linux using the following command.
 
     sudo apt-get install git
+
+Git can be obtained for Windows [here](https://git-scm.com/download/win).
 
 ### Get Iotivity-Lite
 Checkout IoTivity-lite git project run the following command to get a anonymous copy of
@@ -88,6 +88,38 @@ Install OpenJDK on Fedora Linux
     sudo alternatives --config java
 
 ### C Build tools
+#### Android
+Download Android NDK
+
+https://developer.android.com/ndk/downloads/index.html
+
+Unzip downloaded package.
+
+    cd <NDK>/build/tools
+    ./make_standalone_toolchain.py --arch <architecture> --api <level> --install-dir <path>
+
+valid values for `--arch`
+ - arm
+ - arm64
+ - x86
+ - x86_64
+
+The `make_standalone_toolchain` script only supports api level 16 and newer. We recomend using api
+level 23 or newer.
+
+For example:
+
+    ./make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
+
+For further setup see:
+
+https://developer.android.com/ndk/guides/standalone_toolchain.html
+
+#### Linux
+For Ubuntu Linux GCC compiler was used
+
+    sudo apt-get build-essential
+
 #### Windows
 For developement on Windows Visual Studio 2015 was used.  The Visual Studio solution files have
 been tested in newer version of Visual Studio and have been found to work.  Visual studio IDE
@@ -96,16 +128,13 @@ find that the compiler does not work please give us feed back.
 
 Download Visual Studio [here](https://visualstudio.microsoft.com/).
 
-#### Linux
-For Ubuntu Linux GCC compiler was used
-
-    sudo apt-get build-essential
-
 ### Verify installation of needed tools
 The scripts used assume all the needed tools are on PATH and are accessible without knowing the
 location of the tool.
 
-Run the following to verify each tool
+Run the following to verify each tool.  At this time there are no known issues limiting users to
+the same version of the tools as were used for developement.  Feel free to use the latest verson of
+all the developement tools.
 
 ---
 bash shell (windows only) For me this was installed with git
@@ -155,6 +184,68 @@ example of expected output
 
 Building
 =================================================
+### Building for Android
+Navigate to `<iotivity-lite>/swig/java_lang`
+Get SWIG to generate the Java and JNI code:
+
+    ./build_swig.sh android
+
+Build `iotivity-lite.jar`:
+
+    ./build-iotivity-lite.sh
+
+Now copy the `iotivity-lite.jar` to the Android app libs directory for each project:
+
+    cp -v iotivity-lite.jar ../apps/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
+    cp -v iotivity-lite.jar ../apps/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
+
+Note that these commands are in the file `build-iotivity-lite.sh` and can be uncommented-out.
+
+To build the `libiotivity-lite-jni.so` shared object library for Android cd to
+
+    cd <iotivity-lite>/android/port
+
+This Makefile-swig uses then the Android NDK that was installed in the **C Build Tools** section
+above.
+
+Either set ANDROID_API and ANDROID_BASE in the Makefile-swig  or invoke like this:
+
+    make NDK_HOME=/opt/android-ndk ANDROID_API=23
+
+Example Usage:
+
+    make -f Makefile-swig DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 DEBUG=1
+
+or
+
+    make NDK_HOME=~/android-arm-23 ANDROID_API=23 -f Makefile-swig DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 DEBUG=1
+
+Copy the libiotivity-lite-jni.so to the appropriate jniLibs sub-directories for each project:
+
+    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
+    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
+
+The Makefile-swig also contains a version of these same build instructions.
+
+### Building for Linux
+Navigate to `<iotivity-lite>/swig/java_lang`
+Get SWIG to generate the Java and JNI code:
+
+    ./build_swig.sh linux
+
+This will generate several C files in the same directory as the `build_swig` script.  It will also
+generate many `*.java` files in the
+`<iotivity-lite>/swig/iotivity-lite-eclipse-project/src/org/iotivity` directory.  It will also
+copy the files found in `<iotivity-lite>/swig/oc_java` eclipe-project directory.
+
+Build the JNI shared library `libiotivity-lite-jni.so`:
+
+    ./build-jni-so.sh
+
+Build `iotivity-lite.jar`:
+
+    ./build-iotivity-lite.sh
+
 ### Building for Windows
 Navigate to `<iotivity-lite>/swig/java_lang`
 Get SWIG to generate the Java and JNI code:
@@ -162,10 +253,9 @@ Get SWIG to generate the Java and JNI code:
     sh build_swig.sh
 
 This will generate several C and C++ files in the same directory as the `build_swig` script.  It
-will also generate many `*.java` files in the 
-`<iotivity-lite>/swig/iotivity-lite-eclipse-project/src/org/iotivity`
-directory.  It will also copy the files found in `<iotivity-lite>/swig/oc_java` eclipe-project
-directory.
+will also generate many `*.java` files in the
+`<iotivity-lite>/swig/iotivity-lite-eclipse-project/src/org/iotivity` directory.  It will also
+copy the files found in `<iotivity-lite>/swig/oc_java` eclipe-project directory.
 
 Build the JNI shared library:
 
@@ -194,79 +284,12 @@ Build `iotivity-lite.jar` file:
 
     sh build-iotivity-lite.sh
 
-### Building for Linux
-Navigate to `<iotivity-lite>/swig/java_lang`
-Get SWIG to generate the Java and JNI code:
-
-    ./build_swig.sh
-
-This will generate several C and C++ files in the same directory as the `build_swig` script.  It
-will also generate many `*.java` files in the
-`<iotivity-lite>/swig/iotivity-lite-eclipse-project/src/org/iotivity` directory.  It will also
-copy the files found in `<iotivity-lite>/swig/oc_java` eclipe-project directory.
-
-Build the JNI shared library `libiotivity-lite-jni.so`:
-
-    ./build-jni-so.sh
-
-Build `iotivity-lite.jar`:
-
-    ./build-iotivity-lite.sh
-
-### Building for Android
-Follow the steps for Linux to generate the Java and JNI code and build the `iotivity-lite.jar` i.e.
-
-    ./build_swig.sh
-
-    ./build-iotivity-lite.sh
-
-Now copy the `iotivity-lite.jar` to the Android app libs directory:
-
-    cp -v iotivity-lite.jar ../apps/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
-    cp -v iotivity-lite.jar ../apps/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
-
-Note that these commands are in the file `build-iotivity-lite.sh` and can be uncommented-out.
-
-
-To build the `libiotivity-lite-jni.so` shared object library for Android cd to
-`<iotivity-lite>/android/port` and see the instructions in Makefile-swig.
-
 Testing and Verifying
 =================================================
-All samples have the default out of the box behavior of IoTivity which means they are are not 
+All samples have the default out of the box behavior of IoTivity which means they are are not
 onboarded or provisioned.  The default security will prevent the samples from communicating with
 one another.  See the following section **Onboarding and Provisioning** for instructions on using
 the onboarding tool that is part of iotivity-lite.
-
-### Building and Running Samples Windows
-A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
-
-The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
-following commands.
-
-    sh build-simple-server-lite.sh
-    run-simple-server-lite.cmd
-
-The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
-following commands.
-
-    sh build-simple-client-lite.sh
-    run-simple-client-lite.cmd
-
-### Building and Running Samples Linux
-A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
-
-The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
-following commands.
-
-    ./build-simple-server-lite.sh
-    ./run-simple-server-lite.sh
-
-The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
-following commands.
-
-    ./build-simple-client-lite.sh
-    ./run-simple-client-lite.sh
 
 ### Building and Running Samples Android
 A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
@@ -284,18 +307,68 @@ execute the following command:
 
     ./gradlew installDebug
 
+### Building and Running Samples Linux
+A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
+
+The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
+following commands.
+
+    ./build-simple-server-lite.sh
+    ./run-simple-server-lite.sh
+
+The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
+following commands.
+
+    ./build-simple-client-lite.sh
+    ./run-simple-client-lite.sh
+
+### Building and Running Samples Windows
+A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
+
+The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
+following commands.
+
+    sh build-simple-server-lite.sh
+    run-simple-server-lite.cmd
+
+The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
+following commands.
+
+    sh build-simple-client-lite.sh
+    run-simple-client-lite.cmd
+
 Onboarding and Provisioning
 =================================================
-If the libraries have been built using security the will need to be onboarded and provisioned
-before they can be used.
+### Runing the onboarding tool
 
-At the time of this writing the onboarding tool is only built on Linux.  It can be used to
-onboard and provision samples even if they are running on a remote device. The only requirement is
-that the onboarding tool can discover the sample.
+If the libraries have been built using security the samples will need to be onboarded and
+provisioned before they can be used.
+
+A Java version of the onboarding-tool that will run on Windows or Linux can be found
+
+A sample server and client can be found in `<iotivity-lite>/swig/apps/java_onboarding_tool`
+
+Assuming you have already followed the `Building for Linux` or `Building for Windows` build
+instructions the following commands can be used to run the onboarding tool.
+
+Linux:
+
+    build-onboarding-tool-lite.sh
+    run-onboarding-tool-lite.sh
+
+Windows
+
+    sh build-onboarding-tool-lite.sh
+    run-onboarding-tool-lite.cmd
+
 
 Step-by-step guide for onboarding and provisioning the simple server and simple client samples.
 This assumes you are starting one discoverable device at a time. If multiple devices can be
 discovered at the same time the user will have to figure out which UUID belongs to which device.
+
+Once you are able to get the samples onboarded and working with each other using the following
+step-by-step options feel free to RESET the devices and play around with different provisioning
+options.
 
 ### (Step 1) Onboard and Provision the Server
 
@@ -432,7 +505,8 @@ summary of the contents of each directory.
   Contains to client server samples.  The `java_lite` samples have been run and tested on Windows
   and Linux.  The `android` samples are the same samples with a really light UI for Android OS.
   The `java_lite` samples also contain project files for the Eclipse IDE if users wish to import
-  the samples into that IDE.
+  the samples into that IDE. The `java_onboarding_tool` is a bear bones tool for onboarding and
+  provisioning samples that have been built with security.
 - `iotivity-lite-eclipes-project`<br />
   Contains unit test code in the `junit` directory as well as an empty `src` directory.  The
   `src` directory will be populated with `*.java` files when the SWIG build commands are run.
@@ -468,11 +542,11 @@ To open the project files:
  - click `Next>` button
  - click the `Browse..` button next to the `Select root directory:` text box
  - browse to the `<iotivity-lite>\swig` directory click `OK`
- - make sure the checkbox for the three projects is checked.  Click `Finish`
+ - make sure the checkbox for the desired projects is checked.  Click `Finish`
 
 Copy the `iotivity-lite-jni` shared object file into the
-`<iotivity-lite>/swig/iotivity-lite-eclipse-project/libs` directory.  The eclipse has been setup
-to search for the library in that location.
+`<iotivity-lite>/swig/iotivity-lite-eclipse-project/libs` directory.  The eclipse projects have
+been setup to search for the library in that location.
 
 Run the unit tests by right clicking on `iotivity-lite` project select `Run As -> JUnit Test`.
 Selecting `Run As -> Java Application` will run the command line version of the unit tests.
