@@ -7,7 +7,7 @@ import org.junit.Test;
 public class OCUuidTest {
 
     @Test
-    public void generate_and_convert() {
+    public void generateAndConvert() {
         OCUuid testUuid = OCUuidUtil.generateUuid();
         assertNotNull(testUuid);
         String uuid_out = OCUuidUtil.uuidToString(testUuid);
@@ -21,7 +21,7 @@ public class OCUuidTest {
     }
     
     @Test
-    public void convert_string_to_uuid() {
+    public void convertStringToUuid() {
         // Random version 4 uuid, generated using www.uuidgenerator.net
         String generated_uuid = "a4fba108-877c-469e-9270-b400839b0631";
         OCUuid testUuid = OCUuidUtil.stringToUuid(generated_uuid);
@@ -29,7 +29,7 @@ public class OCUuidTest {
     }
 
     @Test
-    public void convert_invalid_string_to_uuid() {
+    public void convertInvalidStringToUuid() {
         // Random version 4 uuid, generated using www.uuidgenerator.net with
         // invalid letters inserted to make it an invalid uuid.
         String generated_uuid = "xxxxa108-877cx469e-9270-b400839b0631";
@@ -41,6 +41,23 @@ public class OCUuidTest {
                 + "and-fixed-then-i-would-be-a-wealthy-person";
         testUuid = OCUuidUtil.stringToUuid(long_invalid_uuid);
         assertNotEquals(long_invalid_uuid, OCUuidUtil.uuidToString(testUuid));
+    }
+
+    @Test
+    public void uuidGetSetIdBytes() {
+        String uuidString = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+        byte[] uuidBytes = {0x6b, (byte)0xa7, (byte)0xb8, 0x10,
+                (byte)0x9d, (byte)0xad, 0x11, (byte)0xd1,
+                (byte)0x80, (byte)0xb4, 0x00, (byte)0xc0,
+                0x4f, (byte)0xd4, (byte)0x30, (byte)0xc8 };
+        OCUuid uuid1 = OCUuidUtil.stringToUuid(uuidString);
+
+        assertEquals(16, uuid1.getId().length);
+        assertArrayEquals(uuidBytes, uuid1.getId());
+        
+        OCUuid uuid2 = new OCUuid();
+        uuid2.setId(uuidBytes);
+        assertEquals(uuidString, OCUuidUtil.uuidToString(uuid2));
     }
 
 }

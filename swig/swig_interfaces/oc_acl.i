@@ -12,6 +12,11 @@
 %rename(OCAceResource) oc_ace_res_s;
 %ignore oc_ace_subject_t;
 %ignore oc_ace_subject_t_role;
+
+%ignore oc_sec_ace_s::OC_LIST_STRUCT(resources);
+%ignore oc_sec_ace_s::subject_type;
+%ignore oc_sec_ace_s::subject;
+%ignore oc_sec_ace_s::permission;
 %rename(OCSecurityAce) oc_sec_ace_s;
 %ignore oc_sec_acl_t;
 %ignore oc_sec_acl_init;
