@@ -1,8 +1,5 @@
 package java_lite_simple_client;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,7 +15,6 @@ public class Client {
     public static Condition cv = lock.newCondition();
 
     public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
-    public static final long CLOCK_TICKS_PER_SECOND = OCClock.OC_CLOCK_SECOND;
 
     static private boolean quit;
     static private Thread mainThread;
@@ -34,11 +30,6 @@ public class Client {
     public static void main(String argv[]) {
         mainThread = Thread.currentThread();
         Runtime.getRuntime().addShutdownHook(shutdownHook);
-
-        String osName = System.getProperty("os.name");
-        boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
-        System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
-
 
         String creds_path = "./simpleclient_creds/";
         java.io.File directory = new java.io.File(creds_path);
@@ -64,26 +55,10 @@ public class Client {
                     System.out.println("Calling cv.await");
                     cv.await();
                 } else {
-                    if (isLinux) {
-                        // For Linux next_event is absolute time.
-                        // Decrement next_event by the current time to get the nanoseconds to wait.
-                        long next_event_secs = (next_event / CLOCK_TICKS_PER_SECOND);
-                        long next_event_nanos = (next_event % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
-
-                        long now = OCClock.clockTime();
-                        long now_secs = (now / CLOCK_TICKS_PER_SECOND);
-                        long now_nanos = (now % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
-
-                        long timeToWait = ((next_event_secs * NANOS_PER_SECOND) + next_event_nanos) -
-                                          ((now_secs * NANOS_PER_SECOND) + now_nanos);
-                        timeToWait %= (NANOS_PER_SECOND * 10); // never more than 10 seconds
-                        //System.out.println("Calling cv.awaitNanos " + timeToWait);
-                        cv.awaitNanos(timeToWait);
-                    } else {
-                        //System.out.println("Calling cv.awaitNanos " + next_event);
-                        long now = OCClock.clockTime();
-                        cv.awaitNanos((next_event - now) * 1000000 / OCClock.OC_CLOCK_SECOND);
-                    }
+                    long now = OCClock.clockTime();
+                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
+                    //System.out.println("Calling cv.awaitNanos " + timeToWait);
+                    cv.awaitNanos(timeToWait);
                 }
             } catch (InterruptedException e) {
                 System.out.println(e);
