@@ -24,6 +24,8 @@ public class ClientActivity extends AppCompatActivity {
     public final Lock lock = new ReentrantLock();
     public Condition cv = lock.newCondition();
 
+    public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
+
     public TextView mConsoleTextView;
     public ScrollView mScrollView;
 
@@ -91,8 +93,7 @@ public class ClientActivity extends AppCompatActivity {
                     cv.await();
                 } else {
                     long now = OCClock.clockTime();
-                    // nextEvent and now are in microseconds
-                    long timeToWait = (nextEvent - now) * 1000;
+                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
                     cv.awaitNanos(timeToWait);
                 }
             } catch (InterruptedException e) {

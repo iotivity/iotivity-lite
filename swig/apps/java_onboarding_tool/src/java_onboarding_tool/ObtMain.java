@@ -51,7 +51,6 @@ public class ObtMain {
     private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
     private static ProvisionAce2Handler provisionAce2Handler = new ProvisionAce2Handler();
 
-
     static private boolean quit;
     static private Thread mainThread;
     static private Thread shutdownHook = new Thread() {
@@ -66,9 +65,6 @@ public class ObtMain {
 
     static private Thread ocfEventThread = new Thread() {
         public void run() {
-            String osName = System.getProperty("os.name");
-            boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
-
             while (!quit) {
                 long next_event = OCMain.mainPoll();
                 lock.lock();
@@ -76,23 +72,10 @@ public class ObtMain {
                     if (next_event == 0) {
                         cv.await();
                     } else {
-                        if (isLinux) {
-                            // For Linux next_event is absolute time.
-                            // Decrement next_event by the current time to get the nanoseconds to wait.
-                            long next_event_secs = (next_event / CLOCK_TICKS_PER_SECOND);
-                            long next_event_nanos = (next_event % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
-
                             long now = OCClock.clockTime();
-                            long now_secs = (now / CLOCK_TICKS_PER_SECOND);
-                            long now_nanos = (now % CLOCK_TICKS_PER_SECOND) * (NANOS_PER_SECOND / CLOCK_TICKS_PER_SECOND);
-
-                            long timeToWait = ((next_event_secs * NANOS_PER_SECOND) + next_event_nanos) -
-                                    ((now_secs * NANOS_PER_SECOND) + now_nanos);
+                            long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
+                            System.out.println("Poll time to wait : " + timeToWait);
                             cv.awaitNanos(timeToWait);
-                        } else {
-                            long now = OCClock.clockTime();
-                            cv.awaitNanos((next_event - now) * 1000000 / OCClock.OC_CLOCK_SECOND);
-                        }
                     }
                 } catch (InterruptedException e) {
                     System.out.println(e);
@@ -497,10 +480,6 @@ public class ObtMain {
         quit = false;
         mainThread = Thread.currentThread();
         Runtime.getRuntime().addShutdownHook(shutdownHook);
-
-        String osName = System.getProperty("os.name");
-        boolean isLinux = (osName != null) && osName.toLowerCase().contains("linux");
-        System.out.println("OS Name = " + osName + ", isLinux = " + isLinux);
 
         String creds_path =  "./onboarding_tool_creds/";
         java.io.File directory = new java.io.File(creds_path);
