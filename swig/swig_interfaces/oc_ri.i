@@ -130,14 +130,15 @@ typedef enum {
 /***************************************************************
 structs from oc_coap
 ***************************************************************/
-// replace all instances of oc_separate_response_s with oc_separate_response_t since parser
-// seems to have a problem with typedef that tells the code they are both the same
-%rename(OCSeparateResponse) oc_separate_response_t;
 /*
  * Currently no known use case that the end user will access this buffer
  * of this must be exposed then work must be done to convert buffer to a java byte[]
  */
 %ignore buffer;
+%ignore OC_LIST_STRUCT(requests);
+// replace all instances of oc_separate_response_s with oc_separate_response_t since parser
+// seems to have a problem with typedef that tells the code they are both the same
+%rename(OCSeparateResponse) oc_separate_response_t;
 typedef struct
 {
   OC_LIST_STRUCT(requests);
