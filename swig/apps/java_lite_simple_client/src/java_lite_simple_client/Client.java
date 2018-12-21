@@ -80,9 +80,10 @@ public class Client {
                         //System.out.println("Calling cv.awaitNanos " + timeToWait);
                         cv.awaitNanos(timeToWait);
                     } else {
-                        //System.out.println("Calling cv.awaitNanos " + next_event);
                         long now = OCClock.clockTime();
-                        cv.awaitNanos((next_event - now) * 1000000 / OCClock.OC_CLOCK_SECOND);
+                        long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
+                        System.out.println("Poll time to wait : " + timeToWait);
+                        cv.awaitNanos(timeToWait);
                     }
                 }
             } catch (InterruptedException e) {
