@@ -48,6 +48,7 @@ typedef struct st_cloud_context
 
 typedef enum {
   CI_TOKEN_EXPIRED = 4000004,
+  CI_TOKEN_REQEUST_EXPIRED = 4010004,
   CI_AUTHORIZATION_FAILED = 4000005,
   CI_CERTIFICATE_FAILED = 4010008,
   CI_UNAUTHORIZED_TOKEN = 4010201,
@@ -289,6 +290,7 @@ error_handler(st_cloud_context_t *context, oc_rep_t* res_payload,
 
   switch (code) {
   case CI_TOKEN_EXPIRED:
+  case CI_TOKEN_REQEUST_EXPIRED:
     oc_remove_delayed_callback(context, callback);
     if (context->cloud_manager_status != CLOUD_MANAGER_RECONNECTING) {
       context->retry_count = 0;
