@@ -451,7 +451,6 @@ get_ap_list(sec_accesspoint **ap_list) {
   st_wifi_ap_t *scanlist = NULL;
   sec_accesspoint *list_tail = NULL;
   sec_accesspoint *tmp;
-  int list_cnt = 0;
   if (!ap_list) {
     return;
   }
