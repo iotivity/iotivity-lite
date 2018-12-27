@@ -338,11 +338,12 @@ sign_up_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] sign up handler(%d)\n", data->code);
 
-  oc_rep_t *payload = get_res_payload(data);
-
   if (context->cloud_manager_status != CLOUD_MANAGER_INITIALIZED &&
       context->cloud_manager_status != CLOUD_MANAGER_RECONNECTING)
     return;
+
+  oc_rep_t *payload = get_res_payload(data);
+
   if (data->code != OC_STATUS_CHANGED)
     goto error;
 
@@ -382,10 +383,11 @@ static oc_event_callback_retval_t
 sign_up(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try sign up(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_INITIALIZED ||
       context->cloud_manager_status == CLOUD_MANAGER_RECONNECTING) {
+    st_print_log("[ST_CM] try sign up(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
       if (0 == oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep,
@@ -441,10 +443,11 @@ static oc_event_callback_retval_t
 sign_in(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try sign in(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_UP ||
       context->cloud_manager_status == CLOUD_MANAGER_RECONNECTING) {
+    st_print_log("[ST_CM] try sign in(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
       if (0 == oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep,
@@ -507,8 +510,8 @@ static oc_event_callback_retval_t
 refresh_token(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try refresh token(%d)\n", context->retry_count++);
-
+  st_print_log("[ST_CM] try refresh token(%d)\n", context->retry_count);
+  context->retry_count++;
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
     oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
@@ -551,9 +554,10 @@ static oc_event_callback_retval_t
 set_dev_profile(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try set dev profile(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_IN) {
+    st_print_log("[ST_CM] try set dev profile(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       oc_set_device_profile(&context->cloud_ep, set_dev_profile_handler,
                             context);
@@ -599,9 +603,10 @@ static oc_event_callback_retval_t
 publish_resource(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try publish resource(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_DEV_PUBLISHED) {
+    st_print_log("[ST_CM] try publish resource(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       rd_publish_all(&context->cloud_ep, context->device_index,
                      publish_resource_handler, LOW_QOS, context);
@@ -619,11 +624,12 @@ find_ping_handler(oc_client_response_t *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data->user_data;
   st_print_log("[ST_CM] find ping handler(%d)\n", data->code);
 
-  oc_rep_t *payload = get_res_payload(data);
-
   if (context->cloud_manager_status != CLOUD_MANAGER_SIGNED_IN &&
       context->cloud_manager_status != CLOUD_MANAGER_RES_PUBLISHED)
     return;
+
+  oc_rep_t *payload = get_res_payload(data);
+
   if (data->code != OC_STATUS_OK)
     goto error;
 
@@ -633,6 +639,7 @@ find_ping_handler(oc_client_response_t *data)
 
   int *interval = NULL;
   size_t size;
+
   oc_rep_get_int_array(payload, "inarray", &interval, &size);
   if (interval)
     g_ping_interval = interval[size - 1];
@@ -651,10 +658,11 @@ static oc_event_callback_retval_t
 find_ping(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try find ping(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_SIGNED_IN ||
       context->cloud_manager_status == CLOUD_MANAGER_RES_PUBLISHED) {
+    st_print_log("[ST_CM] try find ping(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       oc_find_ping_resource(&context->cloud_ep, find_ping_handler, context);
       oc_set_delayed_callback(context, find_ping,
@@ -692,9 +700,10 @@ static oc_event_callback_retval_t
 send_ping(void *data)
 {
   st_cloud_context_t *context = (st_cloud_context_t *)data;
-  st_print_log("[ST_CM] try send ping(%d)\n", context->retry_count++);
 
   if (context->cloud_manager_status == CLOUD_MANAGER_FINISHED) {
+    st_print_log("[ST_CM] try send ping(%d)\n", context->retry_count);
+    context->retry_count++;
     if (!is_retry_over(context)) {
       oc_send_ping_request(&context->cloud_ep, g_ping_interval,
                            send_ping_handler, context);
