@@ -17,7 +17,9 @@
 #ifndef OC_CERTS_H
 #define OC_CERTS_H
 
+#ifdef OC_SECURITY
 #include "mbedtls/x509_crt.h"
+#include "security/oc_cred.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,18 +35,27 @@ int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
 int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
                                 uint8_t *public_key);
 
-int oc_certs_validate_root_cert(mbedtls_x509_crt *root_cert);
+int oc_certs_validate_root_cert(const mbedtls_x509_crt *root_cert);
 
-int oc_certs_validate_intermediate_cert(mbedtls_x509_crt *int_cert);
+int oc_certs_validate_intermediate_cert(const mbedtls_x509_crt *int_cert);
 
-int oc_certs_validate_end_entity_cert(mbedtls_x509_crt *ee_cert);
+int oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *ee_cert);
+
+int oc_certs_validate_role_cert(const mbedtls_x509_crt *role_cert);
 
 int oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
                                    mbedtls_x509_crt *child);
 
 int oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len);
 
+int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
+                              uint8_t *public_key);
+
+int oc_certs_parse_role_certificate(const unsigned char *role_certificate,
+                                    size_t cert_size, oc_sec_cred_t *role_cred);
+
 #ifdef __cplusplus
 }
 #endif
+#endif /* OC_SECURITY */
 #endif /* OC_CERTS_H */
