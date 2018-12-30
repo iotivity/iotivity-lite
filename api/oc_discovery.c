@@ -148,6 +148,21 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
                       request, oc_string(anchor), links))
     matches++;
+
+#ifdef OC_PKI
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SP, device_index),
+                      request, oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CSR, device_index),
+                      request, oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -351,6 +366,21 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
         oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), request,
         oc_rep_array(links)))
     matches++;
+
+#ifdef OC_PKI
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_SP, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_CSR, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+#endif /* OC_PKI */
 #endif
 
   if (filter_oic_1_1_resource(

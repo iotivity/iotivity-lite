@@ -367,6 +367,19 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 void oc_close_session(oc_endpoint_t *endpoint);
 
+/** Asserting roles */
+typedef struct oc_role_t
+{
+  struct oc_role_t *next;
+  oc_string_t role;
+  oc_string_t authority;
+} oc_role_t;
+
+oc_role_t *oc_get_all_roles(void);
+
+bool oc_assert_role(const char *role, const char *authority,
+                    oc_endpoint_t *endpoint, oc_response_handler_t handler);
+
 /** Common operations */
 
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,

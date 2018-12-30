@@ -544,6 +544,9 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   } else if ((strlen(uri) - skip) == 11 &&
              strncmp(uri + skip, "oic/sec/csr", 11) == 0) {
     type = OCF_SEC_CSR;
+  } else if ((strlen(uri) - skip) == 13 &&
+             strncmp(uri + skip, "oic/sec/roles", 13) == 0) {
+    type = OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
