@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#ifdef OC_SECURITY
 #ifdef OC_PKI
 
 #include "oc_keypair.h"
@@ -134,13 +135,13 @@ oc_generate_ecdsa_keypair(size_t device)
   mbedtls_ctr_drbg_init(&ctr_drbg);
   mbedtls_entropy_init(&entropy);
 
-#define PERSONALIZATION_STRING "IoTivity-Lite-Key-Pair"
+#define PERSONALIZATION_DATA "IoTivity-Lite-Key-Pair"
 
   int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                                  (const unsigned char *)PERSONALIZATION_STRING,
-                                  sizeof(PERSONALIZATION_STRING));
+                                  (const unsigned char *)PERSONALIZATION_DATA,
+                                  sizeof(PERSONALIZATION_DATA));
 
-#undef PERSONALIZATION_STRING
+#undef PERSONALIZATION_DATA
 
   if (ret < 0) {
     OC_ERR("error initializing source of entropy");
@@ -194,3 +195,4 @@ generate_ecdsa_keypair_error:
 #else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */
+#endif /* OC_SECURITY */
