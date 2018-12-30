@@ -21,6 +21,7 @@
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
+#include "oc_roles.h"
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
@@ -141,6 +142,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
 #ifdef OC_PKI
+    oc_sec_free_roles_for_device(device);
     oc_sec_sp_default(device);
 #endif /* OC_PKI */
     set_post_otm_acl = true;
@@ -435,12 +437,12 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
       }
     } break;
     case OC_REP_BOOL:
-      if (/*from_storage && */ oc_string_len(rep->name) == 4 &&
+      if (from_storage && oc_string_len(rep->name) == 4 &&
           memcmp(oc_string(rep->name), "isop", 4) == 0) {
         ps.isop = rep->value.boolean;
-      } /* else {
-         return false;
-   }*/
+      } else {
+        return false;
+      }
       break;
     case OC_REP_INT:
       if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
