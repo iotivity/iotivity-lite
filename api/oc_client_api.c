@@ -19,6 +19,9 @@
 #include "oc_api.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#ifdef OC_PKI
+#include "security/oc_roles.h"
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 #ifdef OC_CLIENT
 
@@ -508,5 +511,60 @@ oc_close_session(oc_endpoint_t *endpoint)
 #endif /* OC_TCP */
   }
 }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+oc_role_t *
+oc_get_all_roles(void)
+{
+  return oc_sec_get_role_creds();
+}
+
+bool
+oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
+               oc_response_handler_t handler)
+{
+  oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
+
+  if (cr) {
+    if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
+                     NULL)) {
+      oc_rep_start_root_object();
+      oc_rep_set_array(root, roles);
+      oc_rep_object_array_start_item(roles);
+      /* credid */
+      oc_rep_set_int(roles, credid, cr->credid);
+      /* credtype */
+      oc_rep_set_int(roles, credtype, cr->credtype);
+      /* roleid */
+      if (oc_string_len(cr->role.role) > 0) {
+        oc_rep_set_object(roles, roleid);
+        oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
+        if (oc_string_len(cr->role.authority) > 0) {
+          oc_rep_set_text_string(roleid, authority,
+                                 oc_string(cr->role.authority));
+        }
+        oc_rep_close_object(roles, roleid);
+      }
+      /* credusage */
+      oc_rep_set_text_string(roles, credusage, "oic.sec.cred.rolecert");
+      /* publicdata */
+      if (oc_string_len(cr->publicdata.data) > 0) {
+        oc_rep_set_object(roles, publicdata);
+        oc_rep_set_text_string(publicdata, data,
+                               oc_string(cr->publicdata.data));
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+        oc_rep_close_object(roles, publicdata);
+      }
+      oc_rep_object_array_end_item(roles);
+      oc_rep_close_array(root, roles);
+      oc_rep_end_root_object();
+      if (!oc_do_post()) {
+        return false;
+      }
+    }
+  }
+  return false;
+}
+#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */

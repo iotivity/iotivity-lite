@@ -315,7 +315,7 @@ oc_sec_load_cred(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
-    oc_sec_decode_cred(rep, NULL, true, device);
+    oc_sec_decode_cred(rep, NULL, true, false, NULL, device);
     oc_free_rep(rep);
   }
 #ifdef OC_DYNAMIC_ALLOCATION

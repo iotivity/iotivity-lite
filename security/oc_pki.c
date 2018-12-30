@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#ifdef OC_SECURITY
 #ifdef OC_PKI
 
 #include "mbedtls/pk.h"
@@ -115,8 +116,8 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   oc_uuid_to_str(&c->subjectuuid, subjectuuid, 37);
 
   int new_credid = oc_sec_add_new_cred(
-    device, -1, OC_CREDTYPE_CERT, credusage, subjectuuid, 0, 0, NULL,
-    OC_ENCODING_DER, int_ca.raw.len, int_ca.raw.p, NULL, NULL);
+    device, false, NULL, -1, OC_CREDTYPE_CERT, credusage, subjectuuid, 0, 0,
+    NULL, OC_ENCODING_DER, int_ca.raw.len, int_ca.raw.p, NULL, NULL);
 
   if (new_credid != -1) {
     oc_sec_dump_cred(device);
@@ -182,11 +183,10 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   oc_string_t subjectuuid;
 
   if (oc_certs_parse_CN_for_UUID(&cert1, &subjectuuid) < 0) {
-    OC_ERR("could not extract subjectUUID from CN");
-    mbedtls_x509_crt_free(&cert1);
-    return -1;
+    OC_ERR("could not extract a subjectUUID from the CN property.. Using "
+           "'*'instead..");
+    oc_new_string(&subjectuuid, "*", 1);
   }
-
   oc_sec_creds_t *creds = oc_sec_get_creds(device);
   oc_sec_cred_t *c = oc_list_head(creds->creds);
   for (; c != NULL; c = c->next) {
@@ -220,9 +220,10 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   OC_DBG("adding a new identity cert chain to /oic/sec/cred");
 
   int credid = oc_sec_add_new_cred(
-    device, -1, OC_CREDTYPE_CERT, credusage, oc_string(subjectuuid),
-    OC_ENCODING_DER, private_key_size, privkbuf + (200 - private_key_size),
-    OC_ENCODING_DER, cert1.raw.len, cert1.raw.p, NULL, NULL);
+    device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
+    oc_string(subjectuuid), OC_ENCODING_DER, private_key_size,
+    privkbuf + (200 - private_key_size), OC_ENCODING_DER, cert1.raw.len,
+    cert1.raw.p, NULL, NULL);
 
   if (credid != -1) {
     oc_sec_dump_cred(device);
@@ -306,9 +307,9 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   OC_DBG("adding a new trust anchor to /oic/sec/cred");
 
-  int credid = oc_sec_add_new_cred(device, -1, OC_CREDTYPE_CERT, credusage, "*",
-                                   0, 0, NULL, OC_ENCODING_DER, cert1.raw.len,
-                                   cert1.raw.p, NULL, NULL);
+  int credid = oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT,
+                                   credusage, "*", 0, 0, NULL, OC_ENCODING_DER,
+                                   cert1.raw.len, cert1.raw.p, NULL, NULL);
 
   if (credid != -1) {
     oc_sec_dump_cred(device);
@@ -336,3 +337,4 @@ oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
 #else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */
+#endif /* OC_SECURITY */
