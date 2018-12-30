@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#ifdef OC_SECURITY
 #ifdef OC_PKI
 
 #include "oc_csr.h"
@@ -49,3 +50,4 @@ get_csr(oc_request_t *request, oc_interface_mask_t interface, void *data)
 #else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */
+#endif /* OC_SECURITY */

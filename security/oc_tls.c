@@ -44,6 +44,7 @@
 #include "oc_doxm.h"
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
+#include "oc_roles.h"
 #include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
@@ -88,7 +89,7 @@ mbedtls_x509_crt trust_anchors;
 static unsigned char alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-#define PERSONALIZATION_STR "IoTivity-Constrained"
+#define PERSONALIZATION_DATA "IoTivity-Lite-TLS"
 
 #define CCM_MAC_KEY_LENGTH (0)
 #define CBC_IV_LENGTH (0)
@@ -177,6 +178,11 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
 
+#ifdef OC_PKI
+  /* Free all roles bound to this (D)TLS session */
+  oc_sec_free_roles(peer);
+#endif /* OC_PKI */
+
 #ifdef OC_TCP
   if (peer->endpoint.flags & TCP) {
     oc_connectivity_end_session(&peer->endpoint);
@@ -206,7 +212,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   oc_memb_free(&tls_peers_s, peer);
 }
 
-static oc_tls_peer_t *
+oc_tls_peer_t *
 oc_tls_get_peer(oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_list_head(tls_peers);
@@ -984,8 +990,8 @@ oc_tls_init_context(void)
   mbedtls_ssl_cookie_init(&cookie_ctx);
   mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
   if (mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
-                            (const unsigned char *)PERSONALIZATION_STR,
-                            strlen(PERSONALIZATION_STR)) != 0) {
+                            (const unsigned char *)PERSONALIZATION_DATA,
+                            strlen(PERSONALIZATION_DATA)) != 0) {
     goto dtls_init_err;
   }
   if (mbedtls_ssl_cookie_setup(&cookie_ctx, mbedtls_ctr_drbg_random,
@@ -1260,6 +1266,17 @@ oc_tls_init_connection(oc_message_t *message)
   oc_message_unref(message);
 }
 #endif /* OC_CLIENT */
+
+bool
+oc_tls_uses_psk_cred(oc_tls_peer_t *peer)
+{
+  int cipher = peer->ssl_ctx.session->ciphersuite;
+  if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == cipher ||
+      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == cipher) {
+    return true;
+  }
+  return false;
+}
 
 oc_uuid_t *
 oc_tls_get_peer_uuid(oc_endpoint_t *endpoint)
