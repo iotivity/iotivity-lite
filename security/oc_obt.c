@@ -224,23 +224,28 @@ cache_device_if_not_known(oc_list_t list, oc_uuid_t *uuid,
     }
     device = device->next;
   }
+
   if (!device) {
     device = oc_memb_alloc(&oc_devices_s);
     if (!device) {
       return NULL;
     }
-    oc_endpoint_t *ep = oc_new_endpoint();
-    if (!ep) {
-      oc_memb_free(&oc_devices_s, device);
-      return NULL;
-    }
     memcpy(device->uuid.id, uuid->id, sizeof(oc_uuid_t));
-    memcpy(ep, endpoint, sizeof(oc_endpoint_t));
-    device->endpoint = ep;
     oc_list_add(list, device);
-    return device;
   }
-  return NULL;
+
+  oc_free_server_endpoints(device->endpoint);
+
+  oc_endpoint_t *ep = oc_new_endpoint();
+  if (!ep) {
+    oc_list_remove(list, device);
+    oc_memb_free(&oc_devices_s, device);
+    return NULL;
+  }
+
+  memcpy(ep, endpoint, sizeof(oc_endpoint_t));
+  device->endpoint = ep;
+  return device;
 }
 
 static oc_event_callback_retval_t
@@ -615,7 +620,7 @@ obt_jw_6(oc_client_response_t *data)
   oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
 
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
-  oc_alloc_string(&c->privatedata.data, 16);
+  oc_alloc_string(&c->privatedata.data, 17);
   bool derived = oc_sec_derive_owner_psk(
     ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
     device->uuid.id, 16, my_uuid->id, 16, oc_cast(c->privatedata.data, uint8_t),
@@ -1006,30 +1011,24 @@ obt_check_owned(oc_client_response_t *data)
     return;
   }
 
-  oc_device_t *new_device = NULL;
+  oc_device_t *device = NULL;
 
   if (owned == 0) {
-    new_device = cache_device_if_not_known(oc_cache, &uuid, data->endpoint);
+    device = cache_device_if_not_known(oc_cache, &uuid, data->endpoint);
   } else {
     /* Device is owned by somebody else */
     if (!owned_device(&uuid)) {
       return;
     } else {
-      new_device = cache_device_if_not_known(oc_devices, &uuid, data->endpoint);
+      device = cache_device_if_not_known(oc_devices, &uuid, data->endpoint);
     }
   }
 
-  if (!new_device) {
-    new_device = (owned == 0) ? get_device_handle(&uuid, oc_cache)
-      : get_device_handle(&uuid, oc_devices);
-    if (!new_device) {
-      return;
-    }
+  if (device) {
+    device->ctx = data->user_data;
+    oc_do_get("/oic/res", device->endpoint, "rt=oic.r.doxm", &get_endpoints,
+              HIGH_QOS, device);
   }
-
-  new_device->ctx = data->user_data;
-  oc_do_get("/oic/res", new_device->endpoint, "rt=oic.r.doxm", &get_endpoints,
-            HIGH_QOS, new_device);
 }
 
 /* Unowned device discovery */
