@@ -44,6 +44,7 @@ oc_pki_set_security_profile(size_t device, oc_sp_types_t supported_profiles,
   sp_mfg_default[device].supported_profiles |= supported_profiles;
   sp_mfg_default[device].current_profile = current_profile;
   sp_mfg_default[device].credid = mfg_credid;
+  sp[device] = sp_mfg_default[device];
 }
 
 void
