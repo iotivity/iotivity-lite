@@ -18,12 +18,14 @@
 
 #include "oc_acl.h"
 #include "oc_api.h"
+#include "oc_certs.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"
+#include "oc_roles.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include <stddef.h>
@@ -320,6 +322,26 @@ dump_acl(size_t device)
 }
 #endif /* OC_DEBUG */
 
+static uint16_t
+get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
+                     oc_interface_mask_t interface, size_t device)
+{
+  uint16_t permission = 0;
+  oc_sec_ace_t *match = NULL;
+  do {
+    match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
+                                    (oc_ace_subject_t *)&role_cred->role, -1, 0,
+                                    device);
+
+    if (match) {
+      permission |= oc_ace_get_permission(match, resource, interface);
+      OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
+             permission);
+    }
+  } while (match);
+  return permission;
+}
+
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                  oc_interface_mask_t interface, oc_endpoint_t *endpoint)
@@ -327,28 +349,37 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
 #endif /* OC_DEBUG */
-  oc_uuid_t *uuid = oc_tls_get_peer_uuid(endpoint);
+
+  oc_uuid_t *uuid = NULL;
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (peer) {
+    uuid = &peer->uuid;
+  }
 
   if (uuid) {
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
     if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/acl2", 12) == 0) {
+        oc_string_len(resource->uri) == 13 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/acl2", 13) == 0) {
       OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, doxm->rowneruuid.id, 16) == 0 &&
+        oc_string_len(resource->uri) == 13 &&
         memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
       OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, pstat->rowneruuid.id, 16) == 0 &&
+        oc_string_len(resource->uri) == 14 &&
         memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0) {
       OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid");
       return true;
     }
     if (memcmp(uuid->id, creds->rowneruuid.id, 16) == 0 &&
+        oc_string_len(resource->uri) == 13 &&
         memcmp(oc_string(resource->uri), "/oic/sec/cred", 13) == 0) {
       OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid");
       return true;
@@ -370,21 +401,30 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       }
     } while (match);
 
-    oc_sec_cred_t *role_cred = oc_sec_find_cred(
-      uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
-    if (role_cred && oc_string_len(role_cred->role.role) > 0) {
-      do {
-        match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
-                                        (oc_ace_subject_t *)&role_cred->role,
-                                        -1, 0, endpoint->device);
-
-        if (match) {
-          permission |= oc_ace_get_permission(match, resource, interface);
-          OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
-                 permission);
-        }
-      } while (match);
+    if (oc_tls_uses_psk_cred(peer)) {
+      oc_sec_cred_t *role_cred = oc_sec_find_cred(
+        uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
+      if (role_cred && oc_string_len(role_cred->role.role) > 0) {
+        permission |= get_role_permissions(role_cred, resource, interface,
+                                           endpoint->device);
+      }
     }
+#ifdef OC_PKI
+    else {
+      oc_sec_cred_t *role_cred = oc_sec_get_roles(peer), *next;
+      while (role_cred) {
+        next = role_cred->next;
+        if (oc_certs_validate_role_cert(role_cred->ctx) < 0) {
+          oc_sec_free_role(role_cred, peer);
+          role_cred = next;
+          continue;
+        }
+        permission |= get_role_permissions(role_cred, resource, interface,
+                                           endpoint->device);
+        role_cred = role_cred->next;
+      }
+    }
+#endif /* OC_PKI */
   }
 
   if (endpoint->flags & SECURED) {
