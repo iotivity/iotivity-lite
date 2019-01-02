@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_200aa4d2",
+        "filename": "swig/apps/android_simple_client/SimpleClient/app/src/main/java/org/iotivity/simpleclient/ClientActivity.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-01-02T18:59:56Z",
+      "side": 1,
+      "message": "needs to be:\nlong timeToWait \u003d (NANOS_PER_SECOND / OCClock.clockSeconds()) * (nextEvent - now);",
+      "revId": "efed2aff884ba26e354bf5cd3e1514bc4a51a407",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_400530c1",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/java/org/iotivity/simpleserver/ServerActivity.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-01-02T18:59:56Z",
+      "side": 1,
+      "message": "needs to be:\nlong timeToWait \u003d (NANOS_PER_SECOND / OCClock.clockSeconds()) * (nextEvent - now);",
+      "revId": "efed2aff884ba26e354bf5cd3e1514bc4a51a407",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
