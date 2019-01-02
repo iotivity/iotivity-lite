@@ -736,8 +736,14 @@ oc_acl_remove_ace(int aceid, size_t device)
   while (ace != NULL) {
     next = ace->next;
     if (ace->aceid == aceid) {
-      oc_ace_free_resources(device, &ace, NULL);
       oc_list_remove(aclist[device].subjects, ace);
+      oc_ace_free_resources(device, &ace, NULL);
+      if (ace->subject_type == OC_SUBJECT_ROLE) {
+        oc_free_string(&ace->subject.role.role);
+        if (oc_string_len(ace->subject.role.authority) > 0) {
+          oc_free_string(&ace->subject.role.authority);
+        }
+      }
       oc_memb_free(&ace_l, ace);
       removed = true;
       break;
