@@ -8,6 +8,7 @@
 %include "iotivity.swg"
 
 %import "oc_clock.i"
+%import "oc_collection.i"
 %include <oc_ri.i>
 
 %pragma(java) jniclasscode=%{
@@ -1898,18 +1899,3 @@ int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
 %ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
 /*******************End oc_client_state.h*******************/
-/*******************Begin oc_collection.h*******************/
-typedef struct oc_link_s oc_link_t;
-%rename(OCLink) oc_link_s;
-typedef struct oc_collection_s oc_collection_t;
-%rename(OCCollection) oc_collection_s;
-%rename(handleCollectionRequest) oc_handle_collection_request;
-%rename(newCollection) oc_collection_alloc;
-%rename(freeCollection) oc_collection_free;
-%rename(getCollectionByUri) oc_get_collection_by_uri;
-%rename(collectionGetAll) oc_collection_get_all;
-%rename(getLinkByUri) oc_get_link_by_uri;
-%rename(checkIfCollection) oc_check_if_collection;
-%rename(collectionAdd) oc_collection_add;
-%include "oc_collection.h"
-/*******************End oc_collection.h*********************/
