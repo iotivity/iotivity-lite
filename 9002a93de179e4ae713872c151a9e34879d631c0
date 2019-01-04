@@ -1,0 +1,337 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_40b6d0dd",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Why is this here? Shouldn\u0027t this be inside coap_tcp_parse_message()?\n\nSignaling messages are special, limited in scope (no payload etc.), apply only to TCP, and the option numbers used in signaling messages do not share their number space with generalized CoAP request\u003c-\u003eresponse messages, or for that matter with even other signaling messages.\n\nFor e.g. blocwise_transfer is option 4 in a CSM message, but is ETAG in a CoAP request/response message.",
+      "range": {
+        "startLine": 625,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 19
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_20bbc4c5",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1200,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Couldn\u0027t you add this block right here?\n\n    if (coap_check_signal_message(packet)) {\n\n      coap_parse_signal_options(packet, option_number, current_option,\n                                option_length);\n\n      current_option +\u003d option_length;\n\n      return COAP_NO_ERROR;\n\n    }",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a0c6b447",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "This is the block-wise transfer option and not BERT in particular. So, you could rename this to blockwise_transfer.",
+      "range": {
+        "startLine": 152,
+        "startChar": 10,
+        "endLine": 152,
+        "endChar": 14
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e0d71cec",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to blockwise_transfer_option.",
+      "range": {
+        "startLine": 56,
+        "startChar": 55,
+        "endLine": 56,
+        "endChar": 66
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e0eefcb3",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "You could plug in max_message_size_option over here.",
+      "range": {
+        "startLine": 66,
+        "startChar": 45,
+        "endLine": 66,
+        "endChar": 56
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a0cd1460",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "You should replace this with the following block and move the entire block to line 65 above:\n\n#ifdef OC_BLOCK_WISE\n\n  if (blockwise_transfer_option) {\n\n    if (!coap_signal_set_bert(csm_pkt, blockwise_transfer_option)) {\n\n      OC_ERR(\"coap_signal_set_bert failed\");\n\n      return 0;\n    }\n\n   //Add this line below to remain until we start supporting BERT\n\n   max_message_size_option \u003d 1152;\n\n  }\n\n#endif /* OC_BLOCK_WISE */",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 3
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_4004107e",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to custody_option.",
+      "range": {
+        "startLine": 83,
+        "startChar": 56,
+        "endLine": 83,
+        "endChar": 70
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_603aec37",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Why do we need a transaction here? Couldn\u0027t you instead just directly \ncall coap_send_signal_message(endpoint, ping_pkt)?",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 27
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_20e2a4d5",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to BLOCKWISE_TRANSFER",
+      "range": {
+        "startLine": 42,
+        "startChar": 21,
+        "endLine": 42,
+        "endChar": 25
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a0f4f487",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Regarding block-wise transfers, you\u0027re probably aware that when we got in the CoAP_TCP patches last year we effectively bypassed block-wise transfers over TCP connections (look in engine.c). \n\nThat hasn\u0027t changed since. It would be a moderately simple change to now enable block-wise transfers over TCP, but our block-wise transfers state machine does not support the BERT option and the maximum block size it can handle is 1024.\n\nThe reason I bring this up is setting the blockwise_transfer_option here with max_message_size would lead to outcomes that we may or may not support as if max_message_size is \u003e 1152, a peer may suggest using BERT. \n\nSo, in order to both keep things configurable and fixate on this API in a future-proof way, it might be good to accept both max_message_size and blockwise_transfer_option here and have the caller set them appropriately.",
+      "range": {
+        "startLine": 49,
+        "startChar": 51,
+        "endLine": 49,
+        "endChar": 70
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c0f7808b",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to blockwise_transfer_option.",
+      "range": {
+        "startLine": 49,
+        "startChar": 59,
+        "endLine": 49,
+        "endChar": 70
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_60030c74",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "I think you could also pass in a size_t max_message_size_option over here and not always assume that it should be OC_PDU_SIZE.",
+      "range": {
+        "startLine": 49,
+        "startChar": 50,
+        "endLine": 49,
+        "endChar": 51
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_00f2089a",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to custody_option.",
+      "range": {
+        "startLine": 50,
+        "startChar": 60,
+        "endLine": 50,
+        "endChar": 74
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c03e6029",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Rename to blockwise_transfer.",
+      "range": {
+        "startLine": 62,
+        "startChar": 20,
+        "endLine": 62,
+        "endChar": 24
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_2030e455",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-04T02:48:19Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we return here?\n\nreturn coap_status_code;",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
