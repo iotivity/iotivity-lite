@@ -44,8 +44,8 @@ static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];
 static const char *auth_crypt = "auth-crypt";
 static const char *anon_clear = "anon-clear";
 static const char *wc_all = "*";
-static const char *wc_discoverable = "+";
-static const char *wc_non_discoverable = "-";
+static const char *wc_secured = "+";
+static const char *wc_public = "-";
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
@@ -157,10 +157,12 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
     }
 
     if (match && wildcard != 0 && res->wildcard != 0) {
-      if ((wildcard & res->wildcard) == 0) {
-        match = false;
-      } else {
+      if (wildcard != OC_ACE_WC_ALL && (wildcard & res->wildcard) != 0) {
         positive = true;
+      } else if (wildcard == OC_ACE_WC_ALL && res->wildcard == OC_ACE_WC_ALL) {
+        positive = true;
+      } else {
+        match = false;
       }
     }
 
@@ -229,30 +231,36 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 
 static uint16_t
 oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
-                      oc_interface_mask_t interface)
+                      oc_interface_mask_t interface, bool is_DCR,
+                      bool is_public)
 {
   uint16_t permission = 0;
-  oc_ace_wildcard_t wc = (resource->properties & OC_DISCOVERABLE)
-                           ? OC_ACE_WC_ALL_DISCOVERABLE
-                           : OC_ACE_WC_ALL_NON_DISCOVERABLE;
+
+  /* If the resource is discoverable and exposes >=1 unsecured endpoints
+   * then match with ACEs bearing any of the 3 wildcard resources.
+   * If the resource is discoverable and does not expose any unsecured endpoint,
+   * then match with ACEs bearing either OC_ACE_WC_ALL_SECURED or OC_ACE_WC_ALL.
+   * If the resource is not discoverable, then match only with ACEs bearing
+   *  OC_ACE_WC_ALL.
+   */
+  oc_ace_wildcard_t wc = 0;
+  if (!is_DCR) {
+    if (resource->properties & OC_DISCOVERABLE) {
+      if (is_public) {
+        wc = OC_ACE_WC_ALL_PUBLIC | OC_ACE_WC_ALL_SECURED;
+      } else {
+        wc = OC_ACE_WC_ALL_SECURED;
+      }
+    } else {
+      wc = OC_ACE_WC_ALL;
+    }
+  }
+
   oc_ace_res_t *res = oc_sec_ace_find_resource(
     NULL, ace, oc_string(resource->uri), &resource->types, interface, wc);
+
   while (res != NULL) {
-    switch (res->wildcard) {
-    case OC_ACE_WC_ALL_DISCOVERABLE:
-      if (resource->properties & OC_DISCOVERABLE) {
-        permission |= ace->permission;
-      }
-      break;
-    case OC_ACE_WC_ALL_NON_DISCOVERABLE:
-      if (!(resource->properties & OC_DISCOVERABLE)) {
-        permission |= ace->permission;
-      }
-      break;
-    default:
-      permission |= ace->permission;
-      break;
-    }
+    permission |= ace->permission;
 
     res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri),
                                    &resource->types, interface, wc);
@@ -307,10 +315,10 @@ dump_acl(size_t device)
       case OC_ACE_WC_ALL:
         PRINT("Wildcard: *\n");
         break;
-      case OC_ACE_WC_ALL_DISCOVERABLE:
+      case OC_ACE_WC_ALL_SECURED:
         PRINT("Wildcard: +\n");
         break;
-      case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+      case OC_ACE_WC_ALL_PUBLIC:
         PRINT("Wildcard: -\n");
         break;
       }
@@ -324,7 +332,8 @@ dump_acl(size_t device)
 
 static uint16_t
 get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
-                     oc_interface_mask_t interface, size_t device)
+                     oc_interface_mask_t interface, size_t device, bool is_DCR,
+                     bool is_public)
 {
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
@@ -334,7 +343,8 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
                                     device);
 
     if (match) {
-      permission |= oc_ace_get_permission(match, resource, interface);
+      permission |=
+        oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
              permission);
     }
@@ -350,6 +360,14 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   dump_acl(endpoint->device);
 #endif /* OC_DEBUG */
 
+  bool is_DCR = oc_core_is_DCR(resource, resource->device);
+  bool is_public = ((resource->properties & OC_SECURE) == 0);
+
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
+    return false;
+  }
+
   oc_uuid_t *uuid = NULL;
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
@@ -359,7 +377,6 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (uuid) {
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
-    oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
     if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
         oc_string_len(resource->uri) == 13 &&
         memcmp(oc_string(resource->uri), "/oic/sec/acl2", 13) == 0) {
@@ -395,7 +412,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       endpoint->device);
 
       if (match) {
-        permission |= oc_ace_get_permission(match, resource, interface);
+        permission |=
+          oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
@@ -406,7 +424,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
         uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
         permission |= get_role_permissions(role_cred, resource, interface,
-                                           endpoint->device);
+                                           endpoint->device, is_DCR, is_public);
       }
     }
 #ifdef OC_PKI
@@ -420,7 +438,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
           continue;
         }
         permission |= get_role_permissions(role_cred, resource, interface,
-                                           endpoint->device);
+                                           endpoint->device, is_DCR, is_public);
         role_cred = role_cred->next;
       }
     }
@@ -435,7 +453,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, -1,
                                       0, endpoint->device);
       if (match) {
-        permission |= oc_ace_get_permission(match, resource, interface);
+        permission |=
+          oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
                "connection",
                permission);
@@ -450,7 +469,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
                                     endpoint->device);
     if (match) {
-      permission |= oc_ace_get_permission(match, resource, interface);
+      permission |=
+        oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
              "connection",
              permission);
@@ -534,11 +554,11 @@ oc_sec_encode_acl(size_t device)
         oc_rep_set_text_string(resources, href, oc_string(res->href));
       } else {
         switch (res->wildcard) {
-        case OC_ACE_WC_ALL_DISCOVERABLE:
-          oc_rep_set_text_string(resources, wc, wc_discoverable);
+        case OC_ACE_WC_ALL_SECURED:
+          oc_rep_set_text_string(resources, wc, wc_secured);
           break;
-        case OC_ACE_WC_ALL_NON_DISCOVERABLE:
-          oc_rep_set_text_string(resources, wc, wc_non_discoverable);
+        case OC_ACE_WC_ALL_PUBLIC:
+          oc_rep_set_text_string(resources, wc, wc_public);
           break;
         case OC_ACE_WC_ALL:
           oc_rep_set_text_string(resources, wc, wc_all);
@@ -649,10 +669,10 @@ new_res:
     }
 #ifdef OC_DEBUG
     switch (res->wildcard) {
-    case OC_ACE_WC_ALL_DISCOVERABLE:
+    case OC_ACE_WC_ALL_SECURED:
       OC_DBG("Adding wildcard resource + with permission %d", permission);
       break;
-    case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+    case OC_ACE_WC_ALL_PUBLIC:
       OC_DBG("Adding wildcard resource - with permission %d", permission);
       break;
     case OC_ACE_WC_ALL:
@@ -989,7 +1009,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                   */
                 }
                 if (oc_string(resource->value.string)[0] == '+') {
-                  wc = OC_ACE_WC_ALL_DISCOVERABLE;
+                  wc = OC_ACE_WC_ALL_SECURED;
                   /*
             #ifdef OC_SERVER
                   wc_r = ~0;
@@ -997,7 +1017,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                   */
                 }
                 if (oc_string(resource->value.string)[0] == '-') {
-                  wc = OC_ACE_WC_ALL_NON_DISCOVERABLE;
+                  wc = OC_ACE_WC_ALL_PUBLIC;
                   /*
             #ifdef OC_SERVER
                   wc_r = ~OC_DISCOVERABLE;
@@ -1102,6 +1122,14 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
+
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
+  if (ps->s == OC_DOS_RFNOP) {
+    OC_ERR("oc_acl: Cannot DELETE ACE in RFNOP");
+    oc_send_response(request, OC_STATUS_FORBIDDEN);
+    return;
+  }
+
   bool success = false;
   char *query_param = 0;
   int ret = oc_get_query_value(request, "aceid", &query_param);
