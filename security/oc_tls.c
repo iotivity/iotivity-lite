@@ -580,7 +580,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
       ret = mbedtls_pk_parse_key(
         &cert->pk,
         (const unsigned char *)oc_cast(cred->privatedata.data, uint8_t),
-        oc_string_len(cred->privatedata.data), NULL, 0);
+        oc_string_len(cred->privatedata.data) + 1, NULL, 0);
       if (ret != 0) {
         OC_ERR("could not parse private key %d",
                oc_string_len(cred->privatedata.data));
@@ -835,6 +835,90 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     OC_ERR("failed to verify end entity cert");
     return -1;
   }
+
+  if (depth == 0) {
+    oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
+
+    /* Parse the peer's subjectuuid from its end-entity certificate */
+    oc_string_t uuid;
+    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
+      OC_ERR("unable to retrieve UUID from the cert's CN");
+      return -1;
+    }
+
+    oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+    OC_DBG("attempting to connect with peer %s", oc_string(uuid));
+    oc_free_string(&uuid);
+
+    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+      OC_ERR("unable to extract public key from cert");
+      return -1;
+    }
+
+    oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+    if (!id_cert) {
+      OC_ERR("could not find the identity cert used for this session");
+      return -1;
+    }
+
+    if (id_cert->cred->credusage != OC_CREDUSAGE_MFG_CERT) {
+      OC_DBG("checking if peer is authorized to connect with us");
+      oc_uuid_t wildcard_sub;
+      memset(&wildcard_sub, 0, sizeof(oc_uuid_t));
+      wildcard_sub.id[0] = '*';
+
+      /* Get a handle to the peer's root certificate */
+      mbedtls_x509_crt *root_crt = crt;
+      while (root_crt->next) {
+        root_crt = root_crt->next;
+      }
+
+      OC_DBG("looking for a matching trustca currently tracked by oc_tls");
+      oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
+      for (; ca_cert != NULL && ca_cert->device == id_cert->device &&
+             ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA;
+           ca_cert = ca_cert->next) {
+        if (root_crt->raw.len == ca_cert->cert->raw.len &&
+            memcmp(root_crt->raw.p, ca_cert->cert->raw.p, root_crt->raw.len) ==
+              0) {
+        } else {
+          OC_DBG("trustca mismatch, check next known trustca");
+          continue;
+        }
+        OC_DBG("found matching trustca; check if trustca's cred entry has a "
+               "UUID matching with the peer's UUID, or *");
+#ifdef OC_DEBUG
+        if (ca_cert->cred->subjectuuid.id[0] != '*') {
+          char ca_uuid[37];
+          oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid, 37);
+          OC_DBG("trustca cred UUID is %s", ca_uuid);
+        } else {
+          OC_DBG("trustca cred UUID is the wildcard *");
+        }
+#endif /* OC_DEBUG */
+        if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id, 16) != 0) {
+          if (memcmp(ca_cert->cred->subjectuuid.id, wildcard_sub.id, 16) != 0) {
+            OC_DBG("trustca cred's UUID does not match with with peer's UUID "
+                   "or the wildcard subject *; checking next known trustca");
+            continue;
+          } else {
+            OC_DBG("trustca cred entry bears the wildcard subject * -> "
+                   "authorization successful");
+            break;
+          }
+        } else {
+          OC_DBG("trustca cred entry has subjectuuid that matches with the "
+                 "peer's UUID -> authorization successful");
+          break;
+        }
+      }
+
+      if (!ca_cert) {
+        OC_ERR("could not find authorizing trustca cred for peer");
+        return -1;
+      }
+    }
+  }
   OC_DBG("verified certificate at depth %d", depth);
   return 0;
 }
@@ -874,8 +958,6 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
 #ifdef OC_PKI
   mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
 
-  mbedtls_ssl_conf_verify(conf, verify_certificate, NULL);
-
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   /* Decide between configuring the identity cert chain vs manufacturer cert
    * chain for this device based on device ownership status.
@@ -913,6 +995,11 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 
       oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
                                  transport_type);
+
+#ifdef OC_PKI
+      mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#endif /* OC_PKI */
+
       oc_tls_set_ciphersuites(&peer->ssl_conf, endpoint);
 
       int err = mbedtls_ssl_setup(&peer->ssl_ctx, &peer->ssl_conf);
@@ -1347,83 +1434,8 @@ read_application_data(oc_tls_peer_t *peer)
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
     if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
-#ifdef OC_PKI
-      int cipher = peer->ssl_ctx.session->ciphersuite;
       OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]",
-             cipher);
-      if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 != cipher &&
-          MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 != cipher) {
-        const mbedtls_x509_crt *cert =
-          mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
-        if (cert == NULL) {
-          OC_ERR("unable to retrieve peer cert for TLS handshake");
-          goto error_cert_auth_session;
-        }
-
-        oc_string_t uuid;
-        if (oc_certs_parse_CN_for_UUID(cert, &uuid) < 0) {
-          OC_ERR("unable to retrieve UUID from the cert's CN");
-          goto error_cert_auth_session;
-        }
-
-        oc_str_to_uuid(oc_string(uuid), &peer->uuid);
-        oc_free_string(&uuid);
-
-        if (oc_certs_extract_public_key(cert, peer->public_key) < 0) {
-          OC_ERR("unable to extract public key from cert");
-          goto error_cert_auth_session;
-        }
-
-        oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
-
-        if (!id_cert) {
-          OC_ERR("could not find the identity cert used for this session");
-          goto error_cert_auth_session;
-        }
-
-        if (id_cert->cred->credusage != OC_CREDUSAGE_MFG_CERT) {
-          oc_uuid_t wildcard_sub;
-          memset(&wildcard_sub, 0, sizeof(oc_uuid_t));
-          wildcard_sub.id[0] = '*';
-
-          oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
-          for (; ca_cert != NULL && ca_cert->device == id_cert->device &&
-                 ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA;
-               ca_cert = ca_cert->next) {
-            uint32_t flags = 0;
-            int err = mbedtls_x509_crt_verify_with_profile(
-              &id_cert->cert, ca_cert->cert, NULL,
-              &mbedtls_x509_crt_profile_default, NULL, &flags, NULL, NULL);
-            if (err != 0 || flags != 0) {
-              continue;
-            }
-
-            if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id, 16) != 0) {
-              if (memcmp(ca_cert->cred->subjectuuid.id, wildcard_sub.id, 16) !=
-                  0) {
-                continue;
-              } else {
-                break;
-              }
-            }
-
-            break;
-          }
-
-          if (!cert) {
-            OC_ERR("could not find authorizing trustca cred for peer");
-            goto error_cert_auth_session;
-          }
-        }
-
-        goto session_connected;
-
-      error_cert_auth_session:
-        oc_tls_free_peer(peer, false);
-        return;
-      }
-    session_connected:
-#endif /* OC_PKI */
+             peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
     }
 #ifdef OC_CLIENT
