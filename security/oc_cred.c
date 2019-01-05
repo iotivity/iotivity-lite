@@ -1054,6 +1054,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 {
   (void)interface;
   (void)data;
+
   bool success = false;
   bool roles_resource = false;
 
@@ -1065,6 +1066,16 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
     roles_resource = true;
   }
 #endif /* OC_PKI */
+
+  if (!roles_resource) {
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
+    if (ps->s == OC_DOS_RFNOP) {
+      OC_ERR("oc_cred: Cannot DELETE ACE in RFNOP");
+      oc_send_response(request, OC_STATUS_FORBIDDEN);
+      return;
+    }
+  }
+
   char *query_param = 0;
   int ret = oc_get_query_value(request, "credid", &query_param);
   int credid = 0;
