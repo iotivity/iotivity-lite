@@ -166,7 +166,9 @@ main(void)
     return init;
   }
 
-#ifdef OC_PKI
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_set_max_app_data_size(16384);
+
   const unsigned char my_crt[] = {
     0x30, 0x82, 0x03, 0xf8, 0x30, 0x82, 0x03, 0x9e, 0xa0, 0x03, 0x02, 0x01,
     0x02, 0x02, 0x09, 0x00, 0x8d, 0x0a, 0xfb, 0x7b, 0x53, 0xb2, 0x4c, 0xb6,
@@ -388,7 +390,7 @@ main(void)
   oc_pki_add_mfg_trust_anchor(0, root_ca, sizeof(root_ca));
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
-#endif /* OC_PKI */
+#endif /* OC_SECURITY && OC_PKI */
 
   while (quit != 1) {
     next_event = oc_main_poll();
