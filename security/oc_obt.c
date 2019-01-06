@@ -1735,10 +1735,10 @@ provision_ace(int status, void *data)
           oc_rep_set_text_string(resources, href, oc_string(res->href));
         } else {
           switch (res->wildcard) {
-          case OC_ACE_WC_ALL_DISCOVERABLE:
+          case OC_ACE_WC_ALL_SECURED:
             oc_rep_set_text_string(resources, wc, "+");
             break;
-          case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+          case OC_ACE_WC_ALL_PUBLIC:
             oc_rep_set_text_string(resources, wc, "-");
             break;
           case OC_ACE_WC_ALL:
