@@ -49,7 +49,7 @@ static int quit;
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nOCF 1.3 "
+  PRINT("\n\n################################################\nOCF 2.0 "
         "Onboarding Tool\n################################################\n");
   PRINT("[0] Display this menu\n");
   PRINT("-----------------------------------------------\n");
@@ -520,18 +520,20 @@ provision_ace2(void)
       PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
       SCANF("%d", &c);
       if (c == 1) {
-        PRINT("[1]: All resources\n[2]: All discoverable resources\n[3]: All "
-              "non-discoverable resources\n\nSelect wildcard resource: ");
+        PRINT("[1]: All NCRs '*' \n[2]: All NCRs with >=1 secured endpoint "
+              "'+'\n[3]: "
+              "All NCRs with >=1 unsecured endpoint '-'\n\nSelect wildcard "
+              "resource: ");
         SCANF("%d", &c);
         switch (c) {
         case 1:
           oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
           break;
         case 2:
-          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_DISCOVERABLE);
+          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_SECURED);
           break;
         case 3:
-          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_NON_DISCOVERABLE);
+          oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL_PUBLIC);
           break;
         default:
           break;
