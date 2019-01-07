@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_c08820c9",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Yes it doesn\u0027t have share anything with general coap messages.\nBut the process to parse option logic is same with general coap messages. So I want to re-use that kinds of logic upper(opthin delta check, move current option value ...)\nAlso, if the message is signal packet, it just execute coap_parse_signal_options() and continue(line 630) and other messages can\u0027t call this.",
+      "parentUuid": "5a3f45e8_40b6d0dd",
+      "range": {
+        "startLine": 625,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 19
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_20bbc4c5",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 12
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_a08514af",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1200,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "No. I think this block need to run inside while(570 line) statements.\nDo you want to make other path to parse only signal message?",
+      "parentUuid": "5a3f45e8_20bbc4c5",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_a0c6b447",
         "filename": "messaging/coap/coap.h",
         "patchSetId": 12
@@ -53,6 +95,30 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "This is the block-wise transfer option and not BERT in particular. So, you could rename this to blockwise_transfer.",
+      "range": {
+        "startLine": 152,
+        "startChar": 10,
+        "endLine": 152,
+        "endChar": 14
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_630e7636",
+        "filename": "messaging/coap/coap.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_a0c6b447",
       "range": {
         "startLine": 152,
         "startChar": 10,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_e319e67a",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_e0d71cec",
+      "range": {
+        "startLine": 56,
+        "startChar": 55,
+        "endLine": 56,
+        "endChar": 66
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_e0eefcb3",
         "filename": "messaging/coap/coap_signal.c",
         "patchSetId": 12
@@ -99,6 +189,30 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "You could plug in max_message_size_option over here.",
+      "range": {
+        "startLine": 66,
+        "startChar": 45,
+        "endLine": 66,
+        "endChar": 56
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_031df266",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_e0eefcb3",
       "range": {
         "startLine": 66,
         "startChar": 45,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_a30fde2d",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_a0cd1460",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 3
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_4004107e",
         "filename": "messaging/coap/coap_signal.c",
         "patchSetId": 12
@@ -145,6 +283,30 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "Rename to custody_option.",
+      "range": {
+        "startLine": 83,
+        "startChar": 56,
+        "endLine": 83,
+        "endChar": 70
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_4326dabb",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_4004107e",
       "range": {
         "startLine": 83,
         "startChar": 56,
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_232bce83",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "I thought the ping message could also be the first message of tcp transmission. In case of that, we need to consider whether csm message is sent or not. The check logic for this is in coap_send_message().\nSo I use coap_send_transaction() function.",
+      "parentUuid": "5a3f45e8_603aec37",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 27
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_20e2a4d5",
         "filename": "messaging/coap/coap_signal.h",
         "patchSetId": 12
@@ -191,6 +377,30 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "Rename to BLOCKWISE_TRANSFER",
+      "range": {
+        "startLine": 42,
+        "startChar": 21,
+        "endLine": 42,
+        "endChar": 25
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c312ea57",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_20e2a4d5",
       "range": {
         "startLine": 42,
         "startChar": 21,
@@ -272,6 +482,54 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_8320e29c",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_60030c74",
+      "range": {
+        "startLine": 49,
+        "startChar": 50,
+        "endLine": 49,
+        "endChar": 51
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a336bee5",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_c0f7808b",
+      "range": {
+        "startLine": 49,
+        "startChar": 59,
+        "endLine": 49,
+        "endChar": 70
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_00f2089a",
         "filename": "messaging/coap/coap_signal.h",
         "patchSetId": 12
@@ -283,6 +541,30 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "Rename to custody_option.",
+      "range": {
+        "startLine": 50,
+        "startChar": 60,
+        "endLine": 50,
+        "endChar": 74
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_6325d6aa",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_00f2089a",
       "range": {
         "startLine": 50,
         "startChar": 60,
@@ -318,6 +600,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_c3394ada",
+        "filename": "messaging/coap/coap_signal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_c03e6029",
+      "range": {
+        "startLine": 62,
+        "startChar": 20,
+        "endLine": 62,
+        "endChar": 24
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_2030e455",
         "filename": "messaging/coap/engine.c",
         "patchSetId": 12
@@ -329,6 +635,24 @@
       "writtenOn": "2019-01-04T02:48:19Z",
       "side": 1,
       "message": "Shouldn\u0027t we return here?\n\nreturn coap_status_code;",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_009328fb",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-07T05:21:42Z",
+      "side": 1,
+      "message": "No. If the message is pong message, this message need to process below logics. (especially oc_ri_invoke_client_cb() function to handle ping response(which is pong message)",
+      "parentUuid": "5a3f45e8_2030e455",
       "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
