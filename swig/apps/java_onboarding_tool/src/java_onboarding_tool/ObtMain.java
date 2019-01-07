@@ -74,7 +74,7 @@ public class ObtMain {
                     } else {
                             long now = OCClock.clockTime();
                             long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
-                            System.out.println("Poll time to wait : " + timeToWait);
+//                            System.out.println("Poll time to wait : " + timeToWait);
                             cv.awaitNanos(timeToWait);
                     }
                 } catch (InterruptedException e) {
