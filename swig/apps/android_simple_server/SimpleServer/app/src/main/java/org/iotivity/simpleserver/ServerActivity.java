@@ -47,7 +47,7 @@ public class ServerActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-            File credsDir = new File(getExternalFilesDir(null), "simpleserver_creds");
+            File credsDir = new File(this.getFilesDir(), "simpleserver_creds");
             Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
             if (!credsDir.exists()) {
                 boolean mkDirResult = credsDir.mkdir();
