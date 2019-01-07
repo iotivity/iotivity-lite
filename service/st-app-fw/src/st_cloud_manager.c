@@ -71,7 +71,8 @@ static oc_event_callback_retval_t send_ping(void *data);
 
 static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 60 };
 static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
-static uint16_t g_ping_interval = 1;
+static uint8_t g_ping_interval = 1;
+static bool g_is_connected = false;
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
@@ -115,6 +116,7 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
   st_print_log("[ST_CM] session state (%s)\n",
                (state) ? "DISCONNECTED" : "CONNECTED");
+  g_is_connected = (state) ? false : true;
   if (state == OC_SESSION_CONNECTED)
     return;
 
@@ -173,6 +175,7 @@ st_cloud_manager_start(st_store_t *store_info, size_t device_index,
   if (!context)
     return -1;
 
+  g_is_connected = false;
   context->callback = cb;
   context->device_index = device_index;
   context->cloud_manager_status =
@@ -389,6 +392,10 @@ sign_up(void *data)
     st_print_log("[ST_CM] try sign up(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
+#ifdef OC_TCP
+      if (g_is_connected)
+        oc_connectivity_end_session(&context->cloud_ep);
+#endif /* OC_TCP */
       st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
       if (0 == oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep,
                                      NULL)) {
@@ -449,6 +456,10 @@ sign_in(void *data)
     st_print_log("[ST_CM] try sign in(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
+#ifdef OC_TCP
+      if (g_is_connected)
+        oc_connectivity_end_session(&context->cloud_ep);
+#endif /* OC_TCP */
       st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
       if (0 == oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep,
                                      NULL)) {
@@ -513,11 +524,18 @@ refresh_token(void *data)
   st_print_log("[ST_CM] try refresh token(%d)\n", context->retry_count);
   context->retry_count++;
   if (!is_retry_over(context)) {
+#ifdef OC_TCP
+    if (g_is_connected)
+      oc_connectivity_end_session(&context->cloud_ep);
+#endif /* OC_TCP */
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
-    oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
-                            oc_string(cloudinfo.refresh_token),
-                            context->device_index, refresh_token_handler,
-                            context);
+    if (0 ==
+        oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
+      oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
+                              oc_string(cloudinfo.refresh_token),
+                              context->device_index, refresh_token_handler,
+                              context);
+    }
     oc_set_delayed_callback(context, refresh_token,
                             session_timeout[context->retry_count]);
   }
