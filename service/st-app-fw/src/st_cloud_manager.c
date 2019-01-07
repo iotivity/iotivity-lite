@@ -71,7 +71,8 @@ static oc_event_callback_retval_t send_ping(void *data);
 
 static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 60 };
 static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
-static uint16_t g_ping_interval = 1;
+static uint8_t g_ping_interval = 1;
+static bool g_already_requested = false;
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
@@ -115,23 +116,29 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
   st_print_log("[ST_CM] session state (%s)\n",
                (state) ? "DISCONNECTED" : "CONNECTED");
-  if (state == OC_SESSION_CONNECTED)
+  if (state == OC_SESSION_CONNECTED) {
+    g_already_requested = false;
     return;
+  }
 
   st_cloud_context_t *context = oc_list_head(st_cloud_context_list);
   while (context != NULL && context->device_index != endpoint->device) {
     context = context->next;
   }
 
-  if (!context || context->cloud_manager_status == CLOUD_MANAGER_RECONNECTING ||
-      0 != oc_endpoint_compare(endpoint, &context->cloud_ep))
+  if (!context ||
+      (context->cloud_manager_status == CLOUD_MANAGER_RECONNECTING &&
+       g_already_requested) ||
+      0 != oc_endpoint_compare(endpoint, &context->cloud_ep)) {
+    g_already_requested = false;
     return;
-
+  }
   switch (context->cloud_manager_status) {
   case CLOUD_MANAGER_INITIALIZED:
     oc_remove_delayed_callback(context, sign_up);
     break;
   case CLOUD_MANAGER_SIGNED_UP:
+  case CLOUD_MANAGER_RECONNECTING:
     oc_remove_delayed_callback(context, sign_in);
     break;
   case CLOUD_MANAGER_SIGNED_IN: {
@@ -154,8 +161,10 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
     return;
   }
 
-  context->cloud_manager_status = CLOUD_MANAGER_RECONNECTING;
-  oc_set_delayed_callback(context, callback_handler, 0);
+  if (context->cloud_manager_status > CLOUD_MANAGER_SIGNED_UP) {
+    context->cloud_manager_status = CLOUD_MANAGER_RECONNECTING;
+    oc_set_delayed_callback(context, callback_handler, 0);
+  }
   cloud_start_process(context);
 }
 #endif /* OC_SESSION_EVENTS */
@@ -232,13 +241,19 @@ st_cloud_manager_check_connection(oc_string_t *ci_server)
 static bool
 is_retry_over(st_cloud_context_t *context)
 {
-  if (context->retry_count < MAX_RETRY_COUNT)
+  if (context->retry_count < MAX_RETRY_COUNT) {
+#ifdef OC_TCP
+    if (context->cloud_manager_status <= CLOUD_MANAGER_SIGNED_UP)
+      oc_connectivity_end_session(&context->cloud_ep);
+#endif /* OC_TCP */
     return false;
+  }
 
   if (context->cloud_manager_status != CLOUD_MANAGER_RECONNECTING) {
     context->cloud_manager_status = CLOUD_MANAGER_RECONNECTING;
     oc_set_delayed_callback(context, callback_handler, 0);
   }
+  g_already_requested = true;
 #ifdef OC_TCP
   oc_connectivity_end_session(&context->cloud_ep);
 #endif /* OC_TCP */
@@ -294,6 +309,10 @@ error_handler(st_cloud_context_t *context, oc_rep_t* res_payload,
       context->retry_count = 0;
       context->cloud_manager_status = CLOUD_MANAGER_RECONNECTING;
     }
+    g_already_requested = true;
+#ifdef OC_TCP
+    oc_connectivity_end_session(&context->cloud_ep);
+#endif /* OC_TCP */
     oc_set_delayed_callback(context, refresh_token,
                             session_timeout[context->retry_count]);
     break;
@@ -512,12 +531,16 @@ refresh_token(void *data)
   st_cloud_context_t *context = (st_cloud_context_t *)data;
   st_print_log("[ST_CM] try refresh token(%d)\n", context->retry_count);
   context->retry_count++;
+
   if (!is_retry_over(context)) {
     st_cloud_store_t cloudinfo = st_store_get_info()->cloudinfo;
-    oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
-                            oc_string(cloudinfo.refresh_token),
-                            context->device_index, refresh_token_handler,
-                            context);
+    if (0 ==
+        oc_string_to_endpoint(&cloudinfo.ci_server, &context->cloud_ep, NULL)) {
+      oc_refresh_access_token(&context->cloud_ep, oc_string(cloudinfo.uid),
+                              oc_string(cloudinfo.refresh_token),
+                              context->device_index, refresh_token_handler,
+                              context);
+    }
     oc_set_delayed_callback(context, refresh_token,
                             session_timeout[context->retry_count]);
   }
