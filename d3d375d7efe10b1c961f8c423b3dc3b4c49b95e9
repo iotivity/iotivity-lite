@@ -1,0 +1,284 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_034b325a",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "over 80 cols",
+      "range": {
+        "startLine": 26,
+        "startChar": 100,
+        "endLine": 26,
+        "endChar": 102
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23790e94",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "doesn\u0027t it need #ifdef OC_RPK just in case other signinputs has jwt by mistakes?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e347264a",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "doesn\u0027t it need #ifdef OC_RPK just in case other signinputs has jwt by mistakes?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_43741a9c",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "how about checking jwt existance here?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_836e22c8",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "is it OK to ignore checking whether *info and g_sec_prov are NULL or not?",
+      "range": {
+        "startLine": 491,
+        "startChar": 23,
+        "endLine": 491,
+        "endChar": 49
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_637316b2",
+        "filename": "service/easy-setup/enrollee/samsung/sc_easysetup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "just question.\n What happens if p-type are not in OC_REP_INT or OC_REP_STRING? \n(for example  OC_REP_DOUBLE, OC_REP_BOOL.. and so on .)",
+      "range": {
+        "startLine": 508,
+        "startChar": 11,
+        "endLine": 508,
+        "endChar": 19
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_2352ae13",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "minor ..  /*!ST_JWT_H*/",
+      "range": {
+        "startLine": 56,
+        "startChar": 7,
+        "endLine": 56,
+        "endChar": 19
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e35e0612",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "it seems that the file name doesn\u0027t make sense \nsince it is for jwt.\nhow about adding something like jwt??",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 77
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_439b7ac9",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "please remove tabs",
+      "range": {
+        "startLine": 785,
+        "startChar": 0,
+        "endLine": 786,
+        "endChar": 13
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23a0eef3",
+        "filename": "service/st-app-fw/src/st_data_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "if you don\u0027t have a special reason to use it,\nhow about followings?\n\n\nvoid\nst_free_rpk_profile(void) {\n// no need about   OC_DYNAMIC_ALLOCATION. \n  if (g_st_rpk_profile) {\n    oc_memb_free(\u0026st_rpk_profile_t, g_st_rpk_profile);\n    // g_st_rpk_profile comes from oc_memb_alloc(\u0026st_rpk_profile_s), \n    // so, oc_memb_free looks better.\n\n    g_st_rpk_profile \u003d NULL;\n  }\n\n}",
+      "range": {
+        "startLine": 795,
+        "startChar": 0,
+        "endLine": 795,
+        "endChar": 28
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_635cb626",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "please change a tab into spaces",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_83574202",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "please change a tab into spaces",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c3402a38",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "white space",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a33d1ebe",
+        "filename": "service/st-app-fw/unittest/stmanagertest.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 475
+      },
+      "writtenOn": "2019-01-07T08:23:34Z",
+      "side": 1,
+      "message": "how about adding test functions such as \"st_jwt_json_*\" into a new file when st_register_rpk_hander is removed",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
