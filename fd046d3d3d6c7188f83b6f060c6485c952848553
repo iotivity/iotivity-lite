@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_43053ac1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "move this to Certification.h",
+      "range": {
+        "startLine": 39,
+        "startChar": 23,
+        "endLine": 39,
+        "endChar": 24
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_036cd29b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "remove 100, define a macro and use it",
+      "range": {
+        "startLine": 42,
+        "startChar": 54,
+        "endLine": 42,
+        "endChar": 56
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e368c689",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "move this to top",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 6
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_230aaed2",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "add static for variables which are used only in this file..",
+      "range": {
+        "startLine": 72,
+        "startChar": 33,
+        "endLine": 72,
+        "endChar": 34
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_6314b6f5",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "please check whether you can move prototypes to header file",
+      "range": {
+        "startLine": 110,
+        "startChar": 11,
+        "endLine": 110,
+        "endChar": 12
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c3f82ac7",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "please keep naming simple",
+      "range": {
+        "startLine": 287,
+        "startChar": 36,
+        "endLine": 287,
+        "endChar": 37
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_030332b9",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "if this variable not needed, delete it",
+      "range": {
+        "startLine": 421,
+        "startChar": 2,
+        "endLine": 421,
+        "endChar": 15
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a3f51ecd",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "remove spaces",
+      "range": {
+        "startLine": 424,
+        "startChar": 35,
+        "endLine": 424,
+        "endChar": 36
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e3ff26a9",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 483,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "remove unwanted code",
+      "range": {
+        "startLine": 483,
+        "startChar": 39,
+        "endLine": 483,
+        "endChar": 41
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_432c1a4b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "please make indentation uniform across file",
+      "range": {
+        "startLine": 508,
+        "startChar": 4,
+        "endLine": 508,
+        "endChar": 8
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23310ea3",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 874,
+        "startChar": 23,
+        "endLine": 874,
+        "endChar": 25
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_83262267",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "remove spaces and unwanted lines",
+      "range": {
+        "startLine": 886,
+        "startChar": 13,
+        "endLine": 886,
+        "endChar": 14
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_632b1631",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 1119,
+        "startChar": 0,
+        "endLine": 1119,
+        "endChar": 13
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c31f8a08",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1449,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 1449,
+        "startChar": 27,
+        "endLine": 1449,
+        "endChar": 28
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a31cfe14",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1820,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-08T12:46:48Z",
+      "side": 1,
+      "message": "indentation",
+      "range": {
+        "startLine": 1820,
+        "startChar": 0,
+        "endLine": 1820,
+        "endChar": 12
+      },
+      "revId": "fd046d3d3d6c7188f83b6f060c6485c952848553",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
