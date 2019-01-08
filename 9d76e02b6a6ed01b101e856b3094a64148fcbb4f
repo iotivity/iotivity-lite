@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_a3ca3e6c",
+        "filename": "api/oc_client_api.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-08T22:17:19Z",
+      "side": 1,
+      "message": "This needs to be \"/ping\". Some other code assumes that resource uris provided to this API have a leading slash.",
+      "range": {
+        "startLine": 348,
+        "startChar": 46,
+        "endLine": 348,
+        "endChar": 50
+      },
+      "revId": "9d76e02b6a6ed01b101e856b3094a64148fcbb4f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
