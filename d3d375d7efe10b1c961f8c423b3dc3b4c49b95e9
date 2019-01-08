@@ -42,6 +42,23 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_635dd6e9",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "why not changed cloud_access.h?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_e347264a",
         "filename": "service/cloud-access/src/cloud_access.c",
         "patchSetId": 10
@@ -53,6 +70,23 @@
       "writtenOn": "2019-01-07T08:23:34Z",
       "side": 1,
       "message": "doesn\u0027t it need #ifdef OC_RPK just in case other signinputs has jwt by mistakes?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c3714a79",
+        "filename": "service/cloud-access/src/cloud_access.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "why not changed cloud_access.h?",
       "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -122,6 +156,57 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_435edaea",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please add brief about param and return",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_2363ceb2",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please add brief about param and return",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_8358e2fb",
+        "filename": "service/st-app-fw/include/st_jwt.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please add brief about param and return",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_2352ae13",
         "filename": "service/st-app-fw/include/st_jwt.h",
         "patchSetId": 10
@@ -145,6 +230,23 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_e351e6d9",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please use #ifdef OC_DYNAMIC_ALLOCATION for mem_free and check null before free",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_e35e0612",
         "filename": "service/st-app-fw/src/st_cloud_security.c",
         "patchSetId": 10
@@ -161,6 +263,86 @@
         "startChar": 0,
         "endLine": 17,
         "endChar": 77
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_0355f2c5",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "How about add [ST_CS] ...??",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_63467625",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "how about using strncat?",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 26
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c34aea26",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "remove comment",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a347de1c",
+        "filename": "service/st-app-fw/src/st_cloud_security.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "how about using strncat?",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 26
       },
       "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
@@ -214,6 +396,23 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_4337fab0",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "How about move to outside?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_635cb626",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 10
@@ -231,6 +430,29 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_8341020e",
+        "filename": "service/st-app-fw/src/st_easy_setup.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please null check",
+      "range": {
+        "startLine": 216,
+        "startChar": 13,
+        "endLine": 216,
+        "endChar": 17
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_83574202",
         "filename": "service/st-app-fw/src/st_easy_setup.c",
         "patchSetId": 10
@@ -242,6 +464,189 @@
       "writtenOn": "2019-01-07T08:23:34Z",
       "side": 1,
       "message": "please change a tab into spaces",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c3dcaa77",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "Why do not return?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_63f836e6",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please check null",
+      "range": {
+        "startLine": 430,
+        "startChar": 9,
+        "endLine": 430,
+        "endChar": 16
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a3d99e85",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "Why do not return?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_03e7b241",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please check null",
+      "range": {
+        "startLine": 437,
+        "startChar": 9,
+        "endLine": 437,
+        "endChar": 14
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e3e3a631",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "Why do not return?",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_43d09a53",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please check null",
+      "range": {
+        "startLine": 448,
+        "startChar": 9,
+        "endLine": 448,
+        "endChar": 17
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23d58e43",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "What\u0027s mean?",
+      "range": {
+        "startLine": 473,
+        "startChar": 30,
+        "endLine": 473,
+        "endChar": 31
+      },
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_03be92ff",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please remove comment",
+      "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e3ba8609",
+        "filename": "service/st-app-fw/src/st_manager.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 287
+      },
+      "writtenOn": "2019-01-08T05:18:15Z",
+      "side": 1,
+      "message": "please define value",
+      "range": {
+        "startLine": 506,
+        "startChar": 43,
+        "endLine": 506,
+        "endChar": 45
+      },
       "revId": "d3d375d7efe10b1c961f8c423b3dc3b4c49b95e9",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
