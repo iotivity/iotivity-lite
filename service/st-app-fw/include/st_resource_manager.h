@@ -21,8 +21,8 @@
   @file
 */
 
-#ifndef ST_RECOURCE_MGR_H
-#define ST_RECOURCE_MGR_H
+#ifndef ST_RESOURCE_MGR_H
+#define ST_RESOURCE_MGR_H
 
 #include "oc_rep.h"
 #include "st_types.h"
@@ -83,4 +83,4 @@ st_error_t st_notify_back(const char *uri);
 }
 #endif
 
-#endif /* ST_RECOURCE_MGR_H */
+#endif /* ST_RESOURCE_MGR_H */
