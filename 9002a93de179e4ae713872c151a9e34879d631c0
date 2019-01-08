@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5a3f45e8_03f172cd",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-08T22:17:19Z",
+      "side": 1,
+      "message": "Got it, Thanks.",
+      "parentUuid": "5a3f45e8_c08820c9",
+      "range": {
+        "startLine": 625,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 19
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a3f45e8_20bbc4c5",
         "filename": "messaging/coap/coap.c",
         "patchSetId": 12
@@ -78,6 +102,24 @@
       "side": 1,
       "message": "No. I think this block need to run inside while(570 line) statements.\nDo you want to make other path to parse only signal message?",
       "parentUuid": "5a3f45e8_20bbc4c5",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e3ed66f1",
+        "filename": "messaging/coap/coap.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1200,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-08T22:17:19Z",
+      "side": 1,
+      "message": "No. This is OK.",
+      "parentUuid": "5a3f45e8_a08514af",
       "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -354,6 +396,30 @@
       "side": 1,
       "message": "I thought the ping message could also be the first message of tcp transmission. In case of that, we need to consider whether csm message is sent or not. The check logic for this is in coap_send_message().\nSo I use coap_send_transaction() function.",
       "parentUuid": "5a3f45e8_603aec37",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 27
+      },
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_43ba5ae2",
+        "filename": "messaging/coap/coap_signal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-08T22:17:19Z",
+      "side": 1,
+      "message": "Got it.",
+      "parentUuid": "5a3f45e8_232bce83",
       "range": {
         "startLine": 101,
         "startChar": 0,
@@ -653,6 +719,24 @@
       "side": 1,
       "message": "No. If the message is pong message, this message need to process below logics. (especially oc_ri_invoke_client_cb() function to handle ping response(which is pong message)",
       "parentUuid": "5a3f45e8_2030e455",
+      "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23bf4ed2",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-08T22:17:19Z",
+      "side": 1,
+      "message": "Understood.\n\nIf I understood right, the RFC suggests that PING-PONG messages may be bidirectional, i.e. in theory a Server could PING a Client. However, the code here I guess requires the Client role to also be compiled in for issuing PING requests.\nNot a big deal... just something to remember..",
+      "parentUuid": "5a3f45e8_009328fb",
       "revId": "9002a93de179e4ae713872c151a9e34879d631c0",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
