@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_e3c44661",
+        "filename": "port/android/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-01-08T22:38:34Z",
+      "side": 1,
+      "message": "android -\u003e Android",
+      "revId": "86a5f7aff5606f459f46aade3ee62f4d608e6e35",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
