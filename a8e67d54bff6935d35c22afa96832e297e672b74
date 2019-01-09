@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_83b0e2de",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2019-01-09T10:03:49Z",
+      "side": 1,
+      "message": "what does this value intend?",
+      "range": {
+        "startLine": 75,
+        "startChar": 12,
+        "endLine": 75,
+        "endChar": 31
+      },
+      "revId": "a8e67d54bff6935d35c22afa96832e297e672b74",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_23bbcec5",
+        "filename": "service/st-app-fw/src/st_cloud_manager.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 13
+      },
+      "writtenOn": "2019-01-09T10:03:49Z",
+      "side": 1,
+      "message": "is it related with session end?",
+      "range": {
+        "startLine": 537,
+        "startChar": 4,
+        "endLine": 538,
+        "endChar": 80
+      },
+      "revId": "a8e67d54bff6935d35c22afa96832e297e672b74",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
