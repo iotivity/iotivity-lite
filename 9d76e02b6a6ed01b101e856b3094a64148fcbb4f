@@ -22,6 +22,30 @@
       "revId": "9d76e02b6a6ed01b101e856b3094a64148fcbb4f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c3c94a5c",
+        "filename": "api/oc_client_api.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1225
+      },
+      "writtenOn": "2019-01-09T10:00:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a3f45e8_a3ca3e6c",
+      "range": {
+        "startLine": 348,
+        "startChar": 46,
+        "endLine": 348,
+        "endChar": 50
+      },
+      "revId": "9d76e02b6a6ed01b101e856b3094a64148fcbb4f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
