@@ -340,13 +340,13 @@ oc_remove_ping_handler(void *data)
 
 bool
 oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
-             oc_response_handler_t handler)
+             oc_response_handler_t handler, void *user_data)
 {
   oc_client_handler_t client_handler;
   client_handler.response = handler;
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb("/ping", endpoint, 0, NULL,
-                                             client_handler, LOW_QOS, NULL);
+                                             client_handler, LOW_QOS, user_data);
   if (!cb)
     return false;
 
@@ -561,13 +561,13 @@ oc_get_all_roles(void)
 
 bool
 oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
-               oc_response_handler_t handler)
+               oc_response_handler_t handler, void *user_data)
 {
   oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
 
   if (cr) {
     if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
-                     NULL)) {
+                     user_data)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, roles);
       oc_rep_object_array_start_item(roles);

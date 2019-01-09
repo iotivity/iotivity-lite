@@ -385,10 +385,10 @@ typedef struct oc_role_t
 oc_role_t *oc_get_all_roles(void);
 
 bool oc_assert_role(const char *role, const char *authority,
-                    oc_endpoint_t *endpoint, oc_response_handler_t handler);
+                    oc_endpoint_t *endpoint, oc_response_handler_t handler, void *user_data);
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
-                  uint16_t timeout_seconds, oc_response_handler_t handler);
+                  uint16_t timeout_seconds, oc_response_handler_t handler, void *user_data);
 #endif /* OC_TCP */
 
 /** Common operations */
