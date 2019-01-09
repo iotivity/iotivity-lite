@@ -552,17 +552,21 @@ oc_close_session(oc_endpoint_t *endpoint)
   }
 }
 
-#if defined(OC_SECURITY) && defined(OC_PKI)
 oc_role_t *
 oc_get_all_roles(void)
 {
+#if defined(OC_SECURITY) && defined(OC_PKI)
   return oc_sec_get_role_creds();
+#else
+  return NULL;
+#endif /* OC_SECURITY && OC_PKI */
 }
 
 bool
 oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
                oc_response_handler_t handler)
 {
+#if defined(OC_SECURITY) && defined(OC_PKI)
   oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
 
   if (cr) {
@@ -603,8 +607,8 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
       }
     }
   }
+#endif /* OC_SECURITY && OC_PKI */
   return false;
 }
-#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */
