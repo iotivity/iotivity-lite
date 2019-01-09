@@ -1,0 +1,377 @@
+package org.iotivity.onboardingtool;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.res.Resources;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.Toast;
+
+import org.iotivity.OCClock;
+import org.iotivity.OCMain;
+import org.iotivity.OCObt;
+import org.iotivity.OCObtDeviceStatusHandler;
+import org.iotivity.OCObtDiscoveryHandler;
+import org.iotivity.OCStorage;
+import org.iotivity.OCUuidUtil;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class OnBoardingActivity extends AppCompatActivity {
+
+    public final Lock lock = new ReentrantLock();
+    public Condition cv = lock.newCondition();
+
+    public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
+
+    private static final String TAG = OnBoardingActivity.class.getSimpleName();
+
+    private RadioButton ownedRadioButton;
+    private RadioButton unownedRadioButton;
+    private Button refreshButton;
+    private ListView listView;
+
+    private OCObtDiscoveryHandler ownedDiscoveryHandler;
+    private OCObtDiscoveryHandler unownedDiscoveryHandler;
+    private OCObtDeviceStatusHandler justWorksHandler;
+    private OCObtDeviceStatusHandler deviceResetHandler;
+
+    private AdapterView.OnItemClickListener ownedItemClickListener;
+    private AdapterView.OnItemClickListener unownedItemClickListener;
+
+    private ArrayAdapter<String> ownedArrayAdapter;
+    private ArrayAdapter<String> unownedArrayAdapter;
+
+    private ArrayList<String> ownedDeviceList = new ArrayList<>();
+    private ArrayList<String> unownedDeviceList = new ArrayList<>();
+
+    private final Object arrayAdapterSync = new Object();
+
+    private boolean quit;
+    private int ownedActionChoice = -1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ownedDiscoveryHandler = new OwnedDeviceHandler(this);
+        unownedDiscoveryHandler = new UnownedDeviceHandler(this);
+        justWorksHandler = new JustWorksHandler(this);
+        deviceResetHandler = new DeviceResetHandler(this);
+
+        ownedItemClickListener = new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final String uuid = ownedArrayAdapter.getItem((int) id);
+                if (uuid != null) {
+
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                    alertDialogBuilder.setTitle(uuid);
+                    alertDialogBuilder.setSingleChoiceItems(R.array.ownedDeviceActions, -1, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ownedActionChoice = which;
+                        }
+                    });
+
+                    alertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (ownedActionChoice) {
+                                case 0: // Provision pair-wise credentials
+                                case 1: // Provision ACE2
+                                    Resources res = getResources();
+                                    String[] choices = res.getStringArray(R.array.ownedDeviceActions);
+                                    Toast.makeText(OnBoardingActivity.this, "TODO: " + choices[ownedActionChoice], Toast.LENGTH_LONG).show();
+                                    break;
+                                case 2: // Reset Device
+                                    new Thread(new Runnable() {
+                                        public void run() {
+                                            if (OCObt.deviceHardReset(OCUuidUtil.stringToUuid(uuid), deviceResetHandler) < 0) {
+                                                final String msg = "Failed to perform device reset for uuid " + uuid;
+                                                Log.d(TAG, msg);
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                    }
+                                                });
+                                            } else {
+                                                removeOwnedDevice(uuid);
+                                            }
+                                        }
+                                    }).start();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
+
+                    alertDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+
+                    Dialog resetDeviceDialog = alertDialogBuilder.create();
+                    resetDeviceDialog.show();
+
+                } else {
+                    Log.w(TAG, "Uuid not found in list");
+                }
+            }
+        };
+
+        unownedItemClickListener = new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final String uuid = unownedArrayAdapter.getItem((int) id);
+                if (uuid != null) {
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                    alertDialogBuilder.setTitle(uuid);
+                    alertDialogBuilder.setMessage(R.string.justWorks);
+
+                    alertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new Thread(new Runnable() {
+                                public void run() {
+                                    if (OCObt.performJustWorksOtm(OCUuidUtil.stringToUuid(uuid), justWorksHandler) < 0) {
+                                        final String msg = "Failed to perform ownership transfer for uuid " + uuid;
+                                        Log.d(TAG, msg);
+                                        runOnUiThread(new Runnable() {
+                                            public void run() {
+                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                                    } else {
+                                        removeUnownedDevice(uuid);
+                                    }
+                                }
+                            }).start();
+                        }
+                    });
+
+                    alertDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+
+                    Dialog justWorksDialog = alertDialogBuilder.create();
+                    justWorksDialog.show();
+
+                } else {
+                    Log.w(TAG, "Uuid not found in list");
+                }
+            }
+        };
+
+        ownedRadioButton = (RadioButton) findViewById(R.id.owned_radio_button);
+        ownedRadioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ownedArrayAdapter.setNotifyOnChange(false);
+                ownedArrayAdapter.clear();
+                ownedArrayAdapter.setNotifyOnChange(true);
+                listView.setAdapter(ownedArrayAdapter);
+                listView.setOnItemClickListener(ownedItemClickListener);
+
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (OCObt.discoverOwnedDevices(ownedDiscoveryHandler) < 0) {
+                            final String msg = "Failed to discover owned devices";
+                            Log.d(TAG, msg);
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    }
+                }).start();
+
+                refreshButton.setEnabled(true);
+            }
+        });
+
+        unownedRadioButton = (RadioButton) findViewById(R.id.unowned_radio_button);
+        unownedRadioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                unownedArrayAdapter.setNotifyOnChange(false);
+                unownedArrayAdapter.clear();
+                unownedArrayAdapter.setNotifyOnChange(true);
+                listView.setAdapter(unownedArrayAdapter);
+                listView.setOnItemClickListener(unownedItemClickListener);
+
+                new Thread(new Runnable() {
+                    public void run() {
+                        if (OCObt.discoverUnownedDevices(unownedDiscoveryHandler) < 0) {
+                            final String msg = "Failed to discover unowned devices";
+                            Log.d(TAG, msg);
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    }
+                }).start();
+
+                refreshButton.setEnabled(true);
+            }
+        });
+
+        refreshButton = (Button) findViewById(R.id.refresh_button);
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ownedRadioButton.isChecked()) {
+                    ownedArrayAdapter.setNotifyOnChange(false);
+                    ownedArrayAdapter.clear();
+                    ownedArrayAdapter.setNotifyOnChange(true);
+
+                    ownedRadioButton.callOnClick();
+
+                } else if (unownedRadioButton.isChecked()) {
+                    unownedArrayAdapter.setNotifyOnChange(false);
+                    unownedArrayAdapter.clear();
+                    unownedArrayAdapter.setNotifyOnChange(true);
+
+                    unownedRadioButton.callOnClick();
+                }
+            }
+        });
+
+        listView = (ListView) findViewById(R.id.list_view);
+
+        ownedArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, ownedDeviceList);
+        unownedArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, unownedDeviceList);
+
+        if (savedInstanceState == null) {
+            // start first time only
+            File credsDir = new File(getFilesDir(), "on_boarding_tool_creds");
+            Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
+            if (!credsDir.exists()) {
+                boolean mkDirResult = credsDir.mkdir();
+                if (mkDirResult) {
+                    Log.i(TAG, "Created credentials directory " + credsDir.getAbsolutePath());
+                } else {
+                    Log.e(TAG, "Failed to create credentials directory " + credsDir.getAbsolutePath());
+                }
+            }
+            OCStorage.storageConfig(credsDir.getAbsolutePath());
+
+            ObtInitHandler handler = new ObtInitHandler(this);
+            int initReturn = OCMain.mainInit(handler);
+            if (initReturn < 0) {
+                Log.e(TAG, "Error in mainInit return code = " + initReturn);
+                return;
+            }
+
+            new Thread(new Runnable() {
+                public void run() {
+                    eventLoop();
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        quit = true;
+        Log.d(TAG, "Calling main_shutdown.");
+        OCMain.mainShutdown();
+        super.onDestroy();
+    }
+
+    public void addOwnedDevice(String deviceId) {
+        synchronized (arrayAdapterSync) {
+            ownedArrayAdapter.setNotifyOnChange(false);
+            ownedArrayAdapter.add(deviceId);
+            ownedArrayAdapter.setNotifyOnChange(true);
+        }
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                ownedArrayAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    public void addUnownedDevice(String deviceId) {
+        synchronized (arrayAdapterSync) {
+            unownedArrayAdapter.setNotifyOnChange(false);
+            unownedArrayAdapter.add(deviceId);
+            unownedArrayAdapter.setNotifyOnChange(true);
+        }
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                unownedArrayAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    public void removeOwnedDevice(String deviceId) {
+        synchronized (arrayAdapterSync) {
+            ownedArrayAdapter.setNotifyOnChange(false);
+            ownedArrayAdapter.remove(deviceId);
+            ownedArrayAdapter.setNotifyOnChange(true);
+        }
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                ownedArrayAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    public void removeUnownedDevice(String deviceId) {
+        synchronized (arrayAdapterSync) {
+            unownedArrayAdapter.setNotifyOnChange(false);
+            unownedArrayAdapter.remove(deviceId);
+            unownedArrayAdapter.setNotifyOnChange(true);
+        }
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                unownedArrayAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    private void eventLoop() {
+        while (!quit) {
+            long nextEvent = OCMain.mainPoll();
+            lock.lock();
+            try {
+                if (nextEvent == 0) {
+                    cv.await();
+                } else {
+                    long now = OCClock.clockTime();
+                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (nextEvent - now);
+                    cv.awaitNanos(timeToWait);
+                }
+            } catch (InterruptedException e) {
+                Log.d(TAG, e.getMessage());
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+}
