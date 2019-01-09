@@ -18,6 +18,7 @@
 #define OC_ENDPOINT_H
 
 #include "oc_helpers.h"
+#include "oc_uuid.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -61,7 +62,7 @@ typedef struct oc_endpoint_t
   struct oc_endpoint_t *next;
   size_t device;
   enum transport_flags flags;
-
+  oc_uuid_t di;
   union dev_addr
   {
     oc_ipv6_addr_t ipv6;
@@ -84,6 +85,7 @@ typedef struct oc_endpoint_t
 
 oc_endpoint_t *oc_new_endpoint(void);
 void oc_free_endpoint(oc_endpoint_t *endpoint);
+void oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di);
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);
 int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                           oc_string_t *uri);

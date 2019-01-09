@@ -148,6 +148,21 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
                       request, oc_string(anchor), links))
     matches++;
+
+#ifdef OC_PKI
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SP, device_index),
+                      request, oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CSR, device_index),
+                      request, oc_string(anchor), links))
+    matches++;
+
+  if (filter_resource(
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -351,6 +366,21 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
         oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), request,
         oc_rep_array(links)))
     matches++;
+
+#ifdef OC_PKI
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_SP, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_CSR, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+#endif /* OC_PKI */
 #endif
 
   if (filter_oic_1_1_resource(
@@ -524,11 +554,34 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     rep = rep->next;
   }
 
+  oc_rep_t *link = links->value.object;
+
+  while (link != NULL) {
+    switch (link->type) {
+    case OC_REP_STRING: {
+      if (oc_string_len(link->name) == 6 &&
+          memcmp(oc_string(link->name), "anchor", 6) == 0) {
+        anchor = &link->value.string;
+      }
+    } break;
+    default:
+      break;
+    }
+    if (anchor) {
+      break;
+    }
+    link = link->next;
+  }
+
+  oc_uuid_t di;
+  oc_str_to_uuid(oc_string(*anchor) + 6, &di);
+
   while (links != NULL) {
     /* Reset bm in every round as this can be omitted if 0. */
     oc_resource_properties_t bm = 0;
     oc_endpoint_t *eps_list = NULL;
-    oc_rep_t *link = links->value.object;
+    link = links->value.object;
+
     while (link != NULL) {
       switch (link->type) {
       case OC_REP_STRING: {
@@ -579,6 +632,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
                   if (eps_cur) {
                     memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
+                    memcpy(eps_cur->di.id, di.id, 16);
                     eps_cur->interface_index = endpoint->interface_index;
                     if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
