@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">On Boarding Tool</string>
+    <string name="owned">Owned</string>
+    <string name="unowned">Unowned</string>
+    <string name="refresh">Refresh</string>
+    <string name="justWorks">Take ownership of device (Just Works)</string>
+    <string name="selectDevice">Select device for pairing</string>
+    <string name="selectAceSubject">Select subject or device</string>
+    <string name="aceAnonClear">anon-clear</string>
+    <string name="aceAuthCrypt">auth-crypt</string>
+    <string-array name="ownedDeviceActions">
+        <item>Provision pair-wise credentials</item>
+        <item>Provision ACE2</item>
+        <item>Reset device (Hard Reset)</item>
+    </string-array>
+</resources>
