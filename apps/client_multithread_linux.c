@@ -128,7 +128,7 @@ send_ping(uint16_t timeout_seconds)
 
 #ifdef OC_TCP
   if (target_ep.flags & TCP) {
-    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler)) {
+    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler, NULL)) {
       printf("oc_send_ping failed\n");
     }
   } else
