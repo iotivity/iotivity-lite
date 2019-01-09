@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">On Boarding Tool</string>
+    <string name="owned">Owned</string>
+    <string name="unowned">Unowned</string>
+    <string name="refresh">Refresh</string>
+    <string name="justWorks">Take ownership of device (Just Works)</string>
+    <string name="resetDevice">Reset device (Hard Reset)</string>
+</resources>
