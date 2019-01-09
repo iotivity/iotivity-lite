@@ -59,7 +59,8 @@ typedef enum {
   OC_STATUS_GATEWAY_TIMEOUT,
   OC_STATUS_PROXYING_NOT_SUPPORTED,
   __NUM_OC_STATUS_CODES__,
-  OC_IGNORE
+  OC_IGNORE,
+  OC_PING_TIMEOUT
 } oc_status_t;
 
 typedef struct oc_separate_response_s oc_separate_response_t;
@@ -84,17 +85,26 @@ typedef enum {
 
 typedef enum {
   OCF_P = 0,
-  OCF_RES,
+  /* List of resources on a logical device: start */
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
+  /* List of Device Configuration Resources (DCRs): start */
+  OCF_RES,
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
   OCF_SEC_ACL,
   OCF_SEC_CRED,
-#endif
+#ifdef OC_PKI
+  OCF_SEC_SP,
+  OCF_SEC_CSR,
+  OCF_SEC_ROLES,
+#endif /* OC_PKI */
+#endif /* OC_SECURITY */
   OCF_D
+  /* List of Device Configuration Resources (DCRs): end */
+  /* List of resources on a logical device: end */
 } oc_core_resource_t;
 
 #define OC_NUM_CORE_RESOURCES_PER_DEVICE (1 + OCF_D)

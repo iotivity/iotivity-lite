@@ -497,6 +497,7 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 %rename(notifyObservers) oc_notify_observers;
 
 // client side
+
 /*
  * Code and typemaps for mapping the oc_do_ip_discovery and oc_do_ip_discovery_at_endpoint to the
  * java OCDiscoveryHandler
@@ -830,6 +831,22 @@ bool jni_oc_do_ip_multicast1(const char *uri, const char *query,
 %rename(stopMulticast) oc_stop_multicast;
 %rename(freeServerEndpoints) oc_free_server_endpoints;
 %rename(closeSession) oc_close_session;
+%rename(OCRole) oc_role_t;
+%ignore oc_get_all_roles;
+%rename(getAllRoles) jni_get_all_roles;
+%inline %{
+oc_role_t *jni_get_all_roles(void) {
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  return oc_get_all_roles();
+#else
+  return NULL;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+// TODO implement the oc_assert_role oc_assert_role needs OC_SECURITY and OC_PKI defined
+%ignore oc_assert_role;
+// TODO implement the oc_send_ping when OC_TCP defined
+%ignore oc_send_ping;
 
 // common operations
 /* Code and typemaps for mapping the oc_set_delayed_callback to the java OCTriggerHandler */
@@ -1866,6 +1883,7 @@ const oc_string_array_t * ocArrayToStringArray(oc_array_t *array, size_t *oc_arr
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
 %rename(newEndpoint) oc_new_endpoint;
 %rename(freeEndpoint) oc_free_endpoint;
+%rename(endpointSetDi) oc_endpoint_set_di;
 %apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
 %rename(endpointToString) oc_endpoint_to_string;
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);

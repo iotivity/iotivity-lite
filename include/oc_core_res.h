@@ -88,6 +88,8 @@ void oc_core_regen_unique_ids(size_t device);
 
 bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
 
+bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
+
 #ifdef __cplusplus
 }
 #endif
