@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_43125ab5",
+        "filename": "messaging/coap/observe.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-01-09T19:43:41Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be:\n\noc_string_len(obs-\u003eurl) \u003d\u003d (oc_string_len(rsc-\u003euri) - 1)\n\nbecause obs-\u003eurl will usually contain for e.g. \"a/light\", while rsc-\u003euri will contain \"/a/light\".",
+      "range": {
+        "startLine": 254,
+        "startChar": 9,
+        "endLine": 254,
+        "endChar": 63
+      },
+      "revId": "b88485f511133d4ebc7452f9c5cc20f24e4c07ec",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
