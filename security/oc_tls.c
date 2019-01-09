@@ -1246,8 +1246,8 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   key_block_len = 2 * (mac_key_len + key_size + iv_size);
 
   if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
-                 sizeof(label), peer->client_server_random + 32, 32,
-                 peer->client_server_random, 32) != key_block_len) {
+          sizeof(label), peer->client_server_random + 32, (size_t)32,
+          peer->client_server_random, (size_t)32) != key_block_len) {
     return false;
   }
 
