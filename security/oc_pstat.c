@@ -21,6 +21,8 @@
 #include "oc_core_res.h"
 #include "oc_cred.h"
 #include "oc_doxm.h"
+#include "oc_roles.h"
+#include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 
@@ -139,7 +141,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
-    oc_tls_update_psk_identity(device);
+#ifdef OC_PKI
+    oc_sec_free_roles_for_device(device);
+    oc_sec_sp_default(device);
+#endif /* OC_PKI */
     set_post_otm_acl = true;
     ps->p = false;
   }
@@ -171,10 +176,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
         (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
         nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
         nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_cred(&ps->rowneruuid, device) ||
-        !oc_sec_find_cred(&doxm->rowneruuid, device) ||
-        !oc_sec_find_cred(&acl->rowneruuid, device) ||
-        !oc_sec_find_cred(&creds->rowneruuid, device)) {
+        !oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
         OC_ERR("doxm:owned is false");
@@ -197,16 +202,16 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
       if (nil_uuid(&creds->rowneruuid)) {
         OC_ERR("cred:rowneruuid is nil");
       }
-      if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for pstat:rowneruuid");
       }
-      if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for doxm:rowneruuid");
       }
-      if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for acl2:rowneruuid");
       }
-      if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for cred:rowneruuid");
       }
       OC_ERR("ERROR in RFPRO\n");
@@ -225,10 +230,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
         (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
         nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
         nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_cred(&ps->rowneruuid, device) ||
-        !oc_sec_find_cred(&doxm->rowneruuid, device) ||
-        !oc_sec_find_cred(&acl->rowneruuid, device) ||
-        !oc_sec_find_cred(&creds->rowneruuid, device)) {
+        !oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
         OC_ERR("doxm:owned is false");
@@ -251,16 +256,16 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
       if (nil_uuid(&creds->rowneruuid)) {
         OC_ERR("cred:rowneruuid is nil");
       }
-      if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for pstat:rowneruuid");
       }
-      if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for doxm:rowneruuid");
       }
-      if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for acl2:rowneruuid");
       }
-      if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for cred:rowneruuid");
       }
       OC_ERR("ERROR in RFNOP\n");
@@ -279,10 +284,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
         (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
         nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
         nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_cred(&ps->rowneruuid, device) ||
-        !oc_sec_find_cred(&doxm->rowneruuid, device) ||
-        !oc_sec_find_cred(&acl->rowneruuid, device) ||
-        !oc_sec_find_cred(&creds->rowneruuid, device)) {
+        !oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device) ||
+        !oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
 #ifdef OC_DEBUG
       if (!doxm->owned) {
         OC_ERR("doxm:owned is false");
@@ -305,16 +310,16 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
       if (nil_uuid(&creds->rowneruuid)) {
         OC_ERR("cred:rowneruuid is nil");
       }
-      if (!oc_sec_find_cred(&ps->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&ps->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for pstat:rowneruuid");
       }
-      if (!oc_sec_find_cred(&doxm->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&doxm->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for doxm:rowneruuid");
       }
-      if (!oc_sec_find_cred(&acl->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&acl->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for acl2:rowneruuid");
       }
-      if (!oc_sec_find_cred(&creds->rowneruuid, device)) {
+      if (!oc_sec_find_creds_for_subject(&creds->rowneruuid, NULL, device)) {
         OC_ERR("Could not find credential for cred:rowneruuid");
       }
       OC_ERR("ERROR in SRESET\n");
@@ -518,4 +523,12 @@ post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
   }
 }
 
+void
+oc_sec_reset()
+{
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
+  size_t device;
+  for (device = 0; device < oc_core_get_num_devices(); device++)
+    oc_pstat_handle_state(&ps, device);
+}
 #endif /* OC_SECURITY */

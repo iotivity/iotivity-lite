@@ -30,6 +30,12 @@ extern "C"
 {
 #endif
 
+typedef enum oc_sec_doxmtype_t {
+  OC_OXMTYPE_JW = 0,
+  OC_OXMTYPE_RDP = 1,
+  OC_OXMTYPE_MFG_CERT = 2
+} oc_sec_oxmtype_t;
+
 typedef struct
 {
   int oxmsel;

@@ -106,9 +106,12 @@ static void oc_network_receive(struct net_context *context, struct net_pkt *pkt,
     }
 
     message->length = bytes_read;
-    if (user_data != NULL)
+    if (user_data != NULL) {
       message->endpoint.flags = IPV6 | SECURED;
-    else
+#ifdef OC_SECURITY
+      message->encrypted = 1;
+#endif /* OC_SECURITY */
+    } else
       message->endpoint.flags = IPV6;
     memcpy(message->endpoint.addr.ipv6.address, &NET_IPV6_HDR(pkt)->src, 16);
     message->endpoint.addr.ipv6.scope = 0;

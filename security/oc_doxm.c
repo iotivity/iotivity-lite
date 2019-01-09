@@ -62,7 +62,11 @@ void
 oc_sec_doxm_default(size_t device)
 {
   doxm[device].oxmsel = 0;
+#ifdef OC_PKI
+  doxm[device].sct = 9;
+#else  /* OC_PKI */
   doxm[device].sct = 1;
+#endif /* !OC_PKI */
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
@@ -72,19 +76,34 @@ oc_sec_doxm_default(size_t device)
 void
 oc_sec_encode_doxm(size_t device)
 {
-  int oxms[1] = { 0 };
-  char uuid[OC_UUID_LEN];
+#ifdef OC_PKI
+  int oxms[2] = { OC_OXMTYPE_JW, OC_OXMTYPE_MFG_CERT };
+#else  /* OC_PKI */
+  int oxms[1] = { OC_OXMTYPE_JW };
+#endif /* !OC_PKI */
+  char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+/* oxms */
+#ifdef OC_PKI
+  oc_rep_set_int_array(root, oxms, oxms, 2);
+#else  /* OC_PKI */
   oc_rep_set_int_array(root, oxms, oxms, 1);
+#endif /* !OC_PKI */
+  /* oxmsel */
   oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);
+  /* sct */
   oc_rep_set_int(root, sct, doxm[device].sct);
+  /* owned */
   oc_rep_set_boolean(root, owned, doxm[device].owned);
+  /* devowneruuid */
   oc_uuid_to_str(&doxm[device].devowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, devowneruuid, uuid);
+  /* deviceuuid */
   oc_uuid_to_str(&doxm[device].deviceuuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, deviceuuid, uuid);
+  /* rowneruuid */
   oc_uuid_to_str(&doxm[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
@@ -134,6 +153,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
   while (t != NULL) {
     len = oc_string_len(t->name);
     switch (t->type) {
+    /* owned */
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(t->name), "owned", 5) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
@@ -145,6 +165,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
         return false;
       }
       break;
+    /* oxmsel and sct */
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "oxmsel", 6) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
@@ -158,6 +179,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
         return false;
       }
       break;
+    /* deviceuuid, devowneruuid and rowneruuid */
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "deviceuuid", 10) == 0) {
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
@@ -181,6 +203,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
         return false;
       }
       break;
+    /* oxms */
     case OC_REP_INT_ARRAY:
       if (!from_storage && len == 4 &&
           memcmp(oc_string(t->name), "oxms", 4) == 0) {
@@ -203,11 +226,13 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
   while (rep != NULL) {
     len = oc_string_len(rep->name);
     switch (rep->type) {
+    /* owned */
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(rep->name), "owned", 5) == 0) {
         doxm[device].owned = rep->value.boolean;
       }
       break;
+    /* oxmsel and sct */
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
         doxm[device].oxmsel = rep->value.integer;
@@ -216,6 +241,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
         doxm[device].sct = rep->value.integer;
       }
       break;
+    /* deviceuuid, devowneruuid and rowneruuid */
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm[device].deviceuuid);

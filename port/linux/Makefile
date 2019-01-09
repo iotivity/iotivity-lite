@@ -9,6 +9,8 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
+SECURE ?= 1
+PKI ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
@@ -31,6 +33,7 @@ HEADER_DIR = -I$(ROOT_DIR)/include \
              -I$(OUT_DIR)
 SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
+MESSAGING_HEADERS = -I$(ROOT_DIR)/messaging/coap
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
@@ -45,7 +48,11 @@ PLATFORM_TEST_SRC_FILES := $(wildcard $(PLATFORM_TEST_DIR)/*.cpp)
 PLATFORM_TEST_OBJ_FILES := $(patsubst $(PLATFORM_TEST_DIR)/%.cpp,$(PLATFORM_TEST_OBJ_DIR)/%.o,$(PLATFORM_TEST_SRC_FILES))
 STORAGE_TEST_DIR = storage_test
 $(shell mkdir -p $(STORAGE_TEST_DIR))
-UNIT_TESTS = apitest platformtest securitytest
+MESSAGING_TEST_DIR = $(ROOT_DIR)/messaging/coap/unittest
+MESSAGING_TEST_OBJ_DIR = $(MESSAGING_TEST_DIR)/obj
+MESSAGING_TEST_SRC_FILES := $(wildcard $(MESSAGING_TEST_DIR)/*.cpp)
+MESSAGING_TEST_OBJ_FILES := $(patsubst $(MESSAGING_TEST_DIR)/%.cpp,$(MESSAGING_TEST_OBJ_DIR)/%.o,$(MESSAGING_TEST_SRC_FILES))
+UNIT_TESTS = apitest platformtest securitytest messagingtest
 
 DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
@@ -58,7 +65,8 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c
+	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c	x509write_csr.c\
+	x509write_crt.c	x509_create.c
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
@@ -84,15 +92,22 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleclient client_collections_linux \
+SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
+ifeq ($(DEBUG_TLS),1)
+	CFLAGS += -DOC_DEBUG_TLS
+endif
 else
 	CFLAGS += -Wl,--gc-sections
+endif
+
+ifeq ($(PKI),1)
+	EXTRA_CFLAGS += -DOC_PKI
 endif
 
 ifeq ($(DYNAMIC),1)
@@ -100,7 +115,7 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c)
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -167,6 +182,13 @@ $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
+$(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(MESSAGING_HEADERS) -c $< -o $@
+
+messagingtest: $(MESSAGING_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
@@ -226,6 +248,10 @@ temp_sensor: libiotivity-constrained-client.a $(ROOT_DIR)/apps/temp_sensor_clien
 simpleserver: libiotivity-constrained-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+simpleserver_pki: libiotivity-constrained-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 simpleclient: libiotivity-constrained-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
@@ -315,7 +341,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR)
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)

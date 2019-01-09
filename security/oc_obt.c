@@ -224,23 +224,28 @@ cache_device_if_not_known(oc_list_t list, oc_uuid_t *uuid,
     }
     device = device->next;
   }
+
   if (!device) {
     device = oc_memb_alloc(&oc_devices_s);
     if (!device) {
       return NULL;
     }
-    oc_endpoint_t *ep = oc_new_endpoint();
-    if (!ep) {
-      oc_memb_free(&oc_devices_s, device);
-      return NULL;
-    }
     memcpy(device->uuid.id, uuid->id, sizeof(oc_uuid_t));
-    memcpy(ep, endpoint, sizeof(oc_endpoint_t));
-    device->endpoint = ep;
     oc_list_add(list, device);
-    return device;
   }
-  return NULL;
+
+  oc_free_server_endpoints(device->endpoint);
+
+  oc_endpoint_t *ep = oc_new_endpoint();
+  if (!ep) {
+    oc_list_remove(list, device);
+    oc_memb_free(&oc_devices_s, device);
+    return NULL;
+  }
+
+  memcpy(ep, endpoint, sizeof(oc_endpoint_t));
+  device->endpoint = ep;
+  return device;
 }
 
 static oc_event_callback_retval_t
@@ -348,7 +353,6 @@ free_otm_state(oc_otm_ctx_t *o, int status)
 {
   oc_endpoint_t *ep = get_secure_endpoint(o->device->endpoint);
   oc_tls_close_connection(ep);
-  oc_tls_demote_anon_ciphersuite();
   if (status == -1) {
     char suuid[OC_UUID_LEN];
     oc_uuid_to_str(&o->device->uuid, suuid, OC_UUID_LEN);
@@ -421,8 +425,6 @@ obt_jw_12(oc_client_response_t *data)
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
 
   oc_tls_close_connection(ep);
-
-  oc_tls_demote_anon_ciphersuite();
 
   if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
     return;
@@ -604,7 +606,8 @@ obt_jw_6(oc_client_response_t *data)
   }
 
   oc_device_t *device = o->device;
-  oc_sec_cred_t *c = oc_sec_get_cred(&device->uuid, 0);
+  oc_sec_cred_t *c =
+    oc_sec_allocate_cred(&device->uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, 0);
   if (!c) {
     goto err_obt_jw_6;
   }
@@ -617,9 +620,11 @@ obt_jw_6(oc_client_response_t *data)
   oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
 
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
+  oc_alloc_string(&c->privatedata.data, 17);
   bool derived = oc_sec_derive_owner_psk(
     ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
-    device->uuid.id, 16, my_uuid->id, 16, c->key, 16);
+    device->uuid.id, 16, my_uuid->id, 16, oc_cast(c->privatedata.data, uint8_t),
+    16);
 #undef OXM_JUST_WORKS
   if (!derived) {
     goto err_obt_jw_6;
@@ -638,7 +643,6 @@ obt_jw_6(oc_client_response_t *data)
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
 
-    oc_rep_set_int(creds, credid, c->credid);
     oc_rep_set_int(creds, credtype, 1);
     oc_rep_set_text_string(creds, subjectuuid, uuid);
 
@@ -694,8 +698,13 @@ obt_jw_5(oc_client_response_t *data)
 
   /* Store peer device's now fixed uuid in local device object */
   memcpy(device->uuid.id, peer.id, 16);
+  oc_endpoint_t *ep = device->endpoint;
+  while (ep) {
+    memcpy(ep->di.id, peer.id, 16);
+    ep = ep->next;
+  }
 
-  oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
+  ep = get_secure_endpoint(device->endpoint);
 
   if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_6, HIGH_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
@@ -847,7 +856,6 @@ oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 
   /**  1) <anon ecdh>+post pstat s=reset
    */
-  oc_tls_elevate_anon_ciphersuite();
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_2, HIGH_QOS, o)) {
@@ -888,58 +896,72 @@ get_endpoints(oc_client_response_t *data)
 
   oc_free_server_endpoints(device->endpoint);
 
+  oc_uuid_t di;
+  oc_rep_t *link = links->value.object;
+  while (link != NULL) {
+    switch (link->type) {
+    case OC_REP_STRING: {
+      if (oc_string_len(link->name) == 6 &&
+          memcmp(oc_string(link->name), "anchor", 6) == 0) {
+        oc_str_to_uuid(oc_string(link->value.string) + 6, &di);
+        break;
+      }
+    } break;
+    default:
+      break;
+    }
+    link = link->next;
+  }
+
   oc_endpoint_t *eps_cur = NULL;
+  link = links->value.object;
 
-  while (links != NULL) {
-    oc_rep_t *link = links->value.object;
-    while (link != NULL) {
-      switch (link->type) {
-      case OC_REP_OBJECT_ARRAY: {
-        oc_rep_t *eps = link->value.object_array;
-        while (eps != NULL) {
-          oc_rep_t *ep = eps->value.object;
-          while (ep != NULL) {
-            switch (ep->type) {
-            case OC_REP_STRING: {
-              if (oc_string_len(ep->name) == 2 &&
-                  memcmp(oc_string(ep->name), "ep", 2) == 0) {
-                oc_endpoint_t temp_ep;
-                memset(&temp_ep, 0, sizeof(oc_endpoint_t));
-                if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
-                    0) {
-                  if (eps_cur) {
-                    eps_cur->next = oc_new_endpoint();
-                    eps_cur = eps_cur->next;
-                  } else {
-                    eps_cur = device->endpoint = oc_new_endpoint();
-                  }
+  while (link != NULL) {
+    switch (link->type) {
+    case OC_REP_OBJECT_ARRAY: {
+      oc_rep_t *eps = link->value.object_array;
+      while (eps != NULL) {
+        oc_rep_t *ep = eps->value.object;
+        while (ep != NULL) {
+          switch (ep->type) {
+          case OC_REP_STRING: {
+            if (oc_string_len(ep->name) == 2 &&
+                memcmp(oc_string(ep->name), "ep", 2) == 0) {
+              oc_endpoint_t temp_ep;
+              memset(&temp_ep, 0, sizeof(oc_endpoint_t));
+              if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
+                  0) {
+                if (eps_cur) {
+                  eps_cur->next = oc_new_endpoint();
+                  eps_cur = eps_cur->next;
+                } else {
+                  eps_cur = device->endpoint = oc_new_endpoint();
+                }
 
-                  if (eps_cur) {
-                    memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
-                    eps_cur->interface_index = data->endpoint->interface_index;
-                    if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
-                        oc_ipv6_endpoint_is_link_local(data->endpoint) == 0) {
-                      eps_cur->addr.ipv6.scope =
-                        data->endpoint->addr.ipv6.scope;
-                    }
+                if (eps_cur) {
+                  memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
+                  memcpy(eps_cur->di.id, di.id, 16);
+                  eps_cur->interface_index = data->endpoint->interface_index;
+                  if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
+                      oc_ipv6_endpoint_is_link_local(data->endpoint) == 0) {
+                    eps_cur->addr.ipv6.scope = data->endpoint->addr.ipv6.scope;
                   }
                 }
               }
-            } break;
-            default:
-              break;
             }
-            ep = ep->next;
+          } break;
+          default:
+            break;
           }
-          eps = eps->next;
+          ep = ep->next;
         }
-      } break;
-      default:
-        break;
+        eps = eps->next;
       }
-      link = link->next;
+    } break;
+    default:
+      break;
     }
-    links = links->next;
+    link = link->next;
   }
 
   oc_discovery_cb_t *cb = (oc_discovery_cb_t *)device->ctx;
@@ -989,34 +1011,23 @@ obt_check_owned(oc_client_response_t *data)
     return;
   }
 
-  oc_device_t *new_device = NULL;
+  oc_device_t *device = NULL;
 
   if (owned == 0) {
-    new_device = cache_device_if_not_known(oc_cache, &uuid, data->endpoint);
+    device = cache_device_if_not_known(oc_cache, &uuid, data->endpoint);
   } else {
     /* Device is owned by somebody else */
     if (!owned_device(&uuid)) {
       return;
     } else {
-      new_device = cache_device_if_not_known(oc_devices, &uuid, data->endpoint);
+      device = cache_device_if_not_known(oc_devices, &uuid, data->endpoint);
     }
   }
 
-  if (new_device) {
-    new_device->ctx = data->user_data;
-    oc_do_get("/oic/res", new_device->endpoint, "rt=oic.r.doxm", &get_endpoints,
-              HIGH_QOS, new_device);
-  } else {
-    oc_discovery_cb_t *cb = (oc_discovery_cb_t *)data->user_data;
-    if (!is_item_in_list(oc_discovery_cbs, cb)) {
-      return;
-    }
-    oc_device_t *device = (owned == 0) ? get_device_handle(&uuid, oc_cache)
-                                       : get_device_handle(&uuid, oc_devices);
-    if (!device) {
-      return;
-    }
-    cb->cb(&uuid, device->endpoint, cb->data);
+  if (device) {
+    device->ctx = data->user_data;
+    oc_do_get("/oic/res", device->endpoint, "rt=oic.r.doxm", &get_endpoints,
+              HIGH_QOS, device);
   }
 }
 
@@ -1340,14 +1351,12 @@ device1_cred(oc_client_response_t *data)
   oc_uuid_to_str(&p->device1->uuid, d1uuid, OC_UUID_LEN);
 
   oc_endpoint_t *ep = get_secure_endpoint(p->device2->endpoint);
-  int credid = oc_obt_get_next_id();
 
   if (oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, HIGH_QOS, p)) {
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
 
-    oc_rep_set_int(creds, credid, credid);
     oc_rep_set_int(creds, credtype, 1);
     oc_rep_set_text_string(creds, subjectuuid, d1uuid);
 
@@ -1390,14 +1399,11 @@ device2_RFPRO(int status, void *data)
 
     oc_endpoint_t *ep = get_secure_endpoint(p->device1->endpoint);
 
-    int credid = oc_obt_get_next_id();
-
     if (oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, HIGH_QOS, p)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, creds);
       oc_rep_object_array_start_item(creds);
 
-      oc_rep_set_int(creds, credid, credid);
       oc_rep_set_int(creds, credtype, 1);
       oc_rep_set_text_string(creds, subjectuuid, d2uuid);
 
@@ -1729,10 +1735,10 @@ provision_ace(int status, void *data)
           oc_rep_set_text_string(resources, href, oc_string(res->href));
         } else {
           switch (res->wildcard) {
-          case OC_ACE_WC_ALL_DISCOVERABLE:
+          case OC_ACE_WC_ALL_SECURED:
             oc_rep_set_text_string(resources, wc, "+");
             break;
-          case OC_ACE_WC_ALL_NON_DISCOVERABLE:
+          case OC_ACE_WC_ALL_PUBLIC:
             oc_rep_set_text_string(resources, wc, "-");
             break;
           case OC_ACE_WC_ALL:

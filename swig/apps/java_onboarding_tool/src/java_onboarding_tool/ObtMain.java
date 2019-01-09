@@ -90,7 +90,7 @@ public class ObtMain {
     {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
-        menu.append("OCF 1.3 Onboarding Tool\n");
+        menu.append("OCF 2.0 Onboarding Tool\n");
         menu.append("################################################\n");
         menu.append("[0] Display this menu\n");
         menu.append("------------------------------------------------\n");
@@ -314,9 +314,9 @@ public class ObtMain {
                 c = scanner.nextInt();
                 if (c == 1) {
                     StringBuilder wildcardMenu = new StringBuilder();
-                    wildcardMenu.append("[1]: All resources\n");
-                    wildcardMenu.append("[2]: All discoverable resources\n");
-                    wildcardMenu.append("[3]: All non-discoverable resources\n");
+                    wildcardMenu.append("[1]: All NCRs '*'\n");
+                    wildcardMenu.append("[2]: All NCRs with >=1   secured endpoint '+'\n");
+                    wildcardMenu.append("[3]: All NCRs with >=1 unsecured endpoint '-'\n");
                     wildcardMenu.append("\nSelect wildcard resource: ");
                     System.out.print(wildcardMenu);
                     c = scanner.nextInt();
@@ -325,10 +325,10 @@ public class ObtMain {
                         OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL);
                         break;
                     case 2:
-                        OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL_DISCOVERABLE);
+                        OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL_SECURED);
                         break;
                     case 3:
-                        OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL_NON_DISCOVERABLE);
+                        OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL_PUBLIC);
                         break;
                     default:
                         break;
