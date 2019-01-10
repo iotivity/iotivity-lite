@@ -71,20 +71,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -92,7 +92,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -100,10 +100,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds rmdir  $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds rmdir  $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,17 +112,17 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds rmdir  $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds rmdir  $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -133,7 +133,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -142,10 +142,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds rmdir  $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds rmdir  $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -156,7 +156,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -165,10 +165,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds rmdir  $(SolutionDir)$(Configuration)\$(Platform)\simpleclient_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds rmdir  $(SolutionDir)$(Platform)\$(Configuration)\simpleclient_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
