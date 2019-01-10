@@ -114,10 +114,25 @@ TEST_F(TestSTResourceManager, st_register_resource_handler)
     EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
-TEST_F(TestSTResourceManager, st_register_resource_handler_fail)
+TEST_F(TestSTResourceManager, st_register_resource_handler_param_fail)
 {
     st_error_t ret = st_register_resource_handler(NULL, NULL);
     EXPECT_EQ(ST_ERROR_INVALID_PARAMETER, ret);
+}
+
+TEST_F(TestSTResourceManager, st_register_resource_handler_operation_fail)
+{
+    st_register_resource_handler(resource_handler, resource_handler);
+    st_error_t ret = st_register_resource_handler(resource_handler, resource_handler);
+    EXPECT_EQ(ST_ERROR_OPERATION_FAILED, ret);
+}
+
+TEST_F(TestSTResourceManager, st_unregister_resource_handler)
+{
+    st_register_resource_handler(resource_handler, resource_handler);
+    st_unregister_resource_handler();
+    st_error_t ret = st_register_resource_handler(resource_handler, resource_handler);
+    EXPECT_EQ(ST_ERROR_NONE, ret);
 }
 
 static void onGetRequest(oc_request_t *request,
@@ -261,6 +276,7 @@ class TestSTResourceManagerHandler: public testing::Test
             cv = st_cond_init();
             st_manager_initialize();
             st_set_device_profile(st_device_def, st_device_def_len);
+            st_register_resource_handler(resource_handler, resource_handler);
             st_register_status_handler(st_status_handler);
             st_manager_start();
 #ifndef STATE_MODEL
@@ -282,7 +298,6 @@ class TestSTResourceManagerHandler: public testing::Test
 #ifndef STATE_MODEL
             st_thread_destroy(t);
 #endif
-            st_unregister_status_handler();
             st_manager_deinitialize();
             reset_storage();
             st_cond_destroy(cv);

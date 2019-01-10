@@ -203,10 +203,21 @@ st_register_resource_handler(st_resource_handler get_handler,
     st_print_log("[ST_RM] invalid parameter.\n");
     return ST_ERROR_INVALID_PARAMETER;
   }
+  if (g_resource_get_handler || g_resource_set_handler) {
+    st_print_log("[ST_RM] already registered handler.\n");
+    return ST_ERROR_OPERATION_FAILED;
+  }
 
   g_resource_get_handler = get_handler;
   g_resource_set_handler = set_handler;
   return ST_ERROR_NONE;
+}
+
+void
+st_unregister_resource_handler(void)
+{
+  g_resource_get_handler = NULL;
+  g_resource_set_handler = NULL;
 }
 
 oc_define_interrupt_handler(st_notify)

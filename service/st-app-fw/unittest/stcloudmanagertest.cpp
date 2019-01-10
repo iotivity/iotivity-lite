@@ -444,6 +444,13 @@ void register_cloud_resources(void)
     oc_add_resource(res5);
 }
 
+static bool
+resource_handler(st_request_t *request)
+{
+    (void)request;
+    return true;
+}
+
 class TestSTCloudManager_cb: public testing::Test
 {
     protected:
@@ -455,6 +462,7 @@ class TestSTCloudManager_cb: public testing::Test
             reset_storage();
             st_manager_initialize();
             oc_random_init();
+            st_register_resource_handler(resource_handler, resource_handler);
             st_register_status_handler(st_status_handler);
             st_set_device_profile(st_device_def, st_device_def_len);
             set_st_store_info();
