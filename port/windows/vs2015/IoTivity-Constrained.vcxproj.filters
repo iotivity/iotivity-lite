@@ -121,9 +121,6 @@
     <ClCompile Include="..\..\..\messaging\coap\observe.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_acl.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_base64.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -142,13 +139,7 @@
     <ClCompile Include="..\..\..\api\oc_core_res.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_cred.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_discovery.c">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_doxm.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\api\oc_endpoint.c">
@@ -181,9 +172,6 @@
     <ClCompile Include="..\..\..\util\oc_process.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_pstat.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_rep.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -191,12 +179,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\api\oc_server_api.c">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_store.c">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_svr.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\util\oc_timer.c">
@@ -301,9 +283,6 @@
     <ClCompile Include="..\..\..\messaging\coap\transactions.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\security\oc_tls.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\abort.c">
       <Filter>Port</Filter>
     </ClCompile>
@@ -324,6 +303,45 @@
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\rsa_internal.c">
       <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_certs.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_keypair.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_pki.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_roles.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_sp.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_acl.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_cred.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_doxm.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_pstat.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_store.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_svr.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_tls.c">
+      <Filter>Security</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -355,9 +373,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\messaging\coap\observe.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_acl.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_api.h">
@@ -396,14 +411,8 @@
     <ClInclude Include="..\..\..\include\oc_core_res.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_cred.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\oc_discovery.h">
       <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_doxm.h">
-      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_etimer.h">
       <Filter>Core</Filter>
@@ -424,15 +433,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_process.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_pstat.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_store.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_svr.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_timer.h">
@@ -483,9 +483,6 @@
     <ClInclude Include="..\..\oc_storage.h">
       <Filter>Port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_tls.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\oc_config.h">
       <Filter>Port</Filter>
     </ClInclude>
@@ -494,6 +491,51 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_session_state.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_endpoint.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_network_monitor.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_pki.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\server_introspection.dat.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_certs.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_keypair.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_roles.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_sp.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_acl.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_cred.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_doxm.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_pstat.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_store.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_svr.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_tls.h">
+      <Filter>Security</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -511,6 +553,9 @@
     </Filter>
     <Filter Include="Port">
       <UniqueIdentifier>{00c2e29b-e86c-4224-9f02-56e1b25e8afb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Security">
+      <UniqueIdentifier>{c6a27107-4b6c-4673-be9e-c0d8641f0a90}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

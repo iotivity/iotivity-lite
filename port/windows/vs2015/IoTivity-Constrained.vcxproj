@@ -68,28 +68,28 @@
     <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildBeforeTargets>ClCompile</CustomBuildBeforeTargets>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -223,16 +223,20 @@
     <ClInclude Include="..\..\..\include\oc_collection.h" />
     <ClInclude Include="..\..\..\include\oc_core_res.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
+    <ClInclude Include="..\..\..\include\oc_endpoint.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
     <ClInclude Include="..\..\..\include\oc_introspection.h" />
     <ClInclude Include="..\..\..\include\oc_network_events.h" />
+    <ClInclude Include="..\..\..\include\oc_network_monitor.h" />
     <ClInclude Include="..\..\..\include\oc_obt.h" />
+    <ClInclude Include="..\..\..\include\oc_pki.h" />
     <ClInclude Include="..\..\..\include\oc_rep.h" />
     <ClInclude Include="..\..\..\include\oc_ri.h" />
     <ClInclude Include="..\..\..\include\oc_session_events.h" />
     <ClInclude Include="..\..\..\include\oc_session_state.h" />
     <ClInclude Include="..\..\..\include\oc_signal_event_loop.h" />
     <ClInclude Include="..\..\..\include\oc_uuid.h" />
+    <ClInclude Include="..\..\..\include\server_introspection.dat.h" />
     <ClInclude Include="..\..\..\messaging\coap\coap.h" />
     <ClInclude Include="..\..\..\messaging\coap\conf.h" />
     <ClInclude Include="..\..\..\messaging\coap\constants.h" />
@@ -242,9 +246,13 @@
     <ClInclude Include="..\..\..\messaging\coap\separate.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions.h" />
     <ClInclude Include="..\..\..\security\oc_acl.h" />
+    <ClInclude Include="..\..\..\security\oc_certs.h" />
     <ClInclude Include="..\..\..\security\oc_cred.h" />
     <ClInclude Include="..\..\..\security\oc_doxm.h" />
+    <ClInclude Include="..\..\..\security\oc_keypair.h" />
     <ClInclude Include="..\..\..\security\oc_pstat.h" />
+    <ClInclude Include="..\..\..\security\oc_roles.h" />
+    <ClInclude Include="..\..\..\security\oc_sp.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr.h" />
     <ClInclude Include="..\..\..\security\oc_tls.h" />
@@ -363,9 +371,15 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_certs.c" />
     <ClCompile Include="..\..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\..\security\oc_doxm.c" />
+    <ClCompile Include="..\..\..\security\oc_keypair.c" />
+    <ClCompile Include="..\..\..\security\oc_obt.c" />
+    <ClCompile Include="..\..\..\security\oc_pki.c" />
     <ClCompile Include="..\..\..\security\oc_pstat.c" />
+    <ClCompile Include="..\..\..\security\oc_roles.c" />
+    <ClCompile Include="..\..\..\security\oc_sp.c" />
     <ClCompile Include="..\..\..\security\oc_store.c" />
     <ClCompile Include="..\..\..\security\oc_svr.c" />
     <ClCompile Include="..\..\..\security\oc_tls.c" />
