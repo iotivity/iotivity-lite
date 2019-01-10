@@ -44,7 +44,8 @@ typedef enum {
   OC_STATUS_GATEWAY_TIMEOUT,
   OC_STATUS_PROXYING_NOT_SUPPORTED,
   __NUM_OC_STATUS_CODES__,
-  OC_IGNORE
+  OC_IGNORE,
+  OC_PING_TIMEOUT
 } oc_status_t;
 
 %rename(OCResponse) oc_response_t;
