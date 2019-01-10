@@ -69,6 +69,12 @@ st_error_t st_register_resource_handler(st_resource_handler get_handler,
                                         st_resource_handler set_handler);
 
 /**
+  @brief A function for unregister resource handlers regarding
+     get/set requests.
+*/
+void st_unregister_resource_handler(void);
+
+/**
   @brief A function to notify observed clients regarding uri.
   @param uri The uri of the resource that need to notify.
   @return st_error_t An enumeration of possible outcomes.

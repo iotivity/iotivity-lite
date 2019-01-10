@@ -788,6 +788,7 @@ st_manager_deinitialize(void)
   }
 
   st_free_device_profile();
+  st_unregister_resource_handler();
   st_unregister_status_handler();
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
@@ -1194,6 +1195,7 @@ static void
 change_ready_to_idle(void)
 {
   st_free_device_profile();
+  st_unregister_resource_handler();
   st_unregister_status_handler();
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
