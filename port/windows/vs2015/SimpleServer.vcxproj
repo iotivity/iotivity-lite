@@ -78,27 +78,27 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -107,10 +107,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -118,7 +118,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -127,10 +127,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,7 +140,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -151,10 +151,10 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,7 +165,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -174,10 +174,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds rmdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Configuration)\$(Platform)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
