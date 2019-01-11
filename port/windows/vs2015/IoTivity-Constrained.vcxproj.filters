@@ -349,6 +349,15 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_csr.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\x509_create.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\x509write_crt.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\x509write_csr.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
