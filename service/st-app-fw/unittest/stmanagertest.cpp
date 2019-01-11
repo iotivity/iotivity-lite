@@ -66,6 +66,11 @@ static void st_status_handler_test(st_status_t status)
     }
 }
 
+static void
+st_fota_status_handler_test(void)
+{
+}
+
 #ifdef STATE_MODEL
 static bool bReset=false;
 static void st_status_handler_reset_test(st_status_t status)
@@ -283,6 +288,13 @@ TEST_F(TestSTManager, st_register_status_handler)
     bool ret = st_register_status_handler(st_status_handler_test);
     EXPECT_TRUE(ret);
     st_unregister_status_handler();
+}
+
+TEST_F(TestSTManager, st_register_fota_status_handler)
+{
+    bool ret = st_register_fota_status_handler(st_fota_status_handler_test);
+    EXPECT_TRUE(ret);
+    st_unregister_fota_status_handler();
 }
 
 #ifdef OC_SECURITY

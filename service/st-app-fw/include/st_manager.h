@@ -68,6 +68,11 @@ typedef void (*st_rpk_handle_priv_key_cb_t)(uint8_t *priv_key,
                                             int *priv_key_len);
 
 /**
+  @brief A function pointer for handling the fota status.
+*/
+typedef void (*st_fota_status_cb_t)(void);
+
+/**
   @brief A function to initialize ST application framework.
   @return st_error_t An enumeration of possible outcomes.
   @retval ST_ERROR_NONE if successful.
@@ -203,6 +208,18 @@ bool st_register_rpk_handler(st_rpk_handle_cpubkey_and_token_cb_t pubkey_cb,
   @brief A function for unregister RPK handler
 */
 void st_unregister_rpk_handler(void);
+
+/**
+  @brief Function for register fota status handler
+  @param cb Callback function to notify the fota status.
+  @return Returns true if success.
+*/
+bool st_register_fota_status_handler(st_fota_status_cb_t cb);
+
+/**
+  @brief Function for unregister fota status handler
+*/
+void st_unregister_fota_status_handler(void);
 
 /**
   @brief A function set device profile.

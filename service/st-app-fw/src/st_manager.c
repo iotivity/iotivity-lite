@@ -85,6 +85,7 @@ typedef struct
 static st_status_t g_main_status = ST_STATUS_IDLE;
 #endif
 static st_status_cb_t g_st_status_cb = NULL;
+static st_fota_status_cb_t g_st_fota_status_cb = NULL;
 
 static sc_properties st_vendor_props;
 
@@ -383,6 +384,8 @@ oc_define_interrupt_handler(st_manager)
       break;
     case ST_STATUS_DONE:
       st_print_log("[ST_MGR] Ready to Control ST-Things\n");
+      if (g_st_fota_status_cb)
+        g_st_fota_status_cb();
       break;
     case ST_STATUS_RESET:
       if (st_manager_evt_reset_handler() != 0) {
@@ -790,6 +793,7 @@ st_manager_deinitialize(void)
   st_free_device_profile();
   st_unregister_resource_handler();
   st_unregister_status_handler();
+  st_unregister_fota_status_handler();
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
@@ -883,6 +887,30 @@ st_unregister_rpk_handler(void)
 #else  /* OC_SECURITY */
   st_print_log("[ST_MGR] Un-secured build can't handle RPK\n");
 #endif /* !OC_SECURITY */
+}
+
+bool
+st_register_fota_status_handler(st_fota_status_cb_t cb)
+{
+  if (!cb) {
+    st_print_log(
+      "[ST_MGR] Failed to register fota status - invalid parameter\n");
+    return false;
+  }
+  if (g_st_fota_status_cb) {
+    st_print_log(
+      "[ST_MGR] Failed to register fota status handler - already registered\n");
+    return false;
+  }
+
+  g_st_fota_status_cb = cb;
+  return true;
+}
+
+void
+st_unregister_fota_status_handler(void)
+{
+  g_st_fota_status_cb = NULL;
 }
 
 #ifndef STATE_MODEL
@@ -1197,6 +1225,7 @@ change_ready_to_idle(void)
   st_free_device_profile();
   st_unregister_resource_handler();
   st_unregister_status_handler();
+  st_unregister_fota_status_handler();
   st_unregister_otm_confirm_handler();
   st_turn_off_soft_AP();
   st_vendor_props_shutdown();
