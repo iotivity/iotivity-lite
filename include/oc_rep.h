@@ -95,7 +95,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
-    if ((const char *)value != NULL) {                                                       \
+    if ((const char *)value != NULL) {                                         \
       g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
       g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
     }                                                                          \
@@ -107,7 +107,9 @@ const uint8_t *oc_rep_get_encoder_buf(void);
     g_err |= cbor_encode_byte_string(&object##_map, value, length);            \
   } while (0)
 
-#define oc_rep_start_array(parent, key)                                        \
+#define oc_rep_start_array(parent, key) oc_rep_begin_array(parent, key)
+
+#define oc_rep_begin_array(parent, key)                                        \
   do {                                                                         \
     CborEncoder key##_array;                                                   \
   g_err |=                                                                     \
@@ -118,14 +120,18 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   }                                                                            \
   while (0)
 
-#define oc_rep_start_links_array()                                             \
+#define oc_rep_start_links_array() oc_rep_begin_links_array()
+
+#define oc_rep_begin_links_array()                                             \
   g_err |=                                                                     \
     cbor_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength)
 
 #define oc_rep_end_links_array()                                               \
   g_err |= cbor_encoder_close_container(&g_encoder, &links_array)
 
-#define oc_rep_start_root_object()                                             \
+#define oc_rep_start_root_object() oc_rep_begin_root_object()
+
+#define oc_rep_begin_root_object()                                             \
   g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength)
 
 #define oc_rep_end_root_object()                                               \
@@ -149,16 +155,20 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   g_err |= cbor_encode_boolean(&parent##_array, value)
 
 #define oc_rep_set_key(parent, key)                                            \
-  if ((const char *)key != NULL)                                                             \
+  if ((const char *)key != NULL)                                               \
   g_err |= cbor_encode_text_string(&parent, key, strlen(key))
 
-#define oc_rep_set_array(object, key)                                          \
+#define oc_rep_set_array(object, key) oc_rep_open_array(object, key)
+
+#define oc_rep_open_array(object, key)                                         \
   g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));         \
   oc_rep_start_array(object##_map, key)
 
 #define oc_rep_close_array(object, key) oc_rep_end_array(object##_map, key)
 
-#define oc_rep_start_object(parent, key)                                       \
+#define oc_rep_start_object(parent, key) oc_rep_begin_object(parent, key)
+
+#define oc_rep_begin_object(parent, key)                                       \
   do {                                                                         \
     CborEncoder key##_map;                                                     \
   g_err |= cbor_encoder_create_map(&parent, &key##_map, CborIndefiniteLength)
@@ -168,12 +178,16 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   }                                                                            \
   while (0)
 
-#define oc_rep_object_array_start_item(key)                                    \
+#define oc_rep_object_array_start_item(key) oc_rep_object_array_begin_item(key)
+
+#define oc_rep_object_array_begin_item(key)                                    \
   oc_rep_start_object(key##_array, key)
 
 #define oc_rep_object_array_end_item(key) oc_rep_end_object(key##_array, key)
 
-#define oc_rep_set_object(object, key)                                         \
+#define oc_rep_set_object(object, key) oc_rep_open_object(object, key)
+
+#define oc_rep_open_object(object, key)                                         \
   g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));         \
   oc_rep_start_object(object##_map, key)
 
