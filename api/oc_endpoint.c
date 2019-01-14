@@ -50,6 +50,12 @@ oc_free_endpoint(oc_endpoint_t *endpoint)
   oc_memb_free(&oc_endpoints_s, endpoint);
 }
 
+void
+oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di)
+{
+  memcpy(endpoint->di.id, di->id, 16);
+}
+
 #ifdef OC_IPV4
 static void
 oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)

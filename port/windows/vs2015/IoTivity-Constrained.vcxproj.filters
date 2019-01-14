@@ -328,6 +328,24 @@
     <ClCompile Include="..\..\..\security\oc_obt.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_certs.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_csr.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_keypair.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_pki.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_roles.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_sp.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -498,6 +516,33 @@
     <ClInclude Include="..\..\..\include\oc_session_state.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_endpoint.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_network_monitor.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_pki.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\server_introspection.dat.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_certs.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_csr.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_keypair.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_roles.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_sp.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">
@@ -515,5 +560,13 @@
     <Filter Include="Port">
       <UniqueIdentifier>{00c2e29b-e86c-4224-9f02-56e1b25e8afb}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\security\oc_pstat.c.diff">
+      <Filter>Core</Filter>
+    </None>
+    <None Include="..\..\..\security\oc_tls.c.diff">
+      <Filter>Core</Filter>
+    </None>
   </ItemGroup>
 </Project>

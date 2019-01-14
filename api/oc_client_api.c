@@ -16,9 +16,15 @@
 
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
+#ifdef OC_TCP
+#include "messaging/coap/coap_signal.h"
+#endif /* OC_TCP */
 #include "oc_api.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#ifdef OC_PKI
+#include "security/oc_roles.h"
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 #ifdef OC_CLIENT
 
@@ -318,6 +324,43 @@ oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
   return status;
 }
 
+#ifdef OC_TCP
+oc_event_callback_retval_t
+oc_remove_ping_handler(void *data)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)data;
+
+  oc_client_response_t timeout_response;
+  timeout_response.code = OC_PING_TIMEOUT;
+  timeout_response.endpoint = cb->endpoint;
+  cb->handler.response(&timeout_response);
+
+  return oc_ri_remove_client_cb(cb);
+}
+
+bool
+oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+             oc_response_handler_t handler)
+{
+  oc_client_handler_t client_handler;
+  client_handler.response = handler;
+
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/ping", endpoint, 0, NULL,
+                                             client_handler, LOW_QOS, NULL);
+  if (!cb)
+    return false;
+
+  if (!coap_send_ping_message(endpoint, custody ? 1 : 0, cb->token,
+                              cb->token_len)) {
+    oc_ri_remove_client_cb(cb);
+    return false;
+  }
+
+  oc_set_delayed_callback(cb, oc_remove_ping_handler, timeout_seconds);
+  return true;
+}
+#endif /* OC_TCP */
+
 #ifdef OC_IPV4
 static bool
 oc_do_ipv4_discovery(const oc_client_cb_t *ipv6_cb,
@@ -508,5 +551,60 @@ oc_close_session(oc_endpoint_t *endpoint)
 #endif /* OC_TCP */
   }
 }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+oc_role_t *
+oc_get_all_roles(void)
+{
+  return oc_sec_get_role_creds();
+}
+
+bool
+oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
+               oc_response_handler_t handler)
+{
+  oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
+
+  if (cr) {
+    if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
+                     NULL)) {
+      oc_rep_start_root_object();
+      oc_rep_set_array(root, roles);
+      oc_rep_object_array_start_item(roles);
+      /* credid */
+      oc_rep_set_int(roles, credid, cr->credid);
+      /* credtype */
+      oc_rep_set_int(roles, credtype, cr->credtype);
+      /* roleid */
+      if (oc_string_len(cr->role.role) > 0) {
+        oc_rep_set_object(roles, roleid);
+        oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
+        if (oc_string_len(cr->role.authority) > 0) {
+          oc_rep_set_text_string(roleid, authority,
+                                 oc_string(cr->role.authority));
+        }
+        oc_rep_close_object(roles, roleid);
+      }
+      /* credusage */
+      oc_rep_set_text_string(roles, credusage, "oic.sec.cred.rolecert");
+      /* publicdata */
+      if (oc_string_len(cr->publicdata.data) > 0) {
+        oc_rep_set_object(roles, publicdata);
+        oc_rep_set_text_string(publicdata, data,
+                               oc_string(cr->publicdata.data));
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+        oc_rep_close_object(roles, publicdata);
+      }
+      oc_rep_object_array_end_item(roles);
+      oc_rep_close_array(root, roles);
+      oc_rep_end_root_object();
+      if (!oc_do_post()) {
+        return false;
+      }
+    }
+  }
+  return false;
+}
+#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */

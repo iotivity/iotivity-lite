@@ -21,9 +21,11 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
+#include "oc_csr.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
+#include "oc_sp.h"
 #include "port/oc_log.h"
 
 void
@@ -33,6 +35,10 @@ oc_sec_create_svr(void)
   oc_sec_pstat_init();
   oc_sec_cred_init();
   oc_sec_acl_init();
+
+#ifdef OC_PKI
+  oc_sec_sp_init();
+#endif /* OC_PKI */
 
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
@@ -50,6 +56,18 @@ oc_sec_create_svr(void)
                               OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
                               get_cred, 0, post_cred, delete_cred, 1,
                               "oic.r.cred");
+#ifdef OC_PKI
+    oc_core_populate_resource(OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
+                              get_sp, 0, post_sp, 0, 1, "oic.r.sp");
+    oc_core_populate_resource(OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
+                              get_csr, 0, 0, 0, 1, "oic.r.csr");
+    oc_core_populate_resource(OCF_SEC_ROLES, i, "/oic/sec/roles",
+                              OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
+                              post_cred, delete_cred, 1, "oic.r.roles");
+#endif /* OC_PKI */
   }
 }
 

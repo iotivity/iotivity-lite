@@ -82,15 +82,6 @@ TEST_F(TestTlsConnection, InitTlsTestTwice_P)
     EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
-TEST_F(TestTlsConnection, LoadCertTest_P)
-{
-
-    int errorCode = oc_tls_init_context();
-    ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
-    errorCode = oc_tls_update_psk_identity(0);
-    EXPECT_EQ(0, errorCode) << "Failed to update";
-}
-
 TEST_F(TestTlsConnection, TlsConnectionTest_N)
 {
 

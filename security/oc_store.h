@@ -33,6 +33,10 @@ void oc_sec_dump_doxm(size_t device);
 void oc_sec_dump_acl(size_t device);
 void oc_sec_dump_unique_ids(size_t device);
 void oc_sec_load_unique_ids(size_t device);
+void oc_sec_load_sp(size_t device);
+void oc_sec_dump_sp(size_t device);
+void oc_sec_load_ecdsa_keypair(size_t device);
+void oc_sec_dump_ecdsa_keypair(size_t device);
 
 #ifdef __cplusplus
 }
