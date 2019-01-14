@@ -526,7 +526,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                                (jsize)oc_string_array_get_allocated_size(types),
                                JCALL1(FindClass, (data->jenv), "java/lang/String"),
                                0);
-  for (jsize i = 0; i < oc_string_array_get_allocated_size(types); i++) {
+  for (jsize i = 0; i < (jsize)oc_string_array_get_allocated_size(types); i++) {
     jstring str = JCALL1(NewStringUTF, (data->jenv), oc_string_array_get_item(types, i));
     JCALL3(SetObjectArrayElement, (data->jenv), jtypes, i, str);
   }
