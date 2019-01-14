@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3f45e8_26a0fcf3",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "as discussed, if this array used only on this file , please add static",
+      "range": {
+        "startLine": 49,
+        "startChar": 35,
+        "endLine": 49,
+        "endChar": 37
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_86a59006",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "please remove if not needed",
+      "range": {
+        "startLine": 59,
+        "startChar": 29,
+        "endLine": 59,
+        "endChar": 30
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_66aa04d6",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "better move to header file",
+      "range": {
+        "startLine": 103,
+        "startChar": 12,
+        "endLine": 103,
+        "endChar": 22
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_c6ae78e7",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "please use one variable...like size....\ni think multiple not needed...please modify",
+      "range": {
+        "startLine": 280,
+        "startChar": 25,
+        "endLine": 280,
+        "endChar": 43
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_a6ab6cd5",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "remove all spaces....",
+      "range": {
+        "startLine": 416,
+        "startChar": 35,
+        "endLine": 416,
+        "endChar": 36
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_06b9802e",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "remove tab",
+      "range": {
+        "startLine": 551,
+        "startChar": 0,
+        "endLine": 551,
+        "endChar": 1
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_e6b57432",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "remove spaces",
+      "range": {
+        "startLine": 679,
+        "startChar": 0,
+        "endLine": 679,
+        "endChar": 4
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_46826853",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "remove not needed things",
+      "range": {
+        "startLine": 1033,
+        "startChar": 12,
+        "endLine": 1033,
+        "endChar": 17
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_26875c63",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "similar to this , i would suggest to add at least one line comment on the top of function",
+      "range": {
+        "startLine": 1056,
+        "startChar": 41,
+        "endLine": 1056,
+        "endChar": 48
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a3f45e8_867c7074",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-01-14T04:55:54Z",
+      "side": 1,
+      "message": "use this method : /* comment*/\nremove // all places..",
+      "range": {
+        "startLine": 1686,
+        "startChar": 24,
+        "endLine": 1686,
+        "endChar": 31
+      },
+      "revId": "88cd02b7948b7d0a14cad70f1de5bcae015c907c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
