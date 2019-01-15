@@ -7,6 +7,7 @@
 %include "various.i"
 %include "iotivity.swg"
 
+%import "oc_uuid.i"
 %import "oc_clock.i"
 %import "oc_collection.i"
 %include <oc_ri.i>

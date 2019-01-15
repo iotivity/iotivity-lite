@@ -2,6 +2,9 @@
 %module OCCollectionUtil
 %include iotivity.swg
 
+%import oc_ri.i
+%import oc_uuid.i
+
 %{
 #include "oc_collection.h"
 %}
@@ -10,6 +13,10 @@
 typedef struct oc_link_s oc_link_t;
 %rename(OCLink) oc_link_s;
 typedef struct oc_collection_s oc_collection_t;
+%ignore oc_collection_s::get_handler;
+%ignore oc_collection_s::put_handler;
+%ignore oc_collection_s::post_handler;
+%ignore oc_collection_s::delete_handler;
 %rename(OCCollection) oc_collection_s;
 %rename(handleCollectionRequest) oc_handle_collection_request;
 %rename(newCollection) oc_collection_alloc;
