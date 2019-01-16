@@ -40,81 +40,8 @@
 #   define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
 #   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
 #endif
-
-/*
- * This struct used to hold information needed for java callbacks.
- * When registering a callback handler from java the `JNIEnv`
- * and the java callback handler object must be stored so they
- * can later be used when the callback comes from C this is
- * the `jcb_obj`.
- *
- * If the function used to register the callback also accepts
- * user_data in the form of a void* the `jni_callback_data`
- * can be passed up to the C layer so it can be used in the
- * callback function.
- *
- * The `juser_data` is used to hold a java object that is passed
- * in when registering a callback handler. This value can then be
- * passed back upto the java callback class. Serving the same
- * function as the C void *user_data pointer.
- */
-typedef struct jni_callback_data_s {
-  struct jni_callback_data_s *next;
-  JNIEnv *jenv;
-  jobject jcb_obj;
-} jni_callback_data;
-
-/*
- * Container used to hold all `jni_callback_data` that is
- * allocated dynamically. This can be used to find the
- * memory allocated for the `jni_callback_data` if the callback
- * is removed or unregistered. This can all so be used to clean
- * up the allocated memory when shutting down the stack.
- */
-OC_LIST(jni_callbacks);
-
-#define JNI_CURRENT_VERSION JNI_VERSION_1_6
-
-static JavaVM *jvm;
-
-static JNIEnv* GetJNIEnv(jint* getEnvResult)
-{
-    JNIEnv *env = NULL;
-    *getEnvResult = JCALL2(GetEnv, jvm, (void**)&env, JNI_CURRENT_VERSION);
-    switch (*getEnvResult)
-    {
-        case JNI_OK:
-            return env;
-        case JNI_EDETACHED:
-#    ifdef __ANDROID__
-            if(JCALL2(AttachCurrentThread, jvm, &env, NULL) < 0)
-#    else
-            if(JCALL2(AttachCurrentThread, jvm, (void**)&env, NULL) < 0)
-#    endif
-            {
-                OC_DBG("Failed to get the environment");
-                return NULL;
-            }
-            else
-            {
-                return env;
-            }
-        case JNI_EVERSION:
-            OC_DBG("JNI version not supported");
-            break;
-        default:
-            OC_DBG("Failed to get the environment");
-            return NULL;
-    }
-    return NULL;
-}
-
-static void ReleaseJNIEnv(jint getEnvResult) {
-    if (JNI_EDETACHED == getEnvResult) {
-        JCALL0(DetachCurrentThread, jvm);
-    }
-}
 %}
+
 
 /*********************************************************************
  * change enums being used as bitmaps to integers for Java enums do
