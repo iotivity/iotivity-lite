@@ -47,24 +47,11 @@ public class Client {
             System.exit(init_ret);
         }
 
-        while (!quit) {
-            long next_event = OCMain.mainPoll();
-            lock.lock();
-            try {
-                if (next_event == 0) {
-                    System.out.println("Calling cv.await");
-                    cv.await();
-                } else {
-                    long now = OCClock.clockTime();
-                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
-                    //System.out.println("Calling cv.awaitNanos " + timeToWait);
-                    cv.awaitNanos(timeToWait);
-                }
-            } catch (InterruptedException e) {
-                System.out.println(e);
-            } finally {
-                lock.unlock();
-            }
+        try {
+            Thread.sleep(Long.MAX_VALUE);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         System.exit(0);

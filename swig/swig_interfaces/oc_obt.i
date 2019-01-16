@@ -112,7 +112,10 @@ int jni_oc_obt_discover_unowned_devices0(oc_obt_discovery_cb_t callback, jni_cal
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_discover_unowned_devices(callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_unowned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -123,7 +126,10 @@ int jni_oc_obt_discover_unowned_devices1(oc_obt_discovery_cb_t callback, jni_cal
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_discover_unowned_devices(callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_unowned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -134,7 +140,10 @@ int jni_oc_obt_discover_owned_devices0(oc_obt_discovery_cb_t callback, jni_callb
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -145,7 +154,10 @@ int jni_oc_obt_discover_owned_devices1(oc_obt_discovery_cb_t callback, jni_callb
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -214,7 +226,10 @@ int jni_obt_perform_just_works_otm0(oc_uuid_t *uuid, oc_obt_device_status_cb_t c
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -224,7 +239,10 @@ int jni_obt_perform_just_works_otm1(oc_uuid_t *uuid, oc_obt_device_status_cb_t c
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -235,7 +253,10 @@ int jni_obt_device_hard_reset0(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_device_hard_reset(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_device_hard_reset(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -245,7 +266,10 @@ int jni_obt_device_hard_reset1(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_device_hard_reset(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_device_hard_reset(uuid, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -304,7 +328,10 @@ int jni_obt_provision_pairwise_credentials0(oc_uuid_t *uuid1, oc_uuid_t *uuid2, 
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -314,7 +341,10 @@ int jni_obt_provision_pairwise_credentials1(oc_uuid_t *uuid1, oc_uuid_t *uuid2, 
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -334,7 +364,10 @@ int jni_obt_provision_ace0(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = NULL;
-  return oc_obt_provision_ace(subject, ace, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_ace(subject, ace, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 
@@ -344,7 +377,10 @@ int jni_obt_provision_ace1(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_
 {
   OC_DBG("JNI: %s\n", __func__);
   jcb->juser_data = *(jobject*)user_data;
-  return oc_obt_provision_ace(subject, ace, callback, jcb);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_ace(subject, ace, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  return return_value;
 }
 %}
 %rename(freeAce) oc_obt_free_ace;
