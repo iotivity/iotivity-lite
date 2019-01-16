@@ -24,6 +24,8 @@
 %}
 
 %{
+#include "oc_iotivity_lite_jni.h"
+
 #include "oc_api.h"
 #include "oc_rep.h"
 #include "oc_collection.h"

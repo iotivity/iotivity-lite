@@ -19,6 +19,8 @@
 %}
 
 %{
+#include "oc_iotivity_lite_jni.h"
+
 #include "oc_obt.h"
 %}
 
