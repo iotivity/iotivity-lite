@@ -63,28 +63,30 @@ public class ObtMain {
         }
     };
 
-    static private Thread ocfEventThread = new Thread() {
-        public void run() {
-            while (!quit) {
-                long next_event = OCMain.mainPoll();
-                lock.lock();
-                try {
-                    if (next_event == 0) {
-                        cv.await();
-                    } else {
-                            long now = OCClock.clockTime();
-                            long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
-//                            System.out.println("Poll time to wait : " + timeToWait);
-                            cv.awaitNanos(timeToWait);
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println(e);
-                } finally {
-                    lock.unlock();
-                }
-            }
-        }
-    };
+//    static private Thread ocfEventThread = new Thread() {
+//        public void run() {
+//            while (!quit) {
+//                appSyncLock.lock();
+//                long next_event = OCMain.mainPoll();
+//                appSyncLock.unlock();
+//                lock.lock();
+//                try {
+//                    if (next_event == 0) {
+//                        cv.await();
+//                    } else {
+//                            long now = OCClock.clockTime();
+//                            long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
+////                            System.out.println("Poll time to wait : " + timeToWait);
+//                            cv.awaitNanos(timeToWait);
+//                    }
+//                } catch (InterruptedException e) {
+//                    System.out.println(e);
+//                } finally {
+//                    lock.unlock();
+//                }
+//            }
+//        }
+//    };
 
     public static void displayMenu()
     {
@@ -495,8 +497,8 @@ public class ObtMain {
             System.exit(init_ret);
         }
 
-        ocfEventThread.start();
-
+        //ocfEventThread.start();
+        System.out.println("STARTING Value of quit param: " + quit);
         while (!quit) {
             displayMenu();
             int userInput = 0;
@@ -512,7 +514,6 @@ public class ObtMain {
             case 1:
             {
                 discoverUnownedDevices();
-                obtHandler.signalEventLoop();
                 break;
             }
             case 2:
@@ -531,7 +532,6 @@ public class ObtMain {
                 resetDevice();
                 break;
             case 9: {
-                OCMain.mainShutdown();
                 quit = true;
                 break;
             }
@@ -539,6 +539,8 @@ public class ObtMain {
                 break;
             }
         }
+        System.out.println("ENDING Value of quit param: " + quit);
+        OCMain.mainShutdown();
         System.exit(0);
     }
 
