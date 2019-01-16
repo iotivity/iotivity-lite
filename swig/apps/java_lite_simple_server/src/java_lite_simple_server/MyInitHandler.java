@@ -35,15 +35,4 @@ public class MyInitHandler implements OCMainInitHandler {
     public void requestEntry() {
         System.out.println("inside MyInitHandler.requestEntry()");
     }
-
-    @Override
-    public void signalEventLoop() {
-        System.out.println("inside MyInitHandler.signalEventLoop()");
-        Server.lock.lock();
-        try {
-            Server.cv.signalAll();
-        } finally {
-            Server.lock.unlock();
-        }
-    }
 }

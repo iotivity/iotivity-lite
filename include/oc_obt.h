@@ -58,7 +58,7 @@ void oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href);
 void oc_obt_ace_resource_set_num_rt(oc_ace_res_t *resource, int num_resources);
 void oc_obt_ace_resource_bind_rt(oc_ace_res_t *resource, const char *rt);
 void oc_obt_ace_resource_bind_if(oc_ace_res_t *resource,
-                                 oc_interface_mask_t interface);
+                                 oc_interface_mask_t iface_mask);
 void oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc);
 void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
                                oc_ace_permissions_t permission);
