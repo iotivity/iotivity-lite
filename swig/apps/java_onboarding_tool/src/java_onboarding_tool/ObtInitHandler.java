@@ -25,15 +25,4 @@ public class ObtInitHandler implements OCMainInitHandler {
         System.out.println("inside ObtInitHandler.requestEntry()");
         OCObt.init();
     }
-
-    @Override
-    public void signalEventLoop() {
-        //System.out.println("inside MyInitHandler.signalEventLoop()");
-        ObtMain.lock.lock();
-        try {
-            ObtMain.cv.signalAll();
-        } finally {
-            ObtMain.lock.unlock();
-        }
-    }
 }
