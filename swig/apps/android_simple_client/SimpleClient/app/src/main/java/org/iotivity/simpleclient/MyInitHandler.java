@@ -34,15 +34,4 @@ public class MyInitHandler implements OCMainInitHandler {
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler(activity);
         OCMain.doIPDiscovery("core.light", discoveryHandler);
     }
-
-    @Override
-    public void signalEventLoop() {
-        Log.d(TAG, "inside MyInitHandler.signalEventLoop()");
-        activity.lock.lock();
-        try {
-            activity.cv.signalAll();
-        } finally {
-            activity.lock.unlock();
-        }
-    }
 }

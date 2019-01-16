@@ -65,12 +65,6 @@ public class ServerActivity extends AppCompatActivity {
                 Log.e(TAG, "Error in mainInit return code = " + initReturn);
                 return;
             }
-
-            new Thread(new Runnable() {
-                public void run() {
-                    eventLoop();
-                }
-            }).start();
         }
     }
 
@@ -95,25 +89,5 @@ public class ServerActivity extends AppCompatActivity {
 
     public void printLine() {
         msg("------------------------------------------------------------------------");
-    }
-
-    private void eventLoop() {
-        while (!quit) {
-            long nextEvent = OCMain.mainPoll();
-            lock.lock();
-            try {
-                if (nextEvent == 0) {
-                    cv.await();
-                } else {
-                    long now = OCClock.clockTime();
-                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (nextEvent - now);
-                    cv.awaitNanos(timeToWait);
-                }
-            } catch (InterruptedException e) {
-                Log.d(TAG, e.getMessage());
-            } finally {
-                lock.unlock();
-            }
-        }
     }
 }
