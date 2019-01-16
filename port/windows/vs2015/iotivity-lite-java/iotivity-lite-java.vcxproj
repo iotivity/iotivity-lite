@@ -183,6 +183,9 @@
       <Project>{1866d7a4-fc11-46ca-9377-3baa69d4bf58}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\swig\java_lang\oc_iotivity_lite_jni.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
