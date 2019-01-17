@@ -219,6 +219,8 @@ void
 oc_sec_cred_default(size_t device)
 {
   oc_sec_clear_creds(device);
+  memset(devices[device].rowneruuid.id, 0, 16);
+  oc_sec_dump_cred(device);
 }
 
 void
@@ -496,7 +498,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   else if (kp) {
     oc_new_string(&cred->privatedata.data, (const char *)kp->private_key,
                   kp->private_key_size);
-    cred->privatedata.encoding = OC_ENCODING_DER;
+    cred->privatedata.encoding = OC_ENCODING_RAW;
   }
 #endif /* OC_PKI */
 
@@ -531,7 +533,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       oc_tls_refresh_trust_anchors();
     }
 #if defined(OC_PKI) && defined(OC_CLIENT)
-    if (!roles_resource && credusage == OC_CREDUSAGE_ROLE_CERT) {
+    if (!roles_resource && credusage == OC_CREDUSAGE_ROLE_CERT && role) {
       oc_sec_add_role_cred(role, authority);
     }
 #endif /* OC_PKI && OC_CLIENT */
@@ -697,6 +699,8 @@ oc_sec_encode_cred(bool persist, size_t device)
       return_encoding_string(cr->privatedata.encoding);
     if (encoding_string) {
       oc_rep_set_text_string(privatedata, encoding, encoding_string);
+    } else {
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     }
     oc_rep_close_object(creds, privatedata);
 #ifdef OC_PKI
