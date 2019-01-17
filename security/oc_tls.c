@@ -689,32 +689,14 @@ oc_tls_load_identity_cert_chain(mbedtls_ssl_config *conf, size_t device,
 static bool
 is_known_trust_anchor(oc_sec_cred_t *cred)
 {
-  /* We maintain a single list of trust anchors common to all Logical Devices */
-  mbedtls_x509_crt *c = &trust_anchors;
+  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
 
-  mbedtls_x509_crt cert;
-  mbedtls_x509_crt_init(&cert);
-
-  size_t cert_len = oc_string_len(cred->publicdata.data);
-  if (cred->publicdata.encoding == OC_ENCODING_PEM) {
-    cert_len++;
-  }
-  int ret = mbedtls_x509_crt_parse(
-    &cert, (const unsigned char *)oc_string(cred->publicdata.data), cert_len);
-  if (ret < 0) {
-    OC_ERR("could not parse trust anchor from cred");
-    return true;
-  }
-
-  for (; c != NULL; c = c->next) {
-    if (c->raw.len == cert.raw.len &&
-        memcmp(c->raw.p, cert.raw.p, cert.raw.len) == 0) {
-      mbedtls_x509_crt_free(&cert);
+  for (; cert != NULL; cert = cert->next) {
+    if (cert->cred == cred) {
       return true;
     }
   }
 
-  mbedtls_x509_crt_free(&cert);
   return false;
 }
 
