@@ -60,19 +60,19 @@ handle_array_response(void *data)
 }
 
 static void
-get_array(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_array(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   oc_indicate_separate_response(request, &array_response);
   oc_set_delayed_callback(NULL, &handle_array_response, 5);
 }
 
 static void
-post_array(oc_request_t *request, oc_interface_mask_t interface,
+post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_array:\n");
   int i;

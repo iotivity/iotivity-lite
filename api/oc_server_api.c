@@ -220,16 +220,16 @@ oc_collection_get_collections(void)
 #endif /* OC_COLLECTIONS */
 
 void
-oc_resource_bind_resource_interface(oc_resource_t *resource, oc_interface_mask_t interface)
+oc_resource_bind_resource_interface(oc_resource_t *resource, oc_interface_mask_t iface_mask)
 {
-  resource->interfaces |= interface;
+  resource->interfaces |= iface_mask;
 }
 
 void
 oc_resource_set_default_interface(oc_resource_t *resource,
-                                  oc_interface_mask_t interface)
+                                  oc_interface_mask_t iface_mask)
 {
-  resource->default_interface = interface;
+  resource->default_interface = iface_mask;
 }
 
 void

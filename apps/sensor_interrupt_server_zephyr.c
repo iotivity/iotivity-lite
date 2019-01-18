@@ -43,9 +43,9 @@ app_init(void)
 }
 
 static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   oc_indicate_separate_response(request, &temp_response);
 }

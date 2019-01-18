@@ -43,8 +43,8 @@ bool oc_sec_decode_sp(oc_rep_t *rep, size_t device);
 void oc_sec_encode_sp(size_t device);
 oc_sec_sp_t *oc_sec_get_sp(size_t device);
 void oc_sec_sp_default(size_t device);
-void get_sp(oc_request_t *request, oc_interface_mask_t interface, void *data);
-void post_sp(oc_request_t *request, oc_interface_mask_t interface, void *data);
+void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 
 #ifdef __cplusplus
 }

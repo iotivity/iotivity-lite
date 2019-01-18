@@ -90,7 +90,7 @@ handle_separate_response(void *data)
 }
 
 static void
-get_handler(oc_request_t *request, oc_interface_mask_t interface,
+get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
   (void)user_data;
@@ -103,7 +103,7 @@ get_handler(oc_request_t *request, oc_interface_mask_t interface,
   }
 
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -120,10 +120,10 @@ get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-post_handler(oc_request_t *request, oc_interface_mask_t interface,
+post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
              void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   printf("post_handler:\n");
   printf("  Key : Value\n");
@@ -155,12 +155,12 @@ post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-put_handler(oc_request_t *request, oc_interface_mask_t interface,
+put_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
-  post_handler(request, interface, user_data);
+  post_handler(request, iface_mask, user_data);
 }
 
 static void

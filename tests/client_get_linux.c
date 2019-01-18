@@ -80,12 +80,12 @@ check_resource_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
-             oc_interface_mask_t interfaces, oc_endpoint_t *server,
+             oc_interface_mask_t iface_mask, oc_endpoint_t *server,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;
   (void)di;
-  (void)interfaces;
+  (void)iface_mask;
   (void)user_data;
   
   int i, array_size;
@@ -188,12 +188,12 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   oc_rep_start_root_object();
   bool light = *(bool *)user_data;
 
-  switch (interface) {
+  switch (iface_mask) {
     case OC_IF_BASELINE:
       oc_process_baseline_interface(request->resource);
     case OC_IF_RW:

@@ -55,7 +55,7 @@ struct oc_collection_s
 };
 
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
-                                  oc_interface_mask_t interface,
+                                  oc_interface_mask_t iface_mask,
                                   oc_resource_t *notify_resource);
 oc_collection_t *oc_collection_alloc(uint8_t num_supported_rts,
                                      uint8_t num_mandatory_rts);
