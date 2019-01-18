@@ -238,13 +238,13 @@ get_request(void)
 
 static oc_discovery_flags_t
 discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
-                  oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
                   oc_resource_properties_t bm, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
 
   (void)anchor;
-  (void)interfaces;
+  (void)iface_mask;
   (void)bm;
   int i;
   int uri_len = strlen(uri);

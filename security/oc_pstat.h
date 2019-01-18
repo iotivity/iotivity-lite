@@ -51,9 +51,9 @@ bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_pstat(size_t device);
 oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
 void oc_sec_pstat_default(size_t device);
-void get_pstat(oc_request_t *request, oc_interface_mask_t interface,
+void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
-void post_pstat(oc_request_t *request, oc_interface_mask_t interface,
+void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 void oc_sec_reset();
 

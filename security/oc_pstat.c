@@ -494,10 +494,10 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
 }
 
 void
-get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat(request->resource->device);
     oc_send_response(request, OC_STATUS_OK);
@@ -508,9 +508,9 @@ get_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 void
-post_pstat(oc_request_t *request, oc_interface_mask_t interface, void *data)
+post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {

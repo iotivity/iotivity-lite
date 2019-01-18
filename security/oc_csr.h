@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-void get_csr(oc_request_t *request, oc_interface_mask_t interface, void *data);
+void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 
 #ifdef __cplusplus
 }
