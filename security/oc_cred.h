@@ -116,11 +116,11 @@ oc_sec_cred_t *oc_sec_allocate_cred(oc_uuid_t *subjectuuid,
                                     oc_sec_credtype_t credtype,
                                     oc_sec_credusage_t credusage,
                                     size_t device);
-void put_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
-void post_cred(oc_request_t *request, oc_interface_mask_t interface,
+void put_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void post_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
-void get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data);
-void delete_cred(oc_request_t *request, oc_interface_mask_t interface,
+void get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
                  void *data);
 
 #ifdef __cplusplus

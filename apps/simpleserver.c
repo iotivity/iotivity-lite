@@ -41,14 +41,14 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
   ++power;
 
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -65,9 +65,9 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
@@ -98,12 +98,12 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface,
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
-  post_light(request, interface, user_data);
+  post_light(request, iface_mask, user_data);
 }
 
 static void

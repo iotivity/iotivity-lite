@@ -215,14 +215,14 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
 
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
-                             oc_interface_mask_t interface,
+                             oc_interface_mask_t iface_mask,
                              oc_resource_t *notify_resource)
 {
   int ecode = oc_status_code(OC_STATUS_OK);
   int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   oc_link_t *link = oc_list_head(collection->links);
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE: {
     if (method == OC_GET) {
       oc_rep_start_root_object();
@@ -253,10 +253,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
              *  application layer, skip all coap:// endpoints, and only include
              *  coaps:// endpoints.
              *  Also, exclude all endpoints that are not associated with the
-             * interface
-             *  through which this request arrived. This is achieved by checking
-             * if the
-             *  interface index matches.
+             * interface through which this request arrived. This is achieved
+             * by checking if the interface index matches.
              */
             if ((link->resource->properties & OC_SECURE &&
                  !(eps->flags & SECURED)) ||
@@ -309,14 +307,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_endpoint_t *eps =
           oc_connectivity_get_endpoints(link->resource->device);
         while (eps != NULL) {
-          /*  If this resource has been explicitly tagged as SECURE on the
-           *  application layer, skip all coap:// endpoints, and only include
-           *  coaps:// endpoints.
-           *  Also, exclude all endpoints that are not associated with the
-           * interface
-           *  through which this request arrived. This is achieved by checking
-           * if the
-           *  interface index matches.
+          /* If this resource has been explicitly tagged as SECURE on the
+           * application layer, skip all coap:// endpoints, and only include
+           * coaps:// endpoints.
+           * Also, exclude all endpoints that are not associated with the
+           * interface through which this request arrived. This is achieved by
+           * checking if the interface index matches.
            */
           if ((link->resource->properties & OC_SECURE &&
                !(eps->flags & SECURED)) ||

@@ -554,29 +554,29 @@ free_all_event_timers(void)
 oc_interface_mask_t
 oc_ri_get_interface_mask(char *iface, size_t if_len)
 {
-  oc_interface_mask_t interface = 0;
+  oc_interface_mask_t iface_mask = 0;
   if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0)
-    interface |= OC_IF_BASELINE;
+    iface_mask |= OC_IF_BASELINE;
   if (9 == if_len && strncmp(iface, "oic.if.ll", if_len) == 0)
-    interface |= OC_IF_LL;
+    iface_mask |= OC_IF_LL;
   if (8 == if_len && strncmp(iface, "oic.if.b", if_len) == 0)
-    interface |= OC_IF_B;
+    iface_mask |= OC_IF_B;
   if (8 == if_len && strncmp(iface, "oic.if.r", if_len) == 0)
-    interface |= OC_IF_R;
+    iface_mask |= OC_IF_R;
   if (9 == if_len && strncmp(iface, "oic.if.rw", if_len) == 0)
-    interface |= OC_IF_RW;
+    iface_mask |= OC_IF_RW;
   if (8 == if_len && strncmp(iface, "oic.if.a", if_len) == 0)
-    interface |= OC_IF_A;
+    iface_mask |= OC_IF_A;
   if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0)
-    interface |= OC_IF_S;
-  return interface;
+    iface_mask |= OC_IF_S;
+  return iface_mask;
 }
 
 static bool
-does_interface_support_method(oc_interface_mask_t interface, oc_method_t method)
+does_interface_support_method(oc_interface_mask_t iface_mask, oc_method_t method)
 {
   bool supported = true;
-  switch (interface) {
+  switch (iface_mask) {
   /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
    * are RETRIEVE-only.
    */
@@ -674,7 +674,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj.origin = endpoint;
 
   /* Initialize OCF interface selector. */
-  oc_interface_mask_t interface = 0;
+  oc_interface_mask_t iface_mask = 0;
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
@@ -692,7 +692,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     char *iface;
     int if_len = oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
-      interface |= oc_ri_get_interface_mask(iface, (size_t)if_len);
+      iface_mask |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
   }
 
@@ -783,8 +783,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
-    if (interface == 0)
-      interface = cur_resource->default_interface;
+    if (iface_mask == 0)
+      iface_mask = cur_resource->default_interface;
 
     /* Found the matching resource object. Now verify that:
      * 1) the selected interface is one that is supported by
@@ -793,8 +793,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      *
      * If not, return a 4.00 response.
      */
-    if (((interface & ~cur_resource->interfaces) != 0) ||
-        !does_interface_support_method(interface, method)) {
+    if (((iface_mask & ~cur_resource->interfaces) != 0) ||
+        !does_interface_support_method(iface_mask, method)) {
       forbidden = true;
       bad_request = true;
     }
@@ -841,7 +841,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * the requestor (the subject) is authorized to issue this request to
      * the resource.
      */
-    if (!oc_sec_check_acl(method, cur_resource, interface, endpoint)) {
+    if (!oc_sec_check_acl(method, cur_resource, iface_mask, endpoint)) {
       authorized = false;
     } else
 #endif /* OC_SECURITY */
@@ -851,7 +851,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
       if (resource_is_collection) {
-        oc_handle_collection_request(method, &request_obj, interface, NULL);
+        oc_handle_collection_request(method, &request_obj, iface_mask, NULL);
       } else
 #endif /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
@@ -859,16 +859,16 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
          * implemented that method, then return a 4.05 response.
          */
         if (method == OC_GET && cur_resource->get_handler.cb) {
-        cur_resource->get_handler.cb(&request_obj, interface,
+        cur_resource->get_handler.cb(&request_obj, iface_mask,
                                      cur_resource->get_handler.user_data);
       } else if (method == OC_POST && cur_resource->post_handler.cb) {
-        cur_resource->post_handler.cb(&request_obj, interface,
+        cur_resource->post_handler.cb(&request_obj, iface_mask,
                                       cur_resource->post_handler.user_data);
       } else if (method == OC_PUT && cur_resource->put_handler.cb) {
-        cur_resource->put_handler.cb(&request_obj, interface,
+        cur_resource->put_handler.cb(&request_obj, iface_mask,
                                      cur_resource->put_handler.user_data);
       } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
-        cur_resource->delete_handler.cb(&request_obj, interface,
+        cur_resource->delete_handler.cb(&request_obj, iface_mask,
                                         cur_resource->delete_handler.user_data);
       } else {
         method_impl = false;
@@ -962,7 +962,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
            * via
            * only the batch interface.
            */
-          if (interface != OC_IF_B) {
+          if (iface_mask != OC_IF_B) {
             set_observe_option = false;
           } else {
             oc_collection_t *collection = (oc_collection_t *)cur_resource;

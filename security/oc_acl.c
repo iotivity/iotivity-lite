@@ -100,7 +100,7 @@ get_new_aceid(size_t device)
 static oc_ace_res_t *
 oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
                          const char *href, oc_string_array_t *rt,
-                         oc_interface_mask_t interfaces,
+                         oc_interface_mask_t iface_mask,
                          oc_ace_wildcard_t wildcard)
 {
   int skip = 0;
@@ -148,8 +148,8 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
       }
     }
 
-    if (match && interfaces != 0 && res->interfaces != 0) {
-      if ((interfaces & res->interfaces) == 0) {
+    if (match && iface_mask != 0 && res->interfaces != 0) {
+      if ((iface_mask & res->interfaces) == 0) {
         match = false;
       } else {
         positive = true;
@@ -231,7 +231,7 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 
 static uint16_t
 oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
-                      oc_interface_mask_t interface, bool is_DCR,
+                      oc_interface_mask_t iface_mask, bool is_DCR,
                       bool is_public)
 {
   uint16_t permission = 0;
@@ -257,13 +257,13 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
   }
 
   oc_ace_res_t *res = oc_sec_ace_find_resource(
-    NULL, ace, oc_string(resource->uri), &resource->types, interface, wc);
+    NULL, ace, oc_string(resource->uri), &resource->types, iface_mask, wc);
 
   while (res != NULL) {
     permission |= ace->permission;
 
     res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri),
-                                   &resource->types, interface, wc);
+                                   &resource->types, iface_mask, wc);
   }
 
   return permission;
@@ -332,7 +332,7 @@ dump_acl(size_t device)
 
 static uint16_t
 get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
-                     oc_interface_mask_t interface, size_t device, bool is_DCR,
+                     oc_interface_mask_t iface_mask, size_t device, bool is_DCR,
                      bool is_public)
 {
   uint16_t permission = 0;
@@ -344,7 +344,7 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
 
     if (match) {
       permission |=
-        oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
+        oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
              permission);
     }
@@ -354,7 +354,7 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
 
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_interface_mask_t interface, oc_endpoint_t *endpoint)
+                 oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint)
 {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
@@ -413,7 +413,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
       if (match) {
         permission |=
-          oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
+          oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
@@ -423,7 +423,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       oc_sec_cred_t *role_cred = oc_sec_find_cred(
         uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
-        permission |= get_role_permissions(role_cred, resource, interface,
+        permission |= get_role_permissions(role_cred, resource, iface_mask,
                                            endpoint->device, is_DCR, is_public);
       }
     }
@@ -437,7 +437,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
           role_cred = next;
           continue;
         }
-        permission |= get_role_permissions(role_cred, resource, interface,
+        permission |= get_role_permissions(role_cred, resource, iface_mask,
                                            endpoint->device, is_DCR, is_public);
         role_cred = role_cred->next;
       }
@@ -454,7 +454,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       0, endpoint->device);
       if (match) {
         permission |=
-          oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
+          oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
                "connection",
                permission);
@@ -470,7 +470,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                     endpoint->device);
     if (match) {
       permission |=
-        oc_ace_get_permission(match, resource, interface, is_DCR, is_public);
+        oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
              "connection",
              permission);
@@ -587,7 +587,7 @@ oc_sec_encode_acl(size_t device)
 static oc_ace_res_t *
 oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                    const char *href, oc_ace_wildcard_t wildcard,
-                   oc_string_array_t *rt, oc_interface_mask_t interfaces,
+                   oc_string_array_t *rt, oc_interface_mask_t iface_mask,
                    int aceid, uint16_t permission, size_t device, bool create)
 {
   oc_sec_ace_t *ace =
@@ -605,7 +605,7 @@ oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
   goto done;
 
 got_ace:
-  res = oc_sec_ace_find_resource(NULL, ace, href, rt, interfaces, wildcard);
+  res = oc_sec_ace_find_resource(NULL, ace, href, rt, iface_mask, wildcard);
   if (!res && create) {
     goto new_res;
   }
@@ -696,7 +696,7 @@ new_res:
       }
     }
 
-    res->interfaces = interfaces;
+    res->interfaces = iface_mask;
 
     oc_list_add(ace->resources, res);
   } else {
@@ -711,9 +711,9 @@ static bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       int aceid, uint16_t permission, const char *href,
                       oc_ace_wildcard_t wildcard, oc_string_array_t *rt,
-                      oc_interface_mask_t interfaces, size_t device)
+                      oc_interface_mask_t iface_mask, size_t device)
 {
-  if (oc_sec_ace_get_res(type, subject, href, wildcard, rt, interfaces, aceid,
+  if (oc_sec_ace_get_res(type, subject, href, wildcard, rt, iface_mask, aceid,
                          permission, device, true))
     return true;
   return false;
@@ -988,7 +988,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_resource_properties_t wc_r = 0;
       #endif
           */
-          oc_interface_mask_t interfaces = 0;
+          oc_interface_mask_t iface_mask = 0;
           oc_string_array_t *rt = 0;
           int i;
 
@@ -1035,10 +1035,10 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                     const char *f =
                       oc_string_array_get_item(resource->value.array, i);
                     if (strlen(f) == 1 && f[0] == '*') {
-                      interfaces |= 0xFE;
+                      iface_mask |= 0xFE;
                       break;
                     }
-                    interfaces |=
+                    iface_mask |=
                       oc_ri_get_interface_mask((char *)f, strlen(f));
                   }
                 } else if (strncasecmp(oc_string(resource->name), "rt", 2) ==
@@ -1055,7 +1055,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           }
 
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
-                                wc, rt, interfaces, device);
+                                wc, rt, iface_mask, device);
 
           /* The following code block attaches "coap" endpoints to
                    resources linked to an anon-clear ACE. This logic is being
@@ -1104,9 +1104,9 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
 }
 
 void
-post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
+post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   if (oc_sec_decode_acl(request->request_payload, false,
                         request->resource->device)) {
@@ -1118,9 +1118,9 @@ post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 void
-delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
+delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
@@ -1155,9 +1155,9 @@ delete_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 void
-get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   if (oc_sec_encode_acl(request->resource->device)) {
     oc_send_response(request, OC_STATUS_OK);
