@@ -111,12 +111,12 @@ class ApiHelper
         }
 
         static oc_discovery_flags_t onResourceDiscovered(const char *di, const char *uri,
-                oc_string_array_t types, oc_interface_mask_t interfaces,
+                oc_string_array_t types, oc_interface_mask_t iface_mask,
                 oc_endpoint_t *endpoint, oc_resource_properties_t bm, void *user_data)
         {
             (void)di;
             (void)types;
-            (void)interfaces;
+            (void)iface_mask;
             (void)endpoint;
             (void)bm;
             (void)user_data;
@@ -130,10 +130,10 @@ class ApiHelper
             return OC_CONTINUE_DISCOVERY;
         }
 
-        static void onGet(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+        static void onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
         {
             (void)request;
-            (void)interface;
+            (void)iface_mask;
             (void)user_data;
             s_isCallbackReceived = true;
         }

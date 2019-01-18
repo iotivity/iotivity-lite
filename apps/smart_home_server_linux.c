@@ -42,7 +42,7 @@ app_init(void)
 }
 
 static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
   PRINT("GET_temp:\n");
@@ -63,7 +63,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   }
 
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "home_thermostat");
@@ -115,9 +115,9 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_temp:\n");
   bool out_of_range = false;
@@ -157,13 +157,13 @@ post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-get_pswitch(oc_request_t *request, oc_interface_mask_t interface,
+get_pswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
   (void)user_data;
   PRINT("GET_pswitch:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "purifier_switch");
@@ -180,10 +180,10 @@ get_pswitch(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
+post_pswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
              void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_pswitch:\n");
   bool state = false, bad_request = false;
@@ -221,13 +221,13 @@ post_pswitch(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-get_switch(oc_request_t *request, oc_interface_mask_t interface,
+get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
   PRINT("GET_switch:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     oc_rep_set_text_string(root, id, "thermostat_switch");
@@ -244,10 +244,10 @@ get_switch(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-post_switch(oc_request_t *request, oc_interface_mask_t interface,
+post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_switch:\n");
   bool state = false, bad_request = false;

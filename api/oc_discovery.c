@@ -396,13 +396,13 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
 
 static void
 oc_core_1_1_discovery_handler(oc_request_t *request,
-                              oc_interface_mask_t interface, void *data)
+                              oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   int matches = 0;
   size_t device;
 
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
     for (device = 0; device < oc_core_get_num_devices(); device++) {
@@ -438,20 +438,20 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
 }
 
 static void
-oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t interface,
+oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
                           void *data)
 {
   (void)data;
 
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
-    oc_core_1_1_discovery_handler(request, interface, data);
+    oc_core_1_1_discovery_handler(request, iface_mask, data);
     return;
   }
 
   int matches = 0;
   size_t device = request->resource->device;
 
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
     matches += process_device_resources(oc_rep_array(links), request, device);
@@ -504,7 +504,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_string_t *uri = NULL;
   oc_string_t *anchor = NULL;
   oc_string_array_t *types = NULL;
-  oc_interface_mask_t interfaces = 0;
+  oc_interface_mask_t iface_mask = 0;
 
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
@@ -599,11 +599,11 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             strncmp(oc_string(link->name), "rt", 2) == 0) {
           types = &link->value.array;
         } else {
-          interfaces = 0;
+          iface_mask = 0;
           for (i = 0;
                i < oc_string_array_get_allocated_size(link->value.array);
                i++) {
-            interfaces |= oc_ri_get_interface_mask(
+            iface_mask |= oc_ri_get_interface_mask(
               oc_string_array_get_item(link->value.array, i),
               oc_string_array_get_item_size(link->value.array, i));
           }
@@ -667,7 +667,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     }
 
     if (eps_list &&
-        handler(oc_string(*anchor), oc_string(*uri), *types, interfaces,
+        handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
                 eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
       ret = OC_STOP_DISCOVERY;
       goto done;

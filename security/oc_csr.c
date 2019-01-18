@@ -23,9 +23,9 @@
 #include "oc_core_res.h"
 
 void
-get_csr(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   size_t device = request->resource->device;

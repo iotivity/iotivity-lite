@@ -1003,9 +1003,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 }
 
 void
-get_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   bool roles_resource = false;
 #ifdef OC_PKI
@@ -1050,9 +1050,9 @@ oc_cred_remove_subject(const char *subjectuuid, size_t device)
 }
 
 void
-delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
+delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   bool success = false;
@@ -1116,9 +1116,9 @@ delete_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 void
-post_cred(oc_request_t *request, oc_interface_mask_t interface, void *data)
+post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   bool roles_resource = false;

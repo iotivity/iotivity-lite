@@ -46,10 +46,10 @@ class TestOcRi: public testing::Test
         }
 };
 
-static void onGet(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+static void onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
         (void)request;
-        (void)interface;
+        (void)iface_mask;
         (void)user_data;
 }
 

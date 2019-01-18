@@ -231,11 +231,11 @@ get_lights_oic_if_ll(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
-  (void)interfaces;
+  (void)iface_mask;
   (void)user_data;
   (void)bm;
   int i;
