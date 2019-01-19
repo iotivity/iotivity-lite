@@ -66,7 +66,9 @@ public class ObtMain {
     static private Thread ocfEventThread = new Thread() {
         public void run() {
             while (!quit) {
+                appSyncLock.lock();
                 long next_event = OCMain.mainPoll();
+                appSyncLock.unlock();
                 lock.lock();
                 try {
                     if (next_event == 0) {
