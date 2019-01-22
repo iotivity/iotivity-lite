@@ -137,7 +137,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     ps->om = 3;
     ps->sm = 4;
     memset(ps->rowneruuid.id, 0, 16);
-    oc_core_regen_unique_ids(device);
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);

@@ -198,7 +198,6 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   case OC_IF_R: {
     oc_rep_set_array(root, urlInfo);
     oc_rep_object_array_start_item(urlInfo);
-    oc_rep_set_text_string(urlInfo, content - type, "application/cbor");
     oc_rep_set_text_string(urlInfo, protocol, "coap");
     oc_rep_set_text_string(urlInfo, url, oc_string(uri));
     oc_rep_object_array_end_item(urlInfo);

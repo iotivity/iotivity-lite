@@ -70,6 +70,7 @@ oc_sec_doxm_default(size_t device)
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
+  oc_core_regen_unique_ids(device);
   oc_sec_dump_doxm(device);
 }
 
