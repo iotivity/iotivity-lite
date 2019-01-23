@@ -6,11 +6,11 @@
 %include "typemaps.i"
 %include "various.i"
 %include "iotivity.swg"
+%include "oc_ri.i"
 
 %import "oc_uuid.i"
 %import "oc_clock.i"
 %import "oc_collection.i"
-%include <oc_ri.i>
 
 %pragma(java) jniclasscode=%{
   static {
