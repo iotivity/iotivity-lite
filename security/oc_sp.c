@@ -178,6 +178,8 @@ void
 oc_sec_encode_sp(size_t device)
 {
   oc_rep_start_root_object();
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_SP, device));
   oc_rep_set_text_string(root, currentprofile,
                          sp_to_string(sp[device].current_profile));
   oc_rep_set_array(root, supportedprofiles);
