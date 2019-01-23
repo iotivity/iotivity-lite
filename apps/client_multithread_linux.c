@@ -123,6 +123,7 @@ pong_received_handler(oc_client_response_t *data)
 static void
 send_ping(uint16_t timeout_seconds)
 {
+  (void)timeout_seconds;
   if (!is_resource_found())
     return;
 
