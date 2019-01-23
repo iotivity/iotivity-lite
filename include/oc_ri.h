@@ -144,8 +144,11 @@ struct oc_resource_s
   oc_request_handler_t put_handler;
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
-  uint16_t observe_period_seconds;
   uint8_t num_observers;
+#ifdef OC_COLLECTIONS
+  uint8_t num_links;
+#endif /* OC_COLLECTIONS */
+  uint16_t observe_period_seconds;
 };
 
 typedef struct oc_link_s oc_link_t;
