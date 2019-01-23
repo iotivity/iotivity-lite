@@ -851,9 +851,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
       if (resource_is_collection) {
-        oc_handle_collection_request(method, &request_obj, interface);
+        oc_handle_collection_request(method, &request_obj, interface, NULL);
       } else
-#endif  /* OC_COLLECTIONS && OC_SERVER */
+#endif /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
          * its handler for the requested method. If it has not
          * implemented that method, then return a 4.05 response.
@@ -932,6 +932,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   if (success && coap_get_header_observe(request, &observe)) {
     /* Check if the resource is OBSERVABLE */
     if (cur_resource->properties & OC_OBSERVABLE) {
+      bool set_observe_option = true;
       /* If the observe option is set to 0, make an attempt to add the
        * requesting client as an observer.
        */
@@ -949,18 +950,41 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
            * periodic GET callbacks to utilize the framework's internal
            * polling mechanism.
            */
-          bool set_observe_option = true;
           if (cur_resource->properties & OC_PERIODIC) {
             if (!add_periodic_observe_callback(cur_resource)) {
               set_observe_option = false;
-              coap_remove_observer_by_token(endpoint, packet->token,
-                                            packet->token_len);
             }
           }
-
-          if (set_observe_option) {
-            coap_set_header_observe(response, 0);
+        }
+#if defined(OC_COLLECTIONS)
+        if (resource_is_collection) {
+          /* The implementation currently permits observations of collections
+           * via
+           * only the batch interface.
+           */
+          if (interface != OC_IF_B) {
+            set_observe_option = false;
+          } else {
+            oc_collection_t *collection = (oc_collection_t *)cur_resource;
+            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+            while (links) {
+              if (links->resource &&
+                  (links->resource->properties & OC_PERIODIC)) {
+                if (!add_periodic_observe_callback(links->resource)) {
+                  set_observe_option = false;
+                  break;
+                }
+              }
+              links = links->next;
+            }
           }
+        }
+#endif /* OC_COLLECTIONS */
+        if (set_observe_option) {
+          coap_set_header_observe(response, 0);
+        } else {
+          coap_remove_observer_by_token(endpoint, packet->token,
+                                        packet->token_len);
         }
       }
       /* If the observe option is set to 1, make an attempt to remove
@@ -979,6 +1003,19 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
           }
+#if defined(OC_COLLECTIONS)
+          if (resource_is_collection) {
+            oc_collection_t *collection = (oc_collection_t *)cur_resource;
+            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+            while (links) {
+              if (links->resource &&
+                  (links->resource->properties & OC_PERIODIC)) {
+                remove_periodic_observe_callback(links->resource);
+              }
+              links = links->next;
+            }
+          }
+#endif /* OC_COLLECTIONS */
         }
       }
     }

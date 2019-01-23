@@ -41,6 +41,15 @@ static oc_endpoint_t *lights_server;
 static bool do_once = true;
 static void get_lights_oic_if_b(oc_client_response_t *data);
 
+static oc_event_callback_retval_t
+stop_observe(void *data)
+{
+  (void)data;
+  PRINT("Stopping OBSERVE\n");
+  oc_stop_observe(lights, lights_server);
+  return OC_EVENT_DONE;
+}
+
 static void
 post_lights_oic_if_b(oc_client_response_t *data)
 {
@@ -87,10 +96,11 @@ post_lights_oic_if_b(oc_client_response_t *data)
     ll = ll->next;
   }
 
-  PRINT("\nSending GET %s?if=oic.if.b\n\n", lights);
+  PRINT("\nSending OBSERVE %s?if=oic.if.b\n\n", lights);
 
-  oc_do_get(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b, LOW_QOS,
-            NULL);
+  oc_do_observe(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b,
+                LOW_QOS, NULL);
+  oc_set_delayed_callback(NULL, &stop_observe, 20);
 }
 
 static void

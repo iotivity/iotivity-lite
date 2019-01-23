@@ -42,6 +42,7 @@ get_count(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
   PRINT("GET_count:\n");
+  counter++;
   oc_rep_start_root_object();
   switch (interface) {
   case OC_IF_BASELINE:

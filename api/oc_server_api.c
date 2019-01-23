@@ -206,7 +206,7 @@ oc_delete_collection(oc_resource_t *collection)
 void
 oc_add_collection(oc_resource_t *collection)
 {
-  oc_resource_set_observable(collection, false);
+  oc_resource_set_observable(collection, true);
   oc_collection_add((oc_collection_t *)collection);
 }
 
