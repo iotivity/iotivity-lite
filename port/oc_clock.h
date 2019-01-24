@@ -50,7 +50,7 @@
 #ifndef OC_CLOCK_H
 #define OC_CLOCK_H
 
-#include "oc_config.h"
+#include "oc_clock_util.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
