@@ -18,6 +18,8 @@
 #define OC_CLOCK_UTIL_H
 
 #include "oc_config.h"
+#include <stddef.h>
+
 size_t oc_clock_time_rfc3339(char *out_buf, size_t out_buf_len);
 
 size_t oc_clock_encode_time_rfc3339(oc_clock_time_t time, char *out_buf,
