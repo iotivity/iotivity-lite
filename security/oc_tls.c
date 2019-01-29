@@ -494,12 +494,13 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 static void
 oc_sec_free_certs_chain(mbedtls_ssl_key_cert *kc)
 {
-  while (kc) {
-    mbedtls_x509_crt_free(kc->cert);
-    oc_mem_free(kc->cert);
-    mbedtls_pk_free(kc->key);
-    oc_mem_free(kc->key);
-    kc = kc->next;
+  mbedtls_ssl_key_cert *cur = kc, *next;
+  while(cur != NULL) {
+    next = cur->next;
+    mbedtls_x509_crt_free(cur->cert);
+    mbedtls_pk_free(cur->key);
+    oc_mem_free(cur);
+    cur = next;
   }
 }
 #if defined(OC_UNLOAD_CERT)
