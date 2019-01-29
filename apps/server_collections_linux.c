@@ -167,7 +167,7 @@ register_resources(void)
   oc_add_resource(res2);
 
 #if defined(OC_COLLECTIONS)
-  oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0);
+  oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0, 0, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 

@@ -26,10 +26,16 @@ OC_LIST(oc_collections);
 OC_MEMB(oc_links_s, oc_link_t, OC_MAX_APP_RESOURCES);
 
 oc_collection_t *
-oc_collection_alloc(void)
+oc_collection_alloc(uint8_t num_supported_rts, uint8_t num_mandatory_rts)
 {
   oc_collection_t *collection = oc_memb_alloc(&oc_collections_s);
   if (collection) {
+    if (num_supported_rts > 0) {
+      oc_new_string_array(&collection->supported_rts, num_supported_rts);
+    }
+    if (num_mandatory_rts > 0) {
+      oc_new_string_array(&collection->mandatory_rts, num_mandatory_rts);
+    }
     OC_LIST_STRUCT_INIT(collection, links);
     return collection;
   }
@@ -47,6 +53,14 @@ oc_collection_free(oc_collection_t *collection)
     oc_link_t *link;
     while ((link = oc_list_pop(collection->links)) != NULL) {
       oc_delete_link(link);
+    }
+
+    if (oc_string_array_get_allocated_size(collection->supported_rts) > 0) {
+      oc_free_string_array(&collection->supported_rts);
+    }
+
+    if (oc_string_array_get_allocated_size(collection->mandatory_rts) > 0) {
+      oc_free_string_array(&collection->mandatory_rts);
     }
 
     oc_memb_free(&oc_collections_s, collection);
@@ -187,6 +201,20 @@ oc_collection_add(oc_collection_t *collection)
   oc_list_add(oc_collections, collection);
 }
 
+bool
+oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt)
+{
+  oc_collection_t *col = (oc_collection_t *)collection;
+  return oc_string_array_add_item(col->supported_rts, rt);
+}
+
+bool
+oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt)
+{
+  oc_collection_t *col = (oc_collection_t *)collection;
+  return oc_string_array_add_item(col->mandatory_rts, rt);
+}
+
 oc_collection_t *
 oc_get_next_collection_with_link(oc_resource_t *resource,
                                  oc_collection_t *start)
@@ -227,6 +255,24 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     if (method == OC_GET) {
       oc_rep_start_root_object();
       oc_process_baseline_interface(request->resource);
+      /* rts */
+      if (oc_string_array_get_allocated_size(collection->supported_rts) > 0) {
+        oc_rep_set_string_array(root, rts, collection->supported_rts);
+      }
+      /* rts-m */
+      if (oc_string_array_get_allocated_size(collection->mandatory_rts) > 0) {
+        const char *rtsm_key = "rts-m";
+        oc_rep_set_key(*oc_rep_object(root), rtsm_key);
+        oc_rep_start_array(*oc_rep_object(root), rtsm);
+        size_t arr;
+        for (arr = 0; arr < oc_string_array_get_allocated_size(
+                              collection->mandatory_rts);
+             arr++) {
+          oc_rep_add_text_string(
+            rtsm, oc_string_array_get_item(collection->mandatory_rts, arr));
+        }
+        oc_rep_end_array(*oc_rep_object(root), rtsm);
+      }
       oc_rep_set_array(root, links);
       while (link != NULL) {
         if (oc_filter_resource_by_rt(link->resource, request)) {

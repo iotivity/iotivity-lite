@@ -185,9 +185,11 @@ oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
 #if defined(OC_COLLECTIONS)
 oc_resource_t *
 oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
+                  uint8_t num_supported_rts, uint8_t num_mandatory_rts,
                   size_t device)
 {
-  oc_collection_t *collection = oc_collection_alloc();
+  oc_collection_t *collection =
+    oc_collection_alloc(num_supported_rts, num_mandatory_rts);
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
     collection->default_interface = OC_IF_LL;
