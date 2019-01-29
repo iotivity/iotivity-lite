@@ -1396,8 +1396,6 @@ oc_ri_shutdown(void)
   oc_process_shutdown();
 
 #ifdef OC_SERVER
-  oc_ri_delete_all_app_resources();
-
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all(), *next;
   while (collection != NULL) {
@@ -1406,6 +1404,8 @@ oc_ri_shutdown(void)
     collection = next;
   }
 #endif /* OC_COLLECTIONS */
+
+  oc_ri_delete_all_app_resources();
 #endif /* OC_SERVER */
 
   oc_random_destroy();

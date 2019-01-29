@@ -318,9 +318,13 @@ register_resources(void)
   oc_add_resource(pbswitch);
 
 #ifdef OC_COLLECTIONS
-  oc_resource_t *col = oc_new_collection("dashboard", "/platform", 1, 0);
+  oc_resource_t *col = oc_new_collection("dashboard", "/platform", 1, 2, 2, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
+  oc_collection_add_supported_rt(col, "oic.r.temperature");
+  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
+  oc_collection_add_mandatory_rt(col, "oic.r.temperature");
+  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
   oc_link_t *l1 = oc_new_link(temp);
   oc_collection_add_link(col, l1);
 

@@ -49,13 +49,16 @@ struct oc_collection_s
   oc_request_handler_t delete_handler;
   uint8_t num_observers;
   uint8_t num_links;
+  oc_string_array_t supported_rts;
+  oc_string_array_t mandatory_rts;
   OC_LIST_STRUCT(links);
 };
 
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t interface,
                                   oc_resource_t *notify_resource);
-oc_collection_t *oc_collection_alloc(void);
+oc_collection_t *oc_collection_alloc(uint8_t num_supported_rts,
+                                     uint8_t num_mandatory_rts);
 void oc_collection_free(oc_collection_t *collection);
 
 oc_collection_t *oc_get_next_collection_with_link(oc_resource_t *resource,
