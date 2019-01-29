@@ -203,9 +203,9 @@ main(void)
 
 #ifdef OC_SECURITY
 #ifdef OC_MFG
-  oc_storage_config("./mfgserver_creds");
+  oc_storage_config("./mfg_server_creds");
 #elif defined(OC_RPK)
-  oc_storage_config("./rpkserver_creds");
+  oc_storage_config("./rpk_server_creds");
 #else
   oc_storage_config("./simpleserver_creds");
 #endif
