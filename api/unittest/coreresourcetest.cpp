@@ -81,3 +81,14 @@ TEST_F(TestCoreResource, CoreDevice_P)
     EXPECT_EQ(1, numcoredevice);
     oc_connectivity_shutdown(0);
 }
+
+TEST_F(TestCoreResource, CoreGetResource_P)
+{
+    oc_core_init_platform(MANUFACTURER_NAME, NULL, NULL);
+
+    char uri[] = "/oic/p";
+    oc_resource_t *res = oc_core_get_resource_by_uri(uri, 0);
+
+    ASSERT_NE(res, NULL);
+    EXPECT_EQ(strlen(uri), oc_string_len(res->uri));
+}
