@@ -157,6 +157,10 @@ main(void)
 
   oc_clock_time_t next_event;
 
+  oc_set_con_res_announced(false);
+  oc_set_mtu_size(16384);
+  oc_set_max_app_data_size(16384);
+
 #ifdef OC_SECURITY
   oc_storage_config("./simpleserver_pki_creds");
 #endif /* OC_SECURITY */
