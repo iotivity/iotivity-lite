@@ -1198,7 +1198,7 @@ done:
 static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing IPv4 connectivity for device %d", dev->device);
+  OC_DBG("Initializing IPv4 connectivity for device %zd", dev->device);
   memset(&dev->mcast4, 0, sizeof(dev->mcast4));
   memset(&dev->server4, 0, sizeof(dev->server4));
 
@@ -1308,7 +1308,7 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->dtls4_port = ntohs(sm->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized IPv4 connectivity for device %d",
+  OC_DBG("Successfully initialized IPv4 connectivity for device %zd",
          dev->device);
 
   return 0;
@@ -1323,7 +1323,7 @@ oc_connectivity_init(size_t device)
     WSAStartup(MAKEWORD(2, 2), &wsadata);
   }
 
-  OC_DBG("Initializing connectivity for device %d", device);
+  OC_DBG("Initializing connectivity for device %zd", device);
 #ifdef OC_DYNAMIC_ALLOCATION
   ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
   if (!dev) {
@@ -1501,7 +1501,7 @@ oc_connectivity_init(size_t device)
     return -1;
   }
 
-  OC_DBG("Successfully initialized connectivity for device %d", device);
+  OC_DBG("Successfully initialized connectivity for device %zd", device);
 
   return 0;
 }
@@ -1539,5 +1539,5 @@ oc_connectivity_shutdown(size_t device)
   free(dev);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG("oc_connectivity_shutdown for device %d", device);
+  OC_DBG("oc_connectivity_shutdown for device %zd", device);
 }

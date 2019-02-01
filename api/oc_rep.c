@@ -277,7 +277,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         uint8_t *size =
           (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k);
         size -= 1;
-        *size = len;
+        *size = (uint8_t)len;
         *err |= cbor_value_copy_byte_string(
           &array, (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k),
           &len, NULL);

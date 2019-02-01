@@ -515,8 +515,7 @@ next_cred_in_chain:
       } else if (!id_cert->next) {
         OC_DBG("new cert chains to known cert chain; Add cert to chain and "
                "proceed...");
-        int ret =
-          mbedtls_x509_crt_parse_der(id_cert, cert->raw.p, cert->raw.len);
+        ret = mbedtls_x509_crt_parse_der(id_cert, cert->raw.p, cert->raw.len);
         if (ret < 0) {
           OC_WRN("could not parse cert in provided chain");
           return true;
@@ -582,7 +581,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
         (const unsigned char *)oc_cast(cred->privatedata.data, uint8_t),
         oc_string_len(cred->privatedata.data) + 1, NULL, 0);
       if (ret != 0) {
-        OC_ERR("could not parse private key %d",
+        OC_ERR("could not parse private key %zd",
                oc_string_len(cred->privatedata.data));
         goto add_new_identity_cert_error;
       }
