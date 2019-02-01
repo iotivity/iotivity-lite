@@ -341,7 +341,7 @@ public class ObtMain {
             System.out.print("Enter number of resource types [0-None]: ");
             c = scanner.nextInt();
             if (c > 0 && c <= MAX_NUM_RT) {
-                OCObt.aceResoruceSetNumRt(res, c);
+                OCObt.aceResourceSetNumRt(res, c);
 
                 int j = 0;
                 while (j < c) {
@@ -350,7 +350,7 @@ public class ObtMain {
                     if (rt.length() > 127) {
                         rt = rt.substring(0, 127);
                     }
-                    OCObt.aceResoruceBindRt(res, rt);
+                    OCObt.aceResourceBindRt(res, rt);
                     j++;
                 }
             }

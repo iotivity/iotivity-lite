@@ -320,8 +320,8 @@ int jni_obt_provision_pairwise_credentials1(oc_uuid_t *uuid1, oc_uuid_t *uuid2, 
 %rename(newAceForConnection) oc_obt_new_ace_for_connection;
 %rename(aceNewResource) oc_obt_ace_new_resource;
 %rename(aceResourceSetHref) oc_obt_ace_resource_set_href;
-%rename(aceResoruceSetNumRt) oc_obt_ace_resource_set_num_rt;
-%rename(aceResoruceBindRt) oc_obt_ace_resource_bind_rt;
+%rename(aceResourceSetNumRt) oc_obt_ace_resource_set_num_rt;
+%rename(aceResourceBindRt) oc_obt_ace_resource_bind_rt;
 %rename(aceResourceBindIf) oc_obt_ace_resource_bind_if;
 %rename(aceResourceSetWc) oc_obt_ace_resource_set_wc;
 %rename(aceAddPermission) oc_obt_ace_add_permission;
