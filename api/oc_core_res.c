@@ -118,29 +118,29 @@ oc_core_shutdown(void)
 
 void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
-                               oc_interface_mask_t interface)
+                               oc_interface_mask_t iface_mask)
 {
   oc_rep_set_key((*parent), "if");
   oc_rep_start_array((*parent), if);
-  if (interface & OC_IF_LL) {
+  if (iface_mask & OC_IF_LL) {
     oc_rep_add_text_string(if, "oic.if.ll");
   }
-  if (interface & OC_IF_B) {
+  if (iface_mask & OC_IF_B) {
     oc_rep_add_text_string(if, "oic.if.b");
   }
-  if (interface & OC_IF_R) {
+  if (iface_mask & OC_IF_R) {
     oc_rep_add_text_string(if, "oic.if.r");
   }
-  if (interface & OC_IF_RW) {
+  if (iface_mask & OC_IF_RW) {
     oc_rep_add_text_string(if, "oic.if.rw");
   }
-  if (interface & OC_IF_A) {
+  if (iface_mask & OC_IF_A) {
     oc_rep_add_text_string(if, "oic.if.a");
   }
-  if (interface & OC_IF_S) {
+  if (iface_mask & OC_IF_S) {
     oc_rep_add_text_string(if, "oic.if.s");
   }
-  if (interface & OC_IF_BASELINE) {
+  if (iface_mask & OC_IF_BASELINE) {
     oc_rep_add_text_string(if, "oic.if.baseline");
   }
   oc_rep_end_array((*parent), if);
@@ -160,7 +160,7 @@ oc_core_regen_unique_ids(size_t device)
 #endif /* OC_SECURITY */
 
 static void
-oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
+oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
                        void *data)
 {
   (void)data;
@@ -173,7 +173,7 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_uuid_to_str(&oc_device_info[device].piid, piid, OC_UUID_LEN);
   }
 
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -198,14 +198,14 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
+oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
                         void *data)
 {
   (void)data;
   size_t device = request->resource->device;
   oc_rep_start_root_object();
 
-  switch (interface) {
+  switch (iface_mask) {
     case OC_IF_BASELINE:
       oc_process_baseline_interface(request->resource);
     /* fall through */
@@ -223,10 +223,10 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t interface,
+oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   oc_rep_t *rep = request->request_payload;
   bool changed = false;
   size_t device = request->resource->device;
@@ -367,7 +367,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 }
 
 static void
-oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
+oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
 {
   (void)data;
@@ -376,7 +376,7 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t interface,
   char pi[OC_UUID_LEN];
   oc_uuid_to_str(&oc_platform_info.pi, pi, OC_UUID_LEN);
 
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -435,7 +435,7 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 
 void
 oc_core_populate_resource(int core_resource, size_t device_index, const char *uri,
-                          oc_interface_mask_t interfaces,
+                          oc_interface_mask_t iface_mask,
                           oc_interface_mask_t default_interface,
                           int properties,
                           oc_request_callback_t get, oc_request_callback_t put,
@@ -458,7 +458,7 @@ oc_core_populate_resource(int core_resource, size_t device_index, const char *ur
     oc_string_array_add_item(r->types, va_arg(rt_list, const char *));
   }
   va_end(rt_list);
-  r->interfaces = interfaces;
+  r->interfaces = iface_mask;
   r->default_interface = default_interface;
   r->get_handler.cb = get;
   r->put_handler.cb = put;
@@ -523,10 +523,14 @@ oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri, size_t device)
 {
   int skip = 0, type = 0;
-  if (uri[0] != '/')
+  if (uri[0] == '/')
     skip = 1;
-  if ((strlen(uri) - skip) == 5 && memcmp(uri + skip, "oic/p", 5) == 0) {
-    return &core_resources[0];
+  if ((strlen(uri) - skip) == 5) {
+    if (memcmp(uri + skip, "oic/p", 5) == 0) {
+      return &core_resources[0];
+    } else if (memcmp(uri + skip, "oic/d", 5) == 0) {
+      type = OCF_D;
+    }
   } else if ((strlen(uri) - skip) == 7 &&
              memcmp(uri + skip, "oic/res", 7) == 0) {
     type = OCF_RES;
@@ -534,8 +538,6 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
              (strlen(uri) - skip) == OC_NAMELEN_CON_RES &&
              memcmp(uri + skip, OC_NAME_CON_RES, OC_NAMELEN_CON_RES) == 0) {
     type = OCF_CON;
-  } else if ((strlen(uri) - skip) == 5 && memcmp(uri + skip, "oic/d", 5) == 0) {
-    type = OCF_D;
   } else if ((strlen(uri) - skip) == 19 &&
              memcmp(uri + skip, "oc/wk/introspection", 19) == 0) {
     type = OCF_INTROSPECTION_WK;
@@ -544,28 +546,26 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
     type = OCF_INTROSPECTION_DATA;
   }
 #ifdef OC_SECURITY
-  else if ((strlen(uri) - skip) == 12 &&
-           memcmp(uri + skip, "oic/sec/doxm", 12) == 0) {
-    type = OCF_SEC_DOXM;
-  } else if ((strlen(uri) - skip) == 12 &&
-             memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
-    type = OCF_SEC_PSTAT;
-  } else if ((strlen(uri) - skip) == 12 &&
-             memcmp(uri + skip, "oic/sec/acl2", 12) == 0) {
-    type = OCF_SEC_ACL;
-  } else if ((strlen(uri) - skip) == 12 &&
-             strncmp(uri + skip, "oic/sec/cred", 12) == 0) {
-    type = OCF_SEC_CRED;
+  else if ((strlen(uri) - skip) == 12) {
+    if (memcmp(uri + skip, "oic/sec/doxm", 12) == 0) {
+      type = OCF_SEC_DOXM;
+    } else if (memcmp(uri + skip, "oic/sec/pstat", 12) == 0) {
+      type = OCF_SEC_PSTAT;
+    } else if (memcmp(uri + skip, "oic/sec/acl2", 12) == 0) {
+      type = OCF_SEC_ACL;
+    } else if (memcmp(uri + skip, "oic/sec/cred", 12) == 0) {
+      type = OCF_SEC_CRED;
+    }
   }
 #ifdef OC_PKI
   else if ((strlen(uri) - skip) == 10 &&
-           strncmp(uri + skip, "oic/sec/sp", 10) == 0) {
+           memcmp(uri + skip, "oic/sec/sp", 10) == 0) {
     type = OCF_SEC_SP;
   } else if ((strlen(uri) - skip) == 11 &&
-             strncmp(uri + skip, "oic/sec/csr", 11) == 0) {
+             memcmp(uri + skip, "oic/sec/csr", 11) == 0) {
     type = OCF_SEC_CSR;
   } else if ((strlen(uri) - skip) == 13 &&
-             strncmp(uri + skip, "oic/sec/roles", 13) == 0) {
+             memcmp(uri + skip, "oic/sec/roles", 13) == 0) {
     type = OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */

@@ -178,6 +178,8 @@ void
 oc_sec_encode_sp(size_t device)
 {
   oc_rep_start_root_object();
+  oc_process_baseline_interface(
+    oc_core_get_resource_by_index(OCF_SEC_SP, device));
   oc_rep_set_text_string(root, currentprofile,
                          sp_to_string(sp[device].current_profile));
   oc_rep_set_array(root, supportedprofiles);
@@ -207,10 +209,10 @@ oc_sec_get_sp(size_t device)
 }
 
 void
-get_sp(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE: {
     oc_sec_encode_sp(request->resource->device);
     oc_send_response(request, OC_STATUS_OK);
@@ -221,9 +223,9 @@ get_sp(oc_request_t *request, oc_interface_mask_t interface, void *data)
 }
 
 void
-post_sp(oc_request_t *request, oc_interface_mask_t interface, void *data)
+post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;
   if (oc_sec_decode_sp(request->request_payload, device)) {

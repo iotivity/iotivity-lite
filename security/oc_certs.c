@@ -283,7 +283,7 @@ oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
   j += strlen(end);
   output_buffer[j] = '\0';
 
-  return j;
+  return (int)j;
 }
 
 int
@@ -301,7 +301,7 @@ oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
     buffer_len -= strlen(output_buffer);
     cert = cert->next;
   }
-  return strlen(output_buffer);
+  return (int)strlen(output_buffer);
 }
 
 static int
@@ -647,13 +647,13 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
-    OC_ERR("could not find public/private key pair on device %d", device);
+    OC_ERR("could not find public/private key pair on device %zd", device);
     return -1;
   }
 
   oc_uuid_t *uuid = oc_core_get_device_id(device);
   if (!uuid) {
-    OC_ERR("could not obtain UUID for device %d", device);
+    OC_ERR("could not obtain UUID for device %zd", device);
     return -1;
   }
 
@@ -673,13 +673,13 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   int ret =
     mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_KEYPAIR_PUBKEY_SIZE);
   if (ret != 0) {
-    OC_ERR("could not parse public key for device %d", device);
+    OC_ERR("could not parse public key for device %zd", device);
     goto generate_csr_error;
   }
 
   ret = mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0);
   if (ret != 0) {
-    OC_ERR("could not parse private key for device %d", device);
+    OC_ERR("could not parse private key for device %zd", device);
     goto generate_csr_error;
   }
 
@@ -704,7 +704,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 
   ret = mbedtls_x509write_csr_set_subject_name(&request, subject);
   if (ret != 0) {
-    OC_ERR("could not write subject name into CSR for device %d", device);
+    OC_ERR("could not write subject name into CSR for device %zd", device);
     goto generate_csr_error;
   }
 
@@ -714,7 +714,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
                                   mbedtls_ctr_drbg_random, &ctr_drbg);
 
   if (ret <= 0) {
-    OC_ERR("could not write CSR for device %d into buffer", device);
+    OC_ERR("could not write CSR for device %zd into buffer", device);
     goto generate_csr_error;
   }
   memmove(csr, csr + csr_len - ret, ret);
@@ -724,7 +724,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   mbedtls_entropy_free(&entropy);
   mbedtls_x509write_csr_free(&request);
 
-  OC_DBG("successfully generated CSR for device %d", device);
+  OC_DBG("successfully generated CSR for device %zd", device);
 
   return ret;
 

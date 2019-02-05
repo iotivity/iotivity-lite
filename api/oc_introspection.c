@@ -129,9 +129,9 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 
 static void
 oc_core_introspection_data_handler(oc_request_t *request,
-                                   oc_interface_mask_t interface, void *data)
+                                   oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   OC_DBG("in oc_core_introspection_data_handler");
@@ -160,7 +160,7 @@ oc_core_introspection_data_handler(oc_request_t *request,
 
 static void
 oc_core_introspection_wk_handler(oc_request_t *request,
-                                 oc_interface_mask_t interface, void *data)
+                                 oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
 
@@ -191,14 +191,13 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   oc_rep_start_root_object();
 
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
   case OC_IF_R: {
     oc_rep_set_array(root, urlInfo);
     oc_rep_object_array_start_item(urlInfo);
-    oc_rep_set_text_string(urlInfo, content - type, "application/cbor");
     oc_rep_set_text_string(urlInfo, protocol, "coap");
     oc_rep_set_text_string(urlInfo, url, oc_string(uri));
     oc_rep_object_array_end_item(urlInfo);

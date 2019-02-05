@@ -46,13 +46,13 @@ app_init(void)
 }
 
 static void
-get_fridge(oc_request_t *request, oc_interface_mask_t interface,
+get_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
   PRINT("GET_fridge:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -70,11 +70,11 @@ get_fridge(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-post_fridge(oc_request_t *request, oc_interface_mask_t interface,
+post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
   (void)user_data;
-  (void)interface;
+  (void)iface_mask;
   PRINT("POST_fridge:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -117,13 +117,13 @@ post_fridge(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
   (void)request;
   PRINT("GET_temp:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -139,12 +139,12 @@ get_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_temp(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
-  (void)interface;
+  (void)iface_mask;
   PRINT("POST_temp:\n");
-  if (interface == OC_IF_S) {
+  if (iface_mask == OC_IF_S) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }

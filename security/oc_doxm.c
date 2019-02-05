@@ -70,6 +70,7 @@ oc_sec_doxm_default(size_t device)
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
+  oc_core_regen_unique_ids(device);
   oc_sec_dump_doxm(device);
 }
 
@@ -116,10 +117,10 @@ oc_sec_get_doxm(size_t device)
 }
 
 void
-get_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
@@ -276,9 +277,9 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
 }
 
 void
-post_doxm(oc_request_t *request, oc_interface_mask_t interface, void *data)
+post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
   if (oc_sec_decode_doxm(request->request_payload, false,
                          request->resource->device)) {

@@ -43,14 +43,14 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
   ++power;
 
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -67,10 +67,10 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface,
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
@@ -101,11 +101,11 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)user_data;
-  post_light(request, interface, user_data);
+  post_light(request, iface_mask, user_data);
 }
 
 static void
@@ -157,6 +157,10 @@ main(void)
 
   oc_clock_time_t next_event;
 
+  oc_set_con_res_announced(false);
+  oc_set_mtu_size(16384);
+  oc_set_max_app_data_size(16384);
+
 #ifdef OC_SECURITY
   oc_storage_config("./simpleserver_pki_creds");
 #endif /* OC_SECURITY */
@@ -167,8 +171,6 @@ main(void)
   }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-  oc_set_max_app_data_size(16384);
-
   const unsigned char my_crt[] = {
     0x30, 0x82, 0x03, 0xf8, 0x30, 0x82, 0x03, 0x9e, 0xa0, 0x03, 0x02, 0x01,
     0x02, 0x02, 0x09, 0x00, 0x8d, 0x0a, 0xfb, 0x7b, 0x53, 0xb2, 0x4c, 0xb6,

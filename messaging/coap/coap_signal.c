@@ -56,6 +56,7 @@ int
 coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
                       uint8_t blockwise_transfer_option)
 {
+  (void)blockwise_transfer_option;
   if (!endpoint)
     return 0;
 

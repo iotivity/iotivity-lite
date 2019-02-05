@@ -95,9 +95,9 @@ void oc_set_con_res_announced(bool announce);
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
-                                         oc_interface_mask_t interface);
+                                         oc_interface_mask_t iface_mask);
 void oc_resource_set_default_interface(oc_resource_t *resource,
-                                       oc_interface_mask_t interface);
+                                       oc_interface_mask_t iface_mask);
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 void oc_process_baseline_interface(oc_resource_t *resource);
@@ -132,7 +132,9 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   @see oc_collection_add_link
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types, size_t device);
+                                 uint8_t num_resource_types,
+                                 uint8_t num_supported_rts,
+                                 uint8_t num_mandatory_rts, size_t device);
 
 /**
   @brief Deletes the specified collection.
@@ -238,6 +240,11 @@ void oc_add_collection(oc_resource_t *collection);
    returned by this function.
 */
 oc_resource_t *oc_collection_get_collections(void);
+
+bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
+
+bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
+
 /** @} */ // end of oc_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
@@ -378,10 +385,10 @@ typedef struct oc_role_t
 oc_role_t *oc_get_all_roles(void);
 
 bool oc_assert_role(const char *role, const char *authority,
-                    oc_endpoint_t *endpoint, oc_response_handler_t handler);
+                    oc_endpoint_t *endpoint, oc_response_handler_t handler, void *user_data);
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
-                  uint16_t timeout_seconds, oc_response_handler_t handler);
+                  uint16_t timeout_seconds, oc_response_handler_t handler, void *user_data);
 #endif /* OC_TCP */
 
 /** Common operations */

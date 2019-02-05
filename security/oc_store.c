@@ -36,7 +36,7 @@ static void
 gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
 {
   int svr_tag_len =
-    snprintf(svr_tag, SVR_TAG_MAX, "%s_%ld", name, device_index);
+    snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
   svr_tag_len =
     (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
   svr_tag[svr_tag_len] = '\0';
@@ -239,7 +239,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
     if (oc_sec_decode_ecdsa_keypair(rep, device)) {
-      OC_DBG("successfully read ECDSA keypair for device %d", device);
+      OC_DBG("successfully read ECDSA keypair for device %zd", device);
     }
     oc_free_rep(rep);
   }
@@ -250,7 +250,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
 
   if (ret <= 0) {
     if (oc_generate_ecdsa_keypair(device) < 0) {
-      OC_ERR("error generating ECDSA keypair for device %d", device);
+      OC_ERR("error generating ECDSA keypair for device %zd", device);
     }
     oc_sec_dump_ecdsa_keypair(device);
   }

@@ -221,7 +221,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   int credid = oc_sec_add_new_cred(
     device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
-    oc_string(subjectuuid), OC_ENCODING_DER, private_key_size,
+    oc_string(subjectuuid), OC_ENCODING_RAW, private_key_size,
     privkbuf + (200 - private_key_size), OC_ENCODING_DER, cert1.raw.len,
     cert1.raw.p, NULL, NULL);
 

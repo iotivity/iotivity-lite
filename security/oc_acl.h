@@ -100,12 +100,12 @@ void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device);
 bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_acl_init(void);
-void post_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
-void get_acl(oc_request_t *request, oc_interface_mask_t interface, void *data);
-void delete_acl(oc_request_t *request, oc_interface_mask_t interface,
+void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                      oc_interface_mask_t interface, oc_endpoint_t *endpoint);
+                      oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(size_t device);
 
 #ifdef __cplusplus

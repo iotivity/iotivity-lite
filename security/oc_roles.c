@@ -52,12 +52,12 @@ find_role_cred(const char *role, const char *authority)
 {
   oc_role_t *role_cred = (oc_role_t *)oc_list_head(role_creds);
   size_t role_len = strlen(role);
-  size_t authority_len = strlen(authority);
+  size_t authority_len = (authority ? strlen(authority) : 0);
 
   while (role_cred) {
     if ((oc_string_len(role_cred->role) == role_len) &&
         (memcmp(oc_string(role_cred->role), role, role_len) == 0)) {
-      if ((oc_string_len(role_cred->authority) == authority_len) &&
+      if (authority && (oc_string_len(role_cred->authority) == authority_len) &&
           (memcmp(oc_string(role_cred->authority), authority, authority_len) ==
            0)) {
         return role_cred;

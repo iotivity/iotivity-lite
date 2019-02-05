@@ -89,7 +89,7 @@ oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device)
         }
         memcpy(kp->private_key, oc_cast(rep->value.string, uint8_t),
                oc_string_len(rep->value.string));
-        kp->private_key_size = oc_string_len(rep->value.string);
+        kp->private_key_size = (uint8_t)oc_string_len(rep->value.string);
       }
     }
     rep = rep->next;
@@ -166,7 +166,7 @@ oc_generate_ecdsa_keypair(size_t device)
     OC_ERR("error writing EC private key to internal structure");
     goto generate_ecdsa_keypair_error;
   }
-  kp->private_key_size = ret;
+  kp->private_key_size = (uint8_t)ret;
   memmove(kp->private_key, kp->private_key + OC_KEYPAIR_PRIVKEY_SIZE - ret,
           kp->private_key_size);
 
@@ -177,7 +177,7 @@ oc_generate_ecdsa_keypair(size_t device)
     goto generate_ecdsa_keypair_error;
   }
 
-  OC_DBG("successfully generated ECDSA keypair for device %d", device);
+  OC_DBG("successfully generated ECDSA keypair for device %zd", device);
 
   mbedtls_entropy_free(&entropy);
   mbedtls_ctr_drbg_free(&ctr_drbg);

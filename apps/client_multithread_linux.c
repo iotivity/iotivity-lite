@@ -123,12 +123,13 @@ pong_received_handler(oc_client_response_t *data)
 static void
 send_ping(uint16_t timeout_seconds)
 {
+  (void)timeout_seconds;
   if (!is_resource_found())
     return;
 
 #ifdef OC_TCP
   if (target_ep.flags & TCP) {
-    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler)) {
+    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler, NULL)) {
       printf("oc_send_ping failed\n");
     }
   } else
@@ -237,13 +238,13 @@ get_request(void)
 
 static oc_discovery_flags_t
 discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
-                  oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
                   oc_resource_properties_t bm, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
 
   (void)anchor;
-  (void)interfaces;
+  (void)iface_mask;
   (void)bm;
   int i;
   int uri_len = strlen(uri);

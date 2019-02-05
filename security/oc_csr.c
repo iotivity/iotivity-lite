@@ -23,17 +23,30 @@
 #include "oc_core_res.h"
 
 void
-get_csr(oc_request_t *request, oc_interface_mask_t interface, void *data)
+get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)interface;
+  (void)iface_mask;
   (void)data;
 
   size_t device = request->resource->device;
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  unsigned char *csr =
+    (unsigned char *)calloc(OC_PDU_SIZE, sizeof(unsigned char));
+  if (!csr) {
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    return;
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
   unsigned char csr[OC_PDU_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
   int csr_len = oc_certs_generate_csr(device, csr, OC_PDU_SIZE);
   if (csr_len < 0) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(csr);
+#endif /* OC_DYNAMIC_ALLOCATION */
     return;
   }
 
@@ -45,6 +58,10 @@ get_csr(oc_request_t *request, oc_interface_mask_t interface, void *data)
   oc_rep_end_root_object();
 
   oc_send_response(request, OC_STATUS_OK);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(csr);
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 #else  /* OC_PKI */
