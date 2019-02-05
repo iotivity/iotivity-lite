@@ -116,7 +116,6 @@ static oc_handler_t jni_handler = {
 %typemap(in)     const oc_handler_t *handler {
   JCALL1(GetJavaVM, jenv, &jvm);
   jinit_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   $1 = &jni_handler;
 
   const jclass callback_interface = JCALL1(FindClass, jenv, "org/iotivity/OCMainInitHandler");
@@ -161,7 +160,6 @@ void jni_oc_resource_make_public(oc_resource_t *resource) {
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_add_device_callback;
   $2 = user_data;
@@ -216,7 +214,6 @@ void jni_oc_init_platform_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_init_platform_callback;
   $2 = user_data;
@@ -312,7 +309,6 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_request_callback;
   $2 = user_data;
@@ -403,7 +399,6 @@ void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
   }
   oc_con_write_cb_data.jenv = jenv;
   oc_con_write_cb_data.jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   if(JCALL2(IsSameObject, jenv, $input, NULL))
   {
     $1 = NULL;
@@ -595,7 +590,6 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
@@ -695,7 +689,6 @@ void jni_oc_response_handler(oc_client_response_t *response)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_response_handler;
   $2 = user_data;
@@ -896,7 +889,6 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_oc_trigger_handler;
   $2 = user_data;

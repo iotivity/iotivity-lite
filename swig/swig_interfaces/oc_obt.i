@@ -97,7 +97,6 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_obt_discovery_cb;
   $2 = user_data;
@@ -199,7 +198,6 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_obt_device_status_cb;
   $2 = user_data;
@@ -289,7 +287,6 @@ static void jni_obt_status_cb(int status, void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   oc_list_add(jni_callbacks, user_data);
   $1 = jni_obt_status_cb;
   $2 = user_data;
