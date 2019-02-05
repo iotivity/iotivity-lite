@@ -121,7 +121,6 @@ static void ReleaseJNIEnv(jint getEnvResult) {
 %typemap(javain) void *user_data "$javainput";
 %typemap(in)     void *user_data {
   jobject juser_data = JCALL1(NewGlobalRef, jenv, $input);
-  JCALL1(DeleteLocalRef, jenv, $input);
   $1 = (void*)&juser_data;
 }
 %typemap(javaout) void *user_data {
