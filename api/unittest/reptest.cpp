@@ -74,7 +74,7 @@ TEST(TestRep, OCRepSetGetDouble)
 
     /* read values from  the oc_rep_t */
     double pi_out = 0;
-    oc_rep_get_double(rep, "pi", &pi_out);
+    EXPECT_TRUE(oc_rep_get_double(rep, "pi", &pi_out));
     EXPECT_EQ(3.14159, pi_out);
     /* error handling */
     EXPECT_FALSE(oc_rep_get_double(NULL, "pi", &pi_out));
@@ -330,7 +330,6 @@ TEST(TestRep, OCRepSetGetByteString)
     oc_parse_rep(payload, payload_len, &rep);
     ASSERT_TRUE(rep != NULL);
 
-    /* read the hal9000 from  the oc_rep_t */
     char* test_byte_string_out = NULL;
     size_t str_len;
     EXPECT_TRUE(oc_rep_get_byte_string(rep, "test_byte_string", &test_byte_string_out, &str_len));
@@ -393,6 +392,106 @@ TEST(TestRep, OCRepSetGetIntArray)
     oc_free_rep(rep);
 }
 
+/*
+ * This test uses oc_rep_add_int to build the cbor array instead of
+ * oc_rep_set_int_array
+ */
+TEST(TestRep, OCRepAddGetIntArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+
+    oc_rep_open_array(root, fibonacci);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    for(size_t i = 0; i < (sizeof(fib)/ sizeof(fib[0])); i++)
+    {
+        oc_rep_add_int(fibonacci, fib[i]);
+        EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    }
+    oc_rep_close_array(root, fibonacci);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    int* fib_out = 0;
+    size_t fib_len;
+    EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
+    ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
+    for (size_t i = 0; i < fib_len; ++i ) {
+      EXPECT_EQ(fib[i], fib_out[i]);
+    }
+
+    oc_free_rep(rep);
+}
+
+/*
+ * This test uses oc_rep_add_int to build the cbor array instead of
+ * oc_rep_set_int_array
+ */
+TEST(TestRep, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+
+    oc_rep_set_key(*oc_rep_object(root), "fibonacci");
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_begin_array(*oc_rep_object(root), fibonacci);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    for(size_t i = 0; i < (sizeof(fib)/ sizeof(fib[0])); i++)
+    {
+        oc_rep_add_int(fibonacci, fib[i]);
+        EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    }
+    oc_rep_end_array(*oc_rep_object(root), fibonacci);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    int* fib_out = 0;
+    size_t fib_len;
+    EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
+    ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
+    for (size_t i = 0; i < fib_len; ++i ) {
+      EXPECT_EQ(fib[i], fib_out[i]);
+    }
+
+    oc_free_rep(rep);
+}
+
 TEST(TestRep, OCRepSetGetBoolArray)
 {
     /*buffer for oc_rep_t */
@@ -436,6 +535,56 @@ TEST(TestRep, OCRepSetGetBoolArray)
     oc_free_rep(rep);
 }
 
+/*
+ * Test the oc_rep_add_boolean to build a boolean array instead of
+ * oc_rep_set_array
+ */
+TEST(TestRep, OCRepAddGetBoolArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    bool flip[] = {false, false, true, false, false };
+
+    oc_rep_open_array(root, flip);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    for(size_t i = 0; i < (sizeof(flip)/ sizeof(flip[0])); i++)
+    {
+        oc_rep_add_boolean(flip, flip[i]);
+        EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    }
+    oc_rep_close_array(root, flip);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    bool* flip_out = 0;
+    size_t flip_len;
+    EXPECT_TRUE(oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len));
+    ASSERT_EQ(sizeof(flip)/sizeof(flip[0]), flip_len);
+    for (size_t i = 0; i < flip_len; ++i ) {
+      EXPECT_EQ(flip[i], flip_out[i]);
+    }
+
+    oc_free_rep(rep);
+}
+
 TEST(TestRep, OCRepSetGetDoubleArray)
 {
     /*buffer for oc_rep_t */
@@ -476,6 +625,54 @@ TEST(TestRep, OCRepSetGetDoubleArray)
     EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", NULL, &math_constants_len));
     EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", &math_constants_out, NULL));
     EXPECT_FALSE(oc_rep_get_double_array(rep, "not_a_key", &math_constants_out, &math_constants_len));
+    oc_free_rep(rep);
+}
+
+/*
+ * Build Double Array using oc_rep_add_double instead of oc_rep_set_double
+ */
+TEST(TestRep, OCRepAddGetDoubleArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+    oc_rep_open_array(root, math_constants);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    for(size_t i = 0; i < (sizeof(math_constants)/ sizeof(math_constants[0])); i++)
+    {
+        oc_rep_add_double(math_constants, math_constants[i]);
+        EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    }
+    oc_rep_close_array(root, math_constants);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    double* math_constants_out = 0;
+    size_t math_constants_len;
+    EXPECT_TRUE(oc_rep_get_double_array(rep, "math_constants", &math_constants_out, &math_constants_len));
+    ASSERT_EQ(sizeof(math_constants)/sizeof(math_constants[0]), math_constants_len);
+    for (size_t i = 0; i < math_constants_len; ++i ) {
+      EXPECT_EQ(math_constants[i], math_constants_out[i]);
+    }
+
     oc_free_rep(rep);
 }
 
@@ -643,7 +840,7 @@ TEST(TestRep, OCRepSetGetObjectArray)
     oc_free_rep(rep);
 }
 
-TEST(TestRep, OCRepSetGetByteStringArray)
+TEST(TestRep, OCRepAddGetByteStringArray)
 {
     /*buffer for oc_rep_t */
     uint8_t buf[1024];
@@ -699,5 +896,119 @@ TEST(TestRep, OCRepSetGetByteStringArray)
     EXPECT_EQ(memcmp(ba3, oc_byte_string_array_get_item(barray_out, 2), oc_byte_string_array_get_item_size(barray_out, 2)), 0);
     EXPECT_EQ(sizeof(ba4), oc_byte_string_array_get_item_size(barray_out, 3));
     EXPECT_EQ(memcmp(ba4, oc_byte_string_array_get_item(barray_out, 3), oc_byte_string_array_get_item_size(barray_out, 3)), 0);
+    oc_free_rep(rep);
+}
+
+/* use oc_rep_set_string_array to build the string array. */
+TEST(TestRep, OCRepSetGetStringArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* Strings for testing */
+    const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
+    const char* str1 = "All generalizations are false, including this one.";
+    const char* str2 = "Those who believe in telekinetics, raise my hand.";
+    const char* str3 = "I refuse to join any club that would have me as a member.";
+
+    oc_string_array_t quotes;
+    oc_new_string_array(&quotes, (size_t)4);
+    oc_string_array_add_item(quotes, str0);
+    oc_string_array_add_item(quotes, str1);
+    oc_string_array_add_item(quotes, str2);
+    oc_string_array_add_item(quotes, str3);
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_set_string_array(root, quotes, quotes);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_free_string_array(&quotes);
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    oc_string_array_t quotes_out;
+    size_t quotes_len;
+    EXPECT_TRUE(oc_rep_get_string_array(rep, "quotes", &quotes_out, &quotes_len));
+    ASSERT_EQ(4, quotes_len);
+
+    EXPECT_EQ(strlen(str0), oc_string_array_get_item_size(quotes_out, 0));
+    EXPECT_STREQ(str0, oc_string_array_get_item(quotes_out, 0));
+    EXPECT_EQ(strlen(str1), oc_string_array_get_item_size(quotes_out, 1));
+    EXPECT_STREQ(str1, oc_string_array_get_item(quotes_out, 1));
+    EXPECT_EQ(strlen(str2), oc_string_array_get_item_size(quotes_out, 2));
+    EXPECT_STREQ(str2, oc_string_array_get_item(quotes_out, 2));
+    EXPECT_EQ(strlen(str3), oc_string_array_get_item_size(quotes_out, 3));
+    EXPECT_STREQ(str3, oc_string_array_get_item(quotes_out, 3));
+
+    oc_free_rep(rep);
+}
+
+/* use oc_rep_add_text_string to build string array */
+TEST(TestRep, OCRepAddGetStringArray)
+{
+    /*buffer for oc_rep_t */
+    uint8_t buf[1024];
+    oc_rep_new(&buf[0], 1024);
+
+    /* Strings for testing */
+    const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
+    const char* str1 = "All generalizations are false, including this one.";
+    const char* str2 = "Those who believe in telekinetics, raise my hand.";
+    const char* str3 = "I refuse to join any club that would have me as a member.";
+
+    /* add values to root object */
+    oc_rep_start_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_open_array(root, quotes);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_text_string(quotes, str0);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_text_string(quotes, str1);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_text_string(quotes, str2);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_add_text_string(quotes, str3);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_close_array(root, quotes);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+    oc_rep_end_root_object();
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+    /* convert CborEncoder to oc_rep_t */
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0 ,0 };
+    oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
+    oc_parse_rep(payload, payload_len, &rep);
+    ASSERT_TRUE(rep != NULL);
+
+    /* read the values from the oc_rep_t */
+    oc_string_array_t quotes_out;
+    size_t quotes_len;
+    EXPECT_TRUE(oc_rep_get_string_array(rep, "quotes", &quotes_out, &quotes_len));
+    ASSERT_EQ(4, quotes_len);
+
+    EXPECT_EQ(strlen(str0), oc_string_array_get_item_size(quotes_out, 0));
+    EXPECT_STREQ(str0, oc_string_array_get_item(quotes_out, 0));
+    EXPECT_EQ(strlen(str1), oc_string_array_get_item_size(quotes_out, 1));
+    EXPECT_STREQ(str1, oc_string_array_get_item(quotes_out, 1));
+    EXPECT_EQ(strlen(str2), oc_string_array_get_item_size(quotes_out, 2));
+    EXPECT_STREQ(str2, oc_string_array_get_item(quotes_out, 2));
+    EXPECT_EQ(strlen(str3), oc_string_array_get_item_size(quotes_out, 3));
+    EXPECT_STREQ(str3, oc_string_array_get_item(quotes_out, 3));
+
     oc_free_rep(rep);
 }
