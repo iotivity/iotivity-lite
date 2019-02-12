@@ -16,7 +16,7 @@
 
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
-#include "oc_log.h"
+#include "port/oc_log.h"
 
 #include <openthread/ip6.h>
 #include <openthread/thread.h>

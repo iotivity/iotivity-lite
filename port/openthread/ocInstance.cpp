@@ -22,7 +22,7 @@
 
 extern "C" {
 #include "oc_api.h"
-#include "oc_assert.h"
+#include "port/oc_assert.h"
 }
 
 static otDEFINE_ALIGNED_VAR(sOcInstanceRaw, sizeof(ocInstance), uint64_t);
