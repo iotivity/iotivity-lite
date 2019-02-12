@@ -19,6 +19,8 @@
 #ifndef OC_DISCOVERY_H
 #define OC_DISCOVERY_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C"
 {

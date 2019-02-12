@@ -19,6 +19,8 @@
 #ifndef OC_BUFFER_SETTINGS_H
 #define OC_BUFFER_SETTINGS_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C"
 {
