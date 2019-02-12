@@ -7,6 +7,8 @@
  input file = ../device_lite_output/code/server_introspection.dat
  date 2018-04-30 14:51:53 */
 
+#include <stdint.h>
+
 #define introspection_data_size 3019  /* size of the CBOR */
 uint8_t introspection_data[] = {
  0xa8, 0x64, 0x69, 0x6e, 0x66, 0x6f, 0xa3, 0x67, 0x6c, 0x69, 0x63, 0x65,

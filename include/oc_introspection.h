@@ -19,6 +19,8 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C"
 {
