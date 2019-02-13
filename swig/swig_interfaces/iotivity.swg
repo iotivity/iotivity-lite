@@ -9,7 +9,7 @@
  *********************************************************************/
 %{
 #include "oc_collection.h"
-#include "oc_log.h"
+#include "port/oc_log.h"
 
 /*
  * JNI function calls require different calling conventions for C and C++. These JCALL macros are used so

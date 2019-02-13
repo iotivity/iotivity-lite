@@ -4,8 +4,6 @@ rm *.c
 #rm *.cxx
 rm ../iotivity-lite-eclipse-project/src/org/iotivity/*.java
 
-swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_api.i
-
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_obt.i
 
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_uuid.i
@@ -15,14 +13,17 @@ swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
 then
   echo Building wrapper for linux clock
-  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../port/ -o oc_clock_wrap.c ../swig_interfaces/oc_clock_linux.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../include/ -I../../port/linux ../swig_interfaces/oc_api.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../port/linux -o oc_clock_wrap.c ../swig_interfaces/oc_clock.i
 elif [ "$#" -ge 1 ] && [ "$1" = "android" ]
 then
   echo Building wrapper for android clock
-  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../port/ -o oc_clock_wrap.c ../swig_interfaces/oc_clock_android.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../include/ -I../../port/android ../swig_interfaces/oc_api.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../port/android -o oc_clock_wrap.c ../swig_interfaces/oc_clock.i
 else
   echo Building wrapper for windows clock
-  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../../port/ ../swig_interfaces/oc_clock.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../include/ -I../../port/windows ../swig_interfaces/oc_api.i
+  swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ -I../.. -I../../port/windows ../swig_interfaces/oc_clock.i
 fi
 
 #swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-eclipse-project/src/org/iotivity/ ../swig_interfaces/oc_ri.i

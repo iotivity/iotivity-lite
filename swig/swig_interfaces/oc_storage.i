@@ -14,8 +14,8 @@
 %}
 
 %{
-#include "oc_storage.h"
-#include "oc_log.h"
+#include "port/oc_storage.h"
+#include "port/oc_log.h"
 
 int jni_storage_config(const char *store) {
 #ifdef OC_SECURITY
