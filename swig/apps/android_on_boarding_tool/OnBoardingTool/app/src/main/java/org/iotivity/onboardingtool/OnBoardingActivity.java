@@ -19,10 +19,8 @@ import org.iotivity.OCClock;
 import org.iotivity.OCMain;
 import org.iotivity.OCObt;
 import org.iotivity.OCSecurityAce;
-import org.iotivity.OCStorage;
 import org.iotivity.OCUuidUtil;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -335,17 +333,18 @@ public class OnBoardingActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-            File credsDir = new File(getFilesDir(), "on_boarding_tool_creds");
-            Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
-            if (!credsDir.exists()) {
-                boolean mkDirResult = credsDir.mkdir();
-                if (mkDirResult) {
-                    Log.i(TAG, "Created credentials directory " + credsDir.getAbsolutePath());
-                } else {
-                    Log.e(TAG, "Failed to create credentials directory " + credsDir.getAbsolutePath());
-                }
-            }
-            OCStorage.storageConfig(credsDir.getAbsolutePath());
+            // code moved to jni layer (commented out for now)
+//            File credsDir = new File(getFilesDir(), "on_boarding_tool_creds");
+//            Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
+//            if (!credsDir.exists()) {
+//                boolean mkDirResult = credsDir.mkdir();
+//                if (mkDirResult) {
+//                    Log.i(TAG, "Created credentials directory " + credsDir.getAbsolutePath());
+//                } else {
+//                    Log.e(TAG, "Failed to create credentials directory " + credsDir.getAbsolutePath());
+//                }
+//            }
+//            OCStorage.storageConfig(credsDir.getAbsolutePath());
 
             ObtInitHandler handler = new ObtInitHandler(this);
             int initReturn = OCMain.mainInit(handler);
