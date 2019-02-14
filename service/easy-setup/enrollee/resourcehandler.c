@@ -341,8 +341,7 @@ update_easysetup_resource(oc_request_t *request)
   es_easy_setup_resource_t *es_res =
     es_res_cast(g_enrollee->res[ES_RES_TYPE_EASY_SETUP]);
 
-  if (oc_rep_get_int_array(request->request_payload, OC_RSRVD_ES_CONNECT,
-                           &connect_req, &connect_req_size)) {
+  if ((request->request_payload)&&oc_rep_get_int_array(request->request_payload, OC_RSRVD_ES_CONNECT,&connect_req, &connect_req_size)) {
     memset(es_res->data.connect_request, 0,
            sizeof(es_res->data.connect_request));
     es_res->data.num_request = 0;
@@ -410,7 +409,7 @@ construct_response_of_wificonf(void)
     oc_rep_add_int(swmt, (int)wifi_res->data.supported_mode[i]);
 #else
     // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-    oc_rep_add_text_string(swmt, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_mode[i])));
+    oc_rep_add_text_string(swmt, wifi_mode_enum_tostring(wifi_res->data.supported_mode[i]));
 #endif  // OC_SPEC_VER_OIC
   }
 
@@ -426,11 +425,11 @@ construct_response_of_wificonf(void)
   switch(wifi_res->data.supported_freq) {
      case WIFI_24G:
      case WIFI_5G :
-       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(wifi_res->data.supported_freq)));
+       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(wifi_res->data.supported_freq));
        break;
      case WIFI_BOTH:
-       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(WIFI_24G)));
-       oc_rep_add_text_string(swf, oc_string(wifi_freq_enum_tostring(WIFI_5G)));
+       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(WIFI_24G));
+       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(WIFI_5G));
        break;
      case WIFI_FREQ_NONE:
        break;
@@ -448,19 +447,19 @@ construct_response_of_wificonf(void)
   es_rep_set_int(root, wet, (int)wifi_res->data.enc_type);
 #else
   // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-  es_rep_set_text_string(root, wat, oc_string(wifi_authtype_enum_tostring(wifi_res->data.auth_type)));
-  es_rep_set_text_string(root, wet, oc_string(wifi_enctype_enum_tostring(wifi_res->data.enc_type)));
+  es_rep_set_text_string(root, wat, wifi_authtype_enum_tostring(wifi_res->data.auth_type));
+  es_rep_set_text_string(root, wet, wifi_enctype_enum_tostring(wifi_res->data.enc_type));
 
   // new properties in OCF 1.3 - swat and swet.
   oc_rep_set_array(root, swat);
   for (int i = 0; i < wifi_res->data.num_supported_authtype; i++) {
-    oc_rep_add_text_string(swat, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_authtype[i])));
+    oc_rep_add_text_string(swat, wifi_mode_enum_tostring(wifi_res->data.supported_authtype[i]));
   }
   oc_rep_close_array(root, swat);
 
   oc_rep_set_array(root, swet);
   for (int i = 0; i < wifi_res->data.num_supported_enctype; i++) {
-    oc_rep_add_text_string(swet, oc_string(wifi_mode_enum_tostring(wifi_res->data.supported_enctype[i])));
+    oc_rep_add_text_string(swet, wifi_mode_enum_tostring(wifi_res->data.supported_enctype[i]));
   }
   oc_rep_close_array(root, swet);
 #endif  // OC_SPEC_VER_OIC
