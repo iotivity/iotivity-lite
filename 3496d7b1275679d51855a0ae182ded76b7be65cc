@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a4c51b2_1c09d595",
+        "filename": "swig/swig_interfaces/oc_storage.i",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-02-15T21:10:07Z",
+      "side": 1,
+      "message": "this could be replaced by calling the GetJNIEnv() function\n\n  jint getEnvResult \u003d 0;\n  JNIEnv *jenv \u003d GetJNIEnv(\u0026getEnvResult);\n  ...\n  ReleaseJNIEnv(getEnvResult);",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 5
+      },
+      "revId": "3496d7b1275679d51855a0ae182ded76b7be65cc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4c51b2_7cfe196d",
+        "filename": "swig/swig_interfaces/oc_storage.i",
+        "patchSetId": 7
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-02-15T21:10:07Z",
+      "side": 1,
+      "message": "Could replace with:\n\n  ReleaseJNIEnv(getEnvResult);",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 5
+      },
+      "revId": "3496d7b1275679d51855a0ae182ded76b7be65cc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
