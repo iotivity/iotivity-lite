@@ -589,12 +589,16 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               response_buffer.code = 0;
               response_buffer.response_length = 0;
               method_not_found = false;
+              oc_interface_mask_t if_mask = link->resource->default_interface;
+              if (oc_check_if_collection(link->resource)) {
+                if_mask = interface;
+              }
 
               switch (method) {
               case OC_GET:
                 if (link->resource->get_handler.cb)
                   link->resource->get_handler.cb(
-                    &rest_request, link->resource->default_interface,
+                    &rest_request, if_mask,
                     link->resource->get_handler.user_data);
                 else
                   method_not_found = true;
@@ -602,7 +606,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               case OC_PUT:
                 if (link->resource->put_handler.cb)
                   link->resource->put_handler.cb(
-                    &rest_request, link->resource->default_interface,
+                    &rest_request, if_mask,
                     link->resource->put_handler.user_data);
                 else
                   method_not_found = true;
@@ -610,7 +614,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               case OC_POST:
                 if (link->resource->post_handler.cb)
                   link->resource->post_handler.cb(
-                    &rest_request, link->resource->default_interface,
+                    &rest_request, if_mask,
                     link->resource->post_handler.user_data);
                 else
                   method_not_found = true;
@@ -618,7 +622,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               case OC_DELETE:
                 if (link->resource->delete_handler.cb)
                   link->resource->delete_handler.cb(
-                    &rest_request, link->resource->default_interface,
+                    &rest_request, if_mask,
                     link->resource->delete_handler.user_data);
                 else
                   method_not_found = true;
