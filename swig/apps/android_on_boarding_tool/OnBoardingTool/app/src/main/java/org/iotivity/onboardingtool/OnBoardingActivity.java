@@ -437,7 +437,7 @@ public class OnBoardingActivity extends AppCompatActivity {
                     cv.await();
                 } else {
                     long now = OCClock.clockTime();
-                    long timeToWait = (NANOS_PER_SECOND / 1000000) * (nextEvent - now);
+                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (nextEvent - now);
                     cv.awaitNanos(timeToWait);
                 }
             } catch (InterruptedException e) {
