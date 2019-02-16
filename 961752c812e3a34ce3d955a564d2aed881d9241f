@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a4c51b2_1c7ef5e4",
+        "filename": "port/android/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-02-16T17:18:38Z",
+      "side": 1,
+      "message": "The copy step is not necessary if the command \u0027./build-iotivity-lite.sh android\u0027 is used.  The \u0027android\u0027 parameter was added with the commit for the android on-boarding tool.  Using the \u0027android\u0027 parameter will do the copy.",
+      "revId": "961752c812e3a34ce3d955a564d2aed881d9241f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
