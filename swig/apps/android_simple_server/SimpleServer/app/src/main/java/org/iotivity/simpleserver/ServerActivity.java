@@ -41,19 +41,6 @@ public class ServerActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-            // code moved to jni layer (commented out for now)
-//            File credsDir = new File(getFilesDir(), "simpleserver_creds");
-//            Log.i(TAG, "Credentials directory is " + credsDir.getAbsolutePath());
-//            if (!credsDir.exists()) {
-//                boolean mkDirResult = credsDir.mkdir();
-//                if (mkDirResult) {
-//                    Log.i(TAG, "Created credentials directory " + credsDir.getAbsolutePath());
-//                } else {
-//                    Log.e(TAG, "Failed to create credentials directory " + credsDir.getAbsolutePath());
-//                }
-//            }
-//            OCStorage.storageConfig(credsDir.getAbsolutePath());
-
             MyInitHandler handler = new MyInitHandler(this);
             int initReturn = OCMain.mainInit(handler);
             if (initReturn < 0) {
