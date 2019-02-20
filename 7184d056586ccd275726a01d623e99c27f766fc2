@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_c79f914f",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/java/org/iotivity/simpleserver/PutLightRequestHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-02-20T21:31:58Z",
+      "side": 1,
+      "message": "userData is undefined here ?",
+      "revId": "7184d056586ccd275726a01d623e99c27f766fc2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
