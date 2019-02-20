@@ -55,7 +55,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         (data->jenv),
         callbackInterfaceClass,
         "handler",
-        "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;Ljava/lang/Object;)V");
+        "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;)V");
   assert(mid_handler);
 
   const jclass cls_OCUuid = JCALL1(FindClass, (data->jenv), "org/iotivity/OCUuid");
@@ -75,13 +75,12 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   oc_uuid_t *juuid = malloc(sizeof(oc_uuid_t));
   memcpy(juuid->id, uuid->id, 16);
 
-  JCALL5(CallVoidMethod,
+  JCALL4(CallVoidMethod,
         (data->jenv),
         data->jcb_obj,
         mid_handler,
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false),
-        data->juser_data);
+        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
 
   ReleaseJNIEnv(getEnvResult);
 }
@@ -103,45 +102,21 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
 }
 
 %ignore oc_obt_discover_unowned_devices;
-%rename(discoverUnownedDevices) jni_oc_obt_discover_unowned_devices0;
+%rename(discoverUnownedDevices) jni_oc_obt_discover_unowned_devices;
 %inline %{
-int jni_oc_obt_discover_unowned_devices0(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_discover_unowned_devices(callback, jcb);
-}
-%}
-
-%rename(discoverUnownedDevices) jni_oc_obt_discover_unowned_devices1;
-%inline %{
-int jni_oc_obt_discover_unowned_devices1(oc_obt_discovery_cb_t callback, jni_callback_data *jcb,
-                                          void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_discover_unowned_devices(callback, jcb);
 }
 %}
 
 %ignore oc_obt_discover_owned_devices;
-%rename(discoverOwnedDevices) jni_oc_obt_discover_owned_devices0;
+%rename(discoverOwnedDevices) jni_oc_obt_discover_owned_devices;
 %inline %{
-int jni_oc_obt_discover_owned_devices0(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_discover_owned_devices(callback, jcb);
-}
-%}
-
-%rename(discoverOwnedDevices) jni_oc_obt_discover_owned_devices1;
-%inline %{
-int jni_oc_obt_discover_owned_devices1(oc_obt_discovery_cb_t callback, jni_callback_data *jcb,
-                                          void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_discover_owned_devices(callback, jcb);
 }
 %}
@@ -164,7 +139,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
         (data->jenv),
         callbackInterfaceClass,
         "handler",
-        "(Lorg/iotivity/OCUuid;ILjava/lang/Object;)V");
+        "(Lorg/iotivity/OCUuid;I)V");
   assert(mid_handler);
 
   const jclass cls_OCUuid = JCALL1(FindClass, (data->jenv), "org/iotivity/OCUuid");
@@ -176,13 +151,12 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   oc_uuid_t *juuid = malloc(sizeof(oc_uuid_t));
   memcpy(juuid->id, uuid->id, 16);
 
-  JCALL5(CallVoidMethod,
+  JCALL4(CallVoidMethod,
         (data->jenv),
         data->jcb_obj,
         mid_handler,
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        (jint) status,
-        data->juser_data);
+        (jint) status);
 
   ReleaseJNIEnv(getEnvResult);
 }
@@ -204,43 +178,21 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
 }
 
 %ignore oc_obt_perform_just_works_otm;
-%rename(performJustWorksOtm) jni_obt_perform_just_works_otm0;
+%rename(performJustWorksOtm) jni_obt_perform_just_works_otm;
 %inline %{
-int jni_obt_perform_just_works_otm0(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_perform_just_works_otm(uuid, callback, jcb);
-}
-%}
-
-%rename(performJustWorksOtm) jni_obt_perform_just_works_otm1;
-%inline %{
-int jni_obt_perform_just_works_otm1(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb, void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_perform_just_works_otm(uuid, callback, jcb);
 }
 %}
 
 %ignore oc_obt_device_hard_reset;
-%rename(deviceHardReset) jni_obt_device_hard_reset0;
+%rename(deviceHardReset) jni_obt_device_hard_reset;
 %inline %{
-int jni_obt_device_hard_reset0(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_device_hard_reset(uuid, callback, jcb);
-}
-%}
-
-%rename(deviceHardReset) jni_obt_device_hard_reset1;
-%inline %{
-int jni_obt_device_hard_reset1(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb, void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_device_hard_reset(uuid, callback, jcb);
 }
 %}
@@ -263,15 +215,14 @@ static void jni_obt_status_cb(int status, void *user_data)
         (data->jenv),
         callbackInterfaceClass,
         "handler",
-        "(ILjava/lang/Object;)V");
+        "(I)V");
   assert(mid_handler);
 
-  JCALL4(CallVoidMethod,
+  JCALL3(CallVoidMethod,
         (data->jenv),
         data->jcb_obj,
         mid_handler,
-        (jint) status,
-        data->juser_data);
+        (jint) status);
 
   ReleaseJNIEnv(getEnvResult);
 }
@@ -293,22 +244,11 @@ static void jni_obt_status_cb(int status, void *user_data)
 }
 
 %ignore oc_obt_provision_pairwise_credentials;
-%rename(provisionPairwiseCredentials) jni_obt_provision_pairwise_credentials0;
+%rename(provisionPairwiseCredentials) jni_obt_provision_pairwise_credentials;
 %inline %{
-int jni_obt_provision_pairwise_credentials0(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
-}
-%}
-
-%rename(provisionPairwiseCredentials) jni_obt_provision_pairwise_credentials1;
-%inline %{
-int jni_obt_provision_pairwise_credentials1(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb, void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
 }
 %}
@@ -323,22 +263,11 @@ int jni_obt_provision_pairwise_credentials1(oc_uuid_t *uuid1, oc_uuid_t *uuid2, 
 %rename(aceResourceSetWc) oc_obt_ace_resource_set_wc;
 %rename(aceAddPermission) oc_obt_ace_add_permission;
 %ignore oc_obt_provision_ace;
-%rename(provisionAce) jni_obt_provision_ace0;
+%rename(provisionAce) jni_obt_provision_ace;
 %inline %{
-int jni_obt_provision_ace0(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = NULL;
-  return oc_obt_provision_ace(subject, ace, callback, jcb);
-}
-%}
-
-%rename(provisionAce) jni_obt_provision_ace1;
-%inline %{
-int jni_obt_provision_ace1(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb, void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jcb->juser_data = *(jobject*)user_data;
   return oc_obt_provision_ace(subject, ace, callback, jcb);
 }
 %}

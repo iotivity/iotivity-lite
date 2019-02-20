@@ -9,14 +9,15 @@ public class StopObserveTriggerHandler implements OCTriggerHandler {
     private static final String TAG = StopObserveTriggerHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public StopObserveTriggerHandler(ClientActivity activity) {
+    public StopObserveTriggerHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
-    public OCEventCallbackResult handler(Object userData) {
-        Light light = (Light) userData;
+    public OCEventCallbackResult handler() {
         activity.msg("Stopping OBSERVE");
         activity.printLine();
         OCMain.stopObserve(light.serverUri, light.serverEndpoint);

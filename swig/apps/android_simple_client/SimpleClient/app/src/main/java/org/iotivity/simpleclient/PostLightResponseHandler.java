@@ -12,14 +12,15 @@ public class PostLightResponseHandler implements OCResponseHandler {
     private static final String TAG = PostLightResponseHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public PostLightResponseHandler(ClientActivity activity) {
+    public PostLightResponseHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
     public void handler(OCClientResponse response) {
-        Light light = (Light) response.getUser_data();
         activity.msg("POST light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
             activity.msg("\tPOST response: CHANGED");
@@ -30,8 +31,8 @@ public class PostLightResponseHandler implements OCResponseHandler {
         }
         activity.printLine();
 
-        Post2LightResponseHandler postLight = new Post2LightResponseHandler(activity);
-        if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS, light)) {
+        Post2LightResponseHandler postLight = new Post2LightResponseHandler(activity, light);
+        if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", true);
             OCMain.repSetInt(root, "power", 55);

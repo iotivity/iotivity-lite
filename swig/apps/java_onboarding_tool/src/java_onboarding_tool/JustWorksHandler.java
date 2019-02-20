@@ -7,7 +7,7 @@ import org.iotivity.OCUuid;
 public class JustWorksHandler implements OCObtDeviceStatusHandler {
 
     @Override
-    public void handler(OCUuid uuid, int status, Object userData) {
+    public void handler(OCUuid uuid, int status) {
         if (status >= 0) {
           System.out.println("\nSuccessfully performed OTM on device " + OCUuidUtil.uuidToString(uuid));
         } else {

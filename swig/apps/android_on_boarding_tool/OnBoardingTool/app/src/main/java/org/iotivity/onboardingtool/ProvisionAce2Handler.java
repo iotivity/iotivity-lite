@@ -18,7 +18,7 @@ public class ProvisionAce2Handler implements OCObtDeviceStatusHandler {
     }
 
     @Override
-    public void handler(OCUuid uuid, int status, Object userData) {
+    public void handler(OCUuid uuid, int status) {
         String deviceId = OCUuidUtil.uuidToString(uuid);
 
         final String msg = (status >= 0) ?

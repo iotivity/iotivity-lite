@@ -5,7 +5,7 @@ import org.iotivity.OCObtStatusHandler;
 public class ProvisionCredentialsHandler implements OCObtStatusHandler {
 
     @Override
-    public void handler(int status, Object userData) {
+    public void handler(int status) {
         if (status >= 0) {
           System.out.println("\nSuccessfully provisioned pair-wise credentials");
         } else {

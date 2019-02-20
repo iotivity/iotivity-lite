@@ -13,8 +13,12 @@ import org.iotivity.OCResourcePropertiesMask;
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
-                                    int resourcePropertiesMask, Object userData) {
+    public OCDiscoveryFlags handler(String anchor,
+                                    String uri,
+                                    String[] types,
+                                    int interfaceMask,
+                                    OCEndpoint endpoint,
+                                    int resourcePropertiesMask) {
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
         System.out.println("\turi: " + uri);

@@ -10,7 +10,7 @@ import org.iotivity.OCRequestHandler;
 public class GetLight implements OCRequestHandler {
 
     @Override
-    public void handler(OCRequest request, int interfaces, Object userData) {
+    public void handler(OCRequest request, int interfaces) {
         System.out.println("Inside the GetLight RequestHandler");
 
         Light.power++;

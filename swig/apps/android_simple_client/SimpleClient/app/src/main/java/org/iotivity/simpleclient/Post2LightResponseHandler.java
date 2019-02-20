@@ -11,14 +11,15 @@ public class Post2LightResponseHandler implements OCResponseHandler {
     private static final String TAG = Post2LightResponseHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public Post2LightResponseHandler(ClientActivity activity) {
+    public Post2LightResponseHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
     public void handler(OCClientResponse response) {
-        Light light = (Light) response.getUser_data();
         activity.msg("POST2 light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
             activity.msg("\tPOST2 response: CHANGED");
@@ -29,10 +30,10 @@ public class Post2LightResponseHandler implements OCResponseHandler {
         }
         activity.printLine();
 
-        ObserveLightResponseHandler observerLight = new ObserveLightResponseHandler(activity);
-        OCMain.doObserve(light.serverUri, light.serverEndpoint, null, observerLight, OCQos.LOW_QOS, light);
-        StopObserveTriggerHandler stopObserve = new StopObserveTriggerHandler(activity);
-        OCMain.setDelayedHandler(light, stopObserve, 30);
+        ObserveLightResponseHandler observerLight = new ObserveLightResponseHandler(activity, light);
+        OCMain.doObserve(light.serverUri, light.serverEndpoint, null, observerLight, OCQos.LOW_QOS);
+        StopObserveTriggerHandler stopObserve = new StopObserveTriggerHandler(activity, light);
+        OCMain.setDelayedHandler(stopObserve, 30);
         activity.msg("Sent OBSERVE request");
         activity.printLine();
     }

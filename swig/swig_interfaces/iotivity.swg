@@ -26,6 +26,7 @@
 #   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) jenv->func(ar1, ar2, ar3, ar4, ar5)
 #   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6)
 #   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#   define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
 #   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
 #else
 #   define JCALL0(func, jenv) (*jenv)->func(jenv)
@@ -36,6 +37,7 @@
 #   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5)
 #   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6)
 #   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#   define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
 #   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
 #endif
 
@@ -60,7 +62,6 @@ typedef struct jni_callback_data_s {
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
-  jobject juser_data;
 } jni_callback_data;
 
 /*
@@ -114,22 +115,6 @@ static void ReleaseJNIEnv(jint getEnvResult) {
     }
 }
 %}
-
-%typemap(jni)    void *user_data "jobject";
-%typemap(jtype)  void *user_data "Object";
-%typemap(jstype) void *user_data "Object";
-%typemap(javain) void *user_data "$javainput";
-%typemap(in)     void *user_data {
-  jobject juser_data = JCALL1(NewGlobalRef, jenv, $input);
-  $1 = (void*)&juser_data;
-}
-%typemap(javaout) void *user_data {
-   return $jnicall;
-}
-%typemap(out) void *user_data {
-    jni_callback_data *data = (jni_callback_data *)result;
-    jresult = data->juser_data;
-}
 
 /*********************************************************************
  * change enums being used as bitmaps to integers for Java enums do

@@ -9,14 +9,15 @@ public class ObserveLightResponseHandler implements OCResponseHandler {
     private static final String TAG = ObserveLightResponseHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public ObserveLightResponseHandler(ClientActivity activity) {
+    public ObserveLightResponseHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
     public void handler(OCClientResponse response) {
-        Light light = (Light) response.getUser_data();
         activity.msg("OBSERVER Light:");
         OCRepresentation rep = response.getPayload();
         while (rep != null) {

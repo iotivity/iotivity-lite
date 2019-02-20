@@ -13,16 +13,17 @@ public class PostLightRequestHandler implements OCRequestHandler {
     private static final String TAG = PostLightRequestHandler.class.getSimpleName();
 
     private ServerActivity activity;
+    private Light light;
 
-    public PostLightRequestHandler(ServerActivity activity) {
+    public PostLightRequestHandler(ServerActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
-    public void handler(OCRequest request, int interfaces, Object userData) {
+    public void handler(OCRequest request, int interfaces) {
         Log.d(TAG, "inside Post Light Request Handler");
 
-        Light light = (Light) userData;
         activity.msg("Post Light:");
 
         OCRepresentation rep = request.getRequest_payload();

@@ -12,14 +12,15 @@ public class PutLightResponseHandler implements OCResponseHandler {
     private static final String TAG = PutLightResponseHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public PutLightResponseHandler(ClientActivity activity) {
+    public PutLightResponseHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
     public void handler(OCClientResponse response) {
-        Light light = (Light) response.getUser_data();
         activity.msg("PUT light:");
         if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
             activity.msg("\tPUT response: CHANGED");
@@ -28,8 +29,8 @@ public class PutLightResponseHandler implements OCResponseHandler {
         }
         activity.printLine();
 
-        PostLightResponseHandler postLight = new PostLightResponseHandler(activity);
-        if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS, light)) {
+        PostLightResponseHandler postLight = new PostLightResponseHandler(activity, light);
+        if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", false);
             OCMain.repSetInt(root, "power", 105);

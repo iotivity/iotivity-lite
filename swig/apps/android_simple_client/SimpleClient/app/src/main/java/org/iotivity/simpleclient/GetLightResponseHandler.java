@@ -12,14 +12,15 @@ public class GetLightResponseHandler implements OCResponseHandler {
     private static final String TAG = GetLightResponseHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
-    public GetLightResponseHandler(ClientActivity activity) {
+    public GetLightResponseHandler(ClientActivity activity, Light light) {
         this.activity = activity;
+        this.light = light;
     }
 
     @Override
     public void handler(OCClientResponse response) {
-        Light light = (Light) response.getUser_data();
         activity.msg("Get Light Response Handler:");
         OCRepresentation rep = response.getPayload();
         while (rep != null) {
@@ -43,8 +44,8 @@ public class GetLightResponseHandler implements OCResponseHandler {
         }
         activity.printLine();
 
-        PutLightResponseHandler putLight = new PutLightResponseHandler(activity);
-        if (OCMain.initPut(light.serverUri, light.serverEndpoint, null, putLight, OCQos.LOW_QOS, light)) {
+        PutLightResponseHandler putLight = new PutLightResponseHandler(activity, light);
+        if (OCMain.initPut(light.serverUri, light.serverEndpoint, null, putLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", true);
             OCMain.repSetInt(root, "power", 15);
