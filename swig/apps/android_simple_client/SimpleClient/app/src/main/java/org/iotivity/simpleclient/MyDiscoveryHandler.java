@@ -15,14 +15,19 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
     private static final String TAG = MyDiscoveryHandler.class.getSimpleName();
 
     private ClientActivity activity;
+    private Light light;
 
     public MyDiscoveryHandler(ClientActivity activity) {
         this.activity = activity;
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
-                                    int resourcePropertiesMask, Object userData) {
+    public OCDiscoveryFlags handler(String anchor,
+                                    String uri,
+                                    String[] types,
+                                    int interfaceMask,
+                                    OCEndpoint endpoint,
+                                    int resourcePropertiesMask) {
         activity.msg("DiscoveryHandler:");
         activity.msg("\tanchor: " + anchor);
         activity.msg("\turi: " + uri);
@@ -96,7 +101,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
         for (String type : types) {
             if (type.equals("core.light")) {
-                Light light = new Light();
+                light = new Light();
                 light.serverEndpoint = endpoint;
                 light.serverUri = uri;
                 activity.msg("\tResource " + light.serverUri + " hosted at endpoint(s):");
@@ -112,8 +117,8 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                     ep = ep.getNext();
                 }
                 activity.printLine();
-                GetLightResponseHandler responseHandler = new GetLightResponseHandler(activity);
-                OCMain.doGet(light.serverUri, light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS, light);
+                GetLightResponseHandler responseHandler = new GetLightResponseHandler(activity, light);
+                OCMain.doGet(light.serverUri, light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }

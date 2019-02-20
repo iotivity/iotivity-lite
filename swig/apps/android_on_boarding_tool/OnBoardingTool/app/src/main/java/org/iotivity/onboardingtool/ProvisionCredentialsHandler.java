@@ -16,7 +16,7 @@ public class ProvisionCredentialsHandler implements OCObtStatusHandler {
     }
 
     @Override
-    public void handler(int status, Object userData) {
+    public void handler(int status) {
         final String msg = (status >= 0) ?
                 "Successfully provisioned pair-wise credentials" :
                 "Error provisioning pair-wise credentials, status = " + status;

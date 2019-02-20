@@ -7,7 +7,7 @@ import org.iotivity.OCUuidUtil;
 public class ProvisionAce2Handler implements OCObtDeviceStatusHandler {
 
     @Override
-    public void handler(OCUuid uuid, int status, Object userData) {
+    public void handler(OCUuid uuid, int status) {
         if (status >= 0) {
           System.out.println("\nSuccessfully provisioned ACE to device " + OCUuidUtil.uuidToString(uuid));
         } else {

@@ -9,7 +9,7 @@ import org.iotivity.OCStatus;
 public class PostLight implements OCRequestHandler {
 
     @Override
-    public void handler(OCRequest request, int interfaces, Object userData) {
+    public void handler(OCRequest request, int interfaces) {
         System.out.println("Inside the PostLight RequestHandler");
         System.out.println("POST LIGHT:");
         OCRepresentation rep = request.getRequest_payload();

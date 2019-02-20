@@ -9,7 +9,7 @@ import org.iotivity.OCUuid;
 public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
 
     @Override
-    public void handler(OCUuid uuid, OCEndpoint endpoints, Object userData) {
+    public void handler(OCUuid uuid, OCEndpoint endpoints) {
         String deviceId = OCUuidUtil.uuidToString(uuid);
         System.out.println("\nDiscovered owned device: "+ deviceId + " at:");
         while (endpoints != null) {

@@ -37,14 +37,14 @@ public class MyInitHandler implements OCMainInitHandler {
         OCMain.resourceSetDiscoverable(resource, true);
         OCMain.resourceSetPeriodicObservable(resource, 1);
 
-        Light light = new Light();
+        light = new Light();
         light.name = "John's Light";
         light.power = 0;
         light.state = false;
 
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_GET, new GetLightRequestHandler(activity), light);
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLightRequestHandler(activity), light);
-        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLightRequestHandler(activity), light);
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_GET, new GetLightRequestHandler(activity, light));
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLightRequestHandler(activity, light));
+        OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLightRequestHandler(activity, light));
         OCMain.addResource(resource);
     }
 
@@ -63,4 +63,5 @@ public class MyInitHandler implements OCMainInitHandler {
             activity.lock.unlock();
         }
     }
+    private Light light;
 }

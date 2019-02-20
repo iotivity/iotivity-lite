@@ -1,5 +1,5 @@
 package org.iotivity;
 
 public interface OCObtStatusHandler {
-    public void handler(int status, Object userData);
+    public void handler(int status);
 }
