@@ -16,6 +16,24 @@
       "revId": "7184d056586ccd275726a01d623e99c27f766fc2",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_07aa1970",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/java/org/iotivity/simpleserver/PutLightRequestHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-02-20T21:33:49Z",
+      "side": 1,
+      "message": "Thanks this is why I had not add more reviewers was because I had not had a chance to build the Android yet.",
+      "parentUuid": "1a494da4_c79f914f",
+      "revId": "7184d056586ccd275726a01d623e99c27f766fc2",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
