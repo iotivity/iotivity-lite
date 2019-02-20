@@ -16,7 +16,7 @@ public class PutLightRequestHandler implements OCRequestHandler {
     }
 
     @Override
-    public void handler(OCRequest request, int interfaces, Object userData) {
+    public void handler(OCRequest request, int interfaces) {
         Log.d(TAG, "inside Put Light Request Handler");
         new PostLightRequestHandler(activity).handler(request, interfaces, userData);
     }

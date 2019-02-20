@@ -20,7 +20,7 @@ public class GetLightRequestHandler implements OCRequestHandler {
     }
 
     @Override
-    public void handler(OCRequest request, int interfaces, Object userData) {
+    public void handler(OCRequest request, int interfaces) {
         Log.d(TAG, "inside Get Light Request Handler");
 
         Light light = (Light) userData;

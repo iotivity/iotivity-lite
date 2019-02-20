@@ -7,7 +7,7 @@ import org.iotivity.OCUuid;
 public class ResetDeviceHandler implements OCObtDeviceStatusHandler {
 
     @Override
-    public void handler(OCUuid uuid, int status, Object userData) {
+    public void handler(OCUuid uuid, int status) {
         if (status >= 0) {
           System.out.println("\nSuccessfully performed hard RESET to device " + OCUuidUtil.uuidToString(uuid));
           ObtMain.ownedDevices.remove(uuid);
