@@ -16,6 +16,24 @@
       "revId": "7b37213fb4a52ec2d122aba50f46d4a4afc5cc32",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_47e261d6",
+        "filename": "swig/apps/android_simple_server/SimpleServer/app/src/main/java/org/iotivity/simpleserver/MyInitHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-02-21T17:22:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_07c1792e",
+      "revId": "7b37213fb4a52ec2d122aba50f46d4a4afc5cc32",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
