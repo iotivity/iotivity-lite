@@ -2,4 +2,4 @@
 
 rm *.c
 rm *.cxx
-rm ../iotivity-lite-eclipse-project/src/org/iotivity/*.java
+rm ../iotivity-lite-java/src/org/iotivity/*.java
