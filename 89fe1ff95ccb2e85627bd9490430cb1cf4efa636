@@ -1,0 +1,418 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_478d4131",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "please cross check, remove if not needed.\nplease check uri deletion also...",
+      "range": {
+        "startLine": 141,
+        "startChar": 31,
+        "endLine": 141,
+        "endChar": 32
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_a70c0596",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "better we deallocate UserResourceType_input...since not needed after usage...\n\ncheck similar other things in whole file...",
+      "range": {
+        "startLine": 197,
+        "startChar": 12,
+        "endLine": 197,
+        "endChar": 13
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_a7fec569",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "remove extra space before",
+      "range": {
+        "startLine": 310,
+        "startChar": 6,
+        "endLine": 310,
+        "endChar": 18
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_a7352548",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "where it is made to true ?",
+      "range": {
+        "startLine": 319,
+        "startChar": 11,
+        "endLine": 319,
+        "endChar": 31
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_e7f72d8b",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "For uniformity, please maintain one format for comments, make sure all comments in same form...",
+      "range": {
+        "startLine": 342,
+        "startChar": 8,
+        "endLine": 342,
+        "endChar": 11
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_c7f4b189",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "maintain uniform...",
+      "range": {
+        "startLine": 359,
+        "startChar": 3,
+        "endLine": 359,
+        "endChar": 10
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_27f2b59a",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "we are creating invisible light...better change to light from fan",
+      "range": {
+        "startLine": 366,
+        "startChar": 51,
+        "endLine": 366,
+        "endChar": 68
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_07efb9b1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "createresource api creates binary switch...\nif above is not called , this api should fail.\nplease add related thing...",
+      "range": {
+        "startLine": 393,
+        "startChar": 20,
+        "endLine": 393,
+        "endChar": 28
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_672b1dec",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "add static",
+      "range": {
+        "startLine": 402,
+        "startChar": 4,
+        "endLine": 402,
+        "endChar": 5
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_4730a156",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "typo rectify",
+      "range": {
+        "startLine": 445,
+        "startChar": 2,
+        "endLine": 445,
+        "endChar": 14
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_e73e0d29",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "remove above printf if not needed",
+      "range": {
+        "startLine": 515,
+        "startChar": 44,
+        "endLine": 515,
+        "endChar": 47
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_c73b1137",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "rectify typo...or remove printf...\nplease use use PIRNT instead of printf...whole file...just to maintain uniform",
+      "range": {
+        "startLine": 529,
+        "startChar": 34,
+        "endLine": 529,
+        "endChar": 42
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_274915d1",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "remove above line",
+      "range": {
+        "startLine": 534,
+        "startChar": 29,
+        "endLine": 534,
+        "endChar": 37
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_871109af",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "add a space before fine...\nnext line allignement",
+      "range": {
+        "startLine": 541,
+        "startChar": 13,
+        "endLine": 541,
+        "endChar": 38
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_074699bf",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "remove above statement",
+      "range": {
+        "startLine": 546,
+        "startChar": 21,
+        "endLine": 546,
+        "endChar": 23
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_071df9bd",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "add static key word....avoid extra spacing before selectResource()",
+      "range": {
+        "startLine": 582,
+        "startChar": 5,
+        "endLine": 582,
+        "endChar": 19
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_8788e9e8",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "qos should be based on input param....please check",
+      "range": {
+        "startLine": 626,
+        "startChar": 66,
+        "endLine": 626,
+        "endChar": 73
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_e76c4d39",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-02-21T12:25:18Z",
+      "side": 1,
+      "message": "alignment",
+      "range": {
+        "startLine": 660,
+        "startChar": 0,
+        "endLine": 660,
+        "endChar": 4
+      },
+      "revId": "89fe1ff95ccb2e85627bd9490430cb1cf4efa636",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
