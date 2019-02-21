@@ -20,6 +20,9 @@
 #include <assert.h>
 
 #ifdef __ANDROID__
+
+#include "oc_iotivity_lite_jni.h"
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     OC_DBG("JNI: %s\n", __func__);
