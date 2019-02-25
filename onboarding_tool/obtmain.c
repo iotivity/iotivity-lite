@@ -17,8 +17,13 @@
 #include "oc_api.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
-
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__linux__)
 #include <pthread.h>
+#else
+#error "Unsupported OS"
+#endif
 #include <signal.h>
 #include <stdio.h>
 
@@ -39,11 +44,29 @@ OC_LIST(owned_devices);
 /* List of known un-owned devices */
 OC_LIST(unowned_devices);
 
+#if defined (_WIN32)
+static HANDLE event_thread;
+//static HANDLE app_sync_lock;
+static CRITICAL_SECTION app_sync_lock;
+static CONDITION_VARIABLE cv;
+static CRITICAL_SECTION cs;
+
+/* OS specific definition for lock/unlock */
+#define otb_mutex_lock(m) EnterCriticalSection(&m)
+#define otb_mutex_unlock(m) LeaveCriticalSection(&m)
+
+#elif defined(__linux__)
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
+
+/* OS specific definition for lock/unlock */
+#define otb_mutex_lock(m) pthread_mutex_lock(&m)
+#define otb_mutex_unlock(m) pthread_mutex_unlock(&m)
+
 static struct timespec ts;
+#endif
 static int quit;
 
 static void
@@ -92,9 +115,13 @@ issue_requests(void)
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
+#if defined(_WIN32)
+  WakeConditionVariable(&cv);
+#elif defined(__linux__)
+  otb_mutex_lock(mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
+  otb_mutex_unlock(mutex);
+#endif
 }
 
 static void
@@ -105,17 +132,43 @@ handle_signal(int signal)
   signal_event_loop();
 }
 
+#if defined(_WIN32)
+DWORD WINAPI
+ocf_event_thread(LPVOID lpParam)
+{
+  oc_clock_time_t next_event;
+  while (quit != 1) {
+      otb_mutex_lock(app_sync_lock);
+      next_event = oc_main_poll();
+      otb_mutex_unlock(app_sync_lock);
+
+      if (next_event == 0) {
+          SleepConditionVariableCS(&cv, &cs, INFINITE);
+      }
+      else {
+          oc_clock_time_t now = oc_clock_time();
+          if (now < next_event) {
+              SleepConditionVariableCS(&cv, &cs,
+                  (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          }
+      }
+  }
+
+  oc_main_shutdown();
+  return TRUE;
+}
+#elif defined(__linux__)
 static void *
 ocf_event_thread(void *data)
 {
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
-    pthread_mutex_lock(&app_sync_lock);
+    otb_mutex_lock(app_sync_lock);
     next_event = oc_main_poll();
-    pthread_mutex_unlock(&app_sync_lock);
+    otb_mutex_unlock(app_sync_lock);
 
-    pthread_mutex_lock(&mutex);
+    otb_mutex_lock(mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
@@ -123,11 +176,12 @@ ocf_event_thread(void *data)
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
-    pthread_mutex_unlock(&mutex);
+    otb_mutex_unlock(mutex);
   }
   oc_main_shutdown();
   return NULL;
 }
+#endif
 
 /* App utility functions */
 static bool
@@ -216,17 +270,17 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 static void
 discover_owned_devices(void)
 {
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   oc_obt_discover_owned_devices(owned_device_cb, NULL);
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
 discover_unowned_devices(void)
 {
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
 }
 
@@ -272,7 +326,7 @@ take_ownership_of_device(void)
     return;
   }
 
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
 
   int ret =
     oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb, NULL);
@@ -286,7 +340,7 @@ take_ownership_of_device(void)
    */
   remove_device_from_list(&devices[c]->uuid, unowned_devices);
 
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
@@ -333,14 +387,14 @@ reset_device(void)
     return;
   }
 
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform hard RESET\n");
   } else {
     PRINT("\nERROR issuing request to perform hard RESET\n");
   }
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
@@ -388,7 +442,7 @@ provision_credentials(void)
     return;
   }
 
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_pairwise_credentials(
     &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
   if (ret >= 0) {
@@ -396,7 +450,7 @@ provision_credentials(void)
   } else {
     PRINT("\nERROR issuing request to provision credentials\n");
   }
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
@@ -626,10 +680,10 @@ provision_ace2(void)
     oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
   }
 
-  pthread_mutex_lock(&app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   int ret =
     oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
-  pthread_mutex_unlock(&app_sync_lock);
+  otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision ACE\n");
   } else {
@@ -640,11 +694,17 @@ provision_ace2(void)
 int
 main(void)
 {
+#if defined(_WIN32)
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  InitializeCriticalSection(&app_sync_lock);
+#elif defined(__linux__)
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
+#endif
 
   int init;
 
@@ -658,9 +718,16 @@ main(void)
   if (init < 0)
     return init;
 
+#if defined(_WIN32)
+  event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread, NULL, 0, NULL);
+  if (NULL == event_thread) {
+    return -1;
+  }
+#elif defined(__linux__)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+#endif
 
   int c;
   while (quit != 1) {
@@ -696,6 +763,10 @@ main(void)
     }
   }
 
+#if defined(_WIN32)
+  WaitForSingleObject(event_thread, INFINITE);
+#elif defined(__linux__)
   pthread_join(event_thread, NULL);
+#endif
   return 0;
 }

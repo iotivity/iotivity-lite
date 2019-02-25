@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#include "oc_random.h"
-#include "oc_log.h"
+#include "port/oc_random.h"
+#include "port/oc_log.h"
 
 #include <openthread/platform/random.h>
 
