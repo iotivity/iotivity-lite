@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_7874589c",
+        "filename": "port/android/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-02-26T21:00:27Z",
+      "side": 1,
+      "message": "-constrained \u003d\u003d\u003e -lite",
+      "revId": "ed913b4915ce6fe8de8c5032c04febf4195ae4f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
