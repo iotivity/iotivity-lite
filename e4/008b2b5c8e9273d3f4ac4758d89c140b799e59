@@ -1,0 +1,8 @@
+Code-Review+1: George Nash <george.nash@intel.com>
+Verified+1: George Nash <george.nash@intel.com>
+Code-Review+2: Rick Bell <richard.s.bell@intel.com>
+Submitted-by: Rick Bell <richard.s.bell@intel.com>
+Submitted-at: Tue, 26 Feb 2019 18:27:26 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/29293
+Project: iotivity-lite
+Branch: refs/heads/swig
