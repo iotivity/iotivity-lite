@@ -1,0 +1,32 @@
+{
+    "device": "test1",
+    "company": "Open Connectivity Foundation",
+    "role": "Server",
+    "supportedVerticalProfile": [
+        "Smart Home"
+    ],
+    "supportedDeviceTypes": [
+        "None"
+    ],
+    "icv": "ocf.1.0.0",
+    "dmv": "ocf.res.1.3.0, ocf.sh.1.3.0",
+    "resources": [
+        "oic.r.csr",
+        "oic.r.crl",
+        "oic.r.roles",
+
+        "oic.r.switch.binary",
+
+        "oic.r.humidity"
+],
+    "jurisdictionSwitch": false,
+    "OTM": [
+        "oic.sec.doxm.jw"
+    ],
+    "contentFormatVersion": [ "1.0.0" ],
+    "acceptVersion": [ "1.0.0" ],
+
+    "multiValueQuerySupport": false,
+    "observableOICRES": false,
+    "persistentDeviceuuid": false
+}
