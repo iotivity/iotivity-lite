@@ -295,9 +295,9 @@ server_multithread_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/serv
 client_multithread_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
-CertificationApp: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/CertificationApp.c
+CertificationApp: libiotivity-constrained-server.a $(ROOT_DIR)/apps/CertificationApp.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/device_builder_server.c ../../apps/CertificationApp.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER  ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/device_builder_server.c ../../apps/CertificationApp.c libiotivity-constrained-client-server.a -DOC_SERVER -DOC_CLIENT  ${CFLAGS} ${LIBS}
 
 discover_device: libiotivity-constrained-client.a $(ROOT_DIR)/apps/discover_device.c
 	@mkdir -p $@_creds
