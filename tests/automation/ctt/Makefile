@@ -1,0 +1,4 @@
+tafagent: src/ResourceMap.c src/TAFAgent.c src/MiniHttpServer.c src/DUTController.c
+	gcc -o tafagent src/ResourceMap.c src/TAFAgent.c src/MiniHttpServer.c src/DUTController.c -luv -lxml2 -lm -I
+	#include system configured UV lib path
+	./include -I /usr/include/libxml2 -I /usr/include -I /usr/local/include/uv -L /usr/local/lib/
