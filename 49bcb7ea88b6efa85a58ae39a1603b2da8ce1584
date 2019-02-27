@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_18bb940f",
+        "filename": "service/easy-setup/enrollee/resourcehandler.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 245
+      },
+      "writtenOn": "2019-02-27T08:58:50Z",
+      "side": 1,
+      "message": "fallow coding guidelines (indentation, max line length)",
+      "revId": "49bcb7ea88b6efa85a58ae39a1603b2da8ce1584",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
