@@ -1,6 +1,6 @@
-From d1bd1a88cb68f8f353c0192ba26cc4b211d6361f Mon Sep 17 00:00:00 2001
+From c38061c5134e1d4d229b948536e3d7f05e6add15 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
-Date: Thu, 8 Nov 2018 14:36:07 +0200
+Date: Thu, 28 Feb 2019 17:42:30 +0200
 Subject: [PATCH] ocf Samsung
 
 Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
@@ -13,10 +13,10 @@ Signed-off-by: Oleksii Beketov <ol.beketov@samsung.com>
  library/base64.c                   |  77 +++++++-
  library/ssl_ciphersuites.c         |  18 ++
  library/ssl_cli.c                  | 133 ++++++++++----
- library/ssl_srv.c                  |  33 +++-
+ library/ssl_srv.c                  |  35 ++--
  library/ssl_tls.c                  | 351 ++++++++++++++++++++++++++++++++++++-
  library/version_features.c         |   3 +
- 11 files changed, 597 insertions(+), 58 deletions(-)
+ 11 files changed, 598 insertions(+), 59 deletions(-)
 
 diff --git a/include/mbedtls/check_config.h b/include/mbedtls/check_config.h
 index 1143aa2..984d289 100644
@@ -576,9 +576,18 @@ index 7e2f9a9..fdb07e4 100644
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
          ssl->state++;
 diff --git a/library/ssl_srv.c b/library/ssl_srv.c
-index 7ebe567..70888d5 100644
+index 7ebe567..865e052 100644
 --- a/library/ssl_srv.c
 +++ b/library/ssl_srv.c
+@@ -801,7 +801,7 @@ static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
+     if( suite_info == NULL )
+     {
+         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
+-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
++        return( 0 );
+     }
+ 
+     MBEDTLS_SSL_DEBUG_MSG( 3, ( "trying ciphersuite: %s", suite_info->name ) );
 @@ -2673,6 +2673,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
