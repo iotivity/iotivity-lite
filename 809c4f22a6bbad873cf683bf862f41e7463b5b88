@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_98032473",
+        "filename": "port/android/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-03-01T15:00:35Z",
+      "side": 1,
+      "message": "we can eventually replace this with the Android version of the onboarding tool.  However I think we should stick with the commandline version at this time since I don\u0027t know if we can describe the Android version without screen shots.",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 30
+      },
+      "revId": "809c4f22a6bbad873cf683bf862f41e7463b5b88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
