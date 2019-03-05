@@ -1,0 +1,395 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_784a9884",
+        "filename": "apps/discover_device.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 164,
+        "startChar": 17,
+        "endLine": 164,
+        "endChar": 18
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_584fdc92",
+        "filename": "apps/discover_device.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 176,
+        "startChar": 7,
+        "endLine": 176,
+        "endChar": 8
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_187ef4ae",
+        "filename": "include/Certification.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "please remove space",
+      "range": {
+        "startLine": 27,
+        "startChar": 21,
+        "endLine": 27,
+        "endChar": 22
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b8442075",
+        "filename": "tests/automation/ctt/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "Add a comment to include path of the uv lib accordingly(may be /usr/local/lib or /usr/lib)",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_9849648e",
+        "filename": "tests/automation/ctt/README.rst",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "modify the readme as per current condition...\nchange the gerrit path to lite....please cross verify all the content...",
+      "range": {
+        "startLine": 6,
+        "startChar": 30,
+        "endLine": 6,
+        "endChar": 35
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f85d084a",
+        "filename": "tests/automation/ctt/include/DUTController.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove if not needed",
+      "range": {
+        "startLine": 27,
+        "startChar": 27,
+        "endLine": 27,
+        "endChar": 28
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d85acc4f",
+        "filename": "tests/automation/ctt/include/ResourceMap.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "please remove spaces",
+      "range": {
+        "startLine": 33,
+        "startChar": 14,
+        "endLine": 33,
+        "endChar": 15
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_38581056",
+        "filename": "tests/automation/ctt/run_taf_agent.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 3,
+        "startChar": 33,
+        "endLine": 3,
+        "endChar": 34
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_1855541d",
+        "filename": "tests/automation/ctt/run_taf_agent.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "Add a comment to inform uv lib path",
+      "range": {
+        "startLine": 13,
+        "startChar": 34,
+        "endLine": 13,
+        "endChar": 37
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_7831f80a",
+        "filename": "tests/automation/ctt/server_config.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "please remove all spaces",
+      "range": {
+        "startLine": 18,
+        "startChar": 32,
+        "endLine": 18,
+        "endChar": 33
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_5836bc04",
+        "filename": "tests/automation/ctt/src/MiniHttpServer.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 52,
+        "startChar": 14,
+        "endLine": 52,
+        "endChar": 15
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b83b80ea",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 1042,
+        "startChar": 19,
+        "endLine": 1042,
+        "endChar": 20
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f824e8c7",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 1061,
+        "startChar": 9,
+        "endLine": 1061,
+        "endChar": 10
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d8212cb6",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 1070,
+        "startChar": 15,
+        "endLine": 1070,
+        "endChar": 16
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_382f70a3",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1080,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 1080,
+        "startChar": 17,
+        "endLine": 1080,
+        "endChar": 20
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_98404458",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "allignment",
+      "range": {
+        "startLine": 1114,
+        "startChar": 15,
+        "endLine": 1114,
+        "endChar": 19
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_182c34ab",
+        "filename": "tests/automation/ctt/src/TAFAgent.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-05T11:56:56Z",
+      "side": 1,
+      "message": "remove space",
+      "range": {
+        "startLine": 1147,
+        "startChar": 0,
+        "endLine": 1147,
+        "endChar": 8
+      },
+      "revId": "efeec80e6f65cc3c3cf450705da1cab67df4db3d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
