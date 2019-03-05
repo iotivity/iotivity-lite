@@ -1,8 +1,13 @@
+/**
+  @file
+*/
 #ifndef INTROSPECTION_INCLUDE_H
 #define INTROSPECTION_INCLUDE_H
 /* introspcection data
  input file = ../device_lite_output/code/server_introspection.dat
  date 2018-04-30 14:51:53 */
+
+#include <stdint.h>
 
 #define introspection_data_size 3019  /* size of the CBOR */
 uint8_t introspection_data[] = {

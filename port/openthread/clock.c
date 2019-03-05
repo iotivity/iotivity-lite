@@ -14,7 +14,7 @@
 // limitations under the License.
 */
 
-#include "oc_clock.h"
+#include "port/oc_clock.h"
 #include "oc_api.h"
 
 #include <openthread/platform/alarm-milli.h>

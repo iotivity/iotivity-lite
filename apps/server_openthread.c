@@ -26,7 +26,7 @@
 #endif
 
 #include "oc_api.h"
-#include "oc_assert.h"
+#include "port/oc_assert.h"
 #include "oc_instance.h"
 
 otInstance *ot_instance;
