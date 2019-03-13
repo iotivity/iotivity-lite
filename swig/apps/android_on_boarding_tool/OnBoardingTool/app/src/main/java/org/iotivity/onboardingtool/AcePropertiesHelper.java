@@ -275,7 +275,6 @@ class AcePropertiesHelper {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        activity.appSyncLock.lock();
                         if (OCObt.provisionAce(OCUuidUtil.stringToUuid(uuid), ace, provisionAce2Handler) < 0) {
                             final String msg = "Failed to provision ace credentials for " + uuid;
                             Log.d(TAG, msg);
@@ -285,7 +284,6 @@ class AcePropertiesHelper {
                                 }
                             });
                         }
-                        activity.appSyncLock.unlock();
                     }
                 }).start();
             }

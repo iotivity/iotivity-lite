@@ -17,6 +17,41 @@
 #ifndef OC_IOTIVITY_LITE_H
 #define OC_IOTIVITY_LITE_H
 
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__linux__)
+#include <pthread.h>
+#else
+#error "Unsupported OS"
+#endif
+#include "util/oc_list.h"
+
+#if defined (_WIN32)
+HANDLE jni_poll_event_thread;
+CRITICAL_SECTION jni_sync_lock;
+CONDITION_VARIABLE jni_cv;
+CRITICAL_SECTION jni_cs;
+
+int jni_quit;
+
+/* OS specific definition for lock/unlock */
+#define jni_mutex_lock(m) EnterCriticalSection(&m)
+#define jni_mutex_unlock(m) LeaveCriticalSection(&m)
+
+#elif defined(__linux__)
+pthread_t jni_poll_event_thread __attribute__((unused));
+pthread_mutex_t jni_sync_lock __attribute__((unused));
+pthread_mutexattr_t jni_sync_lock_attr __attribute__((unused));
+pthread_cond_t jni_cv __attribute__((unused));
+pthread_mutex_t jni_cs __attribute__((unused));
+
+int jni_quit __attribute__((unused));
+
+/* OS specific definition for lock/unlock */
+#define jni_mutex_lock(m) pthread_mutex_lock(&m)
+#define jni_mutex_unlock(m) pthread_mutex_unlock(&m)
+#endif
+
 /*
  * This struct used to hold information needed for java callbacks.
  * When registering a callback handler from java the `JNIEnv`
@@ -48,6 +83,14 @@ typedef struct jni_callback_data_s {
  * up the allocated memory when shutting down the stack.
  */
 OC_LIST(jni_callbacks);
+
+static void jni_list_add(oc_list_t list, void *item) {
+    OC_DBG("JNI: - lock %s\n", __func__);
+    jni_mutex_lock(jni_sync_lock);
+    oc_list_add(list, item);
+    jni_mutex_unlock(jni_sync_lock);
+    OC_DBG("JNI: - unlock %s\n", __func__);
+}
 
 #define JNI_CURRENT_VERSION JNI_VERSION_1_6
 
