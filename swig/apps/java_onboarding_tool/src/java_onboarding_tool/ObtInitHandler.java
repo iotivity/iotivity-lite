@@ -1,8 +1,6 @@
 package java_onboarding_tool;
 
-import org.iotivity.OCMain;
-import org.iotivity.OCMainInitHandler;
-import org.iotivity.OCObt;
+import org.iotivity.*;
 
 public class ObtInitHandler implements OCMainInitHandler {
 
@@ -14,7 +12,6 @@ public class ObtInitHandler implements OCMainInitHandler {
         return ret;
     }
 
-
     @Override
     public void registerResources() {
         System.out.println("inside ObtInitHandler.registerResources()");
@@ -24,16 +21,5 @@ public class ObtInitHandler implements OCMainInitHandler {
     public void requestEntry() {
         System.out.println("inside ObtInitHandler.requestEntry()");
         OCObt.init();
-    }
-
-    @Override
-    public void signalEventLoop() {
-        //System.out.println("inside MyInitHandler.signalEventLoop()");
-        ObtMain.lock.lock();
-        try {
-            ObtMain.cv.signalAll();
-        } finally {
-            ObtMain.lock.unlock();
-        }
     }
 }

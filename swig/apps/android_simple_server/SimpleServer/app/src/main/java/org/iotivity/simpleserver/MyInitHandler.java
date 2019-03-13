@@ -53,15 +53,4 @@ public class MyInitHandler implements OCMainInitHandler {
     public void requestEntry() {
         Log.d(TAG, "inside MyInitHandler.requestEntry()");
     }
-
-    @Override
-    public void signalEventLoop() {
-        Log.d(TAG, "inside MyInitHandler.signalEventLoop()");
-        activity.lock.lock();
-        try {
-            activity.cv.signalAll();
-        } finally {
-            activity.lock.unlock();
-        }
-    }
 }

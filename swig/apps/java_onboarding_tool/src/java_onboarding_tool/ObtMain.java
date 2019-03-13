@@ -5,9 +5,6 @@ import java.util.InputMismatchException;
 import java.util.LinkedHashSet;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.iotivity.OCAceConnectionType;
 import org.iotivity.OCAcePermissionsMask;
@@ -25,17 +22,11 @@ import org.iotivity.OCUuid;
 import java_onboarding_tool.UnownedDeviceHandler;
 
 public class ObtMain {
-    /* Locks and Condition variables */
-    public final static Lock appSyncLock = new ReentrantLock();
-    public final static Lock lock = new ReentrantLock();
-    public static Condition cv = lock.newCondition();
 
     /* user input Scanner */
     private static Scanner scanner = new Scanner(System.in);
 
     /* Constants */
-    public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
-    public static final long CLOCK_TICKS_PER_SECOND = OCClock.OC_CLOCK_SECOND;
     private static final int MAX_NUM_RESOURCES = 100;
     private static final int MAX_NUM_RT = 50;
 
@@ -60,31 +51,6 @@ public class ObtMain {
             OCMain.mainShutdown();
             scanner.close();
             mainThread.interrupt();
-        }
-    };
-
-    static private Thread ocfEventThread = new Thread() {
-        public void run() {
-            while (!quit) {
-                appSyncLock.lock();
-                long next_event = OCMain.mainPoll();
-                appSyncLock.unlock();
-                lock.lock();
-                try {
-                    if (next_event == 0) {
-                        cv.await();
-                    } else {
-                            long now = OCClock.clockTime();
-                            long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (next_event - now);
-//                            System.out.println("Poll time to wait : " + timeToWait);
-                            cv.awaitNanos(timeToWait);
-                    }
-                } catch (InterruptedException e) {
-                    System.out.println(e);
-                } finally {
-                    lock.unlock();
-                }
-            }
         }
     };
 
@@ -114,20 +80,16 @@ public class ObtMain {
     private static void discoverUnownedDevices()
     {
         System.out.println("Discovering un-owned devices");
-        appSyncLock.lock();
         if ( 0 > OCObt.discoverUnownedDevices(unownedDeviceHandler)) {
             System.err.println("ERROR discovering un-owned Devices.");
         }
-        appSyncLock.unlock();
     }
 
     private static void discoverOwnedDevices()
     {
-        appSyncLock.lock();
         if (0 > OCObt.discoverOwnedDevices(ownedDeviceHandler)) {
             System.err.println("ERROR discovering owned Devices.");
         }
-        appSyncLock.unlock();
     }
 
     private static void takeOwnershipOfDevice() {
@@ -154,8 +116,6 @@ public class ObtMain {
             return;
         }
 
-        appSyncLock.lock();
-
         int ret = OCObt.performJustWorksOtm(uds[userInput], justWorksHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform ownership transfer");
@@ -166,7 +126,6 @@ public class ObtMain {
         /* Having issued an OTM request, remove this item from the unowned device list
          */
         unownedDevices.remove(uds[userInput]);
-        appSyncLock.unlock();
     }
 
     private static void provisionCredentials() {
@@ -199,14 +158,12 @@ public class ObtMain {
             return;
         }
 
-        appSyncLock.lock();
         int ret = OCObt.provisionPairwiseCredentials(ods[userInput1], ods[userInput2], provisionCredentialsHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision credentials");
         } else {
             System.out.println("\nERROR issuing request to provision credentials");
         }
-        appSyncLock.unlock();
     }
 
     public static void provisionAce2() {
@@ -432,10 +389,7 @@ public class ObtMain {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.NOTIFY);
         }
 
-        appSyncLock.lock();
-        int ret =
-                OCObt.provisionAce(ods[dev], ace, provisionAce2Handler);
-        appSyncLock.unlock();
+        int ret = OCObt.provisionAce(ods[dev], ace, provisionAce2Handler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision ACE");
         } else {
@@ -467,14 +421,12 @@ public class ObtMain {
             return;
         }
 
-        appSyncLock.lock();
         int ret = OCObt.deviceHardReset(ods[userInput], resetDeviceHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform hard RESET");
         } else {
             System.out.println("\nERROR issuing request to perform hard RESET");
         }
-        appSyncLock.unlock();
     }
 
     public static void main(String[] args)
@@ -497,8 +449,6 @@ public class ObtMain {
             System.exit(init_ret);
         }
 
-        ocfEventThread.start();
-
         while (!quit) {
             displayMenu();
             int userInput = 0;
@@ -514,7 +464,6 @@ public class ObtMain {
             case 1:
             {
                 discoverUnownedDevices();
-                obtHandler.signalEventLoop();
                 break;
             }
             case 2:
@@ -533,7 +482,6 @@ public class ObtMain {
                 resetDevice();
                 break;
             case 9: {
-                OCMain.mainShutdown();
                 quit = true;
                 break;
             }
@@ -541,6 +489,7 @@ public class ObtMain {
                 break;
             }
         }
+        OCMain.mainShutdown();
         System.exit(0);
     }
 
