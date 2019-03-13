@@ -13,7 +13,6 @@ public class MyInitHandler implements OCMainInitHandler {
     private static final String TAG = MyInitHandler.class.getSimpleName();
 
     private ServerActivity activity;
-    private Light light;
 
     public MyInitHandler(ServerActivity activity) {
         this.activity = activity;
@@ -38,7 +37,7 @@ public class MyInitHandler implements OCMainInitHandler {
         OCMain.resourceSetDiscoverable(resource, true);
         OCMain.resourceSetPeriodicObservable(resource, 1);
 
-        light = new Light();
+        Light light = new Light();
         light.name = "John's Light";
         light.power = 0;
         light.state = false;
@@ -52,16 +51,5 @@ public class MyInitHandler implements OCMainInitHandler {
     @Override
     public void requestEntry() {
         Log.d(TAG, "inside MyInitHandler.requestEntry()");
-    }
-
-    @Override
-    public void signalEventLoop() {
-        Log.d(TAG, "inside MyInitHandler.signalEventLoop()");
-        activity.lock.lock();
-        try {
-            activity.cv.signalAll();
-        } finally {
-            activity.lock.unlock();
-        }
     }
 }

@@ -15,24 +15,14 @@ import android.widget.RadioButton;
 import android.widget.Toast;
 
 import org.iotivity.OCAceConnectionType;
-import org.iotivity.OCClock;
 import org.iotivity.OCMain;
 import org.iotivity.OCObt;
 import org.iotivity.OCSecurityAce;
 import org.iotivity.OCUuidUtil;
 
 import java.util.ArrayList;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class OnBoardingActivity extends AppCompatActivity {
-
-    public final Lock appSyncLock = new ReentrantLock();
-    public final Lock lock = new ReentrantLock();
-    public Condition cv = lock.newCondition();
-
-    public static final long NANOS_PER_SECOND = 1000000000; // 1.e09
 
     private static final String TAG = OnBoardingActivity.class.getSimpleName();
 
@@ -51,8 +41,6 @@ public class OnBoardingActivity extends AppCompatActivity {
     private ArrayList<String> unownedDeviceList = new ArrayList<>();
 
     private final Object arrayAdapterSync = new Object();
-
-    private boolean quit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +69,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                             Log.d(TAG, "Pairing " + uuid + " and " + uuidPair);
                                             new Thread(new Runnable() {
                                                 public void run() {
-                                                    appSyncLock.lock();
                                                     if (OCObt.provisionPairwiseCredentials(OCUuidUtil.stringToUuid(uuid), OCUuidUtil.stringToUuid(uuidPair), new ProvisionCredentialsHandler(OnBoardingActivity.this)) < 0) {
                                                         final String msg = "Failed to provision credentials for " + uuid + " and " + uuidPair;
                                                         Log.d(TAG, msg);
@@ -91,7 +78,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                                             }
                                                         });
                                                     }
-                                                    appSyncLock.unlock();
                                                 }
                                             }).start();
                                         }
@@ -115,7 +101,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                         public void onClick(DialogInterface dialog, int which) {
                                             final String subject = aceSubjectList[which];
                                             Log.d(TAG, "Ace subject = " + subject);
-                                            appSyncLock.lock();
                                             final OCSecurityAce ace;
                                             if (which == 0) {
                                                 ace = OCObt.newAceForConnection(OCAceConnectionType.OC_CONN_ANON_CLEAR);
@@ -124,7 +109,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                             } else {
                                                 ace = OCObt.newAceForSubject(OCUuidUtil.stringToUuid(aceSubjectList[which]));
                                             }
-                                            appSyncLock.unlock();
 
                                             if (ace != null) {
                                                 AcePropertiesHelper acePropertiesHelper = new AcePropertiesHelper(OnBoardingActivity.this, uuid, new ProvisionAce2Handler(OnBoardingActivity.this));
@@ -155,7 +139,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                         public void onClick(DialogInterface dialog, int which) {
                                             new Thread(new Runnable() {
                                                 public void run() {
-                                                    appSyncLock.lock();
                                                     if (OCObt.deviceHardReset(OCUuidUtil.stringToUuid(uuid), new DeviceResetHandler(OnBoardingActivity.this)) < 0) {
                                                         final String msg = "Failed to perform device reset for uuid " + uuid;
                                                         Log.d(TAG, msg);
@@ -167,7 +150,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                                     } else {
                                                         removeOwnedDevice(uuid);
                                                     }
-                                                    appSyncLock.unlock();
                                                 }
                                             }).start();
                                         }
@@ -212,7 +194,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int which) {
                             new Thread(new Runnable() {
                                 public void run() {
-                                    appSyncLock.lock();
                                     if (OCObt.performJustWorksOtm(OCUuidUtil.stringToUuid(uuid), new JustWorksHandler(OnBoardingActivity.this)) < 0) {
                                         final String msg = "Failed to perform ownership transfer for uuid " + uuid;
                                         Log.d(TAG, msg);
@@ -224,7 +205,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     } else {
                                         removeUnownedDevice(uuid);
                                     }
-                                    appSyncLock.unlock();
                                 }
                             }).start();
                         }
@@ -257,7 +237,6 @@ public class OnBoardingActivity extends AppCompatActivity {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        appSyncLock.lock();
                         if (OCObt.discoverOwnedDevices(new OwnedDeviceHandler(OnBoardingActivity.this)) < 0) {
                             final String msg = "Failed to discover owned devices";
                             Log.d(TAG, msg);
@@ -267,7 +246,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                 }
                             });
                         }
-                        appSyncLock.unlock();
                     }
                 }).start();
 
@@ -287,7 +265,6 @@ public class OnBoardingActivity extends AppCompatActivity {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        appSyncLock.lock();
                         if (OCObt.discoverUnownedDevices(new UnownedDeviceHandler(OnBoardingActivity.this)) < 0) {
                             final String msg = "Failed to discover unowned devices";
                             Log.d(TAG, msg);
@@ -297,7 +274,6 @@ public class OnBoardingActivity extends AppCompatActivity {
                                 }
                             });
                         }
-                        appSyncLock.unlock();
                     }
                 }).start();
 
@@ -337,20 +313,12 @@ public class OnBoardingActivity extends AppCompatActivity {
             int initReturn = OCMain.mainInit(handler);
             if (initReturn < 0) {
                 Log.e(TAG, "Error in mainInit return code = " + initReturn);
-                return;
             }
-
-            new Thread(new Runnable() {
-                public void run() {
-                    eventLoop();
-                }
-            }).start();
         }
     }
 
     @Override
     protected void onDestroy() {
-        quit = true;
         Log.d(TAG, "Calling main_shutdown.");
         OCMain.mainShutdown();
         super.onDestroy();
@@ -410,28 +378,5 @@ public class OnBoardingActivity extends AppCompatActivity {
                 unownedArrayAdapter.notifyDataSetChanged();
             }
         });
-    }
-
-    private void eventLoop() {
-        while (!quit) {
-            appSyncLock.lock();
-            long nextEvent = OCMain.mainPoll();
-            appSyncLock.unlock();
-
-            lock.lock();
-            try {
-                if (nextEvent == 0) {
-                    cv.await();
-                } else {
-                    long now = OCClock.clockTime();
-                    long timeToWait = (NANOS_PER_SECOND / OCClock.OC_CLOCK_SECOND) * (nextEvent - now);
-                    cv.awaitNanos(timeToWait);
-                }
-            } catch (InterruptedException e) {
-                Log.d(TAG, e.getMessage());
-            } finally {
-                lock.unlock();
-            }
-        }
     }
 }

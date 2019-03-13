@@ -34,15 +34,4 @@ public class ObtInitHandler implements OCMainInitHandler {
         Log.d(TAG, "inside ObtInitHandler.requestEntry()");
         OCObt.init();
     }
-
-    @Override
-    public void signalEventLoop() {
-        Log.d(TAG, "inside ObtInitHandler.signalEventLoop()");
-        activity.lock.lock();
-        try {
-            activity.cv.signalAll();
-        } finally {
-            activity.lock.unlock();
-        }
-    }
 }
