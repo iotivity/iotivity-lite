@@ -40,6 +40,12 @@ void jni_obt_init(void* dummy) {
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
 %{
+extern jclass cls_OCObtDiscoveryHandler;
+extern jclass cls_OCObtDeviceStatusHandler;
+extern jclass cls_OCObtStatusHandler;
+extern jclass cls_OCEndpoint;
+extern jclass cls_OCUuid;
+
 static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -49,22 +55,18 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
-  const jclass callbackInterfaceClass = JCALL1(FindClass,
-        (data->jenv),
-        "org/iotivity/OCObtDiscoveryHandler");
-  assert(callbackInterfaceClass);
+  assert(cls_OCObtDiscoveryHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
         (data->jenv),
-        callbackInterfaceClass,
+        cls_OCObtDiscoveryHandler,
         "handler",
         "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;)V");
   assert(mid_handler);
 
-  const jclass cls_OCUuid = JCALL1(FindClass, (data->jenv), "org/iotivity/OCUuid");
   assert(cls_OCUuid);
   const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
   assert(mid_OCUuid_init);
-  const jclass cls_OCEndpoint = JCALL1(FindClass, (data->jenv), "org/iotivity/OCEndpoint");
+
   assert(cls_OCEndpoint);
   const jmethodID mid_OCEndpoint_init = JCALL3(GetMethodID,
         (data->jenv),
@@ -98,7 +100,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  oc_list_add(jni_callbacks, user_data);
+  jni_list_add(jni_callbacks, user_data);
   $1 = jni_obt_discovery_cb;
   $2 = user_data;
 }
@@ -109,7 +111,12 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
 int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_discover_unowned_devices(callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_unowned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 
@@ -119,7 +126,12 @@ int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_call
 int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_discover_owned_devices(callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 
@@ -133,18 +145,14 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
-  const jclass callbackInterfaceClass = JCALL1(FindClass,
-        (data->jenv),
-        "org/iotivity/OCObtDeviceStatusHandler");
-  assert(callbackInterfaceClass);
+  assert(cls_OCObtDeviceStatusHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
         (data->jenv),
-        callbackInterfaceClass,
+        cls_OCObtDeviceStatusHandler,
         "handler",
         "(Lorg/iotivity/OCUuid;I)V");
   assert(mid_handler);
 
-  const jclass cls_OCUuid = JCALL1(FindClass, (data->jenv), "org/iotivity/OCUuid");
   assert(cls_OCUuid);
   const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
   assert(mid_OCUuid_init);
@@ -174,7 +182,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  oc_list_add(jni_callbacks, user_data);
+  jni_list_add(jni_callbacks, user_data);
   $1 = jni_obt_device_status_cb;
   $2 = user_data;
 }
@@ -185,7 +193,12 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
 int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 
@@ -195,7 +208,12 @@ int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t ca
 int jni_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_device_hard_reset(uuid, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_device_hard_reset(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 
@@ -209,13 +227,10 @@ static void jni_obt_status_cb(int status, void *user_data)
   data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
-  const jclass callbackInterfaceClass = JCALL1(FindClass,
-        (data->jenv),
-        "org/iotivity/OCObtStatusHandler");
-  assert(callbackInterfaceClass);
+  assert(cls_OCObtStatusHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
         (data->jenv),
-        callbackInterfaceClass,
+        cls_OCObtStatusHandler,
         "handler",
         "(I)V");
   assert(mid_handler);
@@ -240,7 +255,7 @@ static void jni_obt_status_cb(int status, void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  oc_list_add(jni_callbacks, user_data);
+  jni_list_add(jni_callbacks, user_data);
   $1 = jni_obt_status_cb;
   $2 = user_data;
 }
@@ -251,7 +266,12 @@ static void jni_obt_status_cb(int status, void *user_data)
 int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 
@@ -270,7 +290,12 @@ int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, o
 int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
-  return oc_obt_provision_ace(subject, ace, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_ace(subject, ace, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 }
 %}
 %rename(freeAce) oc_obt_free_ace;

@@ -1,7 +1,6 @@
 package java_lite_simple_client;
 
 import org.iotivity.*;
-import org.iotivity.OCMainInitHandler;
 
 public class MyInitHandler implements OCMainInitHandler {
     @Override
@@ -22,16 +21,5 @@ public class MyInitHandler implements OCMainInitHandler {
         System.out.println("inside MyInitHandler.requestEntry()");
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler();
         OCMain.doIPDiscovery("core.light", discoveryHandler);
-    }
-
-    @Override
-    public void signalEventLoop() {
-        System.out.println("inside MyInitHandler.signalEventLoop()");
-        Client.lock.lock();
-        try {
-            Client.cv.signalAll();
-        } finally {
-            Client.lock.unlock();
-        }
     }
 }

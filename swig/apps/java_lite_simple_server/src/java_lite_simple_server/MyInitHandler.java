@@ -1,7 +1,6 @@
 package java_lite_simple_server;
 
 import org.iotivity.*;
-import org.iotivity.OCMainInitHandler;
 
 public class MyInitHandler implements OCMainInitHandler {
     @Override
@@ -34,16 +33,5 @@ public class MyInitHandler implements OCMainInitHandler {
     @Override
     public void requestEntry() {
         System.out.println("inside MyInitHandler.requestEntry()");
-    }
-
-    @Override
-    public void signalEventLoop() {
-        System.out.println("inside MyInitHandler.signalEventLoop()");
-        Server.lock.lock();
-        try {
-            Server.cv.signalAll();
-        } finally {
-            Server.lock.unlock();
-        }
     }
 }
