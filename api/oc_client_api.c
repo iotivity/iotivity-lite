@@ -75,9 +75,12 @@ dispatch_coap_request(void)
   }
 
   if (payload_size > 0) {
+#ifdef OC_SPEC_VER_OIC
     if (client_cb->endpoint->version == OIC_VER_1_1_0) {
       coap_set_header_content_format(request, APPLICATION_CBOR);
-    } else {
+    } else
+#endif /* OC_SPEC_VER_OIC */
+    {
       coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
     }
   }
@@ -158,9 +161,12 @@ prepare_coap_request(oc_client_cb_t *cb)
     coap_udp_init_message(request, type, cb->method, cb->mid);
   }
 
+#ifdef OC_SPEC_VER_OIC
   if (cb->endpoint->version == OIC_VER_1_1_0) {
     coap_set_header_accept(request, APPLICATION_CBOR);
-  } else {
+  } else
+#endif /* OC_SPEC_VER_OIC */
+  {
     coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
   }
 
