@@ -195,6 +195,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   return matches;
 }
 
+#ifdef OC_SPEC_VER_OIC
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
                         CborEncoder *links)
@@ -436,6 +437,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     request->response->response_buffer->code = OC_IGNORE;
   }
 }
+#endif /* OC_SPEC_VER_OIC */
 
 static void
 oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -443,10 +445,12 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)data;
 
+#ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     oc_core_1_1_discovery_handler(request, iface_mask, data);
     return;
   }
+#endif /* OC_SPEC_VER_OIC */
 
   int matches = 0;
   size_t device = request->resource->device;

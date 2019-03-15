@@ -587,9 +587,12 @@ coap_notify_observers(oc_resource_t *resource,
           } else {
             coap_set_header_observe(notification, 1);
           }
+#ifdef OC_SPEC_VER_OIC
           if (obs->endpoint.version == OIC_VER_1_1_0) {
             coap_set_header_content_format(notification, APPLICATION_CBOR);
-          } else {
+          } else
+#endif /* OC_SPEC_VER_OIC */
+          {
             coap_set_header_content_format(notification,
                                            APPLICATION_VND_OCF_CBOR);
           }
