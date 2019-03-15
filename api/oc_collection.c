@@ -17,6 +17,7 @@
 #include "oc_collection.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "messaging/coap/observe.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "util/oc_memb.h"
@@ -239,6 +240,13 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
   }
 
   return collection;
+}
+
+static oc_event_callback_retval_t
+notify_collection_for_link(void *data)
+{
+  coap_notify_observers(data, NULL, NULL);
+  return OC_EVENT_DONE;
 }
 
 bool
@@ -501,6 +509,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 memcpy(&links_array, &prev_link, sizeof(CborEncoder));
                 goto next;
               } else {
+                if ((method == OC_PUT || method == OC_POST) &&
+                    response_buffer.code <
+                      oc_status_code(OC_STATUS_BAD_REQUEST)) {
+                  oc_set_delayed_callback(link->resource,
+                                          notify_collection_for_link, 0);
+                }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
                   pcode = response_buffer.code;
