@@ -50,7 +50,7 @@
 #endif /* ...POOL_SIZE */
 
 static double doubles[OC_DOUBLES_POOL_SIZE];
-static int ints[OC_INTS_POOL_SIZE];
+static int64_t ints[OC_INTS_POOL_SIZE];
 static unsigned char bytes[OC_BYTES_POOL_SIZE];
 static unsigned int avail_bytes, avail_ints, avail_doubles;
 
@@ -94,9 +94,9 @@ _oc_mmem_alloc(
 #endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
-    bytes_allocated += size * sizeof(int);
+    bytes_allocated += size * sizeof(int64_t);
 #ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(int));
+    m->ptr = malloc(size * sizeof(int64_t));
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
     if (avail_ints < size) {
@@ -152,7 +152,7 @@ _oc_mmem_free(
   unsigned int bytes_freed = m->size;
   switch (pool_type) {
   case INT_POOL:
-    bytes_freed *= sizeof(int);
+    bytes_freed *= sizeof(int64_t);
     break;
   case DOUBLE_POOL:
     bytes_freed *= sizeof(double);

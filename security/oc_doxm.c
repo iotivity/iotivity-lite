@@ -236,10 +236,10 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     /* oxmsel and sct */
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
-        doxm[device].oxmsel = rep->value.integer;
+        doxm[device].oxmsel = (int)rep->value.integer;
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(rep->name), "sct", 3) == 0) {
-        doxm[device].sct = rep->value.integer;
+        doxm[device].sct = (int)rep->value.integer;
       }
       break;
     /* deviceuuid, devowneruuid and rowneruuid */
