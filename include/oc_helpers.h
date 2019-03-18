@@ -105,7 +105,7 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #define oc_int_array_size(ocintarray) ((ocintarray).size)
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size)
 #define oc_double_array_size(ocdoublearray) ((ocdoublearray).size)
-#define oc_int_array(ocintarray) (oc_cast(ocintarray, int))
+#define oc_int_array(ocintarray) (oc_cast(ocintarray, int64_t))
 #define oc_bool_array(ocboolarray) (oc_cast(ocboolarray, bool))
 #define oc_double_array(ocdoublearray) (oc_cast(ocdoublearray, double))
 

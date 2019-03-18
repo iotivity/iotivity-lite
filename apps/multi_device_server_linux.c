@@ -83,7 +83,7 @@ post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     case OC_REP_INT:
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "filter", 6) == 0) {
-        fridge_state.filter = rep->value.integer;
+        fridge_state.filter = (int)rep->value.integer;
         PRINT("value: %d\n", fridge_state.filter);
       } else {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);

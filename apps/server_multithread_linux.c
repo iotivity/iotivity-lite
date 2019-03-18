@@ -136,7 +136,7 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
       printf("%d\n", state);
       break;
     case OC_REP_INT:
-      power = rep->value.integer;
+      power = (int)rep->value.integer;
       printf("%d\n", power);
       break;
     case OC_REP_STRING:

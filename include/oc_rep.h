@@ -268,12 +268,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * ~~~{.c}
  *     int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
  *     oc_rep_start_root_object();
- *     oc_rep_set_key(*oc_rep_object(root), "fibonacci");
- *     oc_rep_begin_array(*oc_rep_object(root), fibonacci);
+ *     oc_rep_set_key(oc_rep_object(root), "fibonacci");
+ *     oc_rep_begin_array(oc_rep_object(root), fibonacci);
  *     for(size_t i = 0; i < (sizeof(fib)/ sizeof(fib[0])); i++) {
  *         oc_rep_add_int(fibonacci, fib[i]);
  *     }
- *     oc_rep_end_array(*oc_rep_object(root), fibonacci);
+ *     oc_rep_end_array(oc_rep_object(root), fibonacci);
  *     oc_rep_end_root_object();
  * ~~~
  *
@@ -294,7 +294,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   do {                                                                         \
     CborEncoder name##_array;                                                  \
   g_err |=                                                                     \
-    cbor_encoder_create_array(&parent, &name##_array, CborIndefiniteLength)
+    cbor_encoder_create_array(parent, &name##_array, CborIndefiniteLength)
 
 /**
  * End the array object.  No additional items can be added to the array after
@@ -305,7 +305,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * @see oc_rep_close_array
  */
 #define oc_rep_end_array(parent, name)                                         \
-  g_err |= cbor_encoder_close_container(&parent, &name##_array);               \
+  g_err |= cbor_encoder_close_container(parent, &name##_array);                \
   }                                                                            \
   while (0)
 
@@ -380,6 +380,10 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_byte_string(&parent##_array, value, value_len)
 
+#define oc_rep_set_value_byte_string(parent, value, value_len)                 \
+  if ((const char *)value != NULL)                                             \
+  g_err |= cbor_encode_byte_string(&parent##_map, value, value_len)
+
 /**
  * Add a text string `value` to a `parent` array. Currently the only way to make
  * an array of text strings is using this macro
@@ -400,10 +404,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
+ *     const char* str0 = "Do not take life too seriously. You will never get
+ * out of it alive.";
  *     const char* str1 = "All generalizations are false, including this one.";
  *     const char* str2 = "Those who believe in telekinetics, raise my hand.";
- *     const char* str3 = "I refuse to join any club that would have me as a member.";
+ *     const char* str3 = "I refuse to join any club that would have me as a
+ * member.";
  *
  *     // add values to root object
  *     oc_rep_start_root_object();
@@ -422,6 +428,10 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_add_text_string(parent, value)                                  \
   if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
+
+#define oc_rep_set_value_text_string(parent, value)                            \
+  if ((const char *)value != NULL)                                             \
+  g_err |= cbor_encode_text_string(&parent##_map, value, strlen(value))
 
 /**
  * Add an `double` `value` to a `parent` array. Using oc_rep_add_double can be
@@ -445,7 +455,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
  *     oc_rep_start_root_object();
  *     oc_rep_open_array(root, math_constants);
- *     for(size_t i = 0; i < (sizeof(math_constants)/ sizeof(math_constants[0])); i++) {
+ *     for(size_t i = 0; i < (sizeof(math_constants)/
+ * sizeof(math_constants[0])); i++) {
  *         oc_rep_add_double(math_constants, math_constants[i]);
  *     }
  *     oc_rep_close_array(root, math_constants);
@@ -458,6 +469,10 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_add_double(parent, value)                                       \
   g_err |= cbor_encode_double(&parent##_array, value)
+
+#define oc_rep_set_value_double(parent, value)                                 \
+  g_err |= cbor_encode_double(&parent##_map, value)
+
 /**
  * Add an `int` `value` to a `parent` array. Using oc_rep_add_int can be useful
  * when the number of items is calculated at run time or for some reason it not
@@ -492,13 +507,16 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_add_int(parent, value)                                          \
   g_err |= cbor_encode_int(&parent##_array, value)
+#define oc_rep_set_value_int(parent, value)                                    \
+  g_err |= cbor_encode_int(&parent##_map, value)
 
 /**
  * Add an `bool` `value` to a `parent` array. Using oc_rep_add_boolean can be
  * used when the number of items is calculated at run time or for some reason it
  * is not know till after calling oc_rep_open_array.
  *
- * If the size of the `bool` array is already known `oc_rep_set_bool_array` should
+ * If the size of the `bool` array is already known `oc_rep_set_bool_array`
+ * should
  * be used.
  *
  * Example:
@@ -526,6 +544,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_add_boolean(parent, value)                                      \
   g_err |= cbor_encode_boolean(&parent##_array, value)
+#define oc_rep_set_value_boolean(parent, value)                                \
+  g_err |= cbor_encode_boolean(&parent##_map, value)
 
 /**
  * End users are very unlikely to use this macro.
@@ -542,14 +562,14 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_set_key(parent, key)                                            \
   if ((const char *)key != NULL)                                               \
-  g_err |= cbor_encode_text_string(&parent, key, strlen(key))
+  g_err |= cbor_encode_text_string(parent, key, strlen(key))
 
- /**
- * This macro has been replaced with oc_rep_open_array
- *
- * @see oc_rep_open_array
- * @see oc_rep_close_array
- */
+/**
+* This macro has been replaced with oc_rep_open_array
+*
+* @see oc_rep_open_array
+* @see oc_rep_close_array
+*/
 #define oc_rep_set_array(object, key) oc_rep_open_array(object, key)
 
 /**
@@ -567,15 +587,15 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_open_array(parent, key)                                         \
   g_err |= cbor_encode_text_string(&parent##_map, #key, strlen(#key));         \
-  oc_rep_begin_array(parent##_map, key)
+  oc_rep_begin_array(&parent##_map, key)
 
- /**
- * Close the array object.  No additional items can be added to the array after
- * this is called.
- *
- * @see oc_rep_open_array
- */
-#define oc_rep_close_array(parent, key) oc_rep_end_array(parent##_map, key)
+/**
+* Close the array object.  No additional items can be added to the array after
+* this is called.
+*
+* @see oc_rep_open_array
+*/
+#define oc_rep_close_array(parent, key) oc_rep_end_array(&parent##_map, key)
 
 /**
 * This macro has been replaced with oc_rep_begin_object
@@ -588,19 +608,19 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_begin_object(parent, key)                                       \
   do {                                                                         \
     CborEncoder key##_map;                                                     \
-  g_err |= cbor_encoder_create_map(&parent, &key##_map, CborIndefiniteLength)
+  g_err |= cbor_encoder_create_map(parent, &key##_map, CborIndefiniteLength)
 
 #define oc_rep_end_object(parent, key)                                         \
-  g_err |= cbor_encoder_close_container(&parent, &key##_map);                  \
+  g_err |= cbor_encoder_close_container(parent, &key##_map);                   \
   }                                                                            \
   while (0)
 
- /**
- * This macro has been replaced with oc_rep_object_array_begin_item
- *
- * @see oc_rep_object_array_begin_item
- * @see oc_rep_object_array_end_item
- */
+/**
+* This macro has been replaced with oc_rep_object_array_begin_item
+*
+* @see oc_rep_object_array_begin_item
+* @see oc_rep_object_array_end_item
+*/
 #define oc_rep_object_array_start_item(key) oc_rep_object_array_begin_item(key)
 
 /**
@@ -646,12 +666,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * @see oc_rep_object_array_end_item
  */
 #define oc_rep_object_array_begin_item(key)                                    \
-  oc_rep_begin_object(key##_array, key)
+  oc_rep_begin_object(&key##_array, key)
 
 /**
  * End the cbor object for the `key` array of cbor objects.
  */
-#define oc_rep_object_array_end_item(key) oc_rep_end_object(key##_array, key)
+#define oc_rep_object_array_end_item(key) oc_rep_end_object(&key##_array, key)
 
 /**
 * This macro has been replaced with oc_rep_open_object
@@ -692,7 +712,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_open_object(parent, key)                                        \
   g_err |= cbor_encode_text_string(&parent##_map, #key, strlen(#key));         \
-  oc_rep_begin_object(parent##_map, key)
+  oc_rep_begin_object(&parent##_map, key)
 
 /**
 * Close the object. No additional items can be added to the object after
@@ -700,7 +720,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 *
 * @see oc_rep_open_object
 */
-#define oc_rep_close_object(parent, key) oc_rep_end_object(parent##_map, key)
+#define oc_rep_close_object(parent, key) oc_rep_end_object(&parent##_map, key)
 
 /**
  * Add an integer array with `values` of `length` to the cbor `object` under the
@@ -913,7 +933,7 @@ typedef struct oc_rep_s
   oc_string_t name;
   union oc_rep_value
   {
-    int integer;
+    int64_t integer;
     bool boolean;
     double double_p;
     oc_string_t string;
@@ -936,7 +956,8 @@ void oc_free_rep(oc_rep_t *rep);
  * Example:
  * ~~~{.c}
  *         int ultimate_answer_out = 0;
- *         if( true == oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out)) {
+ *         if( true == oc_rep_get_int(rep, "ultimate_answer",
+ * &ultimate_answer_out)) {
  *             printf("The ultimate answer is : %d\n", ultimate_answer_out);
  *         }
  * ~~~
@@ -949,7 +970,7 @@ void oc_free_rep(oc_rep_t *rep);
  *
  * @see oc_rep_set_int
  */
-bool oc_rep_get_int(oc_rep_t *rep, const char *key, int *value);
+bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value);
 
 /**
  * Read a boolean value from an `oc_rep_t`
@@ -958,7 +979,8 @@ bool oc_rep_get_int(oc_rep_t *rep, const char *key, int *value);
  * ~~~{.c}
  *     bool door_open_flag = false;
  *     if( true == oc_rep_get_bool(rep, "door_open", &door_open_flag)) {
- *         printf("The door is open : %s\n", (door_open_flag) ? "true" : "false");
+ *         printf("The door is open : %s\n", (door_open_flag) ? "true" :
+ * "false");
  *     }
  * ~~~
  *
@@ -1060,7 +1082,8 @@ bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *siz
  *
  * @see oc_rep_set_int_array
  */
-bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, size_t *size);
+bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
+                          size_t *size);
 
 /**
  * Read an boolean array value from an `oc_rep_t`

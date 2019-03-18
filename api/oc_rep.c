@@ -166,7 +166,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
   /* value */
   switch (value->type) {
   case CborIntegerType:
-    *err |= cbor_value_get_int(value, &cur->value.integer);
+    *err |= cbor_value_get_int64(value, &cur->value.integer);
     cur->type = OC_REP_INT;
     break;
   case CborBooleanType:
@@ -235,7 +235,8 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
           return;
         }
 
-        *err |= cbor_value_get_int(&array, oc_int_array(cur->value.array) + k);
+        *err |=
+          cbor_value_get_int64(&array, oc_int_array(cur->value.array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
@@ -417,7 +418,7 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
       OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
       case OC_REP_INT:
-        **(int **)value = rep_value->value.integer;
+        **(int64_t **)value = rep_value->value.integer;
         break;
       case OC_REP_BOOL:
         **(bool **)value = rep_value->value.boolean;
@@ -466,7 +467,7 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
 }
 
 bool
-oc_rep_get_int(oc_rep_t *rep, const char *key, int *value)
+oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value)
 {
   if (!value) {
     OC_ERR("Error of input parameters");
@@ -516,7 +517,8 @@ oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
 }
 
 bool
-oc_rep_get_int_array(oc_rep_t *rep, const char *key, int **value, size_t *size)
+oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
+                     size_t *size)
 {
   if (!size) {
     OC_ERR("Error of input parameters");
