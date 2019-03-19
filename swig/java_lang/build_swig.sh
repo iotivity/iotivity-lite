@@ -32,3 +32,4 @@ swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/sr
 #swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../security/ ../swig_interfaces/oc_acl.i
 
 cp ../oc_java/*.java ../iotivity-lite-java/src/org/iotivity/
+cp ../oc_java/oc/*.java ../iotivity-lite-java/src/org/iotivity/
