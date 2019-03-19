@@ -1,2 +1,3 @@
 /bin/
 /src/org/iotivity/*.java
+/src/org/iotivity/oc/*.java
