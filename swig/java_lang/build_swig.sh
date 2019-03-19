@@ -3,6 +3,7 @@
 rm *.c
 #rm *.cxx
 rm ../iotivity-lite-java/src/org/iotivity/*.java
+rm ../iotivity-lite-java/src/org/iotivity/oc/*.java
 
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_obt.i
 
@@ -32,3 +33,5 @@ swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/sr
 #swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../security/ ../swig_interfaces/oc_acl.i
 
 cp ../oc_java/*.java ../iotivity-lite-java/src/org/iotivity/
+mkdir -p ../iotivity-lite-java/src/org/iotivity/oc/
+cp ../oc_java/oc/*.java ../iotivity-lite-java/src/org/iotivity/oc/
