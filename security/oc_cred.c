@@ -173,6 +173,42 @@ oc_sec_find_cred(oc_uuid_t *subjectuuid, size_t device)
   return NULL;
 }
 
+#ifdef OC_MFG
+int
+oc_sec_find_max_credid(int device)
+{
+  int credid = -1;
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
+  credid = cred->credid;
+  while (cred != NULL) {
+    if (credid < cred->credid) {
+      credid = cred->credid;
+    }
+    cred = cred->next;
+  }
+  return credid;
+}
+
+oc_sec_cred_t *
+oc_sec_new_cred(oc_uuid_t *subjectuuid, int device)
+{
+  oc_sec_cred_t *cred = NULL;
+  cred = oc_sec_find_cred(subjectuuid, device);
+  if (cred != NULL) {
+    OC_WRN("cred with given uuid already exists");
+    return NULL;
+  }
+  cred = oc_memb_alloc(&creds);
+  if (cred == NULL) {
+    OC_WRN("insufficient memory to add new credential");
+    return NULL;
+  }
+  memcpy(cred->subjectuuid.id, subjectuuid->id, 16);
+  oc_list_add(devices[device].creds, cred);
+  return cred;
+}
+#endif /* OC_MFG */
+
 oc_sec_cred_t *
 oc_sec_get_cred(oc_uuid_t *subjectuuid, size_t device)
 {
@@ -213,14 +249,45 @@ oc_sec_encode_cred(bool persist, size_t device)
       }
       oc_rep_close_object(creds, roleid);
     }
-    oc_rep_set_object(creds, privatedata);
+#ifdef OC_MFG
     if (persist) {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 16);
-    } else {
-      oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+      for (int i = 0; i < cr->ownchainlen; i++) {
+        oc_rep_set_object(creds, publicdata);
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+        oc_rep_set_byte_string(publicdata, data, cr->mfgowncert[i], cr->mfgowncertlen[i]);
+        oc_rep_close_object(creds, publicdata);
+        oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgcert");
+      }
+      if (cr->mfgkeylen != 0 && cr->mfgkey != NULL) {
+        oc_rep_set_object(creds, privatedata);
+        oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+        oc_rep_set_byte_string(privatedata, data, cr->mfgkey, cr->mfgkeylen);
+        oc_rep_close_object(creds, privatedata);
+      }
+      if (cr->mfgtrustcalen > 0) {
+        oc_rep_set_object(creds, publicdata);
+        oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.der");
+        oc_rep_set_byte_string(publicdata, data, cr->mfgtrustca, cr->mfgtrustcalen);
+        oc_rep_close_object(creds, publicdata);
+        oc_rep_set_text_string(creds, credusage, "oic.sec.cred.mfgtrustca");
+      }
     }
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-    oc_rep_close_object(creds, privatedata);
+#endif /* OC_MFG */
+    uint8_t t = 0, i = 0;
+    for (i = 0; i < 16; i++) {
+      t += cr->key[i];
+    }
+    if (t) {
+      oc_rep_set_object(creds, privatedata);
+      if (persist) {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 16);
+      } else {
+        oc_rep_set_byte_string(privatedata, data, cr->key, 0);
+      }
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_close_object(creds, privatedata);
+    }
+
     oc_rep_object_array_end_item(creds);
     cr = cr->next;
   }
@@ -336,7 +403,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       goto next_item;
                     if (size != 24) {
                       OC_ERR("oc_cred: Invalid key(24)");
-                      goto error_exit;
+                      return false;
                     }
                     got_key = true;
                     memcpy(key, p, size);
@@ -350,20 +417,16 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   if (mfgcert_flag) {
 #ifdef OC_DYNAMIC_ALLOCATION
                     mfgkey = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
-                    if (mfgkey == NULL) {
-                      OC_ERR("memory alloc");
-                      goto error_exit;
-                    }
-                    memcpy(mfgkey, p, size);
-                    mfgkeylen = size;
-                    mfgkey_flag = true;
 #else
                     oc_abort("alloc failed");
 #endif
+                    memcpy(mfgkey, p, size);
+                    mfgkeylen = size;
+                    mfgkey_flag = true;
                   } else {
                     if (size != 16) {
                       OC_ERR("oc_cred: Invalid key(16)");
-                      goto error_exit;
+                      return false;
                     }
                     memcpy(key, p, 16);
                     got_key = true;
@@ -394,23 +457,18 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                        memcmp(oc_string(cred->name), "publicdata", 10) == 0) {
               while (data != NULL) {
                 len = oc_string_len(data->name);
-                if ((len == 4) &&
-                    memcmp(oc_string(data->name), "data", 4) == 0) {
-#ifdef OC_DYNAMIC_ALLOCATION
+                if ((len == 4 ) && memcmp(oc_string(data->name), "data", 4) == 0) {
                   uint8_t *p = oc_cast(data->value.string, uint8_t);
                   int size = oc_string_len(data->value.string);
                   if (size == 0)
                     goto next_item;
+#ifdef OC_DYNAMIC_ALLOCATION
                   cert = (uint8_t *)oc_mem_malloc(size * sizeof(uint8_t));
-                  if (cert == NULL) {
-                    OC_ERR("memory alloc");
-                    goto error_exit;
-                  }
-                  memcpy(cert, p, size);
-                  certlen = size;
 #else
                   oc_abort("alloc failed");
 #endif
+                  memcpy(cert, p, size);
+                  certlen = size;
                 }
                 data = data->next;
               }
@@ -424,8 +482,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
         if (non_empty) {
           oc_uuid_t subject;
           if (!subjectuuid) {
-            OC_ERR("invalid subject uuid");
-            goto error_exit;
+            return false;
           }
           oc_str_to_uuid(oc_string(*subjectuuid), &subject);
           if (!unique_credid(credid, device)) {
@@ -436,8 +493,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           }
           oc_sec_cred_t *credobj = oc_sec_get_cred(&subject, device);
           if (!credobj) {
-            OC_ERR("get cred");
-            goto error_exit;
+            return false;
           }
           credobj->credid = credid;
           credobj->credtype = credtype;
@@ -469,8 +525,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             credobj->mfgowncertlen = (int *)oc_mem_realloc(
               credobj->mfgowncertlen, sizeof(int) * (credobj->ownchainlen + 1));
             if (credobj->mfgowncertlen == NULL) {
-              OC_ERR("memory alloc");
-              goto error_exit;
+              return false;
             }
 #else
             oc_abort("alloc failed");
@@ -486,20 +541,12 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             credobj->mfgtrustca = cert;
             credobj->mfgtrustcalen = certlen;
           }
+          if (mfgkey_flag) {
+            credobj->mfgkey = mfgkey;
+            credobj->mfgkeylen = mfgkeylen;
+          }
         }
         creds_array = creds_array->next;
-        continue;
-      error_exit:
-#ifdef OC_DYNAMIC_ALLOCATION
-        if (cert) {
-          oc_mem_free(cert);
-        }
-        if (mfgkey) {
-          oc_mem_free(mfgkey);
-        }
-#endif
-        OC_ERR("%s", __func__);
-        return false;
       }
     } break;
     default:

@@ -147,6 +147,10 @@ SAMPLES = server simpleserver \
 
 ifneq ($(CODE_SIZE_OPT),1)
 SAMPLES += server_block_linux client simpleclient temp_sensor cloud_linux client_collections_linux client_block_linux multi_device_client smart_lock client_multithread_linux server_multithread_linux
+ifeq ($(MFG),1)
+CFLAGS += -DOC_MFG
+SAMPLES += mfg_server
+endif
 endif
 
 ifeq ($(EASYSETUP),1)
@@ -528,9 +532,16 @@ simpleclient: libiotivity-constrained-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+mfg_server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/rpk_server.c
+	@mkdir -p $@_creds
+	@cp ../../apps/mfgserver_pstat $@_creds/pstat_0
+	@cp ../../apps/mfgserver_cred $@_creds/cred_0
+	@cp ../../apps/mfgserver_acl $@_creds/acl_0
+	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_MFG ${CFLAGS}  ${LIBS}
+
 rpk_server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/rpk_server.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_RPK ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/rpk_server.c libiotivity-constrained-server.a -DOC_SERVER -DOC_RPK ${CFLAGS} -UOC_MFG ${LIBS}
 
 client_collections_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_collections_linux.c
 	@mkdir -p $@_creds
