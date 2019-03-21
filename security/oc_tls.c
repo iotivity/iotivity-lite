@@ -760,23 +760,44 @@ oc_sec_load_mfg_certs(int device)
 #ifdef OC_DYNAMIC_ALLOCATION
   int i = 0, j = 0, ret = 0;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
+    mbedtls_x509_crt *cacert =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    if (!cacert) {
+      OC_ERR( " failed\n  !  oc_mem_malloc failed to allocate cacert\n\n");
+      goto tls_certs_load_err;
+    }
+    mbedtls_x509_crt *owncert =
+      (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
+    if (!owncert) {
+      OC_ERR( " failed\n  !  oc_mem_malloc failed to allocate owncert\n\n");
+      oc_mem_free(cacert);
+      goto tls_certs_load_err;
+    }
+    mbedtls_pk_context *pkey =
+      (mbedtls_pk_context *)oc_mem_malloc(sizeof(mbedtls_pk_context));
+    if (!pkey) {
+      OC_ERR( " failed\n  !  oc_mem_malloc failed to allocate pkey\n\n");
+      oc_mem_free(cacert);
+      oc_mem_free(owncert);
+      goto tls_certs_load_err;
+    }
+    mbedtls_x509_crt_init(cacert);
+    mbedtls_x509_crt_init(owncert);
+    mbedtls_pk_init(pkey);
     oc_sec_creds_t *creds = oc_sec_get_creds(device);
     oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
     while (c != NULL) {
       if (c->mfgtrustcalen != 0) {
-        mbedtls_x509_crt *cacert =
-          (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
-        if (!cacert) {
-          goto tls_certs_load_err;
-        }
-        mbedtls_x509_crt_init(cacert);
-        ret = mbedtls_x509_crt_parse(
-          cacert, (const unsigned char *)c->mfgtrustca, c->mfgtrustcalen);
-        if (ret < 0) {
-          OC_ERR(
-            " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n",
-            -ret);
-          oc_mem_free(cacert);
+        ret = mbedtls_x509_crt_parse( cacert, (const unsigned char *) c->mfgtrustca,
+                                                                      c->mfgtrustcalen );
+        if( ret < 0 ) {
+          OC_ERR( " failed\n  !  mbedtls_x509_crt_parse caCert returned -0x%x\n\n", -ret );
+          mbedtls_x509_crt_free(cacert);
+          mbedtls_x509_crt_free(owncert);
+          mbedtls_pk_free(pkey);
+          cacert = NULL;
+          owncert = NULL;
+          pkey = NULL;
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgtrustca loaded ");
@@ -789,70 +810,75 @@ oc_sec_load_mfg_certs(int device)
         mbedtls_ssl_conf_ca_chain(&client_conf[0], cacert, NULL);
 #endif /* OC_CLIENT */
       }
-      c = c->next;
-    }
-    mbedtls_pk_context *pkey = NULL;
-    c = (oc_sec_cred_t *)oc_list_head(creds->creds);
-    while (c != NULL) {
       if (c->mfgkeylen != 0) {
-         pkey = (mbedtls_pk_context *)oc_mem_malloc(sizeof(mbedtls_pk_context));
-        if (!pkey) {
-          goto tls_certs_load_err;
-        }
-        mbedtls_pk_init(pkey);
-        ret = mbedtls_pk_parse_key(pkey, (const unsigned char *)c->mfgkey,
-                                   c->mfgkeylen, NULL, 0);
-        if (ret < 0) {
-          OC_ERR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret);
-          oc_mem_free(pkey);
+        ret =  mbedtls_pk_parse_key(pkey, (const unsigned char *) c->mfgkey,
+                                                                  c->mfgkeylen, NULL, 0 );
+        if( ret < 0 ) {
+          OC_ERR( " failed\n  !  mbedtls_pk_parse_key returned -0x%x\n\n", -ret );
+          mbedtls_x509_crt_free(cacert);
+          mbedtls_x509_crt_free(owncert);
+          mbedtls_pk_free(pkey);
+          cacert = NULL;
+          owncert = NULL;
+          pkey = NULL;
           goto tls_certs_load_err;
         } else {
           OC_DBG("oc_tls: mfgkey loaded ");
         }
-        break;
       }
-      c = c->next;
-    }
-    c = (oc_sec_cred_t *)oc_list_head(creds->creds);
-    if (c == NULL && pkey) {
-      oc_mem_free(pkey);
-    }
-    while (c != NULL) {
       for (j = 0; j < c->ownchainlen; j++) {
         if (c->mfgowncertlen != 0) {
-          mbedtls_x509_crt *owncert =
-            (mbedtls_x509_crt *)oc_mem_malloc(sizeof(mbedtls_x509_crt));
-          if (!owncert) {
-            goto tls_certs_load_err;
-          }
-          mbedtls_x509_crt_init(owncert);
-          ret = mbedtls_x509_crt_parse(owncert,
-                                       (const unsigned char *)c->mfgowncert[j],
-                                       c->mfgowncertlen[j]);
-          if (ret < 0) {
-            OC_ERR(
-              " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n",
-              -ret);
-            oc_mem_free(owncert);
-            if (pkey) {
-              oc_mem_free(pkey);
-            }
+          ret = mbedtls_x509_crt_parse(owncert, (const unsigned char *) c->mfgowncert[j],
+                                                                        c->mfgowncertlen[j] );
+          if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_x509_crt_parse mfgCert returned -0x%x\n\n", -ret );
+            mbedtls_x509_crt_free(cacert);
+            mbedtls_x509_crt_free(owncert);
+            mbedtls_pk_free(pkey);
+            cacert = NULL;
+            owncert = NULL;
+            pkey = NULL;
             goto tls_certs_load_err;
           } else {
             OC_DBG("oc_tls: mfgowncert loaded ");
           }
           ret = mbedtls_ssl_conf_own_cert(&server_conf[i], owncert, pkey);
+          if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
+            mbedtls_x509_crt_free(cacert);
+            mbedtls_x509_crt_free(owncert);
+            mbedtls_pk_free(pkey);
+            cacert = NULL;
+            owncert = NULL;
+            pkey = NULL;
+            goto tls_certs_load_err;
+          }
 #ifdef OC_CLIENT
 #ifdef OC_TCP
           ret = mbedtls_ssl_conf_own_cert(&client_conf_tls[0], owncert, pkey);
-#endif /* OC_TCP */
-          ret = mbedtls_ssl_conf_own_cert(&client_conf[0], owncert, pkey);
-#endif /* OC_CLIENT */
-          if (ret < 0) {
-            OC_ERR(" failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n",
-                   -ret);
+          if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
+            mbedtls_x509_crt_free(cacert);
+            mbedtls_x509_crt_free(owncert);
+            mbedtls_pk_free(pkey);
+            cacert = NULL;
+            owncert = NULL;
+            pkey = NULL;
             goto tls_certs_load_err;
           }
+#endif /* OC_TCP */
+          ret = mbedtls_ssl_conf_own_cert(&client_conf[0], owncert, pkey);
+          if( ret < 0 ) {
+            OC_ERR( " failed\n  !  mbedtls_ssl_conf_own_cert returned -0x%x\n\n", -ret );
+            mbedtls_x509_crt_free(cacert);
+            mbedtls_x509_crt_free(owncert);
+            mbedtls_pk_free(pkey);
+            cacert = NULL;
+            owncert = NULL;
+            pkey = NULL;
+            goto tls_certs_load_err;
+          }
+#endif /* OC_CLIENT */
         }
       }
       c = c->next;
