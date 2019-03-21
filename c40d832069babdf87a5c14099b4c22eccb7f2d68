@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_eef8a2c6",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 3073
+      },
+      "writtenOn": "2019-03-21T07:53:11Z",
+      "side": 1,
+      "message": "please check if list empty, NULL return:\nis cred not NULL before access to cred-\u003ecredid\nlike that:\ncredid \u003d cred ? cred-\u003ecredid : -2;",
+      "range": {
+        "startLine": 181,
+        "startChar": 17,
+        "endLine": 181,
+        "endChar": 21
+      },
+      "revId": "c40d832069babdf87a5c14099b4c22eccb7f2d68",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
