@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_4ea6f6c2",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-22T10:34:24Z",
+      "side": 1,
+      "message": "please remove",
+      "range": {
+        "startLine": 1132,
+        "startChar": 0,
+        "endLine": 1132,
+        "endChar": 4
+      },
+      "revId": "1bb352ac3afc587b3ac2ddf5f4520d5d9d21dc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_aeab3a88",
+        "filename": "apps/CertificationApp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2037,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-22T10:34:24Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 2037,
+        "startChar": 0,
+        "endLine": 2037,
+        "endChar": 4
+      },
+      "revId": "1bb352ac3afc587b3ac2ddf5f4520d5d9d21dc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_8eb0fef5",
+        "filename": "apps/CertificationApp.json",
+        "patchSetId": 7
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-22T10:34:24Z",
+      "side": 1,
+      "message": "change to 2.0.0",
+      "range": {
+        "startLine": 11,
+        "startChar": 21,
+        "endLine": 11,
+        "endChar": 23
+      },
+      "revId": "1bb352ac3afc587b3ac2ddf5f4520d5d9d21dc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_0ec50e5b",
+        "filename": "tests/automation/ctt/README.rst",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-22T10:34:24Z",
+      "side": 1,
+      "message": "please remove spaces",
+      "range": {
+        "startLine": 36,
+        "startChar": 88,
+        "endLine": 36,
+        "endChar": 89
+      },
+      "revId": "1bb352ac3afc587b3ac2ddf5f4520d5d9d21dc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_ee942246",
+        "filename": "tests/automation/ctt/server_config.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 14257
+      },
+      "writtenOn": "2019-03-22T10:34:24Z",
+      "side": 1,
+      "message": "please remove spaces",
+      "range": {
+        "startLine": 20,
+        "startChar": 33,
+        "endLine": 20,
+        "endChar": 34
+      },
+      "revId": "1bb352ac3afc587b3ac2ddf5f4520d5d9d21dc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
