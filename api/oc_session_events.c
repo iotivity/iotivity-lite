@@ -34,6 +34,17 @@
 OC_LIST(session_start_events);
 OC_LIST(session_end_events);
 
+static void
+oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
+{
+#ifdef OC_SESSION_EVENTS
+  handle_session_event_callback(endpoint, state);
+#else
+  (void)endpoint;
+  (void)state;
+#endif /* OC_SESSION_EVENTS */
+}
+
 static oc_event_callback_retval_t
 free_session_state_delayed(void *data)
 {
@@ -51,6 +62,21 @@ free_session_state_delayed(void *data)
 }
 
 static void
+handle_disconnect_endpoint(oc_endpoint_t *endpoint)
+{
+#ifdef OC_SERVER
+  coap_remove_observer_by_client(endpoint);
+#else  /* OC_SERVER */
+  (void)endpoint;
+#endif /* !OC_SERVER */
+#ifdef OC_SECURITY
+  if (endpoint->flags & SECURED && endpoint->flags & TCP) {
+    oc_tls_remove_peer(endpoint);
+  }
+#endif /* OC_SECURITY */
+}
+
+static void
 oc_process_session_event(void)
 {
   oc_network_event_handler_mutex_lock();
@@ -62,6 +88,12 @@ oc_process_session_event(void)
     oc_handle_session(session_event, OC_SESSION_CONNECTED);
     oc_free_endpoint(session_event);
     session_event = oc_list_pop(session_start_events);
+  }
+
+  session_event = (oc_endpoint_t *)oc_list_head(session_end_events);
+  while (session_event != NULL) {
+    handle_disconnect_endpoint(session_event);
+    session_event = oc_list_item_next(session_event);
   }
 
   if (oc_list_length(session_end_events) > 0) {
@@ -122,23 +154,3 @@ oc_session_end_event(oc_endpoint_t *endpoint)
   _oc_signal_event_loop();
 }
 #endif /* OC_TCP */
-
-void
-oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
-{
-  if (state == OC_SESSION_DISCONNECTED) {
-#ifdef OC_SERVER
-    coap_remove_observer_by_client(endpoint);
-#else  /* OC_SERVER */
-    (void)endpoint;
-#endif /* !OC_SERVER */
-#ifdef OC_SECURITY
-    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
-      oc_tls_remove_peer(endpoint);
-    }
-#endif /* OC_SECURITY */
-  }
-#ifdef OC_SESSION_EVENTS
-  handle_session_event_callback(endpoint, state);
-#endif /* OC_SESSION_EVENTS */
-}
