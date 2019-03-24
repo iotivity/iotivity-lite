@@ -51,7 +51,6 @@ OC_PROCESS_NAME(oc_session_events);
 
 void oc_session_start_event(oc_endpoint_t *endpoint);
 void oc_session_end_event(oc_endpoint_t *endpoint);
-void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state);
 
 #ifdef __cplusplus
 }

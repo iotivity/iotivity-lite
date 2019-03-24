@@ -175,7 +175,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   } else
 #endif /* OC_TCP */
   {
-    oc_handle_session(&peer->endpoint, OC_SESSION_DISCONNECTED);
+    oc_session_end_event(&peer->endpoint);
   }
 
   if (!inactivity_cb) {
@@ -1632,7 +1632,7 @@ read_application_data(oc_tls_peer_t *peer)
       {
         /* No public key information for non-certificate-using ciphersuites. */
       }
-      oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
+      oc_session_start_event(&peer->endpoint);
     }
 #ifdef OC_CLIENT
     if (ret == 0) {
