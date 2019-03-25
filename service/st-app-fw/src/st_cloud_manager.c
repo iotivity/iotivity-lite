@@ -27,6 +27,9 @@
 #include "st_store.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#ifdef OC_SECURITY
+#include "security/oc_tls.h"
+#endif
 
 #define ACCESS_TOKEN_KEY "accesstoken"
 #define REFRESH_TOKEN_KEY "refreshtoken"
@@ -160,6 +163,16 @@ session_event_handler(const oc_endpoint_t *endpoint, oc_session_state_t state)
   cloud_start_process(context);
 }
 #endif /* OC_SESSION_EVENTS */
+
+static bool
+st_check_cloud_connection(oc_endpoint_t *endpoint)
+{
+#ifdef OC_SECURITY
+  return oc_tls_connected(endpoint);
+#else
+  return true;
+#endif
+}
 
 int
 st_cloud_manager_start(st_store_t *store_info, size_t device_index,
@@ -561,8 +574,9 @@ set_dev_profile(void *data)
     st_print_log("[ST_CM] try set dev profile(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
-      oc_set_device_profile(&context->cloud_ep, set_dev_profile_handler,
-                            context);
+      if (st_check_cloud_connection(&context->cloud_ep))
+        oc_set_device_profile(&context->cloud_ep, set_dev_profile_handler,
+                              context);
       oc_set_delayed_callback(context, set_dev_profile,
                               message_timeout[context->retry_count]);
     }
@@ -610,8 +624,9 @@ publish_resource(void *data)
     st_print_log("[ST_CM] try publish resource(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
-      rd_publish_all(&context->cloud_ep, context->device_index,
-                     publish_resource_handler, LOW_QOS, context);
+      if (st_check_cloud_connection(&context->cloud_ep))
+        rd_publish_all(&context->cloud_ep, context->device_index,
+                       publish_resource_handler, LOW_QOS, context);
       oc_set_delayed_callback(context, publish_resource,
                               message_timeout[context->retry_count]);
     }
@@ -666,7 +681,8 @@ find_ping(void *data)
     st_print_log("[ST_CM] try find ping(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
-      oc_find_ping_resource(&context->cloud_ep, find_ping_handler, context);
+      if (st_check_cloud_connection(&context->cloud_ep))
+        oc_find_ping_resource(&context->cloud_ep, find_ping_handler, context);
       oc_set_delayed_callback(context, find_ping,
                               message_timeout[context->retry_count]);
     }
@@ -707,8 +723,9 @@ send_ping(void *data)
     st_print_log("[ST_CM] try send ping(%d)\n", context->retry_count);
     context->retry_count++;
     if (!is_retry_over(context)) {
-      oc_send_ping_request(&context->cloud_ep, g_ping_interval,
-                           send_ping_handler, context);
+      if (st_check_cloud_connection(&context->cloud_ep))
+        oc_send_ping_request(&context->cloud_ep, g_ping_interval,
+                             send_ping_handler, context);
       oc_set_delayed_callback(context, send_ping,
                               message_timeout[context->retry_count]);
     }
