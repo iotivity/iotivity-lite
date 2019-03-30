@@ -141,7 +141,7 @@ port/<OS>/*
 
 apps/*
   contains sample OCF applications.
-
+ 
 Setup source tree
 -----------------
 
@@ -210,3 +210,4 @@ This needs to be present in one of the include paths.
 
 Pre-populated (sample) configurations for the sample applications for all
 targets are present in ``port/<OS>/oc_config.h``.
+
