@@ -13,9 +13,17 @@ port/linux/multi_device_server
 port/linux/onboarding_tool
 port/linux/server_multithread_linux
 port/linux/client_multithread_linux
+port/linux/cloud_linux
+port/linux/cloud_linux_creds/
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*
 port/linux/libiotivity-constrained-client-server.*
+port/linux/iotivity-constrained-cloud.pc
+port/linux/iotivity-constrained-cloud.a
+port/linux/iotivity-constrained-cloud.so
+port/linux/iotivity-constrained-rd-client.pc
+port/linux/iotivity-constrained-rd-client.a
+port/linux/iotivity-constrained-rd-client.so
 port/linux/iotivity-constrained-server.pc
 port/linux/iotivity-constrained-client.pc
 port/linux/iotivity-constrained-client-server.pc
@@ -40,10 +48,19 @@ port/openthread/output
 *.o
 *.cmd
 *.tmp
+*.gcda
+*.gcno
 .clang-format
 _clang-format
 port/linux/platformtest
 port/linux/storage_test
+port/linux/apitest
+port/linux/cloudaccesstest
+port/linux/messagingtest
+port/linux/rdclienttest
+port/linux/securitytest
+port/linux/simpleserver_pki
+port/linux/stapptest
 
 #creds files
 port/linux/client_creds
@@ -58,6 +75,10 @@ port/linux/multi_device_client_creds
 port/linux/multi_device_server_creds
 port/linux/server_multithread_linux_creds
 port/linux/client_multithread_linux_creds
+
+#service
+service/cloud-access/unittest/obj
+service/resource-directory/client/unittest/obj
 
 #vscode setting files
 .vscode
