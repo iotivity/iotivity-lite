@@ -142,6 +142,9 @@ port/<OS>/*
 apps/*
   contains sample OCF applications.
 
+service/*
+  contains OCF services
+
 Setup source tree
 -----------------
 
@@ -167,6 +170,9 @@ Add ``TCP=1`` to include support for TCP endpoints and CoAP over TCP (RFC 8323).
 
 Add ``IPV4=1`` to include IPv4 support in the build. Excluding ``IPV4=1``
 produces an IPv6-only build.
+
+Add ``CLOUD=1`` to include OCF Cloud in the build. TCP and IPv4
+are included too.
 
 Building sample applications on Windows
 ---------------------------------------
