@@ -331,30 +331,34 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 
   const char *address = NULL;
   endpoint->flags = 0;
+  size_t len = oc_string_len(*endpoint_str);
 #ifdef OC_TCP
-  if (memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
+  if (len > strlen(OC_SCHEME_COAPS_TCP) &&
+      memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
              strlen(OC_SCHEME_COAPS_TCP)) == 0) {
     address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS_TCP);
     endpoint->flags = TCP | SECURED;
-  } else if (memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
+  } else if (len > strlen(OC_SCHEME_COAP_TCP) &&
+             memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
                     strlen(OC_SCHEME_COAP_TCP)) == 0) {
     address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP_TCP);
     endpoint->flags = TCP;
   } else
 #endif
-    if (memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
+    if (len > strlen(OC_SCHEME_COAPS) &&
+        memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
                strlen(OC_SCHEME_COAPS)) == 0) {
     address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS);
     endpoint->flags = SECURED;
-  } else if (memcmp(OC_SCHEME_COAP, oc_string(*endpoint_str),
+  } else if (len > strlen(OC_SCHEME_COAP) &&
+             memcmp(OC_SCHEME_COAP, oc_string(*endpoint_str),
                     strlen(OC_SCHEME_COAP)) == 0) {
     address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP);
   } else {
     return -1;
   }
 
-  size_t len =
-    oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+  len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
 
   /* Extract a uri path if requested and available */
   const char *u = NULL;
