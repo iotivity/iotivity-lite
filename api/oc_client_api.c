@@ -339,6 +339,7 @@ oc_remove_ping_handler(void *data)
   oc_client_response_t timeout_response;
   timeout_response.code = OC_PING_TIMEOUT;
   timeout_response.endpoint = cb->endpoint;
+  timeout_response.user_data = cb->user_data;
   cb->handler.response(&timeout_response);
 
   return oc_ri_remove_client_cb(cb);
