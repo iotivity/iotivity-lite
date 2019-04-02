@@ -448,46 +448,48 @@ coap_serialize_options(void *packet, uint8_t *option_array)
   COAP_SERIALIZE_INT_OPTION(COAP_OPTION_SIZE1, size1, "Size1");
 
   if (IS_OPTION(coap_pkt, COAP_OPTION_ACCEPT)) {
-    if (coap_pkt->accept == APPLICATION_CBOR) {
+    if (coap_pkt->accept == APPLICATION_VND_OCF_CBOR) {
 
-      option_length += coap_serialize_int_option(
-        OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER, current_number, option,
-        OIC_VER_1_1_0);
-      if (option) {
-        option = option_array + option_length;
-      }
-
-    } else {
-
-      option_length += coap_serialize_int_option(
-        OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER, current_number, option,
-        OCF_VER_1_0_0);
+      option_length +=
+        coap_serialize_int_option(OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER,
+                                  current_number, option, OCF_VER_1_0_0);
       if (option) {
         option = option_array + option_length;
       }
     }
+#ifdef OC_SPEC_VER_OIC
+    else if (coap_pkt->accept == APPLICATION_CBOR) {
+
+      option_length +=
+        coap_serialize_int_option(OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER,
+                                  current_number, option, OIC_VER_1_1_0);
+      if (option) {
+        option = option_array + option_length;
+      }
+    }
+#endif /* OC_SPEC_VER_OIC */
 
     current_number = OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER;
   }
   if (IS_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT)) {
-    if (coap_pkt->content_format == APPLICATION_CBOR) {
+    if (coap_pkt->content_format == APPLICATION_VND_OCF_CBOR) {
 
-      option_length +=
-        coap_serialize_int_option(OCF_OPTION_CONTENT_FORMAT_VER, current_number,
-                                  option, OIC_VER_1_1_0);
-      if (option) {
-        option = option_array + option_length;
-      }
-
-    } else {
-
-      option_length +=
-        coap_serialize_int_option(OCF_OPTION_CONTENT_FORMAT_VER, current_number,
-                                  option, OCF_VER_1_0_0);
+      option_length += coap_serialize_int_option(
+        OCF_OPTION_CONTENT_FORMAT_VER, current_number, option, OCF_VER_1_0_0);
       if (option) {
         option = option_array + option_length;
       }
     }
+#ifdef OC_SPEC_VER_OIC
+    else if (coap_pkt->content_format == APPLICATION_CBOR) {
+
+      option_length += coap_serialize_int_option(
+        OCF_OPTION_CONTENT_FORMAT_VER, current_number, option, OIC_VER_1_1_0);
+      if (option) {
+        option = option_array + option_length;
+      }
+    }
+#endif /* OC_SPEC_VER_OIC */
     current_number = OCF_OPTION_CONTENT_FORMAT_VER;
   }
 
@@ -636,8 +638,11 @@ coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
       coap_pkt->content_format =
         (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Content-Format [%u]", coap_pkt->content_format);
-      if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR &&
-          coap_pkt->content_format != APPLICATION_CBOR)
+      if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR
+#ifdef OC_SPEC_VER_OIC
+          && coap_pkt->content_format != APPLICATION_CBOR
+#endif /* OC_SPEC_VER_OIC */
+          )
         return UNSUPPORTED_MEDIA_TYPE_4_15;
       break;
     case COAP_OPTION_MAX_AGE:
@@ -657,8 +662,11 @@ coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
       coap_pkt->accept =
         (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Accept [%u]", coap_pkt->accept);
-      if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR &&
-          coap_pkt->accept != APPLICATION_CBOR)
+      if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR
+#ifdef OC_SPEC_VER_OIC
+          && coap_pkt->accept != APPLICATION_CBOR
+#endif /* OC_SPEC_VER_OIC */
+          )
         return NOT_ACCEPTABLE_4_06;
       break;
 #if 0
@@ -785,8 +793,12 @@ coap_parse_token_option(void *packet, uint8_t *data, uint32_t data_len,
       uint16_t version =
         (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Content-format/accept-Version: [%u]", version);
-      if (version != OCF_VER_1_0_0 && version != OIC_VER_1_1_0) {
-        OC_WRN("Unsupported version %u", version);
+      if (version < OCF_VER_1_0_0
+#ifdef OC_SPEC_VER_OIC
+          && version != OIC_VER_1_1_0
+#endif /* OC_SPEC_VER_OIC */
+          ) {
+        OC_WRN("Unsupported version %d %u", option_number, version);
         return UNSUPPORTED_MEDIA_TYPE_4_15;
       }
     } break;

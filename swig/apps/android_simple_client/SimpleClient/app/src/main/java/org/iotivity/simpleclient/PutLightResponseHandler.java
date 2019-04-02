@@ -33,7 +33,7 @@ public class PutLightResponseHandler implements OCResponseHandler {
         if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", false);
-            OCMain.repSetInt(root, "power", 105);
+            OCMain.repSetLong(root, "power", 105);
             OCMain.repEndRootObject();
 
             if (OCMain.doPost()) {

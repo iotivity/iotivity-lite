@@ -41,7 +41,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
     return false;
   }
 
-  oc_rep_start_object(*links, link);
+  oc_rep_start_object(links, link);
 
   // anchor
   oc_rep_set_text_string(link, anchor, anchor);
@@ -98,7 +98,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   }
   oc_rep_close_array(link, eps);
 
-  oc_rep_end_object(*links, link);
+  oc_rep_end_object(links, link);
 
   return true;
 }
@@ -195,6 +195,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   return matches;
 }
 
+#ifdef OC_SPEC_VER_OIC
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
                         CborEncoder *links)
@@ -207,7 +208,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     return false;
   }
 
-  oc_rep_start_object(*links, res);
+  oc_rep_start_object(links, res);
 
   // uri
   oc_rep_set_text_string(res, href, oc_string(resource->uri));
@@ -285,7 +286,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
   oc_rep_close_object(res, p);
 
-  oc_rep_end_object(*links, res);
+  oc_rep_end_object(links, res);
   return true;
 }
 
@@ -297,7 +298,7 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, OC_UUID_LEN);
 
-  oc_rep_start_object(*device, links);
+  oc_rep_start_object(device, links);
   oc_rep_set_text_string(links, di, uuid);
 
   if (baseline) {
@@ -389,7 +390,7 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
     matches++;
 
   oc_rep_close_array(links, links);
-  oc_rep_end_object(*device, links);
+  oc_rep_end_object(device, links);
 
   return matches;
 }
@@ -436,6 +437,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     request->response->response_buffer->code = OC_IGNORE;
   }
 }
+#endif /* OC_SPEC_VER_OIC */
 
 static void
 oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -443,10 +445,12 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)data;
 
+#ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     oc_core_1_1_discovery_handler(request, iface_mask, data);
     return;
   }
+#endif /* OC_SPEC_VER_OIC */
 
   int matches = 0;
   size_t device = request->resource->device;
@@ -459,7 +463,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   } break;
   case OC_IF_BASELINE: {
     oc_rep_start_links_array();
-    oc_rep_start_object(*oc_rep_array(links), props);
+    oc_rep_start_object(oc_rep_array(links), props);
     memcpy(&root_map, &props_map, sizeof(CborEncoder));
     oc_process_baseline_interface(
       oc_core_get_resource_by_index(OCF_RES, device));
@@ -467,7 +471,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     matches += process_device_resources(oc_rep_array(links), request, device);
     oc_rep_close_array(root, links);
     memcpy(&props_map, &root_map, sizeof(CborEncoder));
-    oc_rep_end_object(*oc_rep_array(links), props);
+    oc_rep_end_object(oc_rep_array(links), props);
     oc_rep_end_links_array();
   } break;
   default:

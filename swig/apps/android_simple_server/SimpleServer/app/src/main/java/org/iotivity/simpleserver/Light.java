@@ -2,6 +2,6 @@ package org.iotivity.simpleserver;
 
 public class Light {
     public String name;
-    public int power;
+    public long power;
     public boolean state;
 }

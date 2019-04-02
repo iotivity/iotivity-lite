@@ -120,8 +120,8 @@ void
 oc_core_encode_interfaces_mask(CborEncoder *parent,
                                oc_interface_mask_t iface_mask)
 {
-  oc_rep_set_key((*parent), "if");
-  oc_rep_start_array((*parent), if);
+  oc_rep_set_key((parent), "if");
+  oc_rep_start_array((parent), if);
   if (iface_mask & OC_IF_LL) {
     oc_rep_add_text_string(if, "oic.if.ll");
   }
@@ -143,7 +143,7 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   if (iface_mask & OC_IF_BASELINE) {
     oc_rep_add_text_string(if, "oic.if.baseline");
   }
-  oc_rep_end_array((*parent), if);
+  oc_rep_end_array((parent), if);
 }
 
 #ifdef OC_SECURITY

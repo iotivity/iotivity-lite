@@ -285,6 +285,8 @@ coap_notify_collections(oc_resource_t *resource)
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+  int num_links = 0;
+
   oc_request_t request = { 0 };
   oc_response_t response = { 0 };
   response.separate_response = 0;
@@ -317,6 +319,7 @@ coap_notify_collections(oc_resource_t *resource)
       }
 
       OC_DBG("coap_notify_collections: notifying observer");
+      num_links++;
       coap_transaction_t *transaction = NULL;
       coap_packet_t notification[1];
 
@@ -418,7 +421,7 @@ leave_notify_collections:
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return 0;
+  return num_links;
 }
 #endif /* OC_COLLECTIONS */
 
@@ -587,9 +590,12 @@ coap_notify_observers(oc_resource_t *resource,
           } else {
             coap_set_header_observe(notification, 1);
           }
+#ifdef OC_SPEC_VER_OIC
           if (obs->endpoint.version == OIC_VER_1_1_0) {
             coap_set_header_content_format(notification, APPLICATION_CBOR);
-          } else {
+          } else
+#endif /* OC_SPEC_VER_OIC */
+          {
             coap_set_header_content_format(notification,
                                            APPLICATION_VND_OCF_CBOR);
           }
@@ -621,10 +627,11 @@ coap_notify_observers(oc_resource_t *resource,
   }
 
 #ifdef OC_COLLECTIONS
+  int num_links = 0;
   if (resource->num_links > 0) {
-    coap_notify_collections(resource);
+    num_links = coap_notify_collections(resource);
   }
-  return resource->num_observers + resource->num_links;
+  return resource->num_observers + num_links;
 #else  /* OC_COLLECTIONS */
   return resource->num_observers;
 #endif /* !OC_COLLECTIONS */
