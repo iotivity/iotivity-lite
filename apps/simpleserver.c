@@ -79,7 +79,7 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_dat
       PRINT("value: %d\n", state);
       break;
     case OC_REP_INT:
-      power = rep->value.integer;
+      power = (int)rep->value.integer;
       PRINT("value: %d\n", power);
       break;
     case OC_REP_STRING:

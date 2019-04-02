@@ -75,9 +75,12 @@ dispatch_coap_request(void)
   }
 
   if (payload_size > 0) {
+#ifdef OC_SPEC_VER_OIC
     if (client_cb->endpoint->version == OIC_VER_1_1_0) {
       coap_set_header_content_format(request, APPLICATION_CBOR);
-    } else {
+    } else
+#endif /* OC_SPEC_VER_OIC */
+    {
       coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
     }
   }
@@ -158,9 +161,12 @@ prepare_coap_request(oc_client_cb_t *cb)
     coap_udp_init_message(request, type, cb->method, cb->mid);
   }
 
+#ifdef OC_SPEC_VER_OIC
   if (cb->endpoint->version == OIC_VER_1_1_0) {
     coap_set_header_accept(request, APPLICATION_CBOR);
-  } else {
+  } else
+#endif /* OC_SPEC_VER_OIC */
+  {
     coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
   }
 
@@ -333,6 +339,7 @@ oc_remove_ping_handler(void *data)
   oc_client_response_t timeout_response;
   timeout_response.code = OC_PING_TIMEOUT;
   timeout_response.endpoint = cb->endpoint;
+  timeout_response.user_data = cb->user_data;
   cb->handler.response(&timeout_response);
 
   return oc_ri_remove_client_cb(cb);

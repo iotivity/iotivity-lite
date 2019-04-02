@@ -622,12 +622,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
        forbidden = false, entity_too_large = false;
 
   endpoint->version = OCF_VER_1_0_0;
+#ifdef OC_SPEC_VER_OIC
   unsigned int accept = 0;
   if (coap_get_header_accept(request, &accept) == 1) {
     if (accept == APPLICATION_CBOR) {
       endpoint->version = OIC_VER_1_1_0;
     }
   }
+#endif /* OC_SPEC_VER_OIC */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
@@ -1059,7 +1061,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * altered the resource state, so attempt to notify all observers
      * of that resource with the change.
      */
-    if (cur_resource && (method == OC_PUT || method == OC_POST) &&
+    if (!resource_is_collection && cur_resource &&
+        (method == OC_PUT || method == OC_POST) &&
         response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
       oc_ri_add_timed_event_callback_ticks(cur_resource,
                                            &oc_observe_notification_delayed, 0);
@@ -1072,9 +1075,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
+#ifdef OC_SPEC_VER_OIC
       if (endpoint->version == OIC_VER_1_1_0) {
         coap_set_header_content_format(response, APPLICATION_CBOR);
-      } else {
+      } else
+#endif /* OC_SPEC_VER_OIC */
+      {
         coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
       }
     }
@@ -1166,12 +1172,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
 {
   endpoint->version = OCF_VER_1_0_0;
+#ifdef OC_SPEC_VER_OIC
   unsigned int cf = 0;
   if (coap_get_header_content_format(response, &cf) == 1) {
     if (cf == APPLICATION_CBOR) {
       endpoint->version = OIC_VER_1_1_0;
     }
   }
+#endif /* OC_SPEC_VER_OIC */
 
   uint8_t *payload = NULL;
   int payload_len = 0;
