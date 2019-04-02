@@ -34,6 +34,23 @@
 OC_LIST(session_start_events);
 OC_LIST(session_end_events);
 
+static void
+oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
+{
+  (void)endpoint;
+  (void)state;
+  if (state == OC_SESSION_DISCONNECTED) {
+#ifdef OC_SECURITY
+    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
+      oc_tls_remove_peer(endpoint);
+    }
+#endif /* OC_SECURITY */
+  }
+#ifdef OC_SESSION_EVENTS
+  handle_session_event_callback(endpoint, state);
+#endif /* OC_SESSION_EVENTS */
+}
+
 static oc_event_callback_retval_t
 free_session_state_delayed(void *data)
 {
@@ -50,6 +67,14 @@ free_session_state_delayed(void *data)
   return OC_EVENT_DONE;
 }
 
+#ifdef OC_SERVER
+static void
+remove_observers(oc_endpoint_t *endpoint)
+{
+  coap_remove_observer_by_client(endpoint);
+}
+#endif /* OC_SERVER */
+
 static void
 oc_process_session_event(void)
 {
@@ -63,6 +88,14 @@ oc_process_session_event(void)
     oc_free_endpoint(session_event);
     session_event = oc_list_pop(session_start_events);
   }
+
+#ifdef OC_SERVER
+  session_event = (oc_endpoint_t *)oc_list_head(session_end_events);
+  while (session_event != NULL) {
+    remove_observers(session_event);
+    session_event = oc_list_item_next(session_event);
+  }
+#endif /* OC_SERVER */
 
   if (oc_list_length(session_end_events) > 0) {
     oc_set_delayed_callback(NULL, &free_session_state_delayed,
@@ -121,24 +154,17 @@ oc_session_end_event(oc_endpoint_t *endpoint)
   oc_process_poll(&(oc_session_events));
   _oc_signal_event_loop();
 }
-#endif /* OC_TCP */
-
+#else  /* OC_TCP */
+/* empty function implementation to satisfy linker when OC_TCP is not defined */
 void
-oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
+oc_session_start_event(oc_endpoint_t *endpoint)
 {
-  if (state == OC_SESSION_DISCONNECTED) {
-#ifdef OC_SERVER
-    coap_remove_observer_by_client(endpoint);
-#else  /* OC_SERVER */
     (void)endpoint;
-#endif /* !OC_SERVER */
-#ifdef OC_SECURITY
-    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
-      oc_tls_remove_peer(endpoint);
-    }
-#endif /* OC_SECURITY */
-  }
-#ifdef OC_SESSION_EVENTS
-  handle_session_event_callback(endpoint, state);
-#endif /* OC_SESSION_EVENTS */
 }
+/* empty function implementation to satisfy linker when OC_TCP is not defined */
+void
+oc_session_end_event(oc_endpoint_t *endpoint)
+{
+    (void)endpoint;
+}
+#endif /* OC_TCP */

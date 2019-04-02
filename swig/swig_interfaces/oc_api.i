@@ -1166,7 +1166,7 @@ void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
 %rename (repSetInt) jni_rep_set_int;
 %inline %{
 /* Alt implementation of oc_rep_set_int macro */
-void jni_rep_set_int(CborEncoder * object, const char* key, int value) {
+void jni_rep_set_int(CborEncoder * object, const char* key, int64_t value) {
   OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   g_err |= cbor_encode_int(object, value);
@@ -1420,28 +1420,28 @@ void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
 }
 %}
 
-%typemap(jni) (int *values, int length) "jintArray"
-%typemap(jtype) (int *values, int length) "int[]"
-%typemap(jstype) (int *values, int length) "int[]"
-%typemap(javain) (int *values, int length) "$javainput"
-%typemap(javadirectorin) (int *values, int length) "$javainput"
-%typemap(javadirectorout) (int *values, int length) "$javacall"
+%typemap(jni) (int64_t *values, int length) "jlongArray"
+%typemap(jtype) (int64_t *values, int length) "long[]"
+%typemap(jstype) (int64_t *values, int length) "long[]"
+%typemap(javain) (int64_t *values, int length) "$javainput"
+%typemap(javadirectorin) (int64_t *values, int length) "$javainput"
+%typemap(javadirectorout) (int64_t *values, int length) "$javacall"
 
-%typemap(in) (int *values, int length) {
+%typemap(in) (int64_t *values, int length) {
   if (!$input) {
     SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
     return $null;
   }
-  jint *jvalues = JCALL2(GetIntArrayElements, jenv, $input, 0);
+  jlong *jvalues = JCALL2(GetLongArrayElements, jenv, $input, 0);
   jsize jlength = JCALL1(GetArrayLength, jenv, $input);
 
-  $1 = (int *)jvalues;
+  $1 = (int64_t *)jvalues;
   $2 = jlength;
 }
 %rename(repSetIntArray) jni_rep_set_int_array;
 %inline %{
 /* Alt implementation of oc_rep_set_int_array macro */
-void jni_rep_set_int_array(CborEncoder *object, const char* key, int *values, int length) {
+void jni_rep_set_int_array(CborEncoder *object, const char* key, int64_t *values, int length) {
   OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
@@ -1573,17 +1573,17 @@ int jni_rep_get_cbor_errno() {
   $1 = &temp_jni_rep_get_error_flag;
 }
 
-%typemap(jstype) int jni_rep_get_int "Integer"
-%typemap(jtype) int jni_rep_get_int "Integer"
-%typemap(jni) int jni_rep_get_int "jobject"
-%typemap(javaout) int jni_rep_get_int {
+%typemap(jstype) int64_t jni_rep_get_int "Long"
+%typemap(jtype) int64_t jni_rep_get_int "Long"
+%typemap(jni) int64_t jni_rep_get_int "jobject"
+%typemap(javaout) int64_t jni_rep_get_int {
   return $jnicall;
 }
-%typemap(out, noblock=1) int jni_rep_get_int {
+%typemap(out, noblock=1) int64_t jni_rep_get_int {
   if(temp_jni_rep_get_error_flag) {
-    const jclass cls_Integer = JCALL1(FindClass, jenv, "java/lang/Integer");
+    const jclass cls_Integer = JCALL1(FindClass, jenv, "java/lang/Long");
     assert(cls_Integer);
-    const jmethodID mid_Integer_init = JCALL3(GetMethodID, jenv, cls_Integer, "<init>", "(I)V");
+    const jmethodID mid_Integer_init = JCALL3(GetMethodID, jenv, cls_Integer, "<init>", "(J)V");
     assert(mid_Integer_init);
     $result = JCALL3(NewObject, jenv, cls_Integer, mid_Integer_init, $1);
   } else {
@@ -1594,8 +1594,8 @@ int jni_rep_get_cbor_errno() {
 %ignore oc_rep_get_int;
 %rename(repGetInt) jni_rep_get_int;
 %inline %{
-int jni_rep_get_int(oc_rep_t *rep, const char *key, bool *jni_rep_get_error_flag) {
-  int retValue;
+int64_t jni_rep_get_int(oc_rep_t *rep, const char *key, bool *jni_rep_get_error_flag) {
+  int64_t retValue;
   *jni_rep_get_error_flag = oc_rep_get_int(rep, key, &retValue);
   return retValue;
 }
@@ -1705,16 +1705,16 @@ char * jni_rep_get_string(oc_rep_t *rep, const char *key) {
   size_t temp_int_array_size;
   $1 = &temp_int_array_size;
 }
-%typemap(jstype) const int* jni_rep_get_int_array "int[]"
-%typemap(jtype) const int* jni_rep_get_int_array "int[]"
-%typemap(jni) const int* jni_rep_get_int_array "jintArray"
-%typemap(javaout) const int* jni_rep_get_int_array {
+%typemap(jstype) const int64_t* jni_rep_get_int_array "long[]"
+%typemap(jtype) const int64_t* jni_rep_get_int_array "long[]"
+%typemap(jni) const int64_t* jni_rep_get_int_array "jlongArray"
+%typemap(javaout) const int64_t* jni_rep_get_int_array {
   return $jnicall;
 }
-%typemap(out) const int* jni_rep_get_int_array {
+%typemap(out) const int64_t* jni_rep_get_int_array {
   if($1 != NULL) {
-    $result = JCALL1(NewIntArray, jenv, (jsize)temp_int_array_size);
-    JCALL4(SetIntArrayRegion, jenv, $result, 0, (jsize)temp_int_array_size, (const jint *)$1);
+    $result = JCALL1(NewLongArray, jenv, (jsize)temp_int_array_size);
+    JCALL4(SetLongArrayRegion, jenv, $result, 0, (jsize)temp_int_array_size, (const jlong *)$1);
   } else {
     $result = NULL;
   }
@@ -1722,8 +1722,8 @@ char * jni_rep_get_string(oc_rep_t *rep, const char *key) {
 %ignore oc_rep_get_int_array;
 %rename(repGetIntArray) jni_rep_get_int_array;
 %inline %{
-const int* jni_rep_get_int_array(oc_rep_t *rep, const char *key, size_t *int_array_size) {
-  int *c_int_array;
+const int64_t* jni_rep_get_int_array(oc_rep_t *rep, const char *key, size_t *int_array_size) {
+  int64_t *c_int_array;
   if (oc_rep_get_int_array(rep, key, &c_int_array, int_array_size)) {
     return c_int_array;
   }
@@ -1911,22 +1911,22 @@ typedef struct oc_mmem {} oc_array_t;
   size_t temp_oc_array_int_array_len;
   $1 = &temp_oc_array_int_array_len;
 }
-%typemap(jstype)  const int * ocArrayToIntArray "int[]"
-%typemap(jtype)   const int * ocArrayToIntArray "int[]"
-%typemap(jni)     const int * ocArrayToIntArray "jintArray"
-%typemap(javaout) const int * ocArrayToIntArray {
+%typemap(jstype)  const int64_t * ocArrayToIntArray "long[]"
+%typemap(jtype)   const int64_t * ocArrayToIntArray "long[]"
+%typemap(jni)     const int64_t * ocArrayToIntArray "jlongArray"
+%typemap(javaout) const int64_t * ocArrayToIntArray {
   return $jnicall;
 }
-%typemap(out) const int * ocArrayToIntArray {
+%typemap(out) const int64_t * ocArrayToIntArray {
   if($1 != NULL) {
-    $result = JCALL1(NewIntArray, jenv, (jsize)temp_oc_array_int_array_len);
-    JCALL4(SetIntArrayRegion, jenv, $result, 0, (jsize)temp_oc_array_int_array_len, (const jint *)$1);
+    $result = JCALL1(NewLongArray, jenv, (jsize)temp_oc_array_int_array_len);
+    JCALL4(SetLongArrayRegion, jenv, $result, 0, (jsize)temp_oc_array_int_array_len, (const jlong *)$1);
   } else {
     $result = NULL;
   }
 }
 %inline %{
-const int * ocArrayToIntArray(oc_array_t array, size_t *oc_array_int_array_len) {
+const int64_t * ocArrayToIntArray(oc_array_t array, size_t *oc_array_int_array_len) {
   *oc_array_int_array_len = (size_t)oc_int_array_size(array);
   return oc_int_array(array);
 }

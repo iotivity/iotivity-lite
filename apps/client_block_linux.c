@@ -88,7 +88,7 @@ get_array(oc_client_response_t *data)
     PRINT("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT_ARRAY: {
-      int *arr = oc_int_array(rep->value.array);
+      int64_t *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
         PRINT("(%d %d) ", i, arr[i]);
       }

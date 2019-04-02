@@ -112,7 +112,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCMain.repBeginRootObject();
         assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
-        int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
         OCMain.repSetIntArray(root, "fibonacci", fib);
         assertEquals(0, OCMain.repGetCborErrno());
         boolean barray[] = {false, false, true, false, false};
@@ -225,9 +225,9 @@ public class OCRepresentationTest {
         assertEquals("three", outObject.getValue().getString());
 
         // Access values indirectly using repGet functions
-        Integer a = OCMain.repGetInt(v.getObject(), "a");
+        Long a = OCMain.repGetInt(v.getObject(), "a");
         assertNotNull(a);
-        assertEquals(1, a.intValue());
+        assertEquals(1, a.longValue());
         Boolean b = OCMain.repGetBoolean(v.getObject(), "b");
         assertNotNull(b);
         assertEquals(false, b.booleanValue());
@@ -378,9 +378,9 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        Integer outValue = OCMain.repGetInt(rep, "ultimat_answer");
+        Long outValue = OCMain.repGetInt(rep, "ultimat_answer");
         assertNotNull(outValue);
-        assertEquals(42, outValue.intValue());
+        assertEquals(42, outValue.longValue());
         outValue = OCMain.repGetInt(rep, "not_a_key");
         assertNull(outValue);
         OCMain.repDeleteBuffer();
@@ -512,7 +512,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCMain.repBeginRootObject();
         assertEquals(0, OCMain.repGetCborErrno());
         assertNotNull(root);
-        int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
         OCMain.repSetIntArray(root, "fibonacci", fib);
         assertEquals(0, OCMain.repGetCborErrno());
         OCMain.repEndRootObject();
@@ -521,7 +521,7 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        int outValue[] = OCMain.repGetIntArray(rep, "fibonacci");
+        long outValue[] = OCMain.repGetIntArray(rep, "fibonacci");
         assertNotNull(outValue);
         assertEquals(fib.length, outValue.length);
         assertArrayEquals(fib, outValue);
@@ -656,9 +656,9 @@ public class OCRepresentationTest {
         OCRepresentation myObjectOut = OCMain.repGetObject(rep, "my_object");
         assertNotNull(myObjectOut);
 
-        Integer a = OCMain.repGetInt(myObjectOut, "a");
+        Long a = OCMain.repGetInt(myObjectOut, "a");
         assertNotNull(a);
-        assertEquals(1, a.intValue());
+        assertEquals(1, a.longValue());
         Boolean b = OCMain.repGetBoolean(myObjectOut, "b");
         assertNotNull(b);
         assertEquals(false, b.booleanValue());

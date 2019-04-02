@@ -927,7 +927,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
               permission = (uint16_t)ace->value.integer;
             } else if (len == 5 &&
                        memcmp(oc_string(ace->name), "aceid", 5) == 0) {
-              aceid = ace->value.integer;
+              aceid = (int)ace->value.integer;
             }
             break;
           case OC_REP_OBJECT_ARRAY:
