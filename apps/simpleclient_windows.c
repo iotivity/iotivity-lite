@@ -63,8 +63,8 @@ observe_light(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%d\n", rep->value.integer);
-      power = rep->value.integer;
+      PRINT("%lld\n", rep->value.integer);
+      power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
       PRINT("%s\n", oc_string(rep->value.string));
@@ -156,8 +156,8 @@ get_light(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%d\n", rep->value.integer);
-      power = rep->value.integer;
+      PRINT("%lld\n", rep->value.integer);
+      power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
       PRINT("%s\n", oc_string(rep->value.string));

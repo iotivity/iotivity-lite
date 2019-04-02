@@ -866,7 +866,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             /* credid and credtype  */
             case OC_REP_INT:
               if (len == 6 && memcmp(oc_string(cred->name), "credid", 6) == 0) {
-                credid = cred->value.integer;
+                credid = (int)cred->value.integer;
               } else if (len == 8 &&
                          memcmp(oc_string(cred->name), "credtype", 8) == 0) {
                 credtype = cred->value.integer;

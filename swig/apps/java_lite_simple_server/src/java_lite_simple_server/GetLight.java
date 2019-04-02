@@ -25,7 +25,7 @@ public class GetLight implements OCRequestHandler {
         case OCInterfaceMask.RW:
         {
             OCMain.repSetBoolean(root, "state", Light.state);
-            OCMain.repSetInt(root, "power", Light.power);
+            OCMain.repSetLong(root, "power", Light.power);
             OCMain.repSetTextString(root, "name", Light.name);
             break;
         }

@@ -94,7 +94,7 @@ TEST(TestRep, OCRepSetGetInt)
     /* add values to root object */
     oc_rep_start_root_object();
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-    oc_rep_set_int(root, ultimate_answer, 42);
+    oc_rep_set_int(root, ultimate_answer, 10000000000);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_set_int(root, negative, -1024);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -114,13 +114,13 @@ TEST(TestRep, OCRepSetGetInt)
     ASSERT_TRUE(rep != NULL);
 
     /* read the values from  the oc_rep_t */
-    int ultimate_answer_out = 0;
+    int64_t ultimate_answer_out = 0;
     EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
-    EXPECT_EQ(42, ultimate_answer_out);
-    int negative_out = 0;
+    EXPECT_EQ(10000000000, ultimate_answer_out);
+    int64_t negative_out = 0;
     EXPECT_TRUE(oc_rep_get_int(rep, "negative", &negative_out));
     EXPECT_EQ(-1024, negative_out);
-    int zero_out = -1;
+    int64_t zero_out = -1;
     EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
     EXPECT_EQ(0, zero_out);
     /* check error handling */
@@ -179,13 +179,13 @@ TEST(TestRep, OCRepSetGetUint)
 
     /* read the values from  the oc_rep_t */
     EXPECT_EQ(OC_REP_INT, rep->type);
-    int ultimate_answer_out = 0;
+    int64_t ultimate_answer_out = 0;
     EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
     EXPECT_EQ(42u, (uint)ultimate_answer_out);
-    int larger_than_int_out = 0;
+    int64_t larger_than_int_out = 0;
     EXPECT_TRUE(oc_rep_get_int(rep, "larger_than_int", &larger_than_int_out));
     EXPECT_EQ(3000000000u, (uint)larger_than_int_out);
-    int zero_out = -1;
+    int64_t zero_out = -1;
     EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
     EXPECT_EQ(0u, (uint)zero_out);
     /* check error handling */
@@ -358,7 +358,7 @@ TEST(TestRep, OCRepSetGetIntArray)
     /* add values to root object */
     oc_rep_start_root_object();
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000};
     oc_rep_set_int_array(root, fibonacci, fib, (int)(sizeof(fib)/ sizeof(fib[0]) ) );
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_end_root_object();
@@ -375,7 +375,7 @@ TEST(TestRep, OCRepSetGetIntArray)
     ASSERT_TRUE(rep != NULL);
 
     /* read the values from the oc_rep_t */
-    int* fib_out = 0;
+    int64_t* fib_out = 0;
     size_t fib_len;
     EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
     ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
@@ -405,7 +405,7 @@ TEST(TestRep, OCRepAddGetIntArray)
     /* add values to root object */
     oc_rep_start_root_object();
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
 
     oc_rep_open_array(root, fibonacci);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -430,7 +430,7 @@ TEST(TestRep, OCRepAddGetIntArray)
     ASSERT_TRUE(rep != NULL);
 
     /* read the values from the oc_rep_t */
-    int* fib_out = 0;
+    int64_t* fib_out = 0;
     size_t fib_len;
     EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
     ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
@@ -454,18 +454,18 @@ TEST(TestRep, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
     /* add values to root object */
     oc_rep_start_root_object();
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-    int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+    int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
 
-    oc_rep_set_key(*oc_rep_object(root), "fibonacci");
+    oc_rep_set_key(oc_rep_object(root), "fibonacci");
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-    oc_rep_begin_array(*oc_rep_object(root), fibonacci);
+    oc_rep_begin_array(oc_rep_object(root), fibonacci);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     for(size_t i = 0; i < (sizeof(fib)/ sizeof(fib[0])); i++)
     {
         oc_rep_add_int(fibonacci, fib[i]);
         EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     }
-    oc_rep_end_array(*oc_rep_object(root), fibonacci);
+    oc_rep_end_array(oc_rep_object(root), fibonacci);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     oc_rep_end_root_object();
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -481,7 +481,7 @@ TEST(TestRep, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
     ASSERT_TRUE(rep != NULL);
 
     /* read the values from the oc_rep_t */
-    int* fib_out = 0;
+    int64_t* fib_out = 0;
     size_t fib_len;
     EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
     ASSERT_EQ(sizeof(fib)/sizeof(fib[0]), fib_len);
@@ -721,7 +721,7 @@ TEST(TestRep, OCRepSetGetObject)
     oc_rep_t * my_object_out = NULL;
     EXPECT_TRUE(oc_rep_get_object(rep, "my_object", &my_object_out));
     ASSERT_TRUE(my_object_out != NULL);
-    int a_out;
+    int64_t a_out;
     EXPECT_TRUE(oc_rep_get_int(my_object_out, "a", &a_out));
     EXPECT_EQ(1, a_out);
     bool b_out = true;
