@@ -17,6 +17,7 @@
 #include "oc_collection.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "messaging/coap/observe.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "util/oc_memb.h"
@@ -241,6 +242,13 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
   return collection;
 }
 
+static oc_event_callback_retval_t
+notify_collection_for_link(void *data)
+{
+  coap_notify_observers(data, NULL, NULL);
+  return OC_EVENT_DONE;
+}
+
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t iface_mask,
@@ -262,8 +270,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       /* rts-m */
       if (oc_string_array_get_allocated_size(collection->mandatory_rts) > 0) {
         const char *rtsm_key = "rts-m";
-        oc_rep_set_key(*oc_rep_object(root), rtsm_key);
-        oc_rep_start_array(*oc_rep_object(root), rtsm);
+        oc_rep_set_key(oc_rep_object(root), rtsm_key);
+        oc_rep_start_array(oc_rep_object(root), rtsm);
         size_t arr;
         for (arr = 0; arr < oc_string_array_get_allocated_size(
                               collection->mandatory_rts);
@@ -271,7 +279,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           oc_rep_add_text_string(
             rtsm, oc_string_array_get_item(collection->mandatory_rts, arr));
         }
-        oc_rep_end_array(*oc_rep_object(root), rtsm);
+        oc_rep_end_array(oc_rep_object(root), rtsm);
       }
       oc_rep_set_array(root, links);
       while (link != NULL) {
@@ -449,7 +457,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
               oc_rep_set_text_string(links, href,
                                      oc_string(link->resource->uri));
-              oc_rep_set_key(*oc_rep_object(links), "rep");
+              oc_rep_set_key(oc_rep_object(links), "rep");
               memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
 
               int size_before = oc_rep_get_encoded_payload_size();
@@ -501,6 +509,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 memcpy(&links_array, &prev_link, sizeof(CborEncoder));
                 goto next;
               } else {
+                if ((method == OC_PUT || method == OC_POST) &&
+                    response_buffer.code <
+                      oc_status_code(OC_STATUS_BAD_REQUEST)) {
+                  oc_set_delayed_callback(link->resource,
+                                          notify_collection_for_link, 0);
+                }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
                   pcode = response_buffer.code;

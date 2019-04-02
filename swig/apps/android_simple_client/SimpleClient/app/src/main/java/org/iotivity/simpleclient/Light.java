@@ -4,7 +4,7 @@ import org.iotivity.OCEndpoint;
 
 public class Light {
     public String name;
-    public int power;
+    public long power;
     public boolean state;
 
     public OCEndpoint serverEndpoint;

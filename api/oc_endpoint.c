@@ -73,7 +73,7 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     }
   } else
 #endif
-  if (endpoint->flags & SECURED) {
+    if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
@@ -148,7 +148,7 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     }
   } else
 #endif
-  if (endpoint->flags & SECURED) {
+    if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
@@ -329,92 +329,135 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (!endpoint_str || !endpoint)
     return -1;
 
+  const char *address = NULL;
   endpoint->flags = 0;
+  size_t len = oc_string_len(*endpoint_str);
 #ifdef OC_TCP
-  if (memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
+  if (len > strlen(OC_SCHEME_COAPS_TCP) &&
+      memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
              strlen(OC_SCHEME_COAPS_TCP)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS_TCP);
     endpoint->flags = TCP | SECURED;
-  } else if (memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
+  } else if (len > strlen(OC_SCHEME_COAP_TCP) &&
+             memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
                     strlen(OC_SCHEME_COAP_TCP)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP_TCP);
     endpoint->flags = TCP;
   } else
 #endif
-  if (memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
-             strlen(OC_SCHEME_COAPS)) == 0) {
+    if (len > strlen(OC_SCHEME_COAPS) &&
+        memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
+               strlen(OC_SCHEME_COAPS)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS);
     endpoint->flags = SECURED;
-  } else if (memcmp(OC_SCHEME_COAP, oc_string(*endpoint_str),
+  } else if (len > strlen(OC_SCHEME_COAP) &&
+             memcmp(OC_SCHEME_COAP, oc_string(*endpoint_str),
                     strlen(OC_SCHEME_COAP)) == 0) {
-    /* Do nothing */
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP);
   } else {
     return -1;
   }
-  size_t len = oc_string_len(*endpoint_str);
-  const char *p = strrchr(oc_string(*endpoint_str), ':');
-  char *u = 0;
+
+  len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+
+  /* Extract a uri path if requested and available */
+  const char *u = NULL;
+  if (uri) {
+    u = memchr(address, '/', len);
+    if (u) {
+      oc_new_string(uri, u, (len - (u - address)));
+    }
+  }
+
+  /* Extract the port # if avilable */
+  const char *p = NULL;
+  /* If IPv6 address, look for port after ] */
+  if (address[0] == '[') {
+    p = memchr(address, ']', len);
+    if (!p) {
+      return -1;
+    }
+    /* A : that ever follows ] must precede a port */
+    p = memchr(p, ':', len - (p - address + 1));
+  } else {
+    /* IPv4 address or hostname; the first : must precede a port */
+    p = memchr(address, ':', len);
+  }
+
+  uint16_t port = 0;
   if (p) {
-    p += 1;
-    uint16_t port = (uint16_t)strtoul(p, (char **)&u, 10);
-    if (uri && u && (u - oc_string(*endpoint_str)) < (int)len) {
-      oc_new_string(uri, u, (len - (u - oc_string(*endpoint_str))));
+    /* Extract port # from string */
+    port = (uint16_t)strtoul(p + 1, NULL, 10);
+  } else {
+    /* Port not specified; assume 5683 for an unsecured ep and 5684 for
+     * a secured ep
+     */
+    if (endpoint->flags & SECURED) {
+      port = 5684;
+    } else {
+      port = 5683;
     }
-
-    const char *address = memchr(oc_string(*endpoint_str), '/', len);
-    address += 2;
-    size_t address_len = (p - address - 1);
-
+    if (u != NULL) {
+      p = u;
+    } else {
+      p = address + len;
+    }
+  }
+  /* At this point 'p' points to the location immediately following
+   * the last character of the address
+   */
+  size_t address_len = p - address;
 #ifdef OC_DNS_LOOKUP
-    oc_string_t ipaddress;
-    memset(&ipaddress, 0, sizeof(oc_string_t));
+  oc_string_t ipaddress;
+  memset(&ipaddress, 0, sizeof(oc_string_t));
 #endif /* OC_DNS_LOOKUP */
-    if (('A' <= address[address_len - 1] && 'Z' >= address[address_len - 1]) ||
-        ('a' <= address[address_len - 1] && 'z' >= address[address_len - 1])) {
+  if (('A' <= address[address_len - 1] && 'Z' >= address[address_len - 1]) ||
+      ('a' <= address[address_len - 1] && 'z' >= address[address_len - 1])) {
 #ifdef OC_DNS_LOOKUP
-      char domain[address_len + 1];
-      strncpy(domain, address, address_len);
-      domain[address_len] = '\0';
+    char domain[address_len + 1];
+    strncpy(domain, address, address_len);
+    domain[address_len] = '\0';
 #ifdef OC_DNS_LOOKUP_IPV6
-      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
+    if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV6) != 0) {
 #endif /* OC_DNS_LOOKUP_IPV6 */
-        if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
-          return -1;
-        }
-#ifdef OC_DNS_LOOKUP_IPV6
+      if (oc_dns_lookup(domain, &ipaddress, endpoint->flags | IPV4) != 0) {
+        return -1;
       }
+#ifdef OC_DNS_LOOKUP_IPV6
+    }
 #endif /* OC_DNS_LOOKUP_IPV6 */
-      address = oc_string(ipaddress);
-      address_len = oc_string_len(ipaddress);
-#else /* OC_DNS_LOOKUP */
-      return -1;
+    address = oc_string(ipaddress);
+    address_len = oc_string_len(ipaddress);
+#else  /* OC_DNS_LOOKUP */
+    return -1;
 #endif /* !OC_DNS_LOOKUP */
-    }
+  }
 
-    if (address[0] == '[' && address[address_len - 1] == ']') {
-      endpoint->flags |= IPV6;
-      endpoint->addr.ipv6.port = port;
-      oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
-    }
+  if (address[0] == '[' && address[address_len - 1] == ']') {
+    endpoint->flags |= IPV6;
+    endpoint->addr.ipv6.port = port;
+    oc_parse_ipv6_address(&address[1], address_len - 2, endpoint);
+  }
 #ifdef OC_IPV4
-    else {
-      endpoint->flags |= IPV4;
-      endpoint->addr.ipv4.port = port;
-      oc_parse_ipv4_address(address, address_len, endpoint);
-    }
+  else {
+    endpoint->flags |= IPV4;
+    endpoint->addr.ipv4.port = port;
+    oc_parse_ipv4_address(address, address_len, endpoint);
+  }
 #else /* OC_IPV4 */
-    else {
-#ifdef OC_DNS_LOOKUP
-      if (oc_string_len(ipaddress) > 0)
-        oc_free_string(&ipaddress);
-#endif /* OC_DNS_LOOKUP */
-      return -1;
-    }
-#endif /* !OC_IPV4 */
+  else {
 #ifdef OC_DNS_LOOKUP
     if (oc_string_len(ipaddress) > 0)
       oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
-    return 0;
+    return -1;
   }
-  return -1;
+#endif /* !OC_IPV4 */
+#ifdef OC_DNS_LOOKUP
+  if (oc_string_len(ipaddress) > 0)
+    oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
+  return 0;
 }
 
 int

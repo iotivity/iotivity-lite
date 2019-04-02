@@ -24,7 +24,7 @@ public class PostLightResponseHandler implements OCResponseHandler {
         if (OCMain.initPost(Light.serverUri, Light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetInt(root, "power", 55);
+            OCMain.repSetLong(root, "power", 55);
             OCMain.repEndRootObject();
 
             if (OCMain.doPost()) {
