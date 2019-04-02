@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "1a494da4_c947a01c",
+        "filename": "api/oc_session_events.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-02T22:20:52Z",
+      "side": 1,
+      "message": "not sure if this is the best way to fix the linking error when OC_TCP is not defined.",
+      "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_a941740d",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 2
@@ -13,6 +30,24 @@
       "writtenOn": "2019-04-02T22:06:48Z",
       "side": 1,
       "message": "jni_rep_get_long ?",
+      "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_295564c6",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 1576,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-02T22:20:52Z",
+      "side": 1,
+      "message": "In the C code these are still called oc_rep_get_int in general we have not been changing the name of the functions from the name in the C code.  In this case we may want to change it.",
+      "parentUuid": "1a494da4_a941740d",
       "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
@@ -36,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_095228dd",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 1708,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-02T22:20:52Z",
+      "side": 1,
+      "message": "same comment as above.  I am using the name of the C function which still uses the name int_array.",
+      "parentUuid": "1a494da4_89463822",
+      "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_69376cb1",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 2
@@ -47,6 +100,24 @@
       "writtenOn": "2019-04-02T21:59:44Z",
       "side": 1,
       "message": "this seems strange IntArray with long[]",
+      "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_695e4ceb",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 1920,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-02T22:20:52Z",
+      "side": 1,
+      "message": "I was wondering the same question I think I will call you and talk it over with you.",
+      "parentUuid": "1a494da4_69376cb1",
       "revId": "e71b9b887c47e13e11bb883c251f4e53cd850216",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
