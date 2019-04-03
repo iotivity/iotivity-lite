@@ -82,7 +82,8 @@ static void free_res_payload(oc_rep_t *payload) {
 
 void cloud_manager_start(cloud_context_t *ctx) {
   OC_DBG("[CM] cloud_manager_start\n");
-  if (ctx->store.status == CLOUD_SIGNED_IN)
+  if (ctx->store.status == CLOUD_SIGNED_IN ||
+      ctx->store.status == CLOUD_REFRESHED_TOKEN)
     ctx->store.status = CLOUD_SIGNED_UP;
   cloud_start_process(ctx);
 }
@@ -236,6 +237,7 @@ static void sign_in_handler(oc_client_response_t *data) {
   OC_DBG("[CM] sign in handler(%d)\n", data->code);
 
   if (ctx->store.status != CLOUD_SIGNED_UP &&
+      ctx->store.status != CLOUD_REFRESHED_TOKEN &&
       ctx->store.status != CLOUD_RECONNECTING)
     return;
   if (data->code != OC_STATUS_CHANGED)
@@ -244,12 +246,12 @@ static void sign_in_handler(oc_client_response_t *data) {
 
   oc_remove_delayed_callback(ctx, sign_in);
   ctx->retry_count = 0;
+  uint16_t refreshDelay = ctx->store.status == CLOUD_REFRESHED_TOKEN ? REFRESH_TOKEN_DELAY : REFRESH_TOKEN_DELAY_ON_SIGN_IN;
   ctx->store.status = CLOUD_SIGNED_IN;
   cloud_set_last_error(ctx, CLOUD_OK);
   oc_set_delayed_callback(ctx, callback_handler, 0);
   oc_set_delayed_callback(ctx, send_ping, PING_DELAY);
-  oc_set_delayed_callback(ctx, refresh_token_on_sign_in,
-                          REFRESH_TOKEN_DELAY_ON_SIGN_IN);
+  oc_set_delayed_callback(ctx, refresh_token_on_sign_in, refreshDelay);
   free_res_payload(payload);
   return;
 
@@ -270,6 +272,7 @@ static oc_event_callback_retval_t sign_in(void *data) {
   cloud_context_t *ctx = (cloud_context_t *)data;
 
   if (ctx->store.status == CLOUD_SIGNED_UP ||
+      ctx->store.status == CLOUD_REFRESHED_TOKEN ||
       ctx->store.status == CLOUD_RECONNECTING) {
     OC_DBG("[CM] try sign in(%d)\n", ctx->retry_count);
     ctx->retry_count++;
@@ -305,28 +308,25 @@ static void refresh_token_handler(oc_client_response_t *data) {
     goto error;
 
   char *access_value, *refresh_value = NULL;
-  size_t size;
-  oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value, &size);
-  oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value, &size);
+  size_t access_size, refresh_size;
+  oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value, &access_size);
+  oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value, &refresh_size);
 
   if (!access_value || !refresh_value) {
     goto error;
   }
-  if (oc_string_len(ctx->store.access_token) > 0)
-    oc_free_string(&ctx->store.access_token);
-  oc_new_string(&ctx->store.access_token, access_value, strlen(access_value));
-  if (oc_string_len(ctx->store.refresh_token) > 0)
-    oc_free_string(&ctx->store.refresh_token);
-  oc_new_string(&ctx->store.refresh_token, refresh_value,
-                strlen(refresh_value));
+  cloud_set_string(&ctx->store.access_token, access_value, access_size);
+  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
   cloud_store_dump_async(&ctx->store);
 
   oc_remove_delayed_callback(ctx, send_ping);
   oc_remove_delayed_callback(ctx, refresh_token);
   oc_remove_delayed_callback(ctx, refresh_token_on_sign_in);
-  ctx->retry_count = 0;
   cloud_set_last_error(ctx, CLOUD_OK);
+  ctx->retry_count = 0;
+  ctx->store.status = CLOUD_REFRESHED_TOKEN;
   oc_set_delayed_callback(ctx, sign_in, session_timeout[ctx->retry_count]);
+  oc_set_delayed_callback(ctx, callback_handler, 0);
   free_res_payload(payload);
   return;
 
