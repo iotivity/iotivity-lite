@@ -1,5 +1,5 @@
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedffdd..cb25c6620 100644
+index 79eedffdd..cbbb03291 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
 @@ -1,2817 +1,148 @@
@@ -2685,9 +2685,7 @@ index 79eedffdd..cb25c6620 100644
 - * This module is required for X.509 certificate request writing.
 - */
 -#define MBEDTLS_X509_CSR_WRITE_C
-+/* Save RAM at the expense of ROM */
-+#define MBEDTLS_AES_ROM_TABLES
- 
+-
 -/**
 - * \def MBEDTLS_XTEA_C
 - *
@@ -2697,7 +2695,9 @@ index 79eedffdd..cb25c6620 100644
 - * Caller:
 - */
 -#define MBEDTLS_XTEA_C
--
++/* Save RAM at the expense of ROM */
++#define MBEDTLS_AES_ROM_TABLES
+ 
 -/* \} name SECTION: mbed TLS modules */
 +/* Save some RAM by adjusting to your exact needs */
 +#define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
@@ -2725,28 +2725,33 @@ index 79eedffdd..cb25c6620 100644
 -/* MPI / BIGNUM options */
 -//#define MBEDTLS_MPI_WINDOW_SIZE            6 /**< Maximum windows size used. */
 -//#define MBEDTLS_MPI_MAX_SIZE            1024 /**< Maximum number of bytes for usable MPIs. */
-+#ifndef OC_DYNAMIC_ALLOCATION
-+#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
-+#endif /* !OC_DYNAMIC_ALLOCATION */
- 
+-
 -/* CTR_DRBG options */
 -//#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
 -//#define MBEDTLS_CTR_DRBG_RESEED_INTERVAL        10000 /**< Interval before reseed is performed by default */
 -//#define MBEDTLS_CTR_DRBG_MAX_INPUT                256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_CTR_DRBG_MAX_REQUEST             1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_CTR_DRBG_MAX_SEED_INPUT           384 /**< Maximum size of (re)seed buffer */
-+#define MBEDTLS_SSL_BUFFER_MIN 512
- 
+-
 -/* HMAC_DRBG options */
 -//#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000 /**< Interval before reseed is performed by default */
 -//#define MBEDTLS_HMAC_DRBG_MAX_INPUT           256 /**< Maximum number of additional input bytes */
 -//#define MBEDTLS_HMAC_DRBG_MAX_REQUEST        1024 /**< Maximum number of requested bytes per call */
 -//#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT      384 /**< Maximum size of (re)seed buffer */
--
++#ifndef OC_DYNAMIC_ALLOCATION
++#define MBEDTLS_SSL_MAX_CONTENT_LEN (OC_PDU_SIZE)
++#endif /* !OC_DYNAMIC_ALLOCATION */
+ 
 -/* ECP options */
 -//#define MBEDTLS_ECP_MAX_BITS             521 /**< Maximum bit size of groups */
 -//#define MBEDTLS_ECP_WINDOW_SIZE            6 /**< Maximum window size used */
 -//#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
++#define MBEDTLS_SSL_BUFFER_MIN 512
+ 
+-/* Entropy options */
+-//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
+-//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
+-//#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
 +#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 +#define MBEDTLS_ECP_C
 +#define MBEDTLS_BIGNUM_C
@@ -2758,18 +2763,9 @@ index 79eedffdd..cb25c6620 100644
 +#define MBEDTLS_PKCS1_V15
 +#define MBEDTLS_X509_CRT_PARSE_C
  
--/* Entropy options */
--//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
--//#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
--//#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
-+#define MBEDTLS_X509_USE_C
- 
 -/* Memory buffer allocator options */
 -//#define MBEDTLS_MEMORY_ALIGN_MULTIPLE      4 /**< Align on multiples of this value */
-+#define MBEDTLS_ASN1_PARSE_C
-+#define MBEDTLS_OID_C
-+#define MBEDTLS_PK_PARSE_C
-+#define MBEDTLS_PK_C
++#define MBEDTLS_X509_USE_C
  
 -/* Platform options */
 -//#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
@@ -2786,7 +2782,10 @@ index 79eedffdd..cb25c6620 100644
 -//#define MBEDTLS_PLATFORM_STD_NV_SEED_READ   mbedtls_platform_std_nv_seed_read /**< Default nv_seed_read function to use, can be undefined */
 -//#define MBEDTLS_PLATFORM_STD_NV_SEED_WRITE  mbedtls_platform_std_nv_seed_write /**< Default nv_seed_write function to use, can be undefined */
 -//#define MBEDTLS_PLATFORM_STD_NV_SEED_FILE  "seedfile" /**< Seed file to read/write with default implementation */
-+#define MBEDTLS_CIPHER_MODE_CBC
++#define MBEDTLS_ASN1_PARSE_C
++#define MBEDTLS_OID_C
++#define MBEDTLS_PK_PARSE_C
++#define MBEDTLS_PK_C
  
 -/* To Use Function Macros MBEDTLS_PLATFORM_C must be enabled */
 -/* MBEDTLS_PLATFORM_XXX_MACRO and MBEDTLS_PLATFORM_XXX_ALT cannot both be defined */
@@ -2801,19 +2800,21 @@ index 79eedffdd..cb25c6620 100644
 -//#define MBEDTLS_PLATFORM_SNPRINTF_MACRO    snprintf /**< Default snprintf macro to use, can be undefined */
 -//#define MBEDTLS_PLATFORM_NV_SEED_READ_MACRO   mbedtls_platform_std_nv_seed_read /**< Default nv_seed_read function to use, can be undefined */
 -//#define MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO  mbedtls_platform_std_nv_seed_write /**< Default nv_seed_write function to use, can be undefined */
-+#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
++#define MBEDTLS_CIPHER_MODE_CBC
  
 -/* SSL Cache options */
 -//#define MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT       86400 /**< 1 day  */
 -//#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
-+#define MBEDTLS_SSL_EXTENDED_MASTER_SECRET
-+#define MBEDTLS_SSL_ALL_ALERT_MESSAGES
++#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
  
 -/* SSL options */
 -//#define MBEDTLS_SSL_MAX_CONTENT_LEN             16384 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
 -//#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 -//#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 -//#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
++#define MBEDTLS_SSL_EXTENDED_MASTER_SECRET
++#define MBEDTLS_SSL_ALL_ALERT_MESSAGES
++#define MBEDTLS_PKCS5_C
 +#ifdef OC_PKI
 +#define MBEDTLS_ECDSA_C
 +#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
