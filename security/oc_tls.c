@@ -187,10 +187,10 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   if (peer->endpoint.flags & TCP) {
     oc_connectivity_end_session(&peer->endpoint);
   } else
-#endif /* OC_TCP */
   {
     oc_session_end_event(&peer->endpoint);
   }
+#endif /* OC_TCP */
 
   if (!inactivity_cb) {
     oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
@@ -1414,11 +1414,15 @@ read_application_data(oc_tls_peer_t *peer)
         return;
       }
     } while (ret == 0 && peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
+
     if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
       OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]",
              peer->ssl_ctx.session->ciphersuite);
+#ifdef OC_TCP
       oc_session_start_event(&peer->endpoint);
+#endif /* OC_TCP */
     }
+
 #ifdef OC_CLIENT
     if (ret == 0) {
       oc_tls_handler_schedule_write(peer);
