@@ -35,6 +35,7 @@ typedef enum {
   CLOUD_INITIALIZED = 0,
   CLOUD_SIGNED_UP = 1 << 0,
   CLOUD_SIGNED_IN = 1 << 1,
+  CLOUD_REFRESHED_TOKEN = 1 << 2,
   CLOUD_FAILED = 1 << 5,
   CLOUD_RECONNECTING = 1 << 6,
 } cloud_status_t;
