@@ -52,7 +52,7 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_CRED, device));
+    oc_core_get_resource_by_index(OCF_SEC_CSR, device));
   oc_rep_set_byte_string(root, csr, csr, csr_len);
   oc_rep_set_text_string(root, encoding, "oic.sec.encoding.der");
   oc_rep_end_root_object();
