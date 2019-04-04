@@ -40,7 +40,7 @@ public class GetLightRequestHandler implements OCRequestHandler {
             }
             case OCInterfaceMask.RW: {
                 OCMain.repSetBoolean(root, "state", light.state);
-                OCMain.repSetInt(root, "power", light.power);
+                OCMain.repSetLong(root, "power", light.power);
                 OCMain.repSetTextString(root, "name", light.name);
                 break;
             }
