@@ -215,7 +215,6 @@ int jni_main_init(const oc_handler_t *handler)
   JNIEnv *jenv = GetJNIEnv(&getEnvResult);
   assert(jenv);
 
-  // TODO: Is there a better place for this?
   jclass ocAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCAddDeviceHandler");
   assert(ocAddDeviceHandlerClass);
   cls_OCAddDeviceHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocAddDeviceHandlerClass));
@@ -1004,10 +1003,46 @@ oc_role_t *jni_get_all_roles(void) {
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
-// TODO implement the oc_assert_role oc_assert_role needs OC_SECURITY and OC_PKI defined
+
 %ignore oc_assert_role;
-// TODO implement the oc_send_ping when OC_TCP defined
+%rename(assertRole) jni_assert_role;
+%inline %{
+bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
+                     oc_response_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_assert_role(role, authority, endpoint, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+#else
+  return false;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+
 %ignore oc_send_ping;
+%rename(sendPing) jni_send_ping;
+%inline %{
+bool jni_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+                   oc_response_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_TCP)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_send_ping(custody, endpoint, timeout_seconds, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+#else
+  return false;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
 
 // common operations
 /* Code and typemaps for mapping the oc_set_delayed_callback to the java OCTriggerHandler */
