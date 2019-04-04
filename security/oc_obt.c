@@ -303,7 +303,7 @@ oc_obt_load_state(void)
         case OC_REP_INT:
           if (oc_string_len(rep->name) == 2 &&
               memcmp(oc_string(rep->name), "id", 2) == 0) {
-            id = rep->value.integer;
+            id = (int)rep->value.integer;
           }
           break;
         default:

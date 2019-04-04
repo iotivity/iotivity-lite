@@ -445,13 +445,13 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
       break;
     case OC_REP_INT:
       if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
-        ps.cm = rep->value.integer;
+        ps.cm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
-        ps.tm = rep->value.integer;
+        ps.tm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "om", 2) == 0) {
-        ps.om = rep->value.integer;
+        ps.om = (int)rep->value.integer;
       } else if (from_storage && memcmp(oc_string(rep->name), "sm", 2) == 0) {
-        ps.sm = rep->value.integer;
+        ps.sm = (int)rep->value.integer;
       } else {
         return false;
       }

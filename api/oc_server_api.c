@@ -359,9 +359,12 @@ oc_send_separate_response(oc_separate_response_t *handle,
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);
+#ifdef OC_SPEC_VER_OIC
         if (cur->endpoint.version == OIC_VER_1_1_0) {
           coap_set_header_content_format(response, APPLICATION_CBOR);
-        } else {
+        } else
+#endif /* OC_SPEC_VER_OIC */
+        {
           coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
         }
 

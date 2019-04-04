@@ -144,11 +144,6 @@ oc_sec_decode_sp(oc_rep_t *rep, size_t device)
         sp[device].supported_profiles = supported_profiles;
       }
       break;
-    case OC_REP_INT:
-      if (len == 6 && memcmp("credid", oc_string(rep->name), 6) == 0) {
-        sp[device].credid = rep->value.integer;
-      }
-      break;
     default:
       return false;
       break;
@@ -196,9 +191,6 @@ oc_sec_encode_sp(size_t device)
     oc_rep_add_text_string(supportedprofiles, sp_to_string(OC_SP_PURPLE));
   }
   oc_rep_close_array(root, supportedprofiles);
-  if (sp[device].credid != -1) {
-    oc_rep_set_int(root, credid, sp[device].credid);
-  }
   oc_rep_end_root_object();
 }
 

@@ -48,7 +48,7 @@ public class GetLightResponseHandler implements OCResponseHandler {
         if (OCMain.initPut(light.serverUri, light.serverEndpoint, null, putLight, OCQos.LOW_QOS)) {
             CborEncoder root = OCMain.repBeginRootObject();
             OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetInt(root, "power", 15);
+            OCMain.repSetLong(root, "power", 15);
             OCMain.repEndRootObject();
 
             if (OCMain.doPut()) {
