@@ -1,0 +1,145 @@
+<configuration>
+  <endpoint>
+    <ip>%IP%</ip>
+    <port>%PORT%</port>
+  </endpoint>
+  <deviceClass>OCFServer</deviceClass>
+  <profiles>
+    <profile>Server</profile>
+  </profiles>
+  <testCases>
+    <testCase>CT1.1.1</testCase>
+    <testCase>CT1.1.2</testCase>
+    <testCase>CT1.1.3</testCase>
+    <testCase>CT1.1.4</testCase>
+    <testCase>CT1.1.5</testCase>
+    <testCase>CT1.1.6</testCase>
+    <testCase>CT1.1.7</testCase>
+    <testCase>CT1.1.8</testCase>
+    <testCase>CT1.2.2</testCase>
+    <testCase>CT1.2.3</testCase>
+    <testCase>CT1.2.4</testCase>
+    <testCase>CT1.2.6</testCase>
+    <testCase>CT1.2.7</testCase>
+    <testCase>CT1.2.8</testCase>
+    <testCase>CT1.2.9</testCase>
+    <testCase>CT1.2.10</testCase>
+    <testCase>CT1.2.11</testCase>
+    <testCase>CT1.2.12</testCase>
+    <testCase>CT1.2.13</testCase>
+    <testCase>CT1.2.14</testCase>
+    <testCase>CT1.2.15</testCase>
+    <testCase>CT1.2.16</testCase>
+    <testCase>CT1.2.17</testCase>
+    <testCase>CT1.2.18</testCase>
+    <testCase>CT1.2.19</testCase>
+    <testCase>CT1.2.20</testCase>
+    <testCase>CT1.2.21</testCase>
+    <testCase>CT1.2.22</testCase>
+    <testCase>CT1.2.23</testCase>
+    <testCase>CT1.2.25</testCase>
+    <testCase>CT1.2.27</testCase>
+    <testCase>CT1.3.1</testCase>
+    <testCase>CT1.3.2.1</testCase>
+    <testCase>CT1.3.2.2</testCase>
+    <testCase>CT1.3.3.1</testCase>
+    <testCase>CT1.3.3.2</testCase>
+    <testCase>CT1.3.3.3</testCase>
+    <testCase>CT1.3.8</testCase>
+    <testCase>CT1.3.9</testCase>
+    <testCase>CT1.3.9_BZ_3243</testCase>
+    <testCase>CT1.3.10</testCase>
+    <testCase>CT1.3.11</testCase>
+    <testCase>CT1.3.12</testCase>
+    <testCase>CT1.3.13</testCase>
+    <testCase>CT1.3.16</testCase>
+    <testCase>CT1.4.1</testCase>
+    <testCase>CT1.4.2</testCase>
+    <testCase>CT1.4.3</testCase>
+    <testCase>CT1.4.4</testCase>
+    <testCase>CT1.4.5</testCase>
+    <testCase>CT1.4.5_BZ_2982</testCase>
+    <testCase>CT1.4.6</testCase>
+    <testCase>CT1.4.7</testCase>
+    <testCase>CT1.7.2.1.2</testCase>
+    <testCase>CT1.7.2.1.2_BZ_3052</testCase>
+    <testCase>CT1.7.2.2.2</testCase>
+    <testCase>CT1.7.2.2.2_BZ_3052</testCase>
+    <testCase>CT1.7.2.3.2</testCase>
+    <testCase>CT1.7.2.3.3</testCase>
+    <testCase>CT1.7.2.3.3_BZ_3052</testCase>
+    <testCase>CT1.7.2.3.3_BZ_3067</testCase>
+    <testCase>CT1.7.3.2</testCase>
+    <testCase>CT1.7.4.1</testCase>
+    <testCase>CT1.7.4.2</testCase>
+    <testCase>CT1.7.4.3</testCase>
+    <testCase>CT1.7.4.4</testCase>
+    <testCase>CT1.7.4.5</testCase>
+    <testCase>CT1.7.4.5_BZ_3069</testCase>
+    <testCase>CT1.7.4.7</testCase>
+    <testCase>CT1.7.5.1</testCase>
+    <testCase>CT1.7.5.2</testCase>
+    <testCase>CT1.7.7.1</testCase>
+    <testCase>CT1.7.8.1</testCase>
+    <testCase>CT1.7.8.2</testCase>
+    <testCase>CT1.7.8.3</testCase>
+    <testCase>CT1.7.8.4</testCase>
+    <testCase>CT1.7.8.4_BZ_3144</testCase>
+    <testCase>CT1.7.8.5</testCase>
+    <testCase>CT1.7.8.7</testCase>
+    <testCase>CT1.7.8.9</testCase>
+    <testCase>CT1.7.8.11</testCase>
+    <testCase>CT1.7.8.12</testCase>
+    <testCase>CT1.7.8.13</testCase>
+    <testCase>CT1.7.8.13_BZ_3144</testCase>
+    <testCase>CT1.7.8.14</testCase>
+    <testCase>CT1.7.8.15</testCase>
+    <testCase>CT1.7.9.1</testCase>
+    <testCase>CT1.7.9.2</testCase>
+    <testCase>CT1.7.9.3</testCase>
+    <testCase>CT1.7.9.4</testCase>
+    <testCase>CT1.7.9.5</testCase>
+    <testCase>CT1.7.9.6.1</testCase>
+    <testCase>CT1.7.9.6.2</testCase>
+    <testCase>CT1.7.9.6.3</testCase>
+    <testCase>CT1.7.9.7</testCase>
+    <testCase>CT1.7.10.3</testCase>
+    <testCase>CT1.7.10.4</testCase>
+    <testCase>CT1.7.10.5</testCase>
+    <testCase>CT1.7.10.6</testCase>
+    <testCase>CT1.7.10.7</testCase>
+    <testCase>CT1.7.11.1</testCase>
+    <testCase>CT1.7.11.2</testCase>
+    <testCase>CT1.7.11.3</testCase>
+    <testCase>CT1.7.12.1</testCase>
+    <testCase>CT1.7.12.1_BZ_3145</testCase>
+    <testCase>CT1.7.12.2</testCase>
+    <testCase>CT1.7.12.3</testCase>
+    <testCase>CT1.7.12.4</testCase>
+    <testCase>CT1.7.12.5</testCase>
+   </testCases>
+  <pics>{
+    "device": "IoTLite-CertApp",
+    "company": "Granite River Labs",
+    "role": "Server",
+    "supportedVerticalProfile": ["Smart Home"],
+    "supportedDeviceTypes": ["oic.d.dehumidifier"],
+    "icv": "ocf.2.0.2",
+    "dmv": "ocf.res.1.0.0, ocf.sh.1.0.0",
+    "resources": [ "oic.r.switch.binary", "oic.r.humidity", "oic.wk.col", "oic.r.coapcloudconf", "oic.r.csr", "oic.r.roles", "oic.r.sp"],
+    "jurisdictionSwitch": false,
+    "OTM":["oic.sec.doxm.jw","oic.sec.doxm.rdp", "oic.sec.doxm.mfgcert"],
+    "contentFormatVersion": [ "1.0.0" ],
+    "acceptVersion": [ "1.0.0" ],
+    "multiValueQuerySupport":true,
+    "sct": 25,
+    "observableOICRES":true,
+    "persistentDeviceuuid": false,
+    "batchInterface": true,
+    "supportsCoAPoverTCP": true,
+    "supportedSecurityProfiles":[
+       "sp-baseline-v0",
+        "sp-black-v0"
+    ]
+}</pics>
+</configuration>
