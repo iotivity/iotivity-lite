@@ -606,11 +606,6 @@ obt_jw_6(oc_client_response_t *data)
   }
 
   oc_device_t *device = o->device;
-  oc_sec_cred_t *c =
-    oc_sec_allocate_cred(&device->uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, 0);
-  if (!c) {
-    goto err_obt_jw_6;
-  }
 
   oc_endpoint_t *ep = get_secure_endpoint(device->endpoint);
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
@@ -620,25 +615,26 @@ obt_jw_6(oc_client_response_t *data)
   oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
 
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
-  oc_alloc_string(&c->privatedata.data, 17);
+  uint8_t key[16];
   bool derived = oc_sec_derive_owner_psk(
     ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
-    device->uuid.id, 16, my_uuid->id, 16, oc_cast(c->privatedata.data, uint8_t),
-    16);
+    device->uuid.id, 16, my_uuid->id, 16, key, 16);
 #undef OXM_JUST_WORKS
   if (!derived) {
     goto err_obt_jw_6;
   }
 
-  int credid = oc_obt_get_next_id();
+  int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
+                                   OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
+                                   16, key, 0, 0, NULL, NULL, NULL);
+
+  if (credid == -1) {
+    goto err_obt_jw_6;
+  }
 
   /**  6) post cred rowneruuid, cred
    */
   if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_7, HIGH_QOS, o)) {
-    c->credid = credid;
-    c->credtype = 1;
-    memcpy(c->subjectuuid.id, device->uuid.id, 16);
-
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
