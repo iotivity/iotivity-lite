@@ -91,6 +91,7 @@ SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
+HEADERS += ../../apps/Certification.h
 HEADERS += ../../port/linux/oc_config.h
 
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
@@ -110,7 +111,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
+SAMPLES = CertificationApp discover_device server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(CREATE),1)
@@ -136,6 +137,10 @@ ifeq ($(CLOUD),1)
 endif
 
 OBT = onboarding_tool
+
+ifeq ($(IDD),1)
+	CFLAGS += -DOC_IDD_API
+endif
 
 ifeq ($(DEBUG),1)
 	EXTRA_CFLAGS += -DOC_DEBUG -g -O0
@@ -370,6 +375,14 @@ server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_mult
 client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+CertificationApp: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/CertificationApp.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/device_builder_server.c ../../apps/CertificationApp.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER  ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+
+discover_device: libiotivity-lite-client.a $(ROOT_DIR)/apps/discover_device.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/discover_device.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \
