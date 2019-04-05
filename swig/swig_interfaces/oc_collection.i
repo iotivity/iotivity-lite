@@ -1,5 +1,7 @@
 /* File oc_api.i */
 %module OCCollectionUtil
+
+%include "stdint.i"
 %include iotivity.swg
 
 %import oc_ri.i
