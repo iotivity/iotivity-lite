@@ -91,6 +91,7 @@ SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
+HEADERS += ../../apps/Certification.h
 HEADERS += ../../port/linux/oc_config.h
 
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
@@ -101,6 +102,7 @@ HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS_CLOUD=-I../../api/cloud
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
+CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
@@ -109,8 +111,13 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
+SAMPLES = CertificationApp discover_device server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+
+ifeq ($(SWUPDATE),1)
+	SAMPLES += smart_home_server_with_mock_swupdate
+endif
+
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
 endif
@@ -122,6 +129,10 @@ ifeq ($(CLOUD),1)
 endif
 
 OBT = onboarding_tool
+
+ifeq ($(IDD),1)
+	CFLAGS += -DOC_IDD_API
+endif
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -138,6 +149,10 @@ endif
 
 ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
+
+ifeq ($(SWUPDATE),1)
+	EXTRA_CFLAGS += -DOC_SOFTWARE_UPDATE
 endif
 
 ifneq ($(SECURE),0)
@@ -166,6 +181,7 @@ endif
 
 
 CFLAGS += $(EXTRA_CFLAGS)
+CXXFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(MEMTRACE),1)
 	CFLAGS += -DOC_MEMORY_TRACE
@@ -224,6 +240,10 @@ $(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
 
 messagingtest: $(MESSAGING_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+
+copy_pki_certs:
+	@mkdir -p pki_certs
+	@cp ../../apps/pki_certs/*.pem pki_certs/
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -311,9 +331,13 @@ client_block_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_blo
 server_block_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c
+smart_home_server_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+smart_home_server_with_mock_swupdate: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_with_mock_swupdate.cpp
+	@mkdir -p $@_creds
+	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-constrained-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
 
 multi_device_server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
 	@mkdir -p $@_creds
@@ -331,7 +355,7 @@ cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_cert
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
-${OBT}: libiotivity-constrained-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c
+${OBT}: libiotivity-constrained-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
@@ -342,6 +366,13 @@ server_multithread_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/serv
 client_multithread_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+CertificationApp: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/CertificationApp.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/device_builder_server.c ../../apps/CertificationApp.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER  ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+
+discover_device: libiotivity-constrained-client.a $(ROOT_DIR)/apps/discover_device.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/discover_device.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 	$(SED) > $@ < $< \
@@ -408,9 +439,10 @@ endif
 
 clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
+	rm -rf pki_certs
 
 cleanall: clean
-	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
+	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) *.o
 	${MAKE} -C ${GTEST_DIR}/make clean
 
 distclean: cleanall
