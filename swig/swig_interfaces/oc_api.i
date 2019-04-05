@@ -361,13 +361,6 @@ void jni_oc_add_device_callback(void *user_data)
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
 }
-
-void jni_oc_resource_make_public(oc_resource_t *resource) {
-  OC_DBG("JNI: %s\n", __func__);
-#ifdef OC_SECURITY
-  oc_resource_make_public(resource);
-#endif /* OC_SECURITY */
-}
 %}
 %typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
 %typemap(jtype)  oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
@@ -451,9 +444,19 @@ int jni_oc_init_platform(const char *mfg_name) {
 %rename(collectionGetLinks) oc_collection_get_links;
 %rename(addCollection) oc_add_collection;
 %rename(collectionGetCollection) oc_collection_get_collections;
+%rename(collectionAddSupportedResourceType) oc_collection_add_supported_rt;
+%rename(collectionAddMandatoryResourceType) oc_collection_add_mandatory_rt;
 // custom instance of oc_resource_make_public to handle OC_SECURITY
-%rename(resourceMakePublic) jni_oc_resource_make_public;
 %ignore oc_resource_make_public;
+%rename(resourceMakePublic) jni_oc_resource_make_public;
+%inline %{
+void jni_oc_resource_make_public(oc_resource_t *resource) {
+  OC_DBG("JNI: %s\n", __func__);
+#ifdef OC_SECURITY
+  oc_resource_make_public(resource);
+#endif /* OC_SECURITY */
+}
+%}
 %rename(resourceSetDiscoverable) oc_resource_set_discoverable;
 %rename(resourceSetObservable) oc_resource_set_observable;
 %rename(resourceSetPeriodicObservable) oc_resource_set_periodic_observable;
