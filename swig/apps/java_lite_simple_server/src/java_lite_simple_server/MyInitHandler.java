@@ -11,6 +11,8 @@ public class MyInitHandler implements OCMainInitHandler {
         Light.name = "John's Light";
         Light.power = 0;
         Light.state = false;
+        Counter.name = "John's Counter";
+        Counter.count = 0;
         return ret;
     }
 
@@ -28,6 +30,39 @@ public class MyInitHandler implements OCMainInitHandler {
         OCMain.resourceSetRequestHandler(resource, OCMethod.OC_PUT, new PutLight());
         OCMain.resourceSetRequestHandler(resource, OCMethod.OC_POST, new PostLight());
         OCMain.addResource(resource);
+
+        // for running with client_collections_linux
+        OCResource resource1 = OCMain.newResource("lightbulb", "/light/1", (short) 1, 0);
+        OCMain.resourceBindResourceType(resource1, "oic.r.light");
+        OCMain.resourceBindResourceInterface(resource1, OCInterfaceMask.RW);
+        OCMain.resourceSetDefaultInterface(resource1, OCInterfaceMask.RW);
+        OCMain.resourceSetDiscoverable(resource1, true);
+        OCMain.resourceSetPeriodicObservable(resource1, 1);
+        OCMain.resourceSetRequestHandler(resource1, OCMethod.OC_GET, new GetLight());
+        OCMain.resourceSetRequestHandler(resource1, OCMethod.OC_PUT, new PutLight());
+        OCMain.resourceSetRequestHandler(resource1, OCMethod.OC_POST, new PostLight());
+        OCMain.addResource(resource1);
+
+        OCResource resource2 = OCMain.newResource("counter", "/count/1", (short) 1, 0);
+        OCMain.resourceBindResourceType(resource2, "oic.r.counter");
+        OCMain.resourceBindResourceInterface(resource2, OCInterfaceMask.R);
+        OCMain.resourceSetDefaultInterface(resource2, OCInterfaceMask.R);
+        OCMain.resourceSetDiscoverable(resource2, true);
+        OCMain.resourceSetPeriodicObservable(resource2, 1);
+        OCMain.resourceSetRequestHandler(resource2, OCMethod.OC_GET, new GetCounter());
+        OCMain.resourceSetRequestHandler(resource2, OCMethod.OC_POST, new PostCounter());
+        OCMain.addResource(resource2);
+
+        OCResource collection = OCMain.newCollection("roomlights", "/lights", (short) 1, (short) 0, (short) 0, 0);
+        OCMain.resourceBindResourceType(collection, "oic.wk.col");
+        OCMain.resourceSetDiscoverable(collection, true);
+
+        OCLink link1 = OCMain.newLink(resource1);
+        OCMain.collectionAddLink(collection, link1);
+
+        OCLink link2 = OCMain.newLink(resource2);
+        OCMain.collectionAddLink(collection, link2);
+        OCMain.addCollection(collection);
     }
 
     @Override

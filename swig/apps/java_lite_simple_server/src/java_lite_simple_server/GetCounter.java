@@ -7,23 +7,23 @@ import org.iotivity.OCRequest;
 import org.iotivity.OCStatus;
 import org.iotivity.OCRequestHandler;
 
-public class GetLight implements OCRequestHandler {
+public class GetCounter implements OCRequestHandler {
 
     @Override
     public void handler(OCRequest request, int interfaces) {
-        System.out.println("Inside the GetLight RequestHandler");
-        Light.power++;
-        System.out.println("GET LIGHT:");
+        System.out.println("Inside the GetCounter RequestHandler");
+
+        Counter.count++;
+        System.out.println("GET COUNTER:");
         CborEncoder root = OCMain.repBeginRootObject();
         switch (interfaces) {
         case OCInterfaceMask.BASELINE: {
             OCMain.processBaselineInterface(request.getResource());
             /* fall through */
         }
-        case OCInterfaceMask.RW: {
-            OCMain.repSetBoolean(root, "state", Light.state);
-            OCMain.repSetLong(root, "power", Light.power);
-            OCMain.repSetTextString(root, "name", Light.name);
+        case OCInterfaceMask.R: {
+            OCMain.repSetLong(root, "count", Counter.count);
+            OCMain.repSetTextString(root, "name", Counter.name);
             break;
         }
         default:

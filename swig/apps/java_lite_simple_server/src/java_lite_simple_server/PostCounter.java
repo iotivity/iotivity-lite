@@ -7,29 +7,25 @@ import org.iotivity.OCRequestHandler;
 import org.iotivity.OCRepresentation;
 import org.iotivity.OCStatus;
 
-public class PostLight implements OCRequestHandler {
+public class PostCounter implements OCRequestHandler {
 
     @Override
     public void handler(OCRequest request, int interfaces) {
-        System.out.println("Inside the PostLight RequestHandler");
-        System.out.println("POST LIGHT:");
+        System.out.println("Inside the PostCounter RequestHandler");
+        System.out.println("POST COUNTER:");
         OCRepresentation rep = request.getRequest_payload();
         while (rep != null) {
             System.out.println("-----------------------------------------------------");
             System.out.println("Key: " + rep.getName());
             System.out.println("Type: " + rep.getType());
             switch (rep.getType()) {
-            case OC_REP_BOOL:
-                Light.state = rep.getValue().getBool();
-                System.out.println("value: " + Light.state);
-                break;
             case OC_REP_INT:
-                Light.power = rep.getValue().getInteger();
-                System.out.println("value: " + Light.power);
+                Counter.count = rep.getValue().getInteger();
+                System.out.println("value: " + Counter.count);
                 break;
             case OC_REP_STRING:
-                Light.name = rep.getValue().getString();
-                System.out.println("value: " + Light.name);
+                Counter.name = rep.getValue().getString();
+                System.out.println("value: " + Counter.name);
                 break;
             default:
                 System.out.println("NOT YET HANDLED VALUE");
@@ -40,8 +36,7 @@ public class PostLight implements OCRequestHandler {
         }
 
         CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetBoolean(root, "state", Light.state);
-        OCMain.repSetLong(root, "power", Light.power);
+        OCMain.repSetLong(root, "count", Counter.count);
         OCMain.repEndRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);

@@ -43,7 +43,7 @@ public class GetLightResponseHandler implements OCResponseHandler {
             if (OCMain.doPut()) {
                 System.out.println("\tSent PUT request");
             } else {
-                System.out.println("\tCould no send PUT request");
+                System.out.println("\tCould not send PUT request");
             }
         } else {
             System.out.println("\tCould not init PUT request");
