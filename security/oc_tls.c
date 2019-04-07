@@ -395,14 +395,17 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
   }
 }
 
-static int
+int
 oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
               unsigned int c, uint8_t *key, uint32_t key_len)
 {
   mbedtls_md_context_t hmac_SHA256;
   mbedtls_md_init(&hmac_SHA256);
+
   mbedtls_md_setup(&hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
                    1);
+
+  memset(key, 0, key_len);
 
   int ret = mbedtls_pkcs5_pbkdf2_hmac(&hmac_SHA256, pin, pin_len,
                                       (const unsigned char *)uuid->id, 16, c,
@@ -454,7 +457,6 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
         memcpy(peer->uuid.id, identity, 16);
 
         uint8_t key[16];
-        memset(key, 0, 16);
 
         if (oc_tls_pbkdf2(PIN, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
             0) {
@@ -808,6 +810,12 @@ void
 oc_tls_select_cert_ciphersuite(void)
 {
   ciphers = (int *)cert_priority;
+}
+
+void
+oc_tls_select_psk_ciphersuite(void)
+{
+  ciphers = (int *)psk_priority;
 }
 #endif /* OC_CLIENT */
 
