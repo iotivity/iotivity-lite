@@ -77,6 +77,10 @@ int oc_init_platform(const char *mfg_name,
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
+typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
+                                   void *data);
+void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
+
 /**
   @brief Returns whether the oic.wk.con res is announed.
   @return true if announced (default) or false if not
