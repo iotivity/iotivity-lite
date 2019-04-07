@@ -353,34 +353,20 @@ handle_signal(int signal)
   quit = 1;
 }
 
-int
-main(void)
-{
-  int init;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
-
-  oc_clock_time_t next_event;
-  oc_set_con_res_announced(false);
-  oc_set_mtu_size(16384);
-  oc_set_max_app_data_size(16384);
-
 #ifdef OC_SECURITY
-  oc_storage_config("./smart_home_server_linux_creds");
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
+  (void)data;
+  PRINT("\n\nRandom PIN: %.*s\n\n", pin_len, pin);
+}
 #endif /* OC_SECURITY */
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
+void
+factory_presets_cb(size_t device, void *data)
+{
+  (void)device;
+  (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
   const unsigned char my_crt[] = {
     0x30, 0x82, 0x03, 0xf8, 0x30, 0x82, 0x03, 0x9e, 0xa0, 0x03, 0x02, 0x01,
@@ -604,6 +590,40 @@ main(void)
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
 #endif /* OC_SECURITY && OC_PKI */
+}
+
+int
+main(void)
+{
+  int init;
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                         register_resources };
+
+  oc_clock_time_t next_event;
+  oc_set_con_res_announced(false);
+  oc_set_mtu_size(16384);
+  oc_set_max_app_data_size(16384);
+
+#ifdef OC_SECURITY
+  oc_storage_config("./smart_home_server_linux_creds");
+#endif /* OC_SECURITY */
+
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
+#ifdef OC_SECURITY
+  oc_set_random_pin_callback(random_pin_cb, NULL);
+#endif /* OC_SECURITY */
+
+  init = oc_main_init(&handler);
+  if (init < 0)
+    return init;
 
   while (quit != 1) {
     next_event = oc_main_poll();

@@ -240,11 +240,15 @@ get_lock_state(bool observe)
       PRINT("\nERROR: Invalid selection.. Try again..\n");
     } else {
       if (observe) {
-        oc_do_observe(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
-                      HIGH_QOS, locks[c]);
+        if (!oc_do_observe(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
+                           HIGH_QOS, locks[c])) {
+          PRINT("\nERROR: Could not issue Observe request to lock\n");
+        }
       } else {
-        oc_do_get(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
-                  HIGH_QOS, locks[c]);
+        if (!oc_do_get(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
+                       HIGH_QOS, locks[c])) {
+          PRINT("\nERROR Could not issue GET request to lock\n");
+        }
       }
     }
   } else {
@@ -369,7 +373,9 @@ null_discovery(const char *di, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-  oc_do_ip_discovery(NULL, &null_discovery, NULL);
+  if (!oc_do_ip_discovery(NULL, &null_discovery, NULL)) {
+    PRINT("\nERROR: Could not issue discovery request\n");
+  }
 }
 
 static void
@@ -377,11 +383,21 @@ discover_smart_locks(void)
 {
   pthread_mutex_lock(&app_sync_lock);
   free_all_known_locks();
-  oc_do_ip_discovery("oic.r.lock.status", &discovery, NULL);
-  oc_set_delayed_callback(NULL, show_discovered_locks, 5);
+  if (oc_do_ip_discovery("oic.r.lock.status", &discovery, NULL)) {
+    oc_set_delayed_callback(NULL, show_discovered_locks, 5);
+  }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
+
+#ifdef OC_SECURITY
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
+  (void)data;
+  PRINT("\n\nRandom PIN: %.*s\n\n", pin_len, pin);
+}
+#endif /* OC_SECURITY */
 
 int
 main(void)
@@ -400,6 +416,7 @@ main(void)
 
 #ifdef OC_SECURITY
   oc_storage_config("./smart_lock_creds");
+  oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif /* OC_SECURITY */
 
   oc_set_con_res_announced(false);

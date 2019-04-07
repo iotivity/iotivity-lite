@@ -82,6 +82,9 @@ void oc_tls_select_cert_ciphersuite(void);
 void oc_tls_select_mfg_cert_chain(int credid);
 void oc_tls_select_identity_cert_chain(int credid);
 
+/* Internal interface for generating a random PIN */
+void oc_tls_generate_random_pin(void);
+
 /* Internal interface for refreshing identity certficate chains */
 void oc_tls_refresh_identity_certs(void);
 void oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
