@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@ typedef void (*oc_obt_status_cb_t)(int, void *);
 
 /* Call once at startup for OBT initialization */
 void oc_obt_init(void);
+/* Called when the OBT terminates to free all resources */
+void oc_obt_shutdown(void);
 
 /* Device discovery */
 int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
@@ -41,6 +43,11 @@ int oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data);
 
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                                  void *data);
+int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                              void *data);
+int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
+                                  size_t pin_len, oc_obt_device_status_cb_t cb,
                                   void *data);
 
 /* RESET device state */
