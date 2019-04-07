@@ -1102,10 +1102,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 static void
 free_client_cb(oc_client_cb_t *cb)
 {
+  oc_list_remove(client_cbs, cb);
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
-  oc_list_remove(client_cbs, cb);
   oc_free_string(&cb->uri);
   if (oc_string_len(cb->query)) {
     oc_free_string(&cb->query);
