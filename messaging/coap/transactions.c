@@ -242,3 +242,18 @@ coap_free_all_transactions(void)
     t = next;
   }
 }
+
+void
+coap_free_transaction_by_endpoint(oc_endpoint_t *endpoint)
+{
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
+                     *next;
+  while (t != NULL) {
+    next = t->next;
+    if (oc_endpoint_compare(&t->message->endpoint, endpoint) == 0) {
+      coap_clear_transaction(t);
+      break;
+    }
+    t = next;
+  }
+}
