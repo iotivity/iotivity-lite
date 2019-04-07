@@ -202,6 +202,8 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
 
+  coap_free_transaction_by_endpoint(&peer->endpoint);
+
 #ifdef OC_PKI
   /* Free all roles bound to this (D)TLS session */
   oc_sec_free_roles(peer);
