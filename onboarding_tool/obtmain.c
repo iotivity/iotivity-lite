@@ -46,7 +46,6 @@ OC_LIST(unowned_devices);
 
 #if defined (_WIN32)
 static HANDLE event_thread;
-//static HANDLE app_sync_lock;
 static CRITICAL_SECTION app_sync_lock;
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
@@ -79,11 +78,13 @@ display_menu(void)
   PRINT("[1] Discover un-owned devices\n");
   PRINT("[2] Discover owned devices\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[3] Take ownership of device (Just-works)\n");
-  PRINT("[4] Provision pair-wise credentials\n");
-  PRINT("[5] Provision ACE2\n");
+  PRINT("[3] Just-Works Ownership Transfer Method\n");
+  PRINT("[4] Request Random PIN from device for OTM\n");
+  PRINT("[5] Random PIN Ownership Transfer Method\n");
+  PRINT("[6] Provision pair-wise credentials\n");
+  PRINT("[7] Provision ACE2\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[6] RESET device\n");
+  PRINT("[8] RESET device\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[9] Exit\n");
   PRINT("################################################\n");
@@ -155,6 +156,7 @@ ocf_event_thread(LPVOID lpParam)
   }
 
   oc_main_shutdown();
+  oc_obt_shutdown();
   return TRUE;
 }
 #elif defined(__linux__)
@@ -179,6 +181,7 @@ ocf_event_thread(void *data)
     otb_mutex_unlock(mutex);
   }
   oc_main_shutdown();
+  oc_obt_shutdown();
   return NULL;
 }
 #endif
@@ -273,6 +276,7 @@ discover_owned_devices(void)
   otb_mutex_lock(app_sync_lock);
   oc_obt_discover_owned_devices(owned_device_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
+  signal_event_loop();
 }
 
 static void
@@ -285,6 +289,124 @@ discover_unowned_devices(void)
 }
 
 static void
+otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device %s\n", di);
+    add_device_to_list(uuid, owned_devices);
+  } else {
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
+static void
+otm_rdp(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s\n", i, di);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  unsigned char pin[24];
+  PRINT("\nEnter Random PIN: ");
+  SCANF("%10s", pin);
+
+  otb_mutex_lock(app_sync_lock);
+
+  int ret = oc_obt_perform_random_pin_otm(
+    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
+  } else {
+    PRINT("\nERROR issuing request to perform Random PIN OTM\n");
+  }
+
+  /* Having issued an OTM request, remove this item from the unowned device list
+   */
+  remove_device_from_list(&devices[c]->uuid, unowned_devices);
+
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+random_pin_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully requested device %s to generate a Random PIN\n", di);
+  } else {
+    PRINT("\nERROR requesting device %s to generate a Random PIN\n", di);
+  }
+}
+
+static void
+request_random_pin(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s\n", i, di);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+
+  int ret = oc_obt_request_random_pin(&devices[c]->uuid, random_pin_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to generate a random PIN\n");
+  } else {
+    PRINT("\nERROR issuing request to generate random PIN\n");
+  }
+
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
@@ -293,13 +415,14 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
+    add_device_to_list(uuid, unowned_devices);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
 }
 
 static void
-take_ownership_of_device(void)
+otm_just_works(void)
 {
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
@@ -744,15 +867,21 @@ main(void)
       discover_owned_devices();
       break;
     case 3:
-      take_ownership_of_device();
+      otm_just_works();
       break;
     case 4:
-      provision_credentials();
+      request_random_pin();
       break;
     case 5:
-      provision_ace2();
+      otm_rdp();
       break;
     case 6:
+      provision_credentials();
+      break;
+    case 7:
+      provision_ace2();
+      break;
+    case 8:
       reset_device();
       break;
     case 9:
@@ -768,5 +897,18 @@ main(void)
 #elif defined(__linux__)
   pthread_join(event_thread, NULL);
 #endif
+
+  /* Free all device_handle_t objects allocated by this application */
+  device_handle_t *device = (device_handle_t *)oc_list_pop(owned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(owned_devices);
+  }
+  device = (device_handle_t *)oc_list_pop(unowned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(unowned_devices);
+  }
+
   return 0;
 }
