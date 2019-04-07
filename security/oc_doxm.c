@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
+#include "oc_tls.h"
 #include <stddef.h>
 #include <string.h>
 #ifndef _WIN32
@@ -61,7 +62,7 @@ oc_sec_doxm_init(void)
 void
 oc_sec_doxm_default(size_t device)
 {
-  doxm[device].oxmsel = 0;
+  doxm[device].oxmsel = -1;
 #ifdef OC_PKI
   doxm[device].sct = 9;
 #else  /* OC_PKI */
@@ -78,9 +79,9 @@ void
 oc_sec_encode_doxm(size_t device)
 {
 #ifdef OC_PKI
-  int oxms[2] = { OC_OXMTYPE_JW, OC_OXMTYPE_MFG_CERT };
+  int oxms[3] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP, OC_OXMTYPE_MFG_CERT };
 #else  /* OC_PKI */
-  int oxms[1] = { OC_OXMTYPE_JW };
+  int oxms[2] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP };
 #endif /* !OC_PKI */
   char uuid[37];
   oc_rep_start_root_object();
@@ -237,6 +238,9 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(rep->name), "oxmsel", 6) == 0) {
         doxm[device].oxmsel = (int)rep->value.integer;
+        if (!from_storage && doxm[device].oxmsel == OC_OXMTYPE_RDP) {
+          oc_tls_generate_random_pin();
+        }
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(rep->name), "sct", 3) == 0) {
         doxm[device].sct = (int)rep->value.integer;
