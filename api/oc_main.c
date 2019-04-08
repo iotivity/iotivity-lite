@@ -46,8 +46,24 @@
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
 
+#include "oc_main.h"
+
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
+static oc_factory_presets_t factory_presets;
+
+void
+oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data)
+{
+  factory_presets.cb = cb;
+  factory_presets.data = data;
+}
+
+oc_factory_presets_t *
+oc_get_factory_presets_cb(void)
+{
+  return &factory_presets;
+}
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
@@ -204,6 +220,9 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
     oc_sec_load_unique_ids(device);
+    if (factory_presets.cb != NULL) {
+      factory_presets.cb(device, factory_presets.data);
+    }
   }
 #endif
 
