@@ -38,6 +38,7 @@
 /* Code and typemaps for mapping the oc_main_init to the java OCMainInitHandler */
 %{
 static jobject jinit_obj;
+static jclass cls_ArrayList;
 static jclass cls_OCMainInitHandler;
 static jclass cls_OCAddDeviceHandler;
 static jclass cls_OCClientResponse;
@@ -294,6 +295,11 @@ int jni_main_init(const oc_handler_t *handler)
   assert(ocObtStatusHandlerClass);
   cls_OCObtStatusHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocObtStatusHandlerClass));
   JCALL1(DeleteLocalRef, jenv, ocObtStatusHandlerClass);
+
+  jclass utilArrayListClass = JCALL1(FindClass, jenv, "java/util/ArrayList");
+  assert(utilArrayListClass);
+  cls_ArrayList = (jclass)(JCALL1(NewGlobalRef, jenv, utilArrayListClass));
+  JCALL1(DeleteLocalRef, jenv, utilArrayListClass);
 
   ReleaseJNIEnv(getEnvResult);
 
@@ -611,7 +617,7 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
   (void)jrequest_;
   request = *(oc_request_t **)&jrequest;
 
-  jclass cls_ArrayList = JCALL1(FindClass, jenv, "java/util/ArrayList");
+  assert(cls_ArrayList);
   jmethodID mid_arrayListConstructor = JCALL3(GetMethodID, jenv, cls_ArrayList, "<init>", "()V");
   jmethodID mid_add = JCALL3(GetMethodID, jenv, cls_ArrayList, "add", "(Ljava/lang/Object;)Z");
 
