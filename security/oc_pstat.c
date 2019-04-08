@@ -16,6 +16,7 @@
 
 #ifdef OC_SECURITY
 #include "oc_pstat.h"
+#include "api/oc_main.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -144,6 +145,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     oc_sec_free_roles_for_device(device);
     oc_sec_sp_default(device);
 #endif /* OC_PKI */
+    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
+    if (fp->cb != NULL) {
+      fp->cb(device, fp->data);
+    }
     set_post_otm_acl = true;
     ps->p = false;
   }
