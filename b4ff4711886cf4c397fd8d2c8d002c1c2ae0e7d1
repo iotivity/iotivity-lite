@@ -49,6 +49,23 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_2d172fef",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-09T19:12:23Z",
+      "side": 1,
+      "message": "I am not completely sold that OcPlatform needs to be a singleton.\n\nI agree that there are things in OcPlatfrom that should be only done once but nothing about the singleton is actually preventing them from being done multiple times that I can see.\n\nfor example systemInit should only be called once but nothing prevents calling \n\n  OcPlatform.getInstance().systemInit();\n  OcPlatform.getInstance().systemInit();\n\nI am not sure adding in the singleton is actually preventing what you are trying to prevent.",
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_ed6ee795",
         "filename": "swig/oc_java/oc/OcResource.java",
         "patchSetId": 26
