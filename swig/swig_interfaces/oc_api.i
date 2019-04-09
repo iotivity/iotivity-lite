@@ -44,6 +44,7 @@ static jclass cls_OCAddDeviceHandler;
 static jclass cls_OCClientResponse;
 static jclass cls_OCConWriteHandler;
 static jclass cls_OCDiscoveryHandler;
+static jclass cls_OCFactoryPresetsHandler;
 static jclass cls_OCInitPlatformHandler;
 static jclass cls_OCQueryValue;
 static jclass cls_OCRepresentation;
@@ -241,6 +242,11 @@ int jni_main_init(const oc_handler_t *handler)
   cls_OCEndpoint = (jclass)(JCALL1(NewGlobalRef, jenv, ocEndpointClass));
   JCALL1(DeleteLocalRef, jenv, ocEndpointClass);
 
+  jclass ocFactoryPresetsHandler = JCALL1(FindClass, jenv, "org/iotivity/OCFactoryPresetsHandler");
+  assert(ocFactoryPresetsHandler);
+  cls_OCFactoryPresetsHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocFactoryPresetsHandler));
+  JCALL1(DeleteLocalRef, jenv, ocFactoryPresetsHandler);
+
   jclass ocInitPlatformHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCInitPlatformHandler");
   assert(ocInitPlatformHandlerClass);
   cls_OCInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocInitPlatformHandlerClass));
@@ -349,6 +355,46 @@ int jni_main_init(const oc_handler_t *handler)
     // TODO do we need to join this thread and the jni_pool_event_thread?
     // TODO empty the jni_callback list on shutdown.
   }
+%}
+
+/* Code and typemaps for mapping the oc_set_factory_presets_cb to the OCFactoryPresetsHandler */
+%{
+void jni_oc_factory_presets_callback(size_t device, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+
+  assert(cls_OCFactoryPresetsHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+                                       (data->jenv),
+                                       cls_OCFactoryPresetsHandler,
+                                       "handler",
+                                       "(J)V");
+  assert(mid_handler);
+  JCALL3(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
+}
+%}
+
+%typemap(jni)    oc_factory_presets_cb_t cb "jobject";
+%typemap(jtype)  oc_factory_presets_cb_t cb "OCFactoryPresetsHandler";
+%typemap(jstype) oc_factory_presets_cb_t cb "OCFactoryPresetsHandler";
+%typemap(javain) oc_factory_presets_cb_t cb "$javainput";
+%typemap(in,numinputs=1) (oc_factory_presets_cb_t cb, jni_callback_data *jcb) {
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  jni_list_add(jni_callbacks, user_data);
+  $1 = jni_oc_factory_presets_callback;
+  $2 = user_data;
+}
+
+%ignore oc_set_factory_presets_cb;
+%rename(setFactoryPresetsHandler) jni_set_factory_presets_cb;
+%inline %{
+void jni_set_factory_presets_cb(oc_factory_presets_cb_t cb, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_set_factory_presets_cb(cb, jcb);
+}
 %}
 
 /* Code and typemaps for mapping the oc_add_device to the java OCAddDeviceHandler */
