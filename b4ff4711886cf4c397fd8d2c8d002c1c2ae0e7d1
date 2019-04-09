@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_cd0fabe0",
+        "filename": "swig/oc_java/oc/OcCollection.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-09T17:47:08Z",
+      "side": 1,
+      "message": "i don\u0027t think so.  The reason i kept a local copy is that i can\u0027t do ((OCCollection)nativeResource).getSupported_rts() since OCCollection does not extend OCResource",
+      "parentUuid": "1a494da4_0d72337c",
+      "range": {
+        "startLine": 46,
+        "startChar": 15,
+        "endLine": 46,
+        "endChar": 28
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_ed6ee795",
         "filename": "swig/oc_java/oc/OcResource.java",
         "patchSetId": 26
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_6d0ad7d3",
+        "filename": "swig/oc_java/oc/OcResource.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-09T17:47:08Z",
+      "side": 1,
+      "message": "i wasn\u0027t sure if it would be useful to a developer or not since OCResource doesn\u0027t have an accessor.  I can remove the accessors here it you think that\u0027s better.  A developer can always keep their own reference if they want.",
+      "parentUuid": "1a494da4_ed6ee795",
+      "range": {
+        "startLine": 152,
+        "startChar": 17,
+        "endLine": 152,
+        "endChar": 34
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_4d6c3b9d",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 26
@@ -59,6 +107,30 @@
       "writtenOn": "2019-04-09T16:55:13Z",
       "side": 1,
       "message": "i assume this is a change due to rebasing.",
+      "range": {
+        "startLine": 338,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 21
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_8d05a3c4",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 26
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-09T17:47:08Z",
+      "side": 1,
+      "message": "somehow it got lost when i did the original pushing the poll loop to the jni.  oc_main_poll should no longer be public",
+      "parentUuid": "1a494da4_4d6c3b9d",
       "range": {
         "startLine": 338,
         "startChar": 0,
