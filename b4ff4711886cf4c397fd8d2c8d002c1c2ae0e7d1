@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_0d72337c",
+        "filename": "swig/oc_java/oc/OcCollection.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-09T16:55:13Z",
+      "side": 1,
+      "message": "is there a possibility that the native resource and the local value for supportedRts and mandatoryRts will become out of sync with the native value?",
+      "range": {
+        "startLine": 46,
+        "startChar": 15,
+        "endLine": 46,
+        "endChar": 28
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_ed6ee795",
+        "filename": "swig/oc_java/oc/OcResource.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-09T16:55:13Z",
+      "side": 1,
+      "message": "what is the reason for the local copy of the handler?",
+      "range": {
+        "startLine": 152,
+        "startChar": 17,
+        "endLine": 152,
+        "endChar": 34
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_4d6c3b9d",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 26
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-09T16:55:13Z",
+      "side": 1,
+      "message": "i assume this is a change due to rebasing.",
+      "range": {
+        "startLine": 338,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 21
+      },
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
