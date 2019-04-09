@@ -61,6 +61,9 @@ int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
 
+typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
+void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
+
 int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
@@ -73,6 +76,10 @@ int oc_init_platform(const char *mfg_name,
 
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
+
+typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
+                                   void *data);
+void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
   @brief Returns whether the oic.wk.con res is announed.

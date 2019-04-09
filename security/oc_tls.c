@@ -24,17 +24,19 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/md.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/pkcs5.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/ssl_cookie.h"
 #include "mbedtls/ssl_internal.h"
 #include "mbedtls/timing.h"
-#include "mbedtls/oid.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
 #include "mbedtls/error.h"
 #endif /* OC_DEBUG */
 
 #include "api/oc_events.h"
+#include "api/oc_main.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
@@ -56,6 +58,28 @@ OC_LIST(tls_peers);
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
+static oc_random_pin_t random_pin;
+unsigned char PIN[8];
+#define PIN_LEN (8)
+
+void
+oc_tls_generate_random_pin(void)
+{
+  int p = 0;
+  while (p < PIN_LEN) {
+    PIN[p++] = oc_random_value() % 10 + 48;
+  }
+  if (random_pin.cb) {
+    random_pin.cb(PIN, PIN_LEN, random_pin.data);
+  }
+}
+
+void
+oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
+{
+  random_pin.cb = cb;
+  random_pin.data = data;
+}
 
 #ifdef OC_PKI
 typedef struct oc_x509_crt_t
@@ -177,6 +201,8 @@ static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
+
+  coap_free_transaction_by_endpoint(&peer->endpoint);
 
 #ifdef OC_PKI
   /* Free all roles bound to this (D)TLS session */
@@ -371,6 +397,31 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
   }
 }
 
+int
+oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
+              unsigned int c, uint8_t *key, uint32_t key_len)
+{
+  mbedtls_md_context_t hmac_SHA256;
+  mbedtls_md_init(&hmac_SHA256);
+
+  mbedtls_md_setup(&hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
+                   1);
+
+  memset(key, 0, key_len);
+
+  int ret = mbedtls_pkcs5_pbkdf2_hmac(&hmac_SHA256, pin, pin_len,
+                                      (const unsigned char *)uuid->id, 16, c,
+                                      key_len, key);
+
+  mbedtls_md_free(&hmac_SHA256);
+
+  if (ret != 0) {
+    ret = -1;
+  }
+
+  return ret;
+}
+
 static int
 get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
            size_t identity_len)
@@ -401,6 +452,24 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       }
       OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
+    } else {
+      oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
+      oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+      if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+        memcpy(peer->uuid.id, identity, 16);
+
+        uint8_t key[16];
+
+        if (oc_tls_pbkdf2(PIN, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
+            0) {
+          return -1;
+        }
+
+        if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
+          return -1;
+        }
+        return 0;
+      }
     }
   }
   return -1;
@@ -743,6 +812,12 @@ void
 oc_tls_select_cert_ciphersuite(void)
 {
   ciphers = (int *)cert_priority;
+}
+
+void
+oc_tls_select_psk_ciphersuite(void)
+{
+  ciphers = (int *)psk_priority;
 }
 #endif /* OC_CLIENT */
 
@@ -1422,6 +1497,7 @@ read_application_data(oc_tls_peer_t *peer)
       oc_session_start_event(&peer->endpoint);
 #endif /* OC_TCP */
     }
+
 #ifdef OC_CLIENT
     if (ret == 0) {
       oc_tls_handler_schedule_write(peer);

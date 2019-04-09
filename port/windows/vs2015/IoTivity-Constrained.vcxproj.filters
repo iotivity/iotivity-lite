@@ -358,6 +358,12 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509write_csr.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt_otm_justworks.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt_otm_randompin.c">
+      <Filter>Security</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">

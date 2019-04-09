@@ -166,6 +166,8 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   int interface_index =
     (request->origin) ? request->origin->interface_index : -1;
+  enum transport_flags conn =
+    (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
   */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
@@ -173,7 +175,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   memset(&uri, 0, sizeof(oc_string_t));
   while (eps != NULL) {
     if ((interface_index == -1 || eps->interface_index == interface_index) &&
-        !(eps->flags & SECURED)) {
+        !(eps->flags & SECURED) && (eps->flags == conn)) {
       if (oc_endpoint_to_string(eps, &ep) == 0) {
         oc_concat_strings(&uri, oc_string(ep), "/oc/introspection");
         oc_free_string(&ep);

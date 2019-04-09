@@ -155,18 +155,10 @@ coap_send_transaction(coap_transaction_t *t)
     } else {
       /* timed out */
       OC_WRN("Timeout");
-
 #ifdef OC_SERVER
-      OC_WRN("timeout.. so removing observers");
-      /* handle observers */
+      /* remove observers */
       coap_remove_observer_by_client(&t->message->endpoint);
 #endif /* OC_SERVER */
-
-#ifdef OC_SECURITY
-      if (t->message->endpoint.flags & SECURED) {
-        oc_tls_close_connection(&t->message->endpoint);
-      }
-#endif /* OC_SECURITY */
 
 #ifdef OC_CLIENT
       oc_ri_remove_client_cb_by_mid(t->mid);
@@ -175,8 +167,14 @@ coap_send_transaction(coap_transaction_t *t)
 #ifdef OC_BLOCK_WISE
       oc_blockwise_scrub_buffers();
 #endif /* OC_BLOCK_WISE */
-
-      coap_clear_transaction(t);
+#ifdef OC_SECURITY
+      if (t->message->endpoint.flags & SECURED) {
+        oc_tls_close_connection(&t->message->endpoint);
+      } else
+#endif /* OC_SECURITY */
+      {
+        coap_clear_transaction(t);
+      }
     }
   } else {
     oc_message_add_ref(t->message);
@@ -225,7 +223,12 @@ coap_check_transactions(void)
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
       OC_DBG("Retransmitting %u (%u)", t->mid, t->retrans_counter);
+      int removed = oc_list_length(transactions_list);
       coap_send_transaction(t);
+      if ((removed - oc_list_length(transactions_list)) > 1) {
+        t = (coap_transaction_t *)oc_list_head(transactions_list);
+        continue;
+      }
     }
     t = next;
   }
@@ -239,6 +242,28 @@ coap_free_all_transactions(void)
   while (t != NULL) {
     next = t->next;
     coap_clear_transaction(t);
+    t = next;
+  }
+}
+
+void
+coap_free_transaction_by_endpoint(oc_endpoint_t *endpoint)
+{
+#ifdef OC_SERVER
+  /* remove all observations by this peer */
+  coap_remove_observer_by_client(endpoint);
+#endif /* OC_SERVER */
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
+                     *next;
+  while (t != NULL) {
+    next = t->next;
+    if (oc_endpoint_compare(&t->message->endpoint, endpoint) == 0) {
+#ifdef OC_CLIENT
+      /* Remove the client callback tied to this transaction */
+      oc_ri_remove_client_cb_by_mid(t->mid);
+#endif /* OC_CLIENT */
+      coap_clear_transaction(t);
+    }
     t = next;
   }
 }

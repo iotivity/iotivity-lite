@@ -81,6 +81,14 @@ bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
 void oc_tls_select_cert_ciphersuite(void);
 void oc_tls_select_mfg_cert_chain(int credid);
 void oc_tls_select_identity_cert_chain(int credid);
+void oc_tls_select_psk_ciphersuite(void);
+
+/* Internal interface for generating a random PIN */
+void oc_tls_generate_random_pin(void);
+
+/* Internal interface for deriving a PSK for the Random PIN OTM */
+int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
+                  unsigned int c, uint8_t *key, uint32_t key_len);
 
 /* Internal interface for refreshing identity certficate chains */
 void oc_tls_refresh_identity_certs(void);
