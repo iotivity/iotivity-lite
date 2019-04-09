@@ -335,7 +335,7 @@ int jni_main_init(const oc_handler_t *handler)
   return return_value;
 }
 %}
-%rename(mainPoll) oc_main_poll;
+%ignore oc_main_poll;
 %ignore oc_main_shutdown;
 %rename(mainShutdown) jni_main_shutdown;
 %inline %{
