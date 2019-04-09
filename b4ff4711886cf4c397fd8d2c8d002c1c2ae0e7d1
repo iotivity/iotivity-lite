@@ -84,6 +84,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_0de7d313",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 26
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-09T19:39:35Z",
+      "side": 1,
+      "message": "The singleton also indicates that there is only one platform object in existence.",
+      "parentUuid": "1a494da4_cdddeb44",
+      "revId": "b4ff4711886cf4c397fd8d2c8d002c1c2ae0e7d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_ed6ee795",
         "filename": "swig/oc_java/oc/OcResource.java",
         "patchSetId": 26
