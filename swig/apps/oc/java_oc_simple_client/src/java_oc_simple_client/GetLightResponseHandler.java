@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class GetLightResponseHandler implements OCResponseHandler {
 
@@ -36,10 +37,11 @@ public class GetLightResponseHandler implements OCResponseHandler {
 
         PutLightResponseHandler putLight = new PutLightResponseHandler(light);
         if (OCMain.initPut(light.getServerUri(), light.getServerEndpoint(), null, putLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 15);
-            OCMain.repEndRootObject();
+
+            OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
+            root.setBoolean("state", true);
+            root.setLong("power", 15);
+            root.done();
 
             if (OCMain.doPut()) {
                 System.out.println("\tSent PUT request");

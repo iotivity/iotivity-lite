@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class GetLightCollectionResponseHandler implements OCResponseHandler {
 
@@ -74,25 +75,25 @@ public class GetLightCollectionResponseHandler implements OCResponseHandler {
         if (OCMain.initPost(collection.getServerUri(), collection.getServerEndpoint(), "if=oic.if.b", responseHandler,
                 OCQos.LOW_QOS)) {
 
-            CborEncoder links = OCMain.repBeginLinksArray();
+            OcCborEncoder links = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.LINKS_ARRAY);
 
-            CborEncoder link = OCMain.repObjectArrayBeginItem(links);
-            OCMain.repSetTextString(link, "href", "/light/1");
-            CborEncoder light = OCMain.repOpenObject(link, "rep");
-            OCMain.repSetLong(light, "power", 10);
-            OCMain.repSetBoolean(light, "state", true);
-            OCMain.repCloseObject(link, light);
-            OCMain.repObjectArrayEndItem(links, link);
+            OcCborEncoder link = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ARRAY_ITEM, links);
+            link.setTextString("href", "/light/1");
+            OcCborEncoder light = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.OBJECT, link, "rep");
+            light.setLong("power", 10);
+            light.setBoolean("state", true);
+            light.done();
+            link.done();
 
-            link = OCMain.repObjectArrayBeginItem(links);
-            OCMain.repSetTextString(link, "href", "/light/2");
-            light = OCMain.repOpenObject(link, "rep");
-            OCMain.repSetLong(light, "power", 20);
-            OCMain.repSetBoolean(light, "state", true);
-            OCMain.repCloseObject(link, light);
-            OCMain.repObjectArrayEndItem(links, link);
+            link = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ARRAY_ITEM, links);
+            link.setTextString("href", "/light/2");
+            light = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.OBJECT, link, "rep");
+            light.setLong("power", 20);
+            light.setBoolean("state", false);
+            light.done();
+            link.done();
 
-            OCMain.repEndLinksArray();
+            links.done();
 
             if (OCMain.doPost()) {
                 System.out.println("\tSent POST request");
