@@ -30,13 +30,8 @@
   JCALL1(GetJavaVM, jenv, &jvm);
 }
 
-%ignore oc_obt_init;
-%rename(init) jni_obt_init;
-%inline %{
-void jni_obt_init(void* dummy) {
-    oc_obt_init();
-}
-%}
+%rename(init) oc_obt_init;
+%rename(shutdown) oc_obt_shutdown;
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
 %{
@@ -196,6 +191,51 @@ int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t ca
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_perform_just_works_otm(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_request_random_pin;
+%rename(requestRandomPin) jni_obt_request_random_pin;
+%inline %{
+int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_request_random_pin(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+
+/* For oc_obt_perform_random_pin_otm use Java String as the pin input.
+   Use the Java String length to input the pin_len */
+%typemap(in,numinputs=1) (const char *pin, size_t pin_len)
+{
+  $1 = ($1_type)JCALL2(GetStringUTFChars, jenv, $input, 0);
+  $2 = ($2_type)JCALL1(GetStringUTFLength, jenv, $input);
+}
+%typemap(freearg,numinputs=1) (const char *pin, size_t pin_len)
+{
+  JCALL2(ReleaseStringUTFChars, jenv, $input, $1);
+}
+
+
+%ignore oc_obt_perform_random_pin_otm;
+%rename(performRandomPinOtm) jni_obt_perform_random_pin_otm;
+%inline %{
+int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, const char *pin, size_t pin_len,
+                                   oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_perform_random_pin_otm(uuid, (const unsigned char*)pin, pin_len, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
