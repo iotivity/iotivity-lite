@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class StopObserveCollectionTriggerHandler implements OCTriggerHandler {
 
@@ -15,7 +16,7 @@ public class StopObserveCollectionTriggerHandler implements OCTriggerHandler {
         System.out.println("-------------------------------------------------------");
         System.out.println("Stopping OBSERVE of Collection " + collection.getServerUri());
         System.out.println("-------------------------------------------------------");
-        OCMain.stopObserve(collection.getServerUri(), collection.getServerEndpoint());
+        OcUtils.stopObserve(collection.getServerUri(), collection.getServerEndpoint());
         return OCEventCallbackResult.OC_EVENT_DONE;
     }
 }

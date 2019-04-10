@@ -3,6 +3,7 @@ package java_oc_simple_client;
 import java.util.Arrays;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
@@ -95,9 +96,8 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 msg.append("\tResource " + server.getServerUri() + " hosted at endpoint(s):\n");
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
-                    String[] endpointStr = new String[1];
-                    OCMain.endpointToString(ep, endpointStr);
-                    msg.append("\t\tendpoint: " + endpointStr[0] + "\n");
+                    String endpointStr = OcUtils.endpointToString(ep);
+                    msg.append("\t\tendpoint: " + endpointStr + "\n");
                     msg.append("\t\t\tendpoint.device " + ep.getDevice() + "\n");
                     msg.append("\t\t\tendpoint.flags " + ep.getFlags() + "\n");
                     msg.append("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex() + "\n");
@@ -108,18 +108,18 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
                 if (server instanceof Light) {
                     GetLightResponseHandler responseHandler = new GetLightResponseHandler((Light) server);
-                    OCMain.doGet(server.getServerUri(), server.getServerEndpoint(), null, responseHandler,
+                    OcUtils.doGet(server.getServerUri(), server.getServerEndpoint(), null, responseHandler,
                             OCQos.LOW_QOS);
                 } else {
                     GetLinksResponseHandler responseHandler = new GetLinksResponseHandler(server);
-                    OCMain.doGet(server.getServerUri(), server.getServerEndpoint(), "if=oic.if.ll", responseHandler,
+                    OcUtils.doGet(server.getServerUri(), server.getServerEndpoint(), "if=oic.if.ll", responseHandler,
                             OCQos.LOW_QOS);
                 }
 
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OCMain.freeServerEndpoints(endpoint);
+        OcUtils.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }
