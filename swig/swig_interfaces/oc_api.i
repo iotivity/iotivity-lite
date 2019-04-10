@@ -47,6 +47,7 @@ static jclass cls_OCDiscoveryHandler;
 static jclass cls_OCFactoryPresetsHandler;
 static jclass cls_OCInitPlatformHandler;
 static jclass cls_OCQueryValue;
+static jclass cls_OCRandomPinHandler;
 static jclass cls_OCRepresentation;
 static jclass cls_OCRequest;
 static jclass cls_OCRequestHandler;
@@ -256,6 +257,12 @@ int jni_main_init(const oc_handler_t *handler)
   assert(ocQueryValueClass);
   cls_OCQueryValue = (jclass)(JCALL1(NewGlobalRef, jenv, ocQueryValueClass));
   JCALL1(DeleteLocalRef, jenv, ocQueryValueClass);
+
+  jclass ocRandomPinHandler = JCALL1(FindClass, jenv, "org/iotivity/OCRandomPinHandler");
+  assert(ocRandomPinHandler);
+  cls_OCRandomPinHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocRandomPinHandler));
+  JCALL1(DeleteLocalRef, jenv, ocRandomPinHandler);
+
 
   jclass ocRepresentationClass = JCALL1(FindClass, jenv, "org/iotivity/OCRepresentation");
   assert(ocRepresentationClass);
@@ -473,6 +480,50 @@ void jni_oc_init_platform_callback(void *user_data)
 int jni_oc_init_platform(const char *mfg_name) {
   OC_DBG("JNI: %s\n", __func__);
   return oc_init_platform(mfg_name, NULL, NULL);
+}
+%}
+
+/* Code and typemaps for mapping the oc_random_pin_cb_t to the OCRandomPinHandler */
+%{
+void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+
+  assert(cls_OCRandomPinHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+                                       (data->jenv),
+                                       cls_OCRandomPinHandler,
+                                       "handler",
+                                       "(Ljava/lang/String;)V");
+  assert(mid_handler);
+
+  jstring jpin = JCALL1(NewStringUTF, (data->jenv), pin);
+
+  /* TODO convert pin to java string */
+  JCALL3(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
+}
+%}
+
+%typemap(jni)    oc_random_pin_cb_t cb "jobject";
+%typemap(jtype)  oc_random_pin_cb_t cb "OCRandomPinHandler";
+%typemap(jstype) oc_random_pin_cb_t cb "OCRandomPinHandler";
+%typemap(javain) oc_random_pin_cb_t cb "$javainput";
+%typemap(in,numinputs=1) (oc_random_pin_cb_t cb, jni_callback_data *jcb) {
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  jni_list_add(jni_callbacks, user_data);
+  $1 = jni_oc_random_pin_callback;
+  $2 = user_data;
+}
+
+%ignore oc_set_random_pin_callback;
+%rename(setRandomPinHandler) jni_set_random_pin_callback;
+%inline %{
+void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_set_random_pin_callback(cb, jcb);
 }
 %}
 
