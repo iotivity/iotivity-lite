@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class PostLightResponseHandler implements OCResponseHandler {
 
@@ -23,13 +24,14 @@ public class PostLightResponseHandler implements OCResponseHandler {
         }
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler(light);
-        if (OCMain.initPost(light.getServerUri(), light.getServerEndpoint(), null, postLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 55);
-            OCMain.repEndRootObject();
+        if (OcUtils.initPost(light.getServerUri(), light.getServerEndpoint(), null, postLight, OCQos.LOW_QOS)) {
 
-            if (OCMain.doPost()) {
+            OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
+            root.setBoolean("state", true);
+            root.setLong("power", 55);
+            root.done();
+
+            if (OcUtils.doPost()) {
                 System.out.println("\tSent POST2 request");
             } else {
                 System.out.println("\tCould not send POST2 request");
