@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class GetLinksResponseHandler implements OCResponseHandler {
 
@@ -29,12 +30,12 @@ public class GetLinksResponseHandler implements OCResponseHandler {
                             light.setServerEndpoint(server.getServerEndpoint());
                             light.setServerUri(link.getValue().getString());
                             GetLinkedLightResponseHandler responseHandler = new GetLinkedLightResponseHandler(light);
-                            OCMain.doGet(light.getServerUri(), light.getServerEndpoint(), null, responseHandler,
+                            OcUtils.doGet(light.getServerUri(), light.getServerEndpoint(), null, responseHandler,
                                     OCQos.LOW_QOS);
                         }
                         break;
                     case OC_REP_STRING_ARRAY:
-                        String[] strings = OCMain.ocArrayToStringArray(link.getValue().getArray());
+                        String[] strings = OcUtils.ocArrayToStringArray(link.getValue().getArray());
                         StringBuilder msg = new StringBuilder("[");
                         for (String s : strings) {
                             msg.append(" " + s);
@@ -76,6 +77,6 @@ public class GetLinksResponseHandler implements OCResponseHandler {
         }
 
         GetLightCollectionResponseHandler responseHandler = new GetLightCollectionResponseHandler(server);
-        OCMain.doGet(server.getServerUri(), server.getServerEndpoint(), "if=oic.if.b", responseHandler, OCQos.LOW_QOS);
+        OcUtils.doGet(server.getServerUri(), server.getServerEndpoint(), "if=oic.if.b", responseHandler, OCQos.LOW_QOS);
     }
 }

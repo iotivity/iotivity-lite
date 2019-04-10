@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class ObserveLightCollectionResponseHandler implements OCResponseHandler {
 
@@ -24,7 +25,7 @@ public class ObserveLightCollectionResponseHandler implements OCResponseHandler 
                         System.out.println("\tKey " + link.getName() + " value " + link.getValue().getString());
                         break;
                     case OC_REP_STRING_ARRAY: {
-                        String[] strings = OCMain.ocArrayToStringArray(link.getValue().getArray());
+                        String[] strings = OcUtils.ocArrayToStringArray(link.getValue().getArray());
                         StringBuilder msg = new StringBuilder("[");
                         for (String s : strings) {
                             msg.append(" " + s);
