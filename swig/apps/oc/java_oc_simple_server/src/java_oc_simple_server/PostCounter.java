@@ -1,6 +1,7 @@
 package java_oc_simple_server;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class PostCounter implements OCRequestHandler {
 
@@ -30,16 +31,16 @@ public class PostCounter implements OCRequestHandler {
                 break;
             default:
                 System.out.println("NOT YET HANDLED VALUE");
-                OCMain.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
+                OcUtils.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
             }
             System.out.println("-----------------------------------------------------");
             rep = rep.getNext();
         }
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetLong(root, "count", counter.getCounter());
-        OCMain.repEndRootObject();
+        OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
+        root.setLong("count", counter.getCounter());
+        root.done();
 
-        OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
+        OcUtils.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }
 }
