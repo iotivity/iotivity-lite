@@ -1,6 +1,7 @@
 package java_oc_simple_server;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class GetCounter implements OCRequestHandler {
 
@@ -16,19 +17,19 @@ public class GetCounter implements OCRequestHandler {
 
         counter.setCounter(counter.getCounter() + 1);
         System.out.println("GET COUNTER:");
-        CborEncoder root = OCMain.repBeginRootObject();
+        OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
         switch (interfaces) {
         case OCInterfaceMask.BASELINE:
-            OCMain.processBaselineInterface(request.getResource());
+            root.processBaselineInterface(request.getResource());
             /* fall through */
         case OCInterfaceMask.R:
-            OCMain.repSetLong(root, "count", counter.getCounter());
-            OCMain.repSetTextString(root, "name", counter.getName());
+            root.setLong("count", counter.getCounter());
+            root.setTextString("name", counter.getName());
             break;
         default:
             break;
         }
-        OCMain.repEndRootObject();
+        root.done();
         OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }

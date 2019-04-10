@@ -1,6 +1,7 @@
 package java_oc_simple_server;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class GetLight implements OCRequestHandler {
 
@@ -14,22 +15,23 @@ public class GetLight implements OCRequestHandler {
     public void handler(OCRequest request, int interfaces) {
         System.out.println("Inside the GetLight RequestHandler");
 
+        light.setState(!light.getState());
         light.setPower(light.getPower() + 1);
         System.out.println("GET LIGHT:");
-        CborEncoder root = OCMain.repBeginRootObject();
+        OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
         switch (interfaces) {
         case OCInterfaceMask.BASELINE:
-            OCMain.processBaselineInterface(request.getResource());
+            root.processBaselineInterface(request.getResource());
             /* fall through */
         case OCInterfaceMask.RW:
-            OCMain.repSetBoolean(root, "state", light.getState());
-            OCMain.repSetLong(root, "power", light.getPower());
-            OCMain.repSetTextString(root, "name", light.getName());
+            root.setBoolean("state", light.getState());
+            root.setLong("power", light.getPower());
+            root.setTextString("name", light.getName());
             break;
         default:
             break;
         }
-        OCMain.repEndRootObject();
+        root.done();
         OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }
