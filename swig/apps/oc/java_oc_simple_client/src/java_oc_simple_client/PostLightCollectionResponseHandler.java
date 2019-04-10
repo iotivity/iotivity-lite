@@ -1,6 +1,7 @@
 package java_oc_simple_client;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class PostLightCollectionResponseHandler implements OCResponseHandler {
 
@@ -23,10 +24,10 @@ public class PostLightCollectionResponseHandler implements OCResponseHandler {
         }
 
         ObserveLightCollectionResponseHandler responseHandler = new ObserveLightCollectionResponseHandler(collection);
-        OCMain.doGet(collection.getServerUri(), collection.getServerEndpoint(), "if=oic.if.b", responseHandler,
+        OcUtils.doGet(collection.getServerUri(), collection.getServerEndpoint(), "if=oic.if.b", responseHandler,
                 OCQos.LOW_QOS);
         StopObserveCollectionTriggerHandler stopObserve = new StopObserveCollectionTriggerHandler(collection);
-        OCMain.setDelayedHandler(stopObserve, 30);
+        OcUtils.setDelayedHandler(stopObserve, 30);
         System.out.println("Sent OBSERVE request");
     }
 }

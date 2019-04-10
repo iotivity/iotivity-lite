@@ -1,6 +1,7 @@
 package java_oc_simple_server;
 
 import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class PostLight implements OCRequestHandler {
 
@@ -34,17 +35,17 @@ public class PostLight implements OCRequestHandler {
                 break;
             default:
                 System.out.println("NOT YET HANDLED VALUE");
-                OCMain.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
+                OcUtils.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
             }
             System.out.println("-----------------------------------------------------");
             rep = rep.getNext();
         }
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetBoolean(root, "state", light.getState());
-        OCMain.repSetLong(root, "power", light.getPower());
-        OCMain.repEndRootObject();
+        OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
+        root.setBoolean("state", light.getState());
+        root.setLong("power", light.getPower());
+        root.done();
 
-        OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
+        OcUtils.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }
 }
