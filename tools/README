@@ -1,3 +1,4 @@
+
 Both tools, pre-commit and check-style, use clang-format to fix the code style.
 
 In order to use the tools one should copy the file "_clang-format" to the
