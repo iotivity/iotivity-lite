@@ -498,7 +498,7 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
                                        "(Ljava/lang/String;)V");
   assert(mid_handler);
 
-  jstring jpin = JCALL1(NewStringUTF, (data->jenv), pin);
+  jstring jpin = JCALL1(NewStringUTF, (data->jenv), (const char *)pin);
 
   /* TODO convert pin to java string */
   JCALL3(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
