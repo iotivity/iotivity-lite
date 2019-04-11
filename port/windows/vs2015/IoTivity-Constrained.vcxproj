@@ -211,7 +211,9 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
     <ClInclude Include="..\..\..\api\oc_events.h" />
+    <ClInclude Include="..\..\..\api\oc_main.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_api.h" />
@@ -220,6 +222,7 @@
     <ClInclude Include="..\..\..\include\oc_buffer.h" />
     <ClInclude Include="..\..\..\include\oc_buffer_settings.h" />
     <ClInclude Include="..\..\..\include\oc_client_state.h" />
+    <ClInclude Include="..\..\..\include\oc_clock_util.h" />
     <ClInclude Include="..\..\..\include\oc_collection.h" />
     <ClInclude Include="..\..\..\include\oc_core_res.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
@@ -278,10 +281,16 @@
     <ClInclude Include="..\oc_config.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_compare.c" />
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_format.c" />
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_parse.c" />
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_tm.c" />
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_valid.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />
     <ClCompile Include="..\..\..\api\oc_blockwise.c" />
     <ClCompile Include="..\..\..\api\oc_buffer.c" />
     <ClCompile Include="..\..\..\api\oc_client_api.c" />
+    <ClCompile Include="..\..\..\api\oc_clock.c" />
     <ClCompile Include="..\..\..\api\oc_collection.c" />
     <ClCompile Include="..\..\..\api\oc_core_res.c" />
     <ClCompile Include="..\..\..\api\oc_discovery.c" />
