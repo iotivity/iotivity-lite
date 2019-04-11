@@ -364,6 +364,24 @@
     <ClCompile Include="..\..\..\security\oc_obt_otm_randompin.c">
       <Filter>Security</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_clock.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_compare.c">
+      <Filter>Core\c-timestamp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_format.c">
+      <Filter>Core\c-timestamp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_parse.c">
+      <Filter>Core\c-timestamp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_tm.c">
+      <Filter>Core\c-timestamp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\c-timestamp\timestamp_valid.c">
+      <Filter>Core\c-timestamp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -498,17 +516,11 @@
     <ClInclude Include="..\..\oc_random.h">
       <Filter>Port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\oc_signal_event_loop.h">
-      <Filter>Port</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\oc_storage.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\oc_config.h">
       <Filter>Port</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\oc_session_events.h">
-      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_session_state.h">
       <Filter>Core</Filter>
@@ -561,6 +573,21 @@
     <ClInclude Include="..\..\..\security\oc_csr.h">
       <Filter>Security</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_main.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_clock_util.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_session_events.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_signal_event_loop.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h">
+      <Filter>Core\c-timestamp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">
@@ -580,6 +607,9 @@
     </Filter>
     <Filter Include="Security">
       <UniqueIdentifier>{c6a27107-4b6c-4673-be9e-c0d8641f0a90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\c-timestamp">
+      <UniqueIdentifier>{d83c9727-1931-4e51-9774-da03809c6325}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
