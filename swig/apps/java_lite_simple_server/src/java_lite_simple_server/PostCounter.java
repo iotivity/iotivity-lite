@@ -2,10 +2,12 @@ package java_lite_simple_server;
 
 import org.iotivity.CborEncoder;
 import org.iotivity.OCMain;
+import org.iotivity.OCRep;
 import org.iotivity.OCRequest;
 import org.iotivity.OCRequestHandler;
 import org.iotivity.OCRepresentation;
 import org.iotivity.OCStatus;
+import org.iotivity.OCType;
 
 public class PostCounter implements OCRequestHandler {
 
@@ -35,9 +37,9 @@ public class PostCounter implements OCRequestHandler {
             rep = rep.getNext();
         }
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetLong(root, "count", Counter.count);
-        OCMain.repEndRootObject();
+        CborEncoder root = OCRep.beginRootObject();
+        OCRep.setLong(root, "count", Counter.count);
+        OCRep.endRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }
