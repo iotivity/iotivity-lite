@@ -24,10 +24,10 @@ public class PostLightResponseHandler implements OCResponseHandler {
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler(light);
         if (OCMain.initPost(light.getServerUri(), light.getServerEndpoint(), null, postLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 55);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", true);
+            OCRep.setLong(root, "power", 55);
+            OCRep.endRootObject();
 
             if (OCMain.doPost()) {
                 System.out.println("\tSent POST2 request");

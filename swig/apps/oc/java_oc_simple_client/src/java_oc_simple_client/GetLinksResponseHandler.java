@@ -34,7 +34,7 @@ public class GetLinksResponseHandler implements OCResponseHandler {
                         }
                         break;
                     case OC_REP_STRING_ARRAY:
-                        String[] strings = OCMain.ocArrayToStringArray(link.getValue().getArray());
+                        String[] strings = OCRep.ocArrayToStringArray(link.getValue().getArray());
                         StringBuilder msg = new StringBuilder("[");
                         for (String s : strings) {
                             msg.append(" " + s);

@@ -24,7 +24,7 @@ public class GetLightCollectionResponseHandler implements OCResponseHandler {
                         System.out.println("\tKey " + link.getName() + " value " + link.getValue().getString());
                         break;
                     case OC_REP_STRING_ARRAY: {
-                        String[] strings = OCMain.ocArrayToStringArray(link.getValue().getArray());
+                        String[] strings = OCRep.ocArrayToStringArray(link.getValue().getArray());
                         StringBuilder msg = new StringBuilder("[");
                         for (String s : strings) {
                             msg.append(" " + s);
@@ -74,25 +74,25 @@ public class GetLightCollectionResponseHandler implements OCResponseHandler {
         if (OCMain.initPost(collection.getServerUri(), collection.getServerEndpoint(), "if=oic.if.b", responseHandler,
                 OCQos.LOW_QOS)) {
 
-            CborEncoder links = OCMain.repBeginLinksArray();
+            CborEncoder links = OCRep.beginLinksArray();
 
-            CborEncoder link = OCMain.repObjectArrayBeginItem(links);
-            OCMain.repSetTextString(link, "href", "/light/1");
-            CborEncoder light = OCMain.repOpenObject(link, "rep");
-            OCMain.repSetLong(light, "power", 10);
-            OCMain.repSetBoolean(light, "state", true);
-            OCMain.repCloseObject(link, light);
-            OCMain.repObjectArrayEndItem(links, link);
+            CborEncoder link = OCRep.objectArrayBeginItem(links);
+            OCRep.setTextString(link, "href", "/light/1");
+            CborEncoder light = OCRep.openObject(link, "rep");
+            OCRep.setLong(light, "power", 10);
+            OCRep.setBoolean(light, "state", true);
+            OCRep.closeObject(link, light);
+            OCRep.objectArrayEndItem(links, link);
 
-            link = OCMain.repObjectArrayBeginItem(links);
-            OCMain.repSetTextString(link, "href", "/light/2");
-            light = OCMain.repOpenObject(link, "rep");
-            OCMain.repSetLong(light, "power", 20);
-            OCMain.repSetBoolean(light, "state", true);
-            OCMain.repCloseObject(link, light);
-            OCMain.repObjectArrayEndItem(links, link);
+            link = OCRep.objectArrayBeginItem(links);
+            OCRep.setTextString(link, "href", "/light/2");
+            light = OCRep.openObject(link, "rep");
+            OCRep.setLong(light, "power", 20);
+            OCRep.setBoolean(light, "state", true);
+            OCRep.closeObject(link, light);
+            OCRep.objectArrayEndItem(links, link);
 
-            OCMain.repEndLinksArray();
+            OCRep.endLinksArray();
 
             if (OCMain.doPost()) {
                 System.out.println("\tSent POST request");

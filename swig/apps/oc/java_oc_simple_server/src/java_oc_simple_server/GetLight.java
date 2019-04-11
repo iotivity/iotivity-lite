@@ -16,20 +16,20 @@ public class GetLight implements OCRequestHandler {
 
         light.setPower(light.getPower() + 1);
         System.out.println("GET LIGHT:");
-        CborEncoder root = OCMain.repBeginRootObject();
+        CborEncoder root = OCRep.beginRootObject();
         switch (interfaces) {
         case OCInterfaceMask.BASELINE:
             OCMain.processBaselineInterface(request.getResource());
             /* fall through */
         case OCInterfaceMask.RW:
-            OCMain.repSetBoolean(root, "state", light.getState());
-            OCMain.repSetLong(root, "power", light.getPower());
-            OCMain.repSetTextString(root, "name", light.getName());
+            OCRep.setBoolean(root, "state", light.getState());
+            OCRep.setLong(root, "power", light.getPower());
+            OCRep.setTextString(root, "name", light.getName());
             break;
         default:
             break;
         }
-        OCMain.repEndRootObject();
+        OCRep.endRootObject();
         OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }

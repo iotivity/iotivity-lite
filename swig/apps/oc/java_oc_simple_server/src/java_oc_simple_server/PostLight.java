@@ -40,10 +40,10 @@ public class PostLight implements OCRequestHandler {
             rep = rep.getNext();
         }
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetBoolean(root, "state", light.getState());
-        OCMain.repSetLong(root, "power", light.getPower());
-        OCMain.repEndRootObject();
+        CborEncoder root = OCRep.beginRootObject();
+        OCRep.setBoolean(root, "state", light.getState());
+        OCRep.setLong(root, "power", light.getPower());
+        OCRep.endRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }

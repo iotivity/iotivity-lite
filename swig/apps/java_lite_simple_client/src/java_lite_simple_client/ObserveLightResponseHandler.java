@@ -3,6 +3,7 @@ package java_lite_simple_client;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCRepresentation;
 import org.iotivity.OCResponseHandler;
+import org.iotivity.OCType;
 
 public class ObserveLightResponseHandler implements OCResponseHandler {
 

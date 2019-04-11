@@ -16,19 +16,19 @@ public class GetCounter implements OCRequestHandler {
 
         counter.setCounter(counter.getCounter() + 1);
         System.out.println("GET COUNTER:");
-        CborEncoder root = OCMain.repBeginRootObject();
+        CborEncoder root = OCRep.beginRootObject();
         switch (interfaces) {
         case OCInterfaceMask.BASELINE:
             OCMain.processBaselineInterface(request.getResource());
             /* fall through */
         case OCInterfaceMask.R:
-            OCMain.repSetLong(root, "count", counter.getCounter());
-            OCMain.repSetTextString(root, "name", counter.getName());
+            OCRep.setLong(root, "count", counter.getCounter());
+            OCRep.setTextString(root, "name", counter.getName());
             break;
         default:
             break;
         }
-        OCMain.repEndRootObject();
+        OCRep.endRootObject();
         OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }

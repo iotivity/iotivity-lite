@@ -36,10 +36,10 @@ public class GetLightResponseHandler implements OCResponseHandler {
 
         PutLightResponseHandler putLight = new PutLightResponseHandler(light);
         if (OCMain.initPut(light.getServerUri(), light.getServerEndpoint(), null, putLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 15);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", true);
+            OCRep.setLong(root, "power", 15);
+            OCRep.endRootObject();
 
             if (OCMain.doPut()) {
                 System.out.println("\tSent PUT request");

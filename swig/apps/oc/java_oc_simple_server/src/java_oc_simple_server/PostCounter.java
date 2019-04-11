@@ -36,9 +36,9 @@ public class PostCounter implements OCRequestHandler {
             rep = rep.getNext();
         }
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        OCMain.repSetLong(root, "count", counter.getCounter());
-        OCMain.repEndRootObject();
+        CborEncoder root = OCRep.beginRootObject();
+        OCRep.setLong(root, "count", counter.getCounter());
+        OCRep.endRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
     }

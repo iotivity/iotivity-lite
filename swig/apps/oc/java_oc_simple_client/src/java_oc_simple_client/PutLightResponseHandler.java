@@ -22,10 +22,10 @@ public class PutLightResponseHandler implements OCResponseHandler {
 
         PostLightResponseHandler postLight = new PostLightResponseHandler(light);
         if (OCMain.initPost(light.getServerUri(), light.getServerEndpoint(), null, postLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", false);
-            OCMain.repSetLong(root, "power", 105);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", false);
+            OCRep.setLong(root, "power", 105);
+            OCRep.endRootObject();
 
             if (OCMain.doPost()) {
                 System.out.println("\tSent POST request");

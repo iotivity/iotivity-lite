@@ -8,26 +8,26 @@ import org.junit.Test;
 public class OCRepresentationTest {
     @Test
     public void testType() {
-        OCRepresentation req = new OCRepresentation();
-        assertNotNull(req);
-        req.setType(OCType.OC_REP_INT);
-        assertEquals(OCType.OC_REP_INT, req.getType());
+        OCRepresentation rep = new OCRepresentation();
+        assertNotNull(rep);
+        rep.setType(OCType.OC_REP_INT);
+        assertEquals(OCType.OC_REP_INT, rep.getType());
     }
 
     @Test
     public void testNext() {
-        OCRepresentation req1 = new OCRepresentation();
-        OCRepresentation req2 = new OCRepresentation();
-        OCRepresentation req3 = new OCRepresentation();
-        assertNotNull(req1);
-        assertNotNull(req2);
-        assertNotNull(req3);
-        req1.setName("one");
-        req2.setName("two");
-        req3.setName("three");
-        req1.setNext(req2);
-        req1.getNext().setNext(req3);
-        OCRepresentation r = req1;
+        OCRepresentation rep1 = new OCRepresentation();
+        OCRepresentation rep2 = new OCRepresentation();
+        OCRepresentation rep3 = new OCRepresentation();
+        assertNotNull(rep1);
+        assertNotNull(rep2);
+        assertNotNull(rep3);
+        rep1.setName("one");
+        rep2.setName("two");
+        rep3.setName("three");
+        rep1.setNext(rep2);
+        rep1.getNext().setNext(rep3);
+        OCRepresentation r = rep1;
         assertEquals("one", r.getName());
         r = r.getNext();
         assertNotNull(r);
@@ -41,20 +41,20 @@ public class OCRepresentationTest {
 
     @Test
     public void testName() {
-        OCRepresentation req = new OCRepresentation();
-        assertNotNull(req);
-        req.setName("Sam");
-        assertEquals("Sam", req.getName());
+        OCRepresentation rep = new OCRepresentation();
+        assertNotNull(rep);
+        rep.setName("Sam");
+        assertEquals("Sam", rep.getName());
     }
 
     @Test
     public void testValue() {
-        OCRepresentation req = new OCRepresentation();
-        assertNotNull(req);
+        OCRepresentation rep = new OCRepresentation();
+        assertNotNull(rep);
         OCValue v = new OCValue();
         v.setString("happy dog");
-        req.setValue(v);
-        assertEquals("happy dog", req.getValue().getString());
+        rep.setValue(v);
+        assertEquals("happy dog", rep.getValue().getString());
     }
 
     @Test
@@ -107,37 +107,37 @@ public class OCRepresentationTest {
 
     @Test
     public void testValueArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
-        OCMain.repSetLongArray(root, "fibonacci", fib);
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setLongArray(root, "fibonacci", fib);
+        assertEquals(0, OCRep.getCborErrno());
         boolean barray[] = {false, false, true, false, false};
-        OCMain.repSetBooleanArray(root, "flips", barray);
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setBooleanArray(root, "flips", barray);
+        assertEquals(0, OCRep.getCborErrno());
         double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
-        OCMain.repSetDoubleArray(root, "math_constants", mathConstants);
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setDoubleArray(root, "math_constants", mathConstants);
+        assertEquals(0, OCRep.getCborErrno());
         String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
                 "consectetur", "adipiscing", "elit.", "Sed",
                 "nec", "feugiat", "odio.", "Donec."};
-        OCMain.repSetStringArray(root, "lorem_ipsum", lorem_ipsum);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setStringArray(root, "lorem_ipsum", lorem_ipsum);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
         //OCArray to int array
         assertEquals(OCType.OC_REP_INT_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("fibonacci"));
         assertNotNull(rep.getValue().getArray());
-        assertEquals(fib.length, OCMain.ocArrayToLongArray(rep.getValue().getArray()).length);
-        assertArrayEquals(fib, OCMain.ocArrayToLongArray(rep.getValue().getArray()));
+        assertEquals(fib.length, OCRep.ocArrayToLongArray(rep.getValue().getArray()).length);
+        assertArrayEquals(fib, OCRep.ocArrayToLongArray(rep.getValue().getArray()));
 
         rep = rep.getNext();
         assertNotNull(rep);
@@ -146,8 +146,8 @@ public class OCRepresentationTest {
         assertEquals(OCType.OC_REP_BOOL_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("flips"));
         assertNotNull(rep.getValue().getArray());
-        assertEquals(barray.length, OCMain.ocArrayToBooleanArray(rep.getValue().getArray()).length);
-        assertArrayEquals(barray, OCMain.ocArrayToBooleanArray(rep.getValue().getArray()));
+        assertEquals(barray.length, OCRep.ocArrayToBooleanArray(rep.getValue().getArray()).length);
+        assertArrayEquals(barray, OCRep.ocArrayToBooleanArray(rep.getValue().getArray()));
 
         rep = rep.getNext();
         assertNotNull(rep);
@@ -156,9 +156,9 @@ public class OCRepresentationTest {
         assertEquals(OCType.OC_REP_DOUBLE_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("math_constants"));
         assertNotNull(rep.getValue().getArray());
-        assertEquals(mathConstants.length, OCMain.ocArrayToDoubleArray(rep.getValue().getArray()).length);
-        assertArrayEquals(mathConstants, OCMain.ocArrayToDoubleArray(rep.getValue().getArray()), 0.0000001);
-        OCMain.repDeleteBuffer();
+        assertEquals(mathConstants.length, OCRep.ocArrayToDoubleArray(rep.getValue().getArray()).length);
+        assertArrayEquals(mathConstants, OCRep.ocArrayToDoubleArray(rep.getValue().getArray()), 0.0000001);
+        OCRep.deleteBuffer();
 
         rep = rep.getNext();
         assertNotNull(rep);
@@ -167,17 +167,17 @@ public class OCRepresentationTest {
         assertEquals(OCType.OC_REP_STRING_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("lorem_ipsum"));
         assertNotNull(rep.getValue().getArray());
-        assertEquals(lorem_ipsum.length, OCMain.ocArrayToStringArray(rep.getValue().getArray()).length);
-        assertArrayEquals(lorem_ipsum, OCMain.ocArrayToStringArray(rep.getValue().getArray()));
+        assertEquals(lorem_ipsum.length, OCRep.ocArrayToStringArray(rep.getValue().getArray()).length);
+        assertArrayEquals(lorem_ipsum, OCRep.ocArrayToStringArray(rep.getValue().getArray()));
 
         // TODO solve how to pass arrays of bytes.
         // Note Object arrays not covered by the OCArray type
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testValueObject() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
         /*
          * Create an OCRepresentation with the following
@@ -187,18 +187,18 @@ public class OCRepresentationTest {
          *     "c": "three"
          *   }
          */
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetLong(root, "a", 1);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetBoolean(root, "b", false);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(root, "c", "three");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setLong(root, "a", 1);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setBoolean(root, "b", false);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(root, "c", "three");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
         OCValue v = new OCValue();
@@ -225,21 +225,21 @@ public class OCRepresentationTest {
         assertEquals("three", outObject.getValue().getString());
 
         // Access values indirectly using repGet functions
-        Long a = OCMain.repGetLong(v.getObject(), "a");
+        Long a = OCRep.getLong(v.getObject(), "a");
         assertNotNull(a);
         assertEquals(1, a.longValue());
-        Boolean b = OCMain.repGetBoolean(v.getObject(), "b");
+        Boolean b = OCRep.getBoolean(v.getObject(), "b");
         assertNotNull(b);
         assertEquals(false, b.booleanValue());
-        String c = OCMain.repGetString(v.getObject(), "c");
+        String c = OCRep.getString(v.getObject(), "c");
         assertNotNull(c);
         assertTrue(c.equals("three"));
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testValueObjectArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
         /*
          * NOTE Object Array is a misnomer when represented in json/cbor it
          * is an array of objects. It is represented in code as a
@@ -261,50 +261,50 @@ public class OCRepresentationTest {
          *   ]
          */
         /* add values to root object */
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
-        CborEncoder space2001 = OCMain.repOpenArray(root, "space_2001");
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
+        CborEncoder space2001 = OCRep.openArray(root, "space_2001");
+        assertEquals(0, OCRep.getCborErrno());
 
         CborEncoder arrayItemObject;
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Dave Bowman");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Dave Bowman");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Frank Poole");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Frank Poole");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Hal 9000");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "AI computer");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Hal 9000");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "AI computer");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCMain.repCloseArray(root, space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.closeArray(root, space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
         System.out.println(rep.getType());
         System.out.println(rep.getName());
-        OCRepresentation space2001Out = OCMain.repGetObjectArray(rep, "space_2001");
+        OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);
 
         OCValue v = new OCValue();
@@ -360,180 +360,180 @@ public class OCRepresentationTest {
 
         /* 4th object item in the array */
         assertNull(v.getObjectArray().getNext().getNext().getNext());
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepInt() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        OCMain.repSetLong(root, "ultimat_answer", 42);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setLong(root, "ultimat_answer", 42);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        Long outValue = OCMain.repGetLong(rep, "ultimat_answer");
+        Long outValue = OCRep.getLong(rep, "ultimat_answer");
         assertNotNull(outValue);
         assertEquals(42, outValue.longValue());
-        outValue = OCMain.repGetLong(rep, "not_a_key");
+        outValue = OCRep.getLong(rep, "not_a_key");
         assertNull(outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepBoolean() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        OCMain.repSetBoolean(root, "true_flag", true);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setBoolean(root, "true_flag", true);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        Boolean outValue = OCMain.repGetBoolean(rep, "true_flag");
+        Boolean outValue = OCRep.getBoolean(rep, "true_flag");
         assertNotNull(outValue);
         assertEquals(true, outValue.booleanValue());
-        outValue = OCMain.repGetBoolean(rep, "not_a_key");
+        outValue = OCRep.getBoolean(rep, "not_a_key");
         assertNull(outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepDouble() {
-        OCMain.repNewBuffer(1024);
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.newBuffer(1024);
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        OCMain.repSetDouble(root, "pi", 3.14);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setDouble(root, "pi", 3.14);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        Double outValue = OCMain.repGetDouble(rep, "pi");
+        Double outValue = OCRep.getDouble(rep, "pi");
         assertNotNull(outValue);
         assertEquals(3.14, outValue.doubleValue(), 0.001);
-        outValue = OCMain.repGetDouble(rep, "not_a_key");
+        outValue = OCRep.getDouble(rep, "not_a_key");
         assertNull(outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepString() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        OCMain.repSetTextString(root, "hello", "world");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(root, "empty", "");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setTextString(root, "hello", "world");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(root, "empty", "");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        String outValue = OCMain.repGetString(rep, "hello");
+        String outValue = OCRep.getString(rep, "hello");
         assertNotNull(outValue);
         assertTrue(outValue.equals("world"));
-        outValue = OCMain.repGetString(rep, "empty");
+        outValue = OCRep.getString(rep, "empty");
         assertNotNull(outValue);
         assertTrue(outValue.equals(""));
-        outValue = OCMain.repGetString(rep, "not_a_key");
+        outValue = OCRep.getString(rep, "not_a_key");
         assertNull(outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepBooleanArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         boolean barray[] = {false, false, true, false, false};
-        OCMain.repSetBooleanArray(root, "flips", barray);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setBooleanArray(root, "flips", barray);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        boolean outValue[] = OCMain.repGetBooleanArray(rep, "flips");
+        boolean outValue[] = OCRep.getBooleanArray(rep, "flips");
         assertNotNull(outValue);
         assertEquals(barray.length, outValue.length);
         assertArrayEquals(barray, outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepDoubleArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
-        OCMain.repSetDoubleArray(root, "math_constants", mathConstants);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setDoubleArray(root, "math_constants", mathConstants);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        double outValue[] = OCMain.repGetDoubleArray(rep, "math_constants");
+        double outValue[] = OCRep.getDoubleArray(rep, "math_constants");
         assertNotNull(outValue);
         assertEquals(mathConstants.length, outValue.length);
         assertArrayEquals(mathConstants, outValue, 0.000001);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepIntArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
-        OCMain.repSetLongArray(root, "fibonacci", fib);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setLongArray(root, "fibonacci", fib);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        long outValue[] = OCMain.repGetLongArray(rep, "fibonacci");
+        long outValue[] = OCRep.getLongArray(rep, "fibonacci");
         assertNotNull(outValue);
         assertEquals(fib.length, outValue.length);
         assertArrayEquals(fib, outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
     
     @Test
     public void testRepByteStringArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         /* jagged arrays for testing */
         byte ba0[] = {0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
@@ -541,26 +541,26 @@ public class OCRepresentationTest {
         byte ba2[] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
                          0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42};
         byte ba3[] = {0x00, 0x00, (byte)0xff, 0x00, 0x00};
-        CborEncoder barray = OCMain.repOpenArray(root, "barray");
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder barray = OCRep.openArray(root, "barray");
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(barray);
-        OCMain.repAddByteString(barray, ba0);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repAddByteString(barray, ba1);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repAddByteString(barray, ba2);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repAddByteString(barray, ba3);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repCloseArray(root, barray);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.addByteString(barray, ba0);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.addByteString(barray, ba1);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.addByteString(barray, ba2);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.addByteString(barray, ba3);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.closeArray(root, barray);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        byte outValue[][] = OCMain.repGetByteStringArray(rep, "barray");
+        byte outValue[][] = OCRep.getByteStringArray(rep, "barray");
         assertNotNull(outValue);
         assertEquals(4, outValue.length);
         assertEquals(ba0.length, outValue[0].length);
@@ -571,60 +571,60 @@ public class OCRepresentationTest {
         assertArrayEquals(ba2, outValue[2]);
         assertEquals(ba3.length, outValue[3].length);
         assertArrayEquals(ba3, outValue[3]);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepStringArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
                                 "consectetur", "adipiscing", "elit.", "Sed",
                                 "nec", "feugiat", "odio.", "Donec."};
-        OCMain.repSetStringArray(root, "lorem_ipsum", lorem_ipsum);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setStringArray(root, "lorem_ipsum", lorem_ipsum);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        String outValue[] = OCMain.repGetStringArray(rep, "lorem_ipsum");
+        String outValue[] = OCRep.getStringArray(rep, "lorem_ipsum");
         assertNotNull(outValue);
         assertEquals(lorem_ipsum.length, outValue.length);
         assertArrayEquals(lorem_ipsum, outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepByteString() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         byte fibBytes[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
-        OCMain.repSetByteString(root, "fib_bytes", fibBytes);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.setByteString(root, "fib_bytes", fibBytes);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        byte outValue[] = OCMain.repGetByteString(rep, "fib_bytes");
+        byte outValue[] = OCRep.getByteString(rep, "fib_bytes");
         assertNotNull(outValue);
         assertEquals(fibBytes.length, outValue.length);
         assertArrayEquals(fibBytes, outValue);
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepObject() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
 
         /*
          * {
@@ -635,43 +635,43 @@ public class OCRepresentationTest {
          *   }
          * }
          */
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
-        CborEncoder myObject = OCMain.repOpenObject(root, "my_object");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetLong(myObject, "a", 1);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetBoolean(myObject, "b", false);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(myObject, "c", "three");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repCloseObject(root, myObject);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
+        CborEncoder myObject = OCRep.openObject(root, "my_object");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setLong(myObject, "a", 1);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setBoolean(myObject, "b", false);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(myObject, "c", "three");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.closeObject(root, myObject);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        OCRepresentation myObjectOut = OCMain.repGetObject(rep, "my_object");
+        OCRepresentation myObjectOut = OCRep.getObject(rep, "my_object");
         assertNotNull(myObjectOut);
 
-        Long a = OCMain.repGetLong(myObjectOut, "a");
+        Long a = OCRep.getLong(myObjectOut, "a");
         assertNotNull(a);
         assertEquals(1, a.longValue());
-        Boolean b = OCMain.repGetBoolean(myObjectOut, "b");
+        Boolean b = OCRep.getBoolean(myObjectOut, "b");
         assertNotNull(b);
         assertEquals(false, b.booleanValue());
-        String c = OCMain.repGetString(myObjectOut, "c");
+        String c = OCRep.getString(myObjectOut, "c");
         assertNotNull(c);
         assertTrue(c.equals("three"));
 
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 
     @Test
     public void testRepObjectArray() {
-        OCMain.repNewBuffer(1024);
+        OCRep.newBuffer(1024);
         /*
          * NOTE Object Array is a misnomer when represented in json/cbor it
          * is an array of objects. It is represented in code as a
@@ -687,60 +687,60 @@ public class OCRepresentationTest {
          *   ]
          */
         /* add values to root object */
-        CborEncoder root = OCMain.repBeginRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
-        CborEncoder space2001 = OCMain.repOpenArray(root, "space_2001");
-        assertEquals(0, OCMain.repGetCborErrno());
+        CborEncoder root = OCRep.beginRootObject();
+        assertEquals(0, OCRep.getCborErrno());
+        CborEncoder space2001 = OCRep.openArray(root, "space_2001");
+        assertEquals(0, OCRep.getCborErrno());
 
         CborEncoder arrayItemObject;
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Dave Bowman");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Dave Bowman");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Frank Poole");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "astronaut");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Frank Poole");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "astronaut");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        arrayItemObject = OCMain.repObjectArrayBeginItem(space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "name", "Hal 9000");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repSetTextString(arrayItemObject, "job", "AI computer");
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repObjectArrayEndItem(space2001, arrayItemObject);
-        assertEquals(0, OCMain.repGetCborErrno());
+        arrayItemObject = OCRep.objectArrayBeginItem(space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "name", "Hal 9000");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.setTextString(arrayItemObject, "job", "AI computer");
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.objectArrayEndItem(space2001, arrayItemObject);
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCMain.repCloseArray(root, space2001);
-        assertEquals(0, OCMain.repGetCborErrno());
-        OCMain.repEndRootObject();
-        assertEquals(0, OCMain.repGetCborErrno());
+        OCRep.closeArray(root, space2001);
+        assertEquals(0, OCRep.getCborErrno());
+        OCRep.endRootObject();
+        assertEquals(0, OCRep.getCborErrno());
 
-        OCRepresentation rep = OCMain.repGetOCRepresentaionFromRootObject();
+        OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
         System.out.println(rep.getType());
         System.out.println(rep.getName());
-        OCRepresentation space2001Out = OCMain.repGetObjectArray(rep, "space_2001");
+        OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);
 
         String nameOut;
         String jobOut;
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        nameOut = OCRep.getString(space2001Out.getValue().getObject(), "name");
         assertNotNull(nameOut);
         assertTrue(nameOut.equals("Dave Bowman"));
-        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        jobOut = OCRep.getString(space2001Out.getValue().getObject(), "job");
         assertNotNull(jobOut);
         assertTrue(jobOut.equals("astronaut"));
 
@@ -748,10 +748,10 @@ public class OCRepresentationTest {
         assertNotNull(space2001Out);
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        nameOut = OCRep.getString(space2001Out.getValue().getObject(), "name");
         assertNotNull(nameOut);
         assertTrue(nameOut.equals("Frank Poole"));
-        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        jobOut = OCRep.getString(space2001Out.getValue().getObject(), "job");
         assertNotNull(jobOut);
         assertTrue(jobOut.equals("astronaut"));
 
@@ -759,13 +759,13 @@ public class OCRepresentationTest {
         assertNotNull(space2001Out);
 
         assertEquals(OCType.OC_REP_OBJECT, space2001Out.getType());
-        nameOut = OCMain.repGetString(space2001Out.getValue().getObject(), "name");
+        nameOut = OCRep.getString(space2001Out.getValue().getObject(), "name");
         assertNotNull(nameOut);
         assertTrue(nameOut.equals("Hal 9000"));
-        jobOut = OCMain.repGetString(space2001Out.getValue().getObject(), "job");
+        jobOut = OCRep.getString(space2001Out.getValue().getObject(), "job");
         assertNotNull(jobOut);
         assertTrue(jobOut.equals("AI computer"));
 
-        OCMain.repDeleteBuffer();
+        OCRep.deleteBuffer();
     }
 }
