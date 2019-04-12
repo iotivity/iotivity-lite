@@ -1,0 +1,4 @@
+# Folder intentionally left empty
+# The jni wraper code will be placed in this directory by when swig build is run.
+*.c
+*.h
