@@ -13,6 +13,8 @@ public class MyInitHandler implements OCMainInitHandler {
         Light.state = false;
         Counter.name = "John's Counter";
         Counter.count = 0;
+
+        OCMain.setRandomPinHandler(new RandomPinHandler());
         return ret;
     }
 
