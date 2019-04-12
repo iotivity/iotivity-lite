@@ -171,23 +171,23 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_api_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_clock_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_collection_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_endpoint_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_obt_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_pki_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_rep_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_storage_wrap.c" />
-    <ClCompile Include="..\..\..\..\swig\java_lang\oc_uuid_wrap.c" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\IoTivity-Constrained.vcxproj">
       <Project>{1866d7a4-fc11-46ca-9377-3baa69d4bf58}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\swig\java_lang\oc_iotivity_lite_jni.h" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_api_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_clock_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_collection_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_endpoint_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_obt_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_pki_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_rep_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_storage_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_uuid_wrap.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

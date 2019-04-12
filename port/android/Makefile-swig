@@ -36,7 +36,7 @@ RM ?= rm
 MKDIR ?= mkdir
 
 ROOT_DIR = ../..
-SWIG_DIR := ../../swig/java_lang
+SWIG_DIR := ../../swig/iotivity-lite-java/jni/
 OBJDIR ?= ./${ANDROID_HOST}obj
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 
