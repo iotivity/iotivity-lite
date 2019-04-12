@@ -159,6 +159,10 @@ ${OBJDIR}/swig/oc_collection_wrap.o: ${SWIG_DIR}/oc_collection_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
 
+${OBJDIR}/swig/oc_rep_wrap.o: ${SWIG_DIR}/oc_rep_wrap.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
+
 ${OBJDIR}/swig/oc_obt_wrap.o: ${SWIG_DIR}/oc_obt_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER

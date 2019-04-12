@@ -5,6 +5,7 @@ import android.util.Log;
 import org.iotivity.CborEncoder;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
+import org.iotivity.OCRep;
 import org.iotivity.OCRequest;
 import org.iotivity.OCRequestHandler;
 import org.iotivity.OCStatus;
@@ -32,22 +33,22 @@ public class GetLightRequestHandler implements OCRequestHandler {
         activity.msg("\t" + light.name + ", " + light.power + ", " + light.state);
         activity.printLine();
 
-        CborEncoder root = OCMain.repBeginRootObject();
+        CborEncoder root = OCRep.beginRootObject();
         switch (interfaces) {
             case OCInterfaceMask.BASELINE: {
                 OCMain.processBaselineInterface(request.getResource());
                 break;
             }
             case OCInterfaceMask.RW: {
-                OCMain.repSetBoolean(root, "state", light.state);
-                OCMain.repSetLong(root, "power", light.power);
-                OCMain.repSetTextString(root, "name", light.name);
+                OCRep.setBoolean(root, "state", light.state);
+                OCRep.setLong(root, "power", light.power);
+                OCRep.setTextString(root, "name", light.name);
                 break;
             }
             default:
                 break;
         }
-        OCMain.repEndRootObject();
+        OCRep.endRootObject();
         OCMain.sendResponse(request, OCStatus.OC_STATUS_OK);
     }
 }

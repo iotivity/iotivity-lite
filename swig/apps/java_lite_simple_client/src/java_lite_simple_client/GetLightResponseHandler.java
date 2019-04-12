@@ -4,8 +4,10 @@ import org.iotivity.CborEncoder;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
+import org.iotivity.OCRep;
 import org.iotivity.OCRepresentation;
 import org.iotivity.OCResponseHandler;
+import org.iotivity.OCType;
 
 public class GetLightResponseHandler implements OCResponseHandler {
 
@@ -35,10 +37,10 @@ public class GetLightResponseHandler implements OCResponseHandler {
 
         PutLightResponseHandler putLight = new PutLightResponseHandler();
         if (OCMain.initPut(Light.serverUri, Light.serverEndpoint, null, putLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 15);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", true);
+            OCRep.setLong(root, "power", 15);
+            OCRep.endRootObject();
 
             if (OCMain.doPut()) {
                 System.out.println("\tSent PUT request");

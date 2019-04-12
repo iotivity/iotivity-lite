@@ -5,6 +5,7 @@ import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCStatus;
+import org.iotivity.OCRep;
 import org.iotivity.OCResponseHandler;
 
 public class PutLightResponseHandler implements OCResponseHandler {
@@ -31,10 +32,10 @@ public class PutLightResponseHandler implements OCResponseHandler {
 
         PostLightResponseHandler postLight = new PostLightResponseHandler(activity, light);
         if (OCMain.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", false);
-            OCMain.repSetLong(root, "power", 105);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", false);
+            OCRep.setLong(root, "power", 105);
+            OCRep.endRootObject();
 
             if (OCMain.doPost()) {
                 activity.msg("\tSent POST request");

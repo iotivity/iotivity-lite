@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_clock_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_collection_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_obt_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\java_lang\oc_rep_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_storage_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\java_lang\oc_uuid_wrap.c" />
   </ItemGroup>
