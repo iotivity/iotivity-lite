@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_90ff7801",
+        "filename": "swig/oc_java/oc/OcUtils.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-12T22:48:55Z",
+      "side": 1,
+      "message": "Does separating these into the OcUtils class gain us anything?",
+      "revId": "ed62973d190ae3858b6bf872cf0b4251156116bb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
