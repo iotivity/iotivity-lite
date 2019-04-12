@@ -1,3 +1,7 @@
 /bin/
+/jni/*.c
+/jni/*.h
+/libs/*.dll
+/libs/*.so
 /src/org/iotivity/*.java
 /src/org/iotivity/oc/*.java
