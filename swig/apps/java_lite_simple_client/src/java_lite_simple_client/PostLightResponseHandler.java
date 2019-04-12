@@ -4,6 +4,7 @@ import org.iotivity.CborEncoder;
 import org.iotivity.OCClientResponse;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
+import org.iotivity.OCRep;
 import org.iotivity.OCStatus;
 import org.iotivity.OCResponseHandler;
 
@@ -22,10 +23,10 @@ public class PostLightResponseHandler implements OCResponseHandler {
 
         Post2LightResponseHandler postLight = new Post2LightResponseHandler();
         if (OCMain.initPost(Light.serverUri, Light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
-            CborEncoder root = OCMain.repBeginRootObject();
-            OCMain.repSetBoolean(root, "state", true);
-            OCMain.repSetLong(root, "power", 55);
-            OCMain.repEndRootObject();
+            CborEncoder root = OCRep.beginRootObject();
+            OCRep.setBoolean(root, "state", true);
+            OCRep.setLong(root, "power", 55);
+            OCRep.endRootObject();
 
             if (OCMain.doPost()) {
                 System.out.println("\tSent POST2 request");
