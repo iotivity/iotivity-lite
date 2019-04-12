@@ -20,24 +20,32 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-static LARGE_INTEGER frequency = { 0 };
 void
 oc_clock_init(void)
 {
-  QueryPerformanceFrequency(&frequency);
 }
 
 oc_clock_time_t
 oc_clock_time(void)
 {
-  LARGE_INTEGER count = { 0 };
-  if (frequency.QuadPart && QueryPerformanceCounter(&count)) {
-    oc_clock_time_t t =
-      1000 * count.QuadPart / frequency.QuadPart; // milliseconds
-    return t;
-  }
-  // fall back if no QueryPerformanceCounter available
-  return GetTickCount64();
+  oc_clock_time_t time = 0;
+
+  // This magic number is the number of 100 nanosecond intervals since January
+  // 1, 1601 (UTC)
+  // until 00:00:00 January 1, 1970
+  static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+  SYSTEMTIME system_time;
+  FILETIME file_time;
+
+  GetSystemTime(&system_time);
+  SystemTimeToFileTime(&system_time, &file_time);
+
+  time = ((uint64_t)file_time.dwLowDateTime);
+  time += ((uint64_t)file_time.dwHighDateTime) << 32;
+  time = (oc_clock_time_t)((time - EPOCH) / 10000L);
+
+  return time;
 }
 
 unsigned long
