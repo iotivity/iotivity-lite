@@ -30,7 +30,13 @@
   JCALL1(GetJavaVM, jenv, &jvm);
 }
 
-%rename(init) oc_obt_init;
+%ignore oc_obt_init;
+%rename(init) jni_obt_init;
+%inline %{
+void jni_obt_init(void* dummy) {
+    oc_obt_init();
+}
+%}
 %rename(shutdown) oc_obt_shutdown;
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
