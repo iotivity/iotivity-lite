@@ -38,6 +38,8 @@ public class ObtMain {
     private static UnownedDeviceHandler unownedDeviceHandler = new UnownedDeviceHandler();
     private static OwnedDeviceHandler ownedDeviceHandler = new OwnedDeviceHandler();
     private static JustWorksHandler justWorksHandler = new JustWorksHandler();
+    private static GenerateRandomPinHandler generateRandomPinHandler = new GenerateRandomPinHandler();
+    private static OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler();
     private static ProvisionCredentialsHandler provisionCredentialsHandler = new ProvisionCredentialsHandler();
     private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
     private static ProvisionAce2Handler provisionAce2Handler = new ProvisionAce2Handler();
@@ -47,15 +49,15 @@ public class ObtMain {
     static private Thread shutdownHook = new Thread() {
         public void run() {
             quit = true;
-            System.out.println("Calling main_shutdown.");
+            System.out.println("Calling mainShutdown.");
             OCMain.mainShutdown();
+            OCObt.shutdown();
             scanner.close();
             mainThread.interrupt();
         }
     };
 
-    public static void displayMenu()
-    {
+    public static void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
         menu.append("OCF 2.0 Onboarding Tool\n");
@@ -65,11 +67,13 @@ public class ObtMain {
         menu.append("[1] Discover un-owned devices\n");
         menu.append("[2] Discover owned devices\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[3] Take ownership of device (Just-works)\n");
-        menu.append("[4] Provision pair-wise credentials\n");
-        menu.append("[5] Provision ACE2\n");
+        menu.append("[3] Just-Works Ownership Transfer Method\n");
+        menu.append("[4] Request Random PIN from device for OTM\n");
+        menu.append("[5] Random PIN Ownership Transfer Method\n");
+        menu.append("[6] Provision pair-wise credentials\n");
+        menu.append("[7] Provision ACE2\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[6] RESET device\n");
+        menu.append("[8] RESET device\n");
         menu.append("------------------------------------------------\n");
         menu.append("[9] Exit\n");
         menu.append("################################################\n");
@@ -77,22 +81,20 @@ public class ObtMain {
         System.out.print(menu);
     }
 
-    private static void discoverUnownedDevices()
-    {
+    private static void discoverUnownedDevices() {
         System.out.println("Discovering un-owned devices");
-        if ( 0 > OCObt.discoverUnownedDevices(unownedDeviceHandler)) {
+        if (0 > OCObt.discoverUnownedDevices(unownedDeviceHandler)) {
             System.err.println("ERROR discovering un-owned Devices.");
         }
     }
 
-    private static void discoverOwnedDevices()
-    {
+    private static void discoverOwnedDevices() {
         if (0 > OCObt.discoverOwnedDevices(ownedDeviceHandler)) {
             System.err.println("ERROR discovering owned Devices.");
         }
     }
 
-    private static void takeOwnershipOfDevice() {
+    private static void otmJustWorks() {
         if (unownedDevices.isEmpty()) {
             System.out.println("\nPlease Re-discover Unowned devices");
             return;
@@ -103,8 +105,8 @@ public class ObtMain {
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
         OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for(OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) +"\n");
+        for (OCUuid ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -123,13 +125,92 @@ public class ObtMain {
             System.out.println("\nERROR issuing request to perform ownership transfer");
         }
 
-        /* Having issued an OTM request, remove this item from the unowned device list
+        /*
+         * Having issued an OTM request, remove this item from the unowned
+         * device list
+         */
+        unownedDevices.remove(uds[userInput]);
+    }
+
+    private static void requestRandomPin() {
+        if (unownedDevices.isEmpty()) {
+            System.out.println("\nPlease Re-discover Unowned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder unownedDevicesMenu = new StringBuilder();
+        unownedDevicesMenu.append("\nUnowned Devices:\n");
+        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
+        for (OCUuid ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+            i++;
+        }
+        unownedDevicesMenu.append("\n\nSelect device: ");
+        System.out.print(unownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = OCObt.requestRandomPin(uds[userInput], generateRandomPinHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to generate a random pin");
+        } else {
+            System.out.println("\nERROR issuing request to generate a random pin");
+        }
+    }
+
+    private static void otmRandomPin() {
+        if (unownedDevices.isEmpty()) {
+            System.out.println("\nPlease Re-discover Unowned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder unownedDevicesMenu = new StringBuilder();
+        unownedDevicesMenu.append("\nUnowned Devices:\n");
+        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
+        for (OCUuid ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+            i++;
+        }
+        unownedDevicesMenu.append("\n\nSelect device: ");
+        System.out.print(unownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        System.out.print("Enter Random PIN: ");
+        String pin = scanner.next();
+        // max string length for pin is 24 characters
+        if (pin.length() > 24) {
+            pin = pin.substring(0, 24);
+        }
+
+        int ret = OCObt.performRandomPinOtm(uds[userInput], pin, pin.length(), otmRandomPinHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to perform Random PIN OTM");
+        } else {
+            System.out.println("\nERROR issuing request to perform Random PIN OTM");
+        }
+
+        /*
+         * Having issued an OTM request, remove this item from the unowned
+         * device list
          */
         unownedDevices.remove(uds[userInput]);
     }
 
     private static void provisionCredentials() {
-        if(ownedDevices.isEmpty()) {
+        if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
             return;
         }
@@ -139,7 +220,7 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
         OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for(OCUuid od : ods) {
+        for (OCUuid od : ods) {
             ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
             i++;
         }
@@ -167,12 +248,12 @@ public class ObtMain {
     }
 
     public static void provisionAce2() {
-        if(ownedDevices.isEmpty()) {
+        if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
             return;
         }
 
-        String[] connTypes = new String[]{ "anon-clear", "auth-crypt" };
+        String[] connTypes = new String[] { "anon-clear", "auth-crypt" };
         int num_resources = 0;
 
         System.out.println("\nProvision ACL2\nMy Devices:");
@@ -182,14 +263,13 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
         OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for(OCUuid od : ods) {
+        for (OCUuid od : ods) {
             ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
             i++;
         }
 
-
         if (i == 0) {
-            System.out.println("\nNo devices to provision.. Please Re-Discover Owned devices.");
+            System.out.println("\nNo devices to provision... Please Re-Discover Owned devices.");
             return;
         }
 
@@ -206,7 +286,7 @@ public class ObtMain {
         subjectsMenu.append("[0]: " + connTypes[0] + "\n");
         subjectsMenu.append("[1]: " + connTypes[1] + "\n");
         i = 0;
-        for(OCUuid od : ods) {
+        for (OCUuid od : ods) {
             subjectsMenu.append("[" + (i + 2) + "]: " + OCUuidUtil.uuidToString(od) + "\n");
             i++;
         }
@@ -257,10 +337,10 @@ public class ObtMain {
             System.out.print("Have resource href? [0-No, 1-Yes]: ");
             int c = scanner.nextInt();
             if (c == 1) {
-                System.out.println("Enter resource href (eg. /a/light): ");
+                System.out.print("Enter resource href (eg. /a/light): ");
                 String href;
-                // max string length in C is 64 characters
-                // removing then nul character that is 63
+                // max string length in C is 64 characters including
+                // the nul character, so useable lenght is 63
                 href = scanner.next();
                 if (href.length() > 63) {
                     href = href.substring(0, 63);
@@ -356,8 +436,7 @@ public class ObtMain {
                     j++;
                 }
             } else if (c < 0 || c > 7) {
-                System.out.println("\nWARNING: Invalid number of interfaces.."
-                        + "           skipping interface selection");
+                System.out.println("\nWARNING: Invalid number of interfaces... skipping interface selection");
             }
             i++;
         }
@@ -398,7 +477,7 @@ public class ObtMain {
     }
 
     public static void resetDevice() {
-        if(ownedDevices.isEmpty()) {
+        if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
             return;
         }
@@ -408,7 +487,7 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
         OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for(OCUuid od : ods) {
+        for (OCUuid od : ods) {
             ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
             i++;
         }
@@ -429,15 +508,14 @@ public class ObtMain {
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         quit = false;
         mainThread = Thread.currentThread();
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-        String creds_path =  "./onboarding_tool_creds/";
+        String creds_path = "./onboarding_tool_creds/";
         java.io.File directory = new java.io.File(creds_path);
-        if (! directory.exists()) {
+        if (!directory.exists()) {
             directory.mkdir();
         }
         System.out.println("Storage Config PATH : " + directory.getPath());
@@ -456,11 +534,11 @@ public class ObtMain {
             int userInput = 0;
             try {
                 userInput = scanner.nextInt();
-            } catch(InputMismatchException e) {
+            } catch (InputMismatchException e) {
                 System.out.println("Invalid Input.");
                 userInput = 0;
             }
-            switch(userInput) {
+            switch (userInput) {
             case 0:
                 continue;
             case 1:
@@ -470,15 +548,21 @@ public class ObtMain {
                 discoverOwnedDevices();
                 break;
             case 3:
-                takeOwnershipOfDevice();
+                otmJustWorks();
                 break;
             case 4:
-                provisionCredentials();
+                requestRandomPin();
                 break;
             case 5:
-                provisionAce2();
+                otmRandomPin();
                 break;
             case 6:
+                provisionCredentials();
+                break;
+            case 7:
+                provisionAce2();
+                break;
+            case 8:
                 resetDevice();
                 break;
             case 9:
@@ -489,6 +573,7 @@ public class ObtMain {
             }
         }
         OCMain.mainShutdown();
+        OCObt.shutdown();
         System.exit(0);
     }
 }
