@@ -29,6 +29,7 @@ public class GetLightRequestHandler implements OCRequestHandler {
         activity.msg("Get Light:");
 
         ++light.power; // auto increment
+        light.state = !light.state; // auto toggle
 
         activity.msg("\t" + light.name + ", " + light.power + ", " + light.state);
         activity.printLine();
