@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -130,11 +132,11 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     break;
 
                                 case 2: // Reset Device
-                                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
-                                    alertDialogBuilder.setTitle(uuid);
-                                    alertDialogBuilder.setMessage(getResources().getStringArray(R.array.ownedDeviceActions)[2]);
+                                    AlertDialog.Builder resetDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    resetDialogBuilder.setTitle(uuid);
+                                    resetDialogBuilder.setMessage(getResources().getStringArray(R.array.ownedDeviceActions)[2]);
 
-                                    alertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                    resetDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             new Thread(new Runnable() {
@@ -155,13 +157,13 @@ public class OnBoardingActivity extends AppCompatActivity {
                                         }
                                     });
 
-                                    alertDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                    resetDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                         }
                                     });
 
-                                    Dialog resetDeviceDialog = alertDialogBuilder.create();
+                                    Dialog resetDeviceDialog = resetDialogBuilder.create();
                                     resetDeviceDialog.show();
                                     break;
 
@@ -187,37 +189,137 @@ public class OnBoardingActivity extends AppCompatActivity {
                 if (uuid != null) {
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                     alertDialogBuilder.setTitle(uuid);
-                    alertDialogBuilder.setMessage(R.string.justWorks);
-
-                    alertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    alertDialogBuilder.setItems(R.array.unownedDeviceActions, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            new Thread(new Runnable() {
-                                public void run() {
-                                    if (OCObt.performJustWorksOtm(OCUuidUtil.stringToUuid(uuid), new JustWorksHandler(OnBoardingActivity.this)) < 0) {
-                                        final String msg = "Failed to perform ownership transfer for uuid " + uuid;
-                                        Log.d(TAG, msg);
-                                        runOnUiThread(new Runnable() {
-                                            public void run() {
-                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
-                                            }
-                                        });
-                                    } else {
-                                        removeUnownedDevice(uuid);
-                                    }
-                                }
-                            }).start();
+                            switch (which) {
+                                case 0: // Just Works OTM
+                                    AlertDialog.Builder justWorksOtmDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    justWorksOtmDialogBuilder.setTitle(uuid);
+                                    justWorksOtmDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[0]);
+
+                                    justWorksOtmDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            new Thread(new Runnable() {
+                                                public void run() {
+                                                    if (OCObt.performJustWorksOtm(OCUuidUtil.stringToUuid(uuid), new JustWorksHandler(OnBoardingActivity.this)) < 0) {
+                                                        final String msg = "Failed to perform ownership transfer for uuid " + uuid;
+                                                        Log.d(TAG, msg);
+                                                        runOnUiThread(new Runnable() {
+                                                            public void run() {
+                                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                            }
+                                                        });
+                                                    } else {
+                                                        removeUnownedDevice(uuid);
+                                                    }
+                                                }
+                                            }).start();
+                                        }
+                                    });
+
+                                    justWorksOtmDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                        }
+                                    });
+
+                                    Dialog justWorksOtmDialog = justWorksOtmDialogBuilder.create();
+                                    justWorksOtmDialog.show();
+                                    break;
+
+                                case 1: // Generate Random Pin
+                                    AlertDialog.Builder generateRandomPinDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    generateRandomPinDialogBuilder.setTitle(uuid);
+                                    generateRandomPinDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[1]);
+
+                                    generateRandomPinDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            new Thread(new Runnable() {
+                                                public void run() {
+                                                    if (OCObt.requestRandomPin(OCUuidUtil.stringToUuid(uuid), new GenerateRandomPinHandler(OnBoardingActivity.this)) < 0) {
+                                                        final String msg = "Failed to generate random pin for uuid " + uuid;
+                                                        Log.d(TAG, msg);
+                                                        runOnUiThread(new Runnable() {
+                                                            public void run() {
+                                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            }).start();
+                                        }
+                                    });
+
+                                    generateRandomPinDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                        }
+                                    });
+
+                                    Dialog generateRandomPinDialog = generateRandomPinDialogBuilder.create();
+                                    generateRandomPinDialog.show();
+                                    break;
+
+                                case 2: // Random Pin OTM
+                                    LinearLayout layout = new LinearLayout(OnBoardingActivity.this);
+                                    layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                                    layout.setOrientation(LinearLayout.VERTICAL);
+
+                                    final EditText input = new EditText(OnBoardingActivity.this);
+                                    layout.addView(input);
+
+                                    AlertDialog.Builder randomPinOtmDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    randomPinOtmDialogBuilder.setTitle(uuid);
+                                    randomPinOtmDialogBuilder.setMessage(R.string.enterPin);
+                                    randomPinOtmDialogBuilder.setView(layout);
+
+                                    randomPinOtmDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            new Thread(new Runnable() {
+                                                public void run() {
+                                                    String pin = input.getText().toString().trim();
+                                                    if (pin.length() > 24) {
+                                                        pin = pin.substring(0, 24);
+                                                    }
+                                                    Log.d(TAG, "PIN = " + pin);
+                                                    if (OCObt.performRandomPinOtm(OCUuidUtil.stringToUuid(uuid), pin, pin.length(), new OtmRandomPinHandler(OnBoardingActivity.this)) < 0) {
+                                                        final String msg = "Failed to perform ownership transfer for uuid " + uuid;
+                                                        Log.d(TAG, msg);
+                                                        runOnUiThread(new Runnable() {
+                                                            public void run() {
+                                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                            }
+                                                        });
+                                                    } else {
+                                                        removeUnownedDevice(uuid);
+                                                    }
+                                                }
+                                            }).start();
+                                        }
+                                    });
+
+                                    randomPinOtmDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                        }
+                                    });
+
+                                    Dialog randomPinOtmDialog = randomPinOtmDialogBuilder.create();
+                                    randomPinOtmDialog.show();
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
                     });
 
-                    alertDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    });
-
-                    Dialog justWorksDialog = alertDialogBuilder.create();
-                    justWorksDialog.show();
+                    Dialog unownedDeviceDialog = alertDialogBuilder.create();
+                    unownedDeviceDialog.show();
 
                 } else {
                     Log.w(TAG, "Uuid not found in list");
@@ -319,8 +421,9 @@ public class OnBoardingActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        Log.d(TAG, "Calling main_shutdown.");
+        Log.d(TAG, "Calling Shutdown.");
         OCMain.mainShutdown();
+        OCObt.shutdown();
         super.onDestroy();
     }
 
