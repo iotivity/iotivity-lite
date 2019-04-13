@@ -3,7 +3,7 @@
     <string name="owned">Owned</string>
     <string name="unowned">Unowned</string>
     <string name="refresh">Refresh</string>
-    <string name="justWorks">Take ownership of device (Just Works)</string>
+    <string name="enterPin">Enter PIN</string>
     <string name="selectDevice">Select device for pairing</string>
     <string name="selectAceSubject">Select subject or device</string>
     <string name="aceAnonClear">anon-clear</string>
@@ -16,6 +16,11 @@
     <string name="interfacesDialogTitle">Select Resource ? Interfaces (if any)</string>
     <string name="addMoreResourceDialogMessage">Add more resources to this ACE?</string>
     <string name="permissionsDialogTitle">Select ACE Permissions (if any)</string>
+    <string-array name="unownedDeviceActions">
+        <item>Just-Works Ownership Transfer Method</item>
+        <item>Request Random PIN from device for OTM</item>
+        <item>Random PIN Ownership Transfer Method</item>
+    </string-array>
     <string-array name="ownedDeviceActions">
         <item>Provision pair-wise credentials</item>
         <item>Provision ACE2</item>
