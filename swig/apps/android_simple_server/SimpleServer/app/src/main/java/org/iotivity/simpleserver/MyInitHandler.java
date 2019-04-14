@@ -23,6 +23,8 @@ public class MyInitHandler implements OCMainInitHandler {
         Log.d(TAG, "inside MyInitHandler.initialize()");
         int ret = OCMain.initPlatform("Intel");
         ret |= OCMain.addDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
+
+        OCMain.setRandomPinHandler(new RandomPinHandler(activity));
         return ret;
     }
 
