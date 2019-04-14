@@ -49,7 +49,6 @@ public class OnBoardingActivity extends AppCompatActivity {
     private OcObt obt;
     private OcPlatform obtPlatform;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
