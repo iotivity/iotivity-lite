@@ -18,4 +18,8 @@ then
   cp -v iotivity-lite.jar ../apps/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
   cp -v iotivity-lite.jar ../apps/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
   cp -v iotivity-lite.jar ../apps/android_on_boarding_tool/OnBoardingTool/app/libs/iotivity-lite.jar
+
+  cp -v iotivity-lite.jar ../apps/oc/android_simple_server/SimpleServer/app/libs/iotivity-lite.jar
+  cp -v iotivity-lite.jar ../apps/oc/android_simple_client/SimpleClient/app/libs/iotivity-lite.jar
+  cp -v iotivity-lite.jar ../apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/iotivity-lite.jar
 fi
