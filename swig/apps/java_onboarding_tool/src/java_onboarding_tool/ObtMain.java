@@ -19,8 +19,6 @@ import org.iotivity.OCStorage;
 import org.iotivity.OCUuidUtil;
 import org.iotivity.OCUuid;
 
-import java_onboarding_tool.UnownedDeviceHandler;
-
 public class ObtMain {
 
     /* user input Scanner */

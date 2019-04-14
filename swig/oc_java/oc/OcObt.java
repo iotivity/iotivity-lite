@@ -8,6 +8,10 @@ public class OcObt {
         OCObt.init();
     }
 
+    public void shutdown() {
+        OCObt.shutdown();
+    }
+
     public int discoverUnownedDevices(OCObtDiscoveryHandler unownedDeviceHandler) {
         return OCObt.discoverUnownedDevices(unownedDeviceHandler);
     }
@@ -16,8 +20,16 @@ public class OcObt {
         return OCObt.discoverOwnedDevices(ownedDeviceHandler);
     }
 
-    public int performJustWorksOtm(OCUuid uuid, OCObtDeviceStatusHandler justWorksHandler) {
-        return OCObt.performJustWorksOtm(uuid, justWorksHandler);
+    public int performJustWorksOtm(OCUuid uuid, OCObtDeviceStatusHandler otmJustWorksHandler) {
+        return OCObt.performJustWorksOtm(uuid, otmJustWorksHandler);
+    }
+
+    public int requestRandomPin(OCUuid uuid, OCObtDeviceStatusHandler generateRandomPinHandler) {
+        return OCObt.requestRandomPin(uuid, generateRandomPinHandler);
+    }
+
+    public int performRandomPinOtm(OCUuid uuid, String pin, OCObtDeviceStatusHandler otmRandomPinHandler) {
+        return OCObt.performRandomPinOtm(uuid, pin, pin.length(), otmRandomPinHandler);
     }
 
     public int provisionPairwiseCredentials(OCUuid uuid1, OCUuid uuid2,
