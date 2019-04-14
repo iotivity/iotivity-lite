@@ -46,6 +46,7 @@ public class MyInitHandler implements OCMainInitHandler {
         light1 = new Light("Alice's Light");
         light2 = new Light("Bob's Light");
 
+        OcUtils.setRandomPinHandler(new RandomPinHandler());
         return ret;
     }
 
