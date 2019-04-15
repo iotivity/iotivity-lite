@@ -79,6 +79,14 @@
 %typemap(jstype)  oc_ace_permissions_t "int";
 %typemap(javain)  oc_ace_permissions_t "$javainput"
 %typemap(javaout) oc_ace_permissions_t { return $jnicall; }
+
+%typemap(in)      oc_sp_types_t "$1 = (oc_sp_types_t)$input;"
+%typemap(out)     oc_sp_types_t "$result = (jint)$1;"
+%typemap(jni)     oc_sp_types_t "jint";
+%typemap(jtype)   oc_sp_types_t "int";
+%typemap(jstype)  oc_sp_types_t "int";
+%typemap(javain)  oc_sp_types_t "$javainput"
+%typemap(javaout) oc_sp_types_t { return $jnicall; }
 /********************************************************************
  * oc_string_t input param - treat as String
  ********************************************************************/
@@ -292,3 +300,20 @@
 %typemap(javaout) oc_string_array_t {
     return $jnicall;
 }
+
+
+/********************************************************************
+ * map unsigned char*. size_t to byte[]
+ * use the swig apply key word to use.
+ * example:
+ * %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *value, size_t length) };
+ ********************************************************************/
+%typemap(in)     (const unsigned char * BYTE, size_t LENGTH) {
+/* Functions from jni.h */
+$1 = (unsigned char *) JCALL2(GetByteArrayElements, jenv, $input, 0);
+$2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
+}
+%typemap(jni)    (const unsigned char * BYTE, size_t LENGTH) "jbyteArray"
+%typemap(jtype)  (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(jstype) (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(javain) (const unsigned char * BYTE, size_t LENGTH) "$javainput"

@@ -13,6 +13,8 @@ swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/sr
 
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_endpoint.i
 
+swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_pki.i
+
 swig -java -package org.iotivity -outcurrentdir -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ ../swig_interfaces/oc_rep.i
 
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
