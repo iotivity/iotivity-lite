@@ -488,6 +488,8 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = GetJNIEnv(&getEnvResult);
 
   assert(cls_OCRandomPinHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
@@ -498,8 +500,6 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
   assert(mid_handler);
 
   jstring jpin = JCALL1(NewStringUTF, (data->jenv), (const char *)pin);
-
-  /* TODO convert pin to java string */
   JCALL3(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
 }
 %}
