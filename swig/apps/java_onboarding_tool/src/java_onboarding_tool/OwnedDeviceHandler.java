@@ -1,6 +1,7 @@
 package java_onboarding_tool;
 
 import org.iotivity.OCEndpoint;
+import org.iotivity.OCEndpointUtil;
 import org.iotivity.OCMain;
 import org.iotivity.OCObtDiscoveryHandler;
 import org.iotivity.OCUuidUtil;
@@ -14,7 +15,7 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
         System.out.println("\nDiscovered owned device: "+ deviceId + " at:");
         while (endpoints != null) {
             String[] endpointStr = new String[1];
-            OCMain.endpointToString(endpoints, endpointStr);
+            OCEndpointUtil.toString(endpoints, endpointStr);
             System.out.println(endpointStr[0]);
             endpoints = endpoints.getNext();
         }
