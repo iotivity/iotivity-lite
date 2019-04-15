@@ -34,6 +34,24 @@
       "revId": "8c119c10b0de84eb8ab3c67db8bd64453358f7bb",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_9005b8c4",
+        "filename": "swig/apps/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/OnBoardingActivity.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-15T22:29:20Z",
+      "side": 1,
+      "message": "thanks",
+      "parentUuid": "1a494da4_d058e0fc",
+      "revId": "8c119c10b0de84eb8ab3c67db8bd64453358f7bb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
