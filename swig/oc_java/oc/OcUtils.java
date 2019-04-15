@@ -108,7 +108,7 @@ public class OcUtils {
 
     public static String endpointToString(OCEndpoint endpoint) {
         String[] endpointString = new String[1];
-        OCMain.endpointToString(endpoint, endpointString);
+        OCEndpointUtil.toString(endpoint, endpointString);
         return endpointString[0];
     }
 
