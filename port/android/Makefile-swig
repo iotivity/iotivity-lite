@@ -171,6 +171,10 @@ ${OBJDIR}/swig/oc_obt_wrap.o: ${SWIG_DIR}/oc_obt_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
 
+${OBJDIR}/swig/oc_pki_wrap.o: ${SWIG_DIR}/oc_pki_wrap.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
+
 ${OBJDIR}/swig/oc_storage_wrap.o: ${SWIG_DIR}/oc_storage_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
