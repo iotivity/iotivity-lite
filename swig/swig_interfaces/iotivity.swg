@@ -292,3 +292,20 @@
 %typemap(javaout) oc_string_array_t {
     return $jnicall;
 }
+
+
+/********************************************************************
+ * map unsigned char*. size_t to byte[]
+ * use the swig apply key word to use.
+ * example:
+ * %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *value, size_t length) };
+ ********************************************************************/
+%typemap(in)     (const unsigned char * BYTE, size_t LENGTH) {
+/* Functions from jni.h */
+$1 = (unsigned char *) JCALL2(GetByteArrayElements, jenv, $input, 0);
+$2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
+}
+%typemap(jni)    (const unsigned char * BYTE, size_t LENGTH) "jbyteArray"
+%typemap(jtype)  (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(jstype) (const unsigned char * BYTE, size_t LENGTH) "byte[]"
+%typemap(javain) (const unsigned char * BYTE, size_t LENGTH) "$javainput"
