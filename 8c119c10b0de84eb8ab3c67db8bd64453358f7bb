@@ -16,6 +16,24 @@
       "revId": "8c119c10b0de84eb8ab3c67db8bd64453358f7bb",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d058e0fc",
+        "filename": "swig/apps/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/OnBoardingActivity.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-15T20:46:40Z",
+      "side": 1,
+      "message": "naming consistency... should these dialogs move around in the future, it will be easier.",
+      "parentUuid": "1a494da4_3052e4dd",
+      "revId": "8c119c10b0de84eb8ab3c67db8bd64453358f7bb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
