@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.iotivity.OCDiscoveryHandler;
 import org.iotivity.OCDiscoveryFlags;
 import org.iotivity.OCEndpoint;
+import org.iotivity.OCEndpointUtil;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
@@ -98,7 +99,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
                     String[] endpointStr = new String[1];
-                    OCMain.endpointToString(ep, endpointStr);
+                    OCEndpointUtil.toString(ep, endpointStr);
                     System.out.println("\t\tendpoint: " + endpointStr[0]);
                     System.out.println("\t\t\tendpoint.device " + ep.getDevice());
                     System.out.println("\t\t\tendpoint.flags " + ep.getFlags());

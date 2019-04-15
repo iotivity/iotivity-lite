@@ -10,6 +10,7 @@
 %include "oc_ri.i"
 %import "oc_collection.i"
 %import "oc_clock.i"
+%import "oc_endpoint.i"
 %import "oc_rep.i"
 %import "oc_uuid.i"
 
@@ -1243,37 +1244,14 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %}
 %include "oc_api.h"
 
-/*******************Begin oc_endpoint.h*********************/
-%rename(OCEndpoint) oc_endpoint_t;
-// transport flags are pulled from hand generated class as `int` not `enum`
-%ignore transport_flags;
-//%rename (OCTransportFlags) transport_flags;
-%rename(DevAddr) dev_addr;
-//if uncommented the following apply lines will cause the output to be byte[] vs short[]
-//%apply signed char[ANY] { uint8_t address[4] };
-//%apply signed char[ANY] { uint8_t address[16] };
-%rename(OCIPv6Addr) oc_ipv6_addr_t;
-%rename(OCIPv4Addr) oc_ipv4_addr_t;
-%rename(OCLEAddr) oc_le_addr_t;
-%rename(addrLocal) addr_local;
-%rename(OCFVersion) ocf_version_t;
-%rename(interfaceIndex) interface_index;
-// look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
-%rename(newEndpoint) oc_new_endpoint;
-%rename(freeEndpoint) oc_free_endpoint;
-%rename(endpointSetDi) oc_endpoint_set_di;
-%apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
-%rename(endpointToString) oc_endpoint_to_string;
-int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
-%apply oc_string_t *INPUT { oc_string_t *endpoint_str };
-%apply oc_string_t *OUTPUT { oc_string_t *uri };
-%rename(stringToEndpoint) oc_string_to_endpoint;
-%rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
-%rename(endpointCompare) oc_endpoint_compare;
-%rename(endpointCompareAddress) oc_endpoint_compare_address;
-%include "oc_endpoint.h"
-/*******************End oc_endpoint.h***********************/
 /*******************Begin oc_client_state.h*****************/
+/* 
+ * NOTE: currently We only expose callbacks and enum types from oc_client_state.h
+ * This is why we are not currently using an independent swig interface file. It
+ * would just create an empty Java class. If any functions are exposed this should
+ * be moved to its own interface file. (i.e. oc_ri_alloc_client_cb,
+ * oc_ri_get_client_cb, etc.)
+ */
 /* TODO check if any of these ignored functions and data types are needed */
 %rename(OCQos) oc_qos_t;
 %rename(OCClientResponse) oc_client_response_t;
