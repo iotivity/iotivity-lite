@@ -132,16 +132,6 @@ void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* 
 }
 %}
 
-%typemap(in)     (const unsigned char * BYTE, size_t LENGTH) {
-/* Functions from jni.h */
-$1 = (unsigned char *) JCALL2(GetByteArrayElements, jenv, $input, 0);
-$2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
-}
-%typemap(jni)    (const unsigned char * BYTE, size_t LENGTH) "jbyteArray"
-%typemap(jtype)  (const unsigned char * BYTE, size_t LENGTH) "byte[]"
-%typemap(jstype) (const unsigned char * BYTE, size_t LENGTH) "byte[]"
-%typemap(javain) (const unsigned char * BYTE, size_t LENGTH) "$javainput"
-
 /* Specify signature of method to handle */
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *value, size_t length) };
 %rename (setByteString) jni_rep_set_byte_string;
