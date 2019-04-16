@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_50c4d03f",
+        "filename": "swig/swig_interfaces/oc_pki.i",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-16T20:23:41Z",
+      "side": 1,
+      "message": "addMfgIntermediateCert (missing final \u0027e\u0027 on Intermediate)",
+      "revId": "6b85c81851aa03f10f4636027581165fb20e8ac5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
