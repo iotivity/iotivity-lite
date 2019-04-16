@@ -3,6 +3,7 @@ package org.iotivity.simpleclient;
 import org.iotivity.OCDiscoveryFlags;
 import org.iotivity.OCDiscoveryHandler;
 import org.iotivity.OCEndpoint;
+import org.iotivity.OCEndpointUtil;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
@@ -108,7 +109,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
                     String[] endpointStr = new String[1];
-                    OCMain.endpointToString(ep, endpointStr);
+                    OCEndpointUtil.toString(ep, endpointStr);
                     activity.msg("\t\tendpoint: " + endpointStr[0]);
                     activity.msg("\t\t\tendpoint.device " + ep.getDevice());
                     activity.msg("\t\t\tendpoint.flags " + ep.getFlags());
