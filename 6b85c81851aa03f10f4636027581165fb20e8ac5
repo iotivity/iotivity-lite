@@ -16,6 +16,24 @@
       "revId": "6b85c81851aa03f10f4636027581165fb20e8ac5",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_70e2acd6",
+        "filename": "swig/swig_interfaces/oc_pki.i",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-16T20:40:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_50c4d03f",
+      "revId": "6b85c81851aa03f10f4636027581165fb20e8ac5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
