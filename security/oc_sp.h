@@ -18,17 +18,11 @@
 #define OC_SP_H
 
 #include "oc_ri.h"
+#include "oc_pki.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef enum {
-  OC_SP_BASELINE = 1 << 1,
-  OC_SP_BLACK = 1 << 2,
-  OC_SP_BLUE = 1 << 3,
-  OC_SP_PURPLE = 1 << 4
-} oc_sp_types_t;
 
 typedef struct
 {
