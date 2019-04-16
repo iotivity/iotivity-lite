@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_f03b5c36",
+        "filename": "swig/iotivity-lite-java/jni/.gitignore",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-16T22:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_50f2109b",
+      "revId": "46cc5471d756760c8a6b23d93cb8499d02f3d172",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_30ef84b2",
         "filename": "swig/iotivity-lite-java/libs/.gitignore",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-16T22:21:06Z",
       "side": 1,
       "message": "intentially \u003d\u003d\u003e intentionally",
+      "revId": "46cc5471d756760c8a6b23d93cb8499d02f3d172",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_504970cf",
+        "filename": "swig/iotivity-lite-java/libs/.gitignore",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-16T22:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_30ef84b2",
       "revId": "46cc5471d756760c8a6b23d93cb8499d02f3d172",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
