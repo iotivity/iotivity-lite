@@ -3,10 +3,10 @@ package org.iotivity.onboardingtool;
 import android.util.Log;
 
 import org.iotivity.OCEndpoint;
-import org.iotivity.OCMain;
+import org.iotivity.OCEndpointUtil;
 import org.iotivity.OCObtDiscoveryHandler;
-import org.iotivity.OCUuidUtil;
 import org.iotivity.OCUuid;
+import org.iotivity.OCUuidUtil;
 
 public class UnownedDeviceHandler implements OCObtDiscoveryHandler {
 
@@ -24,7 +24,7 @@ public class UnownedDeviceHandler implements OCObtDiscoveryHandler {
         Log.d(TAG, "discovered unowned device: " + deviceId + " at:");
         while (endpoints != null) {
             String[] endpointStr = new String[1];
-            OCMain.endpointToString(endpoints, endpointStr);
+            OCEndpointUtil.toString(endpoints, endpointStr);
             Log.d(TAG, endpointStr[0]);
             endpoints = endpoints.getNext();
         }
