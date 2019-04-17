@@ -415,7 +415,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    add_device_to_list(uuid, unowned_devices);
+    add_device_to_list(uuid, owned_devices);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
