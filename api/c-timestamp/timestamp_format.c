@@ -29,6 +29,7 @@
  */
 #include "timestamp.h"
 #include <stddef.h>
+#include <assert.h>
 
 static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
                                         122, 153, 184, 214, 245, 275 };
@@ -39,7 +40,7 @@ static void
 rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp)
 {
   uint32_t Z, H, A, B;
-  uint16_t y, m, d;
+  uint32_t y, m, d;
 
   Z = rdn + 306;
   H = 100 * Z - 25;
@@ -50,10 +51,12 @@ rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp)
   m = (535 * d + 48950) >> 14;
   if (m > 12)
     y++, m -= 12;
-
-  *yp = y;
-  *mp = m;
-  *dp = d - DayOffset[m];
+  assert(y < UINT16_MAX);
+  assert(m < UINT16_MAX);
+  assert(d < UINT16_MAX);
+  *yp = (uint16_t)y;
+  *mp = (uint16_t)m;
+  *dp = (uint16_t)(d - DayOffset[m]);
 }
 
 #define EPOCH INT64_C(62135683200) /* 1970-01-01T00:00:00 */
@@ -67,8 +70,8 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
                           const int precision)
 {
   unsigned char *p;
-  uint64_t sec;
-  uint32_t rdn, v;
+  uint64_t sec, rdn;
+  uint32_t v;
   uint16_t y, m, d;
   size_t dlen;
 
@@ -84,8 +87,8 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
 
   sec = tsp->sec + tsp->offset * 60 + EPOCH;
   rdn = sec / 86400;
-
-  rdn_to_ymd(rdn, &y, &m, &d);
+  assert(rdn < UINT32_MAX);
+  rdn_to_ymd((uint32_t)rdn, &y, &m, &d);
 
   /*
    *           1
