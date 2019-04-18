@@ -29,6 +29,10 @@ public class Server {
             System.err.println("Failed to setup Storage Config.");
         }
 
+        // Note: If using a factory presets handler,
+        // the factory presets handler must be set prior to calling init().
+        // The init() function will call the factory presets handler when set.
+        OcUtils.setFactoryPresetsHandler(new FactoryPresetsHandler());
         MyInitHandler handler = new MyInitHandler(platform);
         platform.systemInit(handler);
 
