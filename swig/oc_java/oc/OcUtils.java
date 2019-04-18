@@ -65,6 +65,10 @@ public class OcUtils {
         OCMain.stopMulticast(response);
     }
 
+    public static void setFactoryPresetsHandler(OCFactoryPresetsHandler callback) {
+        OCMain.setFactoryPresetsHandler(callback);
+    }
+
     public static void setDelayedHandler(OCTriggerHandler callback, int seconds) {
         OCMain.setDelayedHandler(callback, seconds);
     }
