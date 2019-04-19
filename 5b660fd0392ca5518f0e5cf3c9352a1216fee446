@@ -16,6 +16,24 @@
       "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b049d48d",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-19T16:02:21Z",
+      "side": 0,
+      "message": "seems to crash calling jni_mutex_lock() in jni_list_add()",
+      "parentUuid": "1a494da4_904ad881",
+      "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
