@@ -17,11 +17,16 @@
 #ifndef OC_PKI_H
 #define OC_PKI_H
 
-#include "security/oc_sp.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+  OC_SP_BASELINE = 1 << 1,
+  OC_SP_BLACK = 1 << 2,
+  OC_SP_BLUE = 1 << 3,
+  OC_SP_PURPLE = 1 << 4
+} oc_sp_types_t;
 
 int oc_pki_add_mfg_cert(size_t device, const unsigned char *cert,
                         size_t cert_size, const unsigned char *key,

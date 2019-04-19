@@ -4,8 +4,6 @@
 %include "iotivity.swg"
 
 %import "oc_uuid.i"
-// include not importe oc_acl.i it only exposes structs and enums so no need to build it separate.
-%include "oc_acl.i"
 
 %pragma(java) jniclasscode=%{
   static {
@@ -29,6 +27,24 @@
 %typemap(in, numinputs=0) void* dummy {
   JCALL1(GetJavaVM, jenv, &jvm);
 }
+
+%rename(OCSecurityAce) oc_sec_ace_s;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_s */
+%nodefaultctor oc_sec_ace_s;
+%nodefaultdtor oc_sec_ace_s;
+/* This will cause SWIG to wrap oc_sec_ace_s, even though oc_obt does not know anything about what is inside it */
+struct oc_sec_ace_s{ };
+
+%rename(OCAceResource) oc_ace_res_s;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_ace_res_s */
+%nodefaultctor oc_ace_res_s;
+%nodefaultdtor oc_ace_res_s;
+/* This will cause SWIG to wrap oc_ace_res_s, even though oc_obt does not know anything about what is inside it */
+struct oc_ace_res_s{ };
+
+%rename(OCAceConnectionType) oc_ace_connection_type_t;
+%rename(OCAceWildcard) oc_ace_wildcard_t;
+%ignore oc_ace_permissions_t;
 
 %ignore oc_obt_init;
 %rename(init) jni_obt_init;
