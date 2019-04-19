@@ -370,6 +370,8 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = GetJNIEnv(&getEnvResult);
 
   assert(cls_OCFactoryPresetsHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
@@ -377,8 +379,11 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
                                        cls_OCFactoryPresetsHandler,
                                        "handler",
                                        "(J)V");
+
   assert(mid_handler);
-  JCALL3(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
+  JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
+
+  ReleaseJNIEnv(getEnvResult);
 }
 %}
 
