@@ -38,8 +38,6 @@ fi
 #swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -o ../iotivity-lite-java/jni/oc_ri_wrap.c ../swig_interfaces/oc_ri.i
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../port/ -o ../iotivity-lite-java/jni/oc_storage_wrap.c  ../swig_interfaces/oc_storage.i
 
-#swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../security/ -o ../iotivity-lite-java/jni/oc_acl_wrap.c ../swig_interfaces/oc_acl.i
-
 cp *.h ../iotivity-lite-java/jni/ 
 cp ../oc_java/*.java ../iotivity-lite-java/src/org/iotivity/
 mkdir -p ../iotivity-lite-java/src/org/iotivity/oc/

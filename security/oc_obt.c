@@ -429,8 +429,6 @@ get_endpoints(oc_client_response_t *data)
     return;
   }
   cb->cb(&device->uuid, device->endpoint, cb->data);
-  oc_remove_delayed_callback(cb, free_discovery_cb);
-  free_discovery_cb(cb);
 }
 
 static void
@@ -1286,7 +1284,9 @@ oc_obt_init(void)
 
     memcpy(doxm->devowneruuid.id, uuid->id, 16);
     memcpy(doxm->deviceuuid.id, uuid->id, 16);
+    memcpy(doxm->rowneruuid.id, uuid->id, 16);
     doxm->owned = true;
+    doxm->oxmsel = 0;
 
     memcpy(creds->rowneruuid.id, uuid->id, 16);
 

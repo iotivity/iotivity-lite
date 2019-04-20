@@ -23,12 +23,6 @@
 %}
 
 %rename (OCSpTypesMask) oc_sp_types_t;
-typedef enum {
-  OC_SP_BASELINE = 1 << 1,
-  OC_SP_BLACK = 1 << 2,
-  OC_SP_BLUE = 1 << 3,
-  OC_SP_PURPLE = 1 << 4
-} oc_sp_types_t;
 
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *key, size_t key_size) };
