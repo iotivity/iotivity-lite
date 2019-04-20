@@ -1,0 +1,122 @@
+--- a/port/oc_log.h	2019-04-15 21:50:39.653682500 +0200
++++ b/port/oc_log.h	2019-04-17 13:48:31.186941913 +0200
+@@ -13,9 +13,7 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ */
+-/**
+-  @file
+-*/
++
+ #ifndef OC_LOG_H
+ #define OC_LOG_H
+ 
+@@ -25,13 +23,22 @@
+ extern "C"
+ {
+ #endif
+-
+-#define PRINT(...) printf(__VA_ARGS__)
++#ifdef ARDUINO
++#include "Arduino.h"
++#include "serial.h"
++#if defined(__AVR__)
++#define PRINT(format, ...)  AVR_LOG(format, ##__VA_ARGS__)
++#else
++#define PRINT(format, ...)  ARM_LOG(format, ##__VA_ARGS__)  
++#endif
++#else
++#define PRINT(...) printf(__VA_ARGS__) 
++#endif
+ 
+ #define PRINTipaddr(endpoint)                                                  \
+   do {                                                                         \
+     if ((endpoint).flags & IPV4) {                                             \
+-      PRINT("[%d.%d.%d.%d]:%d", ((endpoint).addr.ipv4.address)[0],             \
++      PRINT("[%d.%d.%d.%d]:%u", ((endpoint).addr.ipv4.address)[0],             \
+             ((endpoint).addr.ipv4.address)[1],                                 \
+             ((endpoint).addr.ipv4.address)[2],                                 \
+             ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);     \
+@@ -39,7 +46,7 @@
+       PRINT(                                                                   \
+         "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%"    \
+         "02x%"                                                                 \
+-        "02x]:%d",                                                             \
++        "02x]:%u",                                                             \
+         ((endpoint).addr.ipv6.address)[0], ((endpoint).addr.ipv6.address)[1],  \
+         ((endpoint).addr.ipv6.address)[2], ((endpoint).addr.ipv6.address)[3],  \
+         ((endpoint).addr.ipv6.address)[4], ((endpoint).addr.ipv6.address)[5],  \
+@@ -54,7 +61,32 @@
+     }                                                                          \
+   } while (0)
+ 
+-#ifdef OC_DEBUG
++
++#ifdef ARDUINO
++#define OC_LOG(level, format, ...)                                            \
++  do {                                                                        \
++      PRINT(level ": " __FILE__ "<%s:%d> ", __func__, __LINE__);           \
++      PRINT(format, ##__VA_ARGS__);                                           \
++      PRINT("\n");                                                          \
++  } while (0)
++#define OC_DBG(format, ...)   OC_LOG("DBG", format, ##__VA_ARGS__)
++#define OC_WRN(format, ...)   OC_LOG("WRN", format,##__VA_ARGS__)
++#define OC_ERR(format, ...)   OC_LOG("ERR", format, ##__VA_ARGS__)
++#define OC_LOGipaddr(endpoint)                                                \
++  do {                                                                        \
++      PRINT("DBG: " __FILE__   "<%s:%d>: " , __func__, __LINE__);             \
++      PRINTipaddr(endpoint);                                                  \
++      PRINT("\r\n");                                                          \
++  } while (0)
++#define OC_LOGbytes(bytes, length)                                            \
++  do {                                                                        \
++			 PRINT("DBG: " __FILE__  "<%s:%d>: " , __func__, __LINE__);                   \
++			 uint16_t i;                                                             \
++      for (i = 0; i < length; i++)                                            \
++        PRINT(" %02X", bytes[i]);                                             \
++      PRINT("\r\n");                                                          \
++  } while (0)
++#else /* ! ARDUINO */
+ #define OC_LOG(level, ...)                                                     \
+   do {                                                                         \
+     PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
+@@ -78,13 +110,6 @@
+       PRINT(" %02X", bytes[i]);                                                \
+     PRINT("\n");                                                               \
+   } while (0)
+-#else
+-#define OC_LOG(...)
+-#define OC_DBG(...)
+-#define OC_WRN(...)
+-#define OC_ERR(...)
+-#define OC_LOGipaddr(endpoint)
+-#define OC_LOGbytes(bytes, length)
+ #endif
+ 
+ #ifdef __cplusplus
+--- a/security/oc_store.c	2019-04-15 21:50:39.665683094 +0200
++++ b/security/oc_store.c	2019-04-17 12:07:36.003254426 +0200
+@@ -36,7 +36,7 @@
+ gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
+ {
+   int svr_tag_len =
+-    snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
++    snprintf(svr_tag, SVR_TAG_MAX, "%s_%d", name, device_index);
+   svr_tag_len =
+     (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
+   svr_tag[svr_tag_len] = '\0';--- security/oc_doxm.c	2019-04-21 14:03:46.955490801 +0200
+--- a/security/oc_doxm.c	2019-04-21 14:34:51.869274891 +0200
++++ b/security/oc_doxm.c	2019-04-21 14:34:51.869274891 +0200
+@@ -24,10 +24,11 @@
+ #include "oc_store.h"
+ #include <stddef.h>
+ #include <string.h>
++#ifndef ARDUINO
+ #ifndef _WIN32
+ #include <strings.h>
+ #endif
+-
++#endif
+ #ifdef OC_DYNAMIC_ALLOCATION
+ #include "port/oc_assert.h"
+ #include <stdlib.h>
