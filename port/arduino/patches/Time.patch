@@ -1,0 +1,338 @@
+diff -ru a/Time/Readme.md b/Time/Readme.md
+--- a/Time/Readme.md	2019-01-30 17:11:53.978520590 +0000
++++ b/Time/Readme.md	2019-01-08 13:36:13.000000000 +0000
+@@ -90,10 +90,10 @@
+   if it is running and connected to the Arduino serial port.
+ 
+ - `TimeSerialDateStrings.pde` adds day and month name strings to the sketch above
+-  Short (3 characters) and long strings are available to print the days of
++  Short (3 character) and long strings are available to print the days of
+   the week and names of the months.
+ 
+-- `TimeRTC` uses a DS1307 real-time clock to provide time synchronization.
++- `TimeRTC` uses a DS1307 real time clock to provide time synchronization.
+   A basic RTC library named DS1307RTC is included in the download.
+   To run this sketch the DS1307RTC library must be installed.
+ 
+diff -ru a/Time/Time.cpp b/Time/Time.cpp
+--- a/Time/Time.cpp	2019-01-30 17:11:53.978520590 +0000
++++ b/Time/Time.cpp	2019-01-08 13:36:13.000000000 +0000
+@@ -41,12 +41,16 @@
+ 
+ void refreshCache(time_t t) {
+   if (t != cacheTime) {
++    #ifdef __cplusplus
+     breakTime(t, tm); 
++    #else
++    breakTime(t, &tm); 
++    #endif
+     cacheTime = t; 
+   }
+ }
+ 
+-int hour() { // the hour now 
++int hourNow() { // the hour now 
+   return hour(now()); 
+ }
+ 
+@@ -55,7 +59,7 @@
+   return tm.Hour;  
+ }
+ 
+-int hourFormat12() { // the hour now in 12 hour format
++int hourFormat12Now() { // the hour now in 12 hour format
+   return hourFormat12(now()); 
+ }
+ 
+@@ -69,7 +73,7 @@
+     return tm.Hour ;
+ }
+ 
+-uint8_t isAM() { // returns true if time now is AM
++uint8_t isAMNow() { // returns true if time now is AM
+   return !isPM(now()); 
+ }
+ 
+@@ -77,7 +81,7 @@
+   return !isPM(t);  
+ }
+ 
+-uint8_t isPM() { // returns true if PM
++uint8_t isPMNow() { // returns true if PM
+   return isPM(now()); 
+ }
+ 
+@@ -85,7 +89,7 @@
+   return (hour(t) >= 12); 
+ }
+ 
+-int minute() {
++int minuteNow() {
+   return minute(now()); 
+ }
+ 
+@@ -94,7 +98,7 @@
+   return tm.Minute;  
+ }
+ 
+-int second() {
++int secondNow() {
+   return second(now()); 
+ }
+ 
+@@ -103,7 +107,7 @@
+   return tm.Second;
+ }
+ 
+-int day(){
++int dayNow(){
+   return(day(now())); 
+ }
+ 
+@@ -112,7 +116,7 @@
+   return tm.Day;
+ }
+ 
+-int weekday() {   // Sunday is day 1
++int weekdayNow() {   // Sunday is day 1
+   return  weekday(now()); 
+ }
+ 
+@@ -121,7 +125,7 @@
+   return tm.Wday;
+ }
+    
+-int month(){
++int monthNow(){
+   return month(now()); 
+ }
+ 
+@@ -130,7 +134,7 @@
+   return tm.Month;
+ }
+ 
+-int year() {  // as in Processing, the full four digit year: (2009, 2010 etc) 
++int yearNow() {  // as in Processing, the full four digit year: (2009, 2010 etc) 
+   return year(now()); 
+ }
+ 
+@@ -147,7 +151,7 @@
+ #define LEAP_YEAR(Y)     ( ((1970+(Y))>0) && !((1970+(Y))%4) && ( ((1970+(Y))%100) || !((1970+(Y))%400) ) )
+ 
+ static  const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31}; // API starts months from 1, this array starts from 0
+- 
++#ifdef __cplusplus 
+ void breakTime(time_t timeInput, tmElements_t &tm){
+ // break the given time_t into time components
+ // this is a more compact version of the C library localtime function
+@@ -200,7 +204,61 @@
+   tm.Month = month + 1;  // jan is month 1  
+   tm.Day = time + 1;     // day of month
+ }
++#else
++void breakTime(time_t timeInput, tmElements_t *tm){
++// break the given time_t into time components
++// this is a more compact version of the C library localtime function
++// note that year is offset from 1970 !!!
+ 
++  uint8_t year;
++  uint8_t month, monthLength;
++  uint32_t time;
++  unsigned long days;
++
++  time = (uint32_t)timeInput;
++  tm->Second = time % 60;
++  time /= 60; // now it is minutes
++  tm->Minute = time % 60;
++  time /= 60; // now it is hours
++  tm->Hour = time % 24;
++  time /= 24; // now it is days
++  tm->Wday = ((time + 4) % 7) + 1;  // Sunday is day 1 
++  
++  year = 0;  
++  days = 0;
++  while((unsigned)(days += (LEAP_YEAR(year) ? 366 : 365)) <= time) {
++    year++;
++  }
++  tm->Year = year; // year is offset from 1970 
++  
++  days -= LEAP_YEAR(year) ? 366 : 365;
++  time  -= days; // now it is days in this year, starting at 0
++  
++  days=0;
++  month=0;
++  monthLength=0;
++  for (month=0; month<12; month++) {
++    if (month==1) { // february
++      if (LEAP_YEAR(year)) {
++        monthLength=29;
++      } else {
++        monthLength=28;
++      }
++    } else {
++      monthLength = monthDays[month];
++    }
++    
++    if (time >= monthLength) {
++      time -= monthLength;
++    } else {
++        break;
++    }
++  }
++  tm->Month = month + 1;  // jan is month 1  
++  tm->Day = time + 1;     // day of month
++}
++#endif
++#ifdef __cplusplus 
+ time_t makeTime(const tmElements_t &tm){   
+ // assemble time elements into time_t 
+ // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
+@@ -231,6 +289,38 @@
+   seconds+= tm.Second;
+   return (time_t)seconds; 
+ }
++#else 
++time_t makeTime(const tmElements_t *tm){   
++// assemble time elements into time_t 
++// note year argument is offset from 1970 (see macros in time.h to convert to other formats)
++// previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
++  
++  int i;
++  uint32_t seconds;
++
++  // seconds from 1970 till 1 jan 00:00:00 of the given year
++  seconds= tm->Year*(SECS_PER_DAY * 365);
++  for (i = 0; i < tm->Year; i++) {
++    if (LEAP_YEAR(i)) {
++      seconds +=  SECS_PER_DAY;   // add extra days for leap years
++    }
++  }
++  
++  // add days for this year, months start from 1
++  for (i = 1; i < tm->Month; i++) {
++    if ( (i == 2) && LEAP_YEAR(tm->Year)) { 
++      seconds += SECS_PER_DAY * 29;
++    } else {
++      seconds += SECS_PER_DAY * monthDays[i-1];  //monthDay array starts from 0
++    }
++  }
++  seconds+= (tm->Day-1) * SECS_PER_DAY;
++  seconds+= tm->Hour * SECS_PER_HOUR;
++  seconds+= tm->Minute * SECS_PER_MIN;
++  seconds+= tm->Second;
++  return (time_t)seconds; 
++}
++#endif
+ /*=====================================================*/	
+ /* Low level system time functions  */
+ 
+@@ -252,6 +342,8 @@
+   while (millis() - prevMillis >= 1000) {
+ 		// millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
+     sysTime++;
++    //Serial.print("System Time: ");
++    //Serial.println(sysTime); /* 1 system time =  1000ms*/
+     prevMillis += 1000;	
+ #ifdef TIME_DRIFT_INFO
+     sysUnsyncedTime++; // this can be compared to the synced time to measure long term drift     
+@@ -282,7 +374,7 @@
+   Status = timeSet;
+   prevMillis = millis();  // restart counting from now (thanks to Korman for this fix)
+ } 
+-
++#ifdef __cplusplus
+ void setTime(int hr,int min,int sec,int dy, int mnth, int yr){
+  // year can be given as full four digit year or two digts (2010 or 10 for 2010);  
+  //it is converted to years since 1970
+@@ -298,7 +390,7 @@
+   tm.Second = sec;
+   setTime(makeTime(tm));
+ }
+-
++#endif
+ void adjustTime(long adjustment) {
+   sysTime += adjustment;
+ }
+diff -ru a/Time/TimeLib.h b/Time/TimeLib.h
+--- a/Time/TimeLib.h	2019-01-30 17:11:53.978520590 +0000
++++ b/Time/TimeLib.h	2019-01-08 13:36:13.000000000 +0000
+@@ -8,7 +8,6 @@
+ */     
+ 
+ #ifndef _Time_h
+-#ifdef __cplusplus
+ #define _Time_h
+ 
+ #include <inttypes.h>
+@@ -30,7 +29,9 @@
+ // and unpredictable effects by conflicting with the C library header "time.h",
+ // but at least this hack lets us define C++ functions as intended.  Hopefully
+ // nothing too terrible will result from overriding the C library header?!
+-extern "C++" {
++#ifdef __cplusplus
++extern "C" {
++#endif
+ typedef enum {timeNotSet, timeNeedsSync, timeSet
+ }  timeStatus_t ;
+ 
+@@ -96,30 +97,30 @@
+ 
+ /*============================================================================*/
+ /*  time and date functions   */
+-int     hour();            // the hour now 
++int     hourNow();            // the hour now 
+ int     hour(time_t t);    // the hour for the given time
+-int     hourFormat12();    // the hour now in 12 hour format
++int     hourFormat12Now();    // the hour now in 12 hour format
+ int     hourFormat12(time_t t); // the hour for the given time in 12 hour format
+-uint8_t isAM();            // returns true if time now is AM
++uint8_t isAMNow();            // returns true if time now is AM
+ uint8_t isAM(time_t t);    // returns true the given time is AM
+-uint8_t isPM();            // returns true if time now is PM
++uint8_t isPMNow();            // returns true if time now is PM
+ uint8_t isPM(time_t t);    // returns true the given time is PM
+-int     minute();          // the minute now 
++int     minuteNow();          // the minute now 
+ int     minute(time_t t);  // the minute for the given time
+-int     second();          // the second now 
++int     secondNow();          // the second now 
+ int     second(time_t t);  // the second for the given time
+-int     day();             // the day now 
++int     dayNow();             // the day now 
+ int     day(time_t t);     // the day for the given time
+-int     weekday();         // the weekday now (Sunday is day 1) 
++int     weekdayNow();         // the weekday now (Sunday is day 1) 
+ int     weekday(time_t t); // the weekday for the given time 
+-int     month();           // the month now  (Jan is month 1)
++int     monthNow();           // the month now  (Jan is month 1)
+ int     month(time_t t);   // the month for the given time
+-int     year();            // the full four digit year: (2009, 2010 etc) 
++int     yearNow();            // the full four digit year: (2009, 2010 etc) 
+ int     year(time_t t);    // the year for the given time
+ 
+ time_t now();              // return the current time as seconds since Jan 1 1970 
+ void    setTime(time_t t);
+-void    setTime(int hr,int min,int sec,int day, int month, int yr);
++void    setTimeParams(int hr,int min,int sec,int day, int month, int yr);
+ void    adjustTime(long adjustment);
+ 
+ /* date strings */ 
+@@ -134,11 +135,16 @@
+ void    setSyncProvider( getExternalTime getTimeFunction); // identify the external time provider
+ void    setSyncInterval(time_t interval); // set the number of seconds between re-sync
+ 
++#ifdef __cplusplus
+ /* low level functions to convert to and from system time                     */
+ void breakTime(time_t time, tmElements_t &tm);  // break time_t into elements
+ time_t makeTime(const tmElements_t &tm);  // convert time elements into time_t
+-
++#else
++void breakTime(time_t time, tmElements_t *tm);  // break time_t into elements
++time_t makeTime(const tmElements_t *tm);  // convert time elements into time_t
++#endif
++#ifdef __cplusplus
+ } // extern "C++"
+-#endif // __cplusplus
++#endif
+ #endif /* _Time_h */
+ 
