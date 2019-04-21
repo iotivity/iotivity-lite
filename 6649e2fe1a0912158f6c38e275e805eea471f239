@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_6da657c3",
+        "filename": "service/cloud/src/cloud_resource.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-04-21T23:05:28Z",
+      "side": 1,
+      "message": "The stack internally handles notifications to observers upon receiving a PUT/POST.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 3
+      },
+      "revId": "6649e2fe1a0912158f6c38e275e805eea471f239",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
