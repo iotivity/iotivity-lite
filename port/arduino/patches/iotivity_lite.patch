@@ -104,4 +104,19 @@
 +    snprintf(svr_tag, SVR_TAG_MAX, "%s_%d", name, device_index);
    svr_tag_len =
      (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
-   svr_tag[svr_tag_len] = '\0';
+   svr_tag[svr_tag_len] = '\0';--- security/oc_doxm.c	2019-04-21 14:03:46.955490801 +0200
+--- a/security/oc_doxm.c	2019-04-21 14:34:51.869274891 +0200
++++ b/security/oc_doxm.c	2019-04-21 14:34:51.869274891 +0200
+@@ -24,10 +24,11 @@
+ #include "oc_store.h"
+ #include <stddef.h>
+ #include <string.h>
++#ifndef ARDUINO
+ #ifndef _WIN32
+ #include <strings.h>
+ #endif
+-
++#endif
+ #ifdef OC_DYNAMIC_ALLOCATION
+ #include "port/oc_assert.h"
+ #include <stdlib.h>

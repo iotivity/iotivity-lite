@@ -21,7 +21,18 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
+#ifdef __AVR__
+#ifdef OC_XMEM
+void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
+void extRAMinit(void) {
+    // set up the xmem registers
+    XMCRB=0; 
+    XMCRA=1<<SRE; 
+    DDRD|=_BV(PD7);
+    DDRL|=(_BV(PL6)|_BV(PL7));
+} 
+#endif
+#endif
 OC_PROCESS(sample_server_process, "server");
 static bool state = false;
 int power;

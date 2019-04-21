@@ -68,8 +68,16 @@ void avr_log(PROGMEM const char *format, ...) {
       if(formatLength == 0 ) return;
       char print_buffer[MAX_LOG_BUFFER_SIZE]; 
       vsnprintf_P(print_buffer, sizeof(print_buffer), (const char *)format, ap); 
-      serial_ref->print(print_buffer); 
-      
+      //serial_ref->print(print_buffer); 
+			for (char *p = &print_buffer[0]; *p; p++)
+			{
+				// emulate cooked mode for newlines
+				if (*p == '\n')
+				{
+					serial_ref->write('\r');
+				}
+				serial_ref->write(*p);
+			}      
       va_end(ap); 
   } while (0);
 }

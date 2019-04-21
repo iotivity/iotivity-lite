@@ -24,7 +24,6 @@ extern "C" {
 
 #ifdef __AVR__
 #ifdef OC_XMEM
-#include "xmem.h"
 void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
 void extRAMinit(void) {
     // set up the xmem registers
