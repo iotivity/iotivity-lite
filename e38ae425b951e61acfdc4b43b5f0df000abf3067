@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_33482e5b",
+        "filename": "service/cloud/src/cloud_access.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_100c0842",
+      "range": {
+        "startLine": 112,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 19
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_73047615",
         "filename": "service/cloud/src/cloud_manager.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-21T23:05:28Z",
       "side": 1,
       "message": "You need to close the connection on seeing this property with:\n\n    oc_tls_close_connection(ctx-\u003ecloud_ep);\n\nand kick off a new registration (sign_up).",
+      "range": {
+        "startLine": 149,
+        "startChar": 0,
+        "endLine": 151,
+        "endChar": 3
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_9374a29d",
+        "filename": "service/cloud/src/cloud_manager.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_73047615",
       "range": {
         "startLine": 149,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_73791693",
+        "filename": "service/cloud/src/cloud_manager.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "In current implementation it is not used. Because refresh token always goes after successful sign in and then it is invoked for every 30minutes.",
+      "parentUuid": "1a494da4_93ff8201",
+      "range": {
+        "startLine": 166,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 3
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_f0087c2f",
         "filename": "service/cloud/src/cloud_store.c",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2019-04-21T23:05:28Z",
       "side": 1,
       "message": "Remove these defaults.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 50
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b3739eb0",
+        "filename": "service/cloud/src/cloud_store.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_f0087c2f",
       "range": {
         "startLine": 28,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_136892b9",
+        "filename": "service/cloud/src/cloud_store.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_50069021",
+      "range": {
+        "startLine": 190,
+        "startChar": 38,
+        "endLine": 191,
+        "endChar": 50
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_30030411",
         "filename": "service/cloud/src/cloud_store.c",
         "patchSetId": 5
@@ -128,6 +248,30 @@
       "writtenOn": "2019-04-21T23:05:28Z",
       "side": 1,
       "message": "Replace with NULL, 0.",
+      "range": {
+        "startLine": 192,
+        "startChar": 42,
+        "endLine": 193,
+        "endChar": 54
+      },
+      "revId": "e38ae425b951e61acfdc4b43b5f0df000abf3067",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f36406e7",
+        "filename": "service/cloud/src/cloud_store.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 14219
+      },
+      "writtenOn": "2019-04-22T18:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a494da4_30030411",
       "range": {
         "startLine": 192,
         "startChar": 42,
