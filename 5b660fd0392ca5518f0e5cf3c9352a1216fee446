@@ -57,6 +57,30 @@
       "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b3aa7ed2",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-22T21:52:16Z",
+      "side": 0,
+      "message": "It\u0027s actually the mutex jni_sync_lock that is not initialized until main_init is called.  if the mutex calls in jni_list_add() are commented-out, the list code works.",
+      "parentUuid": "1a494da4_d3574a01",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 41
+      },
+      "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
