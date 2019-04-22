@@ -1,0 +1,308 @@
+Things not yet exposed:
+========================================================================
+from oc_api.h
+-------------------------------------------------------------------------
+[RED] macro: oc_set_custom_device_property
+[RED] macro: oc_set_custom_platform_property
+[RED] macro: oc_signal_interrupt_handler
+[RED] macro: oc_activate_interrupt_handler
+[RED] macro: oc_define_interrupt_handler
+[DONE] callback: oc_factory_presets_cb_t (recent merge 4/9/2019)
+[DONE] function: oc_set_factory_presets_cb (recent merge 4/9/2019)
+[DONE] callback: oc_random_pin_cb_t (recent merge 4/9/2019)
+[DONE] function: oc_set_random_pin_callback (recent merge 4/9/2019)
+
+oc_base64.h (full header not yet exposed to Java)
+-------------------------------------------------------------------------
+[RED] function: oc_base64_encode - don't know if this function is needed
+[RED] function: oc_base64_decode -  don't know if this function is needed
+
+oc_blockwise.h (full header not yet exposed to Java)
+-------------------------------------------------------------------------
+[RED] enum: oc_blockwise_role_t
+[RED] struct: oc_blockwise_state_s
+[RED] struct: oc_blockwise_request_state_s
+[RED] struct: oc_blockwise_response_state_s
+[RED] function: oc_blockwise_find_request_buffer_by_mid
+[RED] function: oc_blockwise_find_response_buffer_by_mid
+[RED] function: oc_blockwise_find_request_buffer_by_client_cb
+[RED] function: oc_blockwise_find_response_buffer_by_client_cb
+[RED] function: oc_blockwise_find_request_buffer
+[RED] function: oc_blockwise_find_response_buffer
+[RED] function: oc_blockwise_alloc_request_buffer
+[RED] function: oc_blockwise_alloc_response_buffer
+[RED] function: oc_blockwise_free_request_buffer
+[RED] function: oc_blockwise_free_response_buffer
+[RED] function: oc_blockwise_dispatch_block
+[RED] function: oc_blockwise_handle_block
+[RED] function: oc_blockwise_scrub_buffers
+[RED] function: oc_blockwise_scrub_buffers_for_client_cb
+
+oc_buffer.h (full header not yet exposed to Java)
+------------------------------------------------------------------------
+[RED] struct: message_buffer_handler
+[RED] function: oc_allocate_message
+[RED] function: oc_set_buffers_avail_cb
+[RED] function: oc_allocate_message_from_pool
+[RED] function: oc_internal_allocate_outgoing_message
+[RED] function: oc_message_add_ref
+[RED] function: oc_message_unref
+[RED] function: oc_recv_message
+[RED] function: oc_send_message
+
+oc_buffer_settings.h (full header not yet exposed to Java)
+------------------------------------------------------------------------
+[GREEN] function: oc_set_mtu_size
+[GREEN] function: oc_get_mtu_size
+[GREEN] function: oc_set_max_app_data_size
+[GREEN] function: oc_get_max_app_data_size
+[RED] function: oc_get_block_size
+
+oc_client_state.h (What is exposed from this header is done in OCMain do we want to move this to an OCClientState class?)
+------------------------------------------------------------------------
+[RED] function: oc_ri_invoke_client_cb
+[RED] function: oc_ri_alloc_client_cb
+[RED] function: oc_ri_get_client_cb
+[RED] function: oc_ri_find_client_cb_by_token
+[RED] function: oc_ri_find_client_cb_by_mid
+[RED] function: oc_ri_remove_client_cb_by_mid
+[RED] function: oc_ri_process_discovery_payload
+
+oc_clock_util.h (full header not yet exposed to Java)
+------------------------------------------------------------------------
+[GREEN] function: oc_clock_time_rfc3339
+[GREEN] function: oc_clock_encode_time_rfc3339
+[GREEN] function: oc_clock_parse_time_rfc3339
+
+oc_collection.h (all exposed)
+------------------------------------------------------------------------
+(all good here move on)
+
+[GREEN] oc_core_res.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+callback: oc_core_init_platform_cb_t
+callback: oc_core_add_device_cb_t
+struct: oc_platform_info_t
+struct: oc_device_info_t
+function: oc_core_init
+function: oc_core_shutdown
+function: oc_core_init_platform
+function: oc_core_add_new_device
+function: oc_core_get_num_devices
+function: oc_core_get_device_id
+function: oc_core_get_device_info
+function: oc_core_get_platform_info
+function: oc_core_encode_interfaces_mask
+function: oc_core_get_resource_by_index
+function: oc_core_get_resource_by_uri
+function: oc_store_uri
+function: oc_core_populate_resource
+function: oc_core_regen_unique_ids
+function: oc_filter_resource_by_rt
+function: oc_core_is_DCR
+
+oc_discovery.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: oc_create_discovery_resource
+
+[GREEN] oc_endpoint.h (exposed as part of OCMain may want to move to OCEndpointUtil)
+------------------------------------------------------------------------
+function: oc_make_ipv4_endpoint - probably not needed in Java
+function: oc_make_ipv6_endpoint - probably not needed in Java
+
+oc_helpers.h (most helper macros exposed throught iotivity.swg typemaps in through JNI in oc_api.i)
+------------------------------------------------------------------------
+macro: oc_cast - probably not needed in Java any cast needed can be done in JNI
+macro: oc_alloc_string
+macro: oc_free_int_array
+macro: oc_free_bool_array
+macro: oc_free_double_array
+macro: oc_new_int_array
+macro: oc_new_bool_array
+macro: oc_new_double_array
+macro: oc_free_string_array - we have exposed oc_new_string_array but not oc_free_string_array do we have a memory leak?
+macro: oc_new_byte_string_array
+macro: oc_free_byte_string_array
+function: oc_concat_strings
+macro: STRING_ARRAY_ITEM_MAX_LEN
+function: _oc_copy_string_to_array
+function: _oc_string_array_add_item
+function: oc_join_string_array
+function: _oc_copy_byte_string_to_array
+function: _oc_byte_string_array_add_item
+macro: oc_byte_string_array_add_item
+macro: oc_byte_string_array_set_item
+macro: oc_byte_string_array_get_allocated_size
+function: _oc_new_string
+function: _oc_alloc_string
+function: _oc_free_string
+function: _oc_free_array
+function: _oc_new_array
+function: _oc_alloc_string_array
+
+[GREEN] oc_introspection.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+[GREEN] function: oc_set_introspection_file
+[GREEN] function: oc_create_introspection_resource
+
+[?RED?] oc_main.h (recent merge 4/9/2019)
+------------------------------------------------------------------------
+struct: oc_factory_presets_t (recent merge 4/9/2019)
+function: oc_get_factory_presets_cb (recent merge 4/9/2019)
+struct: oc_random_pin_t (recent merge 4/9/2019)
+
+oc_network_events.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+callback: interface_event_handler_t
+struct: oc_network_interface_cb
+macro: OC_PROCESS_NAME
+function: oc_network_event
+function: oc_network_interface_event
+
+[GREEN] oc_network_monitor.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: oc_add_network_interface_event_callback
+function: oc_remove_network_interface_event_callback
+function: oc_add_session_event_callback
+function: oc_remove_session_event_callback
+
+[GREEN] oc_obt.h (all exposed)
+------------------------------------------------------------------------
+(all good here move on)
+[DONE] function: oc_obt_shutdown (recent merge 4/9/2019)
+[DONE] function: oc_obt_request_random_pin (recent merge 4/9/2019)
+[DONE] function: oc_obt_perform_random_pin_otm (recent merge 4/9/2019)
+
+[GREEN] oc_pki.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+[DONE] function: oc_pki_add_mfg_cert
+[DONE] function: oc_pki_add_mfg_intermediate_cert
+[DONE] function: oc_pki_add_mfg_trust_anchor
+[DONE] function: oc_pki_add_trust_anchor
+[DONE] function: oc_pki_set_security_profile
+
+[GREEN] oc_rep.h (many of the macros have alt implementation for Java not listed if we have alt implementation I think I have unit tests that do every data type possible.)
+------------------------------------------------------------------------
+macro: oc_rep_object - not needed for Java APIs
+macro: oc_rep_array - not needed for Java APIs
+macro: oc_rep_begin_array - I think I handled this macro differently and it is not needed for Java APIs
+macro: oc_rep_begin_root_object - I think I handled this macro differently and it is not needed for Java APIs
+macro: oc_rep_set_value_byte_string - same as oc_rep_add_byte_string
+macro: oc_rep_set_value_text_string - same as oc_rep_add_text_sring
+macro: oc_rep_set_value_double - same as oc_rep_add_double
+macro: oc_rep_set_value_int - same as oc_rep_add_int
+macro: oc_rep_set_value_boolean - same as oc_rep_add_boolean
+macro: oc_rep_open_array - I think I handled this macro differently and it is not needed for Java APIs
+macro: oc_rep_object_array_begin_item - same as oc_rep_object_array_start_item
+macro: oc_rep_open_object - same as oc_rep_set_object
+
+oc_ri.h
+------------------------------------------------------------------------
+enum: oc_core_resource_t
+macro: OC_NUM_CORE_RESOURCES_PER_DEVICE
+struct: oc_request_handler_s 
+struct: oc_event_callback_s
+function: oc_ri_init
+function: oc_ri_shutdown
+function: oc_ri_add_timed_event_callback_ticks
+function: oc_ri_remove_timed_event_callback
+function: oc_status_code
+function: oc_ri_get_app_resource_by_uri
+function: oc_ri_get_app_resources
+function: oc_ri_alloc_resource
+function: oc_ri_add_resource
+function: oc_ri_delete_resource
+function: oc_ri_free_resource_properties
+function: oc_ri_get_query_nth_key_value
+function: oc_ri_get_query_value
+function: oc_ri_get_interface_mask
+
+oc_session_events.h
+------------------------------------------------------------------------
+enum: oc_session_state_t
+callback: session_event_handler_t
+struct: oc_session_event_cb
+macro: OC_PROCESS_NAME
+function: oc_session_start_event
+function: oc_session_end_event
+
+oc_signal_event_loopt.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: _oc_signal_event_loop
+
+[GREEN] oc_uuid.h (all exposed)
+------------------------------------------------------------------------
+(all good here move on)
+
+server_introspection.dat.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+macro: introspection_data_size
+array data: introspection_data
+
+port/oc_assert.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: abort_impl
+function: exit_impl
+function: oc_abort
+macro: oc_assert
+function: oc_exit
+
+port/oc_clock.h (all exposed)
+------------------------------------------------------------------------
+(all good here move on)
+
+port/oc_connectivity.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+macro: OC_PDU_SIZE
+macro: OC_BLOCK_SIZE
+macro: OC_MAX_APP_DATA_SIZE
+struct: oc_message_s
+function: oc_send_buffer
+function: oc_connectivity_init
+function: oc_connectivity_shutdown
+function: oc_send_discovery_request
+function: oc_connectivity_end_session
+function: oc_dns_lookup
+function: oc_connectivity_get_endpoints
+function: handle_network_interface_event_callback
+function: handle_session_event_callback
+enum: tcp_csm_state_t
+function: oc_tcp_get_csm_state
+function: oc_tcp_update_csm_state
+(may have missed something)
+
+port/oc_log.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+macro: PRINT
+macro: PRINTipaddr
+macro: OC_LOG
+(may have missed something)
+
+port/oc_network_events_mutex.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: oc_network_event_handler_mutex_init
+function: oc_network_event_handler_mutex_lock
+function: oc_network_event_handler_mutex_unlock
+function: oc_network_event_handler_mutex_destroy
+
+port/oc_random.h (header not yet exposed to Java)
+------------------------------------------------------------------------
+function: oc_random_init
+function: oc_random_value
+function: oc_random_destroy
+
+port/oc_storage.h (all exposed)
+------------------------------------------------------------------------
+(all good here move on)
+
+TODO: (I still need to walk through these header files to check there work progress status.)
+port/<os>/oc_config.h
+
+Things nice to have:
+========================================================================
+version of oc_main_init that accepts user_data context pointer.
+version of oc_set_con_write_cb with user_data context pointer.
+
+Currently known issues:
+========================================================================
+the getQueryValues function in Java is currently not working.
