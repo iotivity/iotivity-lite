@@ -34,6 +34,29 @@
       "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d3574a01",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-22T17:28:40Z",
+      "side": 0,
+      "message": "I will probably restore this line.  This is the only way we can track the allocated memory.",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 393,
+        "endChar": 41
+      },
+      "revId": "5b660fd0392ca5518f0e5cf3c9352a1216fee446",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
