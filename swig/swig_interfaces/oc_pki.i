@@ -22,7 +22,8 @@
 #include "oc_pki.h"
 %}
 
-%rename (OCSpTypesMask) oc_sp_types_t;
+#%rename (OCSpTypesMask) oc_sp_types_t;
+%ignore oc_sp_types_t;
 
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *key, size_t key_size) };
