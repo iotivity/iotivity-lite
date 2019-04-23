@@ -86,7 +86,7 @@ get_interface_addresses(ip_context_t *dev, uint16_t port, bool secure)
 static void
 refresh_endpoints_list(ip_context_t *dev)
 {
-  free_endpoints_list(dev); 
+  free_endpoints_list(dev);
   get_interface_addresses(dev, dev->port4, false);
 #ifdef OC_SECURITY
   get_interface_addresses(dev, dev->dtls4_port, true);
@@ -113,25 +113,25 @@ int oc_send_buffer(oc_message_t *message) {
   PRINTipaddr(message->endpoint);
   PRINT("\r\n");
   uint8_t send_sock = 0;
-  uint16_t send_port = 0;  
+  uint16_t send_port = 0;
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 #ifdef OC_CLIENT
   if (message->endpoint.flags & DISCOVERY) {
       send_sock = dev->mcast4_sock;
-      send_port = (uint16_t)OCF_MCAST_PORT_UNSECURED; 
+      send_port = (uint16_t)OCF_MCAST_PORT_UNSECURED;
   } else {
 #ifdef OC_SECURITY
       if (message->endpoint.flags & SECURED) {
         send_sock = dev->secure4_sock;
       } else
 #else
-        send_sock = dev->server4_sock;    
+        send_sock = dev->server4_sock;
 #endif
-      send_port = message->endpoint.addr.ipv4.port; 
+      send_port = message->endpoint.addr.ipv4.port;
   }
 #endif
 
-#ifdef OC_SERVER  
+#ifdef OC_SERVER
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
     send_sock = dev->secure4_sock;
@@ -142,9 +142,9 @@ int oc_send_buffer(oc_message_t *message) {
   }
 #endif
     send_sock = dev->server4_sock;
-    send_port = message->endpoint.addr.ipv4.port; 
+    send_port = message->endpoint.addr.ipv4.port;
 #endif
-  ard_send_data(send_sock, message->endpoint.addr.ipv4.address, &send_port, 
+  ard_send_data(send_sock, message->endpoint.addr.ipv4.address, &send_port,
                          message->data, message->length);
   return message->length;
 }
@@ -153,7 +153,7 @@ int oc_send_buffer(oc_message_t *message) {
 void
 oc_send_discovery_request(oc_message_t *message)
 {
-  oc_send_buffer(message);  
+  oc_send_buffer(message);
 }
 #endif /* OC_CLIENT */
 
@@ -164,13 +164,13 @@ oc_connectivity_init(size_t device)
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
     oc_abort("drained mem");
-  }  
+  }
   oc_list_add(ip_contexts, dev);
   dev->device = device;
-  OC_LIST_STRUCT_INIT(dev, eps);  
+  OC_LIST_STRUCT_INIT(dev, eps);
 
-  uint16_t mcast_port = (uint16_t)OCF_MCAST_PORT_UNSECURED; 
-  dev->port4 = (uint16_t)OCF_PORT_UNSECURED; 
+  uint16_t mcast_port = (uint16_t)OCF_MCAST_PORT_UNSECURED;
+  dev->port4 = (uint16_t)OCF_PORT_UNSECURED;
   dev->server4_sock = start_udp_server(&dev->port4);
 #ifdef OC_SERVER
   dev->mcast4_sock = start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &mcast_port);
@@ -179,7 +179,7 @@ oc_connectivity_init(size_t device)
   dev->mcast4_sock = start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &dev->port4);
 #endif
 #ifdef OC_SECURITY
-    dev->dtls4_port = (uint16_t)OCF_PORT_SECURED; 
+    dev->dtls4_port = (uint16_t)OCF_PORT_SECURED;
     dev->secure4_sock = start_udp_server(&dev->dtls4_port);
 #endif
   oc_process_start(&ip_adapter_process, dev);
@@ -236,7 +236,7 @@ oc_udp_receive_message(ip_context_t *dev, sdset_t *sds, oc_message_t *message)
     message->endpoint.flags = IPV4 | MULTICAST;
     SD_SET(dev->mcast4_sock, sds);
     return ADAPTER_STATUS_RECEIVE;
-  } 
+  }
 #ifdef OC_SECURITY
   if (!SD_ISSET(dev->secure4_sock, sds)) {
       int count = recv_msg(&dev->secure4_sock,message->endpoint.addr.ipv4.address,
@@ -248,8 +248,8 @@ oc_udp_receive_message(ip_context_t *dev, sdset_t *sds, oc_message_t *message)
     message->endpoint.flags = IPV4 | SECURED;
     message->encrypted = 1;
     SD_SET(dev->secure4_sock, sds);
-    return ADAPTER_STATUS_RECEIVE; 
-  }       
+    return ADAPTER_STATUS_RECEIVE;
+  }
 #endif
   return ADAPTER_STATUS_NONE;
 }
@@ -276,7 +276,7 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
   static sdset_t setsds;
   while (ev != OC_PROCESS_EVENT_EXIT) {
     oc_etimer_set(&et, (oc_clock_time_t)0.01);
-    
+
     if(ev == OC_PROCESS_EVENT_INIT){
 
       dev = (ip_context_t *)data;

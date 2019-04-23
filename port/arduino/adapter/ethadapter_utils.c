@@ -26,13 +26,13 @@
 
 
 OCResult_t arduino_get_free_socket(uint8_t *sockID){
-	
+
 	uint8_t state;
 	if(!wiznet5500) {
 		wiznet5500 = wiz5500_create();
 		if(!wiznet5500)
 			return STATUS_FAILED;
-	}	
+	}
 	*sockID = 0;
 	for (uint8_t i = 1; i < MAX_SOCK_NUM; i++)
 	{
@@ -48,15 +48,15 @@ OCResult_t arduino_get_free_socket(uint8_t *sockID){
 		OC_ERR("No socket sockID 0");
 		return SOCKET_OPERATION_FAILED;
 	}
-	return STATUS_OK;	
+	return STATUS_OK;
 }
 
 OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID){
-   
+
 	if(!socketID) {
 		OC_ERR("Socket ID not provided!");
 		return SOCKET_OPERATION_FAILED;
-	} 
+	}
 	/*Get an availlable socket(closing or closed)*/
 	OCResult_t ret = arduino_get_free_socket(socketID);
 	if (ret != STATUS_OK)
@@ -70,17 +70,17 @@ OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID){
 		OC_ERR("socket create failed!");
 		return STATUS_FAILED;
 	}
-	return STATUS_OK;	
+	return STATUS_OK;
 }
-OCResult_t 
-arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port, 
-																uint16_t *local_port, uint8_t *socketID)
+OCResult_t
+arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port,
+									uint16_t *local_port, uint8_t *socketID)
 {
 
 	if(!socketID || !mcast_addr) {
 		OC_ERR("Socket ID or mcast addr null!");
 		return SOCKET_OPERATION_FAILED;
-	} 
+	}
 	uint8_t mcast_mac_addr[] = { 0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
 	uint8_t ip_addr[4] = { 0 };
 	uint16_t parsed_port = 0;
@@ -108,7 +108,7 @@ arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port,
 		OC_ERR("sock create fail!");
 		return SOCKET_OPERATION_FAILED;
 	}
-	return STATUS_OK;																						 
+	return STATUS_OK;
 }
 /// Retrieves the IP address assigned to Arduino Ethernet shield
 OCResult_t oc_ard_get_iface_addr(uint8_t *address)
@@ -183,9 +183,8 @@ OCResult_t arduino_parse_IPv4_addr(const char *ip_addrStr, uint8_t *ip_addr,
 	}
 	return STATUS_FAILED;
 }
-// #############################################################
 /**
- * @brief Flag to check if multicast server is started
+ * Flag to check if multicast server is started
  */
 bool arduino_mcast_serv_started = false;
 
@@ -209,7 +208,7 @@ uint8_t start_udp_server(uint16_t *local_port)
 	}
 	return serverFD;
 }
-uint8_t start_udp_mcast_server(const char *mcast_addr, 
+uint8_t start_udp_mcast_server(const char *mcast_addr,
                               uint16_t *mcast_port,
                               uint16_t *local_port)
 {
@@ -217,15 +216,15 @@ uint8_t start_udp_mcast_server(const char *mcast_addr,
 	{
 	  return SERVER_STARTED_ALREADY;
 	}
-	uint8_t serverFD = 1; 
+	uint8_t serverFD = 1;
 	if (arduino_init_mcast_udp_socket(mcast_addr, mcast_port, local_port, &serverFD)!= STATUS_OK)
 		return STATUS_FAILED;
-  return serverFD;	
+  return serverFD;
 }
 
 /*Utility method to monitor ready socket*/
 static uint16_t socket_ready(uint8_t *socketID){
-  
+
   if(!wiznet5500) {
     wiznet5500 = wiz5500_create();
     if(!wiznet5500)
@@ -245,9 +244,9 @@ uint8_t select(uint8_t nsds, sdset_t *setsds){
       uint16_t ret = socket_ready(&setsds->sds[i]);
       // Good: data has been receive on this socket: clear it and increase socket ready count
       if(ret != 0) {
-				SD_CLR(setsds->sds[i], setsds);
+		SD_CLR(setsds->sds[i], setsds);
         n++;
-				setsds->rcv_size = ret;
+		setsds->rcv_size = ret;
       }
   }
   return n;
@@ -260,16 +259,16 @@ int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr, uint16_t *sender_port,
   return recvfrom(*socketID, (uint8_t *)data, packets_size + 1, sender_addr, sender_port);
 }
 
-OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr, 
-                          uint16_t *dest_port, uint8_t *data, 
+OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr,
+                          uint16_t *dest_port, uint8_t *data,
                           const uint16_t len)
-{	
+{
 	uint8_t _socketID = socketID; // default client socket
 	uint32_t ret = sendto(_socketID, data, len, dest_addr, *dest_port);
 	if (ret <= 0){
 		OC_ERR("SendData failed: %u", ret);
 	}
 	return STATUS_OK;
-} 
+}
 
 

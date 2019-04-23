@@ -49,20 +49,21 @@ typedef struct  sdset_t {
 
 #define SETSIZE (8)
 #define SD_ZERO(_setsds) (((sdset_t*)_setsds)->sdsset = 0 )
-#define SD_SET(sd,_setsds)																	\
-do {																													\
-	((sdset_t*)_setsds)->sds[sd] = sd; 											\
+#define SD_SET(sd,_setsds)                                  \
+do {                                                        \
+	((sdset_t*)_setsds)->sds[sd] = sd;                      \
 	((sdset_t*)_setsds)->sdsset |= (1 << (sd % SETSIZE));	\
 } while(0)
 #define SD_CLR(sd, _setsds)   (((sdset_t*)_setsds)->sdsset &= ~(1 << (sd % SETSIZE)))
 #define SD_ISSET(sd, _setsds) (((sdset_t*)_setsds)->sdsset & (1 << (sd % SETSIZE)))
+
 uint8_t select(uint8_t nsds, sdset_t *setsds);
-int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr, 
+int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr,
 				uint16_t *sender_port, uint8_t *data, uint16_t packets_size);
-                                
+
 uint8_t start_udp_server(uint16_t *local_port);
 
-uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port, uint16_t *local_port);	
+uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port, uint16_t *local_port);
 
 /**
  * Get available UDP socket.
@@ -87,9 +88,9 @@ extern OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketI
  * @param[out]  socketID         Multicast socket ID.
  * @return  ::OC_STATUS_OK or Appropriate error code.
  */
-																					
-extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port, 
-																						     uint16_t *local_port, uint8_t *socketID);																				
+
+extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port,
+												     uint16_t *local_port, uint8_t *socketID);
 /**
  * To parse the IP address and port from "ipaddress:port".
  * @param[in]   ipAddrStr       IP address to be parsed.
@@ -101,11 +102,6 @@ extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t
 extern OCResult_t arduino_parse_IPv4_addr(const char *ipAddrStr, uint8_t *ipAddr,
                                       uint8_t ipAddrLen, uint16_t *port);
 /**
- * send response  client/server mode.
- * @param[in]  mcast_socketID     multicast port.
- * @return  ::OC_STATUS_OK or Appropriate error code.
- */	
-/**
 * Get the Interface Info(Allocated IP address)
 * @param[in] address  endpoint ipv4 address
 */
@@ -113,9 +109,9 @@ OCResult_t oc_ard_get_iface_addr(uint8_t *address);
 
 
 
-extern OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr, 
+extern OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr,
 								uint16_t *dest_port, uint8_t *data, const uint16_t len);
-														 
+
 #ifdef __cplusplus
 }
 #endif

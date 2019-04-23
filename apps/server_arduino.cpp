@@ -1,36 +1,23 @@
-#ifdef __cplusplus
 #include "Ethernet2.h"
-extern "C" {
-#endif
 #include "serial.h"
 #include "oc_api.h"
+#include "oc_clock.h"
 #include "oc_assert.h"
 #include "oc_storage.h"
-#include "oc_random.h"
-#include "oc_network_events_mutex.h"
 #include "oc_connectivity.h"
-#include "oc_clock.h"
 #include "util/oc_process.h"
-#ifdef OC_SECURITY
-#include "rsa_internal.h"
-#include "ssl_internal.h"
-#include "ssl.h"
-#include "ssl_cookie.h"
-#include "memory_buffer_alloc.h"
-#endif
-#ifdef __cplusplus
-}
-#endif
+#include "oc_network_events_mutex.h"
+
 #ifdef __AVR__
 #ifdef OC_XMEM
 void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
 void extRAMinit(void) {
     // set up the xmem registers
-    XMCRB=0; 
-    XMCRA=1<<SRE; 
+    XMCRB=0;
+    XMCRA=1<<SRE;
     DDRD|=_BV(PD7);
     DDRL|=(_BV(PL6)|_BV(PL7));
-} 
+}
 #endif
 #endif
 OC_PROCESS(sample_server_process, "server");
@@ -146,26 +133,26 @@ OC_PROCESS_THREAD(sample_server_process, ev, data)
   static oc_clock_time_t next_event;
   oc_set_mtu_size(512);
   oc_set_max_app_data_size(880);
-  
+
   OC_PROCESS_BEGIN();
 
   OC_DBG("Initializing server for arduino");
-	
+
   while (ev != OC_PROCESS_EVENT_EXIT) {
-		oc_etimer_set(&et, (oc_clock_time_t)next_event);
-		
-		if(ev == OC_PROCESS_EVENT_INIT){
-			int init = oc_main_init(&handler);
-			if (init < 0){
-				OC_DBG("Server Init failed!");
-				return init;
-			}
-      OC_DBG("Server process init!");
+ 	oc_etimer_set(&et, (oc_clock_time_t)next_event);
+
+	if(ev == OC_PROCESS_EVENT_INIT){
+		int init = oc_main_init(&handler);
+		if (init < 0){
+			OC_DBG("Server Init failed!");
+			return init;
 		}
-		else if(ev == OC_PROCESS_EVENT_TIMER){
-			next_event = oc_main_poll();
-			next_event -= oc_clock_time();
-		}
+      	OC_DBG("Server process init!");
+	}
+	else if(ev == OC_PROCESS_EVENT_TIMER){
+		next_event = oc_main_poll();
+		next_event -= oc_clock_time();
+	}
     OC_PROCESS_WAIT_EVENT();
   }
  OC_PROCESS_END();
@@ -190,7 +177,7 @@ uint8_t ConnectToNetwork()
 }
 
 void setup() {
-	
+
 	Serial.begin(115200);
 #if defined(__SAMD21G18A__)
   while (!Serial) {
@@ -203,10 +190,10 @@ void setup() {
 	}
 
 #ifdef OC_SEC
-  oc_storage_config("next"); 
+  oc_storage_config("creds");
 #endif /* OC_SECURITY */
 	oc_process_start(&sample_server_process, NULL);
-  delay(200);
+  	delay(200);
 }
 
 void loop() {

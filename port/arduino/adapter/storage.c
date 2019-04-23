@@ -37,7 +37,7 @@ int oc_storage_config(const char *store)
   }
   strncpy(store_path, store, store_path_len);
   store_path[store_path_len] = '\0';
-  _sd_holder = sdfat_create(); 
+  _sd_holder = sdfat_create();
   /* Initialize at the highest speed supported by the board that is
    not over 50 MHz. Try a lower speed if SPI errors occur.*/
   if (!sdfat_begin(_sd_holder, chipSelect)) {
@@ -45,14 +45,14 @@ int oc_storage_config(const char *store)
     return -1;
   }
   OC_WRN("initialization done.");
-  if( !sdfat_exists(_sd_holder, store_path)) 
+  if( !sdfat_exists(_sd_holder, store_path))
   {
-    if(!sdfat_mkdir(_sd_holder, store_path) ) 
+    if(!sdfat_mkdir(_sd_holder, store_path) )
     {
       OC_ERR("Error creating sec dir");
-    } 
+    }
   }
-  _file_holder = sdfile_create(); 
+  _file_holder = sdfile_create();
   list_dir();
   sdfile_close(_file_holder);
   return 0;
@@ -94,7 +94,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t len)
   while(sdfile_available(_file_holder)){
     if((len  =  sdfile_read(_file_holder, buf, len)) == -1) {
       OC_ERR("Error reading from: %s",store_path );
-    } 
+    }
   }
   sdfile_close(_file_holder);
   return len;

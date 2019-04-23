@@ -34,7 +34,7 @@ void random32Seed( uint32_t dwSeed )
 long random32(long max) {
   if ( max == 0 )
     return 0 ;
-  return rand() % max; 
+  return rand() % max;
 }
 extern long _random32( long howsmall, long howbig )
 {
@@ -60,7 +60,7 @@ oc_random_init(void)
 #elif defined(__SAM3X8E__ )
   pmc_enable_periph_clk(ID_TRNG);
   TRNG->TRNG_IDR = 0xFFFFFFFF;
-  TRNG->TRNG_CR = TRNG_CR_KEY(0x524e47) | TRNG_CR_ENABLE; 
+  TRNG->TRNG_CR = TRNG_CR_KEY(0x524e47) | TRNG_CR_ENABLE;
 #elif defined(__SAMD21G18A__)
   random32Seed(analogRead(0));
 #endif
@@ -75,7 +75,7 @@ unsigned int rand_val = 0;
     _prng_holder = prng_create();
   }
   if (_prng_holder == NULL)
-      return 0;    
+      return 0;
   rand_val =  (unsigned int)prng_getRndInt(_prng_holder);
 #elif defined(__SAM3X8E__ )
   while (! (TRNG->TRNG_ISR & TRNG_ISR_DATRDY));
