@@ -1,9 +1,9 @@
 ###iotivity contrained sources
-include ../../setup.mk 
+include ../../setup.mk
 
-SRC=$(wildcard ./*.cpp) 
+SRC=$(wildcard ./*.cpp)
 
-LOCAL_CPP_SRCS += $(SRC) 
+LOCAL_CPP_SRCS += $(SRC)
 
 
 ifeq ($(ARCH),avr)
@@ -11,11 +11,11 @@ ifeq ($(ARCH),avr)
 else ifeq ($(ARCH),samd)
 	include .../../samd.mk
 else
-$(error Target Architecture must be define to proceed!)	
+$(error Target Architecture must be define to proceed!)
 endif
 
 
 build-$(BOARD_TAG)/libarduino-prng.a: $(LOCAL_OBJS)
 	$(AR) rcs $@ $(LOCAL_OBJS)
-	
+
 

@@ -22,11 +22,11 @@ else
 endif
 
 ### CFLAGS_STD
-### Set the C standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cflags_std)
+### Set the C standard to be used during compilation.
 CFLAGS_STD        = -std=gnu11
 
 ### CXXFLAGS_STD
-### Set the C++ standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cxxflags_std)
+### Set the C++ standard to be used during compilation.
 CXXFLAGS_STD      += -std=gnu++11 
 
 ### CXXFLAGS

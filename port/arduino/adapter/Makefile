@@ -25,7 +25,7 @@ SRC=$(wildcard $(ROOT_DIR)/messaging/coap/*.c $(ROOT_DIR)/api/*.c *.c )
 LIB_HEADERS   =-I$(ARDUINO_DIR)/libraries/Ethernet2/src/utility -I$(ARDUINO_DIR)/libraries/SdFat/src/FatLib
 DEPS_HEADERS  =$(addprefix -I../deps/, pRNG  wiz5500 sdFat serial)
 CORE_HEADERS  =$(addprefix -I$(ROOT_DIR)/, messaging/coap util util/pt include  api port .)
-CFLAGS += -I. $(CORE_HEADERS) $(LIB_HEADERS) $(DEPS_HEADERS) 
+CFLAGS += -I. $(CORE_HEADERS) $(LIB_HEADERS) $(DEPS_HEADERS)
 
 ifeq ($(VERBOSE),1)
 	CFLAGS += -DOC_DEBUG -DOC_LOG_L1
@@ -34,7 +34,7 @@ else ifeq ($(VERBOSE),2)
 endif
 
 ifeq ($(DYNAMIC),1)
-	CFLAGS += -DOC_DYNAMIC_ALLOCATION 
+	CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
 ifeq ($(SECURE),1)
@@ -66,7 +66,7 @@ ifeq ($(APP),client)
 endif
 
 LOCAL_C_SRCS += $(SRC_COMMON)
-LOCAL_C_SRCS += $(SRC) 
+LOCAL_C_SRCS += $(SRC)
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -82,11 +82,11 @@ else ifeq ($(ARCH),samd)
 	include ../samd.mk
 
 else
-$(error Target Architecture must be define to proceed!)	
+$(error Target Architecture must be define to proceed!)
 endif
 
 build-$(BOARD_TAG)/libarduino-adapter.a: $(LOCAL_OBJS)
-	$(AR) rcs $@ $(LOCAL_OBJS) 
+	$(AR) rcs $@ $(LOCAL_OBJS)
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES = $(sort $(wildcard ../../../patches/*.patch))
@@ -105,4 +105,3 @@ $(MBEDTLS_PATCH_FILE):$(MBEDTLS_PATCHES) $(MBEDTLS_ARDUINO_PATCH)
 	echo "Patches applied in $^" > ${@F}
 endif
 
-	

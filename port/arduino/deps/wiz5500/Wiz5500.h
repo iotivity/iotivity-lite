@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 // remove warning: ISO C++11 requires at least one argument for the "..." in a variadic macro
-//#pragma GCC system_header 
+//#pragma GCC system_header
 #include <Arduino.h>
 
 #define SnMR_CLOSE  ((const uint8_t )0x00)
@@ -17,7 +17,7 @@ extern "C" {
 #define SnMR_PPPOE  ((const uint8_t )0x05)
 #define SnMR_ND     ((const uint8_t )0x20)
 #define SnMR_MULTI  ((const uint8_t )0x80)
-  
+
 #define SnSR_CLOSED      ((const uint8_t )0x00)
 #define SnSR_INIT        ((const uint8_t )0x13)
 #define SnSR_LISTEN      ((const uint8_t )0x14)
@@ -40,12 +40,12 @@ extern "C" {
 struct wiz5500;
 typedef struct wiz5500 wiz5500_t;
 
-extern wiz5500_t *wiznet5500;// = NULL; 
+extern wiz5500_t *wiznet5500;// = NULL;
 
 wiz5500_t *wiz5500_create();
 void wiz5500_destroy(wiz5500_t *wiznet_holder);
 
-// Maybe use a boolean to optimize RAM usage 
+// Maybe use a boolean to optimize RAM usage
 void wiz5500_getIPAddress(wiz5500_t *wiznet_holder, uint8_t *addr);
 
 uint8_t wiz5500_readSnSR(wiz5500_t *wiznet_holder, uint8_t *socketID) ;
@@ -57,9 +57,9 @@ uint16_t wiz5500_writeSnDHAR(wiz5500_t *wiznet_holder, uint8_t *socketID, uint8_
 void wiz5500_writeSnDPORT(wiz5500_t *wiznet_holder, uint8_t *socketID, uint16_t *mport);
 
 uint16_t wiz5500_getRXReceivedSize(wiz5500_t *wiznet_holder, uint8_t *socketID);
- 
+
 #ifdef __cplusplus
 }
 #endif
- 
+
 #endif /* __WIZ5500_H__ */
