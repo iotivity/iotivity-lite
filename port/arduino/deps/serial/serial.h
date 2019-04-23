@@ -1,8 +1,8 @@
 #ifndef __SERIAL_H__
 #define __SERIAL_H__
 #include <stdint.h>
-#include <stdlib.h> 
-#include "Arduino.h" 
+#include <stdlib.h>
+#include "Arduino.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,8 +22,8 @@ extern serial_t *_serial_holder;// = NULL;
 #define PCF(str)  ((PROGMEM const char *)(PSTR(str)))
 #endif
 void avr_log(PROGMEM const char *format, ...);
-#define AVR_LOG(format, ...) avr_log(PCF(format),##__VA_ARGS__)                       													
-#elif defined(__SAMD21G18A__) || defined(__SAM3X8E__) 
+#define AVR_LOG(format, ...) avr_log(PCF(format),##__VA_ARGS__)
+#elif defined(__SAMD21G18A__) || defined(__SAM3X8E__)
 void arm_log(const char *format, ...);
 #define ARM_LOG(format, ...) arm_log(format,##__VA_ARGS__)
 #else
@@ -36,5 +36,5 @@ void arm_log(const char *format, ...);
 #ifdef __cplusplus
 }
 #endif
- 
+
 #endif /* __SERIAL_H__ */

@@ -1,8 +1,6 @@
 ### PROJECT_DIR 
 ### This is the path to where you have created/cloned your project
 PROJECT_DIR       = $(PWD)
-#IOTIVITY_CONSTRAINED       = $(HOME)/iotivity-lite
-#IOTIVITY_CONSTRAINED       = $(HOME)/iotivity-lite
 ### ARDMK_DIR
 ### Path to the Arduino-Makefile directory.
 ARDMK_DIR         = $(PROJECT_DIR)/Arduino-Makefile
@@ -16,17 +14,17 @@ AVRDUDE_ARD_PROGRAMMER = wiring
 
 ### ARDUINO LIBS
 ifeq ($(ARCH),avr)
-	ARDUINO_LIBS +=  Wire SPI Time pRNG Ethernet2 xmem SdFat Arduino-MemoryFree
+	ARDUINO_LIBS +=  Wire SPI Time pRNG Ethernet2 SdFat
 else 
-	ARDUINO_LIBS +=  Wire SPI Time Ethernet2 SdFat Arduino-MemoryFree
+	ARDUINO_LIBS +=  Wire SPI Time Ethernet2 SdFat 
 endif
 
 ### CFLAGS_STD
-### Set the C standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cflags_std)
+### Set the C standard to be used during compilation.
 CFLAGS_STD        = -std=gnu11
 
 ### CXXFLAGS_STD
-### Set the C++ standard to be used during compilation. Documentation (https://github.com/WeAreLeka/Arduino-Makefile/blob/std-flags/arduino-mk-vars.md#cxxflags_std)
+### Set the C++ standard to be used during compilation.
 CXXFLAGS_STD      += -std=gnu++11 
 
 ### CXXFLAGS

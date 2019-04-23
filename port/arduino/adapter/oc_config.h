@@ -45,9 +45,7 @@ typedef uint32_t oc_clock_time_t;
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
-#define OC_COLLECTIONS
 #define OC_BLOCK_WISE
-
 #else /* OC_DYNAMIC_ALLOCATION */
 
 #define OC_BYTES_POOL_SIZE (2000)
