@@ -54,16 +54,7 @@ typedef struct
   oc_response_buffer_t *response_buffer;
 } oc_response_t;
 
-%rename (OCInterfaceMask) oc_interface_mask_t;
-typedef enum {
-  OC_IF_BASELINE = 1 << 1,
-  OC_IF_LL = 1 << 2,
-  OC_IF_B = 1 << 3,
-  OC_IF_R = 1 << 4,
-  OC_IF_RW = 1 << 5,
-  OC_IF_A = 1 << 6,
-  OC_IF_S = 1 << 7,
-} oc_interface_mask_t;
+%ignore oc_interface_mask_t;
 
 %rename (OCMethod) oc_method_t;
 typedef enum { 
