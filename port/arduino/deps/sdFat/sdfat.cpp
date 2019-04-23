@@ -7,8 +7,8 @@
 #include "sdfat.h"
 
 
-sdfat_t *_sd_holder = NULL; 
-sdfile_t *_file_holder = NULL; 
+sdfat_t *_sd_holder = NULL;
+sdfile_t *_file_holder = NULL;
 // can't dynamically create this as it has no destructor
 SdFile cred_file;
 
@@ -16,7 +16,7 @@ sdfat_t *sdfat_create()
 {
     sdfat_t *sd_holder;
     SdFat *sd_ref;
-    
+
     sd_holder = (typeof(sd_holder))malloc(sizeof(*sd_holder));
     sd_ref    = new SdFat();
     sd_holder->sd = sd_ref;
@@ -53,9 +53,9 @@ bool sdfat_begin(sdfat_t *sd_holder, uint8_t chip_select){
     SdFat *_sd;
     if (sd_holder == NULL)
         return 1;
- 
+
     _sd = static_cast<SdFat *>(sd_holder->sd);
-		/* Initialize at the highest speed supported by the board that is
+	/* Initialize at the highest speed supported by the board that is
 		   not over 50 MHz. Try a lower speed if SPI errors occur.*/
     return _sd->begin(chip_select,  SPI_HALF_SPEED);
 }
@@ -106,7 +106,7 @@ bool sdfile_ls(sdfile_t *file_holder){
     _file = static_cast<SdFile *>(file_holder->file);
     return _file->ls(LS_R | LS_DATE | LS_SIZE);
 }
-// // file.open(fileName, O_CREAT | O_WRITE | O_EXCL)
+// file.open(fileName, O_CREAT | O_WRITE | O_EXCL)
 bool sdfile_open_write(sdfile_t *file_holder, const char* path, oflag_t oflags){
 
     SdFile *_file;

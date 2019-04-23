@@ -22,12 +22,11 @@
 void
 abort_impl(void)
 {
-  assert(NULL);
+  abort();
 }
 
 void
 exit_impl(int status)
 {
-  (void)status;
-  assert(NULL);
+  exit(status);
 }

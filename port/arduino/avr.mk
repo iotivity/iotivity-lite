@@ -32,37 +32,37 @@ ifeq "$(AVR_GCC_VERSION)" "1"
     CXXFLAGS += -fdiagnostics-color
 endif
 
-### External Memory Options 
+### External Memory Options
 ## 64 KB of external RAM, starting after internal RAM (ATmega128!),
 ## used for variables (.data/.bss) and heap (malloc()).
 ## 64 KB of external RAM, starting after internal RAM (ATmega128!),
 ## only used for heap (malloc()).
 
-ifeq ($(XMEM),1)         
-#                         0x2200             0xffff    
+ifeq ($(XMEM),1)
+#                         0x2200             0xffff
 # -----------------------------------------------
 #|				|	<---- |	.data	 | .bss     | ---> |	 |
-#|				|	stack |variable|	variable| heap |	 |							
+#|				|	stack |variable|	variable| heap |	 |
 #|				|				|				 |		      |      |   |
 # -----------------------------------------------
 EXTMEMOPTS = -Wl,-Map,MegaXmem.map -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--defsym=__stack=0x8021ff
 
-#                         0x802200             0x80ffff    
+#                         0x802200             0x80ffff
 # ---------------------------------------------------
 #| .data		|	.bss      |       |<---- |   |---> |	 |
-#| variable	|	variables |       |stack |   |heap |	 |								
+#| variable	|	variables |       |stack |   |heap |	 |
 #|					|			      |				|			 |	 |     |   |
 # ---------------------------------------------------
 #EXTMEMOPTS = -Wl,--defsym=__heap_start=0x802200,--defsym=__heap_end=0x80ffff
 
-#                 0x8021ff 0x802200          0x80ffff    
+#                 0x8021ff 0x802200          0x80ffff
 # -------------------------------------------
 #| .bss		  |      |<---- |  .data |---> |	 |
-#| variable	|      |stack |variable|heap |	 |								
+#| variable	|      |stack |variable|heap |	 |
 #|					|      |		  |        |     |   |
 # -------------------------------------------
 #EXTMEMOPTS = -Wl,-Map,MegaDataXmem.map -Wl,--section-start,.bss=0x800200 -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--defsym=__heap_start=0x802200
-	
+
 else
 	EXTMEMOPTS =
 endif

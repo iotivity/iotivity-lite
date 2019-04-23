@@ -9,7 +9,7 @@
 # used need to be patch before compilation can start: it may be easier to provide a dedicated arduino makefile
 
 #######################################################################
-#User interaction functions 
+#User interaction functions
 #######################################################################
 print_headings() {
 	echo
@@ -18,11 +18,11 @@ print_headings() {
 	printf "%bBuild Architecture: 32/64 bits%b\n" "$DBG" "$DEFAULT"
 	printf "%bArduino path: \$(HOME)/arduino-home, if not set the option --ardhome='path to arduino home' %b\n" "$DBG" "$DEFAULT"
 	printf "%bArduino Makefile path: \$(PWD)/Arduino-Makefile, if not set the option --ardmk='path to arduino makefile' %b\n" "$DBG" "$DEFAULT"
-	echo 
+	echo
 	printf "%busage: \n  -u|--upload)\tBuild and upload an app\n  -c|--clean)\tClean working path\n  -x|--xmem)\tEnable or disbale external memory(only on avr)%b\n" "$WRN" "$DEFAULT"
 	printf "%b  -s|--secure)\tEnable or disable\n  ---arch)\tSelect a build architecture (avr/samd/sam)\n  --debug)\tSet log level( 1 / 2)%b\n" "$WRN" "$DEFAULT"
 	printf "%b  --app)\tSelect an app (server/client)\n  --ardhome)\tSet path to arduino home\n  --ardmk)\tSet path to arduino makefile\n %b\n" "$WRN" "$DEFAULT"
-	echo 
+	echo
 	sleep 3
 }
 
@@ -30,37 +30,37 @@ install_dependancies(){
 	echo "*********************************************************************"
 	printf "%b      Installing and updating arduino libraries%b\n" "$DBG" "$DEFAULT"
 	echo "*********************************************************************"
-	if [ -d $ARDUINO_HOME ]; then 
+	if [ -d $ARDUINO_HOME ]; then
 		cd $ARDUINO_HOME/libraries
 		for lib in "${LIBS[@]}"; do
 			path=`echo $lib | cut -d '|' -f 1`
-			if [ ! -d $path ]; then 
+			if [ ! -d $path ]; then
 				remote=`echo $lib | cut -d '|' -f 2`
 				printf "%bInstalling missing library: $remote %b\n" "$WRN" "$DEFAULT"
 				git clone $remote
 			else
 				printf "%bCleaning local libray: $path %b\n" "$WRN" "$DEFAULT"
 				cd $path
-				git clean -fdx . 
-				git reset --hard 
+				git clean -fdx .
+				git reset --hard
 				cd ../
 			fi
 			patch_file=$BUILD_PATCHES/$path.patch
-			if [  -f $patch_file ]; then 
+			if [  -f $patch_file ]; then
 				printf "%bApplying patch to $path %b\n" "$WRN" "$DEFAULT"
 				patch -r - -s -N -p1 < $patch_file
 				printf "%bPatch $patch_file succesfully applied%b\n\n" "$DBG" "$DEFAULT"
 			fi
-		done 
+		done
   else
 		printf "%bInstall arduino IDE and provide a valid path to proceed%b\n" "$ERR" "$DEFAULT"
 		exit 1
 	fi
-	if [ $ARCH == "samd" ]; then 
+	if [ $ARCH == "samd" ]; then
 		SAMD_RANDOM_PATCH_FILE=$BUILD_PATCHES/samd_random.patch
 		cd ~/.arduino15/packages/arduino/hardware/samd/1.6.20/cores
 		patch -r - -s -N -p1 --dry-run < $SAMD_RANDOM_PATCH_FILE 2>/dev/null
-		#If the patch has not been applied then the $? which is the exit status 
+		#If the patch has not been applied then the $? which is the exit status
 		#for last command would have a success status code = 0
 		if [ $? -eq 0 ]; then
 			printf "%bAdding samd basic random support%b\n" "$DBG" "$DEFAULT"
@@ -70,28 +70,28 @@ install_dependancies(){
 			printf "%bRandom support for samd already added%b\n" "$WRN" "$DEFAULT"
 		fi
 	fi
-	
+
 }
 install_arduino_makefile() {
 	echo "*********************************************************************"
 	printf "%b    Installing and updating arduino makefile%b\n" "$DBG" "$DEFAULT"
 	echo "*********************************************************************"
 	cd $ROOT
-	if [ ! -d $ARDMK_DIR ]; then 
+	if [ ! -d $ARDMK_DIR ]; then
 		git clone $ARDMK_REMOTE
 	else
 		cd $ARDMK_DIR
 		printf "%bCleaning local repository%b\n" "$WRN" "$DEFAULT"
-		git clean -fdx . 
-		git reset --hard 
+		git clean -fdx .
+		git reset --hard
 		cd ../
 	fi
 	ARDMK_PATCH_FILE=$BUILD_PATCHES/arduino-mk.patch
-	if [  -f $ARDMK_PATCH_FILE ]; then 
+	if [  -f $ARDMK_PATCH_FILE ]; then
 		printf "%bApplying patch to $ARDMK_DIR %b\n" "$WRN" "$DEFAULT"
 		patch -r - -s -N -p1 < $ARDMK_PATCH_FILE
 		printf "%bPatch $patch succesfully applied%b\n" "$DBG" "$DEFAULT"
-	fi	
+	fi
 }
 
 update_core_to_arduino() {
@@ -101,25 +101,25 @@ update_core_to_arduino() {
 	IOTIVIY_LITE_PATCH_FILE=$BUILD_PATCHES/iotivity_lite.patch
 	cd ../../
 	patch -r - -s -N -p1 --dry-run < $IOTIVIY_LITE_PATCH_FILE 2>/dev/null
-	#If the patch has not been applied then the $? which is the exit status 
+	#If the patch has not been applied then the $? which is the exit status
 	#for last command would have a success status code = 0
 	if [ $? -eq 0 ]; then
     printf "%bAdding Arduino support to iotivity sources%b\n" "$DBG" "$DEFAULT"
     patch -r - -s -N -p1 < $IOTIVIY_LITE_PATCH_FILE
 	else
 		printf "%bSources have already been updated %b\n" "$WRN" "$DEFAULT"
-	fi	
+	fi
 }
 
 build_application()
 {
 
 	echo "*********************************************************************"
-	printf "%b      Build and Upload  a User application %b\n" "$DBG" "$DEFAULT"       
+	printf "%b      Build and Upload  a User application %b\n" "$DBG" "$DEFAULT"
 	echo "*********************************************************************"
-	cd $ROOT	
+	cd $ROOT
   if [ $CLEAN -eq 1 ]; then
-	  make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 -f Makefile clean 
+	  make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 -f Makefile clean
   else
    if [ $UPLOAD -eq 1 ]; then
       make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 XMEM=$XMEM VERBOSE=$VERBOSE -f Makefile upload
@@ -138,7 +138,7 @@ echo "####################################################################"
 #set -o errexit -o pipefail -o noclobber -o nounset
 #Define installation environment
 export ARDUINO_USER="$USER"
-export ARDUINO_USER_GROUP=$(groups "$ARDUINO_USER" | sed 's/^.*\s:\s\(\S*\)\s.*$/\1/')	
+export ARDUINO_USER_GROUP=$(groups "$ARDUINO_USER" | sed 's/^.*\s:\s\(\S*\)\s.*$/\1/')
 export ROOT=$PWD
 export ARDUINO_HOME=$HOME/arduino-home
 export ARDMK_DIR=$PWD/Arduino-Makefile
@@ -162,7 +162,7 @@ export WRN="\033[33;1m" # yellow output
 export DEFAULT="\033[0m"    # white output
 ##################################################
 
-! getopt --test > /dev/null 
+! getopt --test > /dev/null
 if [[ ${PIPESTATUS[0]} -ne 4 ]]; then # PIPESTATUS is an array of exits code just like $?( status of last executed command)
     echo 'This requires GNU getopt.  On Mac OS X and FreeBSD, you have to install this separately; see below.'
     exit 1

@@ -15,29 +15,26 @@
 * limitations under the License.
 *
 ******************************************************************/
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <Arduino.h>
 #include "port/oc_clock.h"
 #include "port/oc_log.h"
 #include "TimeLib.h"
 
 #define SERIAL_TIMEOUT 50   // 50ms wait for client response: may need adjustment
-#define TIME_REQUEST  7    // ASCII bell character requests a time sync message 
+#define TIME_REQUEST  7    // ASCII bell character requests a time sync message
 #define DEFAULT_TIME  ((time_t)(1357041600UL))
 
  void
 oc_clock_init(void)
 {
-  //iotivitySerial_t *serial_object_holder = iotivitySerial_create();
+
   #ifdef SERIAL_TIME
   setSyncProvider(requestSync);  //set function to call when sync required
   #endif
   setTime(DEFAULT_TIME);
-  #ifdef ARDUINO_SERIAL
-  //OIC_LOG_V("DEBUG", "%u", secondNow()); 
-  #endif   
 }
-
+/*Wont it be better to have a millissecond based system time?*/
 oc_clock_time_t
 oc_clock_time(void)
 {
@@ -68,7 +65,7 @@ oc_clock_wait(oc_clock_time_t t)
   /* the user program(iotivity client can listen to serial event)
   *  on a separate thread, get thus the pctime convert to systime and send on serial link(T1357041600)
   *  Used ntp from client to form a system time(number of second since 1970) and send to Arduino
-  *  Arduino can sync with its own ntp time from init(setup). it should not try that in loop unless 
+  *  Arduino can sync with its own ntp time from init(setup). it should not try that in loop unless
   *  the server code is sleeping or blocked
   *
   */
@@ -76,19 +73,19 @@ time_t requestSync() {
 
   // request for time sync from serial client
   iotivitySerial_write(TIME_REQUEST)
-  oc_clock_time_t pctime = 0;  
+  oc_clock_time_t pctime = 0;
   oc_clock_time_t beginWait = millis();
   while (millis() - beginWait < SERIAL_TIMEOUT) {
     if (iotivitySerial_available()) { // receive response from client?
       if(iotivitySerial_find(TIME_HEADER)) {
         pctime = iotivitySerial_parseInt();
         if( pctime >= DEFAULT_TIME) { // check the integer is a valid time (greater than Jan 1 2013)
-          //setTime(pctime);        
+          //setTime(pctime);
           return pctime;//setTime(pctime); // let the Sync Arduino clock to the time received on the serial port
         }
       }
     }
-    //setTime(pctime);    
+    //setTime(pctime);
     return pctime; // nothing on receive buffer
   }
 }

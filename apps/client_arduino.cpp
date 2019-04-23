@@ -1,37 +1,23 @@
-#ifdef __cplusplus
 #include "Ethernet2.h"
-extern "C" {
-#endif
 #include "serial.h"
 #include "oc_api.h"
+#include "oc_clock.h"
 #include "oc_assert.h"
 #include "oc_storage.h"
-#include "oc_random.h"
-#include "oc_network_events_mutex.h"
 #include "oc_connectivity.h"
-#include "oc_clock.h"
 #include "util/oc_process.h"
-#ifdef OC_SECURITY
-#include "rsa_internal.h"
-#include "ssl_internal.h"
-#include "ssl.h"
-#include "ssl_cookie.h"
-#include "memory_buffer_alloc.h"
-#endif
-#ifdef __cplusplus
-}
-#endif
+#include "oc_network_events_mutex.h"
 
 #ifdef __AVR__
 #ifdef OC_XMEM
 void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
 void extRAMinit(void) {
     // set up the xmem registers
-    XMCRB=0; 
-    XMCRA=1<<SRE; 
+    XMCRB=0;
+    XMCRA=1<<SRE;
     DDRD|=_BV(PD7);
     DDRL|=(_BV(PL6)|_BV(PL7));
-} 
+}
 #endif
 #endif
 
@@ -214,7 +200,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
 #ifdef OC_IPV4
-#ifdef OC_ESP32
+#ifdef OC_ESP32 //  this is experimental
       light_server = endpoint;
 #else
       light_server = endpoint->next;
@@ -229,13 +215,13 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
       OC_DBG("Resource %s hosted at endpoints:", a_light);
       oc_endpoint_t *ep = endpoint;
-      while (ep != NULL) { 
+      while (ep != NULL) {
         PRINTipaddr(*ep);
         PRINT("\n");
         ep = ep->next;
       }
       oc_do_get(a_light, light_server, NULL, &get_light, LOW_QOS, NULL);
-      
+
       return OC_STOP_DISCOVERY;
     }
   }
@@ -268,7 +254,7 @@ OC_PROCESS_THREAD(sample_client_process, ev, data)
   OC_DBG("Initializing client for arduino");
   while (ev != OC_PROCESS_EVENT_EXIT) {
     oc_etimer_set(&et, (oc_clock_time_t)next_event);
-    
+
     if(ev == OC_PROCESS_EVENT_INIT){
       int init = oc_main_init(&handler);
       if (init < 0){
@@ -304,10 +290,15 @@ uint8_t ConnectToNetwork()
 }
 
 void setup() {
-  Serial.begin((uint32_t)9600);
+#if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
+	Serial.begin(250000);
+#else
+	Serial.begin(115200);
+#endif
+#if defined(__SAMD21G18A__)
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
   }
+#endif
   if (ConnectToNetwork() != 0)
   {
     OC_ERR("Unable to connect to network");
@@ -315,13 +306,13 @@ void setup() {
   }
   delay(500);
 #ifdef OC_SEC
-  oc_storage_config("creds"); 
+  oc_storage_config("creds");
 #endif /* OC_SECURITY */
   oc_process_start(&sample_client_process, NULL);
   delay(200);
 }
 
 void loop() {
-  
+
   oc_process_run();
 }
