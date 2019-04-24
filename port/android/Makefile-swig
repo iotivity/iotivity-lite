@@ -166,6 +166,10 @@ ${OBJDIR}/swig/oc_clock_wrap.o: ${SWIG_DIR}/oc_clock_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+${OBJDIR}/swig/oc_buffer_settings_wrap.o: ${SWIG_DIR}/oc_buffer_settings_wrap.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
+
 ${OBJDIR}/swig/oc_collection_wrap.o: ${SWIG_DIR}/oc_collection_wrap.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -I../ -DOC_CLIENT -DOC_SERVER
