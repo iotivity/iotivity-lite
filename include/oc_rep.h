@@ -32,44 +32,44 @@ extern "C"
 {
 #endif
 
-extern CborEncoder g_encoder, root_map, links_array;
-extern int g_err;
+  extern CborEncoder g_encoder, root_map, links_array;
+  extern int g_err;
 
-/**
- * Initialize the buffer used to hold the cbor encoded data
- *
- * Unlikely to be used by outside the IoTivity-lite library.
- *
- * @param[in] payload  pointer to payload buffer
- * @param[in] size     size of the payload buffer
- */
-void oc_rep_new(uint8_t *payload, int size);
+  /**
+   * Initialize the buffer used to hold the cbor encoded data
+   *
+   * Unlikely to be used by outside the IoTivity-lite library.
+   *
+   * @param[in] payload  pointer to payload buffer
+   * @param[in] size     size of the payload buffer
+   */
+  void oc_rep_new(uint8_t *payload, int size);
 
-/**
- * Get the size of the cbor encoded data.
- *
- * This can be used to check if the cbor encode data will fit inside the payload
- * buffer. If the payload buffer is too small -1 is returned.
- *
- * @return
- *  - the size of the cbor encoded data.
- *  - returns -1 if the cbor encoded data will not fit in the oc_rep_t payload
- *
- * @see oc_rep_new
- */
-int oc_rep_get_encoded_payload_size(void);
+  /**
+   * Get the size of the cbor encoded data.
+   *
+   * This can be used to check if the cbor encode data will fit inside the
+   * payload buffer. If the payload buffer is too small -1 is returned.
+   *
+   * @return
+   *  - the size of the cbor encoded data.
+   *  - returns -1 if the cbor encoded data will not fit in the oc_rep_t payload
+   *
+   * @see oc_rep_new
+   */
+  int oc_rep_get_encoded_payload_size(void);
 
-/**
- * Get the buffer pointer at the start of the encoded cbor data.
- *
- * This is used when parsing the encoded cbor data to an oc_rep_t. It is unlikely
- * to be used outside the IoTivity-lite library.
- *
- * @return pointer to the start of the cbor encoded buffer
- *
- * @see oc_parse_rep
- */
-const uint8_t *oc_rep_get_encoder_buf(void);
+  /**
+   * Get the buffer pointer at the start of the encoded cbor data.
+   *
+   * This is used when parsing the encoded cbor data to an oc_rep_t. It is
+   * unlikely to be used outside the IoTivity-lite library.
+   *
+   * @return pointer to the start of the cbor encoded buffer
+   *
+   * @see oc_parse_rep
+   */
+  const uint8_t *oc_rep_get_encoder_buf(void);
 
 /**
  * Get a pointer to the cbor object with the given `name`
@@ -226,8 +226,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     // the following bytes equal "AAECAwQF" when base64 encoded
  *     uint8_t byte_string[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
  *     oc_rep_begin_root_object();
- *     oc_rep_set_byte_string(root, byte_string_key, byte_string, sizeof(byte_string));
- *     oc_rep_end_root_object();
+ *     oc_rep_set_byte_string(root, byte_string_key, byte_string,
+ * sizeof(byte_string)); oc_rep_end_root_object();
  * ~~~
  */
 #define oc_rep_set_byte_string(object, key, value, length)                     \
@@ -565,11 +565,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   g_err |= cbor_encode_text_string(parent, key, strlen(key))
 
 /**
-* This macro has been replaced with oc_rep_open_array
-*
-* @see oc_rep_open_array
-* @see oc_rep_close_array
-*/
+ * This macro has been replaced with oc_rep_open_array
+ *
+ * @see oc_rep_open_array
+ * @see oc_rep_close_array
+ */
 #define oc_rep_set_array(object, key) oc_rep_open_array(object, key)
 
 /**
@@ -590,19 +590,19 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_array(&parent##_map, key)
 
 /**
-* Close the array object.  No additional items can be added to the array after
-* this is called.
-*
-* @see oc_rep_open_array
-*/
+ * Close the array object.  No additional items can be added to the array after
+ * this is called.
+ *
+ * @see oc_rep_open_array
+ */
 #define oc_rep_close_array(parent, key) oc_rep_end_array(&parent##_map, key)
 
 /**
-* This macro has been replaced with oc_rep_begin_object
-*
-* @see oc_rep_begin_object
-* @see oc_rep_end_object
-*/
+ * This macro has been replaced with oc_rep_begin_object
+ *
+ * @see oc_rep_begin_object
+ * @see oc_rep_end_object
+ */
 #define oc_rep_start_object(parent, key) oc_rep_begin_object(parent, key)
 
 #define oc_rep_begin_object(parent, key)                                       \
@@ -616,11 +616,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   while (0)
 
 /**
-* This macro has been replaced with oc_rep_object_array_begin_item
-*
-* @see oc_rep_object_array_begin_item
-* @see oc_rep_object_array_end_item
-*/
+ * This macro has been replaced with oc_rep_object_array_begin_item
+ *
+ * @see oc_rep_object_array_begin_item
+ * @see oc_rep_object_array_end_item
+ */
 #define oc_rep_object_array_start_item(key) oc_rep_object_array_begin_item(key)
 
 /**
@@ -674,11 +674,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_object_array_end_item(key) oc_rep_end_object(&key##_array, key)
 
 /**
-* This macro has been replaced with oc_rep_open_object
-*
-* @see oc_rep_open_object
-* @see oc_rep_close_object
-*/
+ * This macro has been replaced with oc_rep_open_object
+ *
+ * @see oc_rep_open_object
+ * @see oc_rep_close_object
+ */
 #define oc_rep_set_object(object, key) oc_rep_open_object(object, key)
 
 /**
@@ -715,11 +715,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_object(&parent##_map, key)
 
 /**
-* Close the object. No additional items can be added to the object after
-* this is called.
-*
-* @see oc_rep_open_object
-*/
+ * Close the object. No additional items can be added to the object after
+ * this is called.
+ *
+ * @see oc_rep_open_object
+ */
 #define oc_rep_close_object(parent, key) oc_rep_end_object(&parent##_map, key)
 
 /**
@@ -816,8 +816,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     oc_rep_set_double_array(root,
  *                             math_constants,
  *                             math_constants,
- *                             (int)(sizeof(math_constants)/ sizeof(math_constants[0]) ) );
- *     oc_rep_end_root_object();
+ *                             (int)(sizeof(math_constants)/
+ * sizeof(math_constants[0]) ) ); oc_rep_end_root_object();
  * ~~~
  */
 #define oc_rep_set_double_array(object, key, values, length)                   \
@@ -834,10 +834,9 @@ const uint8_t *oc_rep_get_encoder_buf(void);
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)
 
-
 /**
- * Add a string array using an oc_string_array_t as `values` to the cbor `object`
- * under the `key` name.
+ * Add a string array using an oc_string_array_t as `values` to the cbor
+ * `object` under the `key` name.
  *
  * Example:
  *
@@ -855,10 +854,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
- *     const char* str1 = "All generalizations are false, including this one.";
- *     const char* str2 = "Those who believe in telekinetics, raise my hand.";
- *     const char* str3 = "I refuse to join any club that would have me as a member.";
+ *     const char* str0 = "Do not take life too seriously. You will never get
+ * out of it alive."; const char* str1 = "All generalizations are false,
+ * including this one."; const char* str2 = "Those who believe in telekinetics,
+ * raise my hand."; const char* str3 = "I refuse to join any club that would
+ * have me as a member.";
  *
  *     oc_string_array_t quotes;
  *     oc_new_string_array(&quotes, (size_t)4);
@@ -896,377 +896,429 @@ const uint8_t *oc_rep_get_encoder_buf(void);
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)
 
-/**
- * Called after any `oc_rep_set_*`, `oc_rep_start_*`, `oc_rep_begin_*`,
- * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*` macros
- * to check if an error occurred while executing the commands.
- *
- * If the value returned is anything other than `CborNoError` then one of the
- * `oc_rep_*` macros failed.
- *
- * The error returned is not automatically cleared. To clear the error set
- * g_err to `CborNoError`.
- */
-CborError oc_rep_get_cbor_errno(void);
+  /**
+   * Called after any `oc_rep_set_*`, `oc_rep_start_*`, `oc_rep_begin_*`,
+   * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*`
+   * macros to check if an error occurred while executing the commands.
+   *
+   * If the value returned is anything other than `CborNoError` then one of the
+   * `oc_rep_*` macros failed.
+   *
+   * The error returned is not automatically cleared. To clear the error set
+   * g_err to `CborNoError`.
+   */
+  CborError oc_rep_get_cbor_errno(void);
 
-typedef enum {
-  OC_REP_NIL = 0,
-  OC_REP_INT = 0x01,
-  OC_REP_DOUBLE = 0x02,
-  OC_REP_BOOL = 0x03,
-  OC_REP_BYTE_STRING = 0x04,
-  OC_REP_STRING = 0x05,
-  OC_REP_OBJECT = 0x06,
-  OC_REP_ARRAY = 0x08,
-  OC_REP_INT_ARRAY = 0x09,
-  OC_REP_DOUBLE_ARRAY = 0x0A,
-  OC_REP_BOOL_ARRAY = 0x0B,
-  OC_REP_BYTE_STRING_ARRAY = 0x0C,
-  OC_REP_STRING_ARRAY = 0x0D,
-  OC_REP_OBJECT_ARRAY = 0x0E
-} oc_rep_value_type_t;
-
-typedef struct oc_rep_s
-{
-  oc_rep_value_type_t type;
-  struct oc_rep_s *next;
-  oc_string_t name;
-  union oc_rep_value
+  typedef enum
   {
-    int64_t integer;
-    bool boolean;
-    double double_p;
-    oc_string_t string;
-    oc_array_t array;
-    struct oc_rep_s *object;
-    struct oc_rep_s *object_array;
-  } value;
-} oc_rep_t;
+    OC_REP_NIL = 0,
+    OC_REP_INT = 0x01,
+    OC_REP_DOUBLE = 0x02,
+    OC_REP_BOOL = 0x03,
+    OC_REP_BYTE_STRING = 0x04,
+    OC_REP_STRING = 0x05,
+    OC_REP_OBJECT = 0x06,
+    OC_REP_ARRAY = 0x08,
+    OC_REP_INT_ARRAY = 0x09,
+    OC_REP_DOUBLE_ARRAY = 0x0A,
+    OC_REP_BOOL_ARRAY = 0x0B,
+    OC_REP_BYTE_STRING_ARRAY = 0x0C,
+    OC_REP_STRING_ARRAY = 0x0D,
+    OC_REP_OBJECT_ARRAY = 0x0E
+  } oc_rep_value_type_t;
 
-void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
+  typedef struct oc_rep_s
+  {
+    oc_rep_value_type_t type;
+    struct oc_rep_s *next;
+    oc_string_t name;
+    union oc_rep_value
+    {
+      int64_t integer;
+      bool boolean;
+      double double_p;
+      oc_string_t string;
+      oc_array_t array;
+      struct oc_rep_s *object;
+      struct oc_rep_s *object_array;
+    } value;
+  } oc_rep_t;
 
-int oc_parse_rep(const uint8_t *payload, int payload_size,
-                 oc_rep_t **value_list);
+  void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 
-void oc_free_rep(oc_rep_t *rep);
+  int oc_parse_rep(const uint8_t *payload, int payload_size,
+                   oc_rep_t **value_list);
+
+  void oc_free_rep(oc_rep_t *rep);
+
+  /**
+   * Read an integer from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *         int ultimate_answer_out = 0;
+   *         if( true == oc_rep_get_int(rep, "ultimate_answer",
+   * &ultimate_answer_out)) {
+   *             printf("The ultimate answer is : %d\n", ultimate_answer_out);
+   *         }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read int value from
+   * @param key the key name for the integer value
+   * @param value the return integer value
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_int
+   */
+  bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value);
+
+  /**
+   * Read a boolean value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     bool door_open_flag = false;
+   *     if( true == oc_rep_get_bool(rep, "door_open", &door_open_flag)) {
+   *         printf("The door is open : %s\n", (door_open_flag) ? "true" :
+   * "false");
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read boolean value from
+   * @param key the key name for the boolean value
+   * @param value the return boolean value
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_boolean
+   */
+  bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
+
+  /**
+   * Read a double value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     double pi_out = 0;
+   *     if( true == oc_rep_get_double(rep, "pi", &pi_out)) {
+   *         printf("The the value for 'pi' is : %f\n", pi_out);
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read double value from
+   * @param key the key name for the double value
+   * @param value the return double value
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_double
+   */
+  bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
+
+  /**
+   * Read a byte string value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     char* byte_string_out = NULL;
+   *     size_t str_len;
+   *     if( true == oc_rep_get_byte_string(rep, "byte_string_key",
+   * &byte_string_out, &str_len)) {
+   *         // byte_string_out can be used
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read byte string value from
+   * @param key the key name for the byte string value
+   * @param value the return byte string value
+   * @param size the size of the byte string
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_byte_string
+   */
+  bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                              size_t *size);
+
+  /**
+   * Read a text string value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     char* greeting_out = NULL;
+   *     size_t str_len;
+   *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out,
+   * &str_len)) { printf("%s\n", greeting_out);
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read string value from
+   * @param key the key name for the string value
+   * @param value the return string value
+   * @param size the size of the string
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_text_string
+   */
+  bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
+                         size_t *size);
+
+  /**
+   * Read an integer array value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     int* fib_out = 0;
+   *     size_t fib_len;
+   *     if( true == oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len))
+   * {
+   *         // fib_out can now be used
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to integer array value from
+   * @param key the key name for the integer array value
+   * @param value the return integer array value
+   * @param size the size of the integer array
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_int_array
+   */
+  bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
+                            size_t *size);
+
+  /**
+   * Read an boolean array value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     bool* flip_out = 0;
+   *     size_t flip_len;
+   *     if( true == oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len)) {
+   *         // flip_out can now be used
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to boolean array value from
+   * @param key the key name for the boolean array value
+   * @param value the return boolean array value
+   * @param size the size of the boolean array
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_bool_array
+   */
+  bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                             size_t *size);
+
+  /**
+   * Read an double array value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     double* math_constants_out = 0;
+   *     size_t math_constants_len;
+   *     if( true == oc_rep_get_double_array(rep,
+   *                                         "math_constants",
+   *                                         &math_constants_out,
+   *                                         &math_constants_len)) {
+   *         // math_constants_out can now be used
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to double array value from
+   * @param key the key name for the double array value
+   * @param value the return double array value
+   * @param size the size of the double array
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_double_array
+   */
+  bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                               size_t *size);
+
+  /**
+   * Read an byte string array value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     oc_string_array_t barray_out;
+   *     size_t barray_len;
+   *     if( true == oc_rep_get_byte_string_array(rep,
+   *                                              "barray",
+   *                                              &barray_out,
+   *                                              &barray_len)) {
+   *         for (size_t i = 0; i < barray_len); i++) {
+   *             char* value = oc_byte_string_array_get_item(barray_out, i);
+   *             size_t value_len
+   * =oc_byte_string_array_get_item_size(barray_out, i);
+   *             // access the individual byte string
+   *         }
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to byte string array value from
+   * @param key the key name for the byte string array value
+   * @param value the return double array value
+   * @param size the size of the byte string array
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_add_byte_string
+   * @see oc_byte_string_array_get_item
+   * @see oc_byte_string_array_get_item_size
+   */
+  bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                                    oc_string_array_t *value, size_t *size);
+
+  /**
+   * Read a string array value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     oc_string_array_t quotes_out;
+   *     size_t quotes_len;
+   *     if( true == oc_rep_get_string_array(rep,
+   *                                         "quotes",
+   *                                         &quotes_out,
+   *                                         &quotes_len)) {
+   *         printf("Quotes :\n")
+   *         for (size_t i = 0; i < barray_len); i++) {
+   *             char* value = oc_string_array_get_item(quotes_out, i);
+   *             size_t value_len = oc_string_array_get_item_size(quotes_out,
+   * i); printf("[%zd] %s\n", i + 1, value);
+   *         }
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to string array value from
+   * @param key the key name for the string array value
+   * @param value the return double array value
+   * @param size the size of the string array
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_string_array
+   * @see oc_rep_add_text_string
+   * @see oc_string_array_get_item
+   * @see oc_string_array_get_item_size
+   */
+  bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                               oc_string_array_t *value, size_t *size);
+
+  /**
+   * Read a object value from an `oc_rep_t`
+   *
+   * Example:
+   * ~~~{.c}
+   *     oc_rep_t * my_object_out = NULL;
+   *     if ( true == oc_rep_get_object(rep, "my_object", &my_object_out)) {
+   *         int a_out;
+   *         if (oc_rep_get_int(my_object_out, "a", &a_out))
+   *             printf("a = %d\n", a_out);
+   *         bool b_out = true;
+   *         if (oc_rep_get_bool(my_object_out, "b", &b_out))
+   *             printf("b = %s\n", (b_out) ? "true" : "false");
+   *         char * c_out = NULL;
+   *         size_t c_out_size = 0;
+   *         if (oc_rep_get_string(my_object_out, "c", &c_out, &c_out_size))
+   *             printf("c = %s\n", c_cout);
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read object value from
+   * @param key the key name for the object value
+   * @param value the return object value
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_object
+   */
+  bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
+
+  /**
+   * Read a object array value from an `oc_rep_t`
+   *
+   * Calling the returned value an array is a misnomer. The value actually
+   * returned is a linked list of oc_rep_t objects. The linked list must be
+   * walked to see each item in the object array.
+   *
+   * Example:
+   * ~~~{.c}
+   *     oc_rep_t * space_2001_out = NULL;
+   *     if ( true == oc_rep_get_object_array(rep, "space_2001",
+   * &space_2001_out)) { while (space_2001_out != NULL) { vhar * str_out = NULL;
+   *             size_t str_out_size = 0;
+   *             if (oc_rep_get_string(space_2001_out->value.object,
+   *                                   "name",
+   *                                   &str_out,
+   *                                   &str_out_size))
+   *                 printf("Character Name: %s", str_out);
+   *             if (oc_rep_get_string(space_2001_out->value.object,
+   *                                   "job",
+   *                                    &str_out, &str_out_size))
+   *                 printf(" job %s\n", str_out);
+   *             space_2001_out = space_2001_out->next;
+   *         }
+   *     }
+   * ~~~
+   *
+   * @param rep oc_rep_t to read object array value from
+   * @param key the key name for the object array value
+   * @param value the return object array value
+   *
+   * @return true if key and value are found and returned.
+   *
+   * @see oc_rep_set_object
+   */
+  bool oc_rep_get_object_array(oc_rep_t *rep, const char *key,
+                               oc_rep_t **value);
 
 /**
- * Read an integer from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *         int ultimate_answer_out = 0;
- *         if( true == oc_rep_get_int(rep, "ultimate_answer",
- * &ultimate_answer_out)) {
- *             printf("The ultimate answer is : %d\n", ultimate_answer_out);
- *         }
- * ~~~
- *
- * @param rep oc_rep_t to read int value from
- * @param key the key name for the integer value
- * @param value the return integer value
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_int
+ * Tab character(s) used for oc_rep_to_json function when doing pretty_print
  */
-bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value);
+#define OC_PRETTY_PRINT_TAB_CHARACTER "  "
 
-/**
- * Read a boolean value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     bool door_open_flag = false;
- *     if( true == oc_rep_get_bool(rep, "door_open", &door_open_flag)) {
- *         printf("The door is open : %s\n", (door_open_flag) ? "true" :
- * "false");
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read boolean value from
- * @param key the key name for the boolean value
- * @param value the return boolean value
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_boolean
- */
-bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
-
-/**
- * Read a double value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     double pi_out = 0;
- *     if( true == oc_rep_get_double(rep, "pi", &pi_out)) {
- *         printf("The the value for 'pi' is : %f\n", pi_out);
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read double value from
- * @param key the key name for the double value
- * @param value the return double value
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_double
- */
-bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
-
-/**
- * Read a byte string value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     char* byte_string_out = NULL;
- *     size_t str_len;
- *     if( true == oc_rep_get_byte_string(rep, "byte_string_key", &byte_string_out, &str_len)) {
- *         // byte_string_out can be used
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read byte string value from
- * @param key the key name for the byte string value
- * @param value the return byte string value
- * @param size the size of the byte string
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_byte_string
- */
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
-
-/**
- * Read a text string value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     char* greeting_out = NULL;
- *     size_t str_len;
- *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out, &str_len)) {
- *         printf("%s\n", greeting_out);
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read string value from
- * @param key the key name for the string value
- * @param value the return string value
- * @param size the size of the string
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_text_string
- */
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
-
-/**
- * Read an integer array value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     int* fib_out = 0;
- *     size_t fib_len;
- *     if( true == oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len)) {
- *         // fib_out can now be used
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to integer array value from
- * @param key the key name for the integer array value
- * @param value the return integer array value
- * @param size the size of the integer array
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_int_array
- */
-bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
-                          size_t *size);
-
-/**
- * Read an boolean array value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     bool* flip_out = 0;
- *     size_t flip_len;
- *     if( true == oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len)) {
- *         // flip_out can now be used
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to boolean array value from
- * @param key the key name for the boolean array value
- * @param value the return boolean array value
- * @param size the size of the boolean array
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_bool_array
- */
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size);
-
-/**
- * Read an double array value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     double* math_constants_out = 0;
- *     size_t math_constants_len;
- *     if( true == oc_rep_get_double_array(rep,
- *                                         "math_constants",
- *                                         &math_constants_out,
- *                                         &math_constants_len)) {
- *         // math_constants_out can now be used
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to double array value from
- * @param key the key name for the double array value
- * @param value the return double array value
- * @param size the size of the double array
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_double_array
- */
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size);
-
-/**
- * Read an byte string array value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     oc_string_array_t barray_out;
- *     size_t barray_len;
- *     if( true == oc_rep_get_byte_string_array(rep,
- *                                              "barray",
- *                                              &barray_out,
- *                                              &barray_len)) {
- *         for (size_t i = 0; i < barray_len); i++) {
- *             char* value = oc_byte_string_array_get_item(barray_out, i);
- *             size_t value_len =oc_byte_string_array_get_item_size(barray_out, i);
- *             // access the individual byte string
- *         }
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to byte string array value from
- * @param key the key name for the byte string array value
- * @param value the return double array value
- * @param size the size of the byte string array
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_add_byte_string
- * @see oc_byte_string_array_get_item
- * @see oc_byte_string_array_get_item_size
- */
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
-
-/**
- * Read a string array value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     oc_string_array_t quotes_out;
- *     size_t quotes_len;
- *     if( true == oc_rep_get_string_array(rep,
- *                                         "quotes",
- *                                         &quotes_out,
- *                                         &quotes_len)) {
- *         printf("Quotes :\n")
- *         for (size_t i = 0; i < barray_len); i++) {
- *             char* value = oc_string_array_get_item(quotes_out, i);
- *             size_t value_len = oc_string_array_get_item_size(quotes_out, i);
- *             printf("[%zd] %s\n", i + 1, value);
- *         }
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to string array value from
- * @param key the key name for the string array value
- * @param value the return double array value
- * @param size the size of the string array
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_string_array
- * @see oc_rep_add_text_string
- * @see oc_string_array_get_item
- * @see oc_string_array_get_item_size
- */
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
-
-/**
- * Read a object value from an `oc_rep_t`
- *
- * Example:
- * ~~~{.c}
- *     oc_rep_t * my_object_out = NULL;
- *     if ( true == oc_rep_get_object(rep, "my_object", &my_object_out)) {
- *         int a_out;
- *         if (oc_rep_get_int(my_object_out, "a", &a_out))
- *             printf("a = %d\n", a_out);
- *         bool b_out = true;
- *         if (oc_rep_get_bool(my_object_out, "b", &b_out))
- *             printf("b = %s\n", (b_out) ? "true" : "false");
- *         char * c_out = NULL;
- *         size_t c_out_size = 0;
- *         if (oc_rep_get_string(my_object_out, "c", &c_out, &c_out_size))
- *             printf("c = %s\n", c_cout);
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read object value from
- * @param key the key name for the object value
- * @param value the return object value
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_object
- */
-bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
-
-/**
- * Read a object array value from an `oc_rep_t`
- *
- * Calling the returned value an array is a misnomer. The value actually
- * returned is a linked list of oc_rep_t objects. The linked list must be walked
- * to see each item in the object array.
- *
- * Example:
- * ~~~{.c}
- *     oc_rep_t * space_2001_out = NULL;
- *     if ( true == oc_rep_get_object_array(rep, "space_2001", &space_2001_out)) {
- *         while (space_2001_out != NULL) {
- *             vhar * str_out = NULL;
- *             size_t str_out_size = 0;
- *             if (oc_rep_get_string(space_2001_out->value.object,
- *                                   "name",
- *                                   &str_out,
- *                                   &str_out_size))
- *                 printf("Character Name: %s", str_out);
- *             if (oc_rep_get_string(space_2001_out->value.object,
- *                                   "job",
- *                                    &str_out, &str_out_size))
- *                 printf(" job %s\n", str_out);
- *             space_2001_out = space_2001_out->next;
- *         }
- *     }
- * ~~~
- *
- * @param rep oc_rep_t to read object array value from
- * @param key the key name for the object array value
- * @param value the return object array value
- *
- * @return true if key and value are found and returned.
- *
- * @see oc_rep_set_object
- */
-bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
+  /**
+   * Convert an oc_rep_t to JSON encoded string.
+   *
+   * All binary data will be encoded to a string using base64 encoding.
+   *
+   * An oc_rep_t that is NULL or empty will return as an empty JSON object "{}".
+   *
+   * @param[in]  rep the oc_rep_t object to be converted to JSON
+   * @param[out] buf a char array that will hold the JSON encoded string.
+   * @param[in]  buf_size the size of the passed in char array
+   * @param[in]  pretty_print if true extra white space and new lines will be
+   * added to the output making it more human readable. Note return value will
+   * differ if pretty_print value is changed.
+   *
+   * Example:
+   * ~~~{.c}
+   *     char * json;
+   *     size_t json_size;
+   *     json_size = oc_rep_to_json(rep, NULL, 0, true);
+   *     json = (char *)malloc(json_size + 1);
+   *     oc_rep_to_json(rep, json, json_size + 1, true);
+   *     printf("%s", rep);
+   *     free(json);
+   * ~~~
+   * @return the number of characters printed (excluding the null byte used to
+   * end output to strings).
+   *
+   * The function will not write more than buf_size bytes (including the
+   * terminating null byte ('\0')). If the output was truncated due to this
+   * limit then the return value is the number of characters (excluding the
+   * terminating null byte) which would have been written to the final string if
+   * enough space had been available. Thus, a return value of buf_size or more
+   * means that the output was truncated.
+   */
+  size_t oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size,
+                        bool pretty_print);
 
 #ifdef __cplusplus
 }
