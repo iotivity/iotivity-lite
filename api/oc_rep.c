@@ -16,6 +16,7 @@
 
 #include "oc_rep.h"
 #include "oc_config.h"
+#include "oc_base64.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
@@ -577,4 +578,222 @@ bool
 oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value)
 {
   return oc_rep_get_value(rep, OC_REP_OBJECT_ARRAY, key, (void **)value, NULL);
+}
+
+static const char* OC_PRETTY_PRINT_TAB_CHARACTER = "  ";
+
+/*
+ * Internal function used to complete the oc_rep_print function
+ *
+ * This function is used when pretty_print param of the oc_rep_print function is
+ * set to true. It helps produce output with reasonably human readable
+ * white-space.
+ */
+void oc_rep_print_tab(int tab_depth) {
+  for (int i = 0; i < tab_depth; i++) {
+    PRINT("%s", OC_PRETTY_PRINT_TAB_CHARACTER);
+  }
+}
+
+/*
+ * Internal function used to complete the oc_rep_print function
+ *
+ * This function is called when the data type is an OC_REP_BYTE_STRING or
+ * an OC_REP_BYTE_STRING_ARRAY.
+ */
+void oc_rep_print_base64_encoded_byte_string(char *byte_str, size_t byte_str_size) {
+  // calculate the b64 encoded string size
+  size_t b64_buf_size = (byte_str_size / 3) * 4;
+  if (byte_str_size % 3 != 0) {
+    b64_buf_size += 4;
+
+  }
+  // one extra byte for terminating NUL character.
+  b64_buf_size++;
+  // allocate space
+  char *b64_buf = (char *)calloc(1, b64_buf_size);
+  int output_len = oc_base64_encode((uint8_t *)byte_str, byte_str_size, (uint8_t *)b64_buf, b64_buf_size);
+  if (output_len < 0) {
+    free(b64_buf);
+    return;
+  }
+  // append NUL character to end of string.
+  b64_buf[output_len] = '\0';
+  PRINT("\"%s\"", b64_buf);
+  free(b64_buf);
+}
+
+/*
+ * Internal function called by oc_rep_print function
+ *
+ * oc_rep_print_format will take any oc_rep_t and print out the json equivalent
+ * of that value.  This function will be called recursively for nested objects.
+ *
+ * Currently does not handle OC_REP_ARRAY data type.
+ */
+void oc_rep_print_format(oc_rep_t *rep, int tab_depth, bool pretty_print) {
+  while (rep != NULL) {
+    if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+    PRINT("\"%s\" : ", oc_string(rep->name));
+    switch (rep->type) {
+    case OC_REP_NIL:
+    {
+      PRINT("null");
+      break;
+    }
+    case OC_REP_INT:
+    {
+      PRINT("%lld", rep->value.integer);
+      break;
+    }
+    case OC_REP_DOUBLE:
+    {
+      PRINT("%f", rep->value.double_p);
+      break;
+    }
+    case OC_REP_BOOL:
+    {
+      PRINT("%s", (rep->value.boolean) ? "true" : "false");
+      break;
+    }
+    case OC_REP_BYTE_STRING:
+    {
+      char *byte_string = NULL;
+      size_t byte_string_size;
+      oc_rep_get_byte_string(rep, oc_string(rep->name), &byte_string, &byte_string_size);
+      oc_rep_print_base64_encoded_byte_string(byte_string, byte_string_size);
+      break;
+    }
+    case OC_REP_STRING:
+    {
+      PRINT("\"%s\"", oc_string(rep->value.string));
+      break;
+    }
+    case OC_REP_OBJECT:
+    {
+      (pretty_print) ? PRINT("{\n") : PRINT("{");
+      oc_rep_print_format(rep->value.object, tab_depth + 1, pretty_print);
+      if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+      PRINT("}");
+      break;
+    }
+    case OC_REP_INT_ARRAY:
+    {
+      PRINT("[");
+      int64_t *int_array;
+      size_t int_array_size = 0;
+      oc_rep_get_int_array(rep, oc_string(rep->name), &int_array, &int_array_size);
+      for (size_t i = 0; i < int_array_size; i++) {
+        PRINT("%lld", int_array[i]);
+        if (i < int_array_size - 1) {
+          PRINT(", ");
+        }
+      }
+      PRINT("]");
+      break;
+    }
+    case OC_REP_DOUBLE_ARRAY:
+    {
+      PRINT("[");
+      double *double_array;
+      size_t double_array_size = 0;
+      oc_rep_get_double_array(rep, oc_string(rep->name), &double_array, &double_array_size);
+      for (size_t i = 0; i < double_array_size; i++) {
+        PRINT("%f", double_array[i]);
+        if (i < double_array_size - 1) {
+          PRINT(", ");
+        }
+      }
+      PRINT("]");
+      break;
+    }
+    case OC_REP_BOOL_ARRAY:
+    {
+      PRINT("[");
+      bool *bool_array;
+      size_t bool_array_size = 0;
+      oc_rep_get_bool_array(rep, oc_string(rep->name), &bool_array, &bool_array_size);
+      for (size_t i = 0; i < bool_array_size; i++) {
+        PRINT("%s", (bool_array[i]) ? "true" : "false");
+        if (i < bool_array_size - 1) {
+          PRINT(", ");
+        }
+      }
+      PRINT("]");
+      break;
+    }
+    case OC_REP_BYTE_STRING_ARRAY:
+    {
+      (pretty_print) ? PRINT("[\n") : PRINT("[");
+      oc_string_array_t byte_str_array;
+      size_t byte_str_array_size = 0;
+      oc_rep_get_byte_string_array(rep, oc_string(rep->name), &byte_str_array, &byte_str_array_size);
+      for (size_t i = 0; i < byte_str_array_size; i++) {
+        if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+        char *byte_string = oc_byte_string_array_get_item(byte_str_array, i);
+        size_t byte_string_size = oc_byte_string_array_get_item_size(byte_str_array, i);
+        oc_rep_print_base64_encoded_byte_string(byte_string, byte_string_size);
+        if (i < byte_str_array_size - 1) {
+          (pretty_print) ? PRINT(",\n") : PRINT(", ");
+        } else {
+          if (pretty_print) PRINT("\n");
+        }
+      }
+      if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+      PRINT("]");
+      break;
+    }
+    case OC_REP_STRING_ARRAY:
+    {
+      (pretty_print) ? PRINT("[\n") : PRINT("[");
+      oc_string_array_t str_array;
+      size_t str_array_size = 0;
+      oc_rep_get_string_array(rep, oc_string(rep->name), &str_array, &str_array_size);
+      for (size_t i = 0; i < str_array_size; i++) {
+        if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+        PRINT("\"%s\"", oc_string_array_get_item(str_array, i));
+        if (i < str_array_size - 1) {
+          (pretty_print) ? PRINT(",\n") : PRINT(", ");
+        } else {
+          if (pretty_print) PRINT("\n");
+        }
+      }
+      if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+      PRINT("]");
+      break;
+    }
+    case OC_REP_OBJECT_ARRAY:
+    {
+      PRINT("[");
+      oc_rep_t *rep_array = rep->value.object_array;
+      if (pretty_print)  PRINT("\n");
+      do {
+        oc_rep_t *rep_item = rep_array->value.object;
+        if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+        (pretty_print) ? PRINT("{\n") : PRINT("{");
+        oc_rep_print_format(rep_item, tab_depth + 2, pretty_print);
+        rep_array = rep_array->next;
+        if (rep_array) {
+          if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+          (pretty_print) ? PRINT("},\n") : PRINT("},");
+        }
+      } while (rep_array);
+      if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+      PRINT("}]");
+      break;
+    }
+    default:
+      PRINT("UNHANDLED TYPE 0x%.2X", rep->type);
+      break;
+    }
+    rep = rep->next;
+    if (rep != NULL) PRINT(",");
+    (pretty_print) ? PRINT("\n") : PRINT(" ");
+  }
+}
+
+void oc_rep_print(oc_rep_t *rep, bool pretty_print) {
+  (pretty_print) ? PRINT("{\n") : PRINT("{");
+  oc_rep_print_format(rep, 0, pretty_print);
+  (pretty_print) ? PRINT("}\n") : PRINT("}");
 }
