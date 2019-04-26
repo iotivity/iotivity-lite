@@ -18,6 +18,7 @@
 #include "port/oc_clock.h"
 #include <signal.h>
 #include <windows.h>
+//#include "server_introspection.dat.h"
 
 int quit = 0;
 
@@ -28,12 +29,15 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
+#ifdef OC_IDD_FILE
+  oc_set_introspection_file(0, "bar");
+  //oc_set_introspection_data(0, introspection_data, introspection_data_size);
+#endif
   oc_new_string(&name, "John's Light", 12);
   return ret;
 }

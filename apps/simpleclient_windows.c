@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_base64.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 #include <windows.h>
@@ -23,6 +24,204 @@ int quit = 0;
 
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
+
+#define OC_PRETTY_PRINT_TAB_CHARACTER "  "
+void oc_rep_print_tab(int tab_depth) {
+    for (int i = 0; i < tab_depth; i++) {
+        printf("%s", OC_PRETTY_PRINT_TAB_CHARACTER);
+    }
+}
+
+void oc_rep_print_format(oc_rep_t *rep, int tab_depth, bool pretty_print) {
+    while (rep != NULL) {
+        if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+        printf("\"%s\" : ", oc_string(rep->name));
+        switch (rep->type) {
+        case OC_REP_NIL:
+            printf("null");
+            break;
+        case OC_REP_INT:
+            printf("%lld", rep->value.integer);
+            break;
+        case OC_REP_DOUBLE:
+            printf("%f", rep->value.double_p);
+            break;
+        case OC_REP_BOOL:
+            printf("%s", (rep->value.boolean) ? "true" : "false");
+            break;
+        case OC_REP_BYTE_STRING:
+            char* byte_string = NULL;
+            size_t byte_string_size;
+            oc_rep_get_byte_string(rep, oc_string(rep->name), &byte_string, &byte_string_size);
+            // calculate the b64 encoded string size
+            size_t b64_buf_size = (byte_string_size / 3) * 4;
+            if (byte_string_size % 3 != 0) {
+                b64_buf_size += 4;
+                
+            }
+            // one extra byte for terminating NUL character.
+            b64_buf_size++;
+            // allocate space
+            char *b64_buf = (char *)calloc(1, b64_buf_size);
+            int output_len = oc_base64_encode(byte_string, byte_string_size, (uint8_t *)b64_buf, b64_buf_size);
+            if (output_len < 0) {
+                free(b64_buf);
+                break;
+            }
+            // append NUL character to end of string.
+            b64_buf[output_len] = '\0';
+            printf("\"%s\"", b64_buf);
+            free(b64_buf);
+            break;
+        case OC_REP_STRING:
+            printf("%s", oc_string(rep->value.string));
+            break;
+        case OC_REP_OBJECT:
+            (pretty_print) ? printf("{\n") : printf("{");
+            oc_rep_print_format(rep->value.object, tab_depth + 1, pretty_print);
+            if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+            printf("}");
+            break;
+        case OC_REP_INT_ARRAY:
+            printf("[");
+            int64_t *int_array;
+            size_t int_array_size = 0;
+            oc_rep_get_int_array(rep, oc_string(rep->name), &int_array, &int_array_size);
+            for (size_t i = 0; i < int_array_size; i++) {
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                printf("%lld", int_array[i]);
+                if (i < int_array_size - 1) {
+                    printf(", ");
+                }
+            }
+            printf("]");
+            break;
+        case OC_REP_DOUBLE_ARRAY:
+            printf("[");
+            double *double_array;
+            size_t double_array_size = 0;
+            oc_rep_get_double_array(rep, oc_string(rep->name), &double_array, &double_array_size);
+            for (size_t i = 0; i < double_array_size; i++) {
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                printf("%f", double_array[i]);
+                if (i < double_array_size - 1) {
+                    printf(", ");
+                }
+            }
+            printf("]");
+            break;
+        case OC_REP_BOOL_ARRAY:
+            printf("[");
+            bool *bool_array;
+            size_t bool_array_size = 0;
+            oc_rep_get_bool_array(rep, oc_string(rep->name), &bool_array, &bool_array_size);
+            for (size_t i = 0; i < bool_array_size; i++) {
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                printf("\"%s\"", (bool_array[i]) ? "true" : "false");
+                if (i < bool_array_size - 1) {
+                    printf(", ");
+                }
+            }
+            printf("]");
+            break;
+        case OC_REP_BYTE_STRING_ARRAY:
+            (pretty_print) ? printf("[\n") : printf("[");
+            oc_string_array_t byte_str_array;
+            size_t byte_str_array_size = 0;
+            oc_rep_get_byte_string_array(rep, oc_string(rep->name), &byte_str_array, &byte_str_array_size);
+            for (size_t i = 0; i < byte_str_array_size; i++) {
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                char *byte_string = oc_byte_string_array_get_item(byte_str_array, i);
+                size_t byte_string_size = oc_byte_string_array_get_item_size(byte_str_array, i);
+                // calculate the b64 encoded string size
+                size_t b64_buf_size = (byte_string_size / 3) * 4;
+                if (byte_string_size % 3 != 0) {
+                    b64_buf_size += 4;
+
+                }
+                // one extra byte for terminating NUL character.
+                b64_buf_size++;
+                // allocate space
+                char *b64_buf = (char *)calloc(1, b64_buf_size);
+                int output_len = oc_base64_encode(byte_string, byte_string_size, (uint8_t *)b64_buf, b64_buf_size);
+                if (output_len < 0) {
+                    free(b64_buf);
+                    break;
+                }
+                // append NUL character to end of string.
+                b64_buf[output_len] = '\0';
+                printf("\"%s\"", b64_buf);
+                free(b64_buf);
+
+                if (i < byte_str_array_size - 1) {
+                    (pretty_print) ? printf(",\n") : printf(", ");
+                }
+                else {
+                    if (pretty_print) printf("\n");
+                }
+            }
+            if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+            printf("]");
+            break;
+            break;
+        case OC_REP_STRING_ARRAY:
+            (pretty_print) ? printf("[\n") : printf("[");
+            oc_string_array_t str_array;
+            size_t str_array_size = 0;
+            oc_rep_get_string_array(rep, oc_string(rep->name), &str_array, &str_array_size);
+            for (size_t i = 0; i < str_array_size; i++) {
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                printf("\"%s\"", oc_string_array_get_item(str_array, i));
+                if (i < str_array_size - 1) {
+                    (pretty_print) ? printf(",\n") : printf(", ");
+                }  else {
+                    if (pretty_print) printf("\n");
+                }
+            }
+            if (pretty_print) oc_rep_print_tab(tab_depth + 1);
+            printf("]");
+            break;
+        case OC_REP_OBJECT_ARRAY:
+            oc_rep_t *rep_array = rep->value.object_array;
+            printf("[");
+            if (pretty_print)  printf("\n");
+            do {
+                oc_rep_t *rep_item = rep_array->value.object;
+                if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                (pretty_print) ? printf("{\n") : printf("{");
+                oc_rep_print_format(rep_item, tab_depth + 2, pretty_print);
+                rep_array = rep_array->next;
+                if (rep_array) {
+                    if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+                    (pretty_print) ? printf("},\n") : printf("},");
+                }
+            } while (rep_array);
+            if (pretty_print) oc_rep_print_tab(tab_depth + 2);
+            printf("}]");
+            break;
+        default:
+            printf("UNHANDLED TYPE 0x%.2X", rep->type);
+            break;
+        }
+        rep = rep->next;
+        if (rep != NULL) printf(",");
+        (pretty_print) ? printf("\n") : printf(" ");
+    }
+}
+
+void oc_rep_printf(oc_rep_t *rep, bool pretty_print) {
+    printf("{");
+    if (pretty_print) printf("\n");
+    if (pretty_print) {
+        oc_rep_print_format(rep, 0, pretty_print);
+    } else {
+        oc_rep_print_format(rep, 0, pretty_print);
+    }
+    printf("}");
+    if (pretty_print) printf("\n");
+}
+
+
 
 static int
 app_init(void)
@@ -33,9 +232,19 @@ app_init(void)
   return ret;
 }
 
-#define MAX_URI_LENGTH (30)
+#define MAX_URI_LENGTH (128)
 static char a_light[MAX_URI_LENGTH];
 static oc_endpoint_t *light_server;
+
+static char wk_introspection_uri[MAX_URI_LENGTH];
+static char introspection_data_uri[MAX_URI_LENGTH];
+static oc_endpoint_t *wk_introspection_server;
+typedef struct uri_info_s {
+    oc_string_t url;
+    oc_string_t protocol;
+} uri_info_t;
+
+static uri_info_t uri_info;
 
 static bool state;
 static int power;
@@ -45,7 +254,7 @@ static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  printf("Stopping OBSERVE\n");
   oc_stop_observe(a_light, light_server);
   return OC_EVENT_DONE;
 }
@@ -53,21 +262,21 @@ stop_observe(void *data)
 static void
 observe_light(oc_client_response_t *data)
 {
-  PRINT("OBSERVE_light:\n");
+  printf("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    printf("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%d\n", rep->value.boolean);
+      printf("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%lld\n", rep->value.integer);
+      printf("%lld\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
-      PRINT("%s\n", oc_string(rep->value.string));
+      printf("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
@@ -83,29 +292,29 @@ observe_light(oc_client_response_t *data)
 static void
 post2_light(oc_client_response_t *data)
 {
-  PRINT("POST2_light:\n");
+  printf("POST2_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response: CHANGED\n");
+    printf("POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    PRINT("POST response: CREATED\n");
+    printf("POST response: CREATED\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    printf("POST response code %d\n", data->code);
 
   oc_do_observe(a_light, light_server, NULL, &observe_light, LOW_QOS, NULL);
-  oc_set_delayed_callback(NULL, &stop_observe, 30);
-  PRINT("Sent OBSERVE request\n");
+  oc_set_delayed_callback(NULL, &stop_observe, 2);
+  printf("Sent OBSERVE request\n");
 }
 
 static void
 post_light(oc_client_response_t *data)
 {
-  PRINT("POST_light:\n");
+  printf("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response: CHANGED\n");
+    printf("POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    PRINT("POST response: CREATED\n");
+    printf("POST response: CREATED\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    printf("POST response code %d\n", data->code);
 
   if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
@@ -113,22 +322,22 @@ post_light(oc_client_response_t *data)
     oc_rep_set_int(root, power, 55);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      printf("Sent POST request\n");
     else
-      PRINT("Could not send POST request\n");
+      printf("Could not send POST request\n");
   } else
-    PRINT("Could not init POST request\n");
+    printf("Could not init POST request\n");
 }
 
 static void
 put_light(oc_client_response_t *data)
 {
-  PRINT("PUT_light:\n");
+  printf("PUT_light:\n");
 
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("PUT response: CHANGED\n");
+    printf("PUT response: CHANGED\n");
   else
-    PRINT("PUT response code %d\n", data->code);
+    printf("PUT response code %d\n", data->code);
 
   if (oc_init_post(a_light, light_server, NULL, &post_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
@@ -136,31 +345,31 @@ put_light(oc_client_response_t *data)
     oc_rep_set_int(root, power, 105);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      printf("Sent POST request\n");
     else
-      PRINT("Could not send POST request\n");
+      printf("Could not send POST request\n");
   } else
-    PRINT("Could not init POST request\n");
+    printf("Could not init POST request\n");
 }
 
 static void
 get_light(oc_client_response_t *data)
 {
-  PRINT("GET_light:\n");
+  printf("GET_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    printf("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%d\n", rep->value.boolean);
+      printf("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%lld\n", rep->value.integer);
+      printf("%lld\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
-      PRINT("%s\n", oc_string(rep->value.string));
+      printf("%s\n", oc_string(rep->value.string));
       if (oc_string_len(name))
         oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
@@ -179,12 +388,14 @@ get_light(oc_client_response_t *data)
     oc_rep_end_root_object();
 
     if (oc_do_put())
-      PRINT("Sent PUT request\n");
+      printf("Sent PUT request\n");
     else
-      PRINT("Could not send PUT request\n");
+      printf("Could not send PUT request\n");
   } else
-    PRINT("Could not init PUT request\n");
+    printf("Could not init PUT request\n");
 }
+
+static void get_wk_introspection(oc_client_response_t *data);
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
@@ -198,21 +409,21 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   int i;
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  PRINT("\n\nDISCOVERYCB %s %s %zd\n\n", anchor, uri,
+  printf("\n\nDISCOVERYCB %s %s %zd\n", anchor, uri,
         oc_string_array_get_allocated_size(types));
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    PRINT("\n\nDISCOVERED RES %s\n\n\n", t);
+    printf("DISCOVERED RES %s\n\n\n", t);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       light_server = endpoint;
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
-      PRINT("Resource %s hosted at endpoints:\n", a_light);
+      printf("Resource %s hosted at endpoints:\n", a_light);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         PRINTipaddr(*ep);
-        PRINT("\n");
+        printf("\n");
         ep = ep->next;
       }
 
@@ -220,15 +431,71 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
       return OC_STOP_DISCOVERY;
     }
+    if (strlen(t) == 20 && strncmp(t, "oic.wk.introspection", 20) == 0) {
+        wk_introspection_server = endpoint;
+        strncpy(wk_introspection_uri, uri, uri_len);
+        wk_introspection_uri[uri_len] = '\0';
+
+        printf("Resource %s hosted at endpoints:\n", wk_introspection_uri);
+        oc_endpoint_t *ep = endpoint;
+        while (ep != NULL) {
+            PRINTipaddr(*ep);
+            printf("\n");
+            ep = ep->next;
+        }
+
+        oc_do_get(wk_introspection_uri, wk_introspection_server, NULL, &get_wk_introspection, LOW_QOS, NULL);
+        return OC_STOP_DISCOVERY;
+    }
   }
   oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
 static void
+get_introspection_data(oc_client_response_t *data) {
+    printf("\n\nGET_introspection_data:\n");
+    oc_rep_t *rep = data->payload;
+    oc_rep_printf(rep, false);
+}
+
+static void
+get_wk_introspection(oc_client_response_t *data)
+{
+    printf("\n\nGET_wk_introspection:\n");
+    oc_rep_t *rep = data->payload;
+    oc_rep_printf(rep, false);
+
+    while (rep != NULL) {
+        switch (rep->type) {
+        case OC_REP_OBJECT_ARRAY:
+            oc_rep_t *rep_array = rep->value.object_array;
+            do {
+                oc_rep_t *rep_item = rep_array->value.object;
+                while (rep_item != NULL) {
+                    if (strncmp("url", oc_string(rep_item->name), oc_string_len(rep_item->name)) == 0) {
+                        //strncpy(introspection_data_uri, oc_string(rep_item->value.string), MAX_URI_LENGTH);
+                        strncpy(introspection_data_uri, "/oc/introspection", MAX_URI_LENGTH);
+                        introspection_data_uri[MAX_URI_LENGTH - 1] = '\0';
+                    }
+                    rep_item = rep_item->next;
+                }
+                rep_array = rep_array->next;
+            } while (rep_array);
+            break;
+        default:
+            break;
+        }
+        rep = rep->next;
+    }
+    oc_do_get(introspection_data_uri, wk_introspection_server, NULL, &get_introspection_data, LOW_QOS, NULL);
+    //oc_do_ip_discovery("core.light", &discovery, NULL);
+}
+
+static void
 issue_requests(void)
 {
-  oc_do_ip_discovery("core.light", &discovery, NULL);
+  oc_do_ip_discovery("oic.wk.introspection", &discovery, NULL);
 }
 
 static void
