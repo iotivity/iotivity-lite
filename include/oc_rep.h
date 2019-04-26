@@ -1291,6 +1291,54 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  */
 bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
 
+/**
+ * Tab character(s) used for oc_rep_to_json function when doing pretty_print
+ */
+#define OC_PRETTY_PRINT_TAB_CHARACTER "  "
+
+/**
+ * Convert an oc_rep_t to JSON encoded string.
+ *
+ * An oc_rep_t that is NULL or empty will return as an empty JSON object "{}".
+ *
+ * All binary data will be encoded to a string using base64 encoding.
+ *
+ * Converting binary data to a base64 encoded string is only done if the `buf`
+ * can hold the entire base64 string. If the resulting base64 string would
+ * overflow the buffer nothing is placed in the buffer.
+ *
+ * The function will not write more than buf_size bytes (including the
+ * terminating null byte ('\0')). If the output was truncated due to this limit
+ * then the return value is the number of characters (excluding the terminating
+ * null byte) which would have been written to the final string if enough space
+ * had been available. Thus, a return value of buf_size or more means that the
+ * output was truncated.
+ *
+ * @param[in]  rep the oc_rep_t object to be converted to JSON
+ * @param[out] buf a char array that will hold the JSON encoded string.
+ * @param[in]  buf_size the size of the passed in char array
+ * @param[in]  pretty_print if true extra white space and new lines will be
+ * added to the output making it more human readable. Note return value will
+ * differ if pretty_print value is changed.
+ *
+ * Example:
+ * ~~~{.c}
+ *     char * json;
+ *     size_t json_size;
+ *     json_size = oc_rep_to_json(rep, NULL, 0, true);
+ *     json = (char *)malloc(json_size + 1);
+ *     oc_rep_to_json(rep, json, json_size + 1, true);
+ *     printf("%s", rep);
+ *     free(json);
+ * ~~~
+ *
+ * @return the number of characters printed (excluding the null byte used to end
+ * output to strings).
+ *
+ */
+size_t oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size,
+                      bool pretty_print);
+
 #ifdef __cplusplus
 }
 #endif
