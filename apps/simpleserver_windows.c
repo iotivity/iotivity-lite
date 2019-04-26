@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_introspection.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 #include <windows.h>
@@ -119,6 +120,7 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
+  oc_create_introspection_resource(0);
 }
 
 static void
