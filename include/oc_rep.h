@@ -1268,6 +1268,20 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  */
 bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
 
+/**
+ * Print the contents of oc_rep_t to stdout
+ *
+ * byte strings will be base64 encoded and then printed as a string.
+ *
+ * Currently OC_REP_ARRAY data type will not be printed.
+ *
+ * @param rep the oc_rep_t to print to stdout
+ * @param pretty_print if set to true new lines and tabs will be added to the
+ *                     printed output to make if more human readable. Otherwise
+ *                     it will all be printed on a single line.
+ */
+void oc_rep_print(oc_rep_t *rep, bool pretty_print);
+
 #ifdef __cplusplus
 }
 #endif
