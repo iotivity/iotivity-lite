@@ -45,6 +45,18 @@ TEST(TestRep, OCRepEncodedPayloadSizeTooSmall) {
     EXPECT_EQ(-1, oc_rep_get_encoded_payload_size());
 }
 
+TEST(TestRep, RepToJson_null)
+{
+  oc_rep_t *rep = NULL;
+  EXPECT_EQ(2, oc_rep_to_json(rep, NULL, 0, false));
+  EXPECT_EQ(4, oc_rep_to_json(rep, NULL, 0, true));
+  char buf[5];
+  EXPECT_EQ(2, oc_rep_to_json(rep, buf, 5, false));
+  EXPECT_STREQ("{}", buf);
+  EXPECT_EQ(4, oc_rep_to_json(rep, buf, 5, true));
+  EXPECT_STREQ("{\n}\n", buf);
+
+}
 /*
  * Most code done here is to enable testing without passing the code through the
  * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
@@ -81,6 +93,22 @@ TEST(TestRep, OCRepSetGetDouble)
     EXPECT_FALSE(oc_rep_get_double(rep, NULL, &pi_out));
     EXPECT_FALSE(oc_rep_get_double(rep, "pi", NULL));
     EXPECT_FALSE(oc_rep_get_double(rep, "no_a_key", &pi_out));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    EXPECT_STREQ("{\"pi\":3.141590}", json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    EXPECT_STREQ("{\n  \"pi\" : 3.141590\n}\n", json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -128,6 +156,18 @@ TEST(TestRep, OCRepSetGetInt)
     EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
     EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
     EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+
+    char json_buf[75];
+    EXPECT_EQ(57, oc_rep_to_json(rep, json_buf, 75, false));
+    EXPECT_STREQ("{\"ultimate_answer\":10000000000,\"negative\":-1024,\"zero\":0}", json_buf);
+    const char json[] = "{\n"
+        "  \"ultimate_answer\" : 10000000000,\n"
+        "  \"negative\" : -1024,\n"
+        "  \"zero\" : 0\n"
+        "}\n";
+    EXPECT_EQ(74, oc_rep_to_json(rep, json_buf, 75, true));
+    EXPECT_STREQ(json, json_buf);
+
     oc_free_rep(rep);
 }
 
@@ -193,6 +233,28 @@ TEST(TestRep, OCRepSetGetUint)
     EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
     EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
     EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    EXPECT_STREQ("{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}", json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"ultimate_answer\" : 42,\n"
+        "  \"larger_than_int\" : 3000000000,\n"
+        "  \"zero\" : 0\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -236,6 +298,28 @@ TEST(TestRep, OCRepSetGetBool)
     EXPECT_FALSE(oc_rep_get_bool(rep, NULL, &true_flag_out));
     EXPECT_FALSE(oc_rep_get_bool(rep, "true_flag", NULL));
     EXPECT_FALSE(oc_rep_get_bool(rep, "not_a_key", &true_flag_out));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"true_flag\":true,\"false_flag\":false}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"true_flag\" : true,\n"
+        "  \"false_flag\" : false\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -298,6 +382,29 @@ TEST(TestRep, OCRepSetGetTextString)
     EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", NULL, &str_len));
     EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", &hal9000_out, NULL));
     EXPECT_FALSE(oc_rep_get_string(rep, "not_a_key", &hal9000_out, &str_len));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"hal9000\":\"Dave\","
+        "\"ru_character_set\":\"Привет, мир\"}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+      "{\n"
+      "  \"hal9000\" : \"Dave\",\n"
+      "  \"ru_character_set\" : \"Привет, мир\"\n"
+      "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -346,6 +453,27 @@ TEST(TestRep, OCRepSetGetByteString)
     EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string", NULL, &str_len));
     EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string", &test_byte_string_out, NULL));
     EXPECT_FALSE(oc_rep_get_byte_string(rep, "not_a_key", &test_byte_string_out, &str_len));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"test_byte_string\":\"AQIDBAIA\"}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"test_byte_string\" : \"AQIDBAIA\"\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -389,6 +517,27 @@ TEST(TestRep, OCRepSetGetIntArray)
     EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", NULL, &fib_len));
     EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, NULL));
     EXPECT_FALSE(oc_rep_get_int_array(rep, "not_a_key", &fib_out, &fib_len));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89,10000000000]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -437,6 +586,26 @@ TEST(TestRep, OCRepAddGetIntArray)
     for (size_t i = 0; i < fib_len; ++i ) {
       EXPECT_EQ(fib[i], fib_out[i]);
     }
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
 
     oc_free_rep(rep);
 }
@@ -489,6 +658,26 @@ TEST(TestRep, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
       EXPECT_EQ(fib[i], fib_out[i]);
     }
 
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -532,6 +721,27 @@ TEST(TestRep, OCRepSetGetBoolArray)
     EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", NULL, &flip_len));
     EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", &flip_out, NULL));
     EXPECT_FALSE(oc_rep_get_bool_array(rep, "not_a_key", &flip_out, &flip_len));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"flip\" : [false, false, true, false, false\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -582,6 +792,26 @@ TEST(TestRep, OCRepAddGetBoolArray)
       EXPECT_EQ(flip[i], flip_out[i]);
     }
 
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"flip\" : [false, false, true, false, false\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -625,6 +855,28 @@ TEST(TestRep, OCRepSetGetDoubleArray)
     EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", NULL, &math_constants_len));
     EXPECT_FALSE(oc_rep_get_double_array(rep, "math_constants", &math_constants_out, NULL));
     EXPECT_FALSE(oc_rep_get_double_array(rep, "not_a_key", &math_constants_out, &math_constants_len));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
+        "}\n";
+
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -672,6 +924,27 @@ TEST(TestRep, OCRepAddGetDoubleArray)
     for (size_t i = 0; i < math_constants_len; ++i ) {
       EXPECT_EQ(math_constants[i], math_constants_out[i]);
     }
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
+        "}\n";
+
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
 
     oc_free_rep(rep);
 }
@@ -732,6 +1005,30 @@ TEST(TestRep, OCRepSetGetObject)
     EXPECT_TRUE(oc_rep_get_string(my_object_out, "c", &c_out, &c_out_size));
     EXPECT_EQ(5, c_out_size);
     EXPECT_STREQ("three", c_out);
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"my_object\" : {\n"
+        "    \"a\" : 1,\n"
+        "    \"b\" : false,\n"
+        "    \"c\" : \"three\"\n"
+        "  }\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
 
     oc_free_rep(rep);
 }
@@ -837,6 +1134,40 @@ TEST(TestRep, OCRepSetGetObjectArray)
     EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "job", &job_out, &job_out_size));
     EXPECT_EQ(strlen("AI computer"), job_out_size);
     EXPECT_STREQ("AI computer", job_out);
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"space_2001\":[{\"name\":\"Dave Bowman\","
+        "\"job\":\"astronaut\"},{\"name\":\"Frank Poole\",\"job\":\"astronaut\"}"
+        ",{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"space_2001\" : [\n"
+        "    {\n"
+        "      \"name\" : \"Dave Bowman\",\n"
+        "      \"job\" : \"astronaut\"\n    },\n"
+        "    {\n"
+        "      \"name\" : \"Frank Poole\",\n"
+        "      \"job\" : \"astronaut\"\n"
+        "    },\n"
+        "    {\n"
+        "      \"name\" : \"Hal 9000\",\n"
+        "      \"job\" : \"AI computer\"\n"
+        "    }]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -896,6 +1227,33 @@ TEST(TestRep, OCRepAddGetByteStringArray)
     EXPECT_EQ(memcmp(ba3, oc_byte_string_array_get_item(barray_out, 2), oc_byte_string_array_get_item_size(barray_out, 2)), 0);
     EXPECT_EQ(sizeof(ba4), oc_byte_string_array_get_item_size(barray_out, 3));
     EXPECT_EQ(memcmp(ba4, oc_byte_string_array_get_item(barray_out, 3), oc_byte_string_array_get_item_size(barray_out, 3)), 0);
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"barray\":[\"AQECAwQFBg==\","
+        "\"AQECAwUIEyE0VYk=\",\"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\"AAD/AAA=\"]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"barray\" : [\n"
+        "    \"AQECAwQFBg==\",\n"
+        "    \"AQECAwUIEyE0VYk=\",\n"
+        "    \"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\n"
+        "    \"AAD/AAA=\"\n"
+        "  ]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
+
     oc_free_rep(rep);
 }
 
@@ -950,6 +1308,35 @@ TEST(TestRep, OCRepSetGetStringArray)
     EXPECT_STREQ(str2, oc_string_array_get_item(quotes_out, 2));
     EXPECT_EQ(strlen(str3), oc_string_array_get_item_size(quotes_out, 3));
     EXPECT_STREQ(str3, oc_string_array_get_item(quotes_out, 3));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"quotes\":"
+        "[\"Do not take life too seriously. You will never get out of it alive.\","
+        "\"All generalizations are false, including this one.\","
+        "\"Those who believe in telekinetics, raise my hand.\","
+        "\"I refuse to join any club that would have me as a member.\"]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"quotes\" : [\n"
+        "    \"Do not take life too seriously. You will never get out of it alive.\",\n"
+        "    \"All generalizations are false, including this one.\",\n"
+        "    \"Those who believe in telekinetics, raise my hand.\",\n"
+        "    \"I refuse to join any club that would have me as a member.\",\n"
+        "  ]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
 
     oc_free_rep(rep);
 }
@@ -1009,6 +1396,35 @@ TEST(TestRep, OCRepAddGetStringArray)
     EXPECT_STREQ(str2, oc_string_array_get_item(quotes_out, 2));
     EXPECT_EQ(strlen(str3), oc_string_array_get_item_size(quotes_out, 3));
     EXPECT_STREQ(str3, oc_string_array_get_item(quotes_out, 3));
+
+    char * json;
+    size_t json_size;
+    json_size = oc_rep_to_json(rep, NULL, 0, false);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, false);
+    const char non_pretty_json[] = "{\"quotes\":"
+        "[\"Do not take life too seriously. You will never get out of it alive.\","
+        "\"All generalizations are false, including this one.\","
+        "\"Those who believe in telekinetics, raise my hand.\","
+        "\"I refuse to join any club that would have me as a member.\"]}";
+    EXPECT_STREQ(non_pretty_json, json);
+    free(json);
+    json = NULL;
+    json_size = oc_rep_to_json(rep, NULL, 0, true);
+    json = (char *)malloc(json_size + 1);
+    oc_rep_to_json(rep, json, json_size + 1, true);
+    const char pretty_json[] =
+        "{\n"
+        "  \"quotes\" : [\n"
+        "    \"Do not take life too seriously. You will never get out of it alive.\",\n"
+        "    \"All generalizations are false, including this one.\",\n"
+        "    \"Those who believe in telekinetics, raise my hand.\",\n"
+        "    \"I refuse to join any club that would have me as a member.\",\n"
+        "  ]\n"
+        "}\n";
+    EXPECT_STREQ(pretty_json, json);
+    free(json);
+    json = NULL;
 
     oc_free_rep(rep);
 }
