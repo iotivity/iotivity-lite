@@ -55,7 +55,6 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-void oc_sec_reset();
 
 #ifdef __cplusplus
 }

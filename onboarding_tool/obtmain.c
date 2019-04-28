@@ -85,8 +85,9 @@ display_menu(void)
   PRINT("[7] Provision ACE2\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[8] RESET device\n");
+  PRINT("[9] RESET OBT\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[9] Exit\n");
+  PRINT("[10] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
@@ -232,6 +233,16 @@ add_device_to_list(oc_uuid_t *uuid, oc_list_t list)
   oc_list_add(list, device);
 
   return true;
+}
+
+void
+empty_device_list(oc_list_t list)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_pop(list);
+  while (device != NULL) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(list);
+  }
 }
 /* End of app utility functions */
 
@@ -885,6 +896,15 @@ main(void)
       reset_device();
       break;
     case 9:
+      otb_mutex_lock(app_sync_lock);
+      oc_reset();
+      oc_obt_shutdown();
+      empty_device_list(owned_devices);
+      empty_device_list(unowned_devices);
+      oc_obt_init();
+      otb_mutex_unlock(app_sync_lock);
+      break;
+    case 10:
       handle_signal(0);
       break;
     default:
