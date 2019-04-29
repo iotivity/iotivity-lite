@@ -98,6 +98,8 @@ bool oc_get_con_res_announced(void);
 */
 void oc_set_con_res_announced(bool announce);
 
+void oc_reset();
+
 /** Server side */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
