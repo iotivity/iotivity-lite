@@ -535,6 +535,7 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 
 %rename(getConResAnnounced) oc_get_con_res_announced;
 %rename(setConResAnnounce) oc_set_con_res_announced;
+%rename(reset) oc_reset;
 
 // server side
 %rename(newResource) oc_new_resource;
