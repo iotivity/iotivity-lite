@@ -65,6 +65,7 @@ public class ObtMain {
         menu.append("[7] Provision ACE2\n");
         menu.append("------------------------------------------------\n");
         menu.append("[8] RESET device\n");
+        menu.append("[9] RESET OBT\n");
         menu.append("------------------------------------------------\n");
         menu.append("[9] Exit\n");
         menu.append("################################################\n");
@@ -498,6 +499,13 @@ public class ObtMain {
         }
     }
 
+    public static void resetOBT() {
+        OCMain.reset();
+        obt.shutdown();
+        ownedDevices.clear();
+        unownedDevices.clear();
+        obt = new OcObt();
+    }
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
@@ -552,6 +560,9 @@ public class ObtMain {
                 resetDevice();
                 break;
             case 9:
+                resetOBT();
+                break;
+            case 10:
                 quit = true;
                 break;
             default:
