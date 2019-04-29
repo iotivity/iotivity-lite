@@ -8,7 +8,6 @@
 
 %include "iotivity.swg"
 %include "oc_ri.i"
-%include "oc_introspection.i"
 %import "oc_collection.i"
 %import "oc_clock.i"
 %import "oc_endpoint.i"
