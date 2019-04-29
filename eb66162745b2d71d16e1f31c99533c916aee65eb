@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_53c4da3f",
+        "filename": "swig/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "add oc_introspection to the list of built files and remove oc_introspection from include list in oc_acl.i",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f3c6c648",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "This should not be included as part of oc_api.i instead it should be add to the make file script.",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_93b662db",
+        "filename": "swig/swig_interfaces/oc_cred.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "\"security/oc_cred.h\" is an internal header file.  We should not be exposing it to developers in Java or C code.\n\nBy exposing it we are implying the APIs are stable and will not be changed. This creates extra maintenance burden if they APIs need to be updated. We don\u0027t want to add that maintenance burden.\n\nAt this point in time we don\u0027t intend oc_cred.h to be a public API.  Please work with Kishen if there are APIs in oc_cred.h that need to be made public.",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_73bbd6c4",
+        "filename": "swig/swig_interfaces/oc_doxm.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "\"security/oc_doxm.h\" is an internal header file.  We should not be exposing it to developers in Java or C code.\n\nBy exposing it we are implying the APIs are stable and will not be changed. This creates extra maintenance burden if they APIs need to be updated. We don\u0027t want to add that maintenance burden.\n\nAt this point in time we don\u0027t intend oc_doxm.h to be a public API.  Please work with Kishen if there are APIs in oc_doxm.h that need to be made public.",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_13ca524f",
+        "filename": "swig/swig_interfaces/oc_introspection.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "Using this assumes that C build flag OC_IDD_FILE has been used when building. Please add a comment indicating this.",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b3b55ecf",
+        "filename": "swig/swig_interfaces/oc_introspection.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "To the best of my knowledge its not possible to use introspection without exposing the oc_create_introspection_resource function.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 7
+      },
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d3b0eadf",
+        "filename": "swig/swig_interfaces/oc_pstat.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-04-29T16:56:51Z",
+      "side": 1,
+      "message": "\"security/oc_pstat.h\" is an internal header file.  We should not be exposing it to developers in Java or C code.\n\nBy exposing it we are implying the APIs are stable and will not be changed. This creates extra maintenance burden if they APIs need to be updated. We don\u0027t want to add that maintenance burden.\n\nAt this point in time we don\u0027t intend oc_pstat.h to be a public API.  Please work with Kishen if there are APIs in oc_ptat.h that need to be made public.",
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
