@@ -1,7 +1,10 @@
 /* File oc_endpoint.i */
 %module OCEndpointUtil
+%include "stdint.i"
+%include "arrays_java.i"
 
 %include "iotivity.swg"
+%import "oc_uuid.i"
 
 %pragma(java) jniclasscode=%{
   static {
