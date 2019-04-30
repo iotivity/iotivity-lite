@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_334b0eb2",
+        "filename": "swig/apps/oc/java_oc_onboarding_tool/src/java_oc_onboarding_tool/ObtMain.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-04-30T16:22:29Z",
+      "side": 1,
+      "message": "should be 10... i missed this earlier.",
+      "revId": "bf36ce0c56bcd740bc86470a70448df7ef699270",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
