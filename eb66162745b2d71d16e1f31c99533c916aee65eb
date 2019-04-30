@@ -110,6 +110,30 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_f33b6636",
+        "filename": "swig/swig_interfaces/oc_introspection.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-04-30T00:47:49Z",
+      "side": 1,
+      "message": "This is called internally in the native layer and not by the application. So, it should be OK to not expose it to Java.",
+      "parentUuid": "1a494da4_b3b55ecf",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 7
+      },
+      "revId": "eb66162745b2d71d16e1f31c99533c916aee65eb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_d3b0eadf",
         "filename": "swig/swig_interfaces/oc_pstat.i",
         "patchSetId": 1
