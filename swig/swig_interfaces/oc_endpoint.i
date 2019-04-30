@@ -1,7 +1,11 @@
 /* File oc_endpoint.i */
 %module OCEndpointUtil
 
+%include "stdint.i"
+%include "arrays_java.i"
 %include "iotivity.swg"
+
+%import "oc_uuid.i"
 
 %pragma(java) jniclasscode=%{
   static {
@@ -20,6 +24,8 @@
 
 /*******************Begin oc_endpoint.h*********************/
 %rename(OCEndpoint) oc_endpoint_t;
+// must use the oc_endpoint_set_di function to set di.
+%immutable oc_endpoint_t::di;
 // transport flags are pulled from hand generated class as `int` not `enum`
 %ignore transport_flags;
 //%rename (OCTransportFlags) transport_flags;
@@ -37,11 +43,13 @@
 %rename(newEndpoint) oc_new_endpoint;
 %rename(freeEndpoint) oc_free_endpoint;
 %rename(setDi) oc_endpoint_set_di;
+/* TODO check the to_string function output */
 %apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
 %rename(toString) oc_endpoint_to_string;
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
+/* TODO check the string_to_endpoint function output */
 %rename(stringToEndpoint) oc_string_to_endpoint;
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(compare) oc_endpoint_compare;
