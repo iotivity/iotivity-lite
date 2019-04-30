@@ -25,6 +25,7 @@
 #error "Unsupported OS"
 #endif
 #include "util/oc_list.h"
+#include <jni.h>
 
 #if defined (_WIN32)
 HANDLE jni_poll_event_thread;

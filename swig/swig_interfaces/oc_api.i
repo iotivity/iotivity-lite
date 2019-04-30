@@ -54,6 +54,9 @@ static jclass cls_OCRequestHandler;
 static jclass cls_OCResponseHandler;
 static jclass cls_OCTriggerHandler;
 
+
+jclass cls_OCCoreAddDeviceHandler;
+jclass cls_OCCoreInitPlatformHandler;
 jclass cls_OCEndpoint;
 jclass cls_OCUuid;
 jclass cls_OCObtDiscoveryHandler;
@@ -227,6 +230,16 @@ int jni_main_init(const oc_handler_t *handler)
   assert(ocClientResponseClass);
   cls_OCClientResponse = (jclass)(JCALL1(NewGlobalRef, jenv, ocClientResponseClass));
   JCALL1(DeleteLocalRef, jenv, ocClientResponseClass);
+
+  jclass ocCoreAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCoreAddDeviceHandler");
+  assert(ocCoreAddDeviceHandlerClass);
+  cls_OCCoreAddDeviceHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreAddDeviceHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCoreAddDeviceHandlerClass);
+
+  jclass ocCoreInitPlatformHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCoreInitPlatformHandler");
+  assert(ocCoreInitPlatformHandlerClass);
+  cls_OCCoreInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreInitPlatformHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCoreInitPlatformHandlerClass);
 
   jclass ocConWriteHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCConWriteHandler");
   assert(ocConWriteHandlerClass);
