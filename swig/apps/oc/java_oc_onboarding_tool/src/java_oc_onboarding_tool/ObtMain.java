@@ -67,7 +67,7 @@ public class ObtMain {
         menu.append("[8] RESET device\n");
         menu.append("[9] RESET OBT\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[9] Exit\n");
+        menu.append("[10] Exit\n");
         menu.append("################################################\n");
         menu.append("\nSelect option: ");
         System.out.print(menu);
