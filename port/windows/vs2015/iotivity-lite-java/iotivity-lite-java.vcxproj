@@ -179,6 +179,7 @@
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_api_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_clock_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_collection_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_core_res_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_endpoint_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_obt_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_pki_wrap.c" />

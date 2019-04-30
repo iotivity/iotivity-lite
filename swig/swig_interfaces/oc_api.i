@@ -228,6 +228,16 @@ int jni_main_init(const oc_handler_t *handler)
   cls_OCClientResponse = (jclass)(JCALL1(NewGlobalRef, jenv, ocClientResponseClass));
   JCALL1(DeleteLocalRef, jenv, ocClientResponseClass);
 
+  jclass ocCoreAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCoreAddDeviceHandler");
+  assert(ocCoreAddDeviceHandlerClass);
+  cls_OCCoreAddDeviceHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreAddDeviceHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCoreAddDeviceHandlerClass);
+
+  jclass ocCoreInitPlatformHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCoreInitPlatformHandler");
+  assert(ocCoreInitPlatformHandlerClass);
+  cls_OCCoreInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreInitPlatformHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCoreInitPlatformHandlerClass);
+
   jclass ocConWriteHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCConWriteHandler");
   assert(ocConWriteHandlerClass);
   cls_OCConWriteHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocConWriteHandlerClass));

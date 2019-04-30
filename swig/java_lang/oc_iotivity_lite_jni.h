@@ -25,6 +25,7 @@
 #error "Unsupported OS"
 #endif
 #include "util/oc_list.h"
+#include <jni.h>
 
 #if defined (_WIN32)
 HANDLE jni_poll_event_thread;
@@ -133,5 +134,8 @@ static void ReleaseJNIEnv(jint getEnvResult) {
         JCALL0(DetachCurrentThread, jvm);
     }
 }
+
+static jclass cls_OCCoreAddDeviceHandler;
+static jclass cls_OCCoreInitPlatformHandler;
 
 #endif /* OC_IOTIVITY_LITE_H */
