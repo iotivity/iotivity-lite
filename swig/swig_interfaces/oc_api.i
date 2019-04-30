@@ -447,6 +447,16 @@ int jni_oc_add_device(const char *uri, const char *rt, const char *name,
 }
 %}
 
+%rename(addDevice) jni_oc_add_device1;
+%inline %{
+int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
+                       const char *spec_version, const char *data_model_version,
+                       oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  return oc_add_device(uri, rt, name, spec_version, data_model_version, add_device_cb, jcb);
+}
+%}
+
 /* Code and typemaps for mapping the oc_init_platform to the java OCInitPlatformHandler */
 %{
 void jni_oc_init_platform_callback(void *user_data)
@@ -484,6 +494,13 @@ void jni_oc_init_platform_callback(void *user_data)
 int jni_oc_init_platform(const char *mfg_name) {
   OC_DBG("JNI: %s\n", __func__);
   return oc_init_platform(mfg_name, NULL, NULL);
+}
+%}
+%rename(initPlatform) jni_oc_init_platform1;
+%inline %{
+int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platform_cb, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  return oc_init_platform(mfg_name, init_platform_cb, jcb);
 }
 %}
 
