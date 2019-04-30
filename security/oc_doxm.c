@@ -89,9 +89,9 @@ oc_sec_encode_doxm(size_t device)
     oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
 /* oxms */
 #ifdef OC_PKI
-  oc_rep_set_int_array(root, oxms, oxms, 2);
+  oc_rep_set_int_array(root, oxms, oxms, 3);
 #else  /* OC_PKI */
-  oc_rep_set_int_array(root, oxms, oxms, 1);
+  oc_rep_set_int_array(root, oxms, oxms, 2);
 #endif /* !OC_PKI */
   /* oxmsel */
   oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);
