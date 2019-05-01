@@ -147,5 +147,6 @@ public class MyInitHandler implements OCMainInitHandler {
     @Override
     public void requestEntry() {
         System.out.println("inside MyInitHandler.requestEntry()");
+        System.out.println("\tDeviceId = " + OCUuidUtil.uuidToString(device.getId()));
     }
 }

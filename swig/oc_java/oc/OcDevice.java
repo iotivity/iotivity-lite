@@ -47,6 +47,10 @@ public class OcDevice {
         return dataModelVersion;
     }
 
+    public OCUuid getId() {
+        return OCCoreRes.getDeviceId(deviceIndex);
+    }
+
     public void addResource(OcResource resource) {
         if (resource != null) {
             if (resource instanceof OcCollection) {
