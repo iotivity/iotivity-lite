@@ -57,14 +57,6 @@ extern "C"
 */
 void oc_set_introspection_file(size_t device, const char* filename);
 
-
-/**
-  @brief Creation of the oic.wk.introspection resource.
-
-  @param device index of the device to which the resource is to be created
-*/
-void oc_create_introspection_resource(size_t device);
-
 #ifdef __cplusplus
 }
 #endif
