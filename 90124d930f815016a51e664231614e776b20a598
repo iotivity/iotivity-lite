@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_734f5693",
+        "filename": "swig/oc_java/OCCoreAddDeviceHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-01T19:26:23Z",
+      "side": 1,
+      "message": "considering not using this instead using the already present OCAddDeviceHandler.",
+      "revId": "90124d930f815016a51e664231614e776b20a598",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d3446a76",
+        "filename": "swig/oc_java/OCCoreInitPlatformHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-01T19:26:23Z",
+      "side": 1,
+      "message": "I am tempted to switch from OCCoreInitPlatformHandler to OCInitPlatformHandler.\n\nIn the JNI it will be converted to oc_core_init_platform_cb_t.",
+      "revId": "90124d930f815016a51e664231614e776b20a598",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
