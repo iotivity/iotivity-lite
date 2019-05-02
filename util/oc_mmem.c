@@ -175,7 +175,7 @@ _oc_mmem_free(
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
-              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int *)m->next->ptr);
+              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int64_t *)m->next->ptr);
       break;
     case DOUBLE_POOL:
       memmove(m->ptr, m->next->ptr,
