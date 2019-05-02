@@ -500,7 +500,7 @@ public class ObtMain {
     }
 
     public static void resetOBT() {
-        OCMain.reset();
+        obtPlatform.reset();
         obt.shutdown();
         ownedDevices.clear();
         unownedDevices.clear();

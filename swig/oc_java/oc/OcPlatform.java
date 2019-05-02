@@ -40,6 +40,10 @@ public class OcPlatform {
         return OCMain.initPlatform(mfgName);
     }
 
+    public void reset() {
+        OCMain.reset();
+    }
+
     public int addDevice(OcDevice device) {
         int ret = -1;
 
