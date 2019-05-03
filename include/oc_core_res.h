@@ -20,6 +20,7 @@
 #define OC_CORE_RES_H
 
 #include "oc_ri.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,7 @@ extern "C" {
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
-typedef struct {
+typedef struct oc_platform_info_t {
   oc_uuid_t pi;
   oc_string_t mfg_name;
   oc_core_init_platform_cb_t init_platform_cb;

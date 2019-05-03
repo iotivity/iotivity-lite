@@ -18,7 +18,7 @@
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_discovery.h"
-#include "oc_introspection.h"
+#include "oc_introspection_internal.h"
 #include "oc_rep.h"
 
 #ifdef OC_SECURITY
