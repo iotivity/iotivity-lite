@@ -17,50 +17,52 @@
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_introspection.h"
+#include "oc_introspection_internal.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
 
-#define MAX_FILENAME_LENGTH 128
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "port/oc_assert.h"
+static oc_introspect_info_t *introspection_list;
+#else /* OC_DYNAMIC_ALLOCATION */
+static oc_introspect_info_t introspection_list[OC_MAX_NUM_DEVICES];
+#endif
 
-#ifdef OC_IDD_FILE
+#define MAX_FILENAME_LENGTH 128
 
 #define MAX_TAG_LENGTH 20
 
 static void
 gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 {
-  int idd_tag_len =
-    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
-  idd_tag_len =
-    (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
-  idd_tag[idd_tag_len] = '\0';
+    int idd_tag_len =
+        snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%zd", name, device_index);
+    idd_tag_len =
+        (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
+    idd_tag[idd_tag_len] = '\0';
 }
 
-static int
-get_IDD_filename(size_t device_index, char *filename)
-{
-  char idd_tag[MAX_TAG_LENGTH];
-  gen_idd_tag("IDD", device_index, idd_tag);
-  int ret = oc_storage_read(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  PRINT("get_IDD_filename: oc_storage_read %d\n", ret);
-  if (ret <= 0) {
-    strcpy(filename, "server_introspection.dat");
-  }
-  PRINT("get_IDD_filename: returning %s\n", filename);
-  return ret;
-}
-
+#ifndef OC_IDD_FILE
+#include "server_introspection.dat.h"
+#else /* OC_IDD_FILE */
 void
 oc_set_introspection_file(size_t device, const char *filename)
 {
-  char idd_tag[MAX_TAG_LENGTH];
-  gen_idd_tag("IDD", device, idd_tag);
-  long ret =
-    oc_storage_write(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  if (ret == 0) {
-    OC_ERR("oc_set_introspection_file: could not set %s in store\n", filename);
-  }
+    introspection_list[device].source = OC_INTROSPECT_FILE;
+    strncpy(introspection_list[device].filename, filename, MAX_INTROSPECT_FILENAME_LENGTH);
+    introspection_list[device].filename[MAX_INTROSPECT_FILENAME_LENGTH] = '\0';
+}
+
+void oc_set_introspection_data(size_t device, uint8_t* IDD, size_t IDD_size)
+{
+    introspection_list[device].source = OC_INTROSPECT_BYTE_ARRAY;
+    introspection_list[device].filename[0] = '\0';
+#ifdef OC_SECURITY
+    char idd_tag[MAX_TAG_LENGTH];
+    gen_idd_tag("IDD", device, idd_tag);
+    oc_storage_write(idd_tag, IDD, IDD_size);
+#endif /* OC_SECURITY */
 }
 
 static long
@@ -86,7 +88,6 @@ static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
-
   fp = fopen(store, "rb");
   if (!fp) {
     OC_ERR("IDD_storage_size file %s does not open\n", store);
@@ -97,34 +98,6 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
   fclose(fp);
   return size;
 }
-
-#else /*OC_IDD_FILE*/
-
-#include "server_introspection.dat.h"
-
-static int
-get_IDD_filename(size_t index, char *filename)
-{
-  (void)index;
-  (void)filename;
-  return 0;
-}
-
-static long
-IDD_storage_size(const char *store)
-{
-  (void)store;
-  return introspection_data_size;
-}
-
-static size_t
-IDD_storage_read(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  memcpy(buf, introspection_data, size);
-  return size;
-}
-
 #endif /*OC_IDD_FILE*/
 
 static void
@@ -137,24 +110,63 @@ oc_core_introspection_data_handler(oc_request_t *request,
   OC_DBG("in oc_core_introspection_data_handler");
 
   size_t index = request->resource->device;
-  char filename[MAX_FILENAME_LENGTH];
-  long filesize;
 
-  get_IDD_filename(index, filename);
+  long filesize = 0;
+  switch (introspection_list[index].source) {
+#ifndef OC_IDD_FILE
+  case OC_INTROSPECT_DEFAULT:
+      if (introspection_data_size < OC_MAX_APP_DATA_SIZE) {
+          memcpy(request->response->response_buffer->buffer, introspection_data, introspection_data_size);
+      }
+      break;
+  case OC_INTROSPECT_FILE:
+      break;
+#else /* OC_IDD_FILE */
+  case OC_INTROSPECT_FILE:
+  {
+      char filename[MAX_FILENAME_LENGTH] = "\0";
+      // retrive file name
+      if (strlen(introspection_list[index].filename) > 0) {
+          strncpy(filename, introspection_list[index].filename, MAX_FILENAME_LENGTH);
+          filename[MAX_FILENAME_LENGTH - 1] = '\0';
+          filesize = IDD_storage_size(filename);
+          if (filesize < OC_MAX_APP_DATA_SIZE) {
+              IDD_storage_read(filename, request->response->response_buffer->buffer, filesize);
+          } else {
+              goto introspection_data_fail;
+          }
+      }
+      break;
+  }
+  case OC_INTROSPECT_DEFAULT:
+    /* FALLTHRU */
+#endif /* OC_IDD_FILE */
+  case OC_INTROSPECT_BYTE_ARRAY:
+  {
+#ifdef OC_SECURITY
+      char idd_tag[MAX_TAG_LENGTH];
+      gen_idd_tag("IDD", request->resource->device, idd_tag);
+      filesize = oc_storage_read(idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
+      if (filesize <= 0) {
+          goto introspection_data_fail;
+      }
+#endif /* OC_SECURITY */
+      break;
+  }
+  default:
+      break;
+  }
 
-  filesize = IDD_storage_size(filename);
+
   if (filesize < OC_MAX_APP_DATA_SIZE) {
-    IDD_storage_read(filename, request->response->response_buffer->buffer,
-                     filesize);
-    request->response->response_buffer->response_length = (uint16_t)filesize;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+      request->response->response_buffer->response_length = (uint16_t)filesize;
+      request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
-    OC_ERR(
-      "oc_core_introspection_data_handler : %d is too big for buffer %d \n",
-      filesize, OC_MAX_APP_DATA_SIZE);
-    request->response->response_buffer->response_length = (uint16_t)0;
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
+  introspection_data_fail:
+      OC_ERR("oc_core_introspection_data_handler : %d is too big for buffer %d \n",
+             filesize, OC_MAX_APP_DATA_SIZE);
+      request->response->response_buffer->response_length = (uint16_t)0;
+      request->response->response_buffer->code = oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 }
 
@@ -214,6 +226,21 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   OC_DBG("got introspection resource uri %s", oc_string(uri));
   oc_free_string(&uri);
+}
+
+void
+oc_introspection_init(void) {
+#ifdef OC_DYNAMIC_ALLOCATION
+  introspection_list =
+      (oc_introspect_info_t *)calloc(oc_core_get_num_devices(), sizeof(oc_introspect_info_t));
+  if (!introspection_list) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
+    introspection_list[i].source = OC_INTROSPECT_DEFAULT;
+    introspection_list[i].filename[0] = '\0';
+  }
 }
 
 void
