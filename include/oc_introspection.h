@@ -14,54 +14,59 @@
 // limitations under the License.
 */
 /**
-  @file
-*/
+ * @file
+ * @brief functions for introspection
+ *
+ * The IDD information is served up as encoded CBOR contents (read as is).
+ * If the size of the IDD data is to big for the buffer, then an internal error
+ * is returned.  Note that some build options can only serve up introspection
+ * data for one device and can not be used if multiple devices are implemented.
+ *
+ * There are multiple mechanisms for adding introspection data to a server.
+ *
+ * Add OC_IDD_API (recomended) to the compilers preprocessor macro defines.
+ * Then set the introspection data for each device using
+ * oc_set_introspection_data function.
+ *
+ * If OC_IDD_API was added to the preprocessor and the server does not call
+ * oc_set_introspection_data the server will look for the file
+ * `IDD_<device_index>` in the location specified by oc_storage_config.
+ *
+ * The final option is to build without OC_IDD_API compiler preprocessor macro
+ * define. This is **not recomended** but is provided for backwards
+ * compatability. The instrospection data is read from the headerfile
+ * `server_introspection.dat.h`. Introspection data can only be added for a
+ * single device.
+ *
+ * When using the final option the `server_introspeciton.dat.h` must
+ * contain two items:
+ *  1. A macro `introspection_data_size` that specifies the size of the
+ * introspection data in bytes
+ *  2. An array `uint8_t introspection_data[]` containing the hex data
+ * representing the IDD. The header file must be placed in a folder that gets
+ * included in the build.
+ */
+
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
 #include <stddef.h>
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief functions for introspection .
- * The introspection mechanism is implemented by 2 different mechanisms
  *
- * The first mechanism is reading the IDD file from a location.
- * The file is read with standard c library (fopen, fread, ..)
- * The IDD information is served up as encoded CBOR contents (e.g. read as is).
- * The file is read and passed to the requesting client on each call.
- * if the file size is to big for the buffer, then an internal error is given
- * back. note that this option can serve up more than 1 introspection file, if
- * multiple devices are implemented. This feature is enabled when the compile
- * switch OC_IDD_FILE is used.
+ * @brief Set the IDD by passing in an array containing the data
  *
- * The second option is to use an include file that contains the IDD
- * information. This is the default mechanism. The include file is called
- * "server_introspection.dat.h" and should contain introspection_data_size :
- * size of the array introspection_data uint8_t introspection_data[] : hex data
- * representing the IDD. one should place this file in a folder that gets
- * included in the build for example the include directory.
+ * @param device index of the device to which the IDD describes
+ * @param IDD an array of CBOR encoded bytes containing the introspection device
+ * data
+ * @param IDD_size the size of the IDD array
  */
-
-/**
-  @brief sets the filename of the introspection resource.
-  if not set the file is "server_introspection.dat" is read from the location
-  where the executable resides
-
-  @param device index of the device to which the resource is to be created
-  @param filename filename of the IDD file in cbor.
-*/
-void oc_set_introspection_file(size_t device, const char *filename);
-
-/**
-  @brief Creation of the oic.wk.introspection resource.
-
-  @param device index of the device to which the resource is to be created
-*/
-void oc_create_introspection_resource(size_t device);
+void oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size);
 
 #ifdef __cplusplus
 }
