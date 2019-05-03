@@ -20,6 +20,7 @@
 #define OC_CORE_RES_H
 
 #include "oc_ri.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -29,7 +30,21 @@ extern "C"
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
-typedef struct
+#define MAX_INTROSPECT_FILENAME_LENGTH 128
+
+typedef enum {
+    OC_INTROSPECT_FILE = 0,
+    OC_INTROSPECT_BYTE_ARRAY
+} oc_introspect_source_t;
+
+typedef struct oc_introspect_info_t {
+    oc_introspect_source_t source;
+    char filename[MAX_INTROSPECT_FILENAME_LENGTH];
+    uint8_t * data;
+    size_t data_size;
+} oc_introspect_info_t;
+
+typedef struct oc_platform_info_t
 {
   oc_uuid_t pi;
   oc_string_t mfg_name;
@@ -45,6 +60,7 @@ typedef struct
   oc_string_t icv;
   oc_string_t dmv;
   oc_core_add_device_cb_t add_device_cb;
+  oc_introspect_info_t introspect_info;
   void *data;
 } oc_device_info_t;
 
