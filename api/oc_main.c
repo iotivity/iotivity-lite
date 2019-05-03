@@ -27,6 +27,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_signal_event_loop.h"
+#include "oc_introspection_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
@@ -189,6 +190,8 @@ oc_main_init(const oc_handler_t *handler)
     oc_shutdown_all_devices();
     goto err;
   }
+
+  oc_introspection_init();
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
