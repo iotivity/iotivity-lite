@@ -20,6 +20,7 @@
 #define OC_INTROSPECTION_H
 
 #include <stddef.h>
+#include "oc_core_res.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -46,24 +47,7 @@ extern "C"
  * one should place this file in a folder that gets included in the build
  * for example the include directory.
 */
-
-
-/**
-  @brief sets the filename of the introspection resource.
-  if not set the file is "server_introspection.dat" is read from the location where the executable resides
-
-  @param device index of the device to which the resource is to be created
-  @param filename filename of the IDD file in cbor.
-*/
-void oc_set_introspection_file(size_t device, const char* filename);
-
-
-/**
-  @brief Creation of the oic.wk.introspection resource.
-
-  @param device index of the device to which the resource is to be created
-*/
-void oc_create_introspection_resource(size_t device);
+void oc_set_introspection_data(size_t device, uint8_t* IDD, size_t IDD_size);
 
 #ifdef __cplusplus
 }

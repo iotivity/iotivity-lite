@@ -27,6 +27,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_signal_event_loop.h"
+#include "oc_introspection_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
