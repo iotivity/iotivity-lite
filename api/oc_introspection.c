@@ -14,118 +14,42 @@
  // limitations under the License.
  */
 
+#include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
-#include "oc_introspection.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
+#include "oc_introspection_internal.h"
 #include <stdio.h>
 
-#define MAX_FILENAME_LENGTH 128
-
-#ifdef OC_IDD_FILE
+#ifndef OC_IDD_API
+#include "server_introspection.dat.h"
+#else /* OC_IDD_API */
 
 #define MAX_TAG_LENGTH 20
 
+#ifdef OC_SECURITY
 static void
 gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 {
   int idd_tag_len =
-    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
+    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%zd", name, device_index);
   idd_tag_len =
     (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
   idd_tag[idd_tag_len] = '\0';
 }
-
-static int
-get_IDD_filename(size_t device_index, char *filename)
-{
-  char idd_tag[MAX_TAG_LENGTH];
-  gen_idd_tag("IDD", device_index, idd_tag);
-  int ret = oc_storage_read(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  PRINT("get_IDD_filename: oc_storage_read %d\n", ret);
-  if (ret <= 0) {
-    strcpy(filename, "server_introspection.dat");
-  }
-  PRINT("get_IDD_filename: returning %s\n", filename);
-  return ret;
-}
+#endif /* OC_SECURITY */
 
 void
-oc_set_introspection_file(size_t device, const char *filename)
+oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
 {
+#ifdef OC_SECURITY
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
-  long ret =
-    oc_storage_write(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  if (ret == 0) {
-    OC_ERR("oc_set_introspection_file: could not set %s in store\n", filename);
-  }
+  oc_storage_write(idd_tag, IDD, IDD_size);
+#endif /* OC_SECURITY */
 }
-
-static long
-IDD_storage_size(const char *store)
-{
-  FILE *fp;
-  long filesize;
-
-  fp = fopen(store, "rb");
-  if (!fp) {
-    OC_ERR("IDD_storage_size: ERROR file %s does not open\n", store);
-    return 0;
-  }
-
-  fseek(fp, 0, SEEK_END);
-  filesize = ftell(fp);
-  fclose(fp);
-  PRINT("IDD_storage_size %s size %d [bytes] \n", store, filesize);
-  return filesize;
-}
-
-static size_t
-IDD_storage_read(const char *store, uint8_t *buf, size_t size)
-{
-  FILE *fp = 0;
-
-  fp = fopen(store, "rb");
-  if (!fp) {
-    OC_ERR("IDD_storage_size file %s does not open\n", store);
-    return 0;
-  }
-
-  size = fread(buf, 1, size, fp);
-  fclose(fp);
-  return size;
-}
-
-#else /*OC_IDD_FILE*/
-
-#include "server_introspection.dat.h"
-
-static int
-get_IDD_filename(size_t index, char *filename)
-{
-  (void)index;
-  (void)filename;
-  return 0;
-}
-
-static long
-IDD_storage_size(const char *store)
-{
-  (void)store;
-  return introspection_data_size;
-}
-
-static size_t
-IDD_storage_read(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  memcpy(buf, introspection_data, size);
-  return size;
-}
-
-#endif /*OC_IDD_FILE*/
+#endif /*OC_IDD_API*/
 
 static void
 oc_core_introspection_data_handler(oc_request_t *request,
@@ -136,22 +60,31 @@ oc_core_introspection_data_handler(oc_request_t *request,
 
   OC_DBG("in oc_core_introspection_data_handler");
 
-  size_t index = request->resource->device;
-  char filename[MAX_FILENAME_LENGTH];
-  long filesize;
+  long IDD_size = 0;
+#ifndef OC_IDD_API
+  if (introspection_data_size < OC_MAX_APP_DATA_SIZE) {
+    memcpy(request->response->response_buffer->buffer, introspection_data,
+           introspection_data_size);
+    IDD_size = introspection_data_size;
+  } else {
+    IDD_size = -1;
+  }
+#else /* OC_IDD_API */
+#ifdef OC_SECURITY
+  char idd_tag[MAX_TAG_LENGTH];
+  gen_idd_tag("IDD", request->resource->device, idd_tag);
+  IDD_size = oc_storage_read(
+    idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
+#endif /* OC_SECURITY */
+#endif /* OC_IDD_API */
 
-  get_IDD_filename(index, filename);
-
-  filesize = IDD_storage_size(filename);
-  if (filesize < OC_MAX_APP_DATA_SIZE) {
-    IDD_storage_read(filename, request->response->response_buffer->buffer,
-                     filesize);
-    request->response->response_buffer->response_length = (uint16_t)filesize;
+  if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
+    request->response->response_buffer->response_length = (uint16_t)IDD_size;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     OC_ERR(
       "oc_core_introspection_data_handler : %d is too big for buffer %d \n",
-      filesize, OC_MAX_APP_DATA_SIZE);
+      IDD_size, OC_MAX_APP_DATA_SIZE);
     request->response->response_buffer->response_length = (uint16_t)0;
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
@@ -169,7 +102,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   enum transport_flags conn =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
-  */
+   */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
   memset(&uri, 0, sizeof(oc_string_t));
