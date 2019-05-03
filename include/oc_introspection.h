@@ -20,6 +20,7 @@
 #define OC_INTROSPECTION_H
 
 #include <stddef.h>
+#include "oc_core_res.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -47,7 +48,6 @@ extern "C"
  * for example the include directory.
 */
 
-
 /**
   @brief sets the filename of the introspection resource.
   if not set the file is "server_introspection.dat" is read from the location where the executable resides
@@ -57,7 +57,7 @@ extern "C"
 */
 void oc_set_introspection_file(size_t device, const char* filename);
 
-
+void oc_set_introspection_data(size_t device, uint8_t* IDD, size_t IDD_size);
 /**
   @brief Creation of the oic.wk.introspection resource.
 
