@@ -342,6 +342,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_new_string(&oc_device_info[device_count].dmv, data_model_version,
                 strlen(data_model_version));
   oc_device_info[device_count].add_device_cb = add_device_cb;
+  oc_device_info[device_count].introspect_info.source = OC_INTROSPECT_FILE;
+  oc_device_info[device_count].introspect_info.filename[0] = '\0';
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
