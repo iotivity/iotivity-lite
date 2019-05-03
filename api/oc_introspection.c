@@ -27,40 +27,25 @@
 
 #define MAX_TAG_LENGTH 20
 
-static void
-gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
-{
-  int idd_tag_len =
-    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
-  idd_tag_len =
-    (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
-  idd_tag[idd_tag_len] = '\0';
-}
-
-static int
-get_IDD_filename(size_t device_index, char *filename)
-{
-  char idd_tag[MAX_TAG_LENGTH];
-  gen_idd_tag("IDD", device_index, idd_tag);
-  int ret = oc_storage_read(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  PRINT("get_IDD_filename: oc_storage_read %d\n", ret);
-  if (ret <= 0) {
-    strcpy(filename, "server_introspection.dat");
-  }
-  PRINT("get_IDD_filename: returning %s\n", filename);
-  return ret;
-}
+OC_LIST(oc_introspect_info);
 
 void
 oc_set_introspection_file(size_t device, const char *filename)
 {
-  char idd_tag[MAX_TAG_LENGTH];
-  gen_idd_tag("IDD", device, idd_tag);
-  long ret =
-    oc_storage_write(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
-  if (ret == 0) {
-    OC_ERR("oc_set_introspection_file: could not set %s in store\n", filename);
-  }
+    printf(">>> oc_set_introspection_file from FILE = \"%s\"\n", filename);
+    oc_device_info_t *device_info = oc_core_get_device_info(device);
+    device_info->introspect_info.source = OC_INTROSPECT_FILE;
+    strncpy(device_info->introspect_info.filename, filename, MAX_INTROSPECT_FILENAME_LENGTH);
+    device_info->introspect_info.filename[MAX_INTROSPECT_FILENAME_LENGTH] = "\0";
+}
+
+void oc_set_introspection_data(size_t device, uint8_t* IDD, size_t IDD_size)
+{
+    oc_device_info_t *device_info = oc_core_get_device_info(device);
+    device_info->introspect_info.source = OC_INTROSPECT_BYTE_ARRAY;
+    device_info->introspect_info.filename[0] = "\0";
+    device_info->introspect_info.data = IDD;
+    device_info->introspect_info.data_size = IDD_size;
 }
 
 static long
@@ -86,7 +71,6 @@ static size_t
 IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   FILE *fp = 0;
-
   fp = fopen(store, "rb");
   if (!fp) {
     OC_ERR("IDD_storage_size file %s does not open\n", store);
@@ -101,14 +85,6 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 #else /*OC_IDD_FILE*/
 
 #include "server_introspection.dat.h"
-
-static int
-get_IDD_filename(size_t index, char *filename)
-{
-  (void)index;
-  (void)filename;
-  return 0;
-}
 
 static long
 IDD_storage_size(const char *store)
@@ -137,15 +113,31 @@ oc_core_introspection_data_handler(oc_request_t *request,
   OC_DBG("in oc_core_introspection_data_handler");
 
   size_t index = request->resource->device;
+  oc_device_info_t *device_info = oc_core_get_device_info(index);
   char filename[MAX_FILENAME_LENGTH];
   long filesize;
 
-  get_IDD_filename(index, filename);
-
-  filesize = IDD_storage_size(filename);
+  if (strlen(device_info->introspect_info.filename) > 0) {
+      strncpy(filename, device_info->introspect_info.filename, MAX_FILENAME_LENGTH);
+      filename[MAX_FILENAME_LENGTH - 1] = '\0';
+  } else {
+      strncpy(filename, "server_introspection.dat", MAX_FILENAME_LENGTH);
+  }
+  if (device_info->introspect_info.source == OC_INTROSPECT_FILE) {
+      filesize = IDD_storage_size(filename);
+  }
+  else {
+      filesize = device_info->introspect_info.data_size;
+  }
   if (filesize < OC_MAX_APP_DATA_SIZE) {
-    IDD_storage_read(filename, request->response->response_buffer->buffer,
-                     filesize);
+      if (device_info->introspect_info.source == OC_INTROSPECT_FILE) {
+          IDD_storage_read(filename, request->response->response_buffer->buffer,
+              filesize);
+      } else {
+          memcpy(request->response->response_buffer->buffer,
+                 device_info->introspect_info.data,
+                 filesize);
+      }
     request->response->response_buffer->response_length = (uint16_t)filesize;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
