@@ -62,7 +62,8 @@ oc_sec_doxm_init(void)
 void
 oc_sec_doxm_default(size_t device)
 {
-  doxm[device].oxmsel = -1;
+  //doxm[device].oxmsel = -1;
+  doxm[device].oxmsel = 0;
 #ifdef OC_PKI
   doxm[device].sct = 9;
 #else  /* OC_PKI */
@@ -79,7 +80,8 @@ void
 oc_sec_encode_doxm(size_t device)
 {
 #ifdef OC_PKI
-  int oxms[3] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP, OC_OXMTYPE_MFG_CERT };
+  //int oxms[3] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP, OC_OXMTYPE_MFG_CERT };
+  int oxms[1] = { OC_OXMTYPE_JW};
 #else  /* OC_PKI */
   int oxms[2] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP };
 #endif /* !OC_PKI */
@@ -89,7 +91,8 @@ oc_sec_encode_doxm(size_t device)
     oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
 /* oxms */
 #ifdef OC_PKI
-  oc_rep_set_int_array(root, oxms, oxms, 3);
+  //oc_rep_set_int_array(root, oxms, oxms, 3);
+  oc_rep_set_int_array(root, oxms, oxms, 1);
 #else  /* OC_PKI */
   oc_rep_set_int_array(root, oxms, oxms, 2);
 #endif /* !OC_PKI */
