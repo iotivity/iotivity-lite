@@ -161,5 +161,5 @@ oc_create_introspection_resource(size_t device)
   oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
                             OC_IF_BASELINE, OC_IF_BASELINE, 0,
                             oc_core_introspection_data_handler, 0, 0, 0, 1,
-                            "oic.introspection.data");
+                            "x.lge.introspection.data");
 }
