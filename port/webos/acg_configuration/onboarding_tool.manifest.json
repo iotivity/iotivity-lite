@@ -1,0 +1,16 @@
+{
+    "serviceFiles": [
+        "/usr/share/luna-service2/services.d/onboarding_tool.service"
+    ],
+    "roleFiles": [
+        "/usr/share/luna-service2/roles.d/onboarding_tool.role.json"
+    ],
+    "apiPermissionFiles": [
+        "/usr/share/luna-service2/api-permissions.d/onboarding_tool.api.json"
+    ],
+    "version": "1.0.0",
+    "id": "onboarding_tool",
+    "clientPermissionFiles": [
+        "/usr/share/luna-service2/client-permissions.d/onboarding_tool.perm.json"
+    ]
+}

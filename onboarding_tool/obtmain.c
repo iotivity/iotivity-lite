@@ -31,6 +31,13 @@
 #define MAX_NUM_RESOURCES (100)
 #define MAX_NUM_RT (50)
 
+#ifdef WEBOS
+#include <luna-service2/lunaservice.h>
+#include <glib.h>
+#include <pbnjson.h>
+#include <PmLogLib.h>
+#endif
+
 /* Structure in app to track currently discovered owned/unowned devices */
 typedef struct device_handle_t
 {
@@ -68,6 +75,11 @@ static pthread_cond_t cv;
 static struct timespec ts;
 #endif
 static int quit;
+
+#ifdef WEBOS
+static LSHandle *pLsHandle = NULL;
+static GMainLoop *mainloop = NULL;
+#endif
 
 static void
 display_menu(void)
@@ -1309,6 +1321,34 @@ factory_presets_cb(size_t device, void *data)
 int
 main(void)
 {
+#ifdef WEBOS
+  struct timespec timeout;
+  LSError lserror;
+  LSErrorInit(&lserror);
+
+  mainloop = g_main_loop_new(NULL, FALSE);
+
+  // Initialize g_main_loop
+  if (!mainloop) {
+    PRINT("Failed to create main loop");
+    return 0;
+  }
+
+  PRINT("Onboarding tool is starting...\n");
+
+  if (!LSRegister("org.ocf.webossample.onboarding_tool", &pLsHandle, &lserror)) {
+    PRINT("Failed to register LS Handle");
+    LSErrorPrint(&lserror, stderr);
+    return 0;
+  }
+
+  if (!LSGmainAttach(pLsHandle, mainloop, &lserror)) {
+    PRINT("Failed to attach main loop: %s", &lserror);
+    LSErrorPrint(&lserror, stderr);
+    return 0;
+  }
+#endif
+
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);

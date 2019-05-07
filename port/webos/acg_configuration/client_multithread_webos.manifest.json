@@ -1,0 +1,16 @@
+{
+    "serviceFiles": [
+        "/usr/share/luna-service2/services.d/client_multithread_webos.service"
+    ],
+    "roleFiles": [
+        "/usr/share/luna-service2/roles.d/client_multithread_webos.role.json"
+    ],
+    "apiPermissionFiles": [
+        "/usr/share/luna-service2/api-permissions.d/client_multithread_webos.api.json"
+    ],
+    "version": "1.0.0",
+    "id": "client_multithread_webos",
+    "clientPermissionFiles": [
+        "/usr/share/luna-service2/client-permissions.d/client_multithread_webos.perm.json"
+    ]
+}

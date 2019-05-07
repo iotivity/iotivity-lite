@@ -1,0 +1,16 @@
+{
+    "serviceFiles": [
+        "/usr/share/luna-service2/services.d/simpleserver_webos.service"
+    ],
+    "roleFiles": [
+        "/usr/share/luna-service2/roles.d/simpleserver_webos.role.json"
+    ],
+    "apiPermissionFiles": [
+        "/usr/share/luna-service2/api-permissions.d/simpleserver_webos.api.json"
+    ],
+    "version": "1.0.0",
+    "id": "simpleserver_webos",
+    "clientPermissionFiles": [
+        "/usr/share/luna-service2/client-permissions.d/simpleserver_webos.perm.json"
+    ]
+}

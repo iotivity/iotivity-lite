@@ -1,0 +1,11 @@
+{
+    "exeName":"/usr/palm/services/org.ocf.webossample.client_multithread_webos/client_multithread_webos",
+    "type":"regular",
+    "allowedNames":["org.ocf.webossample.client_multithread_webos*"],
+    "permissions": [
+        {
+            "service":"org.ocf.webossample.client_multithread_webos*",
+            "outbound":["com.webos.service.connectionmanager"]
+        }
+    ]
+}
