@@ -20,6 +20,22 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define WEBOS 1
+
+
+#ifdef WEBOS
+#include <luna-service2/lunaservice.h>
+#include <glib.h>
+#include <pbnjson.h>
+#include <PmLogLib.h>
+
+static LSHandle *pLsHandle = NULL;
+static GMainLoop *mainloop = NULL;
+
+PmLogContext gLogContext;
+PmLogContext gLogLibContext;
+#endif
+
 pthread_mutex_t mutex;
 pthread_cond_t cv;
 struct timespec ts;
@@ -33,10 +49,10 @@ oc_string_t name;
 static int
 app_init(void)
 {
-  int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
-  oc_new_string(&name, "John's Light", 12);
+  int ret = oc_init_platform("webOS", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "webOS Lamp", "ocf.1.3.0",
+                       "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+  oc_new_string(&name, "webOS Light", 12);
   return ret;
 }
 
@@ -109,10 +125,13 @@ put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-  oc_resource_t *res = oc_new_resource(NULL, "/a/light", 2, 0);
-  oc_resource_bind_resource_type(res, "core.light");
-  oc_resource_bind_resource_type(res, "core.brightlight");
+  oc_resource_t *res = oc_new_resource(NULL, "/binaryswitch", 1, 0);
+  //oc_resource_bind_resource_type(res, "core.light");
+  oc_resource_bind_resource_type(res, "oic.r.switch.binary");
+  //oc_resource_bind_resource_type(res, "core.brightlight");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
+  oc_resource_bind_resource_interface(res, OC_IF_BASELINE);
+  oc_resource_bind_resource_interface(res, OC_IF_A);
   oc_resource_set_default_interface(res, OC_IF_RW);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, 1);
@@ -141,6 +160,35 @@ handle_signal(int signal)
 int
 main(void)
 {
+    struct timespec timeout;
+    LSError lserror;
+    LSErrorInit(&lserror);
+    (void) PmLogGetContext("OCSERVERBASICOPS", &gLogContext);
+    (void) PmLogGetContext("OCSERVERBASICOPS-LIB", &gLogLibContext);
+    PmLogSetLibContext(gLogLibContext);
+
+    mainloop = g_main_loop_new(NULL, FALSE);
+
+    // Initialize g_main_loop
+    if (!mainloop) {
+        PRINT("Failed to create main loop");
+        return 0;
+    }
+
+    PRINT("OCServer is starting...");
+
+    if (!LSRegister("org.ocf.webossample.simpleserver", &pLsHandle, &lserror)) {
+        PRINT("Failed to register LS Handle");
+        LSErrorLog(gLogContext, "LS_SRVC_ERROR", &lserror);
+        return 0;
+    }
+
+    if (!LSGmainAttach(pLsHandle, mainloop, &lserror)) {
+        PRINT("Failed to attach main loop: %s", &lserror);
+        LSErrorLog(gLogContext, "LS_SRVC_ATTACH_ERROR", &lserror);
+        return 0;
+    }
+
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
