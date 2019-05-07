@@ -56,14 +56,14 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
   OC_PROCESS_BEGIN();
   while (oc_process_is_running(&(oc_network_events))) {
     OC_PROCESS_YIELD();
-#ifdef OC_NETWORK_MONITOR
-    if (ev == oc_events[INTERFACE_DOWN]) {
-      handle_network_interface_event_callback(NETWORK_INTERFACE_DOWN);
-    } else if (ev == oc_events[INTERFACE_UP]) {
-      handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
-    }
-#endif /* OC_NETWORK_MONITOR */
   }
+#ifdef OC_NETWORK_MONITOR
+  if (ev == oc_events[INTERFACE_DOWN]) {
+    handle_network_interface_event_callback(NETWORK_INTERFACE_DOWN);
+  } else if (ev == oc_events[INTERFACE_UP]) {
+    handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
+  }
+#endif
   OC_PROCESS_END();
 }
 

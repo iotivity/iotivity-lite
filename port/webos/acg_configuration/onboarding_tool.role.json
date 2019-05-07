@@ -1,0 +1,11 @@
+{
+    "exeName":"/usr/sbin/onboarding_tool",
+    "type":"regular",
+    "allowedNames":["org.ocf.webossample.onboarding_tool*"],
+    "permissions": [
+        {
+            "service":"org.ocf.webossample.onboarding_tool*",
+            "outbound":["com.webos.service.connectionmanager"]
+        }
+    ]
+}
