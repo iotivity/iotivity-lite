@@ -1,0 +1,5 @@
+{
+    "org.ocf.webossample.simpleserver_webos*": [
+        "networking.internal"
+    ]
+}

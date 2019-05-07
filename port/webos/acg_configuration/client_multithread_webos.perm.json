@@ -1,0 +1,5 @@
+{
+    "org.ocf.webossample.client_multithread_webos*": [
+        "networking.internal"
+    ]
+}

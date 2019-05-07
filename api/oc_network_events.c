@@ -62,7 +62,7 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
     } else if (ev == oc_events[INTERFACE_UP]) {
       handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
     }
-#endif /* OC_NETWORK_MONITOR */
+#endif
   }
   OC_PROCESS_END();
 }
