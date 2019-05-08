@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_56f168cc",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-08T23:12:19Z",
+      "side": 1,
+      "message": "have all devices been added when this is called?  what if a device is added later?",
+      "revId": "22c41aa675c9c63a3d4af3a5da9569246af51902",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f6e35403",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-08T23:12:19Z",
+      "side": 1,
+      "message": "Should there be an #else for compile warning/error?",
+      "revId": "22c41aa675c9c63a3d4af3a5da9569246af51902",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
