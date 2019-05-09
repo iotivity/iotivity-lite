@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_b6870c0f",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-09T22:48:16Z",
+      "side": 1,
+      "message": "Before this is committed I should update the documentation.  I will update the name of the OC_IDD_FILE define to OC_IDD_API at the same time.",
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
