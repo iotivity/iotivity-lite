@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_b6b0acf5",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-09T17:50:50Z",
+      "side": 1,
+      "message": "All of the security code assumes that the devices have been added. So I assume that its safe to make the same assumption in the introspection code.",
+      "parentUuid": "1a494da4_56f168cc",
+      "revId": "22c41aa675c9c63a3d4af3a5da9569246af51902",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_f6e35403",
         "filename": "api/oc_introspection.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-05-08T23:12:19Z",
       "side": 1,
       "message": "Should there be an #else for compile warning/error?",
+      "revId": "22c41aa675c9c63a3d4af3a5da9569246af51902",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_16952040",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-09T17:50:50Z",
+      "side": 1,
+      "message": "I feel like there should be an else statement but I don\u0027t know how to create the code for the non-dynamic case. I was hopping I could get some feedback from Kishen on this one.",
+      "parentUuid": "1a494da4_f6e35403",
       "revId": "22c41aa675c9c63a3d4af3a5da9569246af51902",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
