@@ -2,6 +2,167 @@
   "comments": [
     {
       "key": {
+        "uuid": "1a494da4_968f7023",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "Recommend that you remove this; no need to store any context here since the IDD will be in a well-known spot in storage. So, we can do without this, and hence save some memory.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 6
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_76946437",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "You can remove this option. Let apps themselves read from any binary files containing the IDD and use the set_introspection_data API.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 1
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_16a3609f",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "Can remove this.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 50
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_f69fd44e",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "Can get rid of this.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 1
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_56ade887",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "Can get rid of this.",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 1
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_d699f86f",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "You can remove the switch-case and the options. \n\nUse a #ifdef OC_IDD_API inside which you can place the code block below. \n\nThen inside the #else block you can have something like the following:\n\nif (introspection_data_size \u003c OC_MAX_APP_DATA_SIZE) {\n\n  memcpy(request-\u003eresponse-\u003eresponse_buffer-\u003ebuffer, introspection_data, introspection_data_size);\n\n  request-\u003eresponse-\u003eresponse_buffer-\u003eresponse_length \u003d (uint16_t)introspection_data_size;\n\n}",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 3
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_b69eec54",
+        "filename": "api/oc_introspection.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-05-10T19:55:41Z",
+      "side": 1,
+      "message": "When you remove those options, you wouldn\u0027t require this.",
+      "range": {
+        "startLine": 236,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 1
+      },
+      "revId": "f00a988b4f6ebcfc0abd2b0096f4d3f2e07d03c6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_b6870c0f",
         "filename": "include/oc_introspection.h",
         "patchSetId": 10
