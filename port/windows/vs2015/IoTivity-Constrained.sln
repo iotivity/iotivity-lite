@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleClient", "SimpleClien
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleServer", "SimpleServer.vcxproj", "{49A279BB-F431-4310-BEA2-CEDAC797D9E1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iotivity-lite-java", "iotivity-lite-java\iotivity-lite-java.vcxproj", "{F4920803-255A-4BC5-BB70-84BE6D12AADE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iotivity-lite-jni", "iotivity-lite-jni\iotivity-lite-jni.vcxproj", "{F4920803-255A-4BC5-BB70-84BE6D12AADE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1866D7A4-FC11-46CA-9377-3BAA69D4BF58} = {1866D7A4-FC11-46CA-9377-3BAA69D4BF58}
 	EndProjectSection
