@@ -1,8 +1,9 @@
-CC = gcc
+export CC = gcc
 SED = sed
 INSTALL = install
-OS = linux
+export OS = linux
 ROOT_DIR = ../..
+SWIG_DIR = ${ROOT_DIR}/swig
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
 VERSION_MAJOR = 1
@@ -20,8 +21,13 @@ libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
+# For some reason the -fsanitize=address causes build problems when building
+# the Java shared object library.  For now when building Java do not use
+# -fsanitize = address CFLAG.
 ifeq ($(DEBUG),1)
+  ifneq ($(JAVA), 1)
 	EXTRA_CFLAGS += -fsanitize=address
+  endif
 endif
 
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
@@ -118,6 +124,10 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
+ifeq ($(IDD), 1)
+	EXTRA_CFLAGS += -DOC_IDD_FILE
+endif
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
@@ -141,6 +151,10 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(JAVA),1)
+	SWIG = swig
+endif
+
 CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(MEMTRACE),1)
@@ -155,7 +169,7 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(SWIG)
 
 test: $(UNIT_TESTS)
 	for test in $^ ; do ./$${test} ; done
@@ -326,6 +340,9 @@ iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
+swig: $(CONSTRAINED_LIBS)
+	${MAKE} -C ${SWIG_DIR}
+
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
@@ -350,6 +367,7 @@ clean:
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 	${MAKE} -C ${GTEST_DIR}/make clean
+	${MAKE} -C ${SWIG_DIR} clean
 
 distclean: cleanall
 
