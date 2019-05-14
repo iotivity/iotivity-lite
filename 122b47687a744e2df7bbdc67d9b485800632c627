@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_f65a344f",
+        "filename": "port/windows/vs2015/iotivity-lite-jni/iotivity-lite-jni.vcxproj",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-14T18:57:45Z",
+      "side": 1,
+      "message": "that should have been set to $(SolutionDir) some how it got converted to my local path. I will fix thanks.",
+      "parentUuid": "1a494da4_d6445876",
+      "revId": "122b47687a744e2df7bbdc67d9b485800632c627",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_b649cc8d",
         "filename": "port/windows/vs2015/iotivity-lite-jni/iotivity-lite-jni.vcxproj",
         "patchSetId": 2
