@@ -3,6 +3,7 @@
 %include "enums.swg"
 %javaconst(1);
 %include "iotivity.swg"
+%include "stdint.i"
 
 %pragma(java) jniclasscode=%{
   static {
