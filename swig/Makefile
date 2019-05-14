@@ -65,7 +65,7 @@ DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
 LDFLAG += -lm
 
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
-		oc_api oc_obt oc_pki oc_introspection
+		oc_api oc_obt oc_pki oc_introspection oc_core_res
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
