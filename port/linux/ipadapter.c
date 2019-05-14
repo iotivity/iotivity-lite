@@ -41,6 +41,14 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#ifdef OC_NETWORK_MONITOR_WEBOS
+#include <luna-service2/lunaservice.h>
+#include <glib.h>
+#include <pbnjson.h>
+#endif /* OC_NETWORK_MONITOR_WEBOS */
+
+//LSHandle *wifi_handle;
+
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
 #ifndef IFA_FLAGS
@@ -68,6 +76,330 @@ OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
 OC_MEMB(device_eps, oc_endpoint_t, 8 * OC_MAX_NUM_DEVICES); // fix
+
+#ifdef OC_NETWORK_MONITOR_WEBOS
+
+typedef struct _CONNECTION_STATUS {
+    bool isConnectWired;
+    bool isConnectWiFi;
+} CONNECTION_STATUS_T;
+
+CONNECTION_STATUS_T gConnectionStates;
+
+
+#define LS_CONNECTIONMANAGER_GETSTATUS_URI "luna://com.webos.service.connectionmanager/getstatus"
+#define MAX_LS_NAME_SIZE 1024
+#define MAX_GET_LS_SERVICE_NAME_COUNT 5
+static LSHandle *g_pLSHandle = NULL;
+static GMainContext *g_loopContext = NULL;
+static GMainLoop *g_mainLoop = NULL;
+static bool g_isLSRegistering = false;
+char *g_lsServiceName = NULL;
+
+pthread_t threadId_monitor;
+
+static bool CACheckLSRegistered()
+{
+    if (g_pLSHandle)
+    {
+        OC_DBG("Luna service is already registered");
+        return true;
+    }
+    else
+    {
+        OC_DBG("Luna service is not registered");
+        return false;
+    }
+}
+
+static bool CACreateLSServiceName()
+{
+    FILE *fp = NULL;
+    char processNameBuff[MAX_LS_NAME_SIZE];
+    char lunaServiceBuff[MAX_LS_NAME_SIZE];
+    size_t readSize = 0;
+    char *command = NULL;
+
+    command = g_strdup_printf("ps -p %d -f | sed -n '2p' | awk '{print $8}' | cut -d '/' -f2", getpid());
+
+    fp = popen(command, "r");
+    if (NULL == fp)
+    {
+        OC_DBG("Failed to open ls-monitor");
+        exit(1);
+    }
+
+    readSize = fread((void*)processNameBuff, sizeof(char), MAX_LS_NAME_SIZE - 1, fp);
+    OC_DBG("processNameBuff : %s, readSize: %d", processNameBuff, readSize);
+
+    processNameBuff[readSize]='0';
+    //command = g_strdup_printf("ls-monitor -l | grep %d | awk '{print $2}'", getpid());
+    //command = g_strdup_printf("ps -p %d -f | sed -n '2p' | awk '{print $8}'", getpid());
+    command = g_strdup_printf("find /usr/share/luna-service2/services.d/ -name \"*.*\" | /usr/bin/xargs grep %s | grep 'Name' | cut -d '=' -f2 | cut -d '*' -f1", g_strndup(processNameBuff, readSize-1));
+
+    OC_DBG("PID : %d", getpid());
+
+    // Get service Name by pid
+    fp = popen(command, "r");
+    if (NULL == fp)
+    {
+        OC_DBG("Failed to open ls-monitor");
+        exit(1);
+    }
+
+    readSize = fread((void*)lunaServiceBuff, sizeof(char), MAX_LS_NAME_SIZE - 1, fp);
+    OC_DBG("lunaServiceBuff : %s, readSize: %d", lunaServiceBuff, readSize);
+    if (0 == readSize)
+    {
+        OC_DBG("This process does not have Luna service");
+        g_free(command);
+        pclose(fp);
+        return false;
+    }
+    lunaServiceBuff[readSize]='0';
+
+    g_lsServiceName = g_strdup_printf("%s-iotivity%d", g_strndup(lunaServiceBuff, readSize-1), getpid());
+
+    pclose( fp);
+
+    return true;
+}
+
+static void CATriggerCreateLSServiceName()
+{
+    for (int i = 0; i < MAX_GET_LS_SERVICE_NAME_COUNT; i++)
+    {
+        if (CACreateLSServiceName())
+        {
+            OC_DBG("Luna service name : %s", g_lsServiceName);
+            break;
+        }
+
+        sleep(1);
+    }
+}
+
+//static void CAStartLSMainLoop(void * data)
+static void *CAStartLSMainLoop(gpointer user_data)
+{
+    //(void)data;
+
+    OC_DBG("CAStartLSMainLoop");
+
+    LSError lserror;
+    LSErrorInit(&lserror);
+
+
+    g_isLSRegistering = true;
+    OC_DBG("CAStartLSMainLoop Break 1");
+    if (g_lsServiceName == NULL)
+    {
+        OC_DBG("Failed to create Luna service name");
+        return;
+    }
+
+    g_loopContext = g_main_context_new();
+    g_mainLoop = g_main_loop_new(g_loopContext, FALSE);
+    g_main_context_push_thread_default(g_loopContext);
+
+    if (!g_mainLoop)
+    {
+        OC_DBG("Failed to create main loop");
+        return;
+    }
+
+    if (!LSRegister(g_lsServiceName, &g_pLSHandle, &lserror))
+    {
+        OC_DBG("Failed to register LS Handle");
+        return;
+    }
+
+    if (!LSGmainAttach(g_pLSHandle, g_mainLoop, &lserror))
+    {
+        OC_DBG("Failed to attach main loop");
+        return;
+    }
+
+    OC_DBG("SSM Break 1");
+
+    g_isLSRegistering = false;
+    g_main_loop_run(g_mainLoop);
+    OC_DBG("SSM Break 2");
+
+    g_main_context_unref(g_loopContext);
+    g_main_loop_unref(g_mainLoop);
+}
+
+LSHandle* CAGetLSHandle()
+{
+    OC_DBG("CAGetLSHandle");
+    return g_pLSHandle;
+}
+
+/**
+ * Get connection status callback.
+ */
+static bool get_connection_status_cb(LSHandle *sh, LSMessage *message, void *ctx)
+{
+    OC_DBG("Callback for com.webos.service.connectionmanager/getstatus is invoked...");
+
+    //OC_UNUSED(sh);
+    //OC_UNUSED(ctx);
+
+    jvalue_ref parsedObj = {0};
+    jschema_ref input_schema = jschema_parse(j_cstr_to_buffer("{}"), DOMOPT_NOOPT, NULL);
+
+    if (!input_schema)
+        return false;
+
+    JSchemaInfo schemaInfo;
+    jschema_info_init(&schemaInfo, input_schema, NULL, NULL);
+    parsedObj = jdom_parse(j_cstr_to_buffer(LSMessageGetPayload(message)), DOMOPT_NOOPT, &schemaInfo);
+    jschema_release(&input_schema);
+
+    if (jis_null(parsedObj))
+        return true;
+
+    const char *payload = jvalue_tostring(parsedObj, input_schema);
+
+    OC_DBG("Paylod: %s", payload);
+    jvalue_ref wiredObj={0}, wifiObj ={0}, wiredStateObj={0}, wifiStateObj={0};
+
+    if (jobject_get_exists(parsedObj, J_CSTR_TO_BUF("wired"), &wiredObj))
+    {
+        if (jobject_get_exists(wiredObj, J_CSTR_TO_BUF("state"), &wiredStateObj))
+        {
+            if (jstring_equal2(wiredStateObj, J_CSTR_TO_BUF("connected")) && !gConnectionStates.isConnectWired)
+            {
+                gConnectionStates.isConnectWired = true;
+                //CAIPPassNetworkChangesToAdapter(CA_INTERFACE_UP);
+                oc_network_interface_event(NETWORK_INTERFACE_UP);
+                OC_DBG("Wired LAN is connected...");
+            }
+            else if (jstring_equal2(wiredStateObj, J_CSTR_TO_BUF("disconnected")) && gConnectionStates.isConnectWired)
+            {
+                gConnectionStates.isConnectWired = false;
+                //CAIPPassNetworkChangesToAdapter(CA_INTERFACE_DOWN);
+                oc_network_interface_event(NETWORK_INTERFACE_DOWN);
+                OC_DBG("Wired LAN is disconnected...");
+            }
+        }
+    }
+
+    if (jobject_get_exists(parsedObj, J_CSTR_TO_BUF("wifi"), &wifiObj))
+    {
+        if (jobject_get_exists(wifiObj, J_CSTR_TO_BUF("state"), &wifiStateObj))
+        {
+            if (jstring_equal2(wifiStateObj, J_CSTR_TO_BUF("connected")) && !gConnectionStates.isConnectWiFi)
+            {
+                gConnectionStates.isConnectWiFi = true;
+                //CAIPPassNetworkChangesToAdapter(CA_INTERFACE_UP);
+                oc_network_interface_event(NETWORK_INTERFACE_UP);
+                OC_DBG("Wi-Fi is connected...");
+            }
+            else if (jstring_equal2(wifiStateObj, J_CSTR_TO_BUF("disconnected")) && gConnectionStates.isConnectWiFi)
+            {
+                gConnectionStates.isConnectWiFi = false;
+                //CAIPPassNetworkChangesToAdapter(CA_INTERFACE_DOWN);
+                oc_network_interface_event(NETWORK_INTERFACE_DOWN);
+                OC_DBG("Wi-Fi is disconnected...");
+            }
+        }
+    }
+
+    return true;
+}
+
+static void CANetworkMonitorHandler()
+{
+    OC_DBG("CANetworkMonitorHandler");
+    LSError lserror;
+    LSErrorInit(&lserror);
+
+    if (!CAGetLSHandle())
+    {   
+        OC_DBG("Luna service handle is null");
+        exit(1);
+    }   
+
+    if(!LSCall(CAGetLSHandle(), LS_CONNECTIONMANAGER_GETSTATUS_URI,
+                            "{\"subscribe\":true}",
+                            get_connection_status_cb, NULL, NULL, &lserror))
+    {   
+        OC_DBG("com.webos.service.connectionmanager/getstatus failed");
+        LSErrorPrint(&lserror, stderr);
+    }   
+    else
+    {   
+        OC_DBG("com.webos.service.connectionmanager/getstatus succeeds");
+    }   
+}
+
+//bool CAInitializeLS(ca_thread_pool_t handle)
+bool CAInitializeLS(void)
+{
+    OC_DBG("CAInitializeLS");
+
+    //CAResult_t result = CA_STATUS_FAILED;
+    bool result = false;
+
+    if (CACheckLSRegistered())
+       return true;
+
+    if (g_isLSRegistering)
+    {
+        OC_DBG("Wait for registering LS service");
+        sleep(1);
+    }
+
+    CATriggerCreateLSServiceName();
+
+    //result = ca_thread_pool_add_task(handle, CAStartLSMainLoop, NULL);
+    result = pthread_create(&threadId_monitor, NULL, CAStartLSMainLoop, (void *)NULL);
+    if (result)
+    {
+        OC_DBG("LS thread_pool_add_task failed");
+        return result;
+    }
+
+    for (int i = 0; i < MAX_GET_LS_SERVICE_NAME_COUNT; i++)
+    {
+        if (CACheckLSRegistered())
+        {
+            result = true;
+            break;
+        }
+        else
+        {
+            sleep(1);
+            result = false;
+        }
+    }
+    return result;
+}
+
+void CATerminateLS()
+{
+    OC_DBG("CATerminateLS");
+    LSError lserror;
+    LSErrorInit(&lserror);
+
+    if (g_pLSHandle)
+    {
+        OC_DBG("g_pLSHandle is not null");
+        if (!LSUnregister(g_pLSHandle, &lserror))
+        {
+            OC_DBG("Failed to unregister Luna service");
+            LSErrorPrint(&lserror, stderr);
+            LSErrorFree(&lserror);
+        }
+        g_pLSHandle = NULL;
+    }
+
+    g_main_loop_quit(g_mainLoop);
+}
+
+#endif /* OC_NETWORK_MONITOR_WEBOS */
 
 #ifdef OC_NETWORK_MONITOR
 /**
@@ -147,6 +479,7 @@ remove_ip_interface(int target_index)
   oc_list_remove(ip_interface_list, if_item);
   oc_memb_free(&ip_interface_s, if_item);
   OC_DBG("Removed from ip interface list: %d", target_index);
+  //OC_DBG("ETHERNET_DOWN...");
   return true;
 }
 
@@ -595,6 +928,7 @@ static int process_interface_change_event(void) {
       if (ifa) {
 #ifdef OC_NETWORK_MONITOR
         if (add_ip_interface(ifa->ifa_index)) {
+          //PRINT("ETHERNET_UP...");
           oc_network_interface_event(NETWORK_INTERFACE_UP);
         }
 #endif /* OC_NETWORK_MONITOR */
@@ -629,6 +963,7 @@ static int process_interface_change_event(void) {
       if (ifa) {
 #ifdef OC_NETWORK_MONITOR
         if (remove_ip_interface(ifa->ifa_index)) {
+          //PRINT("ETHERNET_DOWN...");
           oc_network_interface_event(NETWORK_INTERFACE_DOWN);
         }
 #endif /* OC_NETWORK_MONITOR */
@@ -1197,6 +1532,14 @@ oc_remove_network_interface_event_callback(interface_event_handler_t cb)
 void
 handle_network_interface_event_callback(oc_interface_event_t event)
 {
+  if (event == NETWORK_INTERFACE_DOWN)
+  {
+    OC_DBG("[SSM] INTERFACE DOWN");
+  }
+  else
+  {
+    OC_DBG("[SSM] INTERFACE UP");
+  }
   if (oc_list_length(oc_network_interface_cb_list) > 0) {
     oc_network_interface_cb_t *cb_item =
       oc_list_head(oc_network_interface_cb_list);
@@ -1560,6 +1903,8 @@ int oc_connectivity_init(size_t device) {
       OC_ERR("checking new IP interfaces failed.");
       return -1;
     }
+    CAInitializeLS();
+    CANetworkMonitorHandler();
 #endif /* OC_NETWORK_MONITOR */
     ifchange_initialized = true;
   }
