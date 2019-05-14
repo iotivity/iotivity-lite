@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 #define MAX_FILENAME_LENGTH 128
 
@@ -31,7 +32,7 @@ static void
 gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 {
   int idd_tag_len =
-    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
+    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%" PRIu64, name, device_index);
   idd_tag_len =
     (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
   idd_tag[idd_tag_len] = '\0';
