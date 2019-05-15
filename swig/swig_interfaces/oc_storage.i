@@ -106,16 +106,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 }
 #endif
 
-int jni_storage_config(const char *store) {
-#ifdef OC_SECURITY
-    OC_DBG("JNI: %s with path %s\n", __func__, store);
-    return oc_storage_config(store);
-#else
-    OC_DBG("JNI: OC_SECURITY disabled ignoring %s with path %s\n", __func__, store);
-    return 0;
-#endif /* OC_SECURITY */
-}
-
 %}
 
 #if defined(SWIGJAVA) 
@@ -137,7 +127,17 @@ $2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input);
 #endif 
 
 %rename (storageConfig) jni_storage_config;
-int jni_storage_config(const char *store);
+%inline %{
+int jni_storage_config(const char *store) {
+#ifdef OC_SECURITY
+    OC_DBG("JNI: %s with path %s\n", __func__, store);
+    return oc_storage_config(store);
+#else
+    OC_DBG("JNI: OC_SECURITY disabled ignoring %s with path %s\n", __func__, store);
+    return 0;
+#endif /* OC_SECURITY */
+}
+%}
 /*
 %rename (storageRead) oc_storage_read;
 long oc_storage_read(const char *store, uint8_t *buf, size_t size);
