@@ -22,6 +22,30 @@
       "revId": "2b0462560915b439a4a2f815bd0d18b59a9731bd",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_c109342e",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-15T00:22:04Z",
+      "side": 1,
+      "message": "i have no strong opinion.",
+      "parentUuid": "1a494da4_81ff2c01",
+      "range": {
+        "startLine": 127,
+        "startChar": 8,
+        "endLine": 127,
+        "endChar": 11
+      },
+      "revId": "2b0462560915b439a4a2f815bd0d18b59a9731bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
