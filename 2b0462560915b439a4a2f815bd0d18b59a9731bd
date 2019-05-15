@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_81ff2c01",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-15T00:08:48Z",
+      "side": 1,
+      "message": "In the Makefile-swig-otgc.mk they used INTROSPECTION instead of IDD.  IDD stands for Introspection Device Data. As long as someone understands what that means this makes since.  I used IDD because it is faster to type.  Do you think I should use INTROSPECTION instead?",
+      "range": {
+        "startLine": 127,
+        "startChar": 8,
+        "endLine": 127,
+        "endChar": 11
+      },
+      "revId": "2b0462560915b439a4a2f815bd0d18b59a9731bd",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
