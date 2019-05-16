@@ -25,7 +25,7 @@
 #	Linux: make OS=linux
 #	Android: 
 #		Set ANDROID_API and ANDROID_BASE in this makefile: make OS=android
-# 		or invoke like this: make OS=android NDK_HOME=/opt/android-ndk ANDROID_API=21
+# 		or invoke like this: make OS=android NDK_HOME=/opt/android-ndk ANDROID_API=23
 #
 
 JAVA_HOME ?= $(shell readlink -e "$$(dirname "$$(readlink -e "$$(which javac)")")"/..)
@@ -79,11 +79,11 @@ ifeq ($(OS),linux)
 endif
 ifeq ($(OS),android)
 	PORT_OBJ_DIR = ../port/android/arm-linux-androideabi-obj/
-	SWIG_CFLAG += -D__linux__
+	SWIG_CFLAG += -D__android__
 	HEADER_FILE += -I../port/android
 	LDFLAG += -llog
 ifeq ($(ANDROID_API),)
-	EXTRA_FLAG += -D__ANDROID_API__=21
+	EXTRA_FLAG += -D__ANDROID_API__=23
 else
 	EXTRA_FLAG += -D__ANDROID_API__=$(ANDROID_API)
 endif
