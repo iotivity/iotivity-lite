@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_815e0ce8",
+        "filename": "port/android/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T15:19:47Z",
+      "side": 1,
+      "message": "Everything above this should be removed... it applies to non-Java usage which is of no value anymore.",
+      "revId": "e252872c863ed4c7c41606bb7da7d4249cc4352e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_215298dd",
+        "filename": "port/android/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T15:19:47Z",
+      "side": 1,
+      "message": "since the default is 23, this should also be 23.",
+      "revId": "e252872c863ed4c7c41606bb7da7d4249cc4352e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_e147101c",
+        "filename": "port/android/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T15:19:47Z",
+      "side": 1,
+      "message": "with the name of the make file now \u0027Makefile\u0027 the -f can be removed.  Also TCP\u003d1 is no longer works for Android. DYNAMIC\u003d1 and SECURE\u003d1 are now the defaults. So the example can be\n\nmake IPV4\u003d1 DEBUG\u003d1",
+      "revId": "e252872c863ed4c7c41606bb7da7d4249cc4352e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_415524c5",
+        "filename": "port/android/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T15:19:47Z",
+      "side": 1,
+      "message": "See Makefile-swig... There is an instruction to copy the *.so files.  ie,\n\n# Copy the *.so to the appropriate jniLibs sub-directories, ie\n# cp *.so ../../swig/apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/.\n\n\nWe should incorporate the copy into this make file.",
+      "revId": "e252872c863ed4c7c41606bb7da7d4249cc4352e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
