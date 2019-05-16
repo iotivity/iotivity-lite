@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_81d3ac37",
+        "filename": "swig/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-16T20:39:55Z",
+      "side": 1,
+      "message": "The only reason we define this for the build is for the oc_clock api did we define __android__ macro in the oc_clock?",
+      "range": {
+        "startLine": 82,
+        "startChar": 16,
+        "endLine": 82,
+        "endChar": 28
+      },
+      "revId": "bbc655ae43b2c52fd39bf96d090de040f6bb36e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_a114e8f5",
         "filename": "swig/Makefile",
         "patchSetId": 1
@@ -30,6 +53,29 @@
       "writtenOn": "2019-05-16T18:34:10Z",
       "side": 1,
       "message": "Should be fixed in comment above also.",
+      "revId": "bbc655ae43b2c52fd39bf96d090de040f6bb36e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_61d82054",
+        "filename": "swig/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-16T20:39:55Z",
+      "side": 1,
+      "message": "$(CC) is exported from the Android Makefile. do we want to repeat that logic in this make file if CC is not defined?",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 85
+      },
       "revId": "bbc655ae43b2c52fd39bf96d090de040f6bb36e5",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
