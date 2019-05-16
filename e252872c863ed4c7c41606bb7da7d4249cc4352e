@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "1a494da4_2169f88b",
+        "filename": "port/android/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T18:24:47Z",
+      "side": 1,
+      "message": "Perhaps swig/Makefile is the place to do this copy.",
+      "parentUuid": "1a494da4_415524c5",
+      "revId": "e252872c863ed4c7c41606bb7da7d4249cc4352e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a494da4_c15814fd",
         "filename": "port/android/Makefile",
         "patchSetId": 2
