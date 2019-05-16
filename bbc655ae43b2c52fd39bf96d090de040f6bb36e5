@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_c10f74e0",
+        "filename": "swig/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T18:34:10Z",
+      "side": 1,
+      "message": "API\u003d23",
+      "revId": "bbc655ae43b2c52fd39bf96d090de040f6bb36e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a494da4_a114e8f5",
+        "filename": "swig/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-05-16T18:34:10Z",
+      "side": 1,
+      "message": "Should be fixed in comment above also.",
+      "revId": "bbc655ae43b2c52fd39bf96d090de040f6bb36e5",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
