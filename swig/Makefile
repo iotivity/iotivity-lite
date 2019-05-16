@@ -79,11 +79,11 @@ ifeq ($(OS),linux)
 endif
 ifeq ($(OS),android)
 	PORT_OBJ_DIR = ../port/android/arm-linux-androideabi-obj/
-	SWIG_CFLAG += -D__linux__
+	SWIG_CFLAG += -D__android__
 	HEADER_FILE += -I../port/android
 	LDFLAG += -llog
 ifeq ($(ANDROID_API),)
-	EXTRA_FLAG += -D__ANDROID_API__=21
+	EXTRA_FLAG += -D__ANDROID_API__=23
 else
 	EXTRA_FLAG += -D__ANDROID_API__=$(ANDROID_API)
 endif
@@ -111,6 +111,7 @@ build_jar:
 	$(JAVAC) -source 1.7 -target 1.7 -sourcepath $(IOTIVITY_LITE_JAVA_SRC_DIR) -d $(IOTIVITY_LITE_JAVA_BIN_DIR) $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/*.java
 	$(JAR) -cfv $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) -C $(IOTIVITY_LITE_JAVA_BIN_DIR) .
 
+# For Android, this is broken... $(CC) needs to be the gcc from the Android toolchain
 build_jni_so: $(JNI_SRC)
 	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
 
