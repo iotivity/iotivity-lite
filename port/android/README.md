@@ -74,41 +74,30 @@ Developers wishing to use Android Studio can find details here:
 
 Building IoTivity-Lite libraries
 =================================================
-Navigate to `<iotivity-lite>/swig/java_lang`
-Get SWIG to generate the Java and JNI code:
-
-    ./build_swig.sh android
-
-Build `iotivity-lite.jar`:
-
-    ./build-iotivity-lite.sh android
-
-The script will copy the `iotivity-lite.jar` to the Android app libs directory for each project.
-
-To build the `libiotivity-lite-jni.so` shared object library for Android cd to
+To build for Android cd to
 
     cd <iotivity-lite>/android/port
 
-The Makefile-swig uses then the Android NDK that was installed above.
+The Makefile uses then the Android NDK that was installed above.
 
-Either set ANDROID_API and ANDROID_BASE in the Makefile-swig or invoke like this:
+Either set ANDROID_API and ANDROID_BASE in the Makefile or invoke like this:
 
     make NDK_HOME=/opt/android-ndk ANDROID_API=23
 
 Example Usage:
 
-    make -f Makefile-swig DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 DEBUG=1
+    make IPV4=1 DEBUG=1
 
 or
 
-    make NDK_HOME=~/android-arm-23 ANDROID_API=23 -f Makefile-swig DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 DEBUG=1
+    make NDK_HOME=~/android-arm-23 ANDROID_API=23 IPV4=1 DEBUG=1
 
 Copy the libiotivity-lite-jni.so to the appropriate jniLibs sub-directories for each project:
 
     cp libiotivity-lite-jni.so ../../swig/apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
     cp libiotivity-lite-jni.so ../../swig/apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
 
-The Makefile-swig also contains a version of these same build instructions.
+The Makefile also contains a version of these same build instructions.
 
 Building and Running Samples
 =================================================
