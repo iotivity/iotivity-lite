@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a494da4_61e2e0d6",
+        "filename": "tools/README",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-05-17T23:46:22Z",
+      "side": 1,
+      "message": "the rename is not needed clang-format will pickup _clang-format as well.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "fd149afd80f89eadea74e95414c84fa75ad52f4b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
