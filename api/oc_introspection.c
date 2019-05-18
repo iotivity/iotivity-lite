@@ -14,9 +14,9 @@
  // limitations under the License.
  */
 
+#include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
-#include "oc_introspection.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
@@ -28,8 +28,7 @@
 #define MAX_TAG_LENGTH 20
 
 static void
-gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
-{
+gen_idd_tag(const char *name, size_t device_index, char *idd_tag) {
   int idd_tag_len =
     snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%d", name, device_index);
   idd_tag_len =
@@ -38,8 +37,7 @@ gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 }
 
 static int
-get_IDD_filename(size_t device_index, char *filename)
-{
+get_IDD_filename(size_t device_index, char *filename) {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device_index, idd_tag);
   int ret = oc_storage_read(idd_tag, (uint8_t *)filename, MAX_FILENAME_LENGTH);
@@ -52,8 +50,7 @@ get_IDD_filename(size_t device_index, char *filename)
 }
 
 void
-oc_set_introspection_file(size_t device, const char *filename)
-{
+oc_set_introspection_file(size_t device, const char *filename) {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   long ret =
@@ -64,8 +61,7 @@ oc_set_introspection_file(size_t device, const char *filename)
 }
 
 static long
-IDD_storage_size(const char *store)
-{
+IDD_storage_size(const char *store) {
   FILE *fp;
   long filesize;
 
@@ -83,8 +79,7 @@ IDD_storage_size(const char *store)
 }
 
 static size_t
-IDD_storage_read(const char *store, uint8_t *buf, size_t size)
-{
+IDD_storage_read(const char *store, uint8_t *buf, size_t size) {
   FILE *fp = 0;
 
   fp = fopen(store, "rb");
@@ -103,23 +98,20 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 #include "server_introspection.dat.h"
 
 static int
-get_IDD_filename(size_t index, char *filename)
-{
+get_IDD_filename(size_t index, char *filename) {
   (void)index;
   (void)filename;
   return 0;
 }
 
 static long
-IDD_storage_size(const char *store)
-{
+IDD_storage_size(const char *store) {
   (void)store;
   return introspection_data_size;
 }
 
 static size_t
-IDD_storage_read(const char *store, uint8_t *buf, size_t size)
-{
+IDD_storage_read(const char *store, uint8_t *buf, size_t size) {
   (void)store;
   memcpy(buf, introspection_data, size);
   return size;
@@ -129,8 +121,7 @@ IDD_storage_read(const char *store, uint8_t *buf, size_t size)
 
 static void
 oc_core_introspection_data_handler(oc_request_t *request,
-                                   oc_interface_mask_t iface_mask, void *data)
-{
+                                   oc_interface_mask_t iface_mask, void *data) {
   (void)iface_mask;
   (void)data;
 
@@ -160,8 +151,7 @@ oc_core_introspection_data_handler(oc_request_t *request,
 
 static void
 oc_core_introspection_wk_handler(oc_request_t *request,
-                                 oc_interface_mask_t iface_mask, void *data)
-{
+                                 oc_interface_mask_t iface_mask, void *data) {
   (void)data;
 
   int interface_index =
@@ -169,7 +159,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   enum transport_flags conn =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
-  */
+   */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
   memset(&uri, 0, sizeof(oc_string_t));
@@ -217,8 +207,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 }
 
 void
-oc_create_introspection_resource(size_t device)
-{
+oc_create_introspection_resource(size_t device) {
   OC_DBG("oc_introspection: Initializing introspection resource");
 
   oc_core_populate_resource(

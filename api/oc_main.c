@@ -53,15 +53,13 @@ static const oc_handler_t *app_callbacks;
 static oc_factory_presets_t factory_presets;
 
 void
-oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data)
-{
+oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data) {
   factory_presets.cb = cb;
   factory_presets.data = data;
 }
 
 oc_factory_presets_t *
-oc_get_factory_presets_cb(void)
-{
+oc_get_factory_presets_cb(void) {
   return &factory_presets;
 }
 
@@ -72,8 +70,7 @@ static size_t _OC_MAX_APP_DATA_SIZE = 8192;
 static size_t _OC_BLOCK_SIZE = 1024;
 
 int
-oc_set_mtu_size(size_t mtu_size)
-{
+oc_set_mtu_size(size_t mtu_size) {
   (void)mtu_size;
 #ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
@@ -89,14 +86,12 @@ oc_set_mtu_size(size_t mtu_size)
 }
 
 long
-oc_get_mtu_size(void)
-{
+oc_get_mtu_size(void) {
   return (long)_OC_MTU_SIZE;
 }
 
 void
-oc_set_max_app_data_size(size_t size)
-{
+oc_set_max_app_data_size(size_t size) {
   _OC_MAX_APP_DATA_SIZE = size;
 #ifndef OC_BLOCK_WISE
   _OC_BLOCK_SIZE = size;
@@ -105,57 +100,49 @@ oc_set_max_app_data_size(size_t size)
 }
 
 long
-oc_get_max_app_data_size(void)
-{
+oc_get_max_app_data_size(void) {
   return (long)_OC_MAX_APP_DATA_SIZE;
 }
 
 long
-oc_get_block_size(void)
-{
+oc_get_block_size(void) {
   return (long)_OC_BLOCK_SIZE;
 }
 #else
 int
-oc_set_mtu_size(size_t mtu_size)
-{
+oc_set_mtu_size(size_t mtu_size) {
   (void)mtu_size;
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
 long
-oc_get_mtu_size(void)
-{
+oc_get_mtu_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
 void
-oc_set_max_app_data_size(size_t size)
-{
+oc_set_max_app_data_size(size_t size) {
   (void)size;
   OC_WRN("Dynamic memory not available");
 }
 
 long
-oc_get_max_app_data_size(void)
-{
+oc_get_max_app_data_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
 long
-oc_get_block_size(void)
-{
+oc_get_block_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
-oc_shutdown_all_devices(void)
-{
+oc_shutdown_all_devices(void) {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
@@ -166,8 +153,7 @@ oc_shutdown_all_devices(void)
 }
 
 int
-oc_main_init(const oc_handler_t *handler)
-{
+oc_main_init(const oc_handler_t *handler) {
   int ret;
 
   if (initialized == true)
@@ -242,8 +228,7 @@ err:
 }
 
 oc_clock_time_t
-oc_main_poll(void)
-{
+oc_main_poll(void) {
   oc_clock_time_t ticks_until_next_event = oc_etimer_request_poll();
   while (oc_process_run()) {
     ticks_until_next_event = oc_etimer_request_poll();
@@ -252,8 +237,7 @@ oc_main_poll(void)
 }
 
 void
-oc_main_shutdown(void)
-{
+oc_main_shutdown(void) {
   if (initialized == false)
     return;
 
@@ -282,8 +266,7 @@ oc_main_shutdown(void)
 }
 
 void
-_oc_signal_event_loop(void)
-{
+_oc_signal_event_loop(void) {
   if (app_callbacks) {
     app_callbacks->signal_event_loop();
   }

@@ -22,23 +22,20 @@
 #include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef void (*oc_core_init_platform_cb_t)(void *data);
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
-typedef struct
-{
+typedef struct {
   oc_uuid_t pi;
   oc_string_t mfg_name;
   oc_core_init_platform_cb_t init_platform_cb;
   void *data;
 } oc_platform_info_t;
 
-typedef struct
-{
+typedef struct {
   oc_uuid_t di;
   oc_uuid_t piid;
   oc_string_t name;
@@ -79,12 +76,14 @@ oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device);
 
 void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
 
-void oc_core_populate_resource(
-  int core_resource, size_t device_index, const char *uri,
-  oc_interface_mask_t iface_mask, oc_interface_mask_t default_interface,
-  int properties, oc_request_callback_t get_cb,
-  oc_request_callback_t put_cb, oc_request_callback_t post_cb,
-  oc_request_callback_t delete_cb, int num_resource_types, ...);
+void oc_core_populate_resource(int core_resource, size_t device_index,
+                               const char *uri, oc_interface_mask_t iface_mask,
+                               oc_interface_mask_t default_interface,
+                               int properties, oc_request_callback_t get_cb,
+                               oc_request_callback_t put_cb,
+                               oc_request_callback_t post_cb,
+                               oc_request_callback_t delete_cb,
+                               int num_resource_types, ...);
 
 void oc_core_regen_unique_ids(size_t device);
 
