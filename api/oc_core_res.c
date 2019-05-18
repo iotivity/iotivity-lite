@@ -206,16 +206,16 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_rep_start_root_object();
 
   switch (iface_mask) {
-    case OC_IF_BASELINE:
-      oc_process_baseline_interface(request->resource);
-    /* fall through */
-    case OC_IF_RW: {
-      /* oic.wk.d attribute n shall always be the same value as
-      oic.wk.con attribute n. */
-      oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
-    } break;
-    default:
-      break;
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(request->resource);
+  /* fall through */
+  case OC_IF_RW: {
+    /* oic.wk.d attribute n shall always be the same value as
+    oic.wk.con attribute n. */
+    oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+  } break;
+  default:
+    break;
   }
 
   oc_rep_end_root_object();
@@ -261,8 +261,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   if (changed) {
     oc_send_response(request, OC_STATUS_CHANGED);
-  }
-  else {
+  } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
@@ -296,7 +295,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     OC_ERR("device limit reached");
     return NULL;
   }
-#else  /* !OC_DYNAMIC_ALLOCATION */
+#else /* !OC_DYNAMIC_ALLOCATION */
   size_t new_num = 1 + OCF_D * (device_count + 1);
   core_resources =
     (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
@@ -405,8 +404,8 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_R, OC_DISCOVERABLE,
-                            oc_core_platform_handler, 0, 0, 0, 1, "oic.wk.p");
+                            OC_IF_R, OC_DISCOVERABLE, oc_core_platform_handler,
+                            0, 0, 0, 1, "oic.wk.p");
 
 #ifndef OC_SECURITY
   oc_gen_uuid(&oc_platform_info.pi);
@@ -434,10 +433,9 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 }
 
 void
-oc_core_populate_resource(int core_resource, size_t device_index, const char *uri,
-                          oc_interface_mask_t iface_mask,
-                          oc_interface_mask_t default_interface,
-                          int properties,
+oc_core_populate_resource(int core_resource, size_t device_index,
+                          const char *uri, oc_interface_mask_t iface_mask,
+                          oc_interface_mask_t default_interface, int properties,
                           oc_request_callback_t get, oc_request_callback_t put,
                           oc_request_callback_t post,
                           oc_request_callback_t delete, int num_resource_types,
