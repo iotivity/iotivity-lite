@@ -14,9 +14,9 @@
  // limitations under the License.
  */
 
+#include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
-#include "oc_introspection.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include <stdio.h>
@@ -169,7 +169,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   enum transport_flags conn =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
-  */
+   */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
   memset(&uri, 0, sizeof(oc_string_t));
