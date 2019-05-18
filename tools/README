@@ -10,6 +10,11 @@ clang-format.
     # from project root directory run
     cp tools/_clang-format _clang-format
 
+if using older version of clang-format version 5.0 or older use
+
+    # from project root directory run
+    cp tools/_clang-format_v5_or_less _clang-format
+
 The clang-format tool can invoked directly for individual files.
 
     # from project root directory run
