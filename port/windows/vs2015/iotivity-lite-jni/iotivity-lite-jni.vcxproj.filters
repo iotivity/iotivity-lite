@@ -50,7 +50,9 @@
     <None Include="..\..\..\..\swig\swig_interfaces\iotivity.swg">
       <Filter>swig_interfaces</Filter>
     </None>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i" />
+    <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i">
+      <Filter>swig_interfaces</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_api.i">
