@@ -28,8 +28,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 extern CborEncoder g_encoder, root_map, links_array;
@@ -48,8 +47,8 @@ void oc_rep_new(uint8_t *payload, int size);
 /**
  * Get the size of the cbor encoded data.
  *
- * This can be used to check if the cbor encode data will fit inside the payload
- * buffer. If the payload buffer is too small -1 is returned.
+ * This can be used to check if the cbor encode data will fit inside the
+ * payload buffer. If the payload buffer is too small -1 is returned.
  *
  * @return
  *  - the size of the cbor encoded data.
@@ -62,8 +61,8 @@ int oc_rep_get_encoded_payload_size(void);
 /**
  * Get the buffer pointer at the start of the encoded cbor data.
  *
- * This is used when parsing the encoded cbor data to an oc_rep_t. It is unlikely
- * to be used outside the IoTivity-lite library.
+ * This is used when parsing the encoded cbor data to an oc_rep_t. It is
+ * unlikely to be used outside the IoTivity-lite library.
  *
  * @return pointer to the start of the cbor encoded buffer
  *
@@ -226,7 +225,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     // the following bytes equal "AAECAwQF" when base64 encoded
  *     uint8_t byte_string[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
  *     oc_rep_begin_root_object();
- *     oc_rep_set_byte_string(root, byte_string_key, byte_string, sizeof(byte_string));
+ *     oc_rep_set_byte_string(root, byte_string_key, byte_string,
+ *                            sizeof(byte_string));
  *     oc_rep_end_root_object();
  * ~~~
  */
@@ -266,7 +266,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+ *     int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
  *     oc_rep_start_root_object();
  *     oc_rep_set_key(oc_rep_object(root), "fibonacci");
  *     oc_rep_begin_array(oc_rep_object(root), fibonacci);
@@ -491,7 +491,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+ *     int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
  *     oc_rep_start_root_object();
  *     oc_rep_open_array(root, fibonacci);
  *     for(size_t i = 0; i < (sizeof(fib)/ sizeof(fib[0])); i++) {
@@ -565,11 +565,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   g_err |= cbor_encode_text_string(parent, key, strlen(key))
 
 /**
-* This macro has been replaced with oc_rep_open_array
-*
-* @see oc_rep_open_array
-* @see oc_rep_close_array
-*/
+ * This macro has been replaced with oc_rep_open_array
+ *
+ * @see oc_rep_open_array
+ * @see oc_rep_close_array
+ */
 #define oc_rep_set_array(object, key) oc_rep_open_array(object, key)
 
 /**
@@ -590,19 +590,19 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_array(&parent##_map, key)
 
 /**
-* Close the array object.  No additional items can be added to the array after
-* this is called.
-*
-* @see oc_rep_open_array
-*/
+ * Close the array object.  No additional items can be added to the array after
+ * this is called.
+ *
+ * @see oc_rep_open_array
+ */
 #define oc_rep_close_array(parent, key) oc_rep_end_array(&parent##_map, key)
 
 /**
-* This macro has been replaced with oc_rep_begin_object
-*
-* @see oc_rep_begin_object
-* @see oc_rep_end_object
-*/
+ * This macro has been replaced with oc_rep_begin_object
+ *
+ * @see oc_rep_begin_object
+ * @see oc_rep_end_object
+ */
 #define oc_rep_start_object(parent, key) oc_rep_begin_object(parent, key)
 
 #define oc_rep_begin_object(parent, key)                                       \
@@ -616,11 +616,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   while (0)
 
 /**
-* This macro has been replaced with oc_rep_object_array_begin_item
-*
-* @see oc_rep_object_array_begin_item
-* @see oc_rep_object_array_end_item
-*/
+ * This macro has been replaced with oc_rep_object_array_begin_item
+ *
+ * @see oc_rep_object_array_begin_item
+ * @see oc_rep_object_array_end_item
+ */
 #define oc_rep_object_array_start_item(key) oc_rep_object_array_begin_item(key)
 
 /**
@@ -674,11 +674,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_object_array_end_item(key) oc_rep_end_object(&key##_array, key)
 
 /**
-* This macro has been replaced with oc_rep_open_object
-*
-* @see oc_rep_open_object
-* @see oc_rep_close_object
-*/
+ * This macro has been replaced with oc_rep_open_object
+ *
+ * @see oc_rep_open_object
+ * @see oc_rep_close_object
+ */
 #define oc_rep_set_object(object, key) oc_rep_open_object(object, key)
 
 /**
@@ -715,11 +715,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_object(&parent##_map, key)
 
 /**
-* Close the object. No additional items can be added to the object after
-* this is called.
-*
-* @see oc_rep_open_object
-*/
+ * Close the object. No additional items can be added to the object after
+ * this is called.
+ *
+ * @see oc_rep_open_object
+ */
 #define oc_rep_close_object(parent, key) oc_rep_end_object(&parent##_map, key)
 
 /**
@@ -737,7 +737,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     int fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+ *     int64_t fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
  *     oc_rep_start_root_object();
  *     oc_rep_set_int_array(root,
  *                          fibonacci,
@@ -816,7 +816,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     oc_rep_set_double_array(root,
  *                             math_constants,
  *                             math_constants,
- *                             (int)(sizeof(math_constants)/ sizeof(math_constants[0]) ) );
+ *                             (int)(sizeof(math_constants)/
+ *                             sizeof(math_constants[0]) ) );
  *     oc_rep_end_root_object();
  * ~~~
  */
@@ -834,10 +835,9 @@ const uint8_t *oc_rep_get_encoder_buf(void);
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)
 
-
 /**
- * Add a string array using an oc_string_array_t as `values` to the cbor `object`
- * under the `key` name.
+ * Add a string array using an oc_string_array_t as `values` to the cbor
+ * `object` under the `key` name.
  *
  * Example:
  *
@@ -855,10 +855,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
- *     const char* str1 = "All generalizations are false, including this one.";
- *     const char* str2 = "Those who believe in telekinetics, raise my hand.";
- *     const char* str3 = "I refuse to join any club that would have me as a member.";
+ *     const char* str0 = "Do not take life too seriously. You will never get
+ * out of it alive."; const char* str1 = "All generalizations are false,
+ * including this one."; const char* str2 = "Those who believe in telekinetics,
+ * raise my hand."; const char* str3 = "I refuse to join any club that would
+ * have me as a member.";
  *
  *     oc_string_array_t quotes;
  *     oc_new_string_array(&quotes, (size_t)4);
@@ -898,8 +899,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 
 /**
  * Called after any `oc_rep_set_*`, `oc_rep_start_*`, `oc_rep_begin_*`,
- * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*` macros
- * to check if an error occurred while executing the commands.
+ * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*`
+ * macros to check if an error occurred while executing the commands.
  *
  * If the value returned is anything other than `CborNoError` then one of the
  * `oc_rep_*` macros failed.
@@ -931,8 +932,7 @@ typedef struct oc_rep_s
   oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;
-  union oc_rep_value
-  {
+  union oc_rep_value {
     int64_t integer;
     bool boolean;
     double double_p;
@@ -955,7 +955,7 @@ void oc_free_rep(oc_rep_t *rep);
  *
  * Example:
  * ~~~{.c}
- *         int ultimate_answer_out = 0;
+ *         int64_t ultimate_answer_out = 0;
  *         if( true == oc_rep_get_int(rep, "ultimate_answer",
  * &ultimate_answer_out)) {
  *             printf("The ultimate answer is : %d\n", ultimate_answer_out);
@@ -1022,7 +1022,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
  * ~~~{.c}
  *     char* byte_string_out = NULL;
  *     size_t str_len;
- *     if( true == oc_rep_get_byte_string(rep, "byte_string_key", &byte_string_out, &str_len)) {
+ *     if( true == oc_rep_get_byte_string(rep, "byte_string_key",
+ *                                        &byte_string_out, &str_len)) {
  *         // byte_string_out can be used
  *     }
  * ~~~
@@ -1036,7 +1037,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
  *
  * @see oc_rep_set_byte_string
  */
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
+bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                            size_t *size);
 
 /**
  * Read a text string value from an `oc_rep_t`
@@ -1045,8 +1047,9 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t
  * ~~~{.c}
  *     char* greeting_out = NULL;
  *     size_t str_len;
- *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out, &str_len)) {
- *         printf("%s\n", greeting_out);
+ *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out,
+ *                                   &str_len)) {
+ *       printf("%s\n", greeting_out);
  *     }
  * ~~~
  *
@@ -1059,16 +1062,18 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t
  *
  * @see oc_rep_set_text_string
  */
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
+bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
+                       size_t *size);
 
 /**
  * Read an integer array value from an `oc_rep_t`
  *
  * Example:
  * ~~~{.c}
- *     int* fib_out = 0;
+ *     int64_t* fib_out = 0;
  *     size_t fib_len;
- *     if( true == oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len)) {
+ *     if( true == oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len))
+ *     {
  *         // fib_out can now be used
  *     }
  * ~~~
@@ -1106,7 +1111,8 @@ bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
  *
  * @see oc_rep_set_bool_array
  */
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size);
+bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                           size_t *size);
 
 /**
  * Read an double array value from an `oc_rep_t`
@@ -1132,7 +1138,8 @@ bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t 
  *
  * @see oc_rep_set_double_array
  */
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size);
+bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                             size_t *size);
 
 /**
  * Read an byte string array value from an `oc_rep_t`
@@ -1147,7 +1154,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, siz
  *                                              &barray_len)) {
  *         for (size_t i = 0; i < barray_len); i++) {
  *             char* value = oc_byte_string_array_get_item(barray_out, i);
- *             size_t value_len =oc_byte_string_array_get_item_size(barray_out, i);
+ *             size_t value_len =
+ *               oc_byte_string_array_get_item_size(barray_out, i);
  *             // access the individual byte string
  *         }
  *     }
@@ -1164,7 +1172,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, siz
  * @see oc_byte_string_array_get_item
  * @see oc_byte_string_array_get_item_size
  */
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
+bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                                  oc_string_array_t *value, size_t *size);
 
 /**
  * Read a string array value from an `oc_rep_t`
@@ -1177,12 +1186,13 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_arra
  *                                         "quotes",
  *                                         &quotes_out,
  *                                         &quotes_len)) {
- *         printf("Quotes :\n")
- *         for (size_t i = 0; i < barray_len); i++) {
- *             char* value = oc_string_array_get_item(quotes_out, i);
- *             size_t value_len = oc_string_array_get_item_size(quotes_out, i);
- *             printf("[%zd] %s\n", i + 1, value);
- *         }
+ *       printf("Quotes :\n")
+ *       for (size_t i = 0; i < barray_len); i++) {
+ *         char* value = oc_string_array_get_item(quotes_out, i);
+ *         size_t value_len =
+ *             oc_string_array_get_item_size(quotes_out, i);
+ *         printf("[%zd] %s\n", i + 1, value);
+ *       }
  *     }
  * ~~~
  *
@@ -1198,7 +1208,8 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_arra
  * @see oc_string_array_get_item
  * @see oc_string_array_get_item_size
  */
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
+bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                             oc_string_array_t *value, size_t *size);
 
 /**
  * Read a object value from an `oc_rep_t`
@@ -1207,7 +1218,7 @@ bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *
  * ~~~{.c}
  *     oc_rep_t * my_object_out = NULL;
  *     if ( true == oc_rep_get_object(rep, "my_object", &my_object_out)) {
- *         int a_out;
+ *         int64_t a_out;
  *         if (oc_rep_get_int(my_object_out, "a", &a_out))
  *             printf("a = %d\n", a_out);
  *         bool b_out = true;
@@ -1234,27 +1245,28 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  * Read a object array value from an `oc_rep_t`
  *
  * Calling the returned value an array is a misnomer. The value actually
- * returned is a linked list of oc_rep_t objects. The linked list must be walked
- * to see each item in the object array.
+ * returned is a linked list of oc_rep_t objects. The linked list must be
+ * walked to see each item in the object array.
  *
  * Example:
  * ~~~{.c}
  *     oc_rep_t * space_2001_out = NULL;
- *     if ( true == oc_rep_get_object_array(rep, "space_2001", &space_2001_out)) {
- *         while (space_2001_out != NULL) {
- *             vhar * str_out = NULL;
- *             size_t str_out_size = 0;
- *             if (oc_rep_get_string(space_2001_out->value.object,
- *                                   "name",
- *                                   &str_out,
- *                                   &str_out_size))
- *                 printf("Character Name: %s", str_out);
- *             if (oc_rep_get_string(space_2001_out->value.object,
- *                                   "job",
- *                                    &str_out, &str_out_size))
- *                 printf(" job %s\n", str_out);
- *             space_2001_out = space_2001_out->next;
- *         }
+ *     if ( true == oc_rep_get_object_array(rep, "space_2001",
+ *                                          &space_2001_out)) {
+ *       while (space_2001_out != NULL) {
+ *         vhar * str_out = NULL;
+ *         size_t str_out_size = 0;
+ *         if (oc_rep_get_string(space_2001_out->value.object,
+ *                               "name",
+ *                               &str_out,
+ *                               &str_out_size))
+ *            printf("Character Name: %s", str_out);
+ *         if (oc_rep_get_string(space_2001_out->value.object,
+ *                               "job",
+ *                                &str_out, &str_out_size))
+ *           printf(" job %s\n", str_out);
+ *         space_2001_out = space_2001_out->next;
+ *       }
  *     }
  * ~~~
  *
