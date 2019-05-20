@@ -115,18 +115,17 @@ void jni_oc_core_add_device_callback(void *user_data)
   $2 = user_data;
 }
 %ignore oc_core_add_new_device;
-%rename(oc_core_add_new_device) jni_oc_add_device;
+%rename(OCCoreAddNewDevice) jni_oc_core_add_new_device0;
 %inline %{
-oc_device_info_t * jni_oc_core_add_new_device(const char *uri, const char *rt,
+oc_device_info_t * jni_oc_core_add_new_device0(const char *uri, const char *rt,
                                const char *name,
                                const char *spec_version,
-                               const char *data_model_version,
-                               oc_core_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
+                               const char *data_model_version) {
   OC_DBG("JNI: %s\n", __func__);
   return oc_core_add_new_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
 }
 %}
-%rename(oc_core_add_new_device) jni_oc_add_device1;
+%rename(OCCoreAddNewDevice) jni_oc_core_add_new_device1;
 %inline %{
 oc_device_info_t * jni_oc_core_add_new_device1(const char *uri, const char *rt,
                                const char *name,
@@ -138,7 +137,6 @@ oc_device_info_t * jni_oc_core_add_new_device1(const char *uri, const char *rt,
 }
 %}
 
-%rename (oc_core_add_new_device) oc_core_add_new_device;
 %rename (getNumDevices) oc_core_get_num_devices;
 %rename (getDeviceId) oc_core_get_device_id;
 %rename (getDeviceInfo) oc_core_get_device_info;

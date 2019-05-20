@@ -113,7 +113,7 @@ typedef enum {
 
 typedef struct oc_resource_s oc_resource_t;
 
-typedef struct
+typedef struct oc_request_t
 {
   oc_endpoint_t *origin;
   oc_resource_t *resource;
