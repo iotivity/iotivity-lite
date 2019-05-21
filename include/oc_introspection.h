@@ -19,6 +19,7 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
+#include "oc_core_res.h"
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -26,26 +27,51 @@ extern "C" {
 #endif
 
 /**
- * @brief functions for introspection .
- * The introspection mechanism is implemented by 2 different mechanisms
+ * @brief functions for introspection
  *
- * The first mechanism is reading the IDD file from a location.
- * The file is read with standard c library (fopen, fread, ..)
- * The IDD information is served up as encoded CBOR contents (e.g. read as is).
- * The file is read and passed to the requesting client on each call.
- * if the file size is to big for the buffer, then an internal error is given
- * back. note that this option can serve up more than 1 introspection file, if
- * multiple devices are implemented. This feature is enabled when the compile
- * switch OC_IDD_FILE is used.
+ * This provides multiple multiple mechanisms for adding introspection data
+ * to a server.
  *
- * The second option is to use an include file that contains the IDD
- * information. This is the default mechanism. The include file is called
- * "server_introspection.dat.h" and should contain introspection_data_size :
- * size of the array introspection_data uint8_t introspection_data[] : hex data
- * representing the IDD. one should place this file in a folder that gets
- * included in the build for example the include directory.
+ * The IDD information is served up as encoded CBOR contents (read as is).
+ * If the size of the IDD data is to big for the buffer, then an internal error
+ * is returned.  Note that some build options can only serve up introspection
+ * data for one device and can not be used if multiple devices are implemented.
+ *
+ * - Add OC_IDD_API (recomended) or OC_IDD_FILE to the compilers preprocessor
+ * macro defines
+ * - Set the introspection data for each device using oc_set_introspection_data
+ * or
+ * - Create a file that contains the introspection data specify name of the file
+ *   using oc_set_introspection_file.
+ *
+ * If OC_IDD_API was added to the preprocessor and the server does not call
+ * oc_set_introspection_data or oc_set_introspection_file the server will look
+ * for the file `IDD_<device_index>` in the location specified by
+ * oc_storage_config.
+ *
+ * If OC_IDD_FILE was added to the preprocessor and the server does not call
+ * oc_set_introspection_data or oc_set_introspection_file the server will look
+ * for the file `server_introspection.dat` in the same location as the server.
+ * This is added for backwards compatability with older privious implementations
+ * and is not recomended. Introspection data can only be added for a single
+ * device.
+ *
+ * The final option is to build without OC_IDD_API or OC_IDD_FILE to the
+ * compilers preprocessor macro defines. This is **not recomended** but is
+ * provided for backwards compatability.  The instrospection data is read from
+ * the headerfile `server_introspection.dat.h`. Introspection data can only be
+ * added for a single device.
+ *
+ * When using the final options the `server_introspeciton.dat.h` must
+ * contain two items:
+ *  1. a macro `introspection_data_size` that specifies the size of the
+ * introspection data in bytes
+ *  2. an array `uint8_t introspection_data[]` containing the hex data
+ * representing the IDD The header file must be placed in a folder that gets
+ * included in the build.
  */
 
+#if defined OC_IDD_API || defined OC_IDD_API
 /**
   @brief sets the filename of the introspection resource.
   if not set the file is "server_introspection.dat" is read from the location
@@ -57,12 +83,15 @@ extern "C" {
 void oc_set_introspection_file(size_t device, const char *filename);
 
 /**
-  @brief Creation of the oic.wk.introspection resource.
-
-  @param device index of the device to which the resource is to be created
-*/
-void oc_create_introspection_resource(size_t device);
-
+ * @brief Set the IDD by passing in an array containing the data
+ *
+ * @param device index of the device to which the IDD describes
+ * @param IDD an array of CBOR encoded bytes containing the introspection device
+ * data
+ * @param IDD_size the size of the IDD array
+ */
+void oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size);
+#endif /* OC_IDD_API or OC_IDD_FILE */
 #ifdef __cplusplus
 }
 #endif
