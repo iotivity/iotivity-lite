@@ -60,9 +60,13 @@ HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I
 # Compile Swig generated C/C++ files
 EXTRA_HEADER_FILE = -I"$(JAVA_HOME)/include/" -I"$(JAVA_HOME)/include/linux/"
 JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow
-EXTRA_FLAG = -std=gnu99 -Wall -DOC_DEBUG -g -O0 -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DLONG_BIT=64
+EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DLONG_BIT=64
 DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
 LDFLAG += -lm
+
+ifeq ($(DEBUG),1)
+	EXTRA_FLAG += -DOC_DEBUG -g -O0
+endif
 
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
 		oc_api oc_obt oc_pki oc_introspection oc_core_res
