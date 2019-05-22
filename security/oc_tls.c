@@ -1126,6 +1126,7 @@ oc_tls_init_context(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_DEBUG
+  mbedtls_platform_set_snprintf(snprintf);
   mbedtls_debug_set_threshold(4);
 #endif /* OC_DEBUG */
 
