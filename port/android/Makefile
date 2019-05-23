@@ -62,9 +62,9 @@
 export OS=android
 export ANDROID_API := 23
 ifeq (${NDK_HOME},)
-ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
+export ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
 else
-ANDROID_BASE := "${NDK_HOME}"
+export ANDROID_BASE := "${NDK_HOME}"
 endif
 # Compiler prefix
 ANDROID_HOST := arm-linux-androideabi-

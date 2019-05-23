@@ -32,7 +32,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 
     if (getEnvResult == JNI_EDETACHED)
     {
+#ifdef __ANDROID__
         if(JCALL2(AttachCurrentThread, vm, &jenv, NULL) < 0)
+#else
+        if(JCALL2(AttachCurrentThread, vm, (void**)&jenv, NULL) < 0)
+#endif
         {
             OC_DBG("Failed to get the environment");
             return -1;

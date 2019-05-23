@@ -3,7 +3,7 @@
 %include "stdint.i"
 #define OC_DYNAMIC_ALLOCATION
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__ANDROID__)
 #define CLOCKS_PER_SEC (1000000)
 #endif
 

@@ -57,8 +57,6 @@ SWIG_INTERFACES_DIR = swig_interfaces/
 SWIG_CFLAG = 
 HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security
 
-# Compile Swig generated C/C++ files
-EXTRA_HEADER_FILE = -I"$(JAVA_HOME)/include/" -I"$(JAVA_HOME)/include/linux/"
 JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow
 EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DLONG_BIT=64
 DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
@@ -76,12 +74,15 @@ SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
 JNI_SRC = $(addsuffix _wrap.c, $(SRC))
 
 ifeq ($(OS),linux)
+	EXTRA_HEADER_FILE = -I"$(JAVA_HOME)/include/" -I"$(JAVA_HOME)/include/linux/"
 	PORT_OBJ_DIR = ../port/linux/obj/
 	SWIG_CFLAG += -D__linux__
+	EXTRA_FLAG += -fno-strict-aliasing
 	HEADER_FILE += -I../port/linux
 	LDFLAG += -lpthread -lrt
 endif
 ifeq ($(OS),android)
+	EXTRA_HEADER_FILE = -I"$(ANDROID_BASE)/sysroot/usr/include/"
 	PORT_OBJ_DIR = ../port/android/arm-linux-androideabi-obj/
 	SWIG_CFLAG += -D__linux__
 	HEADER_FILE += -I../port/android
