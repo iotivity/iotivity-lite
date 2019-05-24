@@ -62,6 +62,8 @@ EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALL
 DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
 LDFLAG += -lm
 
+INSTALL_ANDROID_LIBS =
+
 ifeq ($(DEBUG),1)
 	EXTRA_FLAG += -DOC_DEBUG -g -O0
 endif
@@ -87,6 +89,7 @@ ifeq ($(OS),android)
 	SWIG_CFLAG += -D__linux__
 	HEADER_FILE += -I../port/android
 	LDFLAG += -llog
+	INSTALL_ANDROID_LIBS = install_android_libs
 ifeq ($(ANDROID_API),)
 	EXTRA_FLAG += -D__ANDROID_API__=23
 else
@@ -96,7 +99,7 @@ endif
 
 JAVA_LANG_OBJ_DIR += $(PORT_OBJ_DIR)swig/
 
-all: clean build_swig build_jar build_jni_so
+all: clean build_swig build_jar build_jni_so $(INSTALL_ANDROID_LIBS)
 
 .PHONY: clean
 
@@ -111,13 +114,28 @@ copy_java:
 	mkdir -p $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
 	cp $(OC_JAVA_DIR)oc/*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
 
-build_jar:
+build_jar: copy_java
 	mkdir -p $(IOTIVITY_LITE_JAVA_BIN_DIR)
 	$(JAVAC) -source 1.7 -target 1.7 -sourcepath $(IOTIVITY_LITE_JAVA_SRC_DIR) -d $(IOTIVITY_LITE_JAVA_BIN_DIR) $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/*.java
 	$(JAR) -cfv $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) -C $(IOTIVITY_LITE_JAVA_BIN_DIR) .
 
 build_jni_so: $(JNI_SRC)
 	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
+
+install_android_libs: build_swig build_jar build_jni_so
+	# copy so and jar files to samples
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_simple_client/SimpleClient/app/libs/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_simple_server/SimpleServer/app/libs/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_on_boarding_tool/OnBoardingTool/app/libs/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_simple_client/SimpleClient/app/libs/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_simple_server/SimpleServer/app/libs/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/
 
 %_wrap.c:
 	mkdir -p $(JAVA_LANG_OBJ_DIR)
@@ -132,3 +150,16 @@ clean:
 	rm -rf $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc
 	rm -rf $(IOTIVITY_LITE_JAVA_BIN_DIR)
 	rm -rf $(JAVA_LANG_OBJ_DIR)
+	# delete so and jar files copied to samples
+	rm -f apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_simple_client/SimpleClient/app/libs/$(JAR_NAME)
+	rm -f apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_simple_server/SimpleServer/app/libs/$(JAR_NAME)
+	rm -f apps/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_on_boarding_tool/OnBoardingTool/app/libs/$(JAR_NAME)
+	rm -f apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_simple_client/SimpleClient/app/libs/$(JAR_NAME)
+	rm -f apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_simple_server/SimpleServer/app/libs/$(JAR_NAME)
+	rm -f apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/$(JAR_NAME)

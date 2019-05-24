@@ -92,12 +92,12 @@ or
 
     make NDK_HOME=~/android-arm-23 ANDROID_API=23 IPV4=1 DEBUG=1
 
-Copy the libiotivity-lite-jni.so to the appropriate jniLibs sub-directories for each project:
+The Make file will build and copy the library files (*.so and *.jar) into the
+provided samples.
 
-    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
-    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
-
-The Makefile also contains a version of these same build instructions.
+If developing your own project you may need to manually copy the libraries from
+`<iotivity-lite-root>/swig/iotivity-lite-java/libs` to the location expected
+by your project.
 
 Building and Running Samples
 =================================================
