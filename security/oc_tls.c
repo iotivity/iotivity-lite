@@ -33,6 +33,7 @@
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
 #include "mbedtls/error.h"
+#include "mbedtls/platform.h"
 #endif /* OC_DEBUG */
 
 #include "api/oc_events.h"
@@ -1126,6 +1127,10 @@ oc_tls_init_context(void)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_DEBUG
+#if defined(_WIN32) || defined(_WIN64)
+  // mbedtls debug logs fail if snprintf is not specified
+  mbedtls_platform_set_snprintf(snprintf);
+#endif /* _WIN32 or _WIN64 */
   mbedtls_debug_set_threshold(4);
 #endif /* OC_DEBUG */
 
