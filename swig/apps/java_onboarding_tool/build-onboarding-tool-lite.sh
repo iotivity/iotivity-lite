@@ -7,7 +7,7 @@ rm -rf ./bin
 mkdir ./bin
 
 # compile server java files
-javac  -cp ../../java_lang/iotivity-lite.jar  -sourcepath ./src  -d ./bin  ./src/java_onboarding_tool/*.java
+javac  -cp ../../iotivity-lite-java/libs/iotivity-lite.jar  -sourcepath ./src  -d ./bin  ./src/java_onboarding_tool/*.java
 
 # create jar file
 jar -cfv onboarding-tool-lite.jar -C ./bin  .
