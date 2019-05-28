@@ -165,7 +165,7 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(IDD), 1)
-	EXTRA_CFLAGS += -DOC_IDD_FILE
+	EXTRA_CFLAGS += -DOC_IDD_API
 endif
 
 ifneq ($(SECURE),0)

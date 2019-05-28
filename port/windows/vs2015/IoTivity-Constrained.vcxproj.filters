@@ -588,6 +588,9 @@
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h">
       <Filter>Core\c-timestamp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_introspection_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">
