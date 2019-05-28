@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -Djava.library.path=../../../java_lang -cp onboarding-tool-lite.jar:../../../java_lang/iotivity-lite.jar java_oc_onboarding_tool.ObtMain
+java -Djava.library.path=../../../iotivity-lite-java/libs -cp onboarding-tool-lite.jar:../../../iotivity-lite-java/libs/iotivity-lite.jar java_oc_onboarding_tool.ObtMain
