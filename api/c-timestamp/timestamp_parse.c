@@ -115,7 +115,8 @@ timestamp_parse(const char *str, size_t len, timestamp_t *tsp)
   sod = hour * 3600 + min * 60 + sec;
   end = cur + len;
   cur = cur + 19;
-  offset = nsec = 0;
+  offset = 0;
+  nsec = 0;
 
   ch = *cur++;
   if (ch == '.') {

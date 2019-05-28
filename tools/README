@@ -1,16 +1,37 @@
-Both tools, pre-commit and check-style, use clang-format to fix the code style.
+The `pre-commit` and `check-style` tools use `clang-format` to fix the code style.
 
-In order to use the tools one should copy the file "_clang-format" to the
-project's root dir. This file contains the description of the iotivity-constrained code
-style and will be used by clang-format.
+For Linux clang-format is part of clang and can be installed using your package manager
+For Windows clang-format can be downloaded from http://llvm.org/builds/
 
-The check-style tool can fix the code style of the project's file or only print
-the changes. If no parameter is given the files are automatically fixed, to only
-print the changes the option "-p" should be given.
+In order to use the tools copy the file "_clang-format" to the project's root directory.
+This file contains the description of the IoTivity-lite code style and will be used by
+clang-format.
+
+    # from project root directory run
+    cp tools/_clang-format _clang-format
+
+The clang-format tool can invoked directly for individual files.
+
+    # from project root directory run
+    clang-format -style=file -i <*.c or *.h file>
+
+The check-style tool can fix the code style of all the project's *.c and *.h files
+or only print the changes. If no parameter is given the files are automatically fixed,
+to only print the changes the option "-p" should be given.
+
+    # to print the changes run
+    python tools/check-style -p
+    # to automatically fix the the files run
+    python tools/check-style
 
 The pre-commit tool is a git hook that fix the code style of the commmit
-automatically.  To use this tool one have to copy this file to
-<project-root-dir>/.git/hooks/
+automatically.  To use this tool copy this file to <project-root-dir>/.git/hooks/
+
+    # from project root directory
+    cp tools/pre-commit .git/hooks/pre-commit
 
 Invoke doxygen doygen.ini to create the Doxygen API documentation.
 Afterwards you find the start page by loading html/index.html.
+
+    # from project root directory
+    cd tools & doxygen doxygen.ini

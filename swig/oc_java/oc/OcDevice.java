@@ -51,8 +51,8 @@ public class OcDevice {
         return OCCoreRes.getDeviceId(deviceIndex);
     }
 
-    public void setIntrospectionFile(String filename) {
-        OCIntrospection.setIntrospectionFile(deviceIndex, filename);
+    public void setIntrospectionData(byte[] IDD) {
+        OCIntrospection.setIntrospectionData(deviceIndex, IDD);
     }
 
     public void addResource(OcResource resource) {
