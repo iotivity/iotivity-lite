@@ -28,6 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "timestamp.h"
+#include <assert.h>
 #include <stddef.h>
 #include <time.h>
 
@@ -40,7 +41,7 @@ static void
 rdn_to_struct_tm(uint32_t rdn, struct tm *tmp)
 {
   uint32_t Z, H, A, B;
-  uint16_t C, y, m, d;
+  uint32_t C, y, m, d;
 
   Z = rdn + 306;
   H = 100 * Z - 25;
@@ -75,7 +76,8 @@ timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp, const bool local)
   sec = tsp->sec + RDN_OFFSET;
   if (local)
     sec += tsp->offset * 60;
-  rdn = sec / 86400;
+  assert((sec / 86400) <= UINT32_MAX);
+  rdn = (uint32_t)sec / 86400;
   sod = sec % 86400;
 
   rdn_to_struct_tm(rdn, tmp);
