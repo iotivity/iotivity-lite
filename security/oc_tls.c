@@ -131,9 +131,9 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-static const int psk_priority[7] = {
+static const int psk_priority[6] = {
 #else  /* OC_PKI */
-static const int psk_priority[3] = {
+static const int psk_priority[2] = {
 #endif /* !OC_PKI */
   MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
 #ifdef OC_PKI
@@ -142,11 +142,9 @@ static const int psk_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
-  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
   0
 };
 
-#ifdef OC_CLIENT
 #ifdef OC_PKI
 static const int anon_ecdh_priority[7] = {
 #else  /* OC_PKI */
@@ -163,14 +161,14 @@ static const int anon_ecdh_priority[3] = {
   0
 };
 
+#ifdef OC_CLIENT
 #ifdef OC_PKI
-static const int cert_priority[7] = {
+static const int cert_priority[6] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
   MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
   0
 };
 #endif /* OC_PKI */
@@ -874,7 +872,13 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
   (void)endpoint;
 
-  if (!ciphers) {
+#ifdef OC_SERVER
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
+  if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
+    ciphers = (int *)anon_ecdh_priority;
+  } else
+#endif /* OC_SERVER */
+    if (!ciphers) {
     ciphers = (int *)psk_priority;
 
 #ifdef OC_CLIENT
