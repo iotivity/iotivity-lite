@@ -14,7 +14,6 @@
 // limitations under the License.
 */
 
-
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -38,9 +37,11 @@
 
 #include "api/oc_events.h"
 #include "api/oc_main.h"
+#include "messaging/coap/observe.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
+#include "oc_client_state.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
@@ -202,8 +203,19 @@ static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
-
-  coap_free_transaction_by_endpoint(&peer->endpoint);
+  oc_list_remove(tls_peers, peer);
+#ifdef OC_SERVER
+  /* remove all observations by this peer */
+  coap_remove_observer_by_client(&peer->endpoint);
+#endif /* OC_SERVER */
+  /* remove all open transactions associated to this endpoint */
+  coap_free_transactions_by_endpoint(&peer->endpoint);
+#ifdef OC_CLIENT
+  /* remove all remaining client_cbs awaiting a response from this endpoint and
+   * notify a 5.03 status to the application.
+   */
+  oc_ri_free_client_cbs_by_endpoint(&peer->endpoint);
+#endif /* OC_CLIENT */
 
 #ifdef OC_PKI
   /* Free all roles bound to this (D)TLS session */
@@ -213,8 +225,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #ifdef OC_TCP
   if (peer->endpoint.flags & TCP) {
     oc_connectivity_end_session(&peer->endpoint);
-  } else
-  {
+  } else {
     oc_session_end_event(&peer->endpoint);
   }
 #endif /* OC_TCP */
@@ -235,7 +246,6 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   }
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
-  oc_list_remove(tls_peers, peer);
   oc_memb_free(&tls_peers_s, peer);
 }
 
@@ -361,8 +371,8 @@ check_retr_timers(void)
           mbedtls_ssl_session_reset(&peer->ssl_ctx);
           if (peer->role == MBEDTLS_SSL_IS_SERVER &&
               mbedtls_ssl_set_client_transport_id(
-                  &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-                  sizeof(peer->endpoint.addr)) != 0) {
+                &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+                sizeof(peer->endpoint.addr)) != 0) {
             oc_tls_free_peer(peer, false);
             peer = next;
             continue;
@@ -391,7 +401,7 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
     timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
     oc_etimer_stop(&timer->fin_timer);
     timer->fin_timer.timer.interval =
-        (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
+      (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
     OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler);
     oc_etimer_restart(&timer->fin_timer);
     OC_PROCESS_CONTEXT_END(&oc_tls_handler);
@@ -1071,8 +1081,8 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 
       if (role == MBEDTLS_SSL_IS_SERVER &&
           mbedtls_ssl_set_client_transport_id(
-              &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
-              sizeof(endpoint->addr)) != 0) {
+            &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
+            sizeof(endpoint->addr)) != 0) {
         oc_memb_free(&tls_peers_s, peer);
         return NULL;
       }
@@ -1182,8 +1192,8 @@ oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
   uint8_t A[MBEDTLS_MD_MAX_SIZE], buf[MBEDTLS_MD_MAX_SIZE];
   size_t i, msg_len;
   int gen_output = 0, copy_len,
-    hash_len =
-      mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
+      hash_len =
+        mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
   mbedtls_md_context_t hmacA, hmacA_next;
   va_list msg_list;
   const uint8_t *msg;
@@ -1241,11 +1251,13 @@ exit_tls_prf:
   return gen_output;
 }
 
-bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
-                             const size_t oxm_len, const uint8_t *server_uuid,
-                             const size_t server_uuid_len,
-                             const uint8_t *obt_uuid, const size_t obt_uuid_len,
-                             uint8_t *key, const size_t key_len) {
+bool
+oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+                        const size_t oxm_len, const uint8_t *server_uuid,
+                        const size_t server_uuid_len, const uint8_t *obt_uuid,
+                        const size_t obt_uuid_len, uint8_t *key,
+                        const size_t key_len)
+{
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
     return false;
@@ -1307,8 +1319,8 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   key_block_len = 2 * (mac_key_len + key_size + iv_size);
 
   if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
-          sizeof(label), peer->client_server_random + 32, (size_t)32,
-          peer->client_server_random, (size_t)32) != key_block_len) {
+                 sizeof(label), peer->client_server_random + 32, (size_t)32,
+                 peer->client_server_random, (size_t)32) != key_block_len) {
     return false;
   }
 
@@ -1478,8 +1490,8 @@ read_application_data(oc_tls_peer_t *peer)
         /* For HelloVerifyRequest cookies */
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             mbedtls_ssl_set_client_transport_id(
-                &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-                sizeof(peer->endpoint.addr)) != 0) {
+              &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+              sizeof(peer->endpoint.addr)) != 0) {
           oc_tls_free_peer(peer, false);
           return;
         }
@@ -1565,7 +1577,8 @@ oc_tls_recv_message(oc_message_t *message)
   }
 }
 
-OC_PROCESS_THREAD(oc_tls_handler, ev, data) {
+OC_PROCESS_THREAD(oc_tls_handler, ev, data)
+{
   OC_PROCESS_BEGIN();
 
   while (1) {
