@@ -84,19 +84,6 @@ oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
 }
 
 #ifdef OC_PKI
-typedef struct oc_x509_crt_t
-{
-  struct oc_x509_crt_t *next;
-  size_t device;
-  oc_sec_cred_t *cred;
-  mbedtls_x509_crt cert;
-  mbedtls_pk_context pk;
-} oc_x509_crt_t;
-
-#include "oc_certs.h"
-OC_MEMB(identity_certs_s, oc_x509_crt_t, 2 * OC_MAX_NUM_DEVICES);
-OC_LIST(identity_certs);
-
 typedef struct oc_x509_cacrt_t
 {
   struct oc_x509_cacrt_t *next;
@@ -104,8 +91,24 @@ typedef struct oc_x509_cacrt_t
   oc_sec_cred_t *cred;
   mbedtls_x509_crt *cert;
 } oc_x509_cacrt_t;
+
 OC_MEMB(ca_certs_s, oc_x509_cacrt_t, OC_MAX_NUM_DEVICES);
 OC_LIST(ca_certs);
+
+typedef struct oc_x509_crt_t
+{
+  struct oc_x509_crt_t *next;
+  size_t device;
+  oc_sec_cred_t *cred;
+  mbedtls_x509_crt cert;
+  mbedtls_pk_context pk;
+  oc_x509_cacrt_t *ctx;
+} oc_x509_crt_t;
+
+#include "oc_certs.h"
+OC_MEMB(identity_certs_s, oc_x509_crt_t, 2 * OC_MAX_NUM_DEVICES);
+OC_LIST(identity_certs);
+
 mbedtls_x509_crt trust_anchors;
 #endif /* OC_PKI */
 
@@ -890,12 +893,33 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 {
   (void)opq;
   (void)flags;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   OC_DBG("verifying certificate at depth %d", depth);
   if (depth > 0) {
     if (oc_certs_validate_root_cert(crt) < 0) {
       if (oc_certs_validate_intermediate_cert(crt) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
         return -1;
+      }
+    } else {
+      /* For D2D handshakes involving identity certificates:
+       * Find a trusted root that matches the peer's root and store it
+       * as context accompanying the identity certificate. This is queried
+       * after validating the end-entity certificate to authorize the
+       * the peer per the OCF Specification. */
+      oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+        oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
+        while (ca_cert) {
+          if (ca_cert->device == id_cert->device &&
+              ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA &&
+              crt->raw.len == ca_cert->cert->raw.len &&
+              memcmp(crt->raw.p, ca_cert->cert->raw.p, crt->raw.len) == 0) {
+            id_cert->ctx = ca_cert;
+            break;
+          }
+          ca_cert = ca_cert->next;
+        }
       }
     }
   } else if (oc_certs_validate_end_entity_cert(crt) < 0) {
@@ -904,8 +928,6 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   }
 
   if (depth == 0) {
-    oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
-
     /* Parse the peer's subjectuuid from its end-entity certificate */
     oc_string_t uuid;
     if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
@@ -935,12 +957,14 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       wildcard_sub.id[0] = '*';
 
       /* Get a handle to the peer's root certificate */
-      mbedtls_x509_crt *root_crt = crt;
-      while (root_crt->next) {
-        root_crt = root_crt->next;
+      if (!id_cert->ctx || !id_cert->ctx->cert) {
+        OC_DBG("could not find peer's root certificate");
+        return -1;
       }
+      mbedtls_x509_crt *root_crt = id_cert->ctx->cert;
 
-      OC_DBG("looking for a matching trustca currently tracked by oc_tls");
+      OC_DBG(
+        "looking for a matching trustca entry currently tracked by oc_tls");
       oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
       for (; ca_cert != NULL && ca_cert->device == id_cert->device &&
              ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA;
