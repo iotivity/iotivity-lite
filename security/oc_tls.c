@@ -176,6 +176,14 @@ static const int cert_priority[7] = {
 #endif /* OC_PKI */
 #endif /* OC_CLIENT */
 
+#ifdef OC_PKI
+mbedtls_x509_crt *
+oc_tls_get_trust_anchors(void)
+{
+  return &trust_anchors;
+}
+#endif /* OC_PKI */
+
 #ifdef OC_DEBUG
 static void
 oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
