@@ -36,6 +36,7 @@ typedef struct device_handle_t
 {
   struct device_handle_t *next;
   oc_uuid_t uuid;
+  char device_name[64];
 } device_handle_t;
 /* Pool of device handles */
 OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
@@ -217,7 +218,7 @@ is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 }
 
 static bool
-add_device_to_list(oc_uuid_t *uuid, oc_list_t list)
+add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
 {
   if (is_device_in_list(uuid, list)) {
     return true;
@@ -229,9 +230,9 @@ add_device_to_list(oc_uuid_t *uuid, oc_list_t list)
   }
 
   memcpy(device->uuid.id, uuid->id, 16);
-
+  strncpy(device->device_name, device_name, 64);
+  device->device_name[64 - 1] = '\0';
   oc_list_add(list, device);
-
   return true;
 }
 
@@ -248,11 +249,50 @@ empty_device_list(oc_list_t list)
 
 /* App invocations of oc_obt APIs */
 static void
+get_device(oc_client_response_t *data)
+{
+  oc_rep_t *rep = data->payload;
+  oc_string_t *n = NULL;
+  oc_string_t *di = NULL;
+  // find the human readable device name and device id (uuid)
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_STRING:
+      if (strcmp("n", oc_string(rep->name)) == 0) {
+        n = &rep->value.string;
+      }
+      if (strcmp("di", oc_string(rep->name)) == 0) {
+        di = &rep->value.string;
+      }
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  oc_uuid_t uuid;
+  oc_str_to_uuid(oc_string(*di), &uuid);
+  add_device_to_list(&uuid, oc_string(*n), data->user_data);
+  // use add device name to the device with matching device id
+  // device_handle_t *device = (device_handle_t *)oc_list_head(data->user_data);
+  // while (device != NULL) {
+  //    oc_uuid_t id;
+  //    oc_str_to_uuid(oc_string(*di), &id);
+  //    if (memcmp(device->uuid.id, &id, 16) == 0) {
+  //        strncpy(device->device_name, oc_string(*n), 64);
+  //        break;
+  //    }
+  //    device = device->next;
+  //}
+}
+
+static void
 unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
+  oc_endpoint_t *ep = eps;
 
   PRINT("\nDiscovered unowned device: %s at:\n", di);
   while (eps != NULL) {
@@ -261,7 +301,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  add_device_to_list(uuid, unowned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, unowned_devices);
 }
 
 static void
@@ -270,6 +310,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
+  oc_endpoint_t *ep = eps;
 
   PRINT("\nDiscovered owned device: %s at:\n", di);
   while (eps != NULL) {
@@ -278,7 +319,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  add_device_to_list(uuid, owned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, owned_devices);
 }
 
 static void
@@ -308,7 +349,7 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    add_device_to_list(uuid, owned_devices);
+    discover_owned_devices();
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
@@ -330,7 +371,7 @@ otm_rdp(void)
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
@@ -355,7 +396,6 @@ otm_rdp(void)
   } else {
     PRINT("\nERROR issuing request to perform Random PIN OTM\n");
   }
-
   /* Having issued an OTM request, remove this item from the unowned device list
    */
   remove_device_from_list(&devices[c]->uuid, unowned_devices);
@@ -393,7 +433,7 @@ request_random_pin(void)
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
@@ -426,7 +466,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    add_device_to_list(uuid, owned_devices);
+    discover_owned_devices();
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
@@ -448,7 +488,7 @@ otm_just_works(void)
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
@@ -510,7 +550,7 @@ reset_device(void)
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
@@ -559,7 +599,7 @@ provision_credentials(void)
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
@@ -622,7 +662,7 @@ provision_ace2(void)
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i, di);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
@@ -647,7 +687,7 @@ provision_ace2(void)
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s\n", i + 2, di);
+    PRINT("[%d]: %s - %s\n", i + 2, di, device->device_name);
     i++;
     device = device->next;
   }
