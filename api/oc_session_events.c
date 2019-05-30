@@ -67,14 +67,6 @@ free_session_state_delayed(void *data)
   return OC_EVENT_DONE;
 }
 
-#ifdef OC_SERVER
-static void
-remove_observers(oc_endpoint_t *endpoint)
-{
-  coap_remove_observer_by_client(endpoint);
-}
-#endif /* OC_SERVER */
-
 static void
 oc_process_session_event(void)
 {
@@ -89,14 +81,6 @@ oc_process_session_event(void)
     session_event = oc_list_pop(session_start_events);
   }
 
-#ifdef OC_SERVER
-  session_event = (oc_endpoint_t *)oc_list_head(session_end_events);
-  while (session_event != NULL) {
-    remove_observers(session_event);
-    session_event = oc_list_item_next(session_event);
-  }
-#endif /* OC_SERVER */
-
   if (oc_list_length(session_end_events) > 0) {
     oc_set_delayed_callback(NULL, &free_session_state_delayed,
                             SESSION_STATE_FREE_DELAY_SECS);
@@ -106,7 +90,8 @@ oc_process_session_event(void)
 }
 
 OC_PROCESS(oc_session_events, "");
-OC_PROCESS_THREAD(oc_session_events, ev, data) {
+OC_PROCESS_THREAD(oc_session_events, ev, data)
+{
   (void)data;
   OC_PROCESS_POLLHANDLER(oc_process_session_event());
   OC_PROCESS_BEGIN();

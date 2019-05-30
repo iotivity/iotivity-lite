@@ -100,8 +100,7 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
       oc_memb_free(&transactions_memb, t);
       t = NULL;
     }
-  }
-  else {
+  } else {
     OC_WRN("insufficient memory to create transaction");
   }
 
@@ -125,7 +124,7 @@ coap_send_transaction(coap_transaction_t *t)
 
 #ifdef OC_TCP
   if (!(t->message->endpoint.flags & TCP) && confirmable) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
   if (confirmable) {
 #endif /* !OC_TCP */
     if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
@@ -161,7 +160,7 @@ coap_send_transaction(coap_transaction_t *t)
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
-      oc_ri_remove_client_cb_by_mid(t->mid);
+      oc_ri_free_client_cbs_by_mid(t->mid);
 #endif /* OC_CLIENT */
 
 #ifdef OC_BLOCK_WISE
@@ -247,21 +246,22 @@ coap_free_all_transactions(void)
 }
 
 void
-coap_free_transaction_by_endpoint(oc_endpoint_t *endpoint)
+coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint)
 {
-#ifdef OC_SERVER
-  /* remove all observations by this peer */
-  coap_remove_observer_by_client(endpoint);
-#endif /* OC_SERVER */
   coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
                      *next;
   while (t != NULL) {
     next = t->next;
     if (oc_endpoint_compare(&t->message->endpoint, endpoint) == 0) {
+      int removed = oc_list_length(transactions_list);
 #ifdef OC_CLIENT
       /* Remove the client callback tied to this transaction */
-      oc_ri_remove_client_cb_by_mid(t->mid);
+      oc_ri_free_client_cbs_by_mid(t->mid);
 #endif /* OC_CLIENT */
+      if ((removed - oc_list_length(transactions_list)) > 0) {
+        t = (coap_transaction_t *)oc_list_head(transactions_list);
+        continue;
+      }
       coap_clear_transaction(t);
     }
     t = next;
