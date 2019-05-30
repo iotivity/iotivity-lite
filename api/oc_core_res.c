@@ -506,9 +506,12 @@ oc_core_is_DCR(oc_resource_t *resource, size_t device)
 
   size_t device_resources = OCF_D * device;
 
-  size_t DCRs_start = device_resources + OCF_RES,
-         DCRs_end = device_resources + OCF_D, i;
-  for (i = DCRs_start; i <= DCRs_end; i++) {
+  size_t DCRs_end = device_resources + OCF_D, i;
+  for (i = device_resources + 1; i <= DCRs_end; i++) {
+    if (i == (device_resources + OCF_INTROSPECTION_WK) ||
+        i == (device_resources + OCF_INTROSPECTION_DATA)) {
+      continue;
+    }
     if (resource == &core_resources[i]) {
       return true;
     }
