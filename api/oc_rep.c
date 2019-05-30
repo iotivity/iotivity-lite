@@ -162,9 +162,16 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
                                       NULL);
   if (*err != CborNoError)
     return;
+get_tagged_value:
   *err |= cbor_value_advance(value);
   /* value */
   switch (value->type) {
+  case CborTagType: {
+    CborTag tag;
+    cbor_value_get_tag(value, &tag);
+    /* skip over CBOR Tags */
+    goto get_tagged_value;
+  } break;
   case CborIntegerType:
     *err |= cbor_value_get_int64(value, &cur->value.integer);
     cur->type = OC_REP_INT;
@@ -230,7 +237,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_int_array(&cur->value.array, len);
           cur->type = OC_REP_INT | OC_REP_ARRAY;
-        } else if ((cur->type & OC_REP_INT) != OC_REP_INT){
+        } else if ((cur->type & OC_REP_INT) != OC_REP_INT) {
           *err |= CborErrorIllegalType;
           return;
         }
@@ -242,7 +249,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_double_array(&cur->value.array, len);
           cur->type = OC_REP_DOUBLE | OC_REP_ARRAY;
-        } else if ((cur->type & OC_REP_DOUBLE) != OC_REP_DOUBLE){
+        } else if ((cur->type & OC_REP_DOUBLE) != OC_REP_DOUBLE) {
           *err |= CborErrorIllegalType;
           return;
         }
@@ -254,7 +261,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_bool_array(&cur->value.array, len);
           cur->type = OC_REP_BOOL | OC_REP_ARRAY;
-        } else if ((cur->type & OC_REP_BOOL) != OC_REP_BOOL){
+        } else if ((cur->type & OC_REP_BOOL) != OC_REP_BOOL) {
           *err |= CborErrorIllegalType;
           return;
         }
@@ -287,7 +294,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
         if (k == 0) {
           oc_new_string_array(&cur->value.array, len);
           cur->type = OC_REP_STRING | OC_REP_ARRAY;
-        } else if ((cur->type & OC_REP_STRING) != OC_REP_STRING){
+        } else if ((cur->type & OC_REP_STRING) != OC_REP_STRING) {
           *err |= CborErrorIllegalType;
           return;
         }
@@ -310,7 +317,7 @@ oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
             return;
           }
           prev = &cur->value.object_array;
-        } else if ((cur->type & OC_REP_OBJECT) != OC_REP_OBJECT){
+        } else if ((cur->type & OC_REP_OBJECT) != OC_REP_OBJECT) {
           *err |= CborErrorIllegalType;
           return;
         } else {
@@ -413,7 +420,7 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
   while (rep_value != NULL) {
     if ((oc_string_len(rep_value->name) == strlen(key)) &&
         (strncmp(key, oc_string(rep_value->name),
-                oc_string_len(rep_value->name)) == 0) &&
+                 oc_string_len(rep_value->name)) == 0) &&
         (rep_value->type == type)) {
       OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
@@ -473,7 +480,8 @@ oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value)
     OC_ERR("Error of input parameters");
     return false;
   }
-  return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value, (size_t *)NULL);
+  return oc_rep_get_value(rep, OC_REP_INT, key, (void **)&value,
+                          (size_t *)NULL);
 }
 
 bool
@@ -483,7 +491,8 @@ oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
     OC_ERR("Error of input parameters");
     return false;
   }
-  return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value, (size_t *)NULL);
+  return oc_rep_get_value(rep, OC_REP_BOOL, key, (void **)&value,
+                          (size_t *)NULL);
 }
 
 bool
@@ -493,11 +502,13 @@ oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
     OC_ERR("Error of input parameters");
     return false;
   }
-  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value, (size_t *)NULL);
+  return oc_rep_get_value(rep, OC_REP_DOUBLE, key, (void **)&value,
+                          (size_t *)NULL);
 }
 
 bool
-oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
+oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                       size_t *size)
 {
   if (!size) {
     OC_ERR("Error of input parameters");
@@ -528,7 +539,8 @@ oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
 }
 
 bool
-oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size)
+oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                      size_t *size)
 {
   if (!size) {
     OC_ERR("Error of input parameters");
@@ -538,7 +550,8 @@ oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size
 }
 
 bool
-oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size)
+oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                        size_t *size)
 {
   if (!size) {
     OC_ERR("Error of input parameters");
@@ -548,17 +561,20 @@ oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *
 }
 
 bool
-oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
+oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                             oc_string_array_t *value, size_t *size)
 {
   if (!value || !size) {
     OC_ERR("Error of input parameters");
     return false;
   }
-  return oc_rep_get_value(rep, OC_REP_BYTE_STRING_ARRAY, key, (void **)&value, size);
+  return oc_rep_get_value(rep, OC_REP_BYTE_STRING_ARRAY, key, (void **)&value,
+                          size);
 }
 
 bool
-oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size)
+oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                        oc_string_array_t *value, size_t *size)
 {
   if (!value || !size) {
     OC_ERR("Error of input parameters");
