@@ -925,10 +925,10 @@ network_event_thread(void *data)
 #endif /* OC_SECURITY */
 
 #ifdef OC_TCP
-      tcp_receive_state_t tcp_status = oc_tcp_receive_message(dev,
+      adapter_receive_state_t tcp_status = oc_tcp_receive_message(dev,
                                                               &setfds,
                                                               message);
-      if (tcp_status == TCP_STATUS_RECEIVE) {
+      if (tcp_status == ADAPTER_STATUS_RECEIVE) {
         goto common;
       } else {
         oc_message_unref(message);
