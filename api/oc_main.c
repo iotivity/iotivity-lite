@@ -43,6 +43,10 @@
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
+#ifdef OC_CLOUD
+#include "api/cloud/oc_cloud_internal.h"
+#endif /* OC_CLOUD */
+
 #ifdef OC_MEMORY_TRACE
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
@@ -204,6 +208,10 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_create_svr();
 #endif
 
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  oc_cloud_init();
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
 #ifdef OC_SERVER
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
@@ -257,6 +265,10 @@ oc_main_shutdown(void)
 {
   if (initialized == false)
     return;
+
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  oc_cloud_shutdown();
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
   oc_ri_shutdown();
 
