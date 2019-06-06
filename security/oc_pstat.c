@@ -16,6 +16,7 @@
 
 #ifdef OC_SECURITY
 #include "oc_pstat.h"
+#include "api/cloud/oc_cloud_internal.h"
 #include "api/oc_main.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -145,6 +146,13 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     oc_sec_free_roles_for_device(device);
     oc_sec_sp_default(device);
 #endif /* OC_PKI */
+#ifdef OC_SERVER
+#ifdef OC_CLIENT
+#ifdef OC_CLOUD
+    oc_cloud_reset_context(device);
+#endif /* OC_CLOUD */
+#endif /* OC_CLIENT */
+#endif /* OC_SERVER */
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
       fp->cb(device, fp->data);

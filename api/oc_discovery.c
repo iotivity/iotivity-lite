@@ -165,6 +165,13 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  if (filter_resource(
+        oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
@@ -256,8 +263,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
           oc_rep_set_uint(p, x.org.iotivity.tls, eps->addr.ipv4.port);
         }
 #endif /* OC_IPV4 */
-      }
-      else {
+      } else {
         if (request->origin->flags & IPV6 && eps->flags & IPV6) {
           oc_rep_set_uint(p, x.org.iotivity.tcp, eps->addr.ipv6.port);
         }
@@ -267,10 +273,9 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
         }
 #endif /* OC_IPV4 */
       }
-    }
-    else
+    } else
 #endif /* OC_TCP */
-    if (eps->flags & SECURED) {
+      if (eps->flags & SECURED) {
       if (request->origin->flags & IPV6 && eps->flags & IPV6) {
         oc_rep_set_uint(p, port, eps->addr.ipv6.port);
       }
@@ -280,7 +285,7 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
       }
 #endif /* OC_IPV4 */
     }
-    next_eps:
+  next_eps:
     eps = eps->next;
   }
 
@@ -604,8 +609,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           types = &link->value.array;
         } else {
           iface_mask = 0;
-          for (i = 0;
-               i < oc_string_array_get_allocated_size(link->value.array);
+          for (i = 0; i < oc_string_array_get_allocated_size(link->value.array);
                i++) {
             iface_mask |= oc_ri_get_interface_mask(
               oc_string_array_get_item(link->value.array, i),

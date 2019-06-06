@@ -15,6 +15,7 @@
  */
 
 #include "oc_core_res.h"
+#include "api/cloud/oc_cloud_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_discovery.h"
@@ -353,6 +354,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_discovery_resource(OCF_RES, device_count);
 
   oc_create_introspection_resource(device_count);
+
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  oc_create_cloudconf_resource(device_count);
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
   oc_device_info[device_count].data = data;
 
