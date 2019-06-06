@@ -1328,7 +1328,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   }
 
 #ifdef OC_TCP
-  if (pkt->code == PONG_7_03) {
+  if (pkt->code == PONG_7_03 ||
+      (oc_string_len(cb->uri) == 5 &&
+       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
   }
 #endif /* OC_TCP */

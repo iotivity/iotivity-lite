@@ -16,6 +16,7 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#ifdef OC_CLOUD
 
 #include "rd_client.h"
 #include "oc_api.h"
@@ -26,8 +27,10 @@
 
 #define RD_PUBLISH_TTL 86400
 
-static void _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
-                                  char *rel, char *ins) {
+static void
+_add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
+                      char *ins)
+{
   if (!parent || !resource) {
     OC_ERR("Error of input parameters");
     return;
@@ -49,10 +52,12 @@ static void _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
   oc_rep_end_object(parent, links);
 }
 
-static bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                                      const char *id, const char *name,
-                                      oc_response_handler_t handler,
-                                      oc_qos_t qos, void *user_data) {
+static bool
+rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+                          const char *id, const char *name,
+                          oc_response_handler_t handler, oc_qos_t qos,
+                          void *user_data)
+{
   if (!endpoint || !id || !links || !handler) {
     OC_ERR("Error of input parameters");
     return false;
@@ -83,10 +88,12 @@ static bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return oc_do_post();
 }
 
-bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
-                oc_response_handler_t handler, oc_qos_t qos, void *user_data) {
-  char uuid[OC_UUID_LEN] = {0};
-  oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+bool
+rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+{
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_device_info_t *device_info = oc_core_get_device_info(device);
   if (!device_info)
     return false;
   oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
@@ -94,9 +101,9 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
   bool status = false;
   if (!links) {
     oc_link_t *link_p =
-        oc_new_link(oc_core_get_resource_by_index(OCF_P, device_index));
+      oc_new_link(oc_core_get_resource_by_index(OCF_P, device));
     oc_link_t *link_d =
-        oc_new_link(oc_core_get_resource_by_index(OCF_D, device_index));
+      oc_new_link(oc_core_get_resource_by_index(OCF_D, device));
     oc_list_add((oc_list_t)link_p, link_d);
 
     status = rd_publish_with_device_id(endpoint, link_p, uuid,
@@ -113,10 +120,11 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
   return status;
 }
 
-static bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                                     const char *id,
-                                     oc_response_handler_t handler,
-                                     oc_qos_t qos, void *user_data) {
+static bool
+rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+                         const char *id, oc_response_handler_t handler,
+                         oc_qos_t qos, void *user_data)
+{
   if (!endpoint || !id || !handler) {
     OC_ERR("Error of input parameters");
     return false;
@@ -127,6 +135,7 @@ static bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   oc_concat_strings(&uri_query, "di=", id);
   while (links) {
     oc_concat_strings(&uri_query, "&ins=", oc_string(links->ins));
+    links = links->next;
   }
 
   bool ret = oc_do_delete(OC_RSRVD_RD_URI, endpoint, oc_string(uri_query),
@@ -135,10 +144,12 @@ static bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return ret;
 }
 
-bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
-               oc_response_handler_t handler, oc_qos_t qos, void *user_data) {
-  char uuid[OC_UUID_LEN] = {0};
-  oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+bool
+rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+          oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+{
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_device_info_t *device_info = oc_core_get_device_info(device);
   if (!device_info)
     return false;
   oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
@@ -146,3 +157,6 @@ bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
 }
+#else  /* OC_CLOUD*/
+typedef int dummy_declaration;
+#endif /* !OC_CLOUD */
