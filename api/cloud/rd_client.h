@@ -29,7 +29,8 @@
 #include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /** Resource Directory URI used to Discover RD and Publish resources.*/
@@ -40,26 +41,26 @@ extern "C" {
   @param endpoint The endpoint of the RD.
   @param links This is the resource which we need to register to RD.
    If null, oic/p and oic/d resources will be published.
-  @param device_index Index of the device for an unique identifier.
+  @param device Index of the device for an unique identifier.
   @param handler To refer to the request sent out on behalf of calling this API.
   @param qos Quality of service.
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
-bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
+bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
                 oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
 /**
   @brief Delete RD resource from Resource Directory.
   @param endpoint The endpoint of the RD.
   @param links This is the resource which we need to delete to RD.
-  @param device_index Index of the device for an unique identifier.
+  @param device Index of the device for an unique identifier.
   @param handler To refer to the request sent out on behalf of calling this API.
   @param qos Quality of service.
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
-bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device_index,
+bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
 #ifdef __cplusplus
