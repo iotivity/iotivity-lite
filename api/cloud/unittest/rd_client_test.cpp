@@ -23,47 +23,39 @@
 #include "oc_endpoint.h"
 #include "rd_client.h"
 
-class TestRDClient: public testing::Test
+class TestRDClient : public testing::Test
 {
-  public:
-    static oc_handler_t s_handler;
-    static oc_endpoint_t s_endpoint;
+public:
+  static oc_handler_t s_handler;
+  static oc_endpoint_t s_endpoint;
 
-    static void onPostResponse(oc_client_response_t *data)
-    {
-      (void) data;
-    }
+  static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-    static int appInit(void)
-    {
-      int result = oc_init_platform("OCFCloud", NULL, NULL);
-      result |= oc_add_device("/oic/d", "oic.d.light", "Jaehong's Light",
-                              "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
-      return result;
-    }
+  static int appInit(void)
+  {
+    int result = oc_init_platform("OCFCloud", NULL, NULL);
+    result |= oc_add_device("/oic/d", "oic.d.light", "Jaehong's Light",
+                            "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+    return result;
+  }
 
-    static void signalEventLoop(void)
-    {
-    }
+  static void signalEventLoop(void) {}
 
-  protected:
-    static void SetUpTestCase()
-    {
-      s_handler.init = &appInit;
-      s_handler.signal_event_loop = &signalEventLoop;
-      int ret = oc_main_init(&s_handler);
-      ASSERT_EQ(0, ret);
+protected:
+  static void SetUpTestCase()
+  {
+    s_handler.init = &appInit;
+    s_handler.signal_event_loop = &signalEventLoop;
+    int ret = oc_main_init(&s_handler);
+    ASSERT_EQ(0, ret);
 
-      oc_string_t ep_str;
-      oc_new_string(&ep_str, "coap://224.0.1.187:5683", 23);
-      oc_string_to_endpoint(&ep_str, &s_endpoint, NULL);
-      oc_free_string(&ep_str);
-    }
+    oc_string_t ep_str;
+    oc_new_string(&ep_str, "coap://224.0.1.187:5683", 23);
+    oc_string_to_endpoint(&ep_str, &s_endpoint, NULL);
+    oc_free_string(&ep_str);
+  }
 
-    static void TearDownTestCase()
-    {
-      oc_main_shutdown();
-    }
+  static void TearDownTestCase() { oc_main_shutdown(); }
 };
 oc_handler_t TestRDClient::s_handler;
 oc_endpoint_t TestRDClient::s_endpoint;
