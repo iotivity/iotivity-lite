@@ -56,15 +56,10 @@ MESSAGING_TEST_OBJ_DIR = $(MESSAGING_TEST_DIR)/obj
 MESSAGING_TEST_SRC_FILES := $(wildcard $(MESSAGING_TEST_DIR)/*.cpp)
 MESSAGING_TEST_OBJ_FILES := $(patsubst $(MESSAGING_TEST_DIR)/%.cpp,$(MESSAGING_TEST_OBJ_DIR)/%.o,$(MESSAGING_TEST_SRC_FILES))
 
-CLOUD_TEST_DIR = $(ROOT_DIR)/service/cloud/unittest
+CLOUD_TEST_DIR = $(ROOT_DIR)/api/cloud/unittest
 CLOUD_TEST_OBJ_DIR = $(CLOUD_TEST_DIR)/obj
 CLOUD_TEST_SRC_FILES := $(wildcard $(CLOUD_TEST_DIR)/*.cpp)
 CLOUD_TEST_OBJ_FILES := $(patsubst $(CLOUD_TEST_DIR)/%.cpp,$(CLOUD_TEST_OBJ_DIR)/%.o,$(CLOUD_TEST_SRC_FILES))
-
-RD_CLIENT_TEST_DIR = $(ROOT_DIR)/service/resource-directory/client/unittest
-RD_CLIENT_TEST_OBJ_DIR = $(RD_CLIENT_TEST_DIR)/obj
-RD_CLIENT_TEST_SRC_FILES := $(wildcard $(RD_CLIENT_TEST_DIR)/*.cpp)
-RD_CLIENT_TEST_OBJ_FILES := $(patsubst $(RD_CLIENT_TEST_DIR)/%.cpp,$(RD_CLIENT_TEST_OBJ_DIR)/%.o,$(RD_CLIENT_TEST_SRC_FILES))
 
 UNIT_TESTS = apitest platformtest securitytest messagingtest
 
@@ -89,8 +84,7 @@ CTIMESTAMP=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timest
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
-SRC_CLOUD=$(wildcard ../../service/cloud/src/*.c)
-SRC_RD_CLIENT=$(wildcard ../../service/resource-directory/client/src/*.c)
+SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/oc_config.h
@@ -101,27 +95,26 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
-CFLAGS_CLOUD=-I../../service/cloud/include
-CFLAGS_RD_CLIENT=-I../../service/resource-directory/client/include
+CFLAGS_CLOUD=-I../../api/cloud
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o,$(notdir $(SRC:.c=.o))))
-OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
-OBJ_RD_CLIENT=$(addprefix obj/rd_client/,$(notdir $(SRC_RD_CLIENT:.c=.o)))
+OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
-
 ifeq ($(CLOUD),1)
-	HEADERS += $(wildcard ../../service/cloud/include/*.h)
-	HEADERS += $(wildcard ../../service/resource-directory/client/include/*.h)
-    CFLAGS += -DOC_CLOUD
+#	UNIT_TESTS += cloudtest
+endif
+ifeq ($(CLOUD),1)
+	CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
+	SAMPLES += cloud_linux cloud_tests
 endif
 
 OBT = onboarding_tool
@@ -183,14 +176,6 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-ifeq ($(CLOUD),1)
-	CONSTRAINED_LIBS += libiotivity-constrained-cloud.a libiotivity-constrained-cloud.so \
-			libiotivity-constrained-rd-client.a libiotivity-constrained-rd-client.so
-	UNIT_TESTS += cloudtest rdclienttest
-	PC += iotivity-constrained-rd-client.pc iotivity-constrained-cloud.pc
-	SAMPLES += cloud_linux
-endif
-
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
 test: $(UNIT_TESTS)
@@ -226,15 +211,8 @@ $(CLOUD_TEST_OBJ_DIR)/%.o: $(CLOUD_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -I$(ROOT_DIR)/service/cloud/src -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
-cloudtest: $(CLOUD_TEST_OBJ_FILES) libiotivity-constrained-cloud.a libiotivity-constrained-rd-client.a libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-constrained-cloud -liotivity-constrained-rd-client -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
-
-$(RD_CLIENT_TEST_OBJ_DIR)/%.o: $(RD_CLIENT_TEST_DIR)/%.cpp
-	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_RD_CLIENT) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
-
-rdclienttest: $(RD_CLIENT_TEST_OBJ_FILES) libiotivity-constrained-rd-client.a libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_RD_CLIENT) -l:gtest_main.a -liotivity-constrained-rd-client -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+cloudtest: $(CLOUD_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
@@ -263,11 +241,7 @@ obj/client_server/%.o: %.c
 
 obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
-	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD} ${CFLAGS_RD_CLIENT}
-
-obj/rd_client/%.o: %.c
-	@mkdir -p ${@D}
-	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_RD_CLIENT}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
 obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
@@ -285,23 +259,11 @@ libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
-libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(LIBS)
-
-libiotivity-constrained-cloud.a: $(OBJ_CLOUD)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLOUD)
-
-libiotivity-constrained-cloud.so: $(OBJ_CLOUD)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLOUD) $(LIBS)
-
-libiotivity-constrained-rd-client.a: $(OBJ_RD_CLIENT)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_RD_CLIENT)
-
-libiotivity-constrained-rd-client.so: $(OBJ_RD_CLIENT)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_RD_CLIENT) $(LIBS)
+libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
 
 server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_linux.c
 	@mkdir -p $@_creds
@@ -357,9 +319,13 @@ multi_device_client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/multi_dev
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_linux: libiotivity-constrained-client-server.a libiotivity-constrained-cloud.a libiotivity-constrained-rd-client.a $(ROOT_DIR)/apps/cloud_linux.c
+cloud_linux: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a libiotivity-constrained-cloud.a libiotivity-constrained-rd-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${CFLAGS_ST} ${CFLAGS_RD_CLIENT} ${LIBS}
+	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+
+cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
 ${OBT}: libiotivity-constrained-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c
 	@mkdir -p $@_creds

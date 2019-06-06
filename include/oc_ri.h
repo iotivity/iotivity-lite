@@ -92,8 +92,10 @@ typedef enum {
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
-  /* List of Device Configuration Resources (DCRs): start */
   OCF_RES,
+#ifdef OC_CLOUD
+  OCF_COAPCLOUDCONF,
+#endif /* OC_CLOUD */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
