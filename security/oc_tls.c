@@ -833,12 +833,6 @@ oc_tls_select_cert_ciphersuite(void)
 {
   ciphers = (int *)cert_priority;
 }
-
-void
-oc_tls_select_psk_ciphersuite(void)
-{
-  ciphers = (int *)psk_priority;
-}
 #endif /* OC_CLIENT */
 
 void
@@ -866,6 +860,14 @@ get_identity_cert_for_session(const mbedtls_ssl_config *conf)
   return NULL;
 }
 #endif /* OC_PKI */
+
+#ifdef OC_CLIENT
+void
+oc_tls_select_psk_ciphersuite(void)
+{
+  ciphers = (int *)psk_priority;
+}
+#endif /* OC_CLIENT */
 
 static void
 oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
