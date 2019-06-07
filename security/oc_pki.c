@@ -334,6 +334,16 @@ oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
   return pki_add_trust_anchor(device, cert, cert_size, OC_CREDUSAGE_TRUSTCA);
 }
 
+void
+oc_pki_remove_credential_by_credid(size_t device, long credid)
+{
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
+  if (cred)
+  {
+    oc_sec_remove_cred(cred, device);
+  }
+}
+
 #else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */

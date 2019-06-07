@@ -33,5 +33,6 @@
 %rename (addTrustAnchor) oc_pki_add_trust_anchor;
 %rename (setSecurityProfile) oc_pki_set_security_profile;
 
+%rename (removeCredentialByCredid) oc_pki_remove_credential_by_credid;
 
 %include "oc_pki.h"

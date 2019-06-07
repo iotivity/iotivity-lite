@@ -45,6 +45,9 @@ int oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
 void oc_pki_set_security_profile(size_t device,
                                  oc_sp_types_t supported_profiles,
                                  oc_sp_types_t current_profile, int mfg_credid);
+
+void oc_pki_remove_credential_by_credid(size_t device, long credid);
+
 #ifdef __cplusplus
 }
 #endif
