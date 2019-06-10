@@ -20,7 +20,7 @@ libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
 EXTRA_CFLAGS =
-ifeq ($(DEBUG),1)
+ifeq ($(ASAN),1)
 	EXTRA_CFLAGS += -fsanitize=address
 endif
 
