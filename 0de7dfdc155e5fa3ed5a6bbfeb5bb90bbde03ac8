@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "928e9718_cf555c02",
+        "filename": "include/oc_pki.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-10T15:00:37Z",
+      "side": 1,
+      "message": "Please make this change on the master branch.",
+      "revId": "0de7dfdc155e5fa3ed5a6bbfeb5bb90bbde03ac8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f8e3ceb_39d3fcde",
+        "filename": "security/oc_pki.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-10T15:00:37Z",
+      "side": 1,
+      "message": "Please make this change on the master branch not swig.",
+      "revId": "0de7dfdc155e5fa3ed5a6bbfeb5bb90bbde03ac8",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
