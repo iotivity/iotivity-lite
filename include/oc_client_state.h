@@ -79,6 +79,7 @@ typedef struct oc_client_cb_s
   bool discovery;
   bool multicast;
   bool stop_multicast_receive;
+  uint8_t ref_count;
 } oc_client_cb_t;
 
 #ifdef OC_BLOCK_WISE
@@ -103,7 +104,8 @@ oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
 
 oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
-bool oc_ri_remove_client_cb_by_mid(uint16_t mid);
+void oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint);
+void oc_ri_free_client_cbs_by_mid(uint16_t mid);
 
 oc_discovery_flags_t oc_ri_process_discovery_payload(
   uint8_t *payload, int len, oc_discovery_handler_t handler,
