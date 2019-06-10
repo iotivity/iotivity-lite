@@ -19,6 +19,7 @@
 #define __USE_GNU
 
 #include "tcpadapter.h"
+#include "api/oc_session_events_internal.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "oc_endpoint.h"
@@ -161,7 +162,9 @@ free_tcp_session(tcp_session_t *session)
 {
   oc_list_remove(session_list, session);
 
-  oc_session_end_event(&session->endpoint);
+  if (!oc_session_events_is_ongoing()) {
+    oc_session_end_event(&session->endpoint);
+  }
 
   FD_CLR(session->sock, &session->dev->rfds);
 

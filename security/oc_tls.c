@@ -37,6 +37,7 @@
 
 #include "api/oc_events.h"
 #include "api/oc_main.h"
+#include "api/oc_session_events_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -49,7 +50,6 @@
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
 #include "oc_roles.h"
-#include "oc_session_events.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
 
@@ -234,10 +234,11 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #ifdef OC_TCP
   if (peer->endpoint.flags & TCP) {
     oc_connectivity_end_session(&peer->endpoint);
-  } else {
-    oc_session_end_event(&peer->endpoint);
-  }
+  } else
 #endif /* OC_TCP */
+  {
+    oc_handle_session(&peer->endpoint, OC_SESSION_DISCONNECTED);
+  }
 
   if (!inactivity_cb) {
     oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
@@ -1548,9 +1549,7 @@ read_application_data(oc_tls_peer_t *peer)
     if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER) {
       OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]",
              peer->ssl_ctx.session->ciphersuite);
-#ifdef OC_TCP
-      oc_session_start_event(&peer->endpoint);
-#endif /* OC_TCP */
+      oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
     }
 
 #ifdef OC_CLIENT

@@ -38,9 +38,13 @@ OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
 oc_endpoint_t *
 oc_new_endpoint(void)
 {
+#ifndef OC_DYNAMIC_ALLOCATION
   oc_network_event_handler_mutex_lock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_endpoint_t *endpoint = oc_memb_alloc(&oc_endpoints_s);
+#ifndef OC_DYNAMIC_ALLOCATION
   oc_network_event_handler_mutex_unlock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   return endpoint;
 }
 
