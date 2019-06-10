@@ -44,7 +44,7 @@ OC_LIST(owned_devices);
 /* List of known un-owned devices */
 OC_LIST(unowned_devices);
 
-#if defined (_WIN32)
+#if defined(_WIN32)
 static HANDLE event_thread;
 static CRITICAL_SECTION app_sync_lock;
 static CONDITION_VARIABLE cv;
@@ -76,7 +76,11 @@ display_menu(void)
   PRINT("[0] Display this menu\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[1] Discover un-owned devices\n");
+  PRINT("[11] Discover un-owned devices in the realm-local IPv6 scope\n");
+  PRINT("[12] Discover un-owned devices in the site-local IPv6 scope\n");
   PRINT("[2] Discover owned devices\n");
+  PRINT("[21] Discover owned devices in the realm-local IPv6 scope\n");
+  PRINT("[22] Discover owned devices in the site-local IPv6 scope\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[3] Just-Works Ownership Transfer Method\n");
   PRINT("[4] Request Random PIN from device for OTM\n");
@@ -140,20 +144,19 @@ ocf_event_thread(LPVOID lpParam)
 {
   oc_clock_time_t next_event;
   while (quit != 1) {
-      otb_mutex_lock(app_sync_lock);
-      next_event = oc_main_poll();
-      otb_mutex_unlock(app_sync_lock);
+    otb_mutex_lock(app_sync_lock);
+    next_event = oc_main_poll();
+    otb_mutex_unlock(app_sync_lock);
 
-      if (next_event == 0) {
-          SleepConditionVariableCS(&cv, &cs, INFINITE);
+    if (next_event == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now = oc_clock_time();
+      if (now < next_event) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
-      else {
-          oc_clock_time_t now = oc_clock_time();
-          if (now < next_event) {
-              SleepConditionVariableCS(&cv, &cs,
-                  (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-          }
-      }
+    }
   }
 
   oc_main_shutdown();
@@ -282,19 +285,31 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 }
 
 static void
-discover_owned_devices(void)
+discover_owned_devices(uint8_t scope)
 {
   otb_mutex_lock(app_sync_lock);
-  oc_obt_discover_owned_devices(owned_device_cb, NULL);
+  if (scope == 0x02) {
+    oc_obt_discover_owned_devices(owned_device_cb, NULL);
+  } else if (scope == 0x03) {
+    oc_obt_discover_owned_devices_realm_local_ipv6(owned_device_cb, NULL);
+  } else if (scope == 0x05) {
+    oc_obt_discover_owned_devices_site_local_ipv6(owned_device_cb, NULL);
+  }
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
 }
 
 static void
-discover_unowned_devices(void)
+discover_unowned_devices(uint8_t scope)
 {
   otb_mutex_lock(app_sync_lock);
-  oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+  if (scope == 0x02) {
+    oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+  } else if (scope == 0x03) {
+    oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
+  } else if (scope == 0x05) {
+    oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
+  }
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
 }
@@ -853,7 +868,8 @@ main(void)
     return init;
 
 #if defined(_WIN32)
-  event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread, NULL, 0, NULL);
+  event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
+                              NULL, 0, NULL);
   if (NULL == event_thread) {
     return -1;
   }
@@ -872,10 +888,22 @@ main(void)
       continue;
       break;
     case 1:
-      discover_unowned_devices();
+      discover_unowned_devices(0x02);
+      break;
+    case 11:
+      discover_unowned_devices(0x03);
+      break;
+    case 12:
+      discover_unowned_devices(0x05);
       break;
     case 2:
-      discover_owned_devices();
+      discover_owned_devices(0x02);
+      break;
+    case 21:
+      discover_owned_devices(0x03);
+      break;
+    case 22:
+      discover_owned_devices(0x05);
       break;
     case 3:
       otm_just_works();
