@@ -31,24 +31,24 @@ typedef struct oc_ace_res_s oc_ace_res_t;
 typedef struct oc_sec_ace_s oc_sec_ace_t;
 
 typedef enum {
-    OC_CONN_AUTH_CRYPT = 0,
-    OC_CONN_ANON_CLEAR
+  OC_CONN_AUTH_CRYPT = 0,
+  OC_CONN_ANON_CLEAR
 } oc_ace_connection_type_t;
 
 typedef enum {
-    OC_ACE_NO_WC = -1,
-    OC_ACE_WC_ALL = 0x111,
-    OC_ACE_WC_ALL_SECURED = 0x01,
-    OC_ACE_WC_ALL_PUBLIC = 0x10,
+  OC_ACE_NO_WC = 0,
+  OC_ACE_WC_ALL = 0x111,
+  OC_ACE_WC_ALL_SECURED = 0x01,
+  OC_ACE_WC_ALL_PUBLIC = 0x10,
 } oc_ace_wildcard_t;
 
 typedef enum {
-    OC_PERM_NONE = 0,
-    OC_PERM_CREATE = (1 << 0),
-    OC_PERM_RETRIEVE = (1 << 1),
-    OC_PERM_UPDATE = (1 << 2),
-    OC_PERM_DELETE = (1 << 3),
-    OC_PERM_NOTIFY = (1 << 4)
+  OC_PERM_NONE = 0,
+  OC_PERM_CREATE = (1 << 0),
+  OC_PERM_RETRIEVE = (1 << 1),
+  OC_PERM_UPDATE = (1 << 2),
+  OC_PERM_DELETE = (1 << 3),
+  OC_PERM_NOTIFY = (1 << 4)
 } oc_ace_permissions_t;
 
 typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *, oc_endpoint_t *, void *);
@@ -62,8 +62,15 @@ void oc_obt_shutdown(void);
 
 /* Device discovery */
 int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
+int oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
+                                                     void *data);
+int oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
+                                                    void *data);
 int oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data);
-
+int oc_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
+                                                   void *data);
+int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
+                                                  void *data);
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);

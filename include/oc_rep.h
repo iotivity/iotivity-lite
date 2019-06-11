@@ -62,7 +62,8 @@ int oc_rep_get_encoded_payload_size(void);
 /**
  * Get the buffer pointer at the start of the encoded cbor data.
  *
- * This is used when parsing the encoded cbor data to an oc_rep_t. It is unlikely
+ * This is used when parsing the encoded cbor data to an oc_rep_t. It is
+ * unlikely
  * to be used outside the IoTivity-lite library.
  *
  * @return pointer to the start of the cbor encoded buffer
@@ -204,9 +205,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  */
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
+    g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     if ((const char *)value != NULL) {                                         \
-      g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));     \
       g_err |= cbor_encode_text_string(&object##_map, value, strlen(value));   \
+    } else {                                                                   \
+      g_err |= cbor_encode_text_string(&object##_map, "", 0);                  \
     }                                                                          \
   } while (0)
 
@@ -226,7 +229,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     // the following bytes equal "AAECAwQF" when base64 encoded
  *     uint8_t byte_string[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
  *     oc_rep_begin_root_object();
- *     oc_rep_set_byte_string(root, byte_string_key, byte_string, sizeof(byte_string));
+ *     oc_rep_set_byte_string(root, byte_string_key, byte_string,
+ * sizeof(byte_string));
  *     oc_rep_end_root_object();
  * ~~~
  */
@@ -377,11 +381,9 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * @see oc_rep_close_array
  */
 #define oc_rep_add_byte_string(parent, value, value_len)                       \
-  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_byte_string(&parent##_array, value, value_len)
 
 #define oc_rep_set_value_byte_string(parent, value, value_len)                 \
-  if ((const char *)value != NULL)                                             \
   g_err |= cbor_encode_byte_string(&parent##_map, value, value_len)
 
 /**
@@ -426,12 +428,22 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * @see oc_rep_close_array
  */
 #define oc_rep_add_text_string(parent, value)                                  \
-  if ((const char *)value != NULL)                                             \
-  g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value))
+  do {                                                                         \
+    if ((const char *)value != NULL) {                                         \
+      g_err |= cbor_encode_text_string(&parent##_array, value, strlen(value)); \
+    } else {                                                                   \
+      g_err |= cbor_encode_text_string(&parent##_array, "", 0);                \
+    }                                                                          \
+  } while (0)
 
 #define oc_rep_set_value_text_string(parent, value)                            \
-  if ((const char *)value != NULL)                                             \
-  g_err |= cbor_encode_text_string(&parent##_map, value, strlen(value))
+  do {                                                                         \
+    if ((const char *)value != NULL) {                                         \
+      g_err |= cbor_encode_text_string(&parent##_map, value, strlen(value));   \
+    } else {                                                                   \
+      g_err |= cbor_encode_text_string(&parent##_map, "", 0);                  \
+    }                                                                          \
+  } while (0)
 
 /**
  * Add an `double` `value` to a `parent` array. Using oc_rep_add_double can be
@@ -816,7 +828,8 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  *     oc_rep_set_double_array(root,
  *                             math_constants,
  *                             math_constants,
- *                             (int)(sizeof(math_constants)/ sizeof(math_constants[0]) ) );
+ *                             (int)(sizeof(math_constants)/
+ * sizeof(math_constants[0]) ) );
  *     oc_rep_end_root_object();
  * ~~~
  */
@@ -834,9 +847,9 @@ const uint8_t *oc_rep_get_encoder_buf(void);
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
   } while (0)
 
-
 /**
- * Add a string array using an oc_string_array_t as `values` to the cbor `object`
+ * Add a string array using an oc_string_array_t as `values` to the cbor
+ * `object`
  * under the `key` name.
  *
  * Example:
@@ -855,10 +868,12 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * The following code could be used:
  *
  * ~~~{.c}
- *     const char* str0 = "Do not take life too seriously. You will never get out of it alive.";
+ *     const char* str0 = "Do not take life too seriously. You will never get
+ * out of it alive.";
  *     const char* str1 = "All generalizations are false, including this one.";
  *     const char* str2 = "Those who believe in telekinetics, raise my hand.";
- *     const char* str3 = "I refuse to join any club that would have me as a member.";
+ *     const char* str3 = "I refuse to join any club that would have me as a
+ * member.";
  *
  *     oc_string_array_t quotes;
  *     oc_new_string_array(&quotes, (size_t)4);
@@ -1022,7 +1037,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
  * ~~~{.c}
  *     char* byte_string_out = NULL;
  *     size_t str_len;
- *     if( true == oc_rep_get_byte_string(rep, "byte_string_key", &byte_string_out, &str_len)) {
+ *     if( true == oc_rep_get_byte_string(rep, "byte_string_key",
+ * &byte_string_out, &str_len)) {
  *         // byte_string_out can be used
  *     }
  * ~~~
@@ -1036,7 +1052,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
  *
  * @see oc_rep_set_byte_string
  */
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
+bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                            size_t *size);
 
 /**
  * Read a text string value from an `oc_rep_t`
@@ -1045,7 +1062,8 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t
  * ~~~{.c}
  *     char* greeting_out = NULL;
  *     size_t str_len;
- *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out, &str_len)) {
+ *     if( true == oc_rep_get_string(rep, "greeting", &greeting_out, &str_len))
+ * {
  *         printf("%s\n", greeting_out);
  *     }
  * ~~~
@@ -1059,7 +1077,8 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value, size_t
  *
  * @see oc_rep_set_text_string
  */
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size);
+bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
+                       size_t *size);
 
 /**
  * Read an integer array value from an `oc_rep_t`
@@ -1106,7 +1125,8 @@ bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
  *
  * @see oc_rep_set_bool_array
  */
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t *size);
+bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                           size_t *size);
 
 /**
  * Read an double array value from an `oc_rep_t`
@@ -1132,7 +1152,8 @@ bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value, size_t 
  *
  * @see oc_rep_set_double_array
  */
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, size_t *size);
+bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                             size_t *size);
 
 /**
  * Read an byte string array value from an `oc_rep_t`
@@ -1147,7 +1168,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, siz
  *                                              &barray_len)) {
  *         for (size_t i = 0; i < barray_len); i++) {
  *             char* value = oc_byte_string_array_get_item(barray_out, i);
- *             size_t value_len =oc_byte_string_array_get_item_size(barray_out, i);
+ *             size_t value_len =oc_byte_string_array_get_item_size(barray_out,
+ * i);
  *             // access the individual byte string
  *         }
  *     }
@@ -1164,7 +1186,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value, siz
  * @see oc_byte_string_array_get_item
  * @see oc_byte_string_array_get_item_size
  */
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
+bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                                  oc_string_array_t *value, size_t *size);
 
 /**
  * Read a string array value from an `oc_rep_t`
@@ -1198,7 +1221,8 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key, oc_string_arra
  * @see oc_string_array_get_item
  * @see oc_string_array_get_item_size
  */
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key, oc_string_array_t *value, size_t *size);
+bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                             oc_string_array_t *value, size_t *size);
 
 /**
  * Read a object value from an `oc_rep_t`
@@ -1240,7 +1264,8 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  * Example:
  * ~~~{.c}
  *     oc_rep_t * space_2001_out = NULL;
- *     if ( true == oc_rep_get_object_array(rep, "space_2001", &space_2001_out)) {
+ *     if ( true == oc_rep_get_object_array(rep, "space_2001", &space_2001_out))
+ * {
  *         while (space_2001_out != NULL) {
  *             vhar * str_out = NULL;
  *             size_t str_out_size = 0;

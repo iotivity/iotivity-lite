@@ -35,6 +35,7 @@ port/linux/onboarding_tool
 port/linux/server_multithread_linux
 port/linux/client_multithread_linux
 port/linux/cloud_linux
+port/linux/cloud_tests
 port/linux/cloud_linux_creds/
 port/linux/libiotivity-constrained-client.*
 port/linux/libiotivity-constrained-server.*

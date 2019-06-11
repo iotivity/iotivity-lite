@@ -91,7 +91,7 @@ coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
 
 void coap_check_transactions(void);
 void coap_free_all_transactions(void);
-void coap_free_transaction_by_endpoint(oc_endpoint_t *endpoint);
+void coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint);
 
 #ifdef __cplusplus
 }

@@ -98,6 +98,8 @@ void oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
 void oc_tls_refresh_trust_anchors(void);
 void oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
 
+mbedtls_x509_crt *oc_tls_get_trust_anchors(void);
+
 #ifdef __cplusplus
 }
 #endif

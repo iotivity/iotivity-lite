@@ -30,8 +30,16 @@ extern "C"
 {
 #endif
 
+typedef enum {
+  ADAPTER_STATUS_NONE = 0, /* Nothing happens */
+  ADAPTER_STATUS_ACCEPT,   /* Receiving no meaningful data */
+  ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
+  ADAPTER_STATUS_ERROR     /* Error */
+} adapter_receive_state_t;
+
 #ifdef OC_TCP
-typedef struct tcp_context_t {
+typedef struct tcp_context_t
+{
   struct sockaddr_storage server;
   int server_sock;
   uint16_t port;
