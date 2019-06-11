@@ -34,6 +34,24 @@
       "revId": "4a57a59253a48974bfc9e9d6e1dd926fd7eca8fb",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2838ec8e_c9c23541",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-06-11T18:50:19Z",
+      "side": 1,
+      "message": "Okay. I\u0027m also curious why you didn\u0027t catch it sooner. For e.g., if this header wasn\u0027t included in the code prior to this merge commit, then why is the build error reported following the merge? Do you know? \nOtherwise, I don\u0027t have a problem.",
+      "parentUuid": "627ea377_0fc7e2d9",
+      "revId": "4a57a59253a48974bfc9e9d6e1dd926fd7eca8fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
