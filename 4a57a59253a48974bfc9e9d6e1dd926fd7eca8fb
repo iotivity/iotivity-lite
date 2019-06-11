@@ -52,6 +52,24 @@
       "revId": "4a57a59253a48974bfc9e9d6e1dd926fd7eca8fb",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e5164fa_cda96dd9",
+        "filename": "include/oc_introspection.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-11T19:11:40Z",
+      "side": 1,
+      "message": "I actually think the error was introduced (uncaught) by me when I updated the make files on the swig branch to use the system headers from Android.  The way the make file was written before was to use the Linux system header files. (don\u0027t ask me why.) I think when I switch to the Android system headers I was somehow picking up the old build product so missed the wchar_t undefined error. I could surround the include with an `ifdef android`.  I didn\u0027t see a reason to do that since to the best of my knowledge wchar.h is avalible for all the systems.\n\nI could remove the `include \u003cwchar.h\u003e` and put the fix in separate but I didn\u0027t want the merge to break the build. It was the merge that caused me to find the build break.",
+      "parentUuid": "627ea377_0fc7e2d9",
+      "revId": "4a57a59253a48974bfc9e9d6e1dd926fd7eca8fb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
