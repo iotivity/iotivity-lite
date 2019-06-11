@@ -31,6 +31,7 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
+#include "oc_cloud.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
@@ -41,7 +42,8 @@ extern "C"
 {
 #endif
 
-typedef struct {
+typedef struct
+{
   int (*init)(void);
   void (*signal_event_loop)(void);
 
@@ -224,7 +226,7 @@ void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
    NULL if the collection is NULL or contains no links.
   @see oc_collection_add_link
 */
-oc_link_t * oc_collection_get_links(oc_resource_t* collection);
+oc_link_t *oc_collection_get_links(oc_resource_t *collection);
 
 /**
   @brief Adds a collection to the list of collections.
@@ -291,7 +293,7 @@ bool oc_delete_resource(oc_resource_t *resource);
    applied, 0 is the first device
   @param rep list of properties and their new values
 */
-typedef void(*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
+typedef void (*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
 
 /**
   @brief Sets the callback to receive change notifications for
@@ -333,9 +335,16 @@ int oc_notify_observers(oc_resource_t *resource);
 #include "oc_client_state.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
+
+bool oc_do_site_local_ipv6_discovery(const char *rt,
+                                     oc_discovery_handler_t handler,
+                                     void *user_data);
+
+bool oc_do_realm_local_ipv6_discovery(const char *rt,
+                                      oc_discovery_handler_t handler,
+                                      void *user_data);
 
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
@@ -377,6 +386,14 @@ bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 bool oc_do_ip_multicast(const char *uri, const char *query,
                         oc_response_handler_t handler, void *user_data);
 
+bool oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
+                                      oc_response_handler_t handler,
+                                      void *user_data);
+
+bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
+                                     oc_response_handler_t handler,
+                                     void *user_data);
+
 void oc_stop_multicast(oc_client_response_t *response);
 
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
@@ -394,10 +411,12 @@ typedef struct oc_role_t
 oc_role_t *oc_get_all_roles(void);
 
 bool oc_assert_role(const char *role, const char *authority,
-                    oc_endpoint_t *endpoint, oc_response_handler_t handler, void *user_data);
+                    oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                    void *user_data);
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
-                  uint16_t timeout_seconds, oc_response_handler_t handler, void *user_data);
+                  uint16_t timeout_seconds, oc_response_handler_t handler,
+                  void *user_data);
 #endif /* OC_TCP */
 
 /** Common operations */

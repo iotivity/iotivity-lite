@@ -44,7 +44,7 @@
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
 #ifndef IFA_FLAGS
-#define IFA_FLAGS (IFA_MULTICAST+1)
+#define IFA_FLAGS (IFA_MULTICAST + 1)
 #endif
 
 #define OCF_PORT_UNSECURED (5683)
@@ -245,9 +245,10 @@ get_ip_context_for_device(size_t device)
 }
 
 #ifdef OC_IPV4
-static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
-                                              const struct in_addr *local,
-                                              int interface_index) {
+static int
+add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
+                                   int interface_index)
+{
   struct ip_mreqn mreq;
 
   memset(&mreq, 0, sizeof(mreq));
@@ -268,8 +269,9 @@ static int add_mcast_sock_to_ipv4_mcast_group(int mcast_sock,
 }
 #endif /* OC_IPV4 */
 
-static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
-                                              int interface_index) {
+static int
+add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
+{
   struct ipv6_mreq mreq;
 
   /* Link-local scope */
@@ -317,7 +319,9 @@ static int add_mcast_sock_to_ipv6_mcast_group(int mcast_sock,
   return 0;
 }
 
-static int configure_mcast_socket(int mcast_sock, int sa_family) {
+static int
+configure_mcast_socket(int mcast_sock, int sa_family)
+{
   int ret = 0;
   struct ifaddrs *ifs = NULL, *interface = NULL;
   if (getifaddrs(&ifs) < 0) {
@@ -349,7 +353,7 @@ static int configure_mcast_socket(int mcast_sock, int sa_family) {
       struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
       if (a)
         ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
-                                                if_index);
+                                                  if_index);
     }
 #endif /* OC_IPV4 */
   }
@@ -559,7 +563,9 @@ oc_connectivity_get_endpoints(size_t device)
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
  */
-static int process_interface_change_event(void) {
+static int
+process_interface_change_event(void)
+{
   int ret = 0, i, num_devices = oc_core_get_num_devices();
   struct nlmsghdr *response = NULL;
 
@@ -607,12 +613,12 @@ static int process_interface_change_event(void) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv4_mcast_group(
-                    dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+                  dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
               }
             } else
 #endif /* OC_IPV4 */
-                if (ifa->ifa_family == AF_INET6 &&
-                    ifa->ifa_scope == RT_SCOPE_LINK) {
+              if (ifa->ifa_family == AF_INET6 &&
+                  ifa->ifa_scope == RT_SCOPE_LINK) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
@@ -716,7 +722,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
         while (dst != NULL &&
                (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV6))) {
+                !(dst->flags & IPV6))) {
           dst = dst->next;
         }
         if (dst == NULL) {
@@ -744,7 +750,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
         while (dst != NULL &&
                (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV4))) {
+                !(dst->flags & IPV4))) {
           dst = dst->next;
         }
         if (dst == NULL) {
@@ -893,7 +899,7 @@ network_event_thread(void *data)
       char buf;
       // write to pipe shall not block - so read the byte we wrote
       if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
-          // intentionally left blank
+        // intentionally left blank
       }
     }
 
@@ -1115,6 +1121,9 @@ oc_send_discovery_request(oc_message_t *message)
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
+#define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
+  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     if (!(interface->ifa_flags & IFF_UP) || interface->ifa_flags & IFF_LOOPBACK)
       continue;
@@ -1130,7 +1139,24 @@ oc_send_discovery_request(oc_message_t *message)
           goto done;
         }
         message->endpoint.interface_index = mif;
-        message->endpoint.addr.ipv6.scope = mif;
+        if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
+          message->endpoint.addr.ipv6.scope = mif;
+          unsigned int hops = 1;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+        } else if (IN6_IS_ADDR_MC_REALM_LOCAL(
+                     message->endpoint.addr.ipv6.address)) {
+          unsigned int hops = 255;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+          message->endpoint.addr.ipv6.scope = 0;
+        } else if (IN6_IS_ADDR_MC_SITELOCAL(
+                     message->endpoint.addr.ipv6.address)) {
+          unsigned int hops = 255;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+          message->endpoint.addr.ipv6.scope = 0;
+        }
         oc_send_buffer(message);
       }
 #ifdef OC_IPV4
@@ -1139,8 +1165,7 @@ oc_send_discovery_request(oc_message_t *message)
       struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
       if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF,
                      &addr->sin_addr, sizeof(addr->sin_addr)) == -1) {
-        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d",
-               errno);
+        OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);
         goto done;
       }
       message->endpoint.interface_index = if_nametoindex(interface->ifa_name);
@@ -1151,6 +1176,7 @@ oc_send_discovery_request(oc_message_t *message)
 #endif /* !OC_IPV4 */
   }
 done:
+#undef IN6_IS_ADDR_MC_REALM_LOCAL
   freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
@@ -1379,7 +1405,9 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
-int oc_connectivity_init(size_t device) {
+int
+oc_connectivity_init(size_t device)
+{
   OC_DBG("Initializing connectivity for device %d", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
@@ -1542,12 +1570,11 @@ int oc_connectivity_init(size_t device) {
     memset(&ifchange_nl, 0, sizeof(struct sockaddr_nl));
     ifchange_nl.nl_family = AF_NETLINK;
     ifchange_nl.nl_groups =
-        RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
+      RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
     ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
     if (ifchange_sock < 0) {
-      OC_ERR(
-          "creating netlink socket to monitor network interface changes %d",
-          errno);
+      OC_ERR("creating netlink socket to monitor network interface changes %d",
+             errno);
       return -1;
     }
     if (bind(ifchange_sock, (struct sockaddr *)&ifchange_nl,
@@ -1581,7 +1608,7 @@ oc_connectivity_shutdown(size_t device)
   ip_context_t *dev = get_ip_context_for_device(device);
   dev->terminate = 1;
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-      OC_WRN("cannot wakeup network thread");
+    OC_WRN("cannot wakeup network thread");
   }
 
   close(dev->server_sock);

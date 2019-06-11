@@ -26,6 +26,7 @@
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "oc_keypair.h"
+#include "security/oc_tls.h"
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
@@ -83,7 +84,8 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
 
   /* Verify that the role certificate was signed by a CA */
   uint32_t flags = 0;
-  ret = mbedtls_x509_crt_verify_with_profile(cert, cert->next, NULL,
+  mbedtls_x509_crt *trust_ca = oc_tls_get_trust_anchors();
+  ret = mbedtls_x509_crt_verify_with_profile(cert, trust_ca, NULL,
                                              &mbedtls_x509_crt_profile_default,
                                              NULL, &flags, NULL, NULL);
   if (ret != 0 || flags != 0) {

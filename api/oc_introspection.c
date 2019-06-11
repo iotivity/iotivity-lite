@@ -84,7 +84,7 @@ oc_core_introspection_data_handler(oc_request_t *request,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     OC_ERR(
-      "oc_core_introspection_data_handler : %d is too big for buffer %d \n",
+      "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
       IDD_size, OC_MAX_APP_DATA_SIZE);
     request->response->response_buffer->response_length = (uint16_t)0;
     request->response->response_buffer->code =
@@ -162,5 +162,5 @@ oc_create_introspection_resource(size_t device)
   oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
                             OC_IF_BASELINE, OC_IF_BASELINE, 0,
                             oc_core_introspection_data_handler, 0, 0, 0, 1,
-                            "oic.introspection.data");
+                            "x.org.openconnectivity.oic.introspection.data");
 }

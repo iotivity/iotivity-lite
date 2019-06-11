@@ -17,8 +17,8 @@
  *
  ****************************************************************************/
 
-#include "cloud.h"
 #include "oc_api.h"
+#include "oc_cloud.h"
 #include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include "rd_client.h"
@@ -45,10 +45,36 @@ oc_resource_t *res2;
 int quit = 0;
 
 static void
-cloud_status_handler(cloud_status_t status, void *user_data)
+cloud_status_handler(oc_cloud_status_t status, void *data)
 {
-  (void)user_data;
-  printf("cloud_status: %d\n", (int)status);
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  PRINT("\nCloud Manager Status:\n");
+  if (status & OC_CLOUD_REGISTERED) {
+    PRINT("\t\t-Registered\n");
+  }
+  if (status & OC_CLOUD_TOKEN_EXPIRY) {
+    PRINT("\t\t-Token Expiry: ");
+    if (ctx) {
+      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+    } else {
+      PRINT("\n");
+    }
+  }
+  if (status & OC_CLOUD_FAILURE) {
+    PRINT("\t\t-Failure\n");
+  }
+  if (status & OC_CLOUD_LOGGED_IN) {
+    PRINT("\t\t-Logged In\n");
+  }
+  if (status & OC_CLOUD_LOGGED_OUT) {
+    PRINT("\t\t-Logged Out\n");
+  }
+  if (status & OC_CLOUD_DEREGISTERED) {
+    PRINT("\t\t-DeRegistered\n");
+  }
+  if (status & OC_CLOUD_REFRESHED_TOKEN) {
+    PRINT("\t\t-Refreshed Token\n");
+  }
 }
 
 static int
@@ -57,7 +83,6 @@ app_init(void)
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
-  ret |= cloud_init(0, cloud_status_handler, NULL);
   return ret;
 }
 
@@ -144,7 +169,7 @@ register_resources(void)
   oc_resource_set_observable(res1, true);
   oc_resource_set_request_handler(res1, OC_GET, get_handler, &light1);
   oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
-  cloud_rd_publish(res1);
+  oc_cloud_add_resource(res1);
   oc_add_resource(res1);
 
   res2 = oc_new_resource(NULL, "/light/2", 1, 0);
@@ -155,7 +180,7 @@ register_resources(void)
   oc_resource_set_observable(res2, true);
   oc_resource_set_request_handler(res2, OC_GET, get_handler, &light2);
   oc_resource_set_request_handler(res2, OC_POST, post_handler, &light2);
-  cloud_rd_publish(res2);
+  oc_cloud_add_resource(res2);
   oc_add_resource(res2);
 }
 
@@ -201,6 +226,11 @@ main(void)
   if (init < 0)
     return init;
 
+  oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+  if (ctx) {
+    oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+  }
+
   while (quit != 1) {
     oc_clock_time_t next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
@@ -214,8 +244,7 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
-
-  cloud_shutdown(0);
+  oc_cloud_manager_stop(ctx);
   oc_main_shutdown();
   return 0;
 }
