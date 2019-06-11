@@ -904,6 +904,41 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
 }
+
+%ignore oc_do_site_local_ipv6_discovery;
+%rename(doSiteLocalIPv6Discovery) jni_do_site_local_ipv6_discovery;
+%inline %{
+bool jni_do_site_local_ipv6_discovery(const char *rt,
+                                      oc_discovery_handler_t handler,
+                                      jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_site_local_ipv6_discovery(rt, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_realm_local_ipv6_discovery;
+%rename(doRealmLocalIPv6Discovery) jni_do_realm_local_ipv6_discovery;
+%inline %{
+bool jni_do_realm_local_ipv6_discovery(const char *rt,
+                                       oc_discovery_handler_t handler,
+                                       jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_realm_local_ipv6_discovery(rt, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
 %ignore oc_do_ip_discovery;
 %rename(doIPDiscovery) jni_oc_do_ip_discovery;
 %inline %{
@@ -918,6 +953,7 @@ bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_
   return return_value;
 }
 %}
+
 %ignore oc_do_ip_discovery_at_endpoint;
 %rename(doIPDiscoveryAtEndpoint) jni_oc_do_ip_discovery_at_endpoint;
 %inline %{
@@ -1088,6 +1124,36 @@ bool jni_stop_observe(const char *uri, oc_endpoint_t *endpoint) {
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   bool return_value = oc_stop_observe(uri, endpoint);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_realm_local_ipv6_multicast;
+%rename(doRealmLocalIPv6Multicast) jni_do_realm_local_ipv6_multicast;
+%inline %{
+bool jni_do_realm_local_ipv6_multicast(const char *uri, const char *query,
+                        oc_response_handler_t handler, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_realm_local_ipv6_multicast(uri, query, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_site_local_ipv6_multicast;
+%rename(doSiteLocalIPv6Multicast) jni_do_site_local_ipv6_multicast;
+%inline %{
+bool jni_do_site_local_ipv6_multicast(const char *uri, const char *query,
+                        oc_response_handler_t handler, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_site_local_ipv6_multicast(uri, query, handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
@@ -1305,6 +1371,8 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %ignore oc_ri_find_client_cb_by_token;
 %ignore oc_ri_find_client_cb_by_mid;
 %ignore oc_ri_remove_client_cb_by_mid;
+%ignore oc_ri_free_client_cbs_by_endpoint;
+%ignore oc_ri_free_client_cbs_by_mid;
 %ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
 /*******************End oc_client_state.h*******************/

@@ -137,6 +137,36 @@ int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_call
 }
 %}
 
+%ignore oc_obt_discover_unowned_devices_realm_local_ipv6;
+%rename(discoverUnownedDevicesRealmLocalIPv6) jni_obt_discover_unowned_devices_realm_local_ipv6;
+%inline %{
+int jni_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_unowned_devices_realm_local_ipv6(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_discover_unowned_devices_site_local_ipv6;
+%rename(discoverUnownedDevicesSiteLocalIPv6) jni_obt_discover_unowned_devices_site_local_ipv6;
+%inline %{
+int jni_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_unowned_devices_site_local_ipv6(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
 %ignore oc_obt_discover_owned_devices;
 %rename(discoverOwnedDevices) jni_oc_obt_discover_owned_devices;
 %inline %{
@@ -146,6 +176,36 @@ int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callba
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_owned_devices(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_discover_owned_devices_realm_local_ipv6;
+%rename(discoverOwnedDevicesRealmLocalIPv6) jni_obt_discover_owned_devices_realm_local_ipv6;
+%inline %{
+int jni_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_owned_devices_realm_local_ipv6(callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_discover_owned_devices_site_local_ipv6;
+%rename(discoverOwnedDevicesSiteLocalIPv6) jni_obt_discover_owned_devices_site_local_ipv6;
+%inline %{
+int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_owned_devices_site_local_ipv6(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
