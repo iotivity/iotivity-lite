@@ -88,11 +88,14 @@ typedef enum {
 typedef enum {
   OCF_P = 0,
   /* List of resources on a logical device: start */
+  /* List of Device Configuration Resources (DCRs): start */
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
-  /* List of Device Configuration Resources (DCRs): start */
   OCF_RES,
+#ifdef OC_CLOUD
+  OCF_COAPCLOUDCONF,
+#endif /* OC_CLOUD */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
@@ -209,9 +212,9 @@ bool oc_ri_delete_resource(oc_resource_t *resource);
 
 void oc_ri_free_resource_properties(oc_resource_t *resource);
 
-int oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
-                                  size_t *key_len, char **value, size_t *value_len,
-                                  size_t n);
+int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
+                                  char **key, size_t *key_len, char **value,
+                                  size_t *value_len, size_t n);
 int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                           char **value);
 

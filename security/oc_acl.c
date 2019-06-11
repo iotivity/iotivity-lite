@@ -823,15 +823,22 @@ oc_sec_acl_default(size_t device)
     if (oc_string_len(resource->uri) <= 0) {
       continue;
     }
-    if (i < OCF_SEC_DOXM || i > OCF_SEC_CRED) {
-      success &= oc_sec_ace_update_res(
-        OC_SUBJECT_CONN, &_anon_clear, 1, 2, oc_string(resource->uri), -1,
-        &resource->types, resource->interfaces, device);
+    if (i <= OCF_RES || i == OCF_D) {
+      success &=
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
+                              oc_string(resource->uri), 0, NULL, 0, device);
     }
+#ifdef OC_CLOUD
+    if (i == OCF_COAPCLOUDCONF) {
+      success &=
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, -1, 6,
+                              "/CoapCloudConfResURI", 0, NULL, 0, device);
+    }
+#endif /* OC_CLOUD */
     if (i >= OCF_SEC_DOXM && i < OCF_D) {
-      success &= oc_sec_ace_update_res(
-        OC_SUBJECT_CONN, &_anon_clear, 2, 14, oc_string(resource->uri), -1,
-        &resource->types, resource->interfaces, device);
+      success &=
+        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
+                              oc_string(resource->uri), -1, NULL, 0, device);
     }
   }
   OC_DBG("ACL for core resources initialized %d", success);

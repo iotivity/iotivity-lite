@@ -152,7 +152,8 @@ oc_status_code(oc_status_t key)
 
 int
 oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
-                              size_t *key_len, char **value, size_t *value_len, size_t n)
+                              size_t *key_len, char **value, size_t *value_len,
+                              size_t n)
 {
   int next_pos = -1;
   size_t i = 0;
@@ -189,7 +190,7 @@ oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                       char **value)
 {
   int next_pos = 0, found = -1;
-  size_t  kl, vl, pos = 0;
+  size_t kl, vl, pos = 0;
   char *k;
 
   while (pos < query_len) {
@@ -236,7 +237,9 @@ start_processes(void)
 #endif /* OC_TCP */
 }
 
-static void stop_processes(void) {
+static void
+stop_processes(void)
+{
 #ifdef OC_TCP
   oc_process_exit(&oc_session_events);
 #endif /* OC_TCP */
@@ -405,8 +408,7 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
     oc_etimer_set(&event_cb->timer, ticks);
     OC_PROCESS_CONTEXT_END(&timed_callback_events);
     oc_list_add(timed_callbacks, event_cb);
-  }
-  else {
+  } else {
     OC_WRN("insufficient memory to add timed event callback");
   }
 }
@@ -573,7 +575,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
 }
 
 static bool
-does_interface_support_method(oc_interface_mask_t iface_mask, oc_method_t method)
+does_interface_support_method(oc_interface_mask_t iface_mask,
+                              oc_method_t method)
 {
   bool supported = true;
   switch (iface_mask) {
@@ -692,7 +695,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
     /* Check if query string includes interface selection. */
     char *iface;
-    int if_len = oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
+    int if_len =
+      oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
       iface_mask |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
@@ -1061,9 +1065,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * altered the resource state, so attempt to notify all observers
      * of that resource with the change.
      */
-    if (!resource_is_collection && cur_resource &&
-        (method == OC_PUT || method == OC_POST) &&
-        response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
+    if (
+#ifdef OC_COLLECTIONS
+      !resource_is_collection &&
+#endif /* OC_COLLECTIONS */
+      cur_resource && (method == OC_PUT || method == OC_POST) &&
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
       oc_ri_add_timed_event_callback_ticks(cur_resource,
                                            &oc_observe_notification_delayed, 0);
 
@@ -1120,21 +1127,58 @@ oc_ri_remove_client_cb(void *data)
   return OC_EVENT_DONE;
 }
 
-bool
-oc_ri_remove_client_cb_by_mid(uint16_t mid)
+static void
+notify_client_cb_503(oc_client_cb_t *cb)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+  oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+
+  if (!cb->multicast && !cb->discovery) {
+    oc_client_response_t client_response;
+    memset(&client_response, 0, sizeof(oc_client_response_t));
+    client_response.client_cb = cb;
+    client_response.endpoint = cb->endpoint;
+    client_response.observe_option = -1;
+    client_response.payload = 0;
+    client_response.user_data = cb->user_data;
+    client_response.code = oc_status_code(OC_STATUS_SERVICE_UNAVAILABLE);
+
+    oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
+    handler(&client_response);
+  }
+  free_client_cb(cb);
+}
+
+void
+oc_ri_free_client_cbs_by_mid(uint16_t mid)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
   while (cb != NULL) {
-    if (cb->mid == mid)
-      break;
-    cb = cb->next;
+    next = cb->next;
+    if (cb->ref_count == 0 && cb->mid == mid) {
+      cb->ref_count = 1;
+      notify_client_cb_503(cb);
+      cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      continue;
+    }
+    cb = next;
   }
-  if (cb) {
-    oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-    free_client_cb(cb);
-    return true;
+}
+
+void
+oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
+  while (cb != NULL) {
+    next = cb->next;
+    if (cb->ref_count == 0 &&
+        oc_endpoint_compare(cb->endpoint, endpoint) == 0) {
+      cb->ref_count = 1;
+      notify_client_cb_503(cb);
+      cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      continue;
+    }
+    cb = next;
   }
-  return false;
 }
 
 oc_client_cb_t *
@@ -1161,6 +1205,19 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
   return cb;
 }
 
+static bool
+oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
+{
+  oc_client_cb_t *cb = oc_list_head(client_cbs);
+  while (cb != NULL) {
+    if (cb == client_cb) {
+      return true;
+    }
+    cb = cb->next;
+  }
+  return false;
+}
+
 #ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t **response_state,
@@ -1180,6 +1237,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     }
   }
 #endif /* OC_SPEC_VER_OIC */
+
+  cb->ref_count = 1;
 
   uint8_t *payload = NULL;
   int payload_len = 0;
@@ -1217,7 +1276,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     payload = (*response_state)->buffer;
     payload_len = (*response_state)->payload_size;
   }
-#else /* OC_BLOCK_WISE */
+#else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
 
@@ -1240,8 +1299,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                                           cb->handler.discovery, endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         uint16_t mid = cb->mid;
-        while (oc_ri_remove_client_cb_by_mid(mid))
-          ;
+        cb->ref_count = 0;
+        oc_ri_free_client_cbs_by_mid(mid);
 #ifdef OC_BLOCK_WISE
         *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
@@ -1269,17 +1328,24 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   }
 
 #ifdef OC_TCP
-  if (pkt->code == PONG_7_03) {
+  if (pkt->code == PONG_7_03 ||
+      (oc_string_len(cb->uri) == 5 &&
+       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
   }
 #endif /* OC_TCP */
+
+  if (!oc_ri_is_client_cb_valid(cb)) {
+    return true;
+  }
+
+  cb->ref_count = 0;
 
   if (client_response.observe_option == -1 && !separate && !cb->discovery) {
     if (cb->multicast) {
       if (cb->stop_multicast_receive) {
         uint16_t mid = cb->mid;
-        while (oc_ri_remove_client_cb_by_mid(mid))
-          ;
+        oc_ri_free_client_cbs_by_mid(mid);
       }
     } else {
       oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
@@ -1301,8 +1367,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
             oc_string_len(dup_cb->uri) == uri_len &&
             strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
             oc_endpoint_compare(dup_cb->endpoint, endpoint) == 0) {
-          OC_DBG("Freeing cb %s, token 0x%02X%02X",
-                 oc_string(dup_cb->uri), dup_cb->token[0], dup_cb->token[1]);
+          OC_DBG("Freeing cb %s, token 0x%02X%02X", oc_string(dup_cb->uri),
+                 dup_cb->token[0], dup_cb->token[1]);
           oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
           free_client_cb(dup_cb);
           break;

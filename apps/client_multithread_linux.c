@@ -151,7 +151,7 @@ parse_payload(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      printf("%d\n", rep->value.integer);
+      printf("%lld\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
