@@ -69,7 +69,8 @@ ifeq ($(DEBUG),1)
 endif
 
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
-		oc_api oc_obt oc_pki oc_introspection oc_core_res
+		oc_api oc_obt oc_pki oc_introspection oc_core_res oc_cloud \
+		oc_session_events
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))

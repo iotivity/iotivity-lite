@@ -62,6 +62,7 @@ jclass cls_OCUuid;
 jclass cls_OCObtDiscoveryHandler;
 jclass cls_OCObtDeviceStatusHandler;
 jclass cls_OCObtStatusHandler;
+jclass cls_OCCloudStatusHandler;
 
 /* Callback handlers for oc_main_init */
 int jni_oc_handler_init_callback(void)
@@ -321,6 +322,11 @@ int jni_main_init(const oc_handler_t *handler)
   assert(ocObtStatusHandlerClass);
   cls_OCObtStatusHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocObtStatusHandlerClass));
   JCALL1(DeleteLocalRef, jenv, ocObtStatusHandlerClass);
+
+  jclass ocCloudStatusHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCloudStatusHandler");
+  assert(ocCloudStatusHandlerClass);
+  cls_OCCloudStatusHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudStatusHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCloudStatusHandlerClass);
 
   jclass utilArrayListClass = JCALL1(FindClass, jenv, "java/util/ArrayList");
   assert(utilArrayListClass);
