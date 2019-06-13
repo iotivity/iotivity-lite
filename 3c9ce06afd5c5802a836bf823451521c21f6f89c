@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a43dbc6_23fedf43",
+        "filename": "swig/oc_java/OCCloudStatusHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-13T23:55:39Z",
+      "side": 1,
+      "message": "Debating if this should be renamed to OCCloudHandler since the C function name is oc_cloud_cb_t.",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 37
+      },
+      "revId": "3c9ce06afd5c5802a836bf823451521c21f6f89c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
