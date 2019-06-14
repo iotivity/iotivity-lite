@@ -28,8 +28,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 extern CborEncoder g_encoder, root_map, links_array;
@@ -577,11 +576,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   g_err |= cbor_encode_text_string(parent, key, strlen(key))
 
 /**
-* This macro has been replaced with oc_rep_open_array
-*
-* @see oc_rep_open_array
-* @see oc_rep_close_array
-*/
+ * This macro has been replaced with oc_rep_open_array
+ *
+ * @see oc_rep_open_array
+ * @see oc_rep_close_array
+ */
 #define oc_rep_set_array(object, key) oc_rep_open_array(object, key)
 
 /**
@@ -602,19 +601,19 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_array(&parent##_map, key)
 
 /**
-* Close the array object.  No additional items can be added to the array after
-* this is called.
-*
-* @see oc_rep_open_array
-*/
+ * Close the array object.  No additional items can be added to the array after
+ * this is called.
+ *
+ * @see oc_rep_open_array
+ */
 #define oc_rep_close_array(parent, key) oc_rep_end_array(&parent##_map, key)
 
 /**
-* This macro has been replaced with oc_rep_begin_object
-*
-* @see oc_rep_begin_object
-* @see oc_rep_end_object
-*/
+ * This macro has been replaced with oc_rep_begin_object
+ *
+ * @see oc_rep_begin_object
+ * @see oc_rep_end_object
+ */
 #define oc_rep_start_object(parent, key) oc_rep_begin_object(parent, key)
 
 #define oc_rep_begin_object(parent, key)                                       \
@@ -628,11 +627,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   while (0)
 
 /**
-* This macro has been replaced with oc_rep_object_array_begin_item
-*
-* @see oc_rep_object_array_begin_item
-* @see oc_rep_object_array_end_item
-*/
+ * This macro has been replaced with oc_rep_object_array_begin_item
+ *
+ * @see oc_rep_object_array_begin_item
+ * @see oc_rep_object_array_end_item
+ */
 #define oc_rep_object_array_start_item(key) oc_rep_object_array_begin_item(key)
 
 /**
@@ -686,11 +685,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 #define oc_rep_object_array_end_item(key) oc_rep_end_object(&key##_array, key)
 
 /**
-* This macro has been replaced with oc_rep_open_object
-*
-* @see oc_rep_open_object
-* @see oc_rep_close_object
-*/
+ * This macro has been replaced with oc_rep_open_object
+ *
+ * @see oc_rep_open_object
+ * @see oc_rep_close_object
+ */
 #define oc_rep_set_object(object, key) oc_rep_open_object(object, key)
 
 /**
@@ -727,11 +726,11 @@ const uint8_t *oc_rep_get_encoder_buf(void);
   oc_rep_begin_object(&parent##_map, key)
 
 /**
-* Close the object. No additional items can be added to the object after
-* this is called.
-*
-* @see oc_rep_open_object
-*/
+ * Close the object. No additional items can be added to the object after
+ * this is called.
+ *
+ * @see oc_rep_open_object
+ */
 #define oc_rep_close_object(parent, key) oc_rep_end_object(&parent##_map, key)
 
 /**
@@ -946,8 +945,7 @@ typedef struct oc_rep_s
   oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;
-  union oc_rep_value
-  {
+  union oc_rep_value {
     int64_t integer;
     bool boolean;
     double double_p;
