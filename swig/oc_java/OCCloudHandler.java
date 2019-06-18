@@ -1,5 +1,5 @@
 package org.iotivity;
 
-public interface OCCloudStatusHandler {
+public interface OCCloudHandler {
     public void handler(int status);
 }

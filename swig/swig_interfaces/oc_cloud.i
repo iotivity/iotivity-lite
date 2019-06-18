@@ -26,9 +26,9 @@
 #include "oc_cloud.h"
 %}
 
-/* code and typemaps for mappinc the oc_cloud_cb_t to the java OCCloudStatusHandler */
+/* code and typemaps for mappinc the oc_cloud_cb_t to the java OCCloudHandler */
 %{
-extern jclass cls_OCCloudStatusHandler;
+extern jclass cls_OCCloudHandler;
 
 static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
 {
@@ -38,10 +38,10 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
   data->jenv = GetJNIEnv(&getEnvResult);
   assert(data->jenv);
 
-  assert(cls_OCCloudStatusHandler);
+  assert(cls_OCCloudHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
         (data->jenv),
-        cls_OCCloudStatusHandler,
+        cls_OCCloudHandler,
         "handler",
         "(I)V");
   assert(mid_handler);
@@ -59,8 +59,8 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
 
 %ignore oc_cloud_cb_t;
 %typemap(jni)    oc_cloud_cb_t callback "jobject";
-%typemap(jtype)  oc_cloud_cb_t callback "OCCloudStatusHandler";
-%typemap(jstype) oc_cloud_cb_t callback "OCCloudStatusHandler";
+%typemap(jtype)  oc_cloud_cb_t callback "OCCloudHandler";
+%typemap(jstype) oc_cloud_cb_t callback "OCCloudHandler";
 %typemap(javain) oc_cloud_cb_t callback "$javainput";
 %typemap(in,numinputs=1) (oc_cloud_cb_t callback, jni_callback_data *jcb)
 {
