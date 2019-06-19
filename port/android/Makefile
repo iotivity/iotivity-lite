@@ -115,6 +115,7 @@ CTIMESTAMP=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timest
 
 SRC_COMMON:=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
 SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 # From API level 24 on Android supports getifaddrs itself.
 ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
@@ -130,10 +131,12 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
+CFLAGS_CLOUD=-I../../api/cloud
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_API__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o,$(notdir $(SRC:.c=.o))))
+OBJ_CLOUD=$(addprefix ${OBJDIR}/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
 LIBS?= -lm -llog
@@ -146,6 +149,13 @@ ifneq ($(JAVA), 1)
 endif
 
 OBT = onboarding_tool
+
+ifeq ($(CLOUD),1)
+	CFLAGS += -DOC_CLOUD
+	TCP=1
+	IPV4=1
+	#NATIVE_SAMPLES += cloud_linux cloud_tests
+endif
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
@@ -229,6 +239,11 @@ ${OBJDIR}/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+${OBJDIR}/cloud/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
+
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
@@ -286,7 +301,7 @@ server_multithread_linux: libiotivity-constrained-server.a
 client_multithread_linux: libiotivity-constrained-client.a
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-swig:
+swig: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
