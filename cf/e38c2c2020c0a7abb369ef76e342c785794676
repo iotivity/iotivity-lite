@@ -1,0 +1,7 @@
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+2: Rick Bell <richard.s.bell@intel.com>
+Submitted-by: Rick Bell <richard.s.bell@intel.com>
+Submitted-at: Wed, 19 Jun 2019 20:53:36 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/c/iotivity-lite/+/29564
+Project: iotivity-lite
+Branch: refs/heads/swig
