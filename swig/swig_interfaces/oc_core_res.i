@@ -50,6 +50,10 @@ void jni_oc_core_init_platform_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_core_init_platform_cb_t init_cb "jobject";
@@ -61,6 +65,7 @@ void jni_oc_core_init_platform_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_SHUTDOWN;
   jni_list_add(user_data);
   $1 = jni_oc_core_init_platform_callback;
   $2 = user_data;
@@ -97,6 +102,10 @@ void jni_oc_core_add_device_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_core_add_device_cb_t add_device_cb "jobject";
@@ -107,6 +116,7 @@ void jni_oc_core_add_device_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_FOR_A_SINGLE_CALL;
   jni_list_add(user_data);
   $1 = jni_oc_core_add_device_callback;
   $2 = user_data;
