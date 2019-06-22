@@ -53,6 +53,11 @@ int jni_quit __attribute__((unused));
 #define jni_mutex_unlock(m) pthread_mutex_unlock(&m)
 #endif
 
+typedef enum {
+  OC_SINGLE_CALL,
+  OC_START_CLOUD_MANAGER
+} jni_callback_id_t;
+
 /*
  * This struct used to hold information needed for java callbacks.
  * When registering a callback handler from java the `JNIEnv`
@@ -74,6 +79,7 @@ typedef struct jni_callback_data_s {
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
+  jni_callback_id_t cb_id;
 } jni_callback_data;
 
 /*
