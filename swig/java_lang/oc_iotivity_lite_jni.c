@@ -285,6 +285,7 @@ jni_list_remove(jni_callback_data *item)
     JCALL1(DeleteGlobalRef, item->jenv, item->jcb_obj);
     oc_list_remove(jni_callbacks, item);
     free(item);
+    item = NULL;
   }
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -307,12 +308,22 @@ jni_list_get_item_by_java_callback(jobject callback)
     return item;
 }
 
-//void jni_list_remove_by_java_callback(jobject callback)
-//{
-//
-//    jni_callback_data *item = jni_list_get_item_by_java_callback(callback);
-//    jni_list_remove(item);
-//}
+jni_callback_data *
+jni_list_get_item_by_callback_valid(jni_callback_valid_t cb_valid)
+{
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  jni_callback_data *item = jni_list_get_head();
+  while (item) {
+    if ((item->cb_valid) == cb_valid) {
+      break;
+    }
+    item = (jni_callback_data *)oc_list_item_next(item);
+  }
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return item;
+}
 
 JNIEnv *
 get_jni_env(jint *getEnvResult)
