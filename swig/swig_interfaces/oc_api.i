@@ -198,17 +198,6 @@ int jni_main_init(const oc_handler_t *handler)
 
   release_jni_env(getEnvResult);
 
-// initialize threads
-#if defined(_WIN32)
-  InitializeCriticalSection(&jni_cs);
-  InitializeConditionVariable(&jni_cv);
-  InitializeCriticalSection(&jni_sync_lock);
-#elif defined(__linux__)
-  pthread_mutexattr_init(&jni_sync_lock_attr);
-  pthread_mutexattr_settype(&jni_sync_lock_attr, PTHREAD_MUTEX_ERRORCHECK);  // was PTHREAD_MUTEX_RECURSIVE
-  pthread_mutex_init(&jni_sync_lock, &jni_sync_lock_attr);
-#endif
-
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_main_init(handler);
@@ -265,6 +254,10 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
   assert(mid_handler);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -274,9 +267,17 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
 %typemap(jstype) oc_factory_presets_cb_t cb "OCFactoryPresetsHandler";
 %typemap(javain) oc_factory_presets_cb_t cb "$javainput";
 %typemap(in,numinputs=1) (oc_factory_presets_cb_t cb, jni_callback_data *jcb) {
+  // The C code only contains one instance of oc_factory_presets_cb_t if setFactoryPresetsHandler is
+  // called multiple times we must release the old item.
+  jni_callback_data * item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_SET_FACTORY_PRESETS_CB);
+  if (item) {
+    jni_list_remove(item);
+  }
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_SET_FACTORY_PRESETS_CB;
+  jni_list_add(user_data);
   $1 = jni_oc_factory_presets_callback;
   $2 = user_data;
 }
@@ -305,6 +306,10 @@ void jni_oc_add_device_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
@@ -315,6 +320,7 @@ void jni_oc_add_device_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_FOR_A_SINGLE_CALL;
   jni_list_add(user_data);
   $1 = jni_oc_add_device_callback;
   $2 = user_data;
@@ -354,6 +360,10 @@ void jni_oc_init_platform_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_init_platform_cb_t init_platform_cb "jobject";
@@ -365,6 +375,7 @@ void jni_oc_init_platform_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_SHUTDOWN;
   jni_list_add(user_data);
   $1 = jni_oc_init_platform_callback;
   $2 = user_data;
@@ -406,6 +417,10 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
   jstring jpin = JCALL1(NewStringUTF, (data->jenv), (const char *)pin);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -415,9 +430,16 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
 %typemap(jstype) oc_random_pin_cb_t cb "OCRandomPinHandler";
 %typemap(javain) oc_random_pin_cb_t cb "$javainput";
 %typemap(in,numinputs=1) (oc_random_pin_cb_t cb, jni_callback_data *jcb) {
+  // The C code only contains one instance of oc_random_pin_cb_t if setRandomPinHandler is
+  // called multiple times we must release the old item.
+  jni_callback_data * item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_SET_RANDOM_PIN_CB);
+  if(item) {
+    jni_list_remove(item);
+  }
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_SET_RANDOM_PIN_CB;
   jni_list_add(user_data);
   $1 = jni_oc_random_pin_callback;
   $2 = user_data;
@@ -500,6 +522,10 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
         JCALL4(NewObject, (data->jenv), cls_OCRequest, mid_OCRequest_init, (jlong)request, false),
         (jint)interfaces);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -512,6 +538,7 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
   jni_list_add(user_data);
   $1 = jni_oc_request_callback;
   $2 = user_data;
