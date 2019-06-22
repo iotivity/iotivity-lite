@@ -53,6 +53,12 @@ int jni_quit __attribute__((unused));
 #define jni_mutex_unlock(m) pthread_mutex_unlock(&m)
 #endif
 
+typedef enum {
+  OC_CALLBACK_ID_UNKNOWN,
+  OC_CALLBACK_ID_SINGLE_CALL,
+  OC_CALLBACK_ID_START_CLOUD_MANAGER
+} jni_callback_id_t;
+
 /*
  * JNI function calls require different calling conventions for C and C++. These
  * JCALL macros are used so that the same typemaps can be used for generating
@@ -151,13 +157,14 @@ typedef struct jni_callback_data_s {
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
+  jni_callback_id_t cb_id;
 } jni_callback_data;
 
 jni_callback_data * jni_list_get_head();
 void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
-jni_callback_data * jni_list_get_item_by_java_callback(jobject callback);
-//void jni_list_remove_by_java_callback(jobject callback);
+jni_callback_data *jni_list_get_item_by_java_callback(jobject callback);
+jni_callback_data *jni_list_get_item_by_callback_id(jni_callback_id_t cb_id);
 
 JavaVM *get_jvm();
 
