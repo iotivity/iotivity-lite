@@ -307,12 +307,22 @@ jni_list_get_item_by_java_callback(jobject callback)
     return item;
 }
 
-//void jni_list_remove_by_java_callback(jobject callback)
-//{
-//
-//    jni_callback_data *item = jni_list_get_item_by_java_callback(callback);
-//    jni_list_remove(item);
-//}
+jni_callback_data *
+jni_list_get_item_by_callback_id(jni_callback_id_t cb_id)
+{
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  jni_callback_data *item = jni_list_get_head();
+  while (item) {
+    if ((item->cb_id) == cb_id) {
+      break;
+    }
+    item = (jni_callback_data *)oc_list_item_next(item);
+  }
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return item;
+}
 
 JNIEnv *
 get_jni_env(jint *getEnvResult)

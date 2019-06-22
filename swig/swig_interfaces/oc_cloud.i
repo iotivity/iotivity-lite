@@ -50,7 +50,10 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
         mid_handler,
         (jint) status);
 
-  release_jni_env(getEnvResult);
+  if (data->cb_id == OC_CALLBACK_ID_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+  ReleaseJNIEnv(getEnvResult);
 }
 
 %}
@@ -112,6 +115,7 @@ int jni_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_START_CLOUD_MANAGER;
   int return_value = oc_cloud_manager_start(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -128,7 +132,10 @@ int jni_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
 int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 {
 #ifdef OC_CLOUD
-  return oc_cloud_manager_stop(ctx);
+  int ret = oc_cloud_manager_stop(ctx);
+  jni_callback_data *item = jni_list_get_item_by_callback_id(OC_CALLBACK_ID_START_CLOUD_MANAGER);
+  jni_list_remove(item);
+  return ret;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   return -1;
@@ -136,7 +143,7 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 }
 %}
 %ignore oc_cloud_register;
-%rename (registerHandler) jni_cloud_register;
+%rename (registerCloud) jni_cloud_register;
 %inline %{
 int jni_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callback_data *jcb)
 {
@@ -144,6 +151,7 @@ int jni_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_call
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_SINGLE_CALL;
   int return_value = oc_cloud_register(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -163,6 +171,7 @@ int jni_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callbac
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_SINGLE_CALL;
   int return_value = oc_cloud_login(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -182,6 +191,7 @@ int jni_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callba
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_SINGLE_CALL;
   int return_value = oc_cloud_logout(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -193,7 +203,7 @@ int jni_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callba
 }
 %}
 %ignore oc_cloud_deregister;
-%rename (deregisterHandler) jni_cloud_deregister;
+%rename (deregisterCloud) jni_cloud_deregister;
 %inline %{
 int jni_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callback_data *jcb)
 {
@@ -201,6 +211,7 @@ int jni_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_ca
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_SINGLE_CALL;
   int return_value = oc_cloud_deregister(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -220,6 +231,7 @@ int jni_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
+  jcb->cb_id = OC_CALLBACK_ID_SINGLE_CALL;
   int return_value = oc_cloud_refresh_token(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
