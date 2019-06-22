@@ -207,17 +207,6 @@ int jni_main_init(const oc_handler_t *handler)
 
   release_jni_env(getEnvResult);
 
-// initialize threads
-#if defined(_WIN32)
-  InitializeCriticalSection(&jni_cs);
-  InitializeConditionVariable(&jni_cv);
-  InitializeCriticalSection(&jni_sync_lock);
-#elif defined(__linux__)
-  pthread_mutexattr_init(&jni_sync_lock_attr);
-  pthread_mutexattr_settype(&jni_sync_lock_attr, PTHREAD_MUTEX_ERRORCHECK);  // was PTHREAD_MUTEX_RECURSIVE
-  pthread_mutex_init(&jni_sync_lock, &jni_sync_lock_attr);
-#endif
-
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_main_init(handler);
@@ -274,6 +263,10 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
   assert(mid_handler);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -283,11 +276,24 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
 %typemap(jstype) oc_factory_presets_cb_t cb "OCFactoryPresetsHandler";
 %typemap(javain) oc_factory_presets_cb_t cb "$javainput";
 %typemap(in,numinputs=1) (oc_factory_presets_cb_t cb, jni_callback_data *jcb) {
+  // The C code only contains one instance of oc_factory_presets_cb_t if setFactoryPresetsHandler is
+  // called multiple times we must release the old item.
+  jni_callback_data * item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_SET_FACTORY_PRESETS_CB);
+  if (item) {
+    jni_list_remove(item);
+  }
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  $1 = jni_oc_factory_presets_callback;
+  if(JCALL2(IsSameObject, jenv, $input, NULL)) {
+    user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+    $1 = NULL;
+  } else {
+    user_data->cb_valid = OC_CALLBACK_VALID_TILL_SET_FACTORY_PRESETS_CB;
+    $1 = jni_oc_factory_presets_callback;
+  }
   $2 = user_data;
+  jni_list_add(user_data);
 }
 
 %ignore oc_set_factory_presets_cb;
@@ -314,6 +320,10 @@ void jni_oc_add_device_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
@@ -324,6 +334,7 @@ void jni_oc_add_device_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_FOR_A_SINGLE_CALL;
   jni_list_add(user_data);
   $1 = jni_oc_add_device_callback;
   $2 = user_data;
@@ -363,6 +374,10 @@ void jni_oc_init_platform_callback(void *user_data)
                                        "()V");
   assert(mid_handler);
   JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
 }
 %}
 %typemap(jni)    oc_init_platform_cb_t init_platform_cb "jobject";
@@ -374,6 +389,7 @@ void jni_oc_init_platform_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_SHUTDOWN;
   jni_list_add(user_data);
   $1 = jni_oc_init_platform_callback;
   $2 = user_data;
@@ -415,6 +431,10 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
   jstring jpin = JCALL1(NewStringUTF, (data->jenv), (const char *)pin);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -424,12 +444,26 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
 %typemap(jstype) oc_random_pin_cb_t cb "OCRandomPinHandler";
 %typemap(javain) oc_random_pin_cb_t cb "$javainput";
 %typemap(in,numinputs=1) (oc_random_pin_cb_t cb, jni_callback_data *jcb) {
+  // The C code only contains one instance of oc_random_pin_cb_t if setRandomPinHandler is
+  // called multiple times we must release the old item.
+  jni_callback_data * item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_SET_RANDOM_PIN_CB);
+  if(item) {
+    jni_list_remove(item);
+  }
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  if(JCALL2(IsSameObject, jenv, $input, NULL))
+  {
+    user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+    $1 = NULL;
+    $2 = user_data;
+  } else {
+    user_data->cb_valid = OC_CALLBACK_VALID_TILL_SET_RANDOM_PIN_CB;
+    $1 = jni_oc_random_pin_callback;
+    $2 = user_data;
+  }
   jni_list_add(user_data);
-  $1 = jni_oc_random_pin_callback;
-  $2 = user_data;
 }
 
 %ignore oc_set_random_pin_callback;
@@ -692,6 +726,10 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
         JCALL4(NewObject, (data->jenv), cls_OCRequest, mid_OCRequest_init, (jlong)request, false),
         (jint)interfaces);
 
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -703,7 +741,9 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
 {
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
+  // see jni_delete_resource for the deletion of the GlobalRef in the jni_list_remove calls
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_DELETE_RESOURCE;
   jni_list_add(user_data);
   $1 = jni_oc_request_callback;
   $2 = user_data;
@@ -722,7 +762,35 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
 %}
 
 %rename(addResource) oc_add_resource;
-%rename(deleteResource) oc_delete_resource;
+%ignore oc_delete_resource;
+%rename(deleteResource) jni_delete_resource;
+%inline %{
+bool jni_delete_resource(oc_resource_t *resource) {
+  if(resource) {
+    if(resource->get_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->get_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->put_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->put_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->post_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->post_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->delete_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->delete_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+  }
+  return oc_delete_resource(resource);
+}
+%}
 
 /*
  * Code and typemaps for mapping the `oc_set_con_write_cb` to the java `OCConWriteHandler`
@@ -770,16 +838,18 @@ void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
 %typemap(javain) oc_con_write_cb_t callback "$javainput";
 %typemap(in,numinputs=1) (oc_con_write_cb_t callback)
 {
-  if(!JCALL2(IsSameObject, jenv, oc_con_write_cb_data.jcb_obj, NULL)) {
-    //Delete the old callback jcb_obj if this method is called multiple times
+  //Delete GlobalRef on old callback jcb_obj if this method is called multiple times
+  if(oc_con_write_cb_data.cb_valid == OC_CALLBACK_VALID_TILL_SET_CON_WRITE_CB) {
     JCALL1(DeleteGlobalRef, jenv, oc_con_write_cb_data.jcb_obj);
   }
   oc_con_write_cb_data.jenv = jenv;
   oc_con_write_cb_data.jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
   if(JCALL2(IsSameObject, jenv, $input, NULL))
   {
+    oc_con_write_cb_data.cb_valid = OC_CALLBACK_VALID_UNKNOWN;
     $1 = NULL;
   } else {
+    oc_con_write_cb_data.cb_valid = OC_CALLBACK_VALID_TILL_SET_CON_WRITE_CB;
     $1 = jni_oc_con_callback;
   }
 }
@@ -978,6 +1048,8 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  // TODO figure out the lifetime of the oc_discovery_handler_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
   jni_list_add(user_data);
   $1 = jni_oc_discovery_handler_callback;
   $2 = user_data;
@@ -1107,6 +1179,8 @@ void jni_oc_response_handler(oc_client_response_t *response)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  // TODO figure out the lifetime of the oc_response_handler_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
   jni_list_add(user_data);
   $1 = jni_oc_response_handler;
   $2 = user_data;
@@ -1408,6 +1482,7 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_REMOVE_DELAYED_CALLBACK;
   jni_list_add(user_data);
   $1 = jni_oc_trigger_handler;
   $2 = user_data;
@@ -1439,6 +1514,7 @@ void jni_oc_remove_delayed_callback(jobject callback) {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *item = jni_list_get_item_by_java_callback(callback);
   if (item) {
+    assert(item->cb_valid == OC_CALLBACK_VALID_TILL_REMOVE_DELAYED_CALLBACK);
     oc_remove_delayed_callback(item, jni_oc_trigger_handler);
   }
   jni_list_remove(item);
