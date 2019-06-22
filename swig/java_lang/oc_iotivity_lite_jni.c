@@ -40,7 +40,21 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
         return -1;
     }
 
-    jclass ocAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCAddDeviceHandler");
+    // initialize jni_sync_lock
+#if defined(_WIN32)
+    InitializeCriticalSection(&jni_cs);
+    InitializeConditionVariable(&jni_cv);
+    InitializeCriticalSection(&jni_sync_lock);
+#elif defined(__linux__)
+    pthread_mutexattr_init(&jni_sync_lock_attr);
+    pthread_mutexattr_settype(
+      &jni_sync_lock_attr,
+      PTHREAD_MUTEX_ERRORCHECK); // was PTHREAD_MUTEX_RECURSIVE
+    pthread_mutex_init(&jni_sync_lock, &jni_sync_lock_attr);
+#endif
+
+    jclass ocAddDeviceHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCAddDeviceHandler");
     assert(ocAddDeviceHandlerClass);
     cls_OCAddDeviceHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocAddDeviceHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocAddDeviceHandlerClass);
@@ -292,6 +306,7 @@ jni_list_remove(jni_callback_data *item)
     JCALL1(DeleteGlobalRef, item->jenv, item->jcb_obj);
     oc_list_remove(jni_callbacks, item);
     free(item);
+    item = NULL;
   }
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -314,12 +329,27 @@ jni_list_get_item_by_java_callback(jobject callback)
     return item;
 }
 
-//void jni_list_remove_by_java_callback(jobject callback)
-//{
-//
-//    jni_callback_data *item = jni_list_get_item_by_java_callback(callback);
-//    jni_list_remove(item);
-//}
+jni_callback_data *
+jni_list_get_item_by_callback_valid(jni_callback_valid_t cb_valid)
+{
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  OC_DBG("JNI: 0\n");
+  jni_callback_data *item = jni_list_get_head();
+  OC_DBG("JNI: 1 - %p\n", item);
+  while (item) {
+    OC_DBG("JNI: 2 - %p\n", item);
+    if ((item->cb_valid) == cb_valid) {
+      OC_DBG("JNI: 3 - %p\n", item);
+      break;
+    }
+    item = (jni_callback_data *)oc_list_item_next(item);
+  }
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  OC_DBG("JNI: 4 - %p\n", item);
+  return item;
+}
 
 JNIEnv *
 get_jni_env(jint *getEnvResult)
