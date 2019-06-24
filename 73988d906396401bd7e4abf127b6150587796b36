@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e270fe2b_ce084238",
+        "filename": "onboarding_tool/obtmain.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 7423
+      },
+      "writtenOn": "2019-06-24T15:06:44Z",
+      "side": 1,
+      "message": "This change broke the build",
+      "revId": "73988d906396401bd7e4abf127b6150587796b36",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
