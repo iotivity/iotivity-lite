@@ -267,7 +267,6 @@ get_device(oc_client_response_t *data)
       if (strcmp("di", oc_string(rep->name)) == 0) {
         di = &rep->value.string;
       }
-      break;
     default:
       break;
     }
@@ -347,16 +346,16 @@ discover_unowned_devices(uint8_t scope)
 static void
 otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    discover_owned_devices();
+    add_device_to_list(uuid, (const char *)data, owned_devices);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
+  free(data);
 }
 
 static void
@@ -392,9 +391,11 @@ otm_rdp(void)
   SCANF("%10s", pin);
 
   otb_mutex_lock(app_sync_lock);
-
+  char *d_name =
+    (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
+  strcpy(d_name, devices[c]->device_name);
   int ret = oc_obt_perform_random_pin_otm(
-    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, NULL);
+    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, d_name);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
   } else {
