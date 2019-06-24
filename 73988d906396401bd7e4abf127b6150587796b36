@@ -52,6 +52,24 @@
       "revId": "73988d906396401bd7e4abf127b6150587796b36",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c3b7a9e_5a421d64",
+        "filename": "onboarding_tool/obtmain.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-24T19:43:04Z",
+      "side": 1,
+      "message": "Note this change is what prompted me to create the new feature request to pass the random UUID as well as the UUID when it is changed.  If we had known the old UUID we could have used it to move the device name from the unowned_device list to the owned_device list.  \n\nsee https://jira.iotivity.org/projects/LITE/issues/LITE-52",
+      "parentUuid": "2f1ac6d2_478a6bfd",
+      "revId": "73988d906396401bd7e4abf127b6150587796b36",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
