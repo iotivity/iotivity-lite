@@ -34,6 +34,24 @@
       "revId": "73988d906396401bd7e4abf127b6150587796b36",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f1ac6d2_478a6bfd",
+        "filename": "onboarding_tool/obtmain.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-24T17:33:54Z",
+      "side": 1,
+      "message": "Yes you are correct I did this as a workaround for the fact that the Random uuid changes (see patch set 2). I solved the issue by passing the device name as the data void* and fixed it for the justworks but missed it in the otm_rdp_cb. I have a follow up commit, fixing it for rdp as well.\n\nSee https://gerrit.iotivity.org/gerrit/c/iotivity-lite/+/29567",
+      "parentUuid": "e270fe2b_ce084238",
+      "revId": "73988d906396401bd7e4abf127b6150587796b36",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
