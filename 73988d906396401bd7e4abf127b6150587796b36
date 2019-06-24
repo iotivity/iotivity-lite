@@ -16,6 +16,24 @@
       "revId": "73988d906396401bd7e4abf127b6150587796b36",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e8d73ba_d9ccba8a",
+        "filename": "onboarding_tool/obtmain.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-06-24T17:31:41Z",
+      "side": 1,
+      "message": "You\u0027re right. This has actually been cleaned up in my in-progress patch with some other changes and should be posted soon.\n\nBasically, otm_rdp() needs to pass in the device name in the data parameter to the PIN OTM API and in addition this callback needs to do the following here:\n    add_device_to_list(uuid, (const char *)data, owned_devices);",
+      "parentUuid": "e270fe2b_ce084238",
+      "revId": "73988d906396401bd7e4abf127b6150587796b36",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
