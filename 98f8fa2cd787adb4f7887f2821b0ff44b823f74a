@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea49b2c9_4acdd6b7",
+        "filename": "include/oc_obt.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-06-25T20:25:56Z",
+      "side": 1,
+      "message": "where do we get the credid from?",
+      "range": {
+        "startLine": 109,
+        "startChar": 54,
+        "endLine": 109,
+        "endChar": 66
+      },
+      "revId": "98f8fa2cd787adb4f7887f2821b0ff44b823f74a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
