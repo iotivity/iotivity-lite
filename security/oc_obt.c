@@ -1395,4 +1395,15 @@ oc_obt_shutdown(void)
     device = (oc_device_t *)oc_list_pop(oc_devices);
   }
 }
+
+void
+oc_obt_remove_credential_by_credid(size_t device, long credid)
+{
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
+  if (cred)
+  {
+    oc_sec_remove_cred(cred, device);
+  }
+}
+
 #endif /* OC_SECURITY */
