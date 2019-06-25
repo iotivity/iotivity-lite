@@ -106,6 +106,8 @@ int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
 void oc_obt_free_ace(oc_sec_ace_t *ace);
 
+void oc_obt_remove_credential_by_credid(size_t device, long credid);
+
 #ifdef __cplusplus
 }
 #endif
