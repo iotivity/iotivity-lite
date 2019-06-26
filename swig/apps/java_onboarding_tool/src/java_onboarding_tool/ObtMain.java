@@ -10,14 +10,13 @@ import org.iotivity.OCAceConnectionType;
 import org.iotivity.OCAcePermissionsMask;
 import org.iotivity.OCAceResource;
 import org.iotivity.OCAceWildcard;
-import org.iotivity.OCClock;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCObt;
 import org.iotivity.OCSecurityAce;
 import org.iotivity.OCStorage;
-import org.iotivity.OCUuidUtil;
 import org.iotivity.OCUuid;
+import org.iotivity.OCUuidUtil;
 
 public class ObtMain {
 
@@ -29,15 +28,13 @@ public class ObtMain {
     private static final int MAX_NUM_RT = 50;
 
     /* Sets containing discovered owned and un-owned devices */
-    public static Set<OCUuid> unownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCUuid>());
-    public static Set<OCUuid> ownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCUuid>());
+    public static Set<OCFDeviceInfo> unownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCFDeviceInfo>());
+    public static Set<OCFDeviceInfo> ownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCFDeviceInfo>());
 
     /* Callback handlers */
     private static UnownedDeviceHandler unownedDeviceHandler = new UnownedDeviceHandler();
     private static OwnedDeviceHandler ownedDeviceHandler = new OwnedDeviceHandler();
-    private static JustWorksHandler justWorksHandler = new JustWorksHandler();
     private static GenerateRandomPinHandler generateRandomPinHandler = new GenerateRandomPinHandler();
-    private static OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler();
     private static ProvisionCredentialsHandler provisionCredentialsHandler = new ProvisionCredentialsHandler();
     private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
     private static ProvisionAce2Handler provisionAce2Handler = new ProvisionAce2Handler();
@@ -63,7 +60,11 @@ public class ObtMain {
         menu.append("[0] Display this menu\n");
         menu.append("------------------------------------------------\n");
         menu.append("[1] Discover un-owned devices\n");
+        menu.append("[11] Discover un-owned devices in the realm-local IPv6 scope\n");
+        menu.append("[12] Discover un-owned devices in the site-local IPv6 scope\n");
         menu.append("[2] Discover owned devices\n");
+        menu.append("[21] Discover owned devices in the realm-local IPv6 scope\n");
+        menu.append("[22] Discover owned devices in the site-local IPv6 scope\n");
         menu.append("------------------------------------------------\n");
         menu.append("[3] Just-Works Ownership Transfer Method\n");
         menu.append("[4] Request Random PIN from device for OTM\n");
@@ -80,16 +81,41 @@ public class ObtMain {
         System.out.print(menu);
     }
 
-    private static void discoverUnownedDevices() {
-        System.out.println("Discovering un-owned devices");
-        if (0 > OCObt.discoverUnownedDevices(unownedDeviceHandler)) {
-            System.err.println("ERROR discovering un-owned Devices.");
+    private static void discoverUnownedDevices(int scope) {
+        if (scope == 0) {
+            System.out.println("Discovering un-owned devices.");
+            if (0 > OCObt.discoverUnownedDevices(unownedDeviceHandler)) {
+                System.err.println("ERROR discovering un-owned Devices.");
+            }
+        } else if (scope == 1) {
+            System.out.println("Discovering un-owned devices realm local IPv6.");
+            if (0 > OCObt.discoverUnownedDevicesRealmLocalIPv6(unownedDeviceHandler)) {
+                System.err.println("ERROR discovering un-owned Devices realm local IPv6.");
+            }
+        } else if (scope == 2) {
+            System.out.println("Discovering un-owned devices site local IPv6.");
+            if (0 > OCObt.discoverUnownedDevicesSiteLocalIPv6(unownedDeviceHandler)) {
+                System.err.println("ERROR discovering un-owned Devices site local IPv6.");
+            }
         }
     }
 
-    private static void discoverOwnedDevices() {
-        if (0 > OCObt.discoverOwnedDevices(ownedDeviceHandler)) {
-            System.err.println("ERROR discovering owned Devices.");
+    private static void discoverOwnedDevices(int scope) {
+        if (scope == 0) {
+            System.out.println("Discovering owned devices.");
+            if (0 > OCObt.discoverOwnedDevices(ownedDeviceHandler)) {
+                System.err.println("ERROR discovering owned Devices.");
+            }
+        } else if (scope == 1) {
+            System.out.println("Discovering owned devices realm local IPv6.");
+            if (0 > OCObt.discoverOwnedDevicesRealmLocalIPv6(ownedDeviceHandler)) {
+                System.err.println("ERROR discovering owned Devices realm local IPv6.");
+            }
+        } else if (scope == 2) {
+            System.out.println("Discovering owned devices site local IPv6.");
+            if (0 > OCObt.discoverOwnedDevicesSiteLocalIPv6(ownedDeviceHandler)) {
+                System.err.println("ERROR discovering owned Devices site local IPv6.");
+            }
         }
     }
 
@@ -103,9 +129,9 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OCFDeviceInfo[] uds = unownedDevices.toArray(new OCFDeviceInfo[unownedDevices.size()]);
+        for (OCFDeviceInfo ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.uuid) + " - " + ud.name + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -117,13 +143,15 @@ public class ObtMain {
             return;
         }
 
-        int ret = OCObt.performJustWorksOtm(uds[userInput], justWorksHandler);
+        JustWorksHandler justWorksHandler = new JustWorksHandler(uds[userInput]);
+        int ret = OCObt.performJustWorksOtm(uds[userInput].uuid, justWorksHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform ownership transfer");
         } else {
             System.out.println("\nERROR issuing request to perform ownership transfer");
         }
 
+        unownedDevices.remove(uds[userInput]);
         /*
          * Having issued an OTM request, remove this item from the unowned
          * device list
@@ -141,9 +169,9 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OCFDeviceInfo[] uds = unownedDevices.toArray(new OCFDeviceInfo[unownedDevices.size()]);
+        for (OCFDeviceInfo ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.uuid) + " - " + ud.name + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -155,7 +183,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = OCObt.requestRandomPin(uds[userInput], generateRandomPinHandler);
+        int ret = OCObt.requestRandomPin(uds[userInput].uuid, generateRandomPinHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to generate a random pin");
         } else {
@@ -173,9 +201,9 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OCFDeviceInfo[] uds = unownedDevices.toArray(new OCFDeviceInfo[unownedDevices.size()]);
+        for (OCFDeviceInfo ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.uuid) + " - " + ud.name + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -194,7 +222,8 @@ public class ObtMain {
             pin = pin.substring(0, 24);
         }
 
-        int ret = OCObt.performRandomPinOtm(uds[userInput], pin, pin.length(), otmRandomPinHandler);
+        OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler(uds[userInput]);
+        int ret = OCObt.performRandomPinOtm(uds[userInput].uuid, pin, pin.length(), otmRandomPinHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform Random PIN OTM");
         } else {
@@ -218,9 +247,9 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device 1: ");
@@ -238,7 +267,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = OCObt.provisionPairwiseCredentials(ods[userInput1], ods[userInput2], provisionCredentialsHandler);
+        int ret = OCObt.provisionPairwiseCredentials(ods[userInput1].uuid, ods[userInput2].uuid, provisionCredentialsHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision credentials");
         } else {
@@ -261,9 +290,9 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
             i++;
         }
 
@@ -285,8 +314,8 @@ public class ObtMain {
         subjectsMenu.append("[0]: " + connTypes[0] + "\n");
         subjectsMenu.append("[1]: " + connTypes[1] + "\n");
         i = 0;
-        for (OCUuid od : ods) {
-            subjectsMenu.append("[" + (i + 2) + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        for (OCFDeviceInfo od : ods) {
+            subjectsMenu.append("[" + (i + 2) + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
             i++;
         }
         subjectsMenu.append("\nSelect subject: ");
@@ -300,7 +329,7 @@ public class ObtMain {
 
         OCSecurityAce ace = null;
         if (sub > 1) {
-            ace = OCObt.newAceForSubject(ods[sub - 2]);
+            ace = OCObt.newAceForSubject(ods[sub - 2].uuid);
         } else {
             if (sub == 0) {
                 ace = OCObt.newAceForConnection(OCAceConnectionType.OC_CONN_ANON_CLEAR);
@@ -467,7 +496,7 @@ public class ObtMain {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.NOTIFY);
         }
 
-        int ret = OCObt.provisionAce(ods[dev], ace, provisionAce2Handler);
+        int ret = OCObt.provisionAce(ods[dev].uuid, ace, provisionAce2Handler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision ACE");
         } else {
@@ -485,9 +514,9 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device : ");
@@ -499,7 +528,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = OCObt.deviceHardReset(ods[userInput], resetDeviceHandler);
+        int ret = OCObt.deviceHardReset(ods[userInput].uuid, resetDeviceHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform hard RESET");
         } else {
@@ -549,10 +578,22 @@ public class ObtMain {
             case 0:
                 continue;
             case 1:
-                discoverUnownedDevices();
+                discoverUnownedDevices(0);
+                break;
+            case 11:
+                discoverUnownedDevices(1);
+                break;
+            case 12:
+                discoverUnownedDevices(2);
                 break;
             case 2:
-                discoverOwnedDevices();
+                discoverOwnedDevices(0);
+                break;
+            case 21:
+                discoverOwnedDevices(1);
+                break;
+            case 22:
+                discoverOwnedDevices(2);
                 break;
             case 3:
                 otmJustWorks();
