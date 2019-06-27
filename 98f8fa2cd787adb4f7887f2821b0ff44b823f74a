@@ -70,6 +70,30 @@
       "revId": "98f8fa2cd787adb4f7887f2821b0ff44b823f74a",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b05b8b3_cb67c884",
+        "filename": "include/oc_obt.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-06-27T18:25:36Z",
+      "side": 1,
+      "message": "Javier, I\u0027d like to understand this requirement a little better.\n\nDoes the OTGC need to show identity certificates, or is the requirement to show all the manufacturer/OCF CA root certs? \n\nAt least one of the requirements I was aware of was the ability to add new mfgtrustca creds (not even trustca creds).",
+      "parentUuid": "aa1aa6c3_c9b6c1e7",
+      "range": {
+        "startLine": 109,
+        "startChar": 54,
+        "endLine": 109,
+        "endChar": 66
+      },
+      "revId": "98f8fa2cd787adb4f7887f2821b0ff44b823f74a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
