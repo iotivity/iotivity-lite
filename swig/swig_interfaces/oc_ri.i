@@ -24,10 +24,14 @@
 %ignore oc_resource_properties_t;
 %rename (OCStatus) oc_status_t;
 %rename(OCResponse) oc_response_t;
+%rename (separateResponse) oc_response_t::separate_response;
+%rename (responseBuffer) oc_response_t::response_buffer;
 %ignore oc_interface_mask_t;
 %ignore oc_core_resource_t;
 %rename (OCRequest) oc_request_t;
 %immutable oc_request_t::query;
+%rename (queryLen) oc_request_t::query_len;
+%rename (requestPayload) oc_request_t::request_payload;
 %ignore oc_request_handler_s;
 
 %rename(OCResource) oc_resource_s;
@@ -80,14 +84,15 @@ struct oc_separate_response_s
 #endif /* !OC_DYNAMIC_ALLOCATION */
 };
 
-%rename(OCResponseBuffer) oc_response_buffer_t;
+%rename(OCResponseBuffer) oc_response_buffer_s;
 /*
  * Currently no known use case that the end user will access this buffer
  * of this must be exposed then work must be done to convert buffer and buffer_size to a java byte[]
  */
-%ignore buffer;
-%ignore buffer_size;
-typedef struct
+%ignore oc_response_buffer_s::buffer;
+%ignore oc_response_buffer_s::buffer_size;
+%rename (responseLength) oc_response_buffer_s::response_length;
+typedef struct oc_response_buffer_s
 {
   uint8_t *buffer;
   uint16_t buffer_size;

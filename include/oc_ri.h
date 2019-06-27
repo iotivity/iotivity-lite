@@ -69,7 +69,7 @@ typedef struct oc_separate_response_s oc_separate_response_t;
 
 typedef struct oc_response_buffer_s oc_response_buffer_t;
 
-typedef struct
+typedef struct oc_response_t
 {
   oc_separate_response_t *separate_response;
   oc_response_buffer_t *response_buffer;
