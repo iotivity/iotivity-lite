@@ -14,7 +14,7 @@ public class PostLight implements OCRequestHandler {
     public void handler(OCRequest request, int interfaces) {
         System.out.println("Inside the PostLight RequestHandler");
         System.out.println("POST LIGHT:");
-        OCRepresentation rep = request.getRequest_payload();
+        OCRepresentation rep = request.getRequestPayload();
         while (rep != null) {
             System.out.println("-----------------------------------------------------");
             System.out.println("Key: " + rep.getName());
