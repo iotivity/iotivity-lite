@@ -15,7 +15,7 @@ public class PostCounter implements OCRequestHandler {
     public void handler(OCRequest request, int interfaces) {
         System.out.println("Inside the PostCounter RequestHandler");
         System.out.println("POST COUNTER:");
-        OCRepresentation rep = request.getRequest_payload();
+        OCRepresentation rep = request.getRequestPayload();
         while (rep != null) {
             System.out.println("-----------------------------------------------------");
             System.out.println("Key: " + rep.getName());

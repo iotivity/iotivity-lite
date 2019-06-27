@@ -12,7 +12,7 @@ public class OCMainTest {
     public void testGetQueryValues() {
         OCRequest request = new OCRequest();
         //request.setQuery("field1=value1&field2=value2&field3=value3");
-        request.setQuery_len("field1=value1&field2=value2&field3=value3".length());
+        request.setQueryLen("field1=value1&field2=value2&field3=value3".length());
         List<OCQueryValue> qv = OCMain.getQueryValues(request);
         assertNotNull(qv);
         assertEquals(3, qv.size());
@@ -24,7 +24,7 @@ public class OCMainTest {
         assertTrue(qv.get(2).getValue().equals("value3"));
 
         //request.setQuery("");
-        request.setQuery_len("".length());
+        request.setQueryLen("".length());
         qv = OCMain.getQueryValues(request);
         assertNotNull(qv);
         assertEquals(0, qv.size());
