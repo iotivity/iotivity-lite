@@ -111,9 +111,7 @@ public class OcUtils {
     }
 
     public static String endpointToString(OCEndpoint endpoint) {
-        String[] endpointString = new String[1];
-        OCEndpointUtil.toString(endpoint, endpointString);
-        return endpointString[0];
+        return OCEndpointUtil.toString(endpoint);
     }
 
     public static void closeSession(OCEndpoint endpoint) {

@@ -98,9 +98,8 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 System.out.println("\tResource " + Light.serverUri + " hosted at endpoint(s):");
                 OCEndpoint ep = endpoint;
                 while (ep != null) {
-                    String[] endpointStr = new String[1];
-                    OCEndpointUtil.toString(ep, endpointStr);
-                    System.out.println("\t\tendpoint: " + endpointStr[0]);
+                    String endpointStr = OCEndpointUtil.toString(ep);
+                    System.out.println("\t\tendpoint: " + endpointStr);
                     System.out.println("\t\t\tendpoint.device " + ep.getDevice());
                     System.out.println("\t\t\tendpoint.flags " + ep.getFlags());
                     System.out.println("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex());
