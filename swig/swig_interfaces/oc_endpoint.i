@@ -43,10 +43,47 @@
 %rename(newEndpoint) oc_new_endpoint;
 %rename(freeEndpoint) oc_free_endpoint;
 %rename(setDi) oc_endpoint_set_di;
-/* TODO check the to_string function output */
-%apply oc_string_t *OUTPUT { oc_string_t *endpointStrOut };
-%rename(toString) oc_endpoint_to_string;
-int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpointStrOut);
+%ignore oc_endpoint_to_string;
+
+%typemap(jni)    jobject toString "jobject";
+%typemap(jtype)  jobject toString "String";
+%typemap(jstype) jobject toString "String";
+%typemap(javain) jobject toString "$javainput";
+%pragma(java) jniclassimports="import java.lang.String;"
+%native (toString) jobject toString(oc_endpoint_t *endpoint);
+%{
+#ifdef __cplusplus
+extern "C"
+#endif
+SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *jenv,
+                                                                      jclass jcls,
+                                                                      jlong jendpoint,
+                                                                      jobject jendpoint_)
+{
+  jobject jresult = 0;
+  oc_endpoint_t *endpoint = (oc_endpoint_t *)0;
+  jobject result;
+
+  (void)jenv;
+  (void)jcls;
+  (void)jendpoint_;
+  endpoint = *(oc_endpoint_t **)&jendpoint;
+
+  oc_string_t ep;
+  int r = oc_endpoint_to_string(endpoint, &ep);
+  if(r < 0) {
+    return NULL;
+  }
+
+  result = JCALL1(NewStringUTF, jenv, oc_string(ep));
+  oc_free_string(&ep);
+
+  jresult = result;
+  return jresult;
+}
+%}
+
+
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
 /* TODO check the string_to_endpoint function output */
