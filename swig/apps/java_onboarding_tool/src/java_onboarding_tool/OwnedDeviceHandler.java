@@ -14,9 +14,8 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
         String deviceId = OCUuidUtil.uuidToString(uuid);
         System.out.println("\nDiscovered owned device: "+ deviceId + " at:");
         while (endpoints != null) {
-            String[] endpointStr = new String[1];
-            OCEndpointUtil.toString(endpoints, endpointStr);
-            System.out.println(endpointStr[0]);
+            String endpointStr = OCEndpointUtil.toString(endpoints);
+            System.out.println(endpointStr);
             endpoints = endpoints.getNext();
         }
 
