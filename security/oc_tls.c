@@ -1169,6 +1169,19 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 }
 
 void
+oc_tls_close_all_connections(size_t device)
+{
+  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
+  while (p != NULL) {
+    next = p->next;
+    if (p->endpoint.device == device) {
+      oc_tls_free_peer(p, false);
+    }
+    p = next;
+  }
+}
+
+void
 oc_tls_shutdown(void)
 {
   oc_tls_peer_t *p = oc_list_pop(tls_peers);
@@ -1651,6 +1664,12 @@ oc_tls_recv_message(oc_message_t *message)
   }
 }
 
+static void
+close_all_active_tls_sessions(size_t device)
+{
+  oc_tls_close_all_connections(device);
+}
+
 OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
@@ -1678,6 +1697,10 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
       write_application_data(data);
     }
 #endif /* OC_CLIENT */
+    else if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
+      size_t device = (size_t)data;
+      close_all_active_tls_sessions(device);
+    }
   }
 
   OC_PROCESS_END();

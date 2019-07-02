@@ -142,6 +142,15 @@ oc_send_message(oc_message_t *message)
   _oc_signal_event_loop();
 }
 
+#ifdef OC_SECURITY
+void
+oc_close_all_tls_sessions(size_t device)
+{
+  oc_process_post(&message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
+                  (oc_process_data_t)device);
+}
+#endif /* OC_SECURITY */
+
 OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
@@ -173,7 +182,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       } else
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
-          if (message->endpoint.flags & SECURED) {
+        if (message->endpoint.flags & SECURED) {
         OC_DBG("Outbound network event: forwarding to TLS");
 
 #ifdef OC_CLIENT
@@ -195,6 +204,12 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         oc_message_unref(message);
       }
     }
+#ifdef OC_SECURITY
+    else if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
+      OC_DBG("Signaling to close all TLS sessions from this device");
+      oc_process_post(&oc_tls_handler, oc_events[TLS_CLOSE_ALL_SESSIONS], data);
+    }
+#endif /* OC_SECURITY */
   }
   OC_PROCESS_END();
 }
