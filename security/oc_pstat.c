@@ -540,6 +540,13 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
+bool
+oc_pstat_reset_device(size_t device)
+{
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
+  return oc_pstat_handle_state(&ps, device);
+}
+
 void
 oc_reset()
 {
