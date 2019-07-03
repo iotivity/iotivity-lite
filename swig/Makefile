@@ -56,7 +56,7 @@ SWIG_INTERFACES_DIR = swig_interfaces/
 
 # SWIG
 SWIG_CFLAG = 
-HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security
+HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security -I../cloud
 
 JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow
 EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DLONG_BIT=64
