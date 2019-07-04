@@ -168,10 +168,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #endif /* OC_SERVER */
     store_unique_ids = true;
 #ifdef OC_SERVER
-    coap_remove_observers_on_dos_change(device);
 #if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
     oc_rt_factory_free_created_resources(device);
 #endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
+    coap_remove_observers_on_dos_change(device, true);
 #endif /* OC_SERVER */
     ps->p = false;
   }
@@ -261,7 +261,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
   } break;
   case OC_DOS_RFNOP: {
 #ifdef OC_SERVER
-    coap_remove_observers_on_dos_change(device);
+    coap_remove_observers_on_dos_change(device, false);
 #endif /* OC_SERVER */
     ps->p = true;
     ps->cm = 0;
