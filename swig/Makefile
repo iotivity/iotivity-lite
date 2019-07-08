@@ -71,7 +71,7 @@ endif
 
 ifeq ($(CLOUD),1)
 	EXTRA_FLAG += -DOC_CLOUD -DOC_TCP
-	CLOUD_OBJ_DIR = $(PORT_OBJ_DIR)cloud/
+	CLOUD_OBJ_DIR = $(PORT_OBJ_DIR)cloud/*.o
 endif
 
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
@@ -127,7 +127,7 @@ build_jar: copy_java
 	$(JAR) -cfv $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) -C $(IOTIVITY_LITE_JAVA_BIN_DIR) .
 
 build_jni_so: $(JNI_SRC)
-	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(CLOUD_OBJ_DIR)*.o $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
+	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(CLOUD_OBJ_DIR) $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
 
 install_android_libs: build_swig build_jar build_jni_so
 	# copy so and jar files to samples
