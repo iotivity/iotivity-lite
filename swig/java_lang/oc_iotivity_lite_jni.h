@@ -54,6 +54,48 @@ int jni_quit __attribute__((unused));
 #endif
 
 /*
+ * JNI function calls require different calling conventions for C and C++. These
+ * JCALL macros are used so that the same typemaps can be used for generating
+ * code for both C and C++. These macros are originally from the SWIG
+ * javahead.swg. They placed here because the SWIG preprocessor does not expand
+ * macros that are within the SWIG header code insertion blocks.
+ */
+#ifdef __cplusplus
+#define JCALL0(func, jenv) jenv->func()
+#define JCALL1(func, jenv, ar1) jenv->func(ar1)
+#define JCALL2(func, jenv, ar1, ar2) jenv->func(ar1, ar2)
+#define JCALL3(func, jenv, ar1, ar2, ar3) jenv->func(ar1, ar2, ar3)
+#define JCALL4(func, jenv, ar1, ar2, ar3, ar4) jenv->func(ar1, ar2, ar3, ar4)
+#define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5)                            \
+  jenv->func(ar1, ar2, ar3, ar4, ar5)
+#define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6)                       \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6)
+#define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)                  \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)             \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
+#define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)        \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#else
+#define JCALL0(func, jenv) (*jenv)->func(jenv)
+#define JCALL1(func, jenv, ar1) (*jenv)->func(jenv, ar1)
+#define JCALL2(func, jenv, ar1, ar2) (*jenv)->func(jenv, ar1, ar2)
+#define JCALL3(func, jenv, ar1, ar2, ar3) (*jenv)->func(jenv, ar1, ar2, ar3)
+#define JCALL4(func, jenv, ar1, ar2, ar3, ar4)                                 \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4)
+#define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5)                            \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5)
+#define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6)                       \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6)
+#define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)                  \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)             \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
+#define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)        \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#endif
+
+/*
  * This struct used to hold information needed for java callbacks.
  * When registering a callback handler from java the `JNIEnv`
  * and the java callback handler object must be stored so they
@@ -85,54 +127,12 @@ typedef struct jni_callback_data_s {
  */
 OC_LIST(jni_callbacks);
 
-static void jni_list_add(oc_list_t list, void *item) {
-    OC_DBG("JNI: - lock %s\n", __func__);
-    jni_mutex_lock(jni_sync_lock);
-    oc_list_add(list, item);
-    jni_mutex_unlock(jni_sync_lock);
-    OC_DBG("JNI: - unlock %s\n", __func__);
-}
+void jni_list_add(oc_list_t list, void *item);
 
-#define JNI_CURRENT_VERSION JNI_VERSION_1_6
+JavaVM *get_jvm();
 
-static JavaVM *jvm;
+JNIEnv *get_jni_env(jint *getEnvResult);
 
-static JNIEnv* GetJNIEnv(jint* getEnvResult)
-{
-    JNIEnv *env = NULL;
-    *getEnvResult = JCALL2(GetEnv, jvm, (void**)&env, JNI_CURRENT_VERSION);
-    switch (*getEnvResult)
-    {
-        case JNI_OK:
-            return env;
-        case JNI_EDETACHED:
-#    ifdef __ANDROID__
-            if(JCALL2(AttachCurrentThread, jvm, &env, NULL) < 0)
-#    else
-            if(JCALL2(AttachCurrentThread, jvm, (void**)&env, NULL) < 0)
-#    endif
-            {
-                OC_DBG("Failed to get the environment");
-                return NULL;
-            }
-            else
-            {
-                return env;
-            }
-        case JNI_EVERSION:
-            OC_DBG("JNI version not supported");
-            break;
-        default:
-            OC_DBG("Failed to get the environment");
-            return NULL;
-    }
-    return NULL;
-}
-
-static void ReleaseJNIEnv(jint getEnvResult) {
-    if (JNI_EDETACHED == getEnvResult) {
-        JCALL0(DetachCurrentThread, jvm);
-    }
-}
+void release_jni_env(jint getEnvResult);
 
 #endif /* OC_IOTIVITY_LITE_H */

@@ -25,7 +25,7 @@
 
 /* a little remapping trick to force saving a pointer to the JavaVM */
 %typemap(in, numinputs=0) void* dummy {
-  JCALL1(GetJavaVM, jenv, &jvm);
+  //JCALL1(GetJavaVM, jenv, &get_jvm());
 }
 
 %rename(OCSecurityAce) oc_sec_ace_s;
@@ -69,7 +69,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   assert(user_data);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtDiscoveryHandler);
@@ -103,7 +103,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
         JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -219,7 +219,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtDeviceStatusHandler);
@@ -245,7 +245,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -346,7 +346,7 @@ static void jni_obt_status_cb(int status, void *user_data)
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtStatusHandler);
@@ -363,7 +363,7 @@ static void jni_obt_status_cb(int status, void *user_data)
         mid_handler,
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 

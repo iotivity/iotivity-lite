@@ -8,38 +8,9 @@
  * collection of code need across the project
  *********************************************************************/
 %{
+#include "oc_iotivity_lite_jni.h"
 #include "oc_collection.h"
 #include "port/oc_log.h"
-
-/*
- * JNI function calls require different calling conventions for C and C++. These JCALL macros are used so
- * that the same typemaps can be used for generating code for both C and C++. These macros are originaly from
- * the SWIG javahead.swg. They placed here because the SWIG preprocessor does not expand macros that are
- * within the SWIG header code insertion blocks.
- */
-#ifdef __cplusplus
-#   define JCALL0(func, jenv) jenv->func()
-#   define JCALL1(func, jenv, ar1) jenv->func(ar1)
-#   define JCALL2(func, jenv, ar1, ar2) jenv->func(ar1, ar2)
-#   define JCALL3(func, jenv, ar1, ar2, ar3) jenv->func(ar1, ar2, ar3)
-#   define JCALL4(func, jenv, ar1, ar2, ar3, ar4) jenv->func(ar1, ar2, ar3, ar4)
-#   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) jenv->func(ar1, ar2, ar3, ar4, ar5)
-#   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6)
-#   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7)
-#   define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
-#   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
-#else
-#   define JCALL0(func, jenv) (*jenv)->func(jenv)
-#   define JCALL1(func, jenv, ar1) (*jenv)->func(jenv, ar1)
-#   define JCALL2(func, jenv, ar1, ar2) (*jenv)->func(jenv, ar1, ar2)
-#   define JCALL3(func, jenv, ar1, ar2, ar3) (*jenv)->func(jenv, ar1, ar2, ar3)
-#   define JCALL4(func, jenv, ar1, ar2, ar3, ar4) (*jenv)->func(jenv, ar1, ar2, ar3, ar4)
-#   define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5)
-#   define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6)
-#   define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)
-#   define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
-#   define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9) (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
-#endif
 %}
 
 
