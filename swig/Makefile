@@ -81,6 +81,7 @@ SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
 JNI_SRC = $(addsuffix _wrap.c, $(SRC))
+JNI_SRC += oc_iotivity_lite_jni.c
 
 ifeq ($(OS),linux)
 	EXTRA_HEADER_FILE = -I"$(JAVA_HOME)/include/" -I"$(JAVA_HOME)/include/linux/"
@@ -117,6 +118,7 @@ build_swig: $(SWIG_INTERFACE_SRC) copy_java
 
 copy_java:
 	cp $(JAVA_LANG_DIR)*.h $(IOTIVITY_LITE_JAVA_JNI_DIR)
+	cp $(JAVA_LANG_DIR)*.c $(IOTIVITY_LITE_JAVA_JNI_DIR)
 	cp $(OC_JAVA_DIR)*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)
 	mkdir -p $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
 	cp $(OC_JAVA_DIR)oc/*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
@@ -145,6 +147,10 @@ install_android_libs: build_swig build_jar build_jni_so
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/
 
 %_wrap.c:
+	mkdir -p $(JAVA_LANG_OBJ_DIR)
+	$(CC) -c -o $(JAVA_LANG_OBJ_DIR)$(addsuffix .o, $(basename $@)) $(IOTIVITY_LITE_JAVA_JNI_DIR)$@ $(JNIFLAG) $(EXTRA_HEADER_FILE) $(HEADER_FILE) $(EXTRA_FLAG) $(DTLSFLAGS)
+
+oc_iotivity_lite_jni.c:
 	mkdir -p $(JAVA_LANG_OBJ_DIR)
 	$(CC) -c -o $(JAVA_LANG_OBJ_DIR)$(addsuffix .o, $(basename $@)) $(IOTIVITY_LITE_JAVA_JNI_DIR)$@ $(JNIFLAG) $(EXTRA_HEADER_FILE) $(HEADER_FILE) $(EXTRA_FLAG) $(DTLSFLAGS)
 

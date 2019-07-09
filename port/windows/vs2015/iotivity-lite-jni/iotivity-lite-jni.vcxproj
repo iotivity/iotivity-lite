@@ -118,6 +118,7 @@
     </Link>
     <PreBuildEvent>
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
       <Message>Copying dependency files into project.</Message>
@@ -153,6 +154,7 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
     </Link>
     <PreBuildEvent>
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
       <Message>Copying dependency files into project.</Message>
@@ -264,6 +266,7 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_core_res_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_endpoint_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_introspection_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_obt_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_pki_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_rep_wrap.c" />

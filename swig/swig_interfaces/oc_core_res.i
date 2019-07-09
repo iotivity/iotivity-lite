@@ -64,7 +64,7 @@ void jni_oc_core_init_platform_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_oc_core_init_platform_callback;
   $2 = user_data;
 }
@@ -110,7 +110,7 @@ void jni_oc_core_add_device_callback(void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_oc_core_add_device_callback;
   $2 = user_data;
 }
