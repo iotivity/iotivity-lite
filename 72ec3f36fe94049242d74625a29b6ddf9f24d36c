@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb6fbf37_afae3a60",
+        "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/PutLight.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-09T21:55:52Z",
+      "side": 1,
+      "message": "this file should be removed it is not being used.",
+      "revId": "72ec3f36fe94049242d74625a29b6ddf9f24d36c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
