@@ -35,7 +35,7 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCCloudHandler);
@@ -52,7 +52,7 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
         mid_handler,
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 
 %}
