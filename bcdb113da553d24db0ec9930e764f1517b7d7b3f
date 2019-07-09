@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5b92d55_55c4620f",
+        "filename": "swig/apps/java_multi_device_server/.gitignore",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-07-09T22:29:19Z",
+      "side": 1,
+      "message": "path should match what is in Server.java",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "584f0abb_724183df",
+        "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/PostFridge.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-07-09T22:29:19Z",
+      "side": 1,
+      "message": "PostLight -\u003e PostFridge",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a6fdda3_699d0493",
+        "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/Server.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-07-09T22:29:19Z",
+      "side": 1,
+      "message": "perhaps multi_device_server_creds",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
