@@ -26,16 +26,14 @@
 #include "oc_cloud.h"
 %}
 
-/* code and typemaps for mappinc the oc_cloud_cb_t to the java OCCloudHandler */
+/* code and typemaps for mapping the oc_cloud_cb_t to the java OCCloudHandler */
 %{
-extern jclass cls_OCCloudHandler;
-
 static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCCloudHandler);
@@ -52,7 +50,7 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
         mid_handler,
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 
 %}
@@ -67,7 +65,7 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_cloud_cb;
   $2 = user_data;
 }

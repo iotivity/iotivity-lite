@@ -43,6 +43,9 @@
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_session_events_wrap.c">
       <Filter>c_wrap</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -60,12 +63,6 @@
       <Filter>swig_interfaces</Filter>
     </None>
     <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i">
-      <Filter>swig_interfaces</Filter>
-    </None>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_cloud.i">
-      <Filter>swig_interfaces</Filter>
-    </None>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_session_events.i">
       <Filter>swig_interfaces</Filter>
     </None>
   </ItemGroup>
@@ -104,6 +101,12 @@
       <Filter>swig_interfaces</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_uuid.i">
+      <Filter>swig_interfaces</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cloud.i">
+      <Filter>swig_interfaces</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_session_events.i">
       <Filter>swig_interfaces</Filter>
     </CustomBuild>
   </ItemGroup>

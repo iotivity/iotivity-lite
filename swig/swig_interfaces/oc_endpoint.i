@@ -20,6 +20,7 @@
 
 %{
 #include "oc_endpoint.h"
+#include "oc_iotivity_lite_jni.h"
 %}
 
 /*******************Begin oc_endpoint.h*********************/

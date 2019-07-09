@@ -22,12 +22,6 @@
 #include "oc_obt.h"
 %}
 
-
-/* a little remapping trick to force saving a pointer to the JavaVM */
-%typemap(in, numinputs=0) void* dummy {
-  JCALL1(GetJavaVM, jenv, &jvm);
-}
-
 %rename(OCSecurityAce) oc_sec_ace_s;
 /* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_s */
 %nodefaultctor oc_sec_ace_s;
@@ -46,30 +40,18 @@ struct oc_ace_res_s{ };
 %rename(OCAceWildcard) oc_ace_wildcard_t;
 %ignore oc_ace_permissions_t;
 
-%ignore oc_obt_init;
-%rename(init) jni_obt_init;
-%inline %{
-void jni_obt_init(void* dummy) {
-    oc_obt_init();
-}
-%}
+%rename(init) oc_obt_init;
 %rename(shutdown) oc_obt_shutdown;
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
 %{
-extern jclass cls_OCObtDiscoveryHandler;
-extern jclass cls_OCObtDeviceStatusHandler;
-extern jclass cls_OCObtStatusHandler;
-extern jclass cls_OCEndpoint;
-extern jclass cls_OCUuid;
-
 static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   assert(user_data);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtDiscoveryHandler);
@@ -103,7 +85,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
         JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -117,7 +99,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_obt_discovery_cb;
   $2 = user_data;
 }
@@ -219,7 +201,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtDeviceStatusHandler);
@@ -245,7 +227,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -259,7 +241,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_obt_device_status_cb;
   $2 = user_data;
 }
@@ -346,7 +328,7 @@ static void jni_obt_status_cb(int status, void *user_data)
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCObtStatusHandler);
@@ -363,7 +345,7 @@ static void jni_obt_status_cb(int status, void *user_data)
         mid_handler,
         (jint) status);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -377,7 +359,7 @@ static void jni_obt_status_cb(int status, void *user_data)
   jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
   user_data->jenv = jenv;
   user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  jni_list_add(jni_callbacks, user_data);
+  jni_list_add(user_data);
   $1 = jni_obt_status_cb;
   $2 = user_data;
 }
