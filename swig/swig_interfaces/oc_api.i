@@ -69,7 +69,7 @@ int jni_oc_handler_init_callback(void)
 {
   OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
-  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
 
   assert(jenv);
   assert(cls_OCMainInitHandler);
@@ -77,7 +77,7 @@ int jni_oc_handler_init_callback(void)
   assert(mid_initialize);
   jint ret_value = JCALL2(CallIntMethod, jenv, jinit_obj, mid_initialize);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
   return (int)ret_value;
 }
 
@@ -97,7 +97,7 @@ void jni_oc_handler_register_resource_callback(void)
 {
   OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
-  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
 
   assert(jenv);
   assert(cls_OCMainInitHandler);
@@ -105,14 +105,14 @@ void jni_oc_handler_register_resource_callback(void)
   assert(mid_registerResources);
   JCALL2(CallVoidMethod, jenv, jinit_obj, mid_registerResources);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 
 void jni_oc_handler_requests_entry_callback(void)
 {
   OC_DBG("JNI: %s\n", __func__);
   jint getEnvResult = 0;
-  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
 
   assert(jenv);
   assert(cls_OCMainInitHandler);
@@ -120,7 +120,7 @@ void jni_oc_handler_requests_entry_callback(void)
   assert(mid_requestEntry_method);
   JCALL2(CallVoidMethod, jenv, jinit_obj, mid_requestEntry_method);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 
 static oc_handler_t jni_handler = {
@@ -137,7 +137,7 @@ static oc_handler_t jni_handler = {
 %typemap(jstype) const oc_handler_t *handler "OCMainInitHandler";
 %typemap(javain) const oc_handler_t *handler "$javainput";
 %typemap(in)     const oc_handler_t *handler {
-  JCALL1(GetJavaVM, jenv, &jvm);
+  //JCALL1(GetJavaVM, jenv, &get_jvm());
   jinit_obj = JCALL1(NewGlobalRef, jenv, $input);
   $1 = &jni_handler;
 
@@ -219,7 +219,7 @@ int jni_main_init(const oc_handler_t *handler)
   jni_quit = 0;
 
   jint getEnvResult = 0;
-  JNIEnv *jenv = GetJNIEnv(&getEnvResult);
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
   assert(jenv);
 
   jclass ocAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCAddDeviceHandler");
@@ -333,7 +333,7 @@ int jni_main_init(const oc_handler_t *handler)
   cls_ArrayList = (jclass)(JCALL1(NewGlobalRef, jenv, utilArrayListClass));
   JCALL1(DeleteLocalRef, jenv, utilArrayListClass);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 
 // initialize threads
 #if defined(_WIN32)
@@ -390,7 +390,7 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
 
   assert(cls_OCFactoryPresetsHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
@@ -402,7 +402,7 @@ void jni_oc_factory_presets_callback(size_t device, void *user_data)
   assert(mid_handler);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, (jlong)device);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -530,7 +530,7 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
 
   assert(cls_OCRandomPinHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
@@ -543,7 +543,7 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
   jstring jpin = JCALL1(NewStringUTF, (data->jenv), (const char *)pin);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jpin);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 
@@ -614,7 +614,7 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCRequestHandler);
@@ -635,7 +635,7 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
         JCALL4(NewObject, (data->jenv), cls_OCRequest, mid_OCRequest_init, (jlong)request, false),
         (jint)interfaces);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 %typemap(jni)    oc_request_callback_t callback "jobject";
@@ -831,7 +831,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
   jni_callback_data *data = (jni_callback_data *)user_data;
 
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   jstring janchor = JCALL1(NewStringUTF, (data->jenv), anchor);
@@ -893,7 +893,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                              jDiscoveryFlag,
                              mid_OCDiscoveryFlags_swigValue);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 
   return (oc_discovery_flags_t) return_value;
 }
@@ -986,7 +986,7 @@ void jni_oc_response_handler(oc_client_response_t *response)
   jni_callback_data *data = (jni_callback_data *)response->user_data;
 
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCClientResponse);
@@ -1012,7 +1012,7 @@ void jni_oc_response_handler(oc_client_response_t *response)
   assert(mid_handler);
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jresponse);
 
-  ReleaseJNIEnv(getEnvResult);
+  release_jni_env(getEnvResult);
 }
 %}
 %typemap(jni)    oc_response_handler_t handler "jobject";
@@ -1267,7 +1267,7 @@ oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
   jni_callback_data *data = (jni_callback_data *)cb_data;
   assert(data);
   jint getEnvResult = 0;
-  data->jenv = GetJNIEnv(&getEnvResult);
+  data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
   assert(cls_OCTriggerHandler);
