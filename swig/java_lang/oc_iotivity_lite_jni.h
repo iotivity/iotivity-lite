@@ -54,6 +54,83 @@ int jni_quit __attribute__((unused));
 #endif
 
 /*
+ * JNI function calls require different calling conventions for C and C++. These
+ * JCALL macros are used so that the same typemaps can be used for generating
+ * code for both C and C++. These macros are originally from the SWIG
+ * javahead.swg. They placed here because the SWIG preprocessor does not expand
+ * macros that are within the SWIG header code insertion blocks.
+ */
+#ifdef __cplusplus
+#define JCALL0(func, jenv) jenv->func()
+#define JCALL1(func, jenv, ar1) jenv->func(ar1)
+#define JCALL2(func, jenv, ar1, ar2) jenv->func(ar1, ar2)
+#define JCALL3(func, jenv, ar1, ar2, ar3) jenv->func(ar1, ar2, ar3)
+#define JCALL4(func, jenv, ar1, ar2, ar3, ar4) jenv->func(ar1, ar2, ar3, ar4)
+#define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5)                            \
+  jenv->func(ar1, ar2, ar3, ar4, ar5)
+#define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6)                       \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6)
+#define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)                  \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)             \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
+#define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)        \
+  jenv->func(ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#else
+#define JCALL0(func, jenv) (*jenv)->func(jenv)
+#define JCALL1(func, jenv, ar1) (*jenv)->func(jenv, ar1)
+#define JCALL2(func, jenv, ar1, ar2) (*jenv)->func(jenv, ar1, ar2)
+#define JCALL3(func, jenv, ar1, ar2, ar3) (*jenv)->func(jenv, ar1, ar2, ar3)
+#define JCALL4(func, jenv, ar1, ar2, ar3, ar4)                                 \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4)
+#define JCALL5(func, jenv, ar1, ar2, ar3, ar4, ar5)                            \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5)
+#define JCALL6(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6)                       \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6)
+#define JCALL7(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)                  \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7)
+#define JCALL8(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)             \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8)
+#define JCALL9(func, jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)        \
+  (*jenv)->func(jenv, ar1, ar2, ar3, ar4, ar5, ar6, ar7, ar8, ar9)
+#endif
+
+/*
+ * org/iotivity classes are pre-loaded as part of the JNI_OnLoad event.
+ *
+ * This is important for any code originating from the native code. If that
+ * code is not running in a thread started by the JavaVM then the jni code
+ * can not obtain a pointer to JavaVM or the JNIEnv. It can be really hard to
+ * find bugs that result from a thread not being started by the JavaVM.
+ * For this reason we pre-load most Java classes that are called from the jni
+ * code.
+ */
+jclass cls_ArrayList;
+jclass cls_OCMainInitHandler;
+jclass cls_OCAddDeviceHandler;
+jclass cls_OCClientResponse;
+jclass cls_OCConWriteHandler;
+jclass cls_OCDiscoveryHandler;
+jclass cls_OCFactoryPresetsHandler;
+jclass cls_OCInitPlatformHandler;
+jclass cls_OCQueryValue;
+jclass cls_OCRandomPinHandler;
+jclass cls_OCRepresentation;
+jclass cls_OCRequest;
+jclass cls_OCRequestHandler;
+jclass cls_OCResponseHandler;
+jclass cls_OCTriggerHandler;
+
+jclass cls_OCCoreAddDeviceHandler;
+jclass cls_OCCoreInitPlatformHandler;
+jclass cls_OCEndpoint;
+jclass cls_OCUuid;
+jclass cls_OCObtDiscoveryHandler;
+jclass cls_OCObtDeviceStatusHandler;
+jclass cls_OCObtStatusHandler;
+jclass cls_OCCloudHandler;
+
+/*
  * This struct used to hold information needed for java callbacks.
  * When registering a callback handler from java the `JNIEnv`
  * and the java callback handler object must be stored so they
@@ -76,63 +153,16 @@ typedef struct jni_callback_data_s {
   jobject jcb_obj;
 } jni_callback_data;
 
-/*
- * Container used to hold all `jni_callback_data` that is
- * allocated dynamically. This can be used to find the
- * memory allocated for the `jni_callback_data` if the callback
- * is removed or unregistered. This can all so be used to clean
- * up the allocated memory when shutting down the stack.
- */
-OC_LIST(jni_callbacks);
+jni_callback_data * jni_list_get_head();
+void jni_list_add(jni_callback_data *item);
+void jni_list_remove(jni_callback_data *item);
+jni_callback_data * jni_list_get_item_by_java_callback(jobject callback);
+//void jni_list_remove_by_java_callback(jobject callback);
 
-static void jni_list_add(oc_list_t list, void *item) {
-    OC_DBG("JNI: - lock %s\n", __func__);
-    jni_mutex_lock(jni_sync_lock);
-    oc_list_add(list, item);
-    jni_mutex_unlock(jni_sync_lock);
-    OC_DBG("JNI: - unlock %s\n", __func__);
-}
+JavaVM *get_jvm();
 
-#define JNI_CURRENT_VERSION JNI_VERSION_1_6
+JNIEnv *get_jni_env(jint *getEnvResult);
 
-static JavaVM *jvm;
-
-static JNIEnv* GetJNIEnv(jint* getEnvResult)
-{
-    JNIEnv *env = NULL;
-    *getEnvResult = JCALL2(GetEnv, jvm, (void**)&env, JNI_CURRENT_VERSION);
-    switch (*getEnvResult)
-    {
-        case JNI_OK:
-            return env;
-        case JNI_EDETACHED:
-#    ifdef __ANDROID__
-            if(JCALL2(AttachCurrentThread, jvm, &env, NULL) < 0)
-#    else
-            if(JCALL2(AttachCurrentThread, jvm, (void**)&env, NULL) < 0)
-#    endif
-            {
-                OC_DBG("Failed to get the environment");
-                return NULL;
-            }
-            else
-            {
-                return env;
-            }
-        case JNI_EVERSION:
-            OC_DBG("JNI version not supported");
-            break;
-        default:
-            OC_DBG("Failed to get the environment");
-            return NULL;
-    }
-    return NULL;
-}
-
-static void ReleaseJNIEnv(jint getEnvResult) {
-    if (JNI_EDETACHED == getEnvResult) {
-        JCALL0(DetachCurrentThread, jvm);
-    }
-}
+void release_jni_env(jint getEnvResult);
 
 #endif /* OC_IOTIVITY_LITE_H */
