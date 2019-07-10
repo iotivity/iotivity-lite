@@ -639,13 +639,15 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
   oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
 
   if (cr) {
+    if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
+      return false;
+    }
+    oc_tls_select_cert_ciphersuite();
     if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
                      user_data)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, roles);
       oc_rep_object_array_start_item(roles);
-      /* credid */
-      oc_rep_set_int(roles, credid, cr->credid);
       /* credtype */
       oc_rep_set_int(roles, credtype, cr->credtype);
       /* roleid */
@@ -678,6 +680,24 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
   }
   return false;
 }
+
+static void
+role_asserted_internal(oc_client_response_t *data)
+{
+  (void)data;
+}
+
+void
+oc_assert_all_roles(oc_endpoint_t *endpoint)
+{
+  oc_role_t *roles = oc_get_all_roles();
+  while (roles) {
+    oc_assert_role(oc_string(roles->role), oc_string(roles->authority),
+                   endpoint, role_asserted_internal, NULL);
+    roles = roles->next;
+  }
+}
+
 #endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */
