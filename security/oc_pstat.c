@@ -153,10 +153,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
 #endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 #endif /* OC_SERVER */
-    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
-    if (fp->cb != NULL) {
-      fp->cb(device, fp->data);
-    }
     set_post_otm_acl = true;
     ps->p = false;
   }
@@ -175,6 +171,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
       OC_ERR("ERROR in RFOTM\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
+    }
+    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
+    if (fp->cb != NULL) {
+      fp->cb(device, fp->data);
     }
     ps->p = false;
   } break;

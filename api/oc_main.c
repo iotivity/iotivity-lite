@@ -229,9 +229,6 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
     oc_sec_load_unique_ids(device);
-    if (factory_presets.cb != NULL) {
-      factory_presets.cb(device, factory_presets.data);
-    }
   }
 #endif
 
