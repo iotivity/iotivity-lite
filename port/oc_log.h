@@ -54,6 +54,39 @@ extern "C"
     }                                                                          \
   } while (0)
 
+#define PRINTipaddr_local(endpoint)                                            \
+  do {                                                                         \
+    if ((endpoint).flags & IPV4) {                                             \
+      PRINT("[%d.%d.%d.%d]:%d", ((endpoint).addr_local.ipv4.address)[0],       \
+            ((endpoint).addr_local.ipv4.address)[1],                           \
+            ((endpoint).addr_local.ipv4.address)[2],                           \
+            ((endpoint).addr_local.ipv4.address)[3],                           \
+            (endpoint).addr_local.ipv4.port);                                  \
+    } else {                                                                   \
+      PRINT(                                                                   \
+        "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%"    \
+        "02x%"                                                                 \
+        "02x]:%d",                                                             \
+        ((endpoint).addr_local.ipv6.address)[0],                               \
+        ((endpoint).addr_local.ipv6.address)[1],                               \
+        ((endpoint).addr_local.ipv6.address)[2],                               \
+        ((endpoint).addr_local.ipv6.address)[3],                               \
+        ((endpoint).addr_local.ipv6.address)[4],                               \
+        ((endpoint).addr_local.ipv6.address)[5],                               \
+        ((endpoint).addr_local.ipv6.address)[6],                               \
+        ((endpoint).addr_local.ipv6.address)[7],                               \
+        ((endpoint).addr_local.ipv6.address)[8],                               \
+        ((endpoint).addr_local.ipv6.address)[9],                               \
+        ((endpoint).addr_local.ipv6.address)[10],                              \
+        ((endpoint).addr_local.ipv6.address)[11],                              \
+        ((endpoint).addr_local.ipv6.address)[12],                              \
+        ((endpoint).addr_local.ipv6.address)[13],                              \
+        ((endpoint).addr_local.ipv6.address)[14],                              \
+        ((endpoint).addr_local.ipv6.address)[15],                              \
+        (endpoint).addr_local.ipv6.port);                                      \
+    }                                                                          \
+  } while (0)
+
 #ifdef OC_DEBUG
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \

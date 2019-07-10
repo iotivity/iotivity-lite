@@ -334,6 +334,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     return -1;
 
   const char *address = NULL;
+  endpoint->device = 0;
   endpoint->flags = 0;
   size_t len = oc_string_len(*endpoint_str);
 #ifdef OC_TCP
@@ -468,7 +469,11 @@ int
 oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                       oc_string_t *uri)
 {
-  return oc_parse_endpoint_string(endpoint_str, endpoint, uri);
+  if (endpoint) {
+    memset(endpoint, 0, sizeof(oc_endpoint_t));
+    return oc_parse_endpoint_string(endpoint_str, endpoint, uri);
+  }
+  return -1;
 }
 
 int
@@ -537,3 +542,19 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   // TODO: Add support for other endpoint types
   return -1;
 }
+
+#ifdef OC_CLIENT
+void
+oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
+{
+  oc_endpoint_t *e = oc_connectivity_get_endpoints(ep->device);
+  enum transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;
+  while (e) {
+    if ((e->flags & conn) && e->interface_index == interface_index) {
+      memcpy(&ep->addr_local, &e->addr, sizeof(union dev_addr));
+      return;
+    }
+    e = e->next;
+  }
+}
+#endif /* OC_CLIENT */
