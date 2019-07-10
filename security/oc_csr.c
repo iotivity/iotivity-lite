@@ -30,38 +30,22 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   size_t device = request->resource->device;
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  unsigned char *csr =
-    (unsigned char *)calloc(OC_PDU_SIZE, sizeof(unsigned char));
-  if (!csr) {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
-    return;
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  unsigned char csr[OC_PDU_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+  unsigned char csr[4096];
 
-  int csr_len = oc_certs_generate_csr(device, csr, OC_PDU_SIZE);
-  if (csr_len < 0) {
+  int ret = oc_certs_generate_csr(device, csr, OC_PDU_SIZE);
+  if (ret != 0) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
-#ifdef OC_DYNAMIC_ALLOCATION
-    free(csr);
-#endif /* OC_DYNAMIC_ALLOCATION */
     return;
   }
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_CSR, device));
-  oc_rep_set_byte_string(root, csr, csr, csr_len);
-  oc_rep_set_text_string(root, encoding, "oic.sec.encoding.der");
+  oc_rep_set_text_string(root, csr, (const char *)csr);
+  oc_rep_set_text_string(root, encoding, "oic.sec.encoding.pem");
   oc_rep_end_root_object();
 
   oc_send_response(request, OC_STATUS_OK);
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(csr);
-#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 #else  /* OC_PKI */
