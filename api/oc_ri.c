@@ -1132,19 +1132,18 @@ notify_client_cb_503(oc_client_cb_t *cb)
 {
   oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
 
-  if (!cb->multicast && !cb->discovery) {
-    oc_client_response_t client_response;
-    memset(&client_response, 0, sizeof(oc_client_response_t));
-    client_response.client_cb = cb;
-    client_response.endpoint = cb->endpoint;
-    client_response.observe_option = -1;
-    client_response.payload = 0;
-    client_response.user_data = cb->user_data;
-    client_response.code = oc_status_code(OC_STATUS_SERVICE_UNAVAILABLE);
+  oc_client_response_t client_response;
+  memset(&client_response, 0, sizeof(oc_client_response_t));
+  client_response.client_cb = cb;
+  client_response.endpoint = cb->endpoint;
+  client_response.observe_option = -1;
+  client_response.payload = 0;
+  client_response.user_data = cb->user_data;
+  client_response.code = oc_status_code(OC_STATUS_SERVICE_UNAVAILABLE);
 
-    oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
-    handler(&client_response);
-  }
+  oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
+  handler(&client_response);
+
   free_client_cb(cb);
 }
 
@@ -1154,7 +1153,8 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
   while (cb != NULL) {
     next = cb->next;
-    if (cb->ref_count == 0 && cb->mid == mid) {
+    if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
+        cb->mid == mid) {
       cb->ref_count = 1;
       notify_client_cb_503(cb);
       cb = (oc_client_cb_t *)oc_list_head(client_cbs);
@@ -1170,7 +1170,7 @@ oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
   while (cb != NULL) {
     next = cb->next;
-    if (cb->ref_count == 0 &&
+    if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         oc_endpoint_compare(cb->endpoint, endpoint) == 0) {
       cb->ref_count = 1;
       notify_client_cb_503(cb);
