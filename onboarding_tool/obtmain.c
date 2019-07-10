@@ -1045,7 +1045,7 @@ provision_ace2(void)
 
   oc_sec_ace_t *ace = NULL;
   if (sub > 2) {
-    ace = oc_obt_new_ace_for_subject(&devices[sub - 2]->uuid);
+    ace = oc_obt_new_ace_for_subject(&devices[sub - 3]->uuid);
   } else {
     if (sub == 0) {
       ace = oc_obt_new_ace_for_connection(OC_CONN_ANON_CLEAR);
@@ -1277,39 +1277,6 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
   size_t cert_len = 8192;
-  if (read_pem("../../apps/pki_certs/ee.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
-    return;
-  }
-
-  char key[4096];
-  size_t key_len = 4096;
-  if (read_pem("../../apps/pki_certs/key.pem", key, &key_len) < 0) {
-    PRINT("ERROR: unable to read private key");
-    return;
-  }
-
-  int ee_credid = oc_pki_add_mfg_cert(0, (const unsigned char *)cert, cert_len,
-                                      (const unsigned char *)key, key_len);
-
-  if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
-    return;
-  }
-
-  cert_len = 8192;
-  if (read_pem("../../apps/pki_certs/subca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
-    return;
-  }
-
-  int subca_credid = oc_pki_add_mfg_intermediate_cert(
-    0, ee_credid, (const unsigned char *)cert, cert_len);
-
-  if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
-    return;
-  }
 
   cert_len = 8192;
   if (read_pem("../../apps/pki_certs/rootca1.pem", cert, &cert_len) < 0) {
@@ -1336,8 +1303,6 @@ factory_presets_cb(size_t device, void *data)
     PRINT("ERROR installing root cert\n");
     return;
   }
-
-  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 

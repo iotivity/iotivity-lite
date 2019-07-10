@@ -1093,7 +1093,10 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
   mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
-  mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  if ((ps->s > OC_DOS_RFOTM) || (role != MBEDTLS_SSL_IS_SERVER)) {
+    mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+  }
   mbedtls_ssl_conf_psk_cb(conf, get_psk_cb, NULL);
   if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
     mbedtls_ssl_conf_dtls_cookies(conf, mbedtls_ssl_cookie_write,
