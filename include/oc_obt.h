@@ -20,6 +20,7 @@
 #define OC_OBT_H
 
 #include "oc_api.h"
+#include "oc_pki.h"
 #include "oc_uuid.h"
 
 #ifdef __cplusplus
@@ -79,6 +80,8 @@ int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
                                   size_t pin_len, oc_obt_device_status_cb_t cb,
                                   void *data);
+int oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                            void *data);
 
 /* RESET device state */
 int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
