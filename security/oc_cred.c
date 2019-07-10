@@ -453,8 +453,8 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   }
 
   if (roles_resource) {
-    if (oc_certs_parse_role_certificate(publicdata, publicdata_size + 1, cred) <
-        0) {
+    if (oc_certs_parse_role_certificate(publicdata, publicdata_size + 1, cred,
+                                        roles_resource) < 0) {
       oc_sec_free_role(cred, client);
       return -1;
     }

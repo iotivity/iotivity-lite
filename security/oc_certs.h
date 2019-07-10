@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #ifdef OC_SECURITY
 #include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_csr.h"
 #include "security/oc_cred.h"
 
 #ifdef __cplusplus
@@ -27,7 +28,7 @@ extern "C" {
 
 int oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
                                oc_string_t *subjectuuid);
-
+int oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len);
 int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
                                     char *output_buffer,
                                     size_t output_buffer_len);
@@ -52,7 +53,14 @@ int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
                               uint8_t *public_key);
 
 int oc_certs_parse_role_certificate(const unsigned char *role_certificate,
-                                    size_t cert_size, oc_sec_cred_t *role_cred);
+                                    size_t cert_size, oc_sec_cred_t *role_cred,
+                                    bool roles_resource);
+
+int oc_certs_is_PEM(const unsigned char *cert, size_t cert_len);
+
+int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt);
+int oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
+                          oc_string_t *subject_DN, uint8_t *public_key);
 
 #ifdef __cplusplus
 }
