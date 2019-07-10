@@ -109,16 +109,20 @@ oc_sec_find_role_cred(const char *role, const char *authority)
   /* Checking only the 0th logical device for Clients */
   oc_sec_cred_t *creds = (oc_sec_cred_t *)oc_list_head(devices[0].creds);
   size_t role_len = strlen(role);
-  size_t authority_len = strlen(authority);
-
+  size_t authority_len = 0;
+  if (authority) {
+    authority_len = strlen(authority);
+  }
   while (creds) {
     if (creds->credtype == OC_CREDTYPE_CERT &&
         creds->credusage == OC_CREDUSAGE_ROLE_CERT) {
       if ((role_len == oc_string_len(creds->role.role)) &&
           (memcmp(role, oc_string(creds->role.role), role_len) == 0)) {
-        if ((authority_len == oc_string_len(creds->role.authority)) &&
-            (memcmp(authority, oc_string(creds->role.authority),
-                    authority_len) == 0)) {
+        if (authority_len == 0) {
+          return creds;
+        } else if ((authority_len == oc_string_len(creds->role.authority)) &&
+                   (memcmp(authority, oc_string(creds->role.authority),
+                           authority_len) == 0)) {
           return creds;
         }
       }
@@ -193,23 +197,6 @@ oc_sec_clear_creds(size_t device)
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
   while (cred != NULL) {
     next = cred->next;
-#ifdef OC_PKI
-    if (cred->credusage != OC_CREDUSAGE_MFG_TRUSTCA &&
-        cred->credusage != OC_CREDUSAGE_MFG_CERT)
-#endif /* OC_PKI */
-    {
-      oc_sec_remove_cred(cred, device);
-    }
-    cred = next;
-  }
-}
-
-static void
-oc_sec_free_creds(size_t device)
-{
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
-  while (cred != NULL) {
-    next = cred->next;
     oc_sec_remove_cred(cred, device);
     cred = next;
   }
@@ -228,7 +215,7 @@ oc_sec_cred_free(void)
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_free_creds(device);
+    oc_sec_clear_creds(device);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (devices) {
@@ -310,13 +297,15 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   (void)roles_resource;
 
 #ifdef OC_PKI
+  uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE] = { 0 };
+  if (credtype == OC_CREDTYPE_CERT &&
+      oc_certs_parse_public_key(publicdata, publicdata_size + 1, public_key) <
+        0) {
+    return -1;
+  }
+
   if (roles_resource) {
     if (credusage != OC_CREDUSAGE_ROLE_CERT) {
-      return -1;
-    }
-    uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
-    if (oc_certs_parse_public_key(publicdata, publicdata_size + 1, public_key) <
-        0) {
       return -1;
     }
     if (memcmp(public_key, client->public_key, OC_KEYPAIR_PUBKEY_SIZE) != 0) {
@@ -346,12 +335,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   oc_ecdsa_keypair_t *kp = NULL;
 
   if (credusage == OC_CREDUSAGE_IDENTITY_CERT && privatedata_size == 0) {
-    oc_uuid_t *uuid = oc_core_get_device_id(device);
-    if (memcmp(uuid->id, subject.id, 16) != 0) {
-      return -1;
-    }
     kp = oc_sec_get_ecdsa_keypair(device);
     if (!kp) {
+      return -1;
+    }
+    if (memcmp(kp->public_key, public_key, OC_KEYPAIR_PUBKEY_SIZE) != 0) {
       return -1;
     }
   }
@@ -369,9 +357,6 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
 #endif /* OC_PKI */
   }
 
-#ifdef OC_PKI
-  oc_sec_cred_t *chain = NULL;
-#endif /* OC_PKI */
   oc_sec_cred_t *cred = NULL;
   if (!roles_resource) {
     do {
@@ -392,14 +377,6 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                 memcmp(publicdata, oc_string(cred->publicdata.data),
                        publicdata_size) == 0) {
               return cred->credid;
-            } else if (cred->credusage != OC_CREDUSAGE_TRUSTCA &&
-                       cred->credusage != OC_CREDUSAGE_MFG_TRUSTCA) {
-              /* Trying to record a new cert in a cert chain via a
-               * separate cred entry. Store a pointer to the existing
-               * cred entry for linking to two below.
-               */
-              chain = cred;
-              break;
             }
           }
 #endif /* OC_PKI */
@@ -435,27 +412,12 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   }
 
 #ifdef OC_PKI
-  if (chain) {
-    if (oc_string_len(chain->privatedata.data) > 0) {
-      chain->chain = cred;
-      cred->child = chain;
-    } else if (privatedata_size > 0) {
-      cred->chain = chain;
-      chain->child = cred;
-    } else {
-      /* Cannot find the leaf certificate among two certificates carrying
-       * the same subjectuuid. This contradicts the three tiered certificate
-       * hierarchy and is hence an error.
-       */
-      oc_sec_remove_cred(cred, device);
-      return -1;
-    }
-  }
-
-  if (roles_resource) {
-    if (oc_certs_parse_role_certificate(publicdata, publicdata_size + 1, cred) <
-        0) {
-      oc_sec_free_role(cred, client);
+  if (credusage == OC_CREDUSAGE_ROLE_CERT) {
+    if (oc_certs_parse_role_certificate(publicdata, publicdata_size + 1, cred,
+                                        roles_resource) < 0) {
+      if (roles_resource) {
+        oc_sec_free_role(cred, client);
+      }
       return -1;
     }
   }
@@ -1101,7 +1063,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     }
   } else {
     if (!roles_resource) {
-      oc_sec_free_creds(request->resource->device);
+      oc_sec_clear_creds(request->resource->device);
     }
 #ifdef OC_PKI
     else {
