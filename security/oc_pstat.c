@@ -35,7 +35,7 @@ static oc_sec_pstat_t *pstat;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-static bool set_post_otm_acl = true;
+static bool store_unique_ids = true;
 
 void
 oc_sec_pstat_free(void)
@@ -153,7 +153,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
 #endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 #endif /* OC_SERVER */
-    set_post_otm_acl = true;
+    store_unique_ids = true;
     ps->p = false;
   }
   /* fall through */
@@ -397,10 +397,9 @@ oc_sec_encode_pstat(size_t device)
 }
 
 static oc_event_callback_retval_t
-dump_acl_post_otm(void *data)
+dump_unique_ids(void *data)
 {
   size_t device = (size_t)data;
-  oc_sec_dump_acl(device);
   oc_sec_dump_unique_ids(device);
   return OC_EVENT_DONE;
 }
@@ -491,12 +490,10 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
-      if (transition_success && ps.s == OC_DOS_RFNOP && set_post_otm_acl) {
-        oc_sec_set_post_otm_acl(device);
+      if (transition_success && ps.s == OC_DOS_RFNOP && store_unique_ids) {
         size_t d = (size_t)device;
-        oc_ri_add_timed_event_callback_ticks((void *)d,
-                                             &dump_acl_post_otm, 0);
-        set_post_otm_acl = false;
+        oc_ri_add_timed_event_callback_ticks((void *)d, &dump_unique_ids, 0);
+        store_unique_ids = false;
       }
       return transition_success;
     }
@@ -538,10 +535,9 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 oc_reset()
 {
-  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_pstat_handle_state(&ps, device);
+    oc_sec_pstat_default(device);
   }
 }
 #endif /* OC_SECURITY */
