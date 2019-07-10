@@ -46,6 +46,7 @@
  */
 
 #include "transactions.h"
+#include "api/oc_main.h"
 #include "observe.h"
 #include "oc_buffer.h"
 #include "util/oc_list.h"
@@ -111,6 +112,9 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
 void
 coap_send_transaction(coap_transaction_t *t)
 {
+  if (!oc_main_initialized()) {
+    return;
+  }
   OC_DBG("Sending transaction(len: %zd) %u: %p", t->message->length, t->mid,
          (void *)t);
   OC_LOGbytes(t->message->data, t->message->length);

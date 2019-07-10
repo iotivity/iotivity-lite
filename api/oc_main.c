@@ -234,12 +234,13 @@ oc_main_init(const oc_handler_t *handler)
 
   OC_DBG("oc_main: stack initialized");
 
+  initialized = true;
+
 #ifdef OC_CLIENT
   if (app_callbacks->requests_entry)
     app_callbacks->requests_entry();
 #endif
 
-  initialized = true;
   return 0;
 
 err:
@@ -263,6 +264,8 @@ oc_main_shutdown(void)
   if (initialized == false)
     return;
 
+  initialized = false;
+
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_cloud_shutdown();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
@@ -284,11 +287,16 @@ oc_main_shutdown(void)
   oc_shutdown_all_devices();
 
   app_callbacks = NULL;
-  initialized = false;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_shutdown();
 #endif /* OC_MEMORY_TRACE */
+}
+
+bool
+oc_main_initialized(void)
+{
+  return initialized;
 }
 
 void
