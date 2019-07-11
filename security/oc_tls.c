@@ -564,13 +564,12 @@ is_known_identity_cert(oc_sec_cred_t *cred)
 
   /* Identity cert chain currently tracked by mbedTLS */
   mbedtls_x509_crt *id_cert = &certs->cert;
-
+  mbedtls_x509_crt cert_in_cred;
+  mbedtls_x509_crt *cert = &cert_in_cred;
 next_cred_in_chain:
 
   while (cred) {
-    mbedtls_x509_crt cert_in_cred;
-    mbedtls_x509_crt_init(&cert_in_cred);
-    mbedtls_x509_crt *cert = &cert_in_cred;
+    mbedtls_x509_crt_init(cert);
 
     /* Parse cert in cred entry for matching below */
     size_t cert_len = oc_string_len(cred->publicdata.data);
@@ -594,24 +593,24 @@ next_cred_in_chain:
       if (id_cert->raw.len == cert->raw.len &&
           memcmp(id_cert->raw.p, cert->raw.p, cert->raw.len) == 0) {
 
-        if (!cert->next) {
-          OC_DBG("found matching cert..proceeding further down the chain");
-          cred = cred->chain;
-          mbedtls_x509_crt_free(cert);
-          goto next_cred_in_chain;
-        }
-
         if (cert->next) {
           OC_DBG("found matching cert..proceeding further down the chain");
           cert = cert->next;
           continue;
+        } else {
+          OC_DBG("found matching cert..proceeding further down the chain");
+          cred = cred->chain;
+          mbedtls_x509_crt_free(&cert_in_cred);
+          goto next_cred_in_chain;
         }
       } else if (!id_cert->next) {
         OC_DBG("new cert chains to known cert chain; Add cert to chain and "
                "proceed...");
-        ret = mbedtls_x509_crt_parse_der(id_cert, cert->raw.p, cert->raw.len);
+        ret =
+          mbedtls_x509_crt_parse_der(&certs->cert, cert->raw.p, cert->raw.len);
         if (ret < 0) {
           OC_WRN("could not parse cert in provided chain");
+          mbedtls_x509_crt_free(&cert_in_cred);
           return true;
         }
 #ifdef OC_DEBUG
@@ -630,7 +629,7 @@ next_cred_in_chain:
           continue;
         } else {
           OC_DBG("processing other new certs, if any, further down the chain");
-          mbedtls_x509_crt_free(cert);
+          mbedtls_x509_crt_free(&cert_in_cred);
           cred = cred->chain;
           goto next_cred_in_chain;
         }
@@ -801,7 +800,7 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
     &trust_anchors, (const unsigned char *)oc_string(cred->publicdata.data),
     oc_string_len(cred->publicdata.data) + 1);
   if (ret != 0) {
-    OC_WRN("could not parse an trustca/mfgtrustca root certificate");
+    OC_WRN("could not parse an trustca/mfgtrustca root certificate %d", ret);
     return;
   }
 
@@ -933,7 +932,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
        * after validating the end-entity certificate to authorize the
        * the peer per the OCF Specification. */
       oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
-      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+      if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
         while (ca_cert) {
           if (ca_cert->device == id_cert->device &&
@@ -953,25 +952,30 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   }
 
   if (depth == 0) {
-    /* Parse the peer's subjectuuid from its end-entity certificate */
-    oc_string_t uuid;
-    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
-      OC_ERR("unable to retrieve UUID from the cert's CN");
-      return -1;
-    }
-
-    oc_str_to_uuid(oc_string(uuid), &peer->uuid);
-    OC_DBG("attempting to connect with peer %s", oc_string(uuid));
-    oc_free_string(&uuid);
-
-    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
-      OC_ERR("unable to extract public key from cert");
-      return -1;
-    }
-
     oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
     if (!id_cert) {
       OC_ERR("could not find the identity cert used for this session");
+      return 0;
+    }
+
+    /* Parse the peer's subjectuuid from its end-entity certificate */
+    oc_string_t uuid;
+    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
+      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+        OC_ERR("unable to retrieve UUID from the cert's CN");
+        return -1;
+      } else {
+        peer->uuid.id[0] = '*';
+        OC_DBG("attempting to connect with peer *");
+      }
+    } else {
+      oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+      OC_DBG("attempting to connect with peer %s", oc_string(uuid));
+      oc_free_string(&uuid);
+    }
+
+    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+      OC_ERR("unable to extract public key from cert");
       return -1;
     }
 
