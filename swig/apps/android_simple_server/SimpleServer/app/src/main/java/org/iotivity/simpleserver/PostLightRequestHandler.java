@@ -26,7 +26,7 @@ public class PostLightRequestHandler implements OCRequestHandler {
 
         activity.msg("Post Light:");
 
-        OCRepresentation rep = request.getRequest_payload();
+        OCRepresentation rep = request.getRequestPayload();
         while (rep != null) {
             activity.msg("\tkey: " + rep.getName() + ", type: " + rep.getType());
             switch (rep.getType()) {

@@ -23,9 +23,8 @@ public class UnownedDeviceHandler implements OCObtDiscoveryHandler {
         String deviceId = OCUuidUtil.uuidToString(uuid);
         Log.d(TAG, "discovered unowned device: " + deviceId + " at:");
         while (endpoints != null) {
-            String[] endpointStr = new String[1];
-            OCEndpointUtil.toString(endpoints, endpointStr);
-            Log.d(TAG, endpointStr[0]);
+            String[] endpointStr = OCEndpointUtil.toString(endpoints);
+            Log.d(TAG, endpointStr);
             endpoints = endpoints.getNext();
         }
 
