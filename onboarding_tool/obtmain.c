@@ -77,29 +77,39 @@ display_menu(void)
   PRINT("[0] Display this menu\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[1] Discover un-owned devices\n");
-  PRINT("[11] Discover un-owned devices in the realm-local IPv6 scope\n");
-  PRINT("[12] Discover un-owned devices in the site-local IPv6 scope\n");
-  PRINT("[2] Discover owned devices\n");
-  PRINT("[21] Discover owned devices in the realm-local IPv6 scope\n");
-  PRINT("[22] Discover owned devices in the site-local IPv6 scope\n");
+  PRINT("[2] Discover un-owned devices in the realm-local IPv6 scope\n");
+  PRINT("[3] Discover un-owned devices in the site-local IPv6 scope\n");
+  PRINT("[4] Discover owned devices\n");
+  PRINT("[5] Discover owned devices in the realm-local IPv6 scope\n");
+  PRINT("[6] Discover owned devices in the site-local IPv6 scope\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[3] Just-Works Ownership Transfer Method\n");
-  PRINT("[4] Request Random PIN from device for OTM\n");
-  PRINT("[5] Random PIN Ownership Transfer Method\n");
-  PRINT("[6] Provision pair-wise credentials\n");
-  PRINT("[7] Provision ACE2\n");
+  PRINT("[7] Just-Works Ownership Transfer Method\n");
+  PRINT("[8] Request Random PIN from device for OTM\n");
+  PRINT("[9] Random PIN Ownership Transfer Method\n");
+#ifdef OC_PKI
+  PRINT("[10] Manufacturer Certificate based Ownership Transfer Method\n");
+#endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
-  PRINT("[8] RESET device\n");
-  PRINT("[9] RESET OBT\n");
+  PRINT("[11] Provision pair-wise credentials\n");
+  PRINT("[12] Provision ACE2\n");
+  PRINT("[13] Provision auth-crypt RW access to NCRs\n");
+#ifdef OC_PKI
+  PRINT("[14] Provision role RW access to NCRs\n");
+  PRINT("[15] Provision identity certificate\n");
+  PRINT("[16] Provision role certificate\n");
+#endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
-  PRINT("[10] Exit\n");
+  PRINT("[97] RESET device\n");
+  PRINT("[98] RESET OBT\n");
+  PRINT("-----------------------------------------------\n");
+  PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
 
 #define SCANF(...)                                                             \
   do {                                                                         \
-    if (scanf(__VA_ARGS__) != 1) {                                             \
+    if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
     }                                                                          \
   } while (0)
@@ -108,8 +118,8 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.phone", "OBT", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "OBT", "ocf.2.0.2",
+                       "ocf.res.1.3.0", NULL, NULL);
   return ret;
 }
 
@@ -233,8 +243,12 @@ add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
   }
 
   memcpy(device->uuid.id, uuid->id, 16);
-  strncpy(device->device_name, device_name, 64);
-  device->device_name[64 - 1] = '\0';
+  if (device_name) {
+    strncpy(device->device_name, device_name, 63);
+    device->device_name[64 - 1] = '\0';
+  } else {
+    device->device_name[0] = '\0';
+  }
   oc_list_add(list, device);
   return true;
 }
@@ -255,26 +269,19 @@ static void
 get_device(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
-  oc_string_t *n = NULL;
-  oc_string_t *di = NULL;
-  // find the human readable device name and device id (uuid)
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (strcmp("n", oc_string(rep->name)) == 0) {
-        n = &rep->value.string;
-      }
-      if (strcmp("di", oc_string(rep->name)) == 0) {
-        di = &rep->value.string;
-      }
-    default:
-      break;
+  char *di = NULL, *n = NULL;
+  size_t di_len = 0, n_len = 0;
+
+  if (oc_rep_get_string(rep, "di", &di, &di_len)) {
+    oc_uuid_t uuid;
+    oc_str_to_uuid(di, &uuid);
+    if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
+      n = NULL;
+      n_len = 0;
     }
-    rep = rep->next;
+
+    add_device_to_list(&uuid, n, data->user_data);
   }
-  oc_uuid_t uuid;
-  oc_str_to_uuid(oc_string(*di), &uuid);
-  add_device_to_list(&uuid, oc_string(*n), data->user_data);
 }
 
 static void
@@ -393,12 +400,15 @@ otm_rdp(void)
   otb_mutex_lock(app_sync_lock);
   char *d_name =
     (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
-  strcpy(d_name, devices[c]->device_name);
+  if (d_name) {
+    strcpy(d_name, devices[c]->device_name);
+  }
   int ret = oc_obt_perform_random_pin_otm(
     &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, d_name);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
   } else {
+    free(d_name);
     PRINT("\nERROR issuing request to perform Random PIN OTM\n");
   }
   /* Having issued an OTM request, remove this item from the unowned device list
@@ -462,6 +472,67 @@ request_random_pin(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
+#ifdef OC_PKI
+static void
+otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device %s\n", di);
+    add_device_to_list(uuid, data, owned_devices);
+  } else {
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
+static void
+otm_cert(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+
+  int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+  } else {
+    PRINT("\nERROR issuing request to perform ownership transfer\n");
+  }
+
+  /* Having issued an OTM request, remove this item from the unowned device list
+   */
+  remove_device_from_list(&devices[c]->uuid, unowned_devices);
+
+  otb_mutex_unlock(app_sync_lock);
+}
+#endif /* OC_PKI */
+
 static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
@@ -470,8 +541,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    // discover_owned_devices();
+    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
     add_device_to_list(uuid, (const char *)data, owned_devices);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
@@ -511,12 +581,15 @@ otm_just_works(void)
 
   char *d_name =
     (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
-  strcpy(d_name, devices[c]->device_name);
+  if (d_name) {
+    strcpy(d_name, devices[c]->device_name);
+  }
   int ret =
     oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb, d_name);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
   } else {
+    free(d_name);
     PRINT("\nERROR issuing request to perform ownership transfer\n");
   }
 
@@ -581,6 +654,200 @@ reset_device(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
+#ifdef OC_PKI
+static void
+provision_id_cert_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned identity certificate\n");
+  } else {
+    PRINT("\nERROR provisioning identity certificate\n");
+  }
+}
+
+static void
+provision_id_cert(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_identity_certificate(&devices[c]->uuid,
+                                                  provision_id_cert_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision identity certificate\n");
+  } else {
+    PRINT("\nERROR issuing request to provision identity certificate\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+provision_role_cert_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned role certificate\n");
+  } else {
+    PRINT("\nERROR provisioning role certificate\n");
+  }
+}
+
+static void
+provision_role_cert(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  oc_role_t *roles = NULL;
+  do {
+    char role[64];
+    PRINT("\nEnter role: ");
+    SCANF("%63s", role);
+    PRINT("\nAuthority? [0-No, 1-Yes]: ");
+    SCANF("%d", &i);
+    if (i == 1) {
+      char authority[64];
+      PRINT("\nEnter Authority: ");
+      SCANF("%63s", authority);
+      roles = oc_obt_add_roleid(roles, role, authority);
+    } else {
+      roles = oc_obt_add_roleid(roles, role, NULL);
+    }
+    PRINT("\nMore Roles? [0-No, 1-Yes]: ");
+    SCANF("%d", &i);
+  } while (i == 1);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_role_certificate(roles, &devices[c]->uuid,
+                                              provision_role_cert_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision role certificate\n");
+  } else {
+    PRINT("\nERROR issuing request to provision role certificate\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned rold * ACE to device %s\n", di);
+  } else {
+    remove_device_from_list(uuid, owned_devices);
+    PRINT("\nERROR provisioning ACE to device %s\n", di);
+  }
+}
+
+static void
+provision_role_wildcard_ace(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, dev;
+
+  PRINT("\nProvision role * ACE\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+
+  if (i == 0) {
+    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    return;
+  }
+
+  PRINT("\n\nSelect device for provisioning: ");
+  SCANF("%d", &dev);
+  if (dev < 0 || dev >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  char role[64], authority[64];
+  PRINT("\nEnter role: ");
+  SCANF("%63s", role);
+  int d;
+  PRINT("\nAuthority? [0-No, 1-Yes]: ");
+  SCANF("%d", &d);
+  if (d == 1) {
+    char authority[64];
+    PRINT("\nEnter Authority: ");
+    SCANF("%63s", authority);
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_role_wildcard_ace(
+    &devices[dev]->uuid, role, (d == 1) ? authority : NULL,
+    provision_role_wildcard_ace_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision role * ACE\n");
+  } else {
+    PRINT("\nERROR issuing request to provision role * ACE\n");
+  }
+}
+#endif /* OC_PKI */
+
 static void
 provision_credentials_cb(int status, void *data)
 {
@@ -635,6 +902,66 @@ provision_credentials(void)
     PRINT("\nERROR issuing request to provision credentials\n");
   }
   otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
+  } else {
+    remove_device_from_list(uuid, owned_devices);
+    PRINT("\nERROR provisioning ACE to device %s\n", di);
+  }
+}
+
+static void
+provision_authcrypt_wildcard_ace(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, dev;
+
+  PRINT("\nProvision auth-crypt * ACE\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+
+  if (i == 0) {
+    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    return;
+  }
+
+  PRINT("\n\nSelect device for provisioning: ");
+  SCANF("%d", &dev);
+  if (dev < 0 || dev >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_auth_wildcard_ace(
+    &devices[dev]->uuid, provision_authcrypt_wildcard_ace_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision auth-crypt * ACE\n");
+  } else {
+    PRINT("\nERROR issuing request to provision auth-crypt * ACE\n");
+  }
 }
 
 static void
@@ -693,30 +1020,46 @@ provision_ace2(void)
   device = (device_handle_t *)oc_list_head(owned_devices);
   PRINT("\n[0]: %s\n", conn_types[0]);
   PRINT("[1]: %s\n", conn_types[1]);
+  PRINT("[2]: Role\n");
   i = 0;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i + 2, di, device->device_name);
+    PRINT("[%d]: %s - %s\n", i + 3, di, device->device_name);
     i++;
     device = device->next;
   }
   PRINT("\nSelect subject: ");
   SCANF("%d", &sub);
 
-  if (sub >= (i + 2)) {
+  if (sub >= (i + 3)) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
 
   oc_sec_ace_t *ace = NULL;
-  if (sub > 1) {
+  if (sub > 2) {
     ace = oc_obt_new_ace_for_subject(&devices[sub - 2]->uuid);
   } else {
     if (sub == 0) {
       ace = oc_obt_new_ace_for_connection(OC_CONN_ANON_CLEAR);
-    } else {
+    } else if (sub == 1) {
       ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+    } else {
+      char role[64];
+      PRINT("\nEnter role: ");
+      SCANF("%63s", role);
+      int d;
+      PRINT("\nAuthority? [0-No, 1-Yes]: ");
+      SCANF("%d", &d);
+      if (d == 1) {
+        char authority[64];
+        PRINT("\nEnter Authority: ");
+        SCANF("%63s", authority);
+        ace = oc_obt_new_ace_for_role(role, authority);
+      } else {
+        ace = oc_obt_new_ace_for_role(role, NULL);
+      }
     }
   }
 
@@ -875,6 +1218,123 @@ provision_ace2(void)
   }
 }
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
+  FILE *fp = fopen(file_path, "r");
+  if (fp == NULL) {
+    PRINT("ERROR: unable to read PEM\n");
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  long pem_len = ftell(fp);
+  if (pem_len < 0) {
+    PRINT("ERROR: could not obtain length of file\n");
+    fclose(fp);
+    return -1;
+  }
+  if (pem_len > (long)*buffer_len) {
+    PRINT("ERROR: buffer provided too small\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+  *buffer_len = (size_t)pem_len;
+  return 0;
+}
+#endif /* OC_SECURITY && OC_PKI */
+
+void
+factory_presets_cb(size_t device, void *data)
+{
+  (void)device;
+  (void)data;
+  oc_obt_shutdown();
+  empty_device_list(owned_devices);
+  empty_device_list(unowned_devices);
+  oc_obt_init();
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  char cert[8192];
+  size_t cert_len = 8192;
+  if (read_pem("../../apps/pki_certs/ee.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  char key[4096];
+  size_t key_len = 8192;
+  if (read_pem("../../apps/pki_certs/key.pem", key, &key_len) < 0) {
+    PRINT("ERROR: unable to read private key");
+    return;
+  }
+
+  int ee_credid = oc_pki_add_mfg_cert(0, (const unsigned char *)cert, cert_len,
+                                      (const unsigned char *)key, key_len);
+
+  if (ee_credid < 0) {
+    PRINT("ERROR installing manufacturer EE cert\n");
+    return;
+  }
+
+  cert_len = 8192;
+  if (read_pem("../../apps/pki_certs/subca1.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int subca_credid = oc_pki_add_mfg_intermediate_cert(
+    0, ee_credid, (const unsigned char *)cert, cert_len);
+
+  if (subca_credid < 0) {
+    PRINT("ERROR installing intermediate CA cert\n");
+    return;
+  }
+
+  cert_len = 8192;
+  if (read_pem("../../apps/pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int rootca_credid =
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+
+  cert_len = 8192;
+  if (read_pem("../../apps/pki_certs/rootca2.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  rootca_credid =
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+
+  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+#endif /* OC_SECURITY && OC_PKI */
+}
+
 int
 main(void)
 {
@@ -897,7 +1357,8 @@ main(void)
                                        .requests_entry = issue_requests };
 
   oc_storage_config("./onboarding_tool_creds");
-
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
+  oc_set_con_res_announced(false);
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
@@ -925,49 +1386,64 @@ main(void)
     case 1:
       discover_unowned_devices(0x02);
       break;
-    case 11:
+    case 2:
       discover_unowned_devices(0x03);
       break;
-    case 12:
+    case 3:
       discover_unowned_devices(0x05);
       break;
-    case 2:
+    case 4:
       discover_owned_devices(0x02);
       break;
-    case 21:
+    case 5:
       discover_owned_devices(0x03);
       break;
-    case 22:
+    case 6:
       discover_owned_devices(0x05);
       break;
-    case 3:
+    case 7:
       otm_just_works();
       break;
-    case 4:
+    case 8:
       request_random_pin();
       break;
-    case 5:
+    case 9:
       otm_rdp();
       break;
-    case 6:
+#ifdef OC_PKI
+    case 10:
+      otm_cert();
+      break;
+#endif /* OC_PKI */
+    case 11:
       provision_credentials();
       break;
-    case 7:
+    case 12:
       provision_ace2();
       break;
-    case 8:
+    case 13:
+      provision_authcrypt_wildcard_ace();
+      break;
+#ifdef OC_PKI
+    case 14:
+      provision_role_wildcard_ace();
+      break;
+    case 15:
+      provision_id_cert();
+      break;
+    case 16:
+      provision_role_cert();
+      break;
+#endif /* OC_PKI */
+    case 97:
       reset_device();
       break;
-    case 9:
+    case 98:
       otb_mutex_lock(app_sync_lock);
       oc_reset();
-      oc_obt_shutdown();
-      empty_device_list(owned_devices);
-      empty_device_list(unowned_devices);
-      oc_obt_init();
       otb_mutex_unlock(app_sync_lock);
       break;
-    case 10:
+    case 99:
       handle_signal(0);
       break;
     default:

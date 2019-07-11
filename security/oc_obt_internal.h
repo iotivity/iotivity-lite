@@ -102,6 +102,7 @@ typedef struct oc_credprov_ctx_t
   oc_device_t *device2;
   oc_switch_dos_ctx_t *switch_dos;
   uint8_t key[16];
+  oc_role_t *roles;
 } oc_credprov_ctx_t;
 
 /* Context to be maintained over ACE provisioning sequence */
