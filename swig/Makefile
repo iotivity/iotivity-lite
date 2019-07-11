@@ -59,7 +59,7 @@ SWIG_CFLAG =
 HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security -I../cloud
 
 JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow
-EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DLONG_BIT=64
+EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DLONG_BIT=64
 DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
 LDFLAG += -lm
 
@@ -74,6 +74,9 @@ ifeq ($(CLOUD),1)
 	CLOUD_OBJ_DIR = $(PORT_OBJ_DIR)cloud/*.o
 endif
 
+ifneq ($(SECURE),0)
+	EXTRA_FLAG += -DOC_SECURITY
+endif
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
 		oc_api oc_obt oc_pki oc_introspection oc_core_res oc_cloud \
 		oc_session_events oc_buffer_settings

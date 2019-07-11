@@ -428,7 +428,9 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
 %inline %{
 void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) {
   OC_DBG("JNI: %s\n", __func__);
+  #ifdef OC_SECURITY
   oc_set_random_pin_callback(cb, jcb);
+  #endif /* OC_SECURITY */
 }
 %}
 
