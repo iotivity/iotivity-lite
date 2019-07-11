@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bcbf9b6_7e070f37",
+        "filename": "swig/java_lang/oc_iotivity_lite_jni.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-07-11T17:51:37Z",
+      "side": 1,
+      "message": "this indent is not necessary",
+      "revId": "bb3c9135851629d69fa7300d27c9aeaa46fdf46b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
