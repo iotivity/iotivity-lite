@@ -869,7 +869,30 @@ static void
 oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
   (void)endpoint;
-
+  (void)anon_ecdh_priority;
+#ifdef OC_PKI
+  mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
+#ifdef OC_CLIENT
+  bool loaded_chain = false;
+#endif /* OC_CLIENT */
+  size_t device = endpoint->device;
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  /* Decide between configuring the identity cert chain vs manufacturer cert
+   * chain for this device based on device ownership status.
+   */
+  if (doxm->owned &&
+      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
+#ifdef OC_CLIENT
+    loaded_chain = true;
+#endif /* OC_CLIENT */
+  } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) == 0) {
+#ifdef OC_CLIENT
+    loaded_chain = true;
+#endif /* OC_CLIENT */
+  }
+  selected_mfg_cred = -1;
+  selected_id_cred = -1;
+#endif /* OC_PKI */
 #ifdef OC_SERVER
   oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
@@ -878,19 +901,20 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 #endif /* OC_SERVER */
     if (!ciphers) {
     ciphers = (int *)psk_priority;
-
 #ifdef OC_CLIENT
     oc_sec_cred_t *cred =
       oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
-
-    if (!cred) {
-      ciphers = (int *)anon_ecdh_priority;
+    if (cred && cred->credtype == OC_CREDTYPE_PSK) {
+      ciphers = (int *)psk_priority;
     }
 #ifdef OC_PKI
-    else if (cred->credtype == OC_CREDTYPE_CERT) {
+    else if (loaded_chain) {
       ciphers = (int *)cert_priority;
     }
 #endif /* OC_PKI */
+    else {
+      ciphers = (int *)anon_ecdh_priority;
+    }
 #endif /* OC_CLIENT */
   }
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
@@ -1075,21 +1099,6 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
     mbedtls_ssl_conf_handshake_timeout(conf, 2500, 20000);
   }
 
-#ifdef OC_PKI
-  mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  /* Decide between configuring the identity cert chain vs manufacturer cert
-   * chain for this device based on device ownership status.
-   */
-  if (doxm->owned &&
-      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
-  } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) != 0) {
-    OC_WRN("could not configure mfg cert chain");
-  }
-  selected_mfg_cred = -1;
-  selected_id_cred = -1;
-#endif /* OC_PKI */
   return 0;
 }
 
