@@ -80,7 +80,7 @@ RM ?= rm
 MKDIR ?= mkdir
 
 DYNAMIC ?= 1
-SECURE ?= 1
+export SECURE ?= 1
 PKI ?= 1
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
 # default. It also assumes the use of OC_IDD_API is used by default.
