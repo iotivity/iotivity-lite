@@ -862,14 +862,6 @@ get_identity_cert_for_session(const mbedtls_ssl_config *conf)
 }
 #endif /* OC_PKI */
 
-#ifdef OC_CLIENT
-void
-oc_tls_select_psk_ciphersuite(void)
-{
-  ciphers = (int *)psk_priority;
-}
-#endif /* OC_CLIENT */
-
 static void
 oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
@@ -901,6 +893,20 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
   ciphers = NULL;
 }
+
+#ifdef OC_CLIENT
+void
+oc_tls_select_psk_ciphersuite(void)
+{
+  ciphers = (int *)psk_priority;
+}
+
+void
+oc_tls_select_anon_ciphersuite(void)
+{
+  ciphers = (int *)anon_ecdh_priority;
+}
+#endif /* OC_CLIENT */
 
 #ifdef OC_PKI
 static int
@@ -1469,6 +1475,9 @@ oc_tls_init_connection(oc_message_t *message)
 bool
 oc_tls_uses_psk_cred(oc_tls_peer_t *peer)
 {
+  if (!peer) {
+    return false;
+  }
   int cipher = peer->ssl_ctx.session->ciphersuite;
   if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == cipher ||
       MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == cipher) {
