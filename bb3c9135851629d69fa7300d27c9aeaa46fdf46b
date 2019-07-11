@@ -16,6 +16,24 @@
       "revId": "bb3c9135851629d69fa7300d27c9aeaa46fdf46b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02fb11de_78075320",
+        "filename": "swig/java_lang/oc_iotivity_lite_jni.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-11T21:40:35Z",
+      "side": 1,
+      "message": "I agree this indent is not necessary the auto white space checker created the indent. With out bypassing the whitespace checker I don\u0027t think I can actually fix this.",
+      "parentUuid": "3bcbf9b6_7e070f37",
+      "revId": "bb3c9135851629d69fa7300d27c9aeaa46fdf46b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
