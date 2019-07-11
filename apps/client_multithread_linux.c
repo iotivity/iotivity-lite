@@ -46,8 +46,8 @@ static bool state;
 static int power;
 static oc_string_t name;
 
-#define OC_IPV6_ADDRSTRLEN (46)
-static char address[OC_IPV6_ADDRSTRLEN + 8];
+#define OC_IPV6_ADDRSTRLEN (59)
+static char address[OC_IPV6_ADDRSTRLEN + 1];
 static oc_endpoint_t set_ep;
 
 #define PING_RETRY_COUNT (4)
@@ -373,14 +373,20 @@ main(void)
   sigaction(SIGINT, &sa, NULL);
 
   printf("set remote address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
-  if (scanf("%s", address)) {
+  if (scanf("%59s", address) > 0) {
     printf("address: %s\n", address);
+  } else {
+    printf("error reading remote address\n");
+    return -1;
   }
 
   oc_string_t address_str;
   oc_new_string(&address_str, address, strlen(address));
 
-  oc_string_to_endpoint(&address_str, &set_ep, NULL);
+  if (oc_string_to_endpoint(&address_str, &set_ep, NULL) < 0) {
+    printf("error parsing remote endpoint address\n");
+    return -1;
+  }
   set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
