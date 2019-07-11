@@ -22,8 +22,10 @@
 #include "oc_obt.h"
 #include "oc_core_res.h"
 #include "security/oc_acl.h"
+#include "security/oc_certs.h"
 #include "security/oc_cred.h"
 #include "security/oc_doxm.h"
+#include "security/oc_keypair.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"
@@ -58,11 +60,19 @@ OC_LIST(oc_cache);
 /* Persisted state */
 static int id = 1000;
 
+/* Public/Private key-pair for root of trust */
+#ifdef OC_PKI
+const char *root_subject = "C=US, O=OCF, CN=IoTivity-Lite OBT Root";
+uint8_t private_key[OC_KEYPAIR_PRIVKEY_SIZE];
+uint8_t private_key_size;
+int root_cert_credid;
+#endif /* OC_PKI */
+
 /* Internal utility functions */
 oc_endpoint_t *
 oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint)
 {
-  while (endpoint->next != NULL && endpoint->flags & SECURED) {
+  while (endpoint && endpoint->next != NULL && endpoint->flags & SECURED) {
     endpoint = endpoint->next;
   }
   return endpoint;
@@ -71,7 +81,7 @@ oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint)
 oc_endpoint_t *
 oc_obt_get_secure_endpoint(oc_endpoint_t *endpoint)
 {
-  while (endpoint->next != NULL && !(endpoint->flags & SECURED)) {
+  while (endpoint && endpoint->next != NULL && !(endpoint->flags & SECURED)) {
     endpoint = endpoint->next;
   }
   return endpoint;
@@ -170,7 +180,9 @@ cache_new_device(oc_list_t list, oc_uuid_t *uuid, oc_endpoint_t *endpoint)
     oc_list_add(list, device);
   }
 
-  oc_free_server_endpoints(device->endpoint);
+  if (device->endpoint) {
+    oc_free_server_endpoints(device->endpoint);
+  }
 
   oc_endpoint_t *ep = oc_new_endpoint();
   if (!ep) {
@@ -181,6 +193,7 @@ cache_new_device(oc_list_t list, oc_uuid_t *uuid, oc_endpoint_t *endpoint)
 
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   device->endpoint = ep;
+  ep->next = NULL;
   return device;
 }
 
@@ -205,6 +218,10 @@ oc_obt_dump_state(void)
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
   oc_rep_set_int(root, id, id);
+#ifdef OC_PKI
+  oc_rep_set_byte_string(root, private_key, private_key, private_key_size);
+  oc_rep_set_int(root, credid, root_cert_credid);
+#endif /* OC_PKI */
   oc_rep_end_root_object();
 
   int size = oc_rep_get_encoded_payload_size();
@@ -241,7 +258,22 @@ oc_obt_load_state(void)
               memcmp(oc_string(rep->name), "id", 2) == 0) {
             id = (int)rep->value.integer;
           }
+#ifndef OC_PKI
           break;
+#else  /* !OC_PKI */
+          else if (oc_string_len(rep->name) == 6 &&
+                   memcmp(oc_string(rep->name), "credid", 6) == 0) {
+            root_cert_credid = (int)rep->value.integer;
+          }
+          break;
+        case OC_REP_BYTE_STRING:
+          if (oc_string_len(rep->name) == 11 &&
+              memcmp(oc_string(rep->name), "private_key", 11) == 0) {
+            private_key_size = oc_string_len(rep->value.string);
+            memcpy(private_key, oc_string(rep->value.string), private_key_size);
+          }
+          break;
+#endif /* OC_PKI */
         default:
           break;
         }
@@ -350,11 +382,7 @@ free_discovery_cb(void *data)
 static void
 get_endpoints(oc_client_response_t *data)
 {
-  oc_device_t *device = (oc_device_t *)data->user_data;
-
   oc_rep_t *links = data->payload;
-
-  oc_free_server_endpoints(device->endpoint);
 
   oc_uuid_t di;
   oc_rep_t *link = links->value.object;
@@ -373,9 +401,34 @@ get_endpoints(oc_client_response_t *data)
     link = link->next;
   }
 
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  if (memcmp(my_uuid->id, di.id, 16) == 0) {
+    return;
+  }
+
+  oc_discovery_cb_t *cb = NULL;
+  oc_device_t *device = NULL;
+  oc_client_cb_t *ccb = (oc_client_cb_t *)data->client_cb;
+  if (ccb->multicast) {
+    cb = (oc_discovery_cb_t *)data->user_data;
+    if (oc_obt_is_owned_device(&di)) {
+      device = cache_new_device(oc_devices, &di, data->endpoint);
+    }
+  } else {
+    device = (oc_device_t *)data->user_data;
+    cb = (oc_discovery_cb_t *)device->ctx;
+  }
+
+  if (!device) {
+    return;
+  }
+
+  oc_free_server_endpoints(device->endpoint);
+  device->endpoint = NULL;
+
   oc_endpoint_t *eps_cur = NULL;
   link = links->value.object;
-
+  oc_endpoint_t temp_ep;
   while (link != NULL) {
     switch (link->type) {
     case OC_REP_OBJECT_ARRAY: {
@@ -387,8 +440,6 @@ get_endpoints(oc_client_response_t *data)
           case OC_REP_STRING: {
             if (oc_string_len(ep->name) == 2 &&
                 memcmp(oc_string(ep->name), "ep", 2) == 0) {
-              oc_endpoint_t temp_ep;
-              memset(&temp_ep, 0, sizeof(oc_endpoint_t));
               if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                   0) {
                 if (eps_cur) {
@@ -400,8 +451,12 @@ get_endpoints(oc_client_response_t *data)
 
                 if (eps_cur) {
                   memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
+                  eps_cur->next = NULL;
+                  eps_cur->device = data->endpoint->device;
                   memcpy(eps_cur->di.id, di.id, 16);
                   eps_cur->interface_index = data->endpoint->interface_index;
+                  oc_endpoint_set_local_address(
+                    eps_cur, data->endpoint->interface_index);
                   if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
                       oc_ipv6_endpoint_is_link_local(data->endpoint) == 0) {
                     eps_cur->addr.ipv6.scope = data->endpoint->addr.ipv6.scope;
@@ -424,7 +479,6 @@ get_endpoints(oc_client_response_t *data)
     link = link->next;
   }
 
-  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)device->ctx;
   if (!is_item_in_list(oc_discovery_cbs, cb) || !device->endpoint) {
     return;
   }
@@ -475,13 +529,6 @@ obt_check_owned(oc_client_response_t *data)
 
   if (owned == 0) {
     device = cache_new_device(oc_cache, &uuid, data->endpoint);
-  } else {
-    /* Device is owned by somebody else */
-    if (!oc_obt_is_owned_device(&uuid)) {
-      return;
-    } else {
-      device = cache_new_device(oc_devices, &uuid, data->endpoint);
-    }
   }
 
   if (device) {
@@ -561,21 +608,20 @@ discover_owned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
   c->data = data;
 
   if (scope == 0x02) {
-    if (oc_do_ip_multicast("/oic/sec/doxm", "owned=TRUE", &obt_check_owned,
-                           c)) {
+    if (oc_do_ip_multicast("/oic/res", "rt=oic.r.doxm", &get_endpoints, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
   } else if (scope == 0x03) {
-    if (oc_do_realm_local_ipv6_multicast("/oic/sec/doxm", "owned=TRUE",
+    if (oc_do_realm_local_ipv6_multicast("/oic/res", "rt=oic.r.doxm",
                                          &obt_check_owned, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
   } else if (scope == 0x05) {
-    if (oc_do_site_local_ipv6_multicast("/oic/sec/doxm", "owned=TRUE",
+    if (oc_do_site_local_ipv6_multicast("/oic/res", "rt=oic.r.doxm",
                                         &obt_check_owned, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
@@ -784,15 +830,27 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 static void
 free_credprov_state(oc_credprov_ctx_t *p, int status)
 {
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  oc_tls_close_connection(ep);
-  ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
-  oc_tls_close_connection(ep);
-  p->cb.cb(status, p->cb.data);
-  if (p->switch_dos) {
-    free_switch_dos_state(p->switch_dos);
+  if (!is_item_in_list(oc_credprov_ctx_l, p)) {
+    return;
   }
   oc_list_remove(oc_credprov_ctx_l, p);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  oc_tls_close_connection(ep);
+  if (p->device2) {
+    ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
+    oc_tls_close_connection(ep);
+  }
+  p->cb.cb(status, p->cb.data);
+#ifdef OC_PKI
+  if (p->roles) {
+    oc_obt_free_roleid(p->roles);
+    p->roles = NULL;
+  }
+#endif /* OC_PKI */
+  if (p->switch_dos) {
+    free_switch_dos_state(p->switch_dos);
+    p->switch_dos = NULL;
+  }
   oc_memb_free(&oc_credprov_ctx_m, p);
 }
 
@@ -976,6 +1034,408 @@ device1_RFPRO(int status, void *data)
   }
 }
 
+#ifdef OC_PKI
+/** Construct list of role ids to encode into a role certificate **/
+OC_MEMB(oc_roles, oc_role_t, 1);
+
+oc_role_t *
+oc_obt_add_roleid(oc_role_t *roles, const char *role, const char *authority)
+{
+  oc_role_t *roleid = (oc_role_t *)oc_memb_alloc(&oc_roles);
+  if (roleid) {
+    oc_new_string(&roleid->role, role, strlen(role));
+    if (authority) {
+      oc_new_string(&roleid->authority, authority, strlen(authority));
+    }
+    roleid->next = roles;
+  }
+  return roleid;
+}
+
+void
+oc_obt_free_roleid(oc_role_t *roles)
+{
+  oc_role_t *r = roles, *next;
+  while (r) {
+    next = r->next;
+    oc_free_string(&r->role);
+    if (oc_string_len(r->authority) > 0) {
+      oc_free_string(&r->authority);
+    }
+    oc_memb_free(&oc_roles, r);
+    r = next;
+  }
+}
+
+/** Provision identity/role certificates **/
+
+static void
+device_RFNOP(int status, void *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    free_credprov_ctx(p, 0);
+  } else {
+    free_credprov_ctx(p, -1);
+  }
+}
+
+static void
+device_authcrypt_roles(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_device_authcrypt_roles;
+  }
+
+  /**  6) switch dos to RFNOP
+   */
+  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device_RFNOP, p);
+  if (p->switch_dos) {
+    return;
+  }
+
+err_device_authcrypt_roles:
+  free_credprov_ctx(p, -1);
+}
+
+static void
+device_cred(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_device_cred;
+  }
+
+  /**  5) post acl2 with auth-crypt RW ACE for /oic/sec/roles
+   */
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &device_authcrypt_roles, HIGH_QOS,
+                   p)) {
+    oc_rep_start_root_object();
+
+    oc_rep_set_array(root, aclist2);
+    oc_rep_object_array_start_item(aclist2);
+
+    oc_rep_set_object(aclist2, subject);
+    oc_rep_set_text_string(subject, conntype, "auth-crypt");
+    oc_rep_close_object(aclist2, subject);
+
+    oc_rep_set_array(aclist2, resources);
+    oc_rep_object_array_start_item(resources);
+    oc_rep_set_text_string(resources, href, "/oic/sec/roles");
+    oc_rep_object_array_end_item(resources);
+    oc_rep_close_array(aclist2, resources);
+
+    oc_rep_set_uint(aclist2, permission, OC_PERM_RETRIEVE | OC_PERM_UPDATE);
+
+    oc_rep_object_array_end_item(aclist2);
+    oc_rep_close_array(root, aclist2);
+
+    oc_rep_end_root_object();
+
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_device_cred:
+  free_credprov_ctx(p, -1);
+}
+
+static void
+device_CSR(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+  oc_string_t subject, cert;
+  memset(&subject, 0, sizeof(oc_string_t));
+  memset(&cert, 0, sizeof(oc_string_t));
+  uint8_t pub_key[OC_KEYPAIR_PUBKEY_SIZE];
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_device_CSR;
+  }
+
+  size_t csr_len = 0;
+  char *csr = NULL;
+  size_t encoding_len = 0;
+  char *encoding = NULL;
+
+  if (!oc_rep_get_string(data->payload, "encoding", &encoding, &encoding_len)) {
+    goto err_device_CSR;
+  }
+
+  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.der", 20) == 0) {
+    if (!oc_rep_get_byte_string(data->payload, "csr", &csr, &csr_len)) {
+      goto err_device_CSR;
+    }
+  } else if (encoding_len == 20 &&
+             memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
+    if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
+      goto err_device_CSR;
+    }
+    csr_len++;
+  } else {
+    goto err_device_CSR;
+  }
+
+  /**  4) validate csr
+   */
+  int ret = oc_certs_validate_csr((const unsigned char *)csr, csr_len, &subject,
+                                  pub_key);
+
+  if (ret < 0) {
+    goto err_device_CSR;
+  }
+
+  if (!p->roles) {
+    /**  4) generate identity cert
+     */
+    ret = oc_obt_generate_identity_cert(oc_string(subject), pub_key,
+                                        OC_KEYPAIR_PUBKEY_SIZE, root_subject,
+                                        private_key, private_key_size, &cert);
+  } else {
+    /**  4) generate role cert
+     */
+    ret = oc_obt_generate_role_cert(p->roles, oc_string(subject), pub_key,
+                                    OC_KEYPAIR_PUBKEY_SIZE, root_subject,
+                                    private_key, private_key_size, &cert);
+  }
+  if (ret < 0) {
+    goto err_device_CSR;
+  }
+
+  /**  4) post cred with identity/role cert
+   */
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &device_cred, HIGH_QOS, p)) {
+    oc_rep_start_root_object();
+    oc_rep_set_array(root, creds);
+    oc_rep_object_array_start_item(creds);
+
+    oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
+    oc_rep_set_text_string(creds, subjectuuid, "*");
+
+    oc_rep_set_object(creds, publicdata);
+    oc_rep_set_text_string(publicdata, data, oc_string(cert));
+    oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+    oc_rep_close_object(creds, publicdata);
+    if (p->roles) {
+      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.rolecert");
+    } else {
+      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.cert");
+    }
+    oc_rep_object_array_end_item(creds);
+    oc_rep_close_array(root, creds);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      oc_free_string(&subject);
+      oc_free_string(&cert);
+      return;
+    }
+  }
+err_device_CSR:
+  if (oc_string_len(subject) > 0) {
+    oc_free_string(&subject);
+  }
+  if (oc_string_len(cert) > 0) {
+    oc_free_string(&cert);
+  }
+  free_credprov_state(p, -1);
+}
+
+static void
+device_root(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_device_root;
+  }
+
+  /**  3) get csr
+   */
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  if (oc_do_get("/oic/sec/csr", ep, NULL, &device_CSR, HIGH_QOS, p)) {
+    return;
+  }
+
+err_device_root:
+  free_credprov_ctx(p, -1);
+}
+
+static void
+device_RFPRO(int status, void *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
+
+  p->switch_dos = NULL;
+  if (status >= 0) {
+    oc_sec_cred_t *root = oc_sec_get_cred_by_credid(root_cert_credid, 0);
+    if (!root) {
+      goto err_device_RFPRO;
+    }
+
+    /**  2) post cred with trustca
+     */
+    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+    if (oc_init_post("/oic/sec/cred", ep, NULL, &device_root, HIGH_QOS, p)) {
+      oc_rep_start_root_object();
+      oc_rep_set_array(root, creds);
+      oc_rep_object_array_start_item(creds);
+
+      oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
+      oc_rep_set_text_string(creds, subjectuuid, "*");
+
+      oc_rep_set_object(creds, publicdata);
+      oc_rep_set_text_string(publicdata, data,
+                             oc_string(root->publicdata.data));
+      oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+      oc_rep_close_object(creds, publicdata);
+
+      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.trustca");
+
+      oc_rep_object_array_end_item(creds);
+      oc_rep_close_array(root, creds);
+      oc_rep_end_root_object();
+      if (oc_do_post()) {
+        return;
+      }
+    }
+  }
+
+err_device_RFPRO:
+  free_credprov_state(p, -1);
+}
+
+/*
+  Provision role certificate:
+  1) switch dos to RFPRO
+  2) post cred with trustca
+  3) get csr
+  4) validate csr, generate role cert, post cred with role cert
+  5) post acl2 with auth-crypt RW ACE for /oic/sec/roles
+  6) switch dos to RFNOP
+*/
+int
+oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
+                                  oc_obt_status_cb_t cb, void *data)
+{
+  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
+  if (!p) {
+    OC_ERR("could not allocate API context");
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid)) {
+    OC_ERR("device is not owned");
+    return -1;
+  }
+
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (!device) {
+    OC_ERR("could not obtain device handle");
+    return -1;
+  }
+
+  p->cb.cb = cb;
+  p->cb.data = data;
+  p->device1 = device;
+  p->device2 = NULL;
+  p->roles = roles;
+
+  /**  1) switch dos to RFPRO
+   */
+  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
+  if (!p->switch_dos) {
+    oc_memb_free(&oc_credprov_ctx_m, p);
+    OC_ERR("could not issue switch_dos request");
+    return -1;
+  }
+
+  oc_list_add(oc_credprov_ctx_l, p);
+  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+
+  return 0;
+}
+
+/*
+  Provision identity certificate:
+  1) switch dos to RFPRO
+  2) post cred with trustca
+  3) get csr
+  4) validate csr, generate identity cert, post cred with identity cert
+  5) post acl2 with auth-crypt RW ACE for /oic/sec/roles
+  6) switch dos to RFNOP
+*/
+int
+oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
+                                      void *data)
+{
+  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
+  if (!p) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (!device) {
+    return -1;
+  }
+
+  p->cb.cb = cb;
+  p->cb.data = data;
+  p->device1 = device;
+  p->device2 = NULL;
+
+  /**  1) switch dos to RFPRO
+   */
+  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
+  if (!p->switch_dos) {
+    oc_memb_free(&oc_credprov_ctx_m, p);
+    return -1;
+  }
+
+  oc_list_add(oc_credprov_ctx_l, p);
+  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+
+  return 0;
+}
+
+#endif /* OC_PKI */
+
 int
 oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
@@ -1021,6 +1481,69 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 }
 /* End of provision pair-wise credentials sequence */
 
+/* Provision role ACE for wildcard "*" resource with RW permissions */
+int
+oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
+                                   const char *authority,
+                                   oc_obt_device_status_cb_t cb, void *data)
+{
+  oc_sec_ace_t *ace = NULL;
+  oc_ace_res_t *res = NULL;
+  int ret = -1;
+
+  ace = oc_obt_new_ace_for_role(role, authority);
+  if (!ace) {
+    goto exit_aceprov_role_wc;
+  }
+
+  res = oc_obt_ace_new_resource(ace);
+  if (!res) {
+    goto exit_aceprov_role_wc;
+  }
+
+  oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE | OC_PERM_UPDATE);
+
+  if (oc_obt_provision_ace(subject, ace, cb, data) >= 0) {
+    ret = 0;
+    return ret;
+  }
+
+exit_aceprov_role_wc:
+  return ret;
+}
+
+/* Provision auth-crypt ACE for the wildcard "*" resource with RW permissions */
+int
+oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
+                                   oc_obt_device_status_cb_t cb, void *data)
+{
+  oc_sec_ace_t *ace = NULL;
+  oc_ace_res_t *res = NULL;
+  int ret = -1;
+
+  ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+  if (!ace) {
+    goto exit_aceprov_ac_wc;
+  }
+
+  res = oc_obt_ace_new_resource(ace);
+  if (!res) {
+    goto exit_aceprov_ac_wc;
+  }
+
+  oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE | OC_PERM_UPDATE);
+
+  if (oc_obt_provision_ace(subject, ace, cb, data) >= 0) {
+    ret = 0;
+    return ret;
+  }
+
+exit_aceprov_ac_wc:
+  return ret;
+}
+
 /* Provision access-control entries */
 static oc_sec_ace_t *
 oc_obt_new_ace(void)
@@ -1040,6 +1563,23 @@ oc_obt_new_ace_for_subject(oc_uuid_t *uuid)
   if (ace) {
     ace->subject_type = OC_SUBJECT_UUID;
     memcpy(ace->subject.uuid.id, uuid->id, 16);
+  }
+  return ace;
+}
+
+oc_sec_ace_t *
+oc_obt_new_ace_for_role(const char *role, const char *authority)
+{
+  if (!role) {
+    return NULL;
+  }
+  oc_sec_ace_t *ace = oc_obt_new_ace();
+  if (ace) {
+    ace->subject_type = OC_SUBJECT_ROLE;
+    oc_new_string(&ace->subject.role.role, role, strlen(role));
+    if (authority) {
+      oc_new_string(&ace->subject.role.authority, authority, strlen(authority));
+    }
   }
   return ace;
 }
@@ -1134,6 +1674,14 @@ free_ace(oc_sec_ace_t *ace)
       }
       oc_memb_free(&oc_res_m, res);
       res = (oc_ace_res_t *)oc_list_pop(ace->resources);
+    }
+    if (ace->subject_type == OC_SUBJECT_ROLE) {
+      if (oc_string_len(ace->subject.role.role) > 0) {
+        oc_free_string(&ace->subject.role.role);
+      }
+      if (oc_string_len(ace->subject.role.authority) > 0) {
+        oc_free_string(&ace->subject.role.authority);
+      }
     }
     oc_memb_free(&oc_aces_m, ace);
   }
@@ -1249,6 +1797,14 @@ provision_ace(int status, void *data)
           break;
         }
       } break;
+      case OC_SUBJECT_ROLE: {
+        oc_rep_set_text_string(subject, role,
+                               oc_string(ace->subject.role.role));
+        if (oc_string_len(ace->subject.role.authority) > 0) {
+          oc_rep_set_text_string(subject, authority,
+                                 oc_string(ace->subject.role.authority));
+        }
+      } break;
       default:
         break;
       }
@@ -1343,7 +1899,7 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
 /* End of provision ACE sequence */
 
 /* OBT initialization */
-void
+int
 oc_obt_init(void)
 {
   if (!oc_sec_is_operational(0)) {
@@ -1374,9 +1930,32 @@ oc_obt_init(void)
     oc_sec_dump_cred(0);
     oc_sec_dump_acl(0);
     oc_sec_dump_unique_ids(0);
+
+#ifdef OC_PKI
+    uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
+    uint8_t public_key_size = 0;
+    if (oc_generate_ecdsa_keypair(
+          public_key, OC_KEYPAIR_PUBKEY_SIZE, &public_key_size, private_key,
+          OC_KEYPAIR_PRIVKEY_SIZE, &private_key_size) < 0) {
+      OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
+             "certificate");
+    } else if (public_key_size != OC_KEYPAIR_PUBKEY_SIZE) {
+      OC_ERR("oc_obt: invalid ECDSA keypair for local domain root certificate");
+    } else {
+      root_cert_credid = oc_obt_generate_self_signed_root_cert(
+        root_subject, public_key, OC_KEYPAIR_PUBKEY_SIZE, private_key,
+        private_key_size);
+      if (root_cert_credid > 0) {
+        oc_obt_dump_state();
+        return 0;
+      }
+    }
+    return -1;
+#endif /* OC_PKI */
   } else {
     oc_obt_load_state();
   }
+  return 0;
 }
 
 void
