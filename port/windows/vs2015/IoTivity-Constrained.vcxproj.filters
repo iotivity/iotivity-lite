@@ -403,6 +403,12 @@
     <ClCompile Include="..\..\..\api\cloud\rd_client.c">
       <Filter>Core\cloud</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt_certs.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_obt_otm_cert.c">
+      <Filter>Security</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -623,6 +629,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_obt_internal.h">
+      <Filter>Security</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

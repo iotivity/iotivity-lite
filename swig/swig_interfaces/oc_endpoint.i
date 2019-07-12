@@ -92,5 +92,6 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(compare) oc_endpoint_compare;
 %rename(compareAddress) oc_endpoint_compare_address;
+%rename(setLocalAddress) oc_endpoint_set_local_address;
 %include "oc_endpoint.h"
 /*******************End oc_endpoint.h***********************/
