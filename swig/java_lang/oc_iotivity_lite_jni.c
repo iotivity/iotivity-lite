@@ -18,6 +18,7 @@
 #include "port/oc_log.h"
 #include "port/oc_storage.h"
 #include <assert.h>
+#include <stdlib.h>
 
 #define JNI_CURRENT_VERSION JNI_VERSION_1_6
 
