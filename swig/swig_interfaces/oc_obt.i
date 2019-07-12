@@ -3,6 +3,7 @@
 %include "typemaps.i"
 %include "iotivity.swg"
 
+%import "oc_api.i"
 %import "oc_uuid.i"
 
 %pragma(java) jniclasscode=%{
@@ -289,7 +290,6 @@ int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
   JCALL2(ReleaseStringUTFChars, jenv, $input, $1);
 }
 
-
 %ignore oc_obt_perform_random_pin_otm;
 %rename(performRandomPinOtm) jni_obt_perform_random_pin_otm;
 %inline %{
@@ -305,6 +305,24 @@ int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, const char *pin, size_t pin_
   return return_value;
 }
 %}
+
+%ignore oc_obt_perform_cert_otm;
+%rename(performCertOtm) jni_obt_perform_cert_otm;
+%inline %{
+int jni_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_perform_cert_otm(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%rename(addRoleId) oc_obt_add_roleid;
+%rename(freeRoleId) oc_obt_free_roleid;
 
 %ignore oc_obt_device_hard_reset;
 %rename(deviceHardReset) jni_obt_device_hard_reset;
@@ -379,8 +397,39 @@ int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, o
 }
 %}
 
+%ignore oc_obt_provision_identity_certificate;
+%rename(provisionIdentityCertificate) jni_obt_provision_identity_certificate;
+%inline %{
+int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_identity_certificate(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_provision_role_certificate;
+%rename(provisionRoleCertificate) jni_obt_provision_role_certificate;
+%inline %{
+int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_role_certificate(roles, uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
 %rename(newAceForSubject) oc_obt_new_ace_for_subject;
 %rename(newAceForConnection) oc_obt_new_ace_for_connection;
+%rename(newAceForRole) oc_obt_new_ace_for_role;
 %rename(aceNewResource) oc_obt_ace_new_resource;
 %rename(aceResourceSetHref) oc_obt_ace_resource_set_href;
 %rename(aceResourceSetNumRt) oc_obt_ace_resource_set_num_rt;
@@ -403,5 +452,36 @@ int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_s
 }
 %}
 %rename(freeAce) oc_obt_free_ace;
+
+%ignore oc_obt_provision_role_wildcard_ace;
+%rename(provisionRoleWildcardAce) jni_obt_provision_role_wildcard_ace;
+%inline %{
+int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, const char *authority,
+                                        oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_role_wildcard_ace(subject, role, authority, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_obt_provision_auth_wildcard_ace;
+%rename(provisionAuthWildcardAce) jni_obt_provision_auth_wildcard_ace;
+%inline %{
+int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_auth_wildcard_ace(subject, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
 
 %include "oc_obt.h";
