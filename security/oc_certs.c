@@ -18,6 +18,7 @@
 #ifdef OC_PKI
 
 #include "oc_certs.h"
+#include "mbedtls/bignum.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/oid.h"
@@ -30,6 +31,39 @@
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
+
+int
+oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
+{
+  mbedtls_ctr_drbg_context ctr_drbg;
+  mbedtls_ctr_drbg_init(&ctr_drbg);
+
+  mbedtls_entropy_context entropy;
+  mbedtls_entropy_init(&entropy);
+
+#define PERSONALIZATION_DATA "IoTivity-Lite-Ceriticate_Serial_Number"
+
+  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                  (const unsigned char *)PERSONALIZATION_DATA,
+                                  sizeof(PERSONALIZATION_DATA));
+
+#undef PERSONALIZATION_DATA
+
+  if (ret < 0) {
+    return -1;
+  }
+
+  mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
+
+  ret = mbedtls_mpi_fill_random(&crt->serial, 20, mbedtls_ctr_drbg_random,
+                                &ctr_drbg);
+
+  if (ret < 0) {
+    return -1;
+  }
+
+  return 0;
+}
 
 int
 oc_certs_extract_public_key(const mbedtls_x509_crt *cert, uint8_t *public_key)
@@ -66,20 +100,28 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
 
 int
 oc_certs_parse_role_certificate(const unsigned char *role_certificate,
-                                size_t cert_size, oc_sec_cred_t *role_cred)
+                                size_t cert_size, oc_sec_cred_t *role_cred,
+                                bool roles_resource)
 {
-  mbedtls_x509_crt *cert = (mbedtls_x509_crt *)role_cred->ctx;
+  mbedtls_x509_crt c;
+  mbedtls_x509_crt *cert;
+  if (roles_resource) {
+    cert = (mbedtls_x509_crt *)role_cred->ctx;
+  } else {
+    cert = &c;
+  }
+  mbedtls_x509_crt_init(cert);
 
   /* Parse role certificate chain */
   int ret = mbedtls_x509_crt_parse(cert, role_certificate, cert_size);
   if (ret < 0) {
-    OC_ERR("could not parse role cert chain");
-    return -1;
+    OC_ERR("could not parse role cert chain %d", ret);
+    goto exit_parse_role_cert;
   }
 
   if (oc_certs_validate_role_cert(cert) < 0) {
     OC_ERR("role certificate does not meet the necessary constraints");
-    return -1;
+    goto exit_parse_role_cert;
   }
 
   /* Verify that the role certificate was signed by a CA */
@@ -90,7 +132,7 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
                                              NULL, &flags, NULL, NULL);
   if (ret != 0 || flags != 0) {
     OC_ERR("error verifying role certificate");
-    return -1;
+    goto exit_parse_role_cert;
   }
 
   /* Extract a Role ID from the role certificate's
@@ -154,13 +196,31 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
 
       if (got_roleid && got_authority) {
         OC_DBG("successfully parsed role certificate");
+        if (!roles_resource) {
+          mbedtls_x509_crt_free(cert);
+        }
         return 0;
       }
     }
   }
 
+exit_parse_role_cert:
+  if (!roles_resource) {
+    mbedtls_x509_crt_free(cert);
+  }
   OC_ERR("invalid role certificate");
   return -1;
+}
+
+int
+oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len)
+{
+  if (buf_len < 45) {
+    return -1;
+  }
+  sprintf(buf, "CN=uuid:");
+  oc_uuid_to_str(uuid, buf + 8, 37);
+  return 0;
 }
 
 int
@@ -645,6 +705,72 @@ oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
 }
 
 int
+oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
+{
+  const char *pem_begin = "-----BEGIN ";
+  if (cert_len > strlen(pem_begin) &&
+      memcmp(cert, pem_begin, strlen(pem_begin)) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
+int
+oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
+                      oc_string_t *subject_DN, uint8_t *public_key)
+{
+  int ret = -1;
+  mbedtls_x509_csr c;
+
+  ret = mbedtls_x509_csr_parse(&c, (const unsigned char *)csr, csr_len);
+  if (ret < 0) {
+    OC_ERR("unable to parse CSR %d", ret);
+    return -1;
+  }
+
+  if (mbedtls_pk_get_type(&c.pk) == MBEDTLS_PK_ECKEY &&
+      c.sig_md == MBEDTLS_MD_SHA256 && c.sig.len != 0 && c.sig.p != NULL &&
+      c.cri.len != 0 && c.cri.p != NULL) {
+    unsigned char CertificationRequestInfo_SHA256[MBEDTLS_MD_MAX_SIZE];
+    ret = mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), c.cri.p,
+                     c.cri.len, CertificationRequestInfo_SHA256);
+    if (ret < 0) {
+      OC_ERR("unable to hash CertificationRequestInfo in CSR");
+      goto exit_csr;
+    }
+    ret =
+      mbedtls_pk_verify((mbedtls_pk_context *)&c.pk, MBEDTLS_MD_SHA256,
+                        CertificationRequestInfo_SHA256, 0, c.sig.p, c.sig.len);
+    if (ret < 0) {
+      OC_ERR("unable to verify signature in CSR");
+      goto exit_csr;
+    }
+
+    char DN[512];
+    ret = mbedtls_x509_dn_gets(DN, 512, &c.subject);
+    if (ret < 0) {
+      OC_ERR("unable to retrieve subject from CSR");
+      goto exit_csr;
+    }
+
+    oc_new_string(subject_DN, DN, ret);
+
+    ret = mbedtls_pk_write_pubkey_der((mbedtls_pk_context *)&c.pk, public_key,
+                                      OC_KEYPAIR_PUBKEY_SIZE);
+  }
+
+exit_csr:
+  mbedtls_x509_csr_free(&c);
+  if (ret < 0) {
+    OC_ERR("received invalid or non-compliant CSR");
+    oc_free_string(subject_DN);
+    return -1;
+  }
+
+  return 0;
+}
+
+int
 oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
@@ -660,8 +786,9 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   }
 
   char subject[50];
-  sprintf(subject, "CN=" UUID_PREFIX);
-  oc_uuid_to_str(uuid, subject + UUID_PREFIX_LEN + 3, 37);
+  if (oc_certs_encode_CN_with_UUID(uuid, subject, 50) < 0) {
+    return -1;
+  }
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -712,14 +839,13 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 
   mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
 
-  ret = mbedtls_x509write_csr_der(&request, csr, csr_len,
+  ret = mbedtls_x509write_csr_pem(&request, csr, csr_len,
                                   mbedtls_ctr_drbg_random, &ctr_drbg);
 
-  if (ret <= 0) {
+  if (ret != 0) {
     OC_ERR("could not write CSR for device %zd into buffer", device);
     goto generate_csr_error;
   }
-  memmove(csr, csr + csr_len - ret, ret);
 
   mbedtls_pk_free(&pk);
   mbedtls_ctr_drbg_free(&ctr_drbg);

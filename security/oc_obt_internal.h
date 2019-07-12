@@ -17,13 +17,15 @@
 #ifndef OC_OBT_INTERNAL_H
 #define OC_OBT_INTERNAL_H
 
+#include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_uuid.h"
 #include "security/oc_pstat.h"
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #define DISCOVERY_CB_PERIOD (5)
@@ -100,6 +102,7 @@ typedef struct oc_credprov_ctx_t
   oc_device_t *device2;
   oc_switch_dos_ctx_t *switch_dos;
   uint8_t key[16];
+  oc_role_t *roles;
 } oc_credprov_ctx_t;
 
 /* Context to be maintained over ACE provisioning sequence */
@@ -116,7 +119,7 @@ typedef enum {
   OC_OBT_OTM_JW = 0,
   OC_OBT_RDP,
   OC_OBT_OTM_RDP,
-  OC_OBT_OTM_MFG
+  OC_OBT_OTM_CERT
 } oc_obt_otm_t;
 
 oc_endpoint_t *oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint);
@@ -133,6 +136,25 @@ void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx);
 
+int oc_obt_generate_self_signed_root_cert(const char *subject_name,
+                                          const uint8_t *public_key,
+                                          const uint8_t public_key_size,
+                                          const uint8_t *private_key,
+                                          const uint8_t private_key_size);
+int oc_obt_generate_identity_cert(const char *subject_name,
+                                  const uint8_t *subject_public_key,
+                                  const uint8_t subject_public_key_size,
+                                  const char *issuer_name,
+                                  const uint8_t *issuer_private_key,
+                                  const uint8_t issuer_private_key_size,
+                                  oc_string_t *id_cert);
+int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
+                              const uint8_t *subject_public_key,
+                              const uint8_t subject_public_key_size,
+                              const char *issuer_name,
+                              const uint8_t *issuer_private_key,
+                              const uint8_t issuer_private_key_size,
+                              oc_string_t *role_cert);
 #ifdef __cplusplus
 }
 #endif

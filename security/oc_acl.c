@@ -207,11 +207,13 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
              memcmp(oc_string(subject->role.role),
                     oc_string(ace->subject.role.role),
                     oc_string_len(subject->role.role)) == 0)) {
-          if (oc_string_len(ace->subject.role.authority) ==
-                oc_string_len(subject->role.authority) &&
-              memcmp(oc_string(subject->role.authority),
-                     oc_string(ace->subject.role.authority),
-                     oc_string_len(subject->role.authority)) == 0) {
+          if (oc_string_len(ace->subject.role.authority) == 0) {
+            return ace;
+          } else if (oc_string_len(ace->subject.role.authority) ==
+                       oc_string_len(subject->role.authority) &&
+                     memcmp(oc_string(subject->role.authority),
+                            oc_string(ace->subject.role.authority),
+                            oc_string_len(subject->role.authority)) == 0) {
             return ace;
           }
         }
@@ -844,36 +846,6 @@ oc_sec_acl_default(size_t device)
   OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
-}
-
-void
-oc_sec_set_post_otm_acl(size_t device)
-{
-  oc_ace_subject_t _auth_crypt, _anon_clear;
-  memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-  _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-
-  // pre otm:
-  // anon-clear R: res, p, d
-  // anon-clear RWD: doxm, pstat, acl2, cred
-  // post otm:
-  // anon-clear R: res, p, d
-  // anon-clear RWD: doxm, pstat
-
-  /* Remove anon-clear RWD access to acl2 and cred */
-  oc_sec_ace_t *__anon_clear = NULL;
-  do {
-    __anon_clear = oc_sec_acl_find_subject(__anon_clear, OC_SUBJECT_CONN,
-                                           &_anon_clear, -1, 14, device);
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl2");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/cred");
-    }
-  } while (__anon_clear);
 }
 
 bool

@@ -620,6 +620,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
       case OC_REP_OBJECT_ARRAY: {
         oc_rep_t *eps = link->value.object_array;
         oc_endpoint_t *eps_cur = NULL;
+        oc_endpoint_t temp_ep;
         while (eps != NULL) {
           oc_rep_t *ep = eps->value.object;
           while (ep != NULL) {
@@ -627,8 +628,6 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             case OC_REP_STRING: {
               if (oc_string_len(ep->name) == 2 &&
                   memcmp(oc_string(ep->name), "ep", 2) == 0) {
-                oc_endpoint_t temp_ep;
-                memset(&temp_ep, 0, sizeof(oc_endpoint_t));
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
                   if (eps_cur) {
@@ -640,8 +639,12 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
                   if (eps_cur) {
                     memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
+                    eps_cur->next = NULL;
+                    eps_cur->device = endpoint->device;
                     memcpy(eps_cur->di.id, di.id, 16);
                     eps_cur->interface_index = endpoint->interface_index;
+                    oc_endpoint_set_local_address(eps_cur,
+                                                  endpoint->interface_index);
                     if (oc_ipv6_endpoint_is_link_local(eps_cur) == 0 &&
                         oc_ipv6_endpoint_is_link_local(endpoint) == 0) {
                       eps_cur->addr.ipv6.scope = endpoint->addr.ipv6.scope;

@@ -94,6 +94,7 @@ int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
 int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
 int oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2);
+void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index);
 
 #ifdef __cplusplus
 }

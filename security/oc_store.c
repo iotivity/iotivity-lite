@@ -249,7 +249,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   if (ret <= 0) {
-    if (oc_generate_ecdsa_keypair(device) < 0) {
+    if (oc_generate_ecdsa_keypair_for_device(device) < 0) {
       OC_ERR("error generating ECDSA keypair for device %zd", device);
     }
     oc_sec_dump_ecdsa_keypair(device);

@@ -474,6 +474,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
     } else {
+      OC_DBG("oc_tls: deriving PPSK for PIN OTM");
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
       oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
       if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
@@ -483,16 +484,19 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 
         if (oc_tls_pbkdf2(PIN, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
             0) {
+          OC_ERR("oc_tls: error deriving PPSK");
           return -1;
         }
 
         if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
+          OC_ERR("oc_tls: error applying PPSK to current handshake");
           return -1;
         }
         return 0;
       }
     }
   }
+  OC_ERR("oc_tls: could not find peer credential");
   return -1;
 }
 
@@ -560,13 +564,12 @@ is_known_identity_cert(oc_sec_cred_t *cred)
 
   /* Identity cert chain currently tracked by mbedTLS */
   mbedtls_x509_crt *id_cert = &certs->cert;
-
+  mbedtls_x509_crt cert_in_cred;
+  mbedtls_x509_crt *cert = &cert_in_cred;
 next_cred_in_chain:
 
   while (cred) {
-    mbedtls_x509_crt cert_in_cred;
-    mbedtls_x509_crt_init(&cert_in_cred);
-    mbedtls_x509_crt *cert = &cert_in_cred;
+    mbedtls_x509_crt_init(cert);
 
     /* Parse cert in cred entry for matching below */
     size_t cert_len = oc_string_len(cred->publicdata.data);
@@ -590,24 +593,24 @@ next_cred_in_chain:
       if (id_cert->raw.len == cert->raw.len &&
           memcmp(id_cert->raw.p, cert->raw.p, cert->raw.len) == 0) {
 
-        if (!cert->next) {
-          OC_DBG("found matching cert..proceeding further down the chain");
-          cred = cred->chain;
-          mbedtls_x509_crt_free(cert);
-          goto next_cred_in_chain;
-        }
-
         if (cert->next) {
           OC_DBG("found matching cert..proceeding further down the chain");
           cert = cert->next;
           continue;
+        } else {
+          OC_DBG("found matching cert..proceeding further down the chain");
+          cred = cred->chain;
+          mbedtls_x509_crt_free(&cert_in_cred);
+          goto next_cred_in_chain;
         }
       } else if (!id_cert->next) {
         OC_DBG("new cert chains to known cert chain; Add cert to chain and "
                "proceed...");
-        ret = mbedtls_x509_crt_parse_der(id_cert, cert->raw.p, cert->raw.len);
+        ret =
+          mbedtls_x509_crt_parse_der(&certs->cert, cert->raw.p, cert->raw.len);
         if (ret < 0) {
           OC_WRN("could not parse cert in provided chain");
+          mbedtls_x509_crt_free(&cert_in_cred);
           return true;
         }
 #ifdef OC_DEBUG
@@ -626,7 +629,7 @@ next_cred_in_chain:
           continue;
         } else {
           OC_DBG("processing other new certs, if any, further down the chain");
-          mbedtls_x509_crt_free(cert);
+          mbedtls_x509_crt_free(&cert_in_cred);
           cred = cred->chain;
           goto next_cred_in_chain;
         }
@@ -797,7 +800,7 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
     &trust_anchors, (const unsigned char *)oc_string(cred->publicdata.data),
     oc_string_len(cred->publicdata.data) + 1);
   if (ret != 0) {
-    OC_WRN("could not parse an trustca/mfgtrustca root certificate");
+    OC_WRN("could not parse an trustca/mfgtrustca root certificate %d", ret);
     return;
   }
 
@@ -862,19 +865,34 @@ get_identity_cert_for_session(const mbedtls_ssl_config *conf)
 }
 #endif /* OC_PKI */
 
-#ifdef OC_CLIENT
-void
-oc_tls_select_psk_ciphersuite(void)
-{
-  ciphers = (int *)psk_priority;
-}
-#endif /* OC_CLIENT */
-
 static void
 oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
   (void)endpoint;
-
+  (void)anon_ecdh_priority;
+#ifdef OC_PKI
+  mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
+#ifdef OC_CLIENT
+  bool loaded_chain = false;
+#endif /* OC_CLIENT */
+  size_t device = endpoint->device;
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  /* Decide between configuring the identity cert chain vs manufacturer cert
+   * chain for this device based on device ownership status.
+   */
+  if (doxm->owned &&
+      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
+#ifdef OC_CLIENT
+    loaded_chain = true;
+#endif /* OC_CLIENT */
+  } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) == 0) {
+#ifdef OC_CLIENT
+    loaded_chain = true;
+#endif /* OC_CLIENT */
+  }
+  selected_mfg_cred = -1;
+  selected_id_cred = -1;
+#endif /* OC_PKI */
 #ifdef OC_SERVER
   oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
@@ -883,24 +901,39 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 #endif /* OC_SERVER */
     if (!ciphers) {
     ciphers = (int *)psk_priority;
-
 #ifdef OC_CLIENT
     oc_sec_cred_t *cred =
       oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
-
-    if (!cred) {
-      ciphers = (int *)anon_ecdh_priority;
+    if (cred && cred->credtype == OC_CREDTYPE_PSK) {
+      ciphers = (int *)psk_priority;
     }
 #ifdef OC_PKI
-    else if (cred->credtype == OC_CREDTYPE_CERT) {
+    else if (loaded_chain) {
       ciphers = (int *)cert_priority;
     }
 #endif /* OC_PKI */
+    else {
+      ciphers = (int *)anon_ecdh_priority;
+    }
 #endif /* OC_CLIENT */
   }
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
   ciphers = NULL;
 }
+
+#ifdef OC_CLIENT
+void
+oc_tls_select_psk_ciphersuite(void)
+{
+  ciphers = (int *)psk_priority;
+}
+
+void
+oc_tls_select_anon_ciphersuite(void)
+{
+  ciphers = (int *)anon_ecdh_priority;
+}
+#endif /* OC_CLIENT */
 
 #ifdef OC_PKI
 static int
@@ -923,7 +956,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
        * after validating the end-entity certificate to authorize the
        * the peer per the OCF Specification. */
       oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
-      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+      if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
         while (ca_cert) {
           if (ca_cert->device == id_cert->device &&
@@ -943,25 +976,30 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   }
 
   if (depth == 0) {
-    /* Parse the peer's subjectuuid from its end-entity certificate */
-    oc_string_t uuid;
-    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
-      OC_ERR("unable to retrieve UUID from the cert's CN");
-      return -1;
-    }
-
-    oc_str_to_uuid(oc_string(uuid), &peer->uuid);
-    OC_DBG("attempting to connect with peer %s", oc_string(uuid));
-    oc_free_string(&uuid);
-
-    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
-      OC_ERR("unable to extract public key from cert");
-      return -1;
-    }
-
     oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
     if (!id_cert) {
       OC_ERR("could not find the identity cert used for this session");
+      return 0;
+    }
+
+    /* Parse the peer's subjectuuid from its end-entity certificate */
+    oc_string_t uuid;
+    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
+      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+        OC_ERR("unable to retrieve UUID from the cert's CN");
+        return -1;
+      } else {
+        peer->uuid.id[0] = '*';
+        OC_DBG("attempting to connect with peer *");
+      }
+    } else {
+      oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+      OC_DBG("attempting to connect with peer %s", oc_string(uuid));
+      oc_free_string(&uuid);
+    }
+
+    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+      OC_ERR("unable to extract public key from cert");
       return -1;
     }
 
@@ -1061,21 +1099,6 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
     mbedtls_ssl_conf_handshake_timeout(conf, 2500, 20000);
   }
 
-#ifdef OC_PKI
-  mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  /* Decide between configuring the identity cert chain vs manufacturer cert
-   * chain for this device based on device ownership status.
-   */
-  if (doxm->owned &&
-      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
-  } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) != 0) {
-    OC_WRN("could not configure mfg cert chain");
-  }
-  selected_mfg_cred = -1;
-  selected_id_cred = -1;
-#endif /* OC_PKI */
   return 0;
 }
 
@@ -1469,6 +1492,9 @@ oc_tls_init_connection(oc_message_t *message)
 bool
 oc_tls_uses_psk_cred(oc_tls_peer_t *peer)
 {
+  if (!peer) {
+    return false;
+  }
   int cipher = peer->ssl_ctx.session->ciphersuite;
   if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == cipher ||
       MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == cipher) {
