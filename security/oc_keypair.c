@@ -117,10 +117,9 @@ oc_sec_encode_ecdsa_keypair(size_t device)
 }
 
 int
-oc_generate_ecdsa_keypair(uint8_t *public_key, uint8_t public_key_buf_size,
-                          uint8_t *public_key_size, uint8_t *private_key,
-                          uint8_t private_key_buf_size,
-                          uint8_t *private_key_size)
+oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
+                          size_t *public_key_size, uint8_t *private_key,
+                          size_t private_key_buf_size, size_t *private_key_size)
 {
   mbedtls_pk_context pk;
   mbedtls_entropy_context entropy;
@@ -170,7 +169,7 @@ oc_generate_ecdsa_keypair(uint8_t *public_key, uint8_t public_key_buf_size,
     OC_ERR("error writing EC public key to internal structure");
     goto generate_ecdsa_keypair_error;
   }
-  *public_key_size = ret;
+  *public_key_size = (size_t)ret;
 
   mbedtls_entropy_free(&entropy);
   mbedtls_ctr_drbg_free(&ctr_drbg);
@@ -195,7 +194,7 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
     }
   }
 
-  uint8_t public_key_size = 0;
+  size_t public_key_size = 0;
   if (oc_generate_ecdsa_keypair(
         kp->public_key, OC_KEYPAIR_PUBKEY_SIZE, &public_key_size,
         kp->private_key, OC_KEYPAIR_PRIVKEY_SIZE, &kp->private_key_size) < 0) {

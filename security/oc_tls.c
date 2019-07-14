@@ -869,7 +869,6 @@ static void
 oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
   (void)endpoint;
-  (void)anon_ecdh_priority;
 #ifdef OC_PKI
   mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
 #ifdef OC_CLIENT
@@ -1212,6 +1211,7 @@ oc_tls_init_context(void)
   if (mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
                             (const unsigned char *)PERSONALIZATION_DATA,
                             strlen(PERSONALIZATION_DATA)) != 0) {
+    OC_ERR("error initializing RNG");
     goto dtls_init_err;
   }
   if (mbedtls_ssl_cookie_setup(&cookie_ctx, mbedtls_ctr_drbg_random,

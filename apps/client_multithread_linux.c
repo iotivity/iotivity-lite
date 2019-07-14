@@ -107,7 +107,7 @@ pong_received_handler(oc_client_response_t *data)
       oc_connectivity_end_session(data->endpoint);
     } else {
       ping_timeout <<= 1;
-      printf("PING send again.[retry: %d, time: %u]\n", ping_count,
+      printf("PING send again.[retry: %zd, time: %u]\n", ping_count,
              ping_timeout);
       send_ping(ping_timeout);
     }

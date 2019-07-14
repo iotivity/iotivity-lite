@@ -942,7 +942,7 @@ network_event_thread(void *data)
 
     common:
 #ifdef OC_DEBUG
-      PRINT("Incoming message of size %d bytes from ", message->length);
+      PRINT("Incoming message of size %zd bytes from ", message->length);
       PRINTipaddr(message->endpoint);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -1042,7 +1042,7 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %d bytes to ", message->length);
+  PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -1289,7 +1289,7 @@ handle_session_event_callback(const oc_endpoint_t *endpoint,
 static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing IPv4 connectivity for device %d", dev->device);
+  OC_DBG("Initializing IPv4 connectivity for device %zd", dev->device);
   memset(&dev->mcast4, 0, sizeof(struct sockaddr_storage));
   memset(&dev->server4, 0, sizeof(struct sockaddr_storage));
 
@@ -1398,7 +1398,7 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->dtls4_port = ntohs(sm->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized IPv4 connectivity for device %d",
+  OC_DBG("Successfully initialized IPv4 connectivity for device %zd",
          dev->device);
 
   return 0;
@@ -1408,7 +1408,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 int
 oc_connectivity_init(size_t device)
 {
-  OC_DBG("Initializing connectivity for device %d", device);
+  OC_DBG("Initializing connectivity for device %zd", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
@@ -1597,7 +1597,7 @@ oc_connectivity_init(size_t device)
     return -1;
   }
 
-  OC_DBG("Successfully initialized connectivity for device %d", device);
+  OC_DBG("Successfully initialized connectivity for device %zd", device);
 
   return 0;
 }
@@ -1640,7 +1640,7 @@ oc_connectivity_shutdown(size_t device)
   oc_list_remove(ip_contexts, dev);
   oc_memb_free(&ip_context_s, dev);
 
-  OC_DBG("oc_connectivity_shutdown for device %d", device);
+  OC_DBG("oc_connectivity_shutdown for device %zd", device);
 }
 
 #ifdef OC_TCP
