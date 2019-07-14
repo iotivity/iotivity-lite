@@ -92,16 +92,21 @@ DTLS= \
 	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c	\
-	x509write_csr.c			x509write_crt.c			x509_create.c
+	x509write_csr.c			x509write_crt.c			x509_create.c	x509_csr.c
 
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
-CTIMESTAMP=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
+ifeq ($(PKI),1)
+	CTIMESTAMP=../../api/c-timestamp/timestamp_tm.c
+endif
+
+CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
 SRC_COMMON:=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
 SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 # From API level 24 on Android supports getifaddrs itself.
 ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
@@ -117,10 +122,12 @@ HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
+CFLAGS_CLOUD=-I../../api/cloud
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_API__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
-OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o,$(notdir $(SRC:.c=.o))))
+OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
+OBJ_CLOUD=$(addprefix ${OBJDIR}/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
 LIBS?= -lm -llog
@@ -128,6 +135,13 @@ LIBS?= -lm -llog
 SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
 	  smart_lock server_multithread_linux client_multithread_linux
+
+ifeq ($(CLOUD),1)
+	CFLAGS += -DOC_CLOUD
+	TCP=1
+	IPV4=1
+	SAMPLES += cloud_linux cloud_tests
+endif
 
 OBT = onboarding_tool
 
@@ -154,7 +168,9 @@ ifneq ($(SECURE),0)
 ifeq ($(DYNAMIC),1)
 	SRC += ../../security/oc_obt.c \
 		../../security/oc_obt_otm_justworks.c \
-		../../security/oc_obt_otm_randompin.c
+		../../security/oc_obt_otm_randompin.c \
+		../../security/oc_obt_otm_cert.c \
+		../../security/oc_obt_certs.c
 	SAMPLES += ${OBT}
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
@@ -168,7 +184,7 @@ ifeq ($(IPV4),1)
 endif
 
 ifeq ($(TCP),1)
-	EXTRA_CFLAGS += -DOC_TCP
+	CFLAGS += -DOC_TCP
 endif
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
@@ -196,14 +212,18 @@ ${OBJDIR}/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+${OBJDIR}/cloud/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
+
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
 libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
 server: libiotivity-constrained-server.a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
@@ -243,6 +263,12 @@ multi_device_server: libiotivity-constrained-server.a
 
 multi_device_client: libiotivity-constrained-client.a
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+cloud_linux: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
+	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+
+cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
+	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
 ${OBT}: libiotivity-constrained-client.a
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
