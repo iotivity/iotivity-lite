@@ -19,6 +19,7 @@
 #define __USE_GNU
 
 #include "tcpadapter.h"
+#include "api/oc_session_events_internal.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "oc_endpoint.h"
@@ -29,10 +30,24 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <ifaddrs.h>
 #include <net/if.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <android/api-level.h>
+#if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
+#error __ANDROID_API__ not defined
+#endif
+#include <arpa/inet.h>
+#if __ANDROID_API__ >= 24
+#include <ifaddrs.h>
+#define OC_GETIFADDRS getifaddrs
+#define OC_FREEIFADDRS freeifaddrs
+#else
+#include "ifaddrs-android.h"
+#define OC_GETIFADDRS android_getifaddrs
+#define OC_FREEIFADDRS android_freeifaddrs
+#endif /* __ANDROID_API__ >= 24 */
 
 #ifdef OC_TCP
 
@@ -105,7 +120,7 @@ get_interface_index(int sock)
   }
 
   struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
+  if (OC_GETIFADDRS(&ifs) < 0) {
     OC_ERR("querying interfaces: %d", errno);
     return -1;
   }
@@ -135,7 +150,7 @@ get_interface_index(int sock)
     }
   }
 
-  freeifaddrs(ifs);
+  OC_FREEIFADDRS(ifs);
   return interface_index;
 }
 
@@ -159,7 +174,11 @@ oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 static void
 free_tcp_session(tcp_session_t *session)
 {
-  oc_session_end_event(&session->endpoint);
+  oc_list_remove(session_list, session);
+
+  if (!oc_session_events_is_ongoing()) {
+    oc_session_end_event(&session->endpoint);
+  }
 
   FD_CLR(session->sock, &session->dev->rfds);
 
@@ -171,7 +190,6 @@ free_tcp_session(tcp_session_t *session)
 
   close(session->sock);
 
-  oc_list_remove(session_list, session);
   oc_memb_free(&tcp_session_s, session);
 
   OC_DBG("freed TCP session");
@@ -599,7 +617,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_DBG("Sent %zd bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
 
@@ -614,7 +632,7 @@ oc_tcp_send_buffer_done:
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter IPv4 for device %d", dev->device);
+  OC_DBG("Initializing TCP adapter IPv4 for device %zd", dev->device);
 
   memset(&dev->tcp.server4, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in *l = (struct sockaddr_in *)&dev->tcp.server4;
@@ -670,7 +688,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
     ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized TCP adapter IPv4 for device %d",
+  OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
          dev->device);
 
   return 0;
@@ -680,7 +698,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter for device %d", dev->device);
+  OC_DBG("Initializing TCP adapter for device %zd", dev->device);
 
   if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0) {
     oc_abort("error initializing TCP adapter mutex");
@@ -761,7 +779,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 #endif
 #endif
 
-  OC_DBG("Successfully initialized TCP adapter for device %d", dev->device);
+  OC_DBG("Successfully initialized TCP adapter for device %zd", dev->device);
 
   return 0;
 }
@@ -796,7 +814,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
 
   pthread_mutex_destroy(&dev->tcp.mutex);
 
-  OC_DBG("oc_tcp_connectivity_shutdown for device %d", dev->device);
+  OC_DBG("oc_tcp_connectivity_shutdown for device %zd", dev->device);
 }
 
 tcp_csm_state_t
