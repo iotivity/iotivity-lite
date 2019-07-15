@@ -38,7 +38,7 @@ cloud_manager_cb(oc_cloud_context_t *ctx)
   cloud_rd_manager_status_changed(ctx);
 
   if (ctx->callback) {
-    ctx->callback(ctx->store.status, ctx->user_data);
+    ctx->callback(ctx, ctx->store.status, ctx->user_data);
   }
 }
 
@@ -101,8 +101,10 @@ cloud_close_endpoint(oc_endpoint_t *cloud_ep)
 }
 
 static void
-cloud_register_internal_cb(oc_cloud_status_t status, void *data)
+cloud_register_internal_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                           void *data)
 {
+  (void)ctx;
   (void)status;
   (void)data;
 }
@@ -117,10 +119,11 @@ cloud_register_internal(void *user_data)
 
 #ifdef OC_SECURITY
 static void
-cloud_deregister_on_reset_internal(oc_cloud_status_t status, void *data)
+cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
+                                   oc_cloud_status_t status, void *data)
 {
   (void)status;
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   cloud_close_endpoint(ctx->cloud_ep);
   cloud_store_deinit(&ctx->store);
   cloud_manager_stop(ctx);

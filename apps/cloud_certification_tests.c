@@ -91,9 +91,10 @@ app_init(void)
 }
 
 static void
-cloud_refresh_token_cb(oc_cloud_status_t status, void *data)
+cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                       void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Refresh Token status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -141,9 +142,10 @@ cloud_refresh_token(void)
 }
 
 static void
-cloud_deregister_cb(oc_cloud_status_t status, void *data)
+cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                    void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud DeRegister status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -188,9 +190,9 @@ cloud_deregister(void)
 }
 
 static void
-cloud_logout_cb(oc_cloud_status_t status, void *data)
+cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Logout status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -232,9 +234,9 @@ cloud_logout(void)
 }
 
 static void
-cloud_login_cb(oc_cloud_status_t status, void *data)
+cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Login status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -273,9 +275,9 @@ cloud_login(void)
 }
 
 static void
-cloud_register_cb(oc_cloud_status_t status, void *data)
+cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Register status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
