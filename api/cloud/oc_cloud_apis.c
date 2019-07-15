@@ -73,7 +73,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   }
 
   if (ctx->store.status & OC_CLOUD_REGISTERED) {
-    cb(ctx->store.status, data);
+    cb(ctx, ctx->store.status, data);
     return 0;
   }
 
@@ -115,7 +115,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   }
 
   if (ctx->store.status & OC_CLOUD_LOGGED_IN) {
-    cb(ctx->store.status, data);
+    cb(ctx, ctx->store.status, data);
     return 0;
   }
 
@@ -170,7 +170,7 @@ cloud_logout_internal(oc_client_response_t *data)
   }
 
   if (p->cb) {
-    p->cb(ctx->store.status, p->data);
+    p->cb(ctx, ctx->store.status, p->data);
   }
   free_api_param(p);
 
@@ -228,7 +228,7 @@ cloud_deregistered_internal(oc_client_response_t *data)
   }
 
   if (p->cb) {
-    p->cb(ctx->store.status, p->data);
+    p->cb(ctx, ctx->store.status, p->data);
   }
   free_api_param(p);
 

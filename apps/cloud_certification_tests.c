@@ -91,9 +91,10 @@ app_init(void)
 }
 
 static void
-cloud_refresh_token_cb(oc_cloud_status_t status, void *data)
+cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                       void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Refresh Token status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -131,7 +132,7 @@ cloud_refresh_token(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_cloud_refresh_token(ctx, cloud_refresh_token_cb, ctx);
+  int ret = oc_cloud_refresh_token(ctx, cloud_refresh_token_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
     PRINT("\nCould not issue Refresh Token request\n");
@@ -141,9 +142,10 @@ cloud_refresh_token(void)
 }
 
 static void
-cloud_deregister_cb(oc_cloud_status_t status, void *data)
+cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                    void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud DeRegister status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -178,7 +180,7 @@ cloud_deregister(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_cloud_deregister(ctx, cloud_deregister_cb, ctx);
+  int ret = oc_cloud_deregister(ctx, cloud_deregister_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
     PRINT("\nCould not issue Cloud DeRegister request\n");
@@ -188,9 +190,9 @@ cloud_deregister(void)
 }
 
 static void
-cloud_logout_cb(oc_cloud_status_t status, void *data)
+cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Logout status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -222,7 +224,7 @@ cloud_logout(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_cloud_logout(ctx, cloud_logout_cb, ctx);
+  int ret = oc_cloud_logout(ctx, cloud_logout_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
     PRINT("\nCould not issue Cloud Logout request\n");
@@ -232,9 +234,9 @@ cloud_logout(void)
 }
 
 static void
-cloud_login_cb(oc_cloud_status_t status, void *data)
+cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Login status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -263,7 +265,7 @@ cloud_login(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_cloud_login(ctx, cloud_login_cb, ctx);
+  int ret = oc_cloud_login(ctx, cloud_login_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
     PRINT("\nCould not issue Cloud Login request\n");
@@ -273,9 +275,9 @@ cloud_login(void)
 }
 
 static void
-cloud_register_cb(oc_cloud_status_t status, void *data)
+cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Register status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
@@ -301,7 +303,7 @@ cloud_register(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
-  int ret = oc_cloud_register(ctx, cloud_register_cb, ctx);
+  int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
     PRINT("\nCould not issue Cloud Register request\n");

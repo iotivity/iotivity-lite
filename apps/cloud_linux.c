@@ -45,9 +45,10 @@ oc_resource_t *res2;
 int quit = 0;
 
 static void
-cloud_status_handler(oc_cloud_status_t status, void *data)
+cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                     void *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  (void)data;
   PRINT("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
     PRINT("\t\t-Registered\n");
