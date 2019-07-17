@@ -29,8 +29,12 @@ public class ObtMain {
     private static GenerateRandomPinHandler generateRandomPinHandler = new GenerateRandomPinHandler();
     private static OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler();
     private static ProvisionCredentialsHandler provisionCredentialsHandler = new ProvisionCredentialsHandler();
-    private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
     private static ProvisionAce2Handler provisionAce2Handler = new ProvisionAce2Handler();
+    private static ProvisionAuthWildcardAceHandler provisionAuthWildcardAceHandler = new ProvisionAuthWildcardAceHandler();
+    private static ProvisionRoleWildcardAceHandler provisionRoleWildcardAceHandler = new ProvisionRoleWildcardAceHandler();
+    private static ProvisionIdCertificateHandler provisionIdCertificateHandler = new ProvisionIdCertificateHandler();
+    private static ProvisionRoleCertificateHandler provisionRoleCertificateHandler = new ProvisionRoleCertificateHandler();
+    private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
 
     private static boolean quit;
     private static OcObt obt;
@@ -56,33 +60,69 @@ public class ObtMain {
         menu.append("[0] Display this menu\n");
         menu.append("------------------------------------------------\n");
         menu.append("[1] Discover un-owned devices\n");
-        menu.append("[2] Discover owned devices\n");
+        menu.append("[2] Discover un-owned devices in the realm-local IPv6 scope\n");
+        menu.append("[3] Discover un-owned devices in the site-local IPv6 scope\n");
+        menu.append("[4] Discover owned devices\n");
+        menu.append("[5] Discover owned devices in the realm-local IPv6 scope\n");
+        menu.append("[6] Discover owned devices in the site-local IPv6 scope\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[3] Just-Works Ownership Transfer Method\n");
-        menu.append("[4] Request Random PIN from device for OTM\n");
-        menu.append("[5] Random PIN Ownership Transfer Method\n");
-        menu.append("[6] Provision pair-wise credentials\n");
-        menu.append("[7] Provision ACE2\n");
+        menu.append("[7] Just-Works Ownership Transfer Method\n");
+        menu.append("[8] Request Random PIN from device for OTM\n");
+        menu.append("[9] Random PIN Ownership Transfer Method\n");
+        menu.append("[10] Manufacturer Certificate based Ownership Transfer Method\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[8] RESET device\n");
-        menu.append("[9] RESET OBT\n");
+        menu.append("[11] Provision pair-wise credentials\n");
+        menu.append("[12] Provision ACE2\n");
+        menu.append("[13] Provision auth-crypt RW access to NCRs\n");
+        menu.append("[14] Provision role RW access to NCRs\n");
+        menu.append("[15] Provision identity certificate\n");
+        menu.append("[16] Provision role certificate\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[10] Exit\n");
+        menu.append("[97] RESET device\n");
+        menu.append("[98] RESET OBT\n");
+        menu.append("------------------------------------------------\n");
+        menu.append("[99] Exit\n");
         menu.append("################################################\n");
         menu.append("\nSelect option: ");
         System.out.print(menu);
     }
 
-    private static void discoverUnownedDevices() {
-        System.out.println("Discovering un-owned devices");
-        if (obt.discoverUnownedDevices(unownedDeviceHandler) < 0) {
-            System.err.println("ERROR discovering un-owned Devices.");
+    private static void discoverUnownedDevices(int scope) {
+
+        if (scope == 1) {
+            System.out.println("Discovering un-owned devices realm local IPv6");
+            if (obt.discoverUnownedDevicesRealmLocalIPv6(unownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering un-owned devices realm local IPv6.");
+            }
+        } else if (scope == 2) {
+            System.out.println("Discovering un-owned devices site local IPv6");
+            if (obt.discoverUnownedDevicesSiteLocalIPv6(unownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering un-owned devices site local IPv6.");
+            }
+        } else {
+            System.out.println("Discovering un-owned devices");
+            if (obt.discoverUnownedDevices(unownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering un-owned devices.");
+            }
         }
     }
 
-    private static void discoverOwnedDevices() {
-        if (obt.discoverOwnedDevices(ownedDeviceHandler) < 0) {
-            System.err.println("ERROR discovering owned Devices.");
+    private static void discoverOwnedDevices(int scope) {
+        if (scope == 1) {
+            System.out.println("Discovering owned devices realm local IPv6");
+            if (obt.discoverOwnedDevicesRealmLocalIPv6(ownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering owned devices realm local IPv6.");
+            }
+        } else if (scope == 2) {
+            System.out.println("Discovering owned devices site local IPv6");
+            if (obt.discoverOwnedDevicesSiteLocalIPv6(ownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering owned devices site local IPv6.");
+            }
+        } else {
+            System.out.println("Discovering owned devices");
+            if (obt.discoverOwnedDevices(ownedDeviceHandler) < 0) {
+                System.err.println("ERROR discovering owned Devices.");
+            }
         }
     }
 
@@ -192,6 +232,45 @@ public class ObtMain {
             System.out.println("\nSuccessfully issued request to perform Random PIN OTM");
         } else {
             System.out.println("\nERROR issuing request to perform Random PIN OTM");
+        }
+
+        /*
+         * Having issued an OTM request, remove this item from the unowned
+         * device list
+         */
+        unownedDevices.remove(uds[userInput]);
+    }
+
+    private static void otmCertificate() {
+        if (unownedDevices.isEmpty()) {
+            System.out.println("\nPlease Re-discover Unowned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder unownedDevicesMenu = new StringBuilder();
+        unownedDevicesMenu.append("\nUnowned Devices:\n");
+        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
+        for (OCUuid ud : uds) {
+            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+            i++;
+        }
+        unownedDevicesMenu.append("\n\nSelect device: ");
+        System.out.print(unownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        OtmCertificationHandler otmCertificateHandler = new OtmCertificationHandler();
+        int ret = obt.performCertOtm(uds[userInput], otmCertificateHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to perform Certificate OTM");
+        } else {
+            System.out.println("\nERROR issuing request to perform Certificate OTM");
         }
 
         /*
@@ -467,6 +546,178 @@ public class ObtMain {
         }
     }
 
+    public static void provisionAuthWildcardAce() {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("\nProvision auth crypt * ACE\n");
+        ownedDevicesMenu.append("My Devices:\n");
+        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
+        for (OCUuid od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device for provisioning: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = obt.provisionAuthWildcardAce(ods[userInput], provisionAuthWildcardAceHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
+        } else {
+            System.out.println("\nERROR issuing request to provision auth-crypt * ACE");
+        }
+    }
+
+    public static void provisionRoleWildcardAce() {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("\nProvision role * ACE\n");
+        ownedDevicesMenu.append("My Devices:\n");
+        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
+        for (OCUuid od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device for provisioning: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        System.out.println("\nEnter role: ");
+        String role = scanner.next();
+        // max string length for role is 64 characters
+        if (role.length() > 64) {
+            role = role.substring(0, 64);
+        }
+        String authority = null;
+        System.out.print("Authority? [0-No, 1-Yes]: ");
+        int c = scanner.nextInt();
+        if (c == 1) {
+            authority = scanner.next();
+            // max string length for role is 64 characters
+            if (authority.length() > 64) {
+                authority = authority.substring(0, 64);
+            }
+        }
+
+        int ret = obt.provisionRoleWildcardAce(ods[userInput], role, authority, provisionRoleWildcardAceHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
+        } else {
+            System.out.println("\nERROR issuing request to provision auth-crypt * ACE");
+        }
+    }
+
+    public static void provisionIdCertificate() {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("My Devices:\n");
+        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
+        for (OCUuid od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = obt.provisionIdentityCertificate(ods[userInput], provisionIdCertificateHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to provision identity certificate");
+        } else {
+            System.out.println("\nERROR issuing request to provision identity certificate");
+        }
+    }
+
+    public static void provisionRoleCertificate() {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("\nProvision role * ACE\n");
+        ownedDevicesMenu.append("My Devices:\n");
+        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
+        for (OCUuid od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device for provisioning: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        OCRole roles = null;
+        int c;
+        do {
+            System.out.println("\nEnter role: ");
+            String role = scanner.next();
+            // max string length for role is 64 characters
+            if (role.length() > 64) {
+                role = role.substring(0, 64);
+            }
+            String authority = null;
+            System.out.print("Authority? [0-No, 1-Yes]: ");
+            c = scanner.nextInt();
+            if (c == 1) {
+                authority = scanner.next();
+                // max string length for role is 64 characters
+                if (authority.length() > 64) {
+                    authority = authority.substring(0, 64);
+                }
+            }
+            roles = obt.addRoleId(roles, role, authority);
+            System.out.print("\nMore Roles? [0-No, 1-Yes]: ");
+            c = scanner.nextInt();
+        } while (c == 1);
+
+        int ret = obt.provisionRoleCertificate(roles, ods[userInput], provisionRoleCertificateHandler);
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
+        } else {
+            System.out.println("\nERROR issuing request to provision auth-crypt * ACE");
+        }
+    }
+
     private static void resetDevice() {
         if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
@@ -506,6 +757,7 @@ public class ObtMain {
         unownedDevices.clear();
         obt = new OcObt();
     }
+
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
@@ -536,33 +788,60 @@ public class ObtMain {
             case 0:
                 continue;
             case 1:
-                discoverUnownedDevices();
+                discoverUnownedDevices(0);
                 break;
             case 2:
-                discoverOwnedDevices();
+                discoverUnownedDevices(1);
                 break;
             case 3:
-                otmJustWorks();
+                discoverUnownedDevices(2);
                 break;
             case 4:
-                requestRandomPin();
+                discoverOwnedDevices(0);
                 break;
             case 5:
-                otmRandomPin();
+                discoverOwnedDevices(1);
                 break;
             case 6:
-                provisionCredentials();
+                discoverOwnedDevices(2);
                 break;
             case 7:
-                provisionAce2();
+                otmJustWorks();
                 break;
             case 8:
-                resetDevice();
+                requestRandomPin();
                 break;
             case 9:
-                resetOBT();
+                otmRandomPin();
                 break;
             case 10:
+                otmCertificate();
+                break;
+            case 11:
+                provisionCredentials();
+                break;
+            case 12:
+                provisionAce2();
+                break;
+            case 13:
+                provisionAuthWildcardAce();
+                break;
+            case 14:
+                provisionRoleWildcardAce();
+                break;
+            case 15:
+                provisionIdCertificate();
+                break;
+            case 16:
+                provisionRoleCertificate();
+                break;
+            case 97:
+                resetDevice();
+                break;
+            case 98:
+                resetOBT();
+                break;
+            case 99:
                 quit = true;
                 break;
             default:
