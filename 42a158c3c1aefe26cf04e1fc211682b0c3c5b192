@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f93ae36a_889a02c4",
+        "filename": "swig/apps/oc/java_oc_simple_server/src/java_oc_simple_server/FactoryPresetsHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-18T18:47:15Z",
+      "side": 1,
+      "message": "should we look for the pki_certs in directories so far away from the app?  I am a little worried this is to tightly tied to the code layout of the iotivity-lite project.  Should we copy the certificates so the are more local to the sample?",
+      "range": {
+        "startLine": 20,
+        "startChar": 36,
+        "endLine": 20,
+        "endChar": 69
+      },
+      "revId": "42a158c3c1aefe26cf04e1fc211682b0c3c5b192",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
