@@ -22,6 +22,30 @@
       "revId": "42a158c3c1aefe26cf04e1fc211682b0c3c5b192",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01e805c8_2c366849",
+        "filename": "swig/apps/oc/java_oc_simple_server/src/java_oc_simple_server/FactoryPresetsHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-07-18T19:23:27Z",
+      "side": 1,
+      "message": "the smart_home_linux_server does something similar.  i didn\u0027t want to have multiple copies of the same files and have to keep up with changes.",
+      "parentUuid": "f93ae36a_889a02c4",
+      "range": {
+        "startLine": 20,
+        "startChar": 36,
+        "endLine": 20,
+        "endChar": 69
+      },
+      "revId": "42a158c3c1aefe26cf04e1fc211682b0c3c5b192",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
