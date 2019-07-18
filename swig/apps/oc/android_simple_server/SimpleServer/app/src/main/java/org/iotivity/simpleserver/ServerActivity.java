@@ -9,6 +9,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.iotivity.oc.OcPlatform;
+import org.iotivity.oc.OcUtils;
 
 public class ServerActivity extends AppCompatActivity {
 
@@ -17,7 +18,7 @@ public class ServerActivity extends AppCompatActivity {
     private TextView mConsoleTextView;
     private ScrollView mScrollView;
 
-    private OcPlatform obtPlatform;
+    private OcPlatform ocPlatform;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +32,23 @@ public class ServerActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-            obtPlatform = OcPlatform.getInstance();
-            MyInitHandler handler = new MyInitHandler(this, obtPlatform);
-            obtPlatform.systemInit(handler);
+
+            // Note: If using a factory presets handler,
+            // the factory presets handler must be set prior to calling systemInit().
+            // The systemInit() function will cause the factory presets handler to
+            // be called if it is set.
+            OcUtils.setFactoryPresetsHandler(new FactoryPresetsHandler(this));
+
+            ocPlatform = OcPlatform.getInstance();
+            MyInitHandler handler = new MyInitHandler(this, ocPlatform);
+            ocPlatform.systemInit(handler);
         }
     }
 
     @Override
     protected void onDestroy() {
         Log.d(TAG, "Calling Shutdown.");
-        obtPlatform.systemShutdown();
+        ocPlatform.systemShutdown();
         super.onDestroy();
     }
 

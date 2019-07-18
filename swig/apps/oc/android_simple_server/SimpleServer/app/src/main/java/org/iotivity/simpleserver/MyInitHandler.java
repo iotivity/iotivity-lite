@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMainInitHandler;
+import org.iotivity.OCUuidUtil;
 import org.iotivity.oc.OcDevice;
 import org.iotivity.oc.OcPlatform;
 import org.iotivity.oc.OcResource;
@@ -14,23 +15,23 @@ public class MyInitHandler implements OCMainInitHandler {
     private static final String TAG = MyInitHandler.class.getSimpleName();
 
     private ServerActivity activity;
-    private OcPlatform obtPlatform;
+    private OcPlatform ocPlatform;
 
     private OcDevice device;
     private Light light;
 
-    public MyInitHandler(ServerActivity activity, OcPlatform obtPlatform) {
+    public MyInitHandler(ServerActivity activity, OcPlatform ocPlatform) {
         this.activity = activity;
-        this.obtPlatform = obtPlatform;
+        this.ocPlatform = ocPlatform;
     }
 
     @Override
     public int initialize() {
         Log.d(TAG, "inside MyInitHandler.initialize()");
-        int ret = obtPlatform.platformInit("Intel");
+        int ret = ocPlatform.platformInit("Intel");
         if (ret >= 0) {
             device = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
-            ret |= obtPlatform.addDevice(device);
+            ret |= ocPlatform.addDevice(device);
         }
 
         light = new Light();
@@ -61,5 +62,6 @@ public class MyInitHandler implements OCMainInitHandler {
     @Override
     public void requestEntry() {
         Log.d(TAG, "inside MyInitHandler.requestEntry()");
+        Log.d(TAG, "\tDeviceId = " + OCUuidUtil.uuidToString(device.getId()));
     }
 }
