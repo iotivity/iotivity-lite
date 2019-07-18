@@ -286,6 +286,7 @@ public class ObtMain {
          */
         unownedDevices.remove(uds[userInput]);
     }
+
     private static void provisionCredentials() {
         if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
@@ -316,7 +317,8 @@ public class ObtMain {
             return;
         }
 
-        int ret = OCObt.provisionPairwiseCredentials(ods[userInput1].uuid, ods[userInput2].uuid, provisionCredentialsHandler);
+        int ret = OCObt.provisionPairwiseCredentials(ods[userInput1].uuid, ods[userInput2].uuid,
+                provisionCredentialsHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision credentials");
         } else {
@@ -333,7 +335,7 @@ public class ObtMain {
         String[] connTypes = new String[] { "anon-clear", "auth-crypt" };
         int num_resources = 0;
 
-        System.out.println("\nProvision ACL2\nMy Devices:");
+        System.out.println("\nProvision ACE2\nMy Devices:");
 
         int i = 0;
 
@@ -362,28 +364,49 @@ public class ObtMain {
         subjectsMenu.append("\nSubjects:\n");
         subjectsMenu.append("[0]: " + connTypes[0] + "\n");
         subjectsMenu.append("[1]: " + connTypes[1] + "\n");
+        subjectsMenu.append("[2]: Role\n");
         i = 0;
         for (OCFDeviceInfo od : ods) {
-            subjectsMenu.append("[" + (i + 2) + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            subjectsMenu.append("[" + (i + 3) + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
             i++;
         }
         subjectsMenu.append("\nSelect subject: ");
         System.out.print(subjectsMenu);
         int sub = scanner.nextInt();
 
-        if (sub >= (i + 2)) {
+        if (sub >= (i + 3)) {
             System.out.println("ERROR: Invalid selection");
             return;
         }
 
         OCSecurityAce ace = null;
-        if (sub > 1) {
-            ace = OCObt.newAceForSubject(ods[sub - 2].uuid);
+        if (sub > 2) {
+            ace = OCObt.newAceForSubject(ods[sub - 3].uuid);
         } else {
             if (sub == 0) {
                 ace = OCObt.newAceForConnection(OCAceConnectionType.OC_CONN_ANON_CLEAR);
-            } else {
+            } else if (sub == 1) {
                 ace = OCObt.newAceForConnection(OCAceConnectionType.OC_CONN_AUTH_CRYPT);
+            } else {
+                System.out.println("\nEnter role: ");
+                String role = scanner.next();
+                // max string length for role is 64 characters
+                if (role.length() > 64) {
+                    role = role.substring(0, 64);
+                }
+                String authority = null;
+                System.out.print("Authority? [0-No, 1-Yes]: ");
+                int c = scanner.nextInt();
+                if (c == 1) {
+                    System.out.println("\nEnter authority: ");
+                    authority = scanner.next();
+                    // max string length for role is 64 characters
+                    if (authority.length() > 64) {
+                        authority = authority.substring(0, 64);
+                    }
+
+                }
+                ace = OCObt.newAceForRole(role, authority);
             }
         }
 
@@ -609,7 +632,7 @@ public class ObtMain {
             System.out.println("ERROR: Invalid selection");
             return;
         }
-        
+
         System.out.println("\nEnter role: ");
         String role = scanner.next();
         // max string length for role is 64 characters
@@ -691,7 +714,7 @@ public class ObtMain {
             System.out.println("ERROR: Invalid selection");
             return;
         }
-        
+
         OCRole roles = null;
         int c;
         do {
@@ -780,6 +803,7 @@ public class ObtMain {
             System.err.println("Failed to setup Storage Config.");
         }
 
+        OCMain.setFactoryPresetsHandler(new FactoryPresetsHandler());
         ObtInitHandler obtHandler = new ObtInitHandler();
         int init_ret = OCMain.mainInit(obtHandler);
         if (init_ret < 0) {
@@ -849,7 +873,7 @@ public class ObtMain {
             case 97:
                 resetDevice();
                 break;
-                
+
             case 98:
                 resetOBT();
                 break;
