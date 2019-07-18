@@ -22,10 +22,14 @@ public class PutLightResponseHandler implements OCResponseHandler {
     @Override
     public void handler(OCClientResponse response) {
         activity.msg("PUT light:");
-        if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            activity.msg("\tPUT response: CHANGED");
-        } else {
-            activity.msg("\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+        try {
+            if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
+                activity.msg("\tPUT response: CHANGED");
+            } else {
+                activity.msg("\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+            }
+        } catch (IllegalArgumentException e) {
+            activity.msg("\tError: Bad Response Code, Client not properly provisioned");
         }
         activity.printLine();
 

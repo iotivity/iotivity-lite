@@ -21,12 +21,16 @@ public class Post2LightResponseHandler implements OCResponseHandler {
     @Override
     public void handler(OCClientResponse response) {
         activity.msg("POST2 light:");
-        if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            activity.msg("\tPOST2 response: CHANGED");
-        } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            activity.msg("\tPOST2 response: CREATED");
-        } else {
-            activity.msg("\tPOST2 response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+        try {
+            if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
+                activity.msg("\tPOST2 response: CHANGED");
+            } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
+                activity.msg("\tPOST2 response: CREATED");
+            } else {
+                activity.msg("\tPOST2 response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+            }
+        } catch (IllegalArgumentException e) {
+            activity.msg("\tError: Bad Response Code, Client not properly provisioned");
         }
         activity.printLine();
 

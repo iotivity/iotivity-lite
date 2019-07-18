@@ -17,7 +17,7 @@ public class ClientActivity extends AppCompatActivity {
     private TextView mConsoleTextView;
     private ScrollView mScrollView;
 
-    private OcPlatform obtPlatform;
+    private OcPlatform ocPlatform;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +31,16 @@ public class ClientActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // start first time only
-            obtPlatform = OcPlatform.getInstance();
-            MyInitHandler handler = new MyInitHandler(this, obtPlatform);
-            obtPlatform.systemInit(handler);
+            ocPlatform = OcPlatform.getInstance();
+            MyInitHandler handler = new MyInitHandler(this, ocPlatform);
+            ocPlatform.systemInit(handler);
         }
     }
 
     @Override
     protected void onDestroy() {
         Log.d(TAG, "Calling Shutdown.");
-        obtPlatform.systemShutdown();
+        ocPlatform.systemShutdown();
         super.onDestroy();
     }
 

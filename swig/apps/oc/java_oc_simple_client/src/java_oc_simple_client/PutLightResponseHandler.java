@@ -14,11 +14,15 @@ public class PutLightResponseHandler implements OCResponseHandler {
     @Override
     public void handler(OCClientResponse response) {
         System.out.println("PUT light:");
-        if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            System.out.println("\tPUT response: CHANGED");
-        } else {
-            System.out
-                    .println("\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+        try {
+            if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
+                System.out.println("\tPUT response: CHANGED");
+            } else {
+                System.out.println(
+                        "\tPUT response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("\tError: Bad Response Code, Client not properly provisioned");
         }
 
         PostLightResponseHandler postLight = new PostLightResponseHandler(light);

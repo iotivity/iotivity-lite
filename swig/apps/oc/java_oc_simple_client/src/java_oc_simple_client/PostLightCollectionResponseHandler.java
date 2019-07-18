@@ -14,13 +14,17 @@ public class PostLightCollectionResponseHandler implements OCResponseHandler {
     @Override
     public void handler(OCClientResponse response) {
         System.out.println("POST light collection:");
-        if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
-            System.out.println("\tPOST response: CHANGED");
-        } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
-            System.out.println("\tPOST response: CREATED");
-        } else {
-            System.out
-                    .println("\tPOST response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+        try {
+            if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
+                System.out.println("\tPOST response: CHANGED");
+            } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
+                System.out.println("\tPOST response: CREATED");
+            } else {
+                System.out.println(
+                        "\tPOST response code " + response.getCode().toString() + " (" + response.getCode() + ")");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("\tError: Bad Response Code, Client not properly provisioned");
         }
 
         ObserveLightCollectionResponseHandler responseHandler = new ObserveLightCollectionResponseHandler(collection);
