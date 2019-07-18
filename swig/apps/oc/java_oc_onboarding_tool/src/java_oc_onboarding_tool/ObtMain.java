@@ -37,7 +37,7 @@ public class ObtMain {
     private static ResetDeviceHandler resetDeviceHandler = new ResetDeviceHandler();
 
     private static boolean quit;
-    private static OcObt obt;
+    static OcObt obt;
     private static OcPlatform obtPlatform = OcPlatform.getInstance();
     private static Thread mainThread = Thread.currentThread();
 
@@ -327,7 +327,7 @@ public class ObtMain {
         String[] connTypes = new String[] { "anon-clear", "auth-crypt" };
         int num_resources = 0;
 
-        System.out.println("\nProvision ACL2\nMy Devices:");
+        System.out.println("\nProvision ACE2\nMy Devices:");
 
         int i = 0;
 
@@ -356,28 +356,48 @@ public class ObtMain {
         subjectsMenu.append("\nSubjects:\n");
         subjectsMenu.append("[0]: " + connTypes[0] + "\n");
         subjectsMenu.append("[1]: " + connTypes[1] + "\n");
+        subjectsMenu.append("[2]: Role\n");
         i = 0;
         for (OCUuid od : ods) {
-            subjectsMenu.append("[" + (i + 2) + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+            subjectsMenu.append("[" + (i + 3) + "]: " + OCUuidUtil.uuidToString(od) + "\n");
             i++;
         }
         subjectsMenu.append("\nSelect subject: ");
         System.out.print(subjectsMenu);
         int sub = scanner.nextInt();
 
-        if (sub >= (i + 2)) {
+        if (sub >= (i + 3)) {
             System.out.println("ERROR: Invalid selection");
             return;
         }
 
         OcSecurityAce ace = null;
-        if (sub > 1) {
-            ace = new OcSubjectSecurityAce(ods[sub - 2]);
+        if (sub > 2) {
+            ace = new OcSubjectSecurityAce(ods[sub - 3]);
         } else {
             if (sub == 0) {
                 ace = new OcAnonSecurityAce();
-            } else {
+            } else if (sub == 1) {
                 ace = new OcAuthSecurityAce();
+            } else {
+                System.out.println("\nEnter role: ");
+                String role = scanner.next();
+                // max string length for role is 64 characters
+                if (role.length() > 64) {
+                    role = role.substring(0, 64);
+                }
+                String authority = null;
+                System.out.print("Authority? [0-No, 1-Yes]: ");
+                int c = scanner.nextInt();
+                if (c == 1) {
+                    System.out.println("\nEnter authority: ");
+                    authority = scanner.next();
+                    // max string length for role is 64 characters
+                    if (authority.length() > 64) {
+                        authority = authority.substring(0, 64);
+                    }
+                }
+                ace = new OcRoleSecurityAce(role, authority);
             }
         }
 
@@ -770,6 +790,13 @@ public class ObtMain {
         if (0 != OCStorage.storageConfig(directory.getPath())) {
             System.err.println("Failed to setup Storage Config.");
         }
+
+        // Note: If using a factory presets handler,
+        // the factory presets handler must be set prior to calling
+        // systemInit().
+        // The systemInit() function will cause the factory presets handler to
+        // be called if it is set.
+        OcUtils.setFactoryPresetsHandler(new FactoryPresetsHandler());
 
         ObtInitHandler obtHandler = new ObtInitHandler(obtPlatform);
         obtPlatform.systemInit(obtHandler);
