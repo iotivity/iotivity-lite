@@ -50,7 +50,14 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCClientResponse = (jclass)(JCALL1(NewGlobalRef, jenv, ocClientResponseClass));
     JCALL1(DeleteLocalRef, jenv, ocClientResponseClass);
 
-    jclass ocCoreAddDeviceHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCCoreAddDeviceHandler");
+    jclass ocCloudContextClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCCloudContext");
+    assert(ocCloudContextClass);
+    cls_OCCloudContext = (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudContextClass));
+    JCALL1(DeleteLocalRef, jenv, ocCloudContextClass);
+
+    jclass ocCoreAddDeviceHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCCoreAddDeviceHandler");
     assert(ocCoreAddDeviceHandlerClass);
     cls_OCCoreAddDeviceHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreAddDeviceHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocCoreAddDeviceHandlerClass);
