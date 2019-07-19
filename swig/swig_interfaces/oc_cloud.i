@@ -28,7 +28,7 @@
 
 /* code and typemaps for mapping the oc_cloud_cb_t to the java OCCloudHandler */
 %{
-static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
+static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
@@ -41,13 +41,27 @@ static void jni_cloud_cb(oc_cloud_status_t status, void *user_data)
         (data->jenv),
         cls_OCCloudHandler,
         "handler",
-        "(I)V");
+        "(Lorg/iotivity/OCCloudContext;I)V);
   assert(mid_handler);
 
-  JCALL3(CallVoidMethod,
+  // convert oc_cloud_context_t to java org.iotivity.OCCloudContext so it can
+  // be passed upto the handler method.
+  assert(cls_OCCloudContext);
+  const jmethodID mid_OCOCCloudContext_init = JCALL3(GetMethodID,
+                                                     (data.jenv),
+                                                     cls_OCCloudContext, "<init>",
+                                                     "(JZ)V");
+  assert(mid_OCRepresentation_init);
+
+  JCALL4(CallVoidMethod,
         (data->jenv),
         data->jcb_obj,
         mid_handler,
+        JCALL4(NewObject,
+                (data.jenv),
+                cls_OCCloudContext,
+                mid_OCOCCloudContext_init,
+                (jlong)ctx, false)
         (jint) status);
 
   release_jni_env(getEnvResult);
