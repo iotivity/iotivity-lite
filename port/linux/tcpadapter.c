@@ -603,7 +603,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_DBG("Sent %zd bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
 
@@ -618,7 +618,7 @@ oc_tcp_send_buffer_done:
 static int
 tcp_connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter IPv4 for device %d", dev->device);
+  OC_DBG("Initializing TCP adapter IPv4 for device %zd", dev->device);
 
   memset(&dev->tcp.server4, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in *l = (struct sockaddr_in *)&dev->tcp.server4;
@@ -674,7 +674,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
     ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized TCP adapter IPv4 for device %d",
+  OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
          dev->device);
 
   return 0;
@@ -684,7 +684,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing TCP adapter for device %d", dev->device);
+  OC_DBG("Initializing TCP adapter for device %zd", dev->device);
 
   if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0) {
     oc_abort("error initializing TCP adapter mutex");
@@ -765,7 +765,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 #endif
 #endif
 
-  OC_DBG("Successfully initialized TCP adapter for device %d", dev->device);
+  OC_DBG("Successfully initialized TCP adapter for device %zd", dev->device);
 
   return 0;
 }
@@ -800,7 +800,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
 
   pthread_mutex_destroy(&dev->tcp.mutex);
 
-  OC_DBG("oc_tcp_connectivity_shutdown for device %d", dev->device);
+  OC_DBG("oc_tcp_connectivity_shutdown for device %zd", dev->device);
 }
 
 tcp_csm_state_t

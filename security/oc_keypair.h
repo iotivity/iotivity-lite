@@ -34,15 +34,15 @@ typedef struct oc_ecdsa_keypair_t
   size_t device;
   uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
   uint8_t private_key[OC_KEYPAIR_PRIVKEY_SIZE];
-  uint8_t private_key_size;
+  size_t private_key_size;
 } oc_ecdsa_keypair_t;
 
 bool oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device);
 bool oc_sec_encode_ecdsa_keypair(size_t device);
-int oc_generate_ecdsa_keypair(uint8_t *public_key, uint8_t public_key_buf_size,
-                              uint8_t *public_key_size, uint8_t *private_key,
-                              uint8_t private_key_buf_size,
-                              uint8_t *private_key_size);
+int oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
+                              size_t *public_key_size, uint8_t *private_key,
+                              size_t private_key_buf_size,
+                              size_t *private_key_size);
 int oc_generate_ecdsa_keypair_for_device(size_t device);
 oc_ecdsa_keypair_t *oc_sec_get_ecdsa_keypair(size_t device);
 void oc_free_ecdsa_keypairs(void);

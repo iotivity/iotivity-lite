@@ -53,7 +53,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   ret = mbedtls_x509_crt_parse(&int_ca, (const unsigned char *)cert_copy,
                                cert_size);
   if (ret < 0) {
-    OC_ERR("could not parse intermediate cert");
+    OC_ERR("could not parse intermediate cert %d", ret);
     return -1;
   }
   OC_DBG("parsed intermediate CA cert");
@@ -67,7 +67,8 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
     oc_string_len(c->publicdata.data) + 1);
   if (ret < 0) {
     OC_ERR("could not parse existing identity cert that chains to this "
-           "intermediate cert");
+           "intermediate cert %d",
+           ret);
     mbedtls_x509_crt_free(&int_ca);
     return -1;
   }
@@ -149,7 +150,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   int ret = mbedtls_pk_parse_key(&pkey, (const unsigned char *)key_copy,
                                  key_size, NULL, 0);
   if (ret != 0) {
-    OC_ERR("could not parse identity cert's private key");
+    OC_ERR("could not parse identity cert's private key %d", ret);
     return -1;
   }
   OC_DBG("parsed the provided identity cert's private key");
@@ -161,7 +162,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   mbedtls_pk_free(&pkey);
 
   if (ret < 0) {
-    OC_ERR("could not write identity cert's private key to DER");
+    OC_ERR("could not write identity cert's DER encoded private key %d", ret);
     return -1;
   }
 
@@ -296,6 +297,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
       &cert2, (const unsigned char *)oc_string(c->publicdata.data),
       oc_string_len(c->publicdata.data) + 1);
     if (ret < 0) {
+      OC_ERR("could not parse stored certificate %d", ret);
       mbedtls_x509_crt_free(&cert2);
       continue;
     }

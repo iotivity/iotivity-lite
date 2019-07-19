@@ -41,7 +41,7 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
 
-#define PERSONALIZATION_DATA "IoTivity-Lite-Ceriticate_Serial_Number"
+#define PERSONALIZATION_DATA "IoTivity-Lite-Certificate_Serial_Number"
 
   int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
                                   (const unsigned char *)PERSONALIZATION_DATA,
@@ -50,6 +50,7 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
 #undef PERSONALIZATION_DATA
 
   if (ret < 0) {
+    OC_ERR("error initializing RNG %d", ret);
     return -1;
   }
 
@@ -59,6 +60,7 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
                                 &ctr_drbg);
 
   if (ret < 0) {
+    OC_ERR("error generating random serial number for certificate %d", ret);
     return -1;
   }
 
@@ -81,7 +83,7 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
 
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret < 0) {
-    OC_ERR("could not parse the provided cert");
+    OC_ERR("could not parse the provided cert %d", ret);
     return -1;
   }
 
@@ -89,7 +91,7 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
 
   if (ret < 0) {
     mbedtls_x509_crt_free(&crt);
-    OC_ERR("could not extract public key from cert");
+    OC_ERR("could not extract public key from cert %d", ret);
     return -1;
   }
 
@@ -131,7 +133,7 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
                                              &mbedtls_x509_crt_profile_default,
                                              NULL, &flags, NULL, NULL);
   if (ret != 0 || flags != 0) {
-    OC_ERR("error verifying role certificate");
+    OC_ERR("error verifying role certificate %d", ret);
     goto exit_parse_role_cert;
   }
 
@@ -735,21 +737,21 @@ oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
     ret = mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), c.cri.p,
                      c.cri.len, CertificationRequestInfo_SHA256);
     if (ret < 0) {
-      OC_ERR("unable to hash CertificationRequestInfo in CSR");
+      OC_ERR("unable to hash CertificationRequestInfo in CSR %d", ret);
       goto exit_csr;
     }
     ret =
       mbedtls_pk_verify((mbedtls_pk_context *)&c.pk, MBEDTLS_MD_SHA256,
                         CertificationRequestInfo_SHA256, 0, c.sig.p, c.sig.len);
     if (ret < 0) {
-      OC_ERR("unable to verify signature in CSR");
+      OC_ERR("unable to verify signature in CSR %d", ret);
       goto exit_csr;
     }
 
     char DN[512];
     ret = mbedtls_x509_dn_gets(DN, 512, &c.subject);
     if (ret < 0) {
-      OC_ERR("unable to retrieve subject from CSR");
+      OC_ERR("unable to retrieve subject from CSR %d", ret);
       goto exit_csr;
     }
 
@@ -757,6 +759,9 @@ oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
 
     ret = mbedtls_pk_write_pubkey_der((mbedtls_pk_context *)&c.pk, public_key,
                                       OC_KEYPAIR_PUBKEY_SIZE);
+    if (ret < 0) {
+      OC_ERR("unable to read public key from CSR %d", ret);
+    }
   }
 
 exit_csr:
@@ -808,7 +813,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 
   ret = mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0);
   if (ret != 0) {
-    OC_ERR("could not parse private key for device %zd", device);
+    OC_ERR("could not parse private key for device %zd %d", device, ret);
     goto generate_csr_error;
   }
 
@@ -821,7 +826,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 #undef PERSONALIZATION_DATA
 
   if (ret < 0) {
-    OC_ERR("error initializing source of entropy");
+    OC_ERR("error initializing RNG %d", ret);
     goto generate_csr_error;
   }
 
@@ -833,7 +838,8 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 
   ret = mbedtls_x509write_csr_set_subject_name(&request, subject);
   if (ret != 0) {
-    OC_ERR("could not write subject name into CSR for device %zd", device);
+    OC_ERR("could not write subject name into CSR for device %zd %d", device,
+           ret);
     goto generate_csr_error;
   }
 
@@ -843,7 +849,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
                                   mbedtls_ctr_drbg_random, &ctr_drbg);
 
   if (ret != 0) {
-    OC_ERR("could not write CSR for device %zd into buffer", device);
+    OC_ERR("could not write CSR for device %zd into buffer %d", device, ret);
     goto generate_csr_error;
   }
 

@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="IoTivity-Constrained.vcxproj">
+    <ProjectReference Include="IoTivity-lite.vcxproj">
       <Project>{1866d7a4-fc11-46ca-9377-3baa69d4bf58}</Project>
     </ProjectReference>
   </ItemGroup>

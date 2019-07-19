@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016-2018 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 // Copyright (c) 2017-2018 Lynx Technology
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -732,9 +732,13 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
                * address of a multicast response.
                */
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV6)) {
+        while (dst != NULL &&
+               (dst->interface_index != endpoint->interface_index ||
+                !(dst->flags & IPV6))) {
           dst = dst->next;
+        }
+        if (dst == NULL) {
+          return -1;
         }
         memcpy(endpoint->addr_local.ipv6.address, dst->addr.ipv6.address, 16);
       }
@@ -756,9 +760,13 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
         memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
       } else {
         oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst->interface_index != endpoint->interface_index ||
-               !(dst->flags & IPV4)) {
+        while (dst != NULL &&
+               (dst->interface_index != endpoint->interface_index ||
+                !(dst->flags & IPV4))) {
           dst = dst->next;
+        }
+        if (dst == NULL) {
+          return -1;
         }
         memcpy(endpoint->addr_local.ipv4.address, dst->addr.ipv4.address, 4);
       }
@@ -929,16 +937,15 @@ network_event_thread(void *data)
         oc_tcp_receive_message(dev, &setfds, message);
       if (tcp_status == ADAPTER_STATUS_RECEIVE) {
         goto common;
-      } else {
-        oc_message_unref(message);
-        continue;
       }
 #endif /* OC_TCP */
 
+      oc_message_unref(message);
+      continue;
+
     common:
 #ifdef OC_DEBUG
-      PRINT("Incoming message of size %lu bytes from ",
-            (unsigned long int)message->length);
+      PRINT("Incoming message of size %zd bytes from ", message->length);
       PRINTipaddr(message->endpoint);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -1025,7 +1032,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
     }
     bytes_sent += x;
   }
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_DBG("Sent %zd bytes", bytes_sent);
 
   if (bytes_sent == 0) {
     return -1;
@@ -1038,8 +1045,7 @@ int
 oc_send_buffer(oc_message_t *message)
 {
 #ifdef OC_DEBUG
-  PRINT("Outgoing message of size %lu bytes to ",
-        (unsigned long int)message->length);
+  PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -1118,6 +1124,9 @@ oc_send_discovery_request(oc_message_t *message)
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
+#define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
+  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Only broadcast on LAN/WLAN. 3G/4G/5G should not have the broadcast
        and multicast flags set. */
@@ -1139,7 +1148,24 @@ oc_send_discovery_request(oc_message_t *message)
           goto done;
         }
         message->endpoint.interface_index = mif;
-        message->endpoint.addr.ipv6.scope = mif;
+        if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
+          message->endpoint.addr.ipv6.scope = mif;
+          unsigned int hops = 1;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+        } else if (IN6_IS_ADDR_MC_REALM_LOCAL(
+                     message->endpoint.addr.ipv6.address)) {
+          unsigned int hops = 255;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+          message->endpoint.addr.ipv6.scope = 0;
+        } else if (IN6_IS_ADDR_MC_SITELOCAL(
+                     message->endpoint.addr.ipv6.address)) {
+          unsigned int hops = 255;
+          setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                     sizeof(hops));
+          message->endpoint.addr.ipv6.scope = 0;
+        }
         oc_send_buffer(message);
       }
 #ifdef OC_IPV4
@@ -1272,7 +1298,7 @@ handle_session_event_callback(const oc_endpoint_t *endpoint,
 static int
 connectivity_ipv4_init(ip_context_t *dev)
 {
-  OC_DBG("Initializing IPv4 connectivity for device %d", dev->device);
+  OC_DBG("Initializing IPv4 connectivity for device %zd", dev->device);
   memset(&dev->mcast4, 0, sizeof(struct sockaddr_storage));
   memset(&dev->server4, 0, sizeof(struct sockaddr_storage));
 
@@ -1381,7 +1407,7 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->dtls4_port = ntohs(sm->sin_port);
 #endif /* OC_SECURITY */
 
-  OC_DBG("Successfully initialized IPv4 connectivity for device %d",
+  OC_DBG("Successfully initialized IPv4 connectivity for device %zd",
          dev->device);
 
   return 0;
@@ -1391,7 +1417,7 @@ connectivity_ipv4_init(ip_context_t *dev)
 int
 oc_connectivity_init(size_t device)
 {
-  OC_DBG("Initializing connectivity for device %d", device);
+  OC_DBG("Initializing connectivity for device %zd", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
@@ -1580,7 +1606,7 @@ oc_connectivity_init(size_t device)
     return -1;
   }
 
-  OC_DBG("Successfully initialized connectivity for device %d", device);
+  OC_DBG("Successfully initialized connectivity for device %zd", device);
 
   return 0;
 }
@@ -1623,7 +1649,7 @@ oc_connectivity_shutdown(size_t device)
   oc_list_remove(ip_contexts, dev);
   oc_memb_free(&ip_context_s, dev);
 
-  OC_DBG("oc_connectivity_shutdown for device %d", device);
+  OC_DBG("oc_connectivity_shutdown for device %zd", device);
 }
 
 #ifdef OC_TCP
@@ -1660,8 +1686,30 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     ret = getnameinfo(result->ai_addr, result->ai_addrlen, address,
                       sizeof(address), NULL, 0, 0);
     if (ret == 0) {
-      OC_DBG("%s address is %s", domain, address);
-      oc_new_string(addr, address, strlen(address));
+      char address[INET6_ADDRSTRLEN + 2] = { 0 };
+      const char *dest = NULL;
+      if (flags & IPV6) {
+        struct sockaddr_in6 *s_addr = (struct sockaddr_in6 *)result->ai_addr;
+        address[0] = '[';
+        dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address + 1,
+                         INET6_ADDRSTRLEN);
+        size_t addr_len = strlen(address);
+        address[addr_len] = ']';
+        address[addr_len + 1] = '\0';
+      }
+#ifdef OC_IPV4
+      else {
+        struct sockaddr_in *s_addr = (struct sockaddr_in *)result->ai_addr;
+        dest = inet_ntop(AF_INET, (void *)&s_addr->sin_addr, address,
+                         INET_ADDRSTRLEN);
+      }
+#endif /* OC_IPV4 */
+      if (dest) {
+        OC_DBG("%s address is %s", domain, address);
+        oc_new_string(addr, address, strlen(address));
+      } else {
+        ret = -1;
+      }
     }
   }
 

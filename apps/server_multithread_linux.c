@@ -292,7 +292,7 @@ main(void)
   size_t i;
   for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
-    printf("=== device(%d) endpoint info. ===\n", i);
+    printf("=== device(%zd) endpoint info. ===\n", i);
     while (ep) {
       oc_string_t ep_str;
       if (oc_endpoint_to_string(ep, &ep_str) == 0) {

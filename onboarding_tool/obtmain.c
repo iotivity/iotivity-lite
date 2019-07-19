@@ -1277,7 +1277,7 @@ factory_presets_cb(size_t device, void *data)
   }
 
   char key[4096];
-  size_t key_len = 8192;
+  size_t key_len = 4096;
   if (read_pem("../../apps/pki_certs/key.pem", key, &key_len) < 0) {
     PRINT("ERROR: unable to read private key");
     return;

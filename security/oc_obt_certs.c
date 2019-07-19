@@ -33,10 +33,10 @@
 int
 oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
                           const uint8_t *subject_public_key,
-                          const uint8_t subject_public_key_size,
+                          const size_t subject_public_key_size,
                           const char *issuer_name,
                           const uint8_t *issuer_private_key,
-                          const uint8_t issuer_private_key_size,
+                          const size_t issuer_private_key_size,
                           oc_string_t *role_cert)
 {
   int ret = 0;
@@ -281,10 +281,10 @@ exit:
 int
 oc_obt_generate_identity_cert(const char *subject_name,
                               const uint8_t *subject_public_key,
-                              const uint8_t subject_public_key_size,
+                              const size_t subject_public_key_size,
                               const char *issuer_name,
                               const uint8_t *issuer_private_key,
-                              const uint8_t issuer_private_key_size,
+                              const size_t issuer_private_key_size,
                               oc_string_t *id_cert)
 {
   int ret = 0;
@@ -475,9 +475,9 @@ exit:
 int
 oc_obt_generate_self_signed_root_cert(const char *subject_name,
                                       const uint8_t *public_key,
-                                      const uint8_t public_key_size,
+                                      const size_t public_key_size,
                                       const uint8_t *private_key,
-                                      const uint8_t private_key_size)
+                                      const size_t private_key_size)
 {
   int ret = 0;
 

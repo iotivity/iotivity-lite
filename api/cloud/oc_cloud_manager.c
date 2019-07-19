@@ -212,7 +212,7 @@ oc_cloud_register_handler(oc_client_response_t *data)
   _register_handler(ctx, data);
 
   if (p->cb) {
-    p->cb(ctx->store.status, p->data);
+    p->cb(ctx, ctx->store.status, p->data);
   }
   free_api_param(p);
 
@@ -310,7 +310,7 @@ oc_cloud_login_handler(oc_client_response_t *data)
   _login_handler(ctx, data);
 
   if (p->cb) {
-    p->cb(ctx->store.status, p->data);
+    p->cb(ctx, ctx->store.status, p->data);
   }
   free_api_param(p);
 
@@ -440,7 +440,7 @@ oc_cloud_refresh_token_handler(oc_client_response_t *data)
   _refresh_token_handler(ctx, data);
 
   if (p->cb) {
-    p->cb(ctx->store.status, p->data);
+    p->cb(ctx, ctx->store.status, p->data);
   }
   free_api_param(p);
 

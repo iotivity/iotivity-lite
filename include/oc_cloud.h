@@ -41,12 +41,6 @@ typedef enum {
   OC_CLOUD_DEREGISTERED = 64
 } oc_cloud_status_t;
 
-/**
-  @brief A function pointer for handling the cloud status.
-  @param status Current status of the cloud.
-*/
-typedef void (*oc_cloud_cb_t)(oc_cloud_status_t status, void *user_data);
-
 typedef struct oc_cloud_store_t
 {
   oc_string_t ci_server;
@@ -65,6 +59,15 @@ typedef enum {
   CLOUD_ERROR_CONNECT = 2,
   CLOUD_ERROR_REFRESH_ACCESS_TOKEN = 3,
 } oc_cloud_error_t;
+
+struct oc_cloud_context_t;
+
+/**
+  @brief A function pointer for handling the cloud status.
+  @param status Current status of the cloud.
+*/
+typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
+                              oc_cloud_status_t status, void *user_data);
 
 typedef struct oc_cloud_context_t
 {

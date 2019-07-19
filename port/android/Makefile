@@ -112,7 +112,7 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
-ifeq ($(PKI), 1)
+ifeq ($(PKI),1)
 	CTIMESTAMP=../../api/c-timestamp/timestamp_tm.c
 endif
 
@@ -151,6 +151,13 @@ ifneq ($(JAVA), 1)
 	NATIVE_SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
 	  smart_lock server_multithread_linux client_multithread_linux
+endif
+
+ifeq ($(CLOUD),1)
+	CFLAGS += -DOC_CLOUD
+	TCP=1
+	IPV4=1
+	SAMPLES += cloud_linux cloud_tests
 endif
 
 OBT = onboarding_tool
@@ -197,7 +204,7 @@ ifeq ($(DYNAMIC),1)
 		../../security/oc_obt_otm_cert.c \
 		../../security/oc_obt_certs.c
 # skip building the native onboarding tool if JAVA=1
-ifneq ($(JAVA), 1)
+ifneq ($(JAVA),1)
 	NATIVE_SAMPLES += ${OBT}
 endif
 else
@@ -250,15 +257,14 @@ ${OBJDIR}/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
-
 libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
 libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER)
+libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
 server: libiotivity-constrained-server.a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
@@ -298,6 +304,12 @@ multi_device_server: libiotivity-constrained-server.a
 
 multi_device_client: libiotivity-constrained-client.a
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+cloud_linux: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
+	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+
+cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
+	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
 ${OBT}: libiotivity-constrained-client.a
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}

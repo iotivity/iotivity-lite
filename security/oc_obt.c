@@ -60,11 +60,11 @@ OC_LIST(oc_cache);
 /* Persisted state */
 static int id = 1000;
 
-/* Public/Private key-pair for root of trust */
+/* Public/Private key-pair for the local domain's root of trust */
 #ifdef OC_PKI
 const char *root_subject = "C=US, O=OCF, CN=IoTivity-Lite OBT Root";
 uint8_t private_key[OC_KEYPAIR_PRIVKEY_SIZE];
-uint8_t private_key_size;
+size_t private_key_size;
 int root_cert_credid;
 #endif /* OC_PKI */
 
@@ -1933,7 +1933,7 @@ oc_obt_init(void)
 
 #ifdef OC_PKI
     uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
-    uint8_t public_key_size = 0;
+    size_t public_key_size = 0;
     if (oc_generate_ecdsa_keypair(
           public_key, OC_KEYPAIR_PUBKEY_SIZE, &public_key_size, private_key,
           OC_KEYPAIR_PRIVKEY_SIZE, &private_key_size) < 0) {
