@@ -639,17 +639,16 @@ public class ObtMain {
         if (role.length() > 64) {
             role = role.substring(0, 64);
         }
-        String authority;
+        String authority = null;
         System.out.print("Authority? [0-No, 1-Yes]: ");
         int c = scanner.nextInt();
         if (c == 1) {
+            System.out.println("\nEnter authority: ");
             authority = scanner.next();
             // max string length for role is 64 characters
             if (authority.length() > 64) {
                 authority = authority.substring(0, 64);
             }
-        } else {
-            authority = null;
         }
         int ret = OCObt.provisionRoleWildcardAce(ods[userInput].uuid, role, authority, provisionRoleWildcardAceHandler);
         if (ret >= 0) {
@@ -724,19 +723,18 @@ public class ObtMain {
             if (role.length() > 64) {
                 role = role.substring(0, 64);
             }
-            String authority = "";
+            String authority = null;
             System.out.print("Authority? [0-No, 1-Yes]: ");
             c = scanner.nextInt();
             if (c == 1) {
+                System.out.println("\nEnter authority: ");
                 authority = scanner.next();
                 // max string length for role is 64 characters
                 if (authority.length() > 64) {
                     authority = authority.substring(0, 64);
                 }
-                roles = OCObt.addRoleId(roles, role, authority);
-            } else {
-                roles = OCObt.addRoleId(roles, role, null);
             }
+            roles = OCObt.addRoleId(roles, role, authority);
             System.out.print("\nMore Roles? [0-No, 1-Yes]: ");
             c = scanner.nextInt();
         } while (c == 1);

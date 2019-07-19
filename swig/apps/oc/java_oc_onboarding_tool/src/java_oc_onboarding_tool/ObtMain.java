@@ -634,6 +634,7 @@ public class ObtMain {
         System.out.print("Authority? [0-No, 1-Yes]: ");
         int c = scanner.nextInt();
         if (c == 1) {
+            System.out.println("\nEnter authority: ");
             authority = scanner.next();
             // max string length for role is 64 characters
             if (authority.length() > 64) {
@@ -719,6 +720,7 @@ public class ObtMain {
             System.out.print("Authority? [0-No, 1-Yes]: ");
             c = scanner.nextInt();
             if (c == 1) {
+                System.out.println("\nEnter authority: ");
                 authority = scanner.next();
                 // max string length for role is 64 characters
                 if (authority.length() > 64) {
