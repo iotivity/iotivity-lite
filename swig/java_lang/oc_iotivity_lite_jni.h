@@ -109,6 +109,7 @@ jclass cls_ArrayList;
 jclass cls_OCMainInitHandler;
 jclass cls_OCAddDeviceHandler;
 jclass cls_OCClientResponse;
+jclass cls_OCCloudContext;
 jclass cls_OCConWriteHandler;
 jclass cls_OCDiscoveryHandler;
 jclass cls_OCFactoryPresetsHandler;
