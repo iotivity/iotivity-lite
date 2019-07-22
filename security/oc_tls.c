@@ -976,15 +976,11 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 
   if (depth == 0) {
     oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
-    if (!id_cert) {
-      OC_ERR("could not find the identity cert used for this session");
-      return 0;
-    }
 
     /* Parse the peer's subjectuuid from its end-entity certificate */
     oc_string_t uuid;
     if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
-      if (id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
+      if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         OC_ERR("unable to retrieve UUID from the cert's CN");
         return -1;
       } else {
@@ -1002,7 +998,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       return -1;
     }
 
-    if (id_cert->cred->credusage != OC_CREDUSAGE_MFG_CERT) {
+    if (id_cert && id_cert->cred->credusage != OC_CREDUSAGE_MFG_CERT) {
       OC_DBG("checking if peer is authorized to connect with us");
       oc_uuid_t wildcard_sub;
       memset(&wildcard_sub, 0, sizeof(oc_uuid_t));
