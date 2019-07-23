@@ -84,6 +84,13 @@ oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
 }
 
 #ifdef OC_PKI
+static bool auto_assert_all_roles = true;
+void
+oc_auto_assert_roles(bool auto_assert)
+{
+  auto_assert_all_roles = auto_assert;
+}
+
 typedef struct oc_x509_cacrt_t
 {
   struct oc_x509_cacrt_t *next;
@@ -1572,6 +1579,11 @@ read_application_data(oc_tls_peer_t *peer)
       OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]",
              peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
+#if defined(OC_PKI) && defined(OC_CLIENT)
+      if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer)) {
+        oc_assert_all_roles(&peer->endpoint);
+      }
+#endif /* OC_PKI && OC_CLIENT */
     }
 
 #ifdef OC_CLIENT
