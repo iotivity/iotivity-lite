@@ -10,7 +10,12 @@ public class ProvisionAce2Handler implements OCObtDeviceStatusHandler {
         if (status >= 0) {
             System.out.println("\nSuccessfully provisioned ACE to device " + OCUuidUtil.uuidToString(uuid));
         } else {
-            ObtMain.ownedDevices.remove(uuid);
+            for (OcfDeviceInfo od : ObtMain.ownedDevices) {
+                if (od.getUuid().equals(uuid)) {
+                    ObtMain.ownedDevices.remove(od);
+                    break;
+                }
+            }
             System.out.println("\nERROR provisioning ACE to device " + OCUuidUtil.uuidToString(uuid));
         }
     }
