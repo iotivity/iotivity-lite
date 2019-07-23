@@ -12,7 +12,7 @@ public class ProvisionAuthWildcardAceHandler implements OCObtDeviceStatusHandler
             System.out.println("\nSuccessfully provisioned auth-crypt * ACE to device " + OCUuidUtil.uuidToString(uuid));
           } else {
             for (OCFDeviceInfo od : ObtMain.ownedDevices) {
-                if (od.uuid == uuid ) {
+                if (od.uuid.equals(uuid)) {
                     ObtMain.ownedDevices.remove(od);
                     break;
                 }
