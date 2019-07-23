@@ -373,6 +373,11 @@ obt_jw_9(oc_client_response_t *data)
     goto err_obt_jw_9;
   }
 
+  oc_sec_cred_t *oc = oc_sec_get_cred_by_credid(credid, 0);
+  if (oc) {
+    oc->owner_cred = true;
+  }
+
   /**  9) post cred rowneruuid, cred
    */
   if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_10, HIGH_QOS, o)) {

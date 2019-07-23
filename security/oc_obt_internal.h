@@ -84,8 +84,9 @@ typedef struct oc_switch_dos_ctx_t
 } oc_switch_dos_ctx_t;
 
 /* Context to be maintained over hard RESET sequence */
-typedef struct
+typedef struct oc_hard_reset_ctx_t
 {
+  struct oc_hard_reset_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
   oc_switch_dos_ctx_t *switch_dos;

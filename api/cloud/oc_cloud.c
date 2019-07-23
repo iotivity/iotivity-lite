@@ -314,7 +314,6 @@ oc_cloud_init(void)
 
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, device));
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_D, device));
-    oc_cloud_add_resource(ctx->cloud_conf);
   }
   return 0;
 }

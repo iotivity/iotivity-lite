@@ -476,7 +476,6 @@ request_random_pin(void)
 static void
 otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
@@ -486,6 +485,7 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
+  free(data);
 }
 
 static void
@@ -517,12 +517,18 @@ otm_cert(void)
   }
 
   otb_mutex_lock(app_sync_lock);
+  char *d_name =
+    (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
+  if (d_name) {
+    strcpy(d_name, devices[c]->device_name);
+  }
 
-  int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, NULL);
+  int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, d_name);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
   } else {
     PRINT("\nERROR issuing request to perform ownership transfer\n");
+    free(d_name);
   }
 
   /* Having issued an OTM request, remove this item from the unowned device list
