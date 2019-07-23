@@ -126,6 +126,7 @@ xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..
     <CustomBuildStep>
       <Message>Clean SWIG output</Message>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
       <TreatOutputAsContent>
@@ -161,6 +162,7 @@ xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
       <Message>Clean SWIG output</Message>
@@ -194,12 +196,14 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
     </Link>
     <PreBuildEvent>
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
       <Message>Clean SWIG output</Message>
@@ -233,12 +237,14 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
     </Link>
     <PreBuildEvent>
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
 del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
       <Message>Clean SWIG output</Message>
