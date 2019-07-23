@@ -162,7 +162,6 @@ public class ObtMain {
             System.out.println("\nERROR issuing request to perform ownership transfer");
         }
 
-        unownedDevices.remove(uds[userInput]);
         /*
          * Having issued an OTM request, remove this item from the unowned
          * device list
