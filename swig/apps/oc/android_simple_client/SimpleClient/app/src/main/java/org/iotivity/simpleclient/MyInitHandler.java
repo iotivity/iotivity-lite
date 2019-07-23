@@ -12,22 +12,22 @@ public class MyInitHandler implements OCMainInitHandler {
     private static final String TAG = MyInitHandler.class.getSimpleName();
 
     private ClientActivity activity;
-    private OcPlatform obtPlatform;
+    private OcPlatform ocPlatform;
 
     OcDevice device;
 
-    public MyInitHandler(ClientActivity activity, OcPlatform obtPlatform) {
+    public MyInitHandler(ClientActivity activity, OcPlatform ocPlatform) {
         this.activity = activity;
-        this.obtPlatform = obtPlatform;
+        this.ocPlatform = ocPlatform;
     }
 
     @Override
     public int initialize() {
         Log.d(TAG, "inside MyInitHandler.initialize()");
-        int ret = obtPlatform.platformInit("Android");
+        int ret = ocPlatform.platformInit("Android");
         if (ret >= 0) {
             device = new OcDevice("/oic/d", "oic.d.phone", "Kishen's Android Phone", "ocf.1.0.0", "ocf.res.1.0.0");
-            ret |= obtPlatform.addDevice(device);
+            ret |= ocPlatform.addDevice(device);
         }
 
         return ret;
