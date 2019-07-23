@@ -1103,6 +1103,7 @@ bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *end
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
+%rename(autoAssertRoles) oc_auto_assert_roles;
 %rename(assertAllRoles) oc_assert_all_roles;
 %ignore oc_send_ping;
 %rename(sendPing) jni_send_ping;
