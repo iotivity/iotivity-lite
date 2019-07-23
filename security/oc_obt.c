@@ -119,7 +119,7 @@ oc_obt_is_owned_device(oc_uuid_t *uuid)
   oc_sec_creds_t *creds = oc_sec_get_creds(0);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
   while (c != NULL) {
-    if (memcmp(c->subjectuuid.id, uuid->id, 16) == 0) {
+    if (memcmp(c->subjectuuid.id, uuid->id, 16) == 0 && c->owner_cred) {
       return true;
     }
     c = c->next;

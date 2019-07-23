@@ -689,6 +689,9 @@ oc_sec_encode_cred(bool persist, size_t device)
       }
       oc_rep_close_object(creds, publicdata);
     }
+    if (persist) {
+      oc_rep_set_boolean(creds, owner_cred, cr->owner_cred);
+    }
 #endif /* OC_PKI */
     oc_rep_object_array_end_item(creds);
     cr = cr->next;
@@ -820,6 +823,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           oc_sec_encoding_t publicdatatype = 0;
           size_t publicdata_size = 0;
 #endif /* OC_PKI */
+          bool owner_cred = false;
           bool non_empty = false;
           while (cred != NULL) {
             non_empty = true;
@@ -923,6 +927,12 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 }
               }
             } break;
+            case OC_REP_BOOL:
+              if (len == 10 &&
+                  memcmp(oc_string(cred->name), "owner_cred", 10) == 0) {
+                owner_cred = cred->value.boolean;
+              }
+              break;
             default:
               break;
             }
@@ -950,10 +960,15 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
               return false;
             }
 
+            oc_sec_cred_t *cr = oc_sec_get_cred_by_credid(credid, device);
+            if (cr) {
+              cr->owner_cred = owner_cred;
+            }
             /* Obtain a handle to the owner credential entry where that applies
              */
             if (credtype == OC_CREDTYPE_PSK && privatedata_size == 0 && owner) {
-              *owner = oc_sec_get_cred_by_credid(credid, device);
+              *owner = cr;
+              (*owner)->owner_cred = true;
             }
           }
           creds_array = creds_array->next;
