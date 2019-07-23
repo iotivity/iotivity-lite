@@ -19,15 +19,13 @@ public class ObtMain {
     private static final int MAX_NUM_RT = 50;
 
     /* Sets containing discovered owned and un-owned devices */
-    static Set<OCUuid> unownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCUuid>());
-    static Set<OCUuid> ownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCUuid>());
+    static Set<OcfDeviceInfo> unownedDevices = Collections.synchronizedSet(new LinkedHashSet<OcfDeviceInfo>());
+    static Set<OcfDeviceInfo> ownedDevices = Collections.synchronizedSet(new LinkedHashSet<OcfDeviceInfo>());
 
     /* Callback handlers */
     private static UnownedDeviceHandler unownedDeviceHandler = new UnownedDeviceHandler();
     private static OwnedDeviceHandler ownedDeviceHandler = new OwnedDeviceHandler();
-    private static JustWorksHandler justWorksHandler = new JustWorksHandler();
     private static GenerateRandomPinHandler generateRandomPinHandler = new GenerateRandomPinHandler();
-    private static OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler();
     private static ProvisionCredentialsHandler provisionCredentialsHandler = new ProvisionCredentialsHandler();
     private static ProvisionAce2Handler provisionAce2Handler = new ProvisionAce2Handler();
     private static ProvisionAuthWildcardAceHandler provisionAuthWildcardAceHandler = new ProvisionAuthWildcardAceHandler();
@@ -136,9 +134,10 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OcfDeviceInfo[] uds = unownedDevices.toArray(new OcfDeviceInfo[unownedDevices.size()]);
+        for (OcfDeviceInfo ud : uds) {
+            unownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.getUuid()) + " - " + ud.getName() + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -150,7 +149,8 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.performJustWorksOtm(uds[userInput], justWorksHandler);
+        JustWorksHandler justWorksHandler = new JustWorksHandler(uds[userInput]);
+        int ret = obt.performJustWorksOtm(uds[userInput].getUuid(), justWorksHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform ownership transfer");
         } else {
@@ -174,9 +174,10 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OcfDeviceInfo[] uds = unownedDevices.toArray(new OcfDeviceInfo[unownedDevices.size()]);
+        for (OcfDeviceInfo ud : uds) {
+            unownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.getUuid()) + " - " + ud.getName() + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -188,7 +189,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.requestRandomPin(uds[userInput], generateRandomPinHandler);
+        int ret = obt.requestRandomPin(uds[userInput].getUuid(), generateRandomPinHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to generate a random pin");
         } else {
@@ -206,9 +207,10 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OcfDeviceInfo[] uds = unownedDevices.toArray(new OcfDeviceInfo[unownedDevices.size()]);
+        for (OcfDeviceInfo ud : uds) {
+            unownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.getUuid()) + " - " + ud.getName() + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -227,7 +229,8 @@ public class ObtMain {
             pin = pin.substring(0, 24);
         }
 
-        int ret = obt.performRandomPinOtm(uds[userInput], pin, otmRandomPinHandler);
+        OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler(uds[userInput]);
+        int ret = obt.performRandomPinOtm(uds[userInput].getUuid(), pin, otmRandomPinHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform Random PIN OTM");
         } else {
@@ -251,9 +254,10 @@ public class ObtMain {
 
         StringBuilder unownedDevicesMenu = new StringBuilder();
         unownedDevicesMenu.append("\nUnowned Devices:\n");
-        OCUuid[] uds = unownedDevices.toArray(new OCUuid[unownedDevices.size()]);
-        for (OCUuid ud : uds) {
-            unownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud) + "\n");
+        OcfDeviceInfo[] uds = unownedDevices.toArray(new OcfDeviceInfo[unownedDevices.size()]);
+        for (OcfDeviceInfo ud : uds) {
+            unownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.getUuid()) + " - " + ud.getName() + "\n");
             i++;
         }
         unownedDevicesMenu.append("\n\nSelect device: ");
@@ -265,8 +269,8 @@ public class ObtMain {
             return;
         }
 
-        OtmCertificationHandler otmCertificateHandler = new OtmCertificationHandler();
-        int ret = obt.performCertOtm(uds[userInput], otmCertificateHandler);
+        OtmCertificationHandler otmCertificateHandler = new OtmCertificationHandler(uds[userInput]);
+        int ret = obt.performCertOtm(uds[userInput].getUuid(), otmCertificateHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform Certificate OTM");
         } else {
@@ -290,9 +294,10 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device 1: ");
@@ -310,7 +315,8 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.provisionPairwiseCredentials(ods[userInput1], ods[userInput2], provisionCredentialsHandler);
+        int ret = obt.provisionPairwiseCredentials(ods[userInput1].getUuid(), ods[userInput2].getUuid(),
+                provisionCredentialsHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision credentials");
         } else {
@@ -333,9 +339,10 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
 
@@ -358,8 +365,9 @@ public class ObtMain {
         subjectsMenu.append("[1]: " + connTypes[1] + "\n");
         subjectsMenu.append("[2]: Role\n");
         i = 0;
-        for (OCUuid od : ods) {
-            subjectsMenu.append("[" + (i + 3) + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        for (OcfDeviceInfo od : ods) {
+            subjectsMenu.append(
+                    "[" + (i + 3) + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         subjectsMenu.append("\nSelect subject: ");
@@ -373,7 +381,7 @@ public class ObtMain {
 
         OcSecurityAce ace = null;
         if (sub > 2) {
-            ace = new OcSubjectSecurityAce(ods[sub - 3]);
+            ace = new OcSubjectSecurityAce(ods[sub - 3].getUuid());
         } else {
             if (sub == 0) {
                 ace = new OcAnonSecurityAce();
@@ -558,7 +566,7 @@ public class ObtMain {
             ace.addPermission(OCAcePermissionsMask.NOTIFY);
         }
 
-        int ret = obt.provisionAce(ods[dev], ace, provisionAce2Handler);
+        int ret = obt.provisionAce(ods[dev].getUuid(), ace, provisionAce2Handler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision ACE");
         } else {
@@ -577,9 +585,10 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nProvision auth crypt * ACE\n");
         ownedDevicesMenu.append("My Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
@@ -591,7 +600,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.provisionAuthWildcardAce(ods[userInput], provisionAuthWildcardAceHandler);
+        int ret = obt.provisionAuthWildcardAce(ods[userInput].getUuid(), provisionAuthWildcardAceHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
         } else {
@@ -610,9 +619,10 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nProvision role * ACE\n");
         ownedDevicesMenu.append("My Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
@@ -642,7 +652,8 @@ public class ObtMain {
             }
         }
 
-        int ret = obt.provisionRoleWildcardAce(ods[userInput], role, authority, provisionRoleWildcardAceHandler);
+        int ret = obt.provisionRoleWildcardAce(ods[userInput].getUuid(), role, authority,
+                provisionRoleWildcardAceHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
         } else {
@@ -660,9 +671,10 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("My Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device: ");
@@ -674,7 +686,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.provisionIdentityCertificate(ods[userInput], provisionIdCertificateHandler);
+        int ret = obt.provisionIdentityCertificate(ods[userInput].getUuid(), provisionIdCertificateHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision identity certificate");
         } else {
@@ -693,9 +705,10 @@ public class ObtMain {
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nProvision role * ACE\n");
         ownedDevicesMenu.append("My Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
@@ -732,7 +745,7 @@ public class ObtMain {
             c = scanner.nextInt();
         } while (c == 1);
 
-        int ret = obt.provisionRoleCertificate(roles, ods[userInput], provisionRoleCertificateHandler);
+        int ret = obt.provisionRoleCertificate(roles, ods[userInput].getUuid(), provisionRoleCertificateHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
         } else {
@@ -750,9 +763,10 @@ public class ObtMain {
 
         StringBuilder ownedDevicesMenu = new StringBuilder();
         ownedDevicesMenu.append("\nMy Devices:\n");
-        OCUuid[] ods = ownedDevices.toArray(new OCUuid[ownedDevices.size()]);
-        for (OCUuid od : ods) {
-            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od) + "\n");
+        OcfDeviceInfo[] ods = ownedDevices.toArray(new OcfDeviceInfo[ownedDevices.size()]);
+        for (OcfDeviceInfo od : ods) {
+            ownedDevicesMenu
+                    .append("[" + i + "]: " + OCUuidUtil.uuidToString(od.getUuid()) + " - " + od.getName() + "\n");
             i++;
         }
         ownedDevicesMenu.append("\nSelect device : ");
@@ -764,7 +778,7 @@ public class ObtMain {
             return;
         }
 
-        int ret = obt.deviceHardReset(ods[userInput], resetDeviceHandler);
+        int ret = obt.deviceHardReset(ods[userInput].getUuid(), resetDeviceHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform hard RESET");
         } else {

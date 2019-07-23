@@ -7,6 +7,7 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
 
     @Override
     public void handler(OCUuid uuid, OCEndpoint endpoints) {
+        OCEndpoint ep = endpoints;
         String deviceId = OCUuidUtil.uuidToString(uuid);
         System.out.println("\nDiscovered owned device: " + deviceId + " at:");
         while (endpoints != null) {
@@ -15,6 +16,6 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
             endpoints = endpoints.getNext();
         }
 
-        ObtMain.ownedDevices.add(uuid);
+        OcUtils.doGet("/oic/d", ep, null, new GetOwnedDeviceNameHandler(), OCQos.LOW_QOS);
     }
 }
