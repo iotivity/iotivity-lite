@@ -42,6 +42,7 @@ OC_MEMB(oc_switch_dos_ctx_m, oc_switch_dos_ctx_t, 1);
 OC_LIST(oc_switch_dos_ctx_l);
 
 OC_MEMB(oc_hard_reset_ctx_m, oc_hard_reset_ctx_t, 1);
+OC_LIST(oc_hard_reset_ctx_l);
 
 OC_MEMB(oc_credprov_ctx_m, oc_credprov_ctx_t, 1);
 OC_LIST(oc_credprov_ctx_l);
@@ -335,6 +336,10 @@ oc_obt_alloc_otm_ctx(void)
 static void
 free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
 {
+  if (!is_item_in_list(oc_otm_ctx_l, o)) {
+    return;
+  }
+  oc_list_remove(oc_otm_ctx_l, o);
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(o->device->endpoint);
   oc_tls_close_connection(ep);
   if (status == -1) {
@@ -350,7 +355,6 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
       oc_list_add(oc_devices, o->device);
     }
   }
-  oc_list_remove(oc_otm_ctx_l, o);
   oc_memb_free(&oc_otm_ctx_m, o);
 }
 
@@ -756,6 +760,10 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
 static void
 free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
 {
+  if (!is_item_in_list(oc_hard_reset_ctx_l, ctx)) {
+    return;
+  }
+  oc_list_remove(oc_hard_reset_ctx_l, ctx);
   oc_device_status_cb_t cb = ctx->cb;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(ctx->device->endpoint);
   oc_tls_close_connection(ep);
@@ -786,6 +794,9 @@ static void
 hard_reset_cb(int status, void *data)
 {
   oc_hard_reset_ctx_t *d = (oc_hard_reset_ctx_t *)data;
+  if (!is_item_in_list(oc_hard_reset_ctx_l, d)) {
+    return;
+  }
   d->switch_dos = NULL;
   oc_remove_delayed_callback(data, hard_reset_timeout_cb);
   free_hard_reset_ctx(data, status);
@@ -820,6 +831,7 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
     return -1;
   }
 
+  oc_list_add(oc_hard_reset_ctx_l, d);
   oc_set_delayed_callback(d, hard_reset_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
@@ -1696,6 +1708,10 @@ oc_obt_free_ace(oc_sec_ace_t *ace)
 static void
 free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
 {
+  if (!is_item_in_list(oc_acl2prov_l, request)) {
+    return;
+  }
+  oc_list_remove(oc_acl2prov_l, request);
   free_ace(request->ace);
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(request->device->endpoint);
   oc_tls_close_connection(ep);
@@ -1703,7 +1719,6 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
     free_switch_dos_state(request->switch_dos);
   }
   request->cb.cb(&request->device->uuid, status, request->cb.data);
-  oc_list_remove(oc_acl2prov_l, request);
   oc_memb_free(&oc_acl2prov_m, request);
 }
 
