@@ -16,11 +16,11 @@ public class OcObt {
         return OCObt.discoverUnownedDevices(unownedDeviceHandler);
     }
 
-    public static int discoverUnownedDevicesRealmLocalIPv6(OCObtDiscoveryHandler unownedDeviceHandler) {
+    public int discoverUnownedDevicesRealmLocalIPv6(OCObtDiscoveryHandler unownedDeviceHandler) {
         return OCObt.discoverUnownedDevicesRealmLocalIPv6(unownedDeviceHandler);
     }
 
-    public static int discoverUnownedDevicesSiteLocalIPv6(OCObtDiscoveryHandler unownedDeviceHandler) {
+    public int discoverUnownedDevicesSiteLocalIPv6(OCObtDiscoveryHandler unownedDeviceHandler) {
         return OCObt.discoverUnownedDevicesSiteLocalIPv6(unownedDeviceHandler);
     }
 
