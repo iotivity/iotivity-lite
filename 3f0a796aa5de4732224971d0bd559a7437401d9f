@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c2ff86d_8e6c1fac",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 7
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-24T20:30:09Z",
+      "side": 1,
+      "message": "assert(resource-\u003eget_handler.user_data.cb_valid \u003d\u003d OC_CALLBACK_VALID_TILL_DELETE_RESOURCE)",
+      "revId": "3f0a796aa5de4732224971d0bd559a7437401d9f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
