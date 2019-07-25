@@ -739,9 +739,9 @@ public class ObtMain {
         } while (c == 1);
         int ret = OCObt.provisionRoleCertificate(roles, ods[userInput].uuid, provisionRoleCertificateHandler);
         if (ret >= 0) {
-            System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
+            System.out.println("\nSuccessfully issued request to provision role certificate");
         } else {
-            System.out.println("\nERROR issuing request to provision auth-crypt * ACE");
+            System.out.println("\nERROR issuing request to provision role certificate");
         }
     }
 
