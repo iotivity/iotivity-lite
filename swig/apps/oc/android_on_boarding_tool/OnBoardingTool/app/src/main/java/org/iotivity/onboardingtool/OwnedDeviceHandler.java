@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.iotivity.OCEndpoint;
 import org.iotivity.OCObtDiscoveryHandler;
+import org.iotivity.OCQos;
 import org.iotivity.OCUuid;
 import org.iotivity.OCUuidUtil;
 import org.iotivity.oc.OcUtils;
@@ -20,6 +21,7 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
 
     @Override
     public void handler(OCUuid uuid, OCEndpoint endpoints) {
+        OCEndpoint ep = endpoints;
         String deviceId = OCUuidUtil.uuidToString(uuid);
         Log.d(TAG, "discovered owned device: " + deviceId + " at:");
         while (endpoints != null) {
@@ -28,6 +30,6 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
             endpoints = endpoints.getNext();
         }
 
-        activity.addOwnedDevice(deviceId);
+        OcUtils.doGet("/oic/d", ep, null, new GetDeviceNameHandler(activity, true), OCQos.LOW_QOS);
     }
 }

@@ -56,7 +56,7 @@ class AcePropertiesHelper {
         final EditText input = new EditText(activity);
         layout.addView(input);
 
-        String title = activity.getResources().getString(R.string.hrefDialogTitle).replace("?", Integer.toString(resourceNumber));
+        String title = activity.getString(R.string.hrefDialogTitle).replace("?", Integer.toString(resourceNumber));
         hrefAlertDialogBuilder.setTitle(title);
         hrefAlertDialogBuilder.setMessage(R.string.hrefDialogMessage);
         hrefAlertDialogBuilder.setView(layout);
@@ -123,7 +123,7 @@ class AcePropertiesHelper {
         final EditText input = new EditText(activity);
         layout.addView(input);
 
-        String title = activity.getResources().getString(R.string.resourceTypesDialogTitle).replace("?", Integer.toString(resourceNumber));
+        String title = activity.getString(R.string.resourceTypesDialogTitle).replace("?", Integer.toString(resourceNumber));
         resourceTypesAlertDialogBuilder.setTitle(title);
         resourceTypesAlertDialogBuilder.setMessage(R.string.resourceTypesDialogMessage);
         resourceTypesAlertDialogBuilder.setView(layout);
@@ -157,7 +157,7 @@ class AcePropertiesHelper {
     private void getInterfaces(final OcSecurityAce ace, final OcAceResource aceResource) {
         final Set<Integer> interfaces = new HashSet<>();
         AlertDialog.Builder interfacesAlertDialogBuilder = new AlertDialog.Builder(activity);
-        String title = activity.getResources().getString(R.string.interfacesDialogTitle).replace("?", Integer.toString(resourceNumber));
+        String title = activity.getString(R.string.interfacesDialogTitle).replace("?", Integer.toString(resourceNumber));
         interfacesAlertDialogBuilder.setTitle(title);
         interfacesAlertDialogBuilder.setMultiChoiceItems(R.array.interfaces, null, new DialogInterface.OnMultiChoiceClickListener() {
             @Override
@@ -206,7 +206,7 @@ class AcePropertiesHelper {
                 }
 
                 AlertDialog.Builder moreResourcesAlertDialogBuilder = new AlertDialog.Builder(activity);
-                moreResourcesAlertDialogBuilder.setTitle(R.string.addMoreResourceDialogMessage);
+                moreResourcesAlertDialogBuilder.setTitle(R.string.addMoreResourcesDialogMessage);
 
                 moreResourcesAlertDialogBuilder.setPositiveButton("Yes"/*android.R.string.yes*/, new DialogInterface.OnClickListener() {
                     @Override

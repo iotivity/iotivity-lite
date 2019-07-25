@@ -10,12 +10,20 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.iotivity.onboardingtool.OnBoardingActivity">
 
+    <Button
+        android:id="@+id/reset_obt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="true"
+        android:text="@string/resetObt" />
+
     <RadioGroup
         android:id="@+id/radio_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="false"
         android:layout_alignParentTop="false"
+        android:layout_below="@+id/reset_obt"
         android:orientation="horizontal">
 
         <RadioButton
@@ -34,11 +42,61 @@
 
     </RadioGroup>
 
+    <RadioGroup
+        android:id="@+id/realm_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentTop="false"
+        android:layout_below="@+id/radio_group"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/owned_realm_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ownedRealm" />
+
+        <RadioButton
+            android:id="@+id/unowned_realm_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/unownedRealm" />
+
+    </RadioGroup>
+
+    <RadioGroup
+        android:id="@+id/site_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentTop="false"
+        android:layout_below="@+id/realm_radio_group"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/owned_site_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ownedSite" />
+
+        <RadioButton
+            android:id="@+id/unowned_site_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/unownedSite" />
+
+    </RadioGroup>
+
     <Button
         android:id="@+id/refresh_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/radio_group"
+        android:layout_below="@+id/site_radio_group"
         android:enabled="false"
         android:text="@string/refresh" />
 

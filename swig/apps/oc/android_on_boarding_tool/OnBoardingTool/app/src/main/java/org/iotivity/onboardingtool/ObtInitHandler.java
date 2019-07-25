@@ -23,7 +23,7 @@ public class ObtInitHandler implements OCMainInitHandler {
         Log.d(TAG, "inside ObtInitHandler.initialize()");
         int ret = obtPlatform.platformInit("OCF");
         if (ret >= 0) {
-            OcDevice device = new OcDevice("/oic/d", "oic.d.sensor", "OBT", "ocf.1.0.0", "ocf.res.1.0.0");
+            OcDevice device = new OcDevice("/oic/d", "oic.wk.d", "OBT", "ocf.2.0.2", "ocf.res.1.3.0");
             ret |= obtPlatform.addDevice(device);
         }
 
