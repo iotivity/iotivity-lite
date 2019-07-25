@@ -655,9 +655,9 @@ public class ObtMain {
         int ret = obt.provisionRoleWildcardAce(ods[userInput].getUuid(), role, authority,
                 provisionRoleWildcardAceHandler);
         if (ret >= 0) {
-            System.out.println("\nSuccessfully issued request to provision auth-crypt * ACE");
+            System.out.println("\nSuccessfully issued request to provision role * ACE");
         } else {
-            System.out.println("\nERROR issuing request to provision auth-crypt * ACE");
+            System.out.println("\nERROR issuing request to provision role * ACE");
         }
     }
 
