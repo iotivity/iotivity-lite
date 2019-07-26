@@ -312,17 +312,47 @@ int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, const char *pin, size_t pin_
 int jni_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_perform_cert_otm(uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY && OC_PKI */
   return return_value;
 }
 %}
 
-%rename(addRoleId) oc_obt_add_roleid;
-%rename(freeRoleId) oc_obt_free_roleid;
+%ignore oc_obt_add_roleid;
+%rename(addRoleId) jni_obt_add_roleid;
+%inline %{
+oc_role_t *jni_obt_add_roleid(oc_role_t *roles, const char *role, const char *authority)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  return oc_obt_add_roleid(roles, role, authority);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+%ignore oc_obt_free_roleid;
+%rename(freeRoleId) jni_obt_free_roleid;
+%inline %{
+void jni_obt_free_roleid(oc_role_t *roles)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_obt_free_roleid(roles);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI.", __func__);
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
 
 %ignore oc_obt_device_hard_reset;
 %rename(deviceHardReset) jni_obt_device_hard_reset;
@@ -403,11 +433,16 @@ int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, o
 int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_identity_certificate(uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY && OC_PKI */
   return return_value;
 }
 %}
@@ -418,11 +453,16 @@ int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t c
 int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_role_certificate(roles, uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY && OC_PKI */
   return return_value;
 }
 %}
