@@ -77,9 +77,31 @@ endif
 ifneq ($(SECURE),0)
 	EXTRA_FLAG += -DOC_SECURITY
 endif
+
+ifneq ($(PKI),0)
+	EXTRA_FLAG += -DOC_PKI
+endif
 SRC = oc_uuid oc_endpoint oc_rep oc_collection oc_clock oc_storage \
-		oc_api oc_obt oc_pki oc_introspection oc_core_res oc_cloud \
-		oc_session_events oc_buffer_settings
+		oc_api oc_introspection oc_core_res oc_cloud oc_session_events \
+		oc_buffer_settings
+
+ifeq ($(SECURE),1)
+	SRC += oc_obt
+endif
+
+ifeq ($(PKI),1)
+	SRC += oc_pki
+endif
+
+# Object Oriented version of Java output
+SWIG_EXTRA_JAVA_OC_CODE = OcCborEncoder.java  OcLink.java OcRepresentation.java \
+    OcCollection.java OcResource.java OcDevice.java OcPlatform.java OcUtils.java
+
+ifeq ($(SECURE),1)
+	SWIG_EXTRA_JAVA_OC_CODE += OcAceResource.java OcSecurityAce.java \
+    OcAnonSecurityAce.java OcAuthSecurityAce.java OcObt.java OcRoleSecurityAce.java \
+    OcSubjectSecurityAce.java
+endif
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
@@ -119,12 +141,17 @@ build_swig: $(SWIG_INTERFACE_SRC) copy_java
 %.i:
 	$(SWIG) -java -package $(PACKAGE_NAME) -outdir $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR) $(SWIG_CFLAG) $(HEADER_FILE) -o $(addsuffix _wrap.c, $(IOTIVITY_LITE_JAVA_JNI_DIR)$(basename $@)) $(SWIG_INTERFACES_DIR)$@
 
-copy_java:
+copy_extra_java: ${addprefix $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/, $(SWIG_EXTRA_JAVA_OC_CODE)}
+
+copy_java: copy_extra_java
 	cp $(JAVA_LANG_DIR)*.h $(IOTIVITY_LITE_JAVA_JNI_DIR)
 	cp $(JAVA_LANG_DIR)*.c $(IOTIVITY_LITE_JAVA_JNI_DIR)
 	cp $(OC_JAVA_DIR)*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)
-	mkdir -p $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
-	cp $(OC_JAVA_DIR)oc/*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
+
+$(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/%.java : $(OC_JAVA_DIR)oc/%.java
+	@echo "cp $< $@"
+	@mkdir -p $(dir $@)
+	@cp $< $@
 
 build_jar: copy_java
 	mkdir -p $(IOTIVITY_LITE_JAVA_BIN_DIR)
