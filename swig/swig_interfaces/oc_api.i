@@ -436,7 +436,16 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 
 %rename(getConResAnnounced) oc_get_con_res_announced;
 %rename(setConResAnnounce) oc_set_con_res_announced;
-%rename(reset) oc_reset;
+%ignore oc_reset;
+%rename(reset) jni_reset;
+%inline %{
+void jni_reset() {
+  OC_DBG("JNI: %s\n", __func__);
+  #ifdef OC_SECURITY
+  oc_reset();
+  #endif /* OC_SECURITY */
+}
+%}
 
 // server side
 %rename(newResource) oc_new_resource;
@@ -459,9 +468,9 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 %rename(collectionAddMandatoryResourceType) oc_collection_add_mandatory_rt;
 // custom instance of oc_resource_make_public to handle OC_SECURITY
 %ignore oc_resource_make_public;
-%rename(resourceMakePublic) jni_oc_resource_make_public;
+%rename(resourceMakePublic) jni_resource_make_public;
 %inline %{
-void jni_oc_resource_make_public(oc_resource_t *resource) {
+void jni_resource_make_public(oc_resource_t *resource) {
   OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_resource_make_public(resource);
@@ -1103,8 +1112,26 @@ bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *end
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
-%rename(autoAssertRoles) oc_auto_assert_roles;
-%rename(assertAllRoles) oc_assert_all_roles;
+%ignore oc_auto_assert_roles;
+%rename(autoAssertRoles) jni_auto_assert_roles;
+%inline %{
+void jni_auto_assert_roles(bool auto_assert) {
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_auto_assert_roles(auto_assert);
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+%ignore oc_assert_all_roles;
+%rename(assertAllRoles) jni_assert_all_roles;
+%inline %{
+void jni_assert_all_roles(oc_endpoint_t *endpoint) {
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_assert_all_roles(endpoint);
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
 %ignore oc_send_ping;
 %rename(sendPing) jni_send_ping;
 %inline %{
