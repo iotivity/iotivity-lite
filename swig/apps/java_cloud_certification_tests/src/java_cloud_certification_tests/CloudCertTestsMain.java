@@ -22,7 +22,6 @@ public class CloudCertTestsMain {
             quit = true;
             System.out.println("Calling mainShutdown.");
             OCMain.mainShutdown();
-            OCObt.shutdown();
             scanner.close();
             mainThread.interrupt();
         }
