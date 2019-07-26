@@ -51,10 +51,3 @@ int jni_storage_config(const char *store) {
 #endif /* OC_SECURITY */
 }
 %}
-/*
-%rename (storageRead) oc_storage_read;
-long oc_storage_read(const char *store, uint8_t *buf, size_t size);
-
-%rename (storageWrite) oc_storage_write;
-long oc_storage_write(const char *store, uint8_t *buf, size_t size);
-*/
