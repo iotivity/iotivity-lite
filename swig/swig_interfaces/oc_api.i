@@ -530,7 +530,35 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
 %}
 
 %rename(addResource) oc_add_resource;
-%rename(deleteResource) oc_delete_resource;
+%ignore oc_delete_resource;
+%rename(deleteResource) jni_delete_resource;
+%inline %{
+bool jni_delete_resource(oc_resource_t *resource) {
+  if(resource) {
+    if(resource->get_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->get_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->put_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->put_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->post_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->post_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+    if(resource->delete_handler.user_data) {
+      jni_callback_data *data = (jni_callback_data *)resource->delete_handler.user_data;
+      assert(data->cb_valid == OC_CALLBACK_VALID_TILL_DELETE_RESOURCE);
+      jni_list_remove(data);
+    }
+  }
+  return oc_delete_resource(resource);
+}
+%}
 
 /*
  * Code and typemaps for mapping the `oc_set_con_write_cb` to the java `OCConWriteHandler`
