@@ -25,6 +25,14 @@
   }
 %}
 
+%pragma(java) moduleclassmodifiers="
+/**
+ * Main API of IoTivity-lite for client and server.
+ *
+ * This is the main entry for all server and client related OCF functions.
+ */
+ public class";
+
 %{
 #include "oc_iotivity_lite_jni.h"
 
@@ -444,6 +452,28 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 %rename(resourceSetDefaultInterface) oc_resource_set_default_interface;
 %rename(resourceBindResourceType) oc_resource_bind_resource_type;
 %rename(processBaselineInterface) oc_process_baseline_interface;
+%javamethodmodifiers oc_new_collection "
+/**
+ * Creates a new empty collection.
+ *
+ * The collection is created with interfaces OC_IF_BASELINE,
+ * OC_IF_LL (also default) and OC_IF_B. Initially it is neither
+ * discoverable nor observable.
+
+ * The function only allocates the collection. Use addCollection() after the
+ * setup of the collection is complete.
+ *
+ * @param name name of the collection
+ * @param uri Unique URI of this collection. Must not be NULL.
+ * @param num_resource_types Number of resources the caller will bind with this resource
+ *                           (e.g. by invoking resourceBindResourceType(col, OIC_WK_COLLECTION)).
+ *                           Must be 1 or higher.
+ * @param device The internal device that should carry this collection. This is typically 0.
+ * @return the new collection or NULL if out of memory.
+ * @see addCollection
+ * @see collectionAddLink
+ */
+public";
 %rename(newCollection) oc_new_collection;
 %rename(deleteCollection) oc_delete_collection;
 %rename(newLink) oc_new_link;
