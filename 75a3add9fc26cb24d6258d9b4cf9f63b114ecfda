@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c434269f_1bfedd75",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-29T16:25:27Z",
+      "side": 1,
+      "message": "This one is documenting the OCMain class not a specific method note this is using a %pragma while the others are using %javamethodmodifiers.",
+      "parentUuid": "d0e8fd90_3ab88fb6",
+      "revId": "75a3add9fc26cb24d6258d9b4cf9f63b114ecfda",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5246a19e_dc62dcd1",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-07-29T16:08:58Z",
       "side": 1,
       "message": "newline for /** ?",
+      "revId": "75a3add9fc26cb24d6258d9b4cf9f63b114ecfda",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "326734c6_d51669b4",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-07-29T16:25:27Z",
+      "side": 1,
+      "message": "The new line is not needed. I was going back and forth between using a newline and not using a newline based on the output. In the end I decided the output looked better with the newline.  I will update the commit to put a newline here.  thanks for the critical eye.",
+      "parentUuid": "5246a19e_dc62dcd1",
       "revId": "75a3add9fc26cb24d6258d9b4cf9f63b114ecfda",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
