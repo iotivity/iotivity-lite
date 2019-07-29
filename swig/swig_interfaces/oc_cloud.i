@@ -250,7 +250,7 @@ int jni_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
 int jni_cloud_get_token_expiry(oc_cloud_context_t *ctx)
 {
 #ifdef OC_CLOUD
-  oc_cloud_get_token_expiry(ctx);
+  return oc_cloud_get_token_expiry(ctx);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   return -1;
@@ -288,7 +288,7 @@ void jni_cloud_delete_resource(oc_resource_t *resource)
 int jni_cloud_publish_resources(size_t device)
 {
 #ifdef OC_CLOUD
-  oc_cloud_publish_resources(device);
+  return oc_cloud_publish_resources(device);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   return -1;
