@@ -1,16 +1,17 @@
-CC = gcc
+export CC = gcc
 SED = sed
 INSTALL = install
-OS = linux
+export OS = linux
 ROOT_DIR = ../..
+SWIG_DIR = ${ROOT_DIR}/swig
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
-SECURE ?= 1
-PKI ?= 1
+export SECURE ?= 1
+export PKI ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
 prefix = $(DESTDIR)
@@ -140,6 +141,10 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
+ifeq ($(IDD), 1)
+	EXTRA_CFLAGS += -DOC_IDD_API
+endif
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
@@ -163,7 +168,9 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
-
+ifeq ($(JAVA),1)
+	SWIG = swig
+endif
 
 CFLAGS += $(EXTRA_CFLAGS)
 
@@ -180,7 +187,7 @@ CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-clie
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
      iotivity-constrained-client-server.pc
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(SWIG)
 
 test: $(UNIT_TESTS)
 	for test in $^ ; do ./$${test} ; done
@@ -388,6 +395,9 @@ iotivity-constrained-cloud.pc: iotivity-constrained-cloud.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
+swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	${MAKE} -C ${SWIG_DIR}
+
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
@@ -412,6 +422,7 @@ clean:
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE)
 	${MAKE} -C ${GTEST_DIR}/make clean
+	${MAKE} -C ${SWIG_DIR} clean
 
 distclean: cleanall
 

@@ -18,8 +18,7 @@
 #define OC_SESSION_EVENTS_INTERNAL_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state);

@@ -37,7 +37,7 @@ typedef struct oc_platform_info_t
   void *data;
 } oc_platform_info_t;
 
-typedef struct
+typedef struct oc_device_info_t
 {
   oc_uuid_t di;
   oc_uuid_t piid;

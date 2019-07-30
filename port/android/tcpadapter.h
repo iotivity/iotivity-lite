@@ -16,7 +16,6 @@
  *
  ****************************************************************************/
 
-
 #ifndef TCP_ADAPTER_H
 #define TCP_ADAPTER_H
 
@@ -25,8 +24,7 @@
 #include <sys/select.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 int oc_tcp_connectivity_init(ip_context_t *dev);

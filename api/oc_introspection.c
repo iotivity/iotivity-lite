@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
+#include <inttypes.h>
 #include <stdio.h>
 
 #ifndef OC_IDD_API
@@ -43,6 +44,9 @@ gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 void
 oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
 {
+  (void) device;
+  (void) IDD;
+  (void) IDD_size;
 #ifdef OC_SECURITY
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);

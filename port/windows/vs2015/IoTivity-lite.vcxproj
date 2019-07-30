@@ -94,7 +94,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -128,7 +128,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -159,7 +159,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -186,7 +186,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -212,9 +212,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
     <ClInclude Include="..\..\..\api\oc_events.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />
+    <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_api.h" />
@@ -224,6 +227,7 @@
     <ClInclude Include="..\..\..\include\oc_buffer_settings.h" />
     <ClInclude Include="..\..\..\include\oc_client_state.h" />
     <ClInclude Include="..\..\..\include\oc_clock_util.h" />
+    <ClInclude Include="..\..\..\include\oc_cloud.h" />
     <ClInclude Include="..\..\..\include\oc_collection.h" />
     <ClInclude Include="..\..\..\include\oc_core_res.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
@@ -288,6 +292,13 @@
     <ClCompile Include="..\..\..\api\c-timestamp\timestamp_parse.c" />
     <ClCompile Include="..\..\..\api\c-timestamp\timestamp_tm.c" />
     <ClCompile Include="..\..\..\api\c-timestamp\timestamp_valid.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_apis.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_manager.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_rd.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c" />
+    <ClCompile Include="..\..\..\api\cloud\rd_client.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />
     <ClCompile Include="..\..\..\api\oc_blockwise.c" />
     <ClCompile Include="..\..\..\api\oc_buffer.c" />
@@ -415,6 +426,10 @@
     <ClCompile Include="..\ipadapter.c" />
     <ClCompile Include="..\random.c" />
     <ClCompile Include="..\storage.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\security\oc_pstat.c.diff" />
+    <None Include="..\..\..\security\oc_tls.c.diff" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
