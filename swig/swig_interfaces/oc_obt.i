@@ -41,8 +41,34 @@ struct oc_ace_res_s{ };
 %rename(OCAceWildcard) oc_ace_wildcard_t;
 %ignore oc_ace_permissions_t;
 
-%rename(init) oc_obt_init;
-%rename(shutdown) oc_obt_shutdown;
+%ignore oc_obt_init;
+%rename(init) jni_obt_init;
+%inline %{
+int jni_obt_init(void)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_init();
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_shutdown;
+%rename(shutdown) jni_obt_shutdown;
+%inline %{
+void jni_obt_shutdown(void)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_shutdown();
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
 %{
@@ -111,11 +137,16 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
 int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_unowned_devices(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -126,11 +157,16 @@ int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_call
 int jni_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_unowned_devices_realm_local_ipv6(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -141,11 +177,16 @@ int jni_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t call
 int jni_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_unowned_devices_site_local_ipv6(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -156,11 +197,16 @@ int jni_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t callb
 int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_owned_devices(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -171,11 +217,16 @@ int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callba
 int jni_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_owned_devices_realm_local_ipv6(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -186,11 +237,16 @@ int jni_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callba
 int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_discover_owned_devices_site_local_ipv6(callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -253,11 +309,16 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
 int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_perform_just_works_otm(uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -268,11 +329,16 @@ int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t ca
 int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_request_random_pin(uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -297,11 +363,16 @@ int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, const char *pin, size_t pin_
                                    oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_perform_random_pin_otm(uuid, (const unsigned char*)pin, pin_len, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -360,11 +431,16 @@ void jni_obt_free_roleid(oc_role_t *roles)
 int jni_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_device_hard_reset(uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -418,11 +494,16 @@ static void jni_obt_status_cb(int status, void *user_data)
 int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_pairwise_credentials(uuid1, uuid2, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -467,32 +548,174 @@ int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt
 }
 %}
 
-%rename(newAceForSubject) oc_obt_new_ace_for_subject;
-%rename(newAceForConnection) oc_obt_new_ace_for_connection;
-%rename(newAceForRole) oc_obt_new_ace_for_role;
-%rename(aceNewResource) oc_obt_ace_new_resource;
-%rename(aceResourceSetHref) oc_obt_ace_resource_set_href;
-%rename(aceResourceSetNumRt) oc_obt_ace_resource_set_num_rt;
-%rename(aceResourceBindRt) oc_obt_ace_resource_bind_rt;
-%rename(aceResourceBindIf) oc_obt_ace_resource_bind_if;
-%rename(aceResourceSetWc) oc_obt_ace_resource_set_wc;
-%rename(aceAddPermission) oc_obt_ace_add_permission;
+%ignore oc_obt_new_ace_for_subject;
+%rename(newAceForSubject) jni_obt_new_ace_for_subject;
+%inline %{
+oc_sec_ace_t *jni_obt_new_ace_for_subject(oc_uuid_t *uuid)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_new_ace_for_subject(uuid);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_new_ace_for_connection;
+%rename(newAceForConnection) jni_obt_new_ace_for_connection;
+%inline %{
+oc_sec_ace_t *jni_obt_new_ace_for_connection(oc_ace_connection_type_t conn)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_new_ace_for_connection(conn);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_new_ace_for_role;
+%rename(newAceForRole) jni_obt_new_ace_for_role;
+%inline %{
+oc_sec_ace_t *jni_obt_new_ace_for_role(const char *role, const char *authority)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_new_ace_for_role(role, authority);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_new_resource;
+%rename(aceNewResource) jni_obt_ace_new_resource;
+%inline %{
+oc_ace_res_t *jni_obt_ace_new_resource(oc_sec_ace_t *ace)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_ace_new_resource(ace);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_resource_set_href;
+%rename(aceResourceSetHref) jni_obt_ace_resource_set_href;
+%inline %{
+void jni_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_resource_set_href(resource, href);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_resource_set_num_rt;
+%rename(aceResourceSetNumRt) jni_obt_ace_resource_set_num_rt;
+%inline %{
+void jni_obt_ace_resource_set_num_rt(oc_ace_res_t *resource, int num_resources)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_resource_set_num_rt(resource, num_resources);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_resource_bind_rt;
+%rename(aceResourceBindRt) jni_obt_ace_resource_bind_rt;
+%inline %{
+void jni_obt_ace_resource_bind_rt(oc_ace_res_t *resource, const char *rt)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_resource_bind_rt(resource, rt);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_resource_bind_if;
+%rename(aceResourceBindIf) jni_obt_ace_resource_bind_if;
+%inline %{
+void jni_obt_ace_resource_bind_if(oc_ace_res_t *resource,
+                                  oc_interface_mask_t iface_mask)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_resource_bind_if(resource, iface_mask);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_resource_set_wc;
+%rename(aceResourceSetWc) jni_obt_ace_resource_set_wc;
+%inline %{
+void jni_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_resource_set_wc(resource, wc);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+%ignore oc_obt_ace_add_permission;
+%rename(aceAddPermission) jni_obt_ace_add_permission;
+%inline %{
+void jni_obt_ace_add_permission(oc_sec_ace_t *ace,
+                                oc_ace_permissions_t permission)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_ace_add_permission(ace, permission);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
 %ignore oc_obt_provision_ace;
 %rename(provisionAce) jni_obt_provision_ace;
 %inline %{
 int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_ace(subject, ace, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
-%rename(freeAce) oc_obt_free_ace;
-
+%ignore oc_obt_free_ace;
+%rename(freeAce) jni_obt_free_ace;
+%inline %{
+void jni_obt_free_ace(oc_sec_ace_t *ace)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_free_ace(ace);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
 %ignore oc_obt_provision_role_wildcard_ace;
 %rename(provisionRoleWildcardAce) jni_obt_provision_role_wildcard_ace;
 %inline %{
@@ -500,11 +723,16 @@ int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, co
                                         oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_role_wildcard_ace(subject, role, authority, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
@@ -515,11 +743,16 @@ int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, co
 int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   int return_value = oc_obt_provision_auth_wildcard_ace(subject, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
   return return_value;
 }
 %}
