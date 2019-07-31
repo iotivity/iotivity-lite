@@ -75,7 +75,7 @@ int oc_base64_encode(const uint8_t *input, size_t input_len,
  *    }
  *
  * @param[in,out] str base 64 encoded string that will be decoded in place.
- * @param[in] size of the base 64 encoded string.
+ * @param[in] len size of the base 64 encoded string.
  * @return
  *   - The size the the decoded byte array
  *   - '-1' if unable to decode string. This should only happen if the string
