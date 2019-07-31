@@ -103,6 +103,11 @@ void oc_set_con_res_announced(bool announce);
 void oc_reset();
 
 /** Server side */
+/**
+  @defgroup doc_module_tag_server_side Server side
+  Optional group of functions OCF server support.
+  @{
+*/
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
@@ -116,7 +121,7 @@ void oc_device_bind_resource_type(size_t device, const char *type);
 void oc_process_baseline_interface(oc_resource_t *resource);
 
 /**
-  @defgroup oc_collections Collection Support
+  @defgroup doc_module_tag_collections Collection Support
   Optional group of functions to support OCF compliant collections.
   @{
 */
@@ -137,6 +142,10 @@ void oc_process_baseline_interface(oc_resource_t *resource);
    bind with this resource (e.g. by invoking
    \c oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)). Must
    be 1 or higher.
+  @param num_supported_rts number of resource types in links included in the
+   collection
+  @param num_mandatory_rts number of mandatory resource types if any in links
+   included in the collection
   @param device The internal device that should carry this collection.
    This is typically 0.
   @return A pointer to the new collection (actually oc_collection_t*)
@@ -230,7 +239,7 @@ oc_link_t *oc_collection_get_links(oc_resource_t *collection);
   @param collection Collection to add to the list of collections.
    Must not be NULL. Must not be added twice or a list corruption
    will occur. The collection is not copied.
-  @see oc_set_discoverable
+  @see oc_resource_set_discoverable
   @see oc_new_collection
 */
 void oc_add_collection(oc_resource_t *collection);
@@ -262,7 +271,7 @@ bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
 #endif    /* OC_COLLECTIONS_IF_CREATE */
-/** @} */ // end of oc_collections
+/** @} */ // end of doc_module_tag_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
 
@@ -341,8 +350,13 @@ int oc_notify_observers(oc_resource_t *resource);
 #ifdef __cplusplus
 }
 #endif
+/** @} */ // end of doc_module_tag_server_side
 
-/** Client side */
+/**
+  @defgroup doc_module_tag_client_state Client side
+  Client side support functions
+  @{
+*/
 #include "oc_client_state.h"
 
 #ifdef __cplusplus
@@ -411,7 +425,11 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 void oc_close_session(oc_endpoint_t *endpoint);
 
-/** Asserting roles */
+/**
+  @defgroup doc_module_tag_asserting_roles Asserting roles
+  Asserting roles support functions
+  @{
+*/
 typedef struct oc_role_t
 {
   struct oc_role_t *next;
@@ -428,14 +446,19 @@ void oc_auto_assert_roles(bool auto_assert);
 
 void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
                          void *user_data);
+/** @} */ // end of doc_module_tag_asserting_roles
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,
                   void *user_data);
-#endif /* OC_TCP */
+#endif    /* OC_TCP */
+/** @} */ // end of doc_module_tag_client_state
 
-/** Common operations */
-
+/**  */
+/**
+  @defgroup doc_module_tag_common_operations Common operations
+  @{
+*/
 void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
 
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
@@ -467,7 +490,7 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
     OC_PROCESS_END();                                                          \
   }                                                                            \
   void name##_interrupt_x_handler(void)
-
+/** @} */ // end of doc_module_tag_common_operations
 #ifdef __cplusplus
 }
 #endif
