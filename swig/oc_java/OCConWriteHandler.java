@@ -23,7 +23,7 @@ public interface OCConWriteHandler {
      * Note: The callee shall not block for too long as the stack is blocked
      * during the invocation.
      *
-     * @param device_index index of the device to which the change was
+     * @param deviceIndex index of the device to which the change was
      *                     applied, 0 is the first device
      * @param rep list of properties and their new values
      */

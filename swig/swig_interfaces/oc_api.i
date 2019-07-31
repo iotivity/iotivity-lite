@@ -534,6 +534,10 @@ void jni_reset() {
  * @param num_resource_types Number of resources the caller will bind with this resource
  *                           (e.g. by invoking resourceBindResourceType(col, OIC_WK_COLLECTION)).
  *                           Must be 1 or higher.
+ * @param num_supported_rts number of resource types in links included in the
+ *                          collection
+ * @param num_mandatory_rts number of mandatory resource types if any in links
+ *                          included in the collection
  * @param device The internal device that should carry this collection. This is typically 0.
  * @return the new collection or NULL if out of memory.
  * @see addCollection
@@ -555,8 +559,8 @@ public";
  *
  * @param collection The pointer to the collection to delete.
  *                   If this is NULL, the function does nothing.
- * @see oc_collection_get_links
- * @see oc_delete_link
+ * @see collectionGetLinks
+ * @see deleteLink
  */
 public";
 %rename(deleteCollection) oc_delete_collection;
@@ -663,7 +667,7 @@ public";
  *  Must not be NULL. Must not be added twice or a list corruption
  *  will occur. The collection is not copied.
  *
- * @see setDiscoverable
+ * @see resourceSetDiscoverable
  * @see newCollection
  */
 public";
