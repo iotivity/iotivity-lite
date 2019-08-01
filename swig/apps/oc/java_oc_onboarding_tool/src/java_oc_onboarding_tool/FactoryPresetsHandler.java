@@ -9,7 +9,6 @@ import java.io.IOException;
 
 import org.iotivity.OCFactoryPresetsHandler;
 import org.iotivity.OCPki;
-import org.iotivity.OCSpTypesMask;
 
 import org.iotivity.oc.OcObt;
 
@@ -27,41 +26,9 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
         ObtMain.unownedDevices.clear();
         ObtMain.obt = new OcObt();
 
-        byte[] cert = getFileBytes("../../../../apps/pki_certs/ee.pem");
-        if (cert == null) {
-            System.err.println("Failed to read certificates");
-            return;
-        }
-
-        byte[] key = getFileBytes("../../../../apps/pki_certs/key.pem");
-        if (key == null) {
-            System.err.println("Failed to read private key");
-            return;
-        }
-
-        int eeCredId = OCPki.addMfgCert(deviceIndex, cert, key);
-        System.out.println("addMfgCert() credId = " + eeCredId);
-        if (eeCredId < 0) {
-            System.err.println("Error installing manufacturer ee certificate");
-            return;
-        }
-
-        byte[] subCa = getFileBytes("../../../../apps/pki_certs/subca1.pem");
-        if (subCa == null) {
-            System.err.println("Failed to read sub ca cetificate");
-            return;
-        }
-
-        int subCaCredId = OCPki.addMfgIntermediateCert(deviceIndex, eeCredId, subCa);
-        System.out.println("addMfgIntermediateCert() result = " + subCaCredId);
-        if (subCaCredId < 0) {
-            System.err.println("Error installing intermediate ca certificate");
-            return;
-        }
-
         byte[] rootCa1 = getFileBytes("../../../../apps/pki_certs/rootca1.pem");
         if (rootCa1 == null) {
-            System.err.println("Failed to read root ca1 cetificate");
+            System.err.println("Failed to read root ca1 certificate");
             return;
         }
 
@@ -74,7 +41,7 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
 
         byte[] rootCa2 = getFileBytes("../../../../apps/pki_certs/rootca2.pem");
         if (rootCa2 == null) {
-            System.err.println("Failed to read root ca2 cetificate");
+            System.err.println("Failed to read root ca2 certificate");
             return;
         }
 
@@ -84,9 +51,6 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
             System.err.println("Error installing root ca2 certificate");
             return;
         }
-
-        OCPki.setSecurityProfile(deviceIndex, OCSpTypesMask.BLACK, OCSpTypesMask.BLACK, eeCredId);
-        System.out.println("setSecurityProfile()");
     }
 
     public static byte[] getFileBytes(String filepath) {
