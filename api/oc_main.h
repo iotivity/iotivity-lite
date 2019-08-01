@@ -37,6 +37,8 @@ typedef struct oc_random_pin_t
   void *data;
 } oc_random_pin_t;
 
+bool oc_main_initialized(void);
+
 #ifdef __cplusplus
 }
 #endif
