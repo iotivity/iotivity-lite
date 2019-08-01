@@ -29,7 +29,7 @@
 %pragma(java) moduleclassmodifiers="
 /**
  * Main API of IoTivity-lite for client and server.
- *
+ * <p>
  * This is the main entry for all server and client related OCF functions.
  */
  public class";
@@ -491,10 +491,11 @@ public";
 %javamethodmodifiers oc_set_con_res_announced "
 /**
  * Sets whether the oic.wk.con res is announced.
- *
- * Note: this should be set before invoking OCMain.init().
+ * <p>
+ * <strong>Note</strong>: this should be set before invoking OCMain.init().
  *
  * @param announce true to announce (default) or false if not
+ *
  * @see getConResAnnounced
  * @see OCConWriteHandler
  */
@@ -521,24 +522,24 @@ void jni_reset() {
 %javamethodmodifiers oc_new_collection "
 /**
  * Creates a new empty collection.
- *
+ * <p>
  * The collection is created with interfaces `oic.if.baseline`,
  * `oic.if.ll` (also default) and `oic.if.b`. Initially it is neither
  * discoverable nor observable.
-
+ * <p>
  * The function only allocates the collection. Use addCollection() after the
  * setup of the collection is complete.
  *
  * @param name name of the collection
- * @param uri Unique URI of this collection. Must not be NULL.
+ * @param uri Unique URI of this collection. Must not be NULL
  * @param num_resource_types Number of resources the caller will bind with this resource
  *                           (e.g. by invoking resourceBindResourceType(col, OIC_WK_COLLECTION)).
- *                           Must be 1 or higher.
+ *                           Must be 1 or higher
  * @param num_supported_rts number of resource types in links included in the
  *                          collection
  * @param num_mandatory_rts number of mandatory resource types if any in links
  *                          included in the collection
- * @param device The internal device that should carry this collection. This is typically 0.
+ * @param device The internal device that should carry this collection. This is typically 0
  * @return the new collection or NULL if out of memory.
  * @see addCollection
  * @see collectionAddLink
@@ -549,16 +550,17 @@ public";
 %javamethodmodifiers oc_delete_collection "
 /**
  * Deletes the specified collection.
- *
+ * <p>
  * The function removes the collection from the internal list of collections
  * and releases all direct resources and links associated with this collection.
- *
+ * <p>
  * Note: The function does not delete the resources set in the links.
  *  The caller needs to do this on their own in case these are
  *  no longer required.
  *
  * @param collection The pointer to the collection to delete.
- *                   If this is NULL, the function does nothing.
+ *                   If this is NULL, the function does nothing
+ *
  * @see collectionGetLinks
  * @see deleteLink
  */
@@ -570,9 +572,10 @@ public";
  * Creates a new link for collections with the specified resource.
  *
  * @param resource Resource to set in the link. The resource is not copied.
- *  Must not be NULL.
+ *  Must not be NULL
  *
  * @return The created link or NULL if out of memory or resource is NULL.
+ *
  * @see deleteLink
  * @see collectionAddLink
  * @see newResource
@@ -583,12 +586,12 @@ public";
 %javamethodmodifiers oc_delete_link "
 /**
  * Deletes the link.
- *
- * Note: the function neither removes the resource set on this link
+ * <p>
+ * <strong>Note</strong>: the function neither removes the resource set on this link
  *  nor does it remove it from any collection.
  *
  * @param link The link to delete. The function does nothing, if
- *  the parameter is NULL.
+ *  the parameter is NULL
  */
 public";
 %rename(deleteLink) oc_delete_link;
@@ -597,8 +600,8 @@ public";
 /**
  * Adds a relation to the link.
  *
- * @param link Link to add the relation to. Must not be NULL.
- * @param rel Relation to add. Must not be NULL.
+ * @param link Link to add the relation to. Must not be NULL
+ * @param rel Relation to add. Must not be NULL
  */
 public";
 %rename(linkAddRelation) oc_link_add_rel;
@@ -607,8 +610,8 @@ public";
 /**
  * Sets the unique link instance on the link.
  *
- * @param link The link to set the instance on. Must not be NULL.
- * @param ins The link instance to set. Must not be NULL.
+ * @param link The link to set the instance on. Must not be NULL
+ * @param ins The link instance to set. Must not be NULL
  */
 public";
 %rename(linkSetInstance) oc_link_set_ins;
@@ -616,12 +619,15 @@ public";
 %javamethodmodifiers oc_collection_add_link "
 /**
  * Adds the link to the collection.
+ * <p>
+ * The collection and link must not be null.
+ * <p>
+ * The link is not copied. The link Must not be added again to this or a
+ * different collection; this will cause a list corruption to occur. To re-add
+ * a link, remove the link first.
  *
  * @param collection Collection to add the link to. Must not be NULL.
- * @param link Link to add to the collection. The link is not copied.
- *  Must not be NULL. Must not be added again to this or a different
- *  collection or a list corruption will occur. To re-add it, remove
- *  the link first.
+ * @param link Link to add to the collection 
  *
  * @see newLink
  * @see collectionRemoveLink
@@ -632,11 +638,13 @@ public";
 %javamethodmodifiers oc_collection_remove_link "
 /**
  * Removes a link from the collection.
- *
- * @param collection Collection to remove the link from. Does nothing
- *  if this is NULL.
- * @param link The link to remove. Does nothing if this is NULL or not
- *  part of the collection. The link and its resource are not freed.
+ * <p>
+ * Does nothing if the collection or link is null.
+ * <p>
+ * Does nothing if the link is not part of the collection.
+ * <p>
+ * @param collection Collection to remove the link from
+ * @param link The link to remove
  */
 public";
 %rename(collectionRemoveLink) oc_collection_remove_link;
@@ -644,11 +652,11 @@ public";
 %javamethodmodifiers oc_collection_get_links "
 /**
  * Returns the list of links belonging to this collection.
- *
+ * 
  * @param collection Collection to get the links from.
  *
  * @return All links of this collection. The links are not copied. Returns
- *  NULL if the collection is NULL or contains no links.
+ *  null if the collection is null or contains no links.
  *
  * @see collectionAddLink
  */
@@ -658,14 +666,15 @@ public";
 %javamethodmodifiers oc_add_collection "
 /**
  * Adds a collection to the list of collections.
- *
+ * <p>
  * If the caller makes the collection discoverable, then it will
  * be included in the collection discovery once it has been added
  * with this function.
+ * <p>
+ * The collection must not be null. Must not be added twice or a list corruption
+ * will occur. The collection is not copied.
  *
- * @param collection Collection to add to the list of collections.
- *  Must not be NULL. Must not be added twice or a list corruption
- *  will occur. The collection is not copied.
+ * @param collection Collection to add to the list of collections
  *
  * @see resourceSetDiscoverable
  * @see newCollection
@@ -677,11 +686,10 @@ public";
 /**
  * Gets all known collections.
  *
- * @return All collections that have been added via
- *  addCollection(). The collections are not copied.
- *  Returns NULL if there are no collections. Collections created
- *  only via newCollection() but not added will not be
- *  returned by this function.
+ * @return All collections that have been added via addCollection(). The
+ * collections are not copied.  Returns null if there are no collections.
+ * Collections created using newCollection() but not added will not be
+ * returned by this method.
  */
 public";
 %rename(collectionGetCollections) oc_collection_get_collections;
@@ -861,15 +869,16 @@ void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
 %javamethodmodifiers oc_set_con_write_cb "
 /**
  * Sets the callback handler to receive change notifications for
- *  the oic.wk.con resource.
- *
- * The function can be used to set or unset the callback handler.
+ * the oic.wk.con resource.
+ * <p>
+ * The method can be used to set or unset the callback handler.
  * Whenever an attribute of the oic.wk.con resource is changed,
  * the callback will be invoked.
+ * <p>
+ * If the method is invoked a second time, then the previously set callback
+ * handler is replaced.
  *
- * @param callback The callback handler to register or NULL to unset it.
- *  If the function is invoked a second time, then the previously
- *  set callback is simply replaced.
+ * @param callback The callback handler to register or null to unset it
  */
 public";
 %rename(setConWriteHandler) oc_set_con_write_cb;
@@ -1112,10 +1121,11 @@ bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_
 %javamethodmodifiers jni_oc_do_ip_discovery_at_endpoint "
 /**
  * Discover resources in specific endpoint.
- *
- * @param  rt         Resource type query to discover.
- * @param  handler    The callback for discovered resources. Must not be NULL.
- * @param  endpoint   Endpoint at which to discover resources. Must not be NULL.
+ * <p>
+ * The callback handler and endpoint <strong>must not</strong> be null.
+ * @param  rt         Resource type query to discover
+ * @param  handler    The callback handler for discovered resources
+ * @param  endpoint   Endpoint at which to discover resources
  *
  * @return Returns true if it successfully makes and dispatches a coap packet.
  */

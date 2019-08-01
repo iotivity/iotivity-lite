@@ -56,6 +56,39 @@ struct CborEncoder
 %ignore g_err;
 
 %ignore oc_rep_new;
+// DOCUMENTATION workaround
+%javamethodmodifiers newBuffer "
+/**
+ * Allocate memory needed hold the OCRepresentation object.
+ * <p>
+ * <strong>IMPORTANT</strong>: the memory buffer needed to hold the an
+ * OCRepresentation object is normally created by the IoTivity-lite framework.
+ * It is unlikely that developers will ever need to call this method. Its
+ * primary purpose is for testing.
+ * <p>
+ * <strong>NOTE</strong>: The buffer allocated is a single global buffer
+ * multiple calls to this method will only result in deleteing the old buffer
+ * and changing its size.  The memory allocated by the calling newBuffer is not
+ * managed by the Java VM failure to call {@link  OCRep#deleteBuffer()} will result
+ * in a memory leak.
+ *
+ * @param size the size in bytes for the allocated buffer
+ *
+ * @see deleteBuffer
+ * @see getOCRepresentaionFromRootObject
+ */
+public";
+// DOCUMENTATION workaround
+%javamethodmodifiers deleteBuffer "
+/**
+ * Release the memory allocated by the call to {@link OCRep#newBuffer(int)}
+ * <p>
+ * <strong>NOTE</strong>: memory allocated by the call to newBuffer is not
+ * managed by the Java VM failure to call deleteBuffer() will result in a memory leak.
+ *
+ * @see newBuffer
+ */
+public";
 %{
 uint8_t *g_new_rep_buffer = NULL;
 struct oc_memb g_rep_objects;
@@ -65,6 +98,7 @@ void deleteBuffer() {
   free(g_new_rep_buffer);
   g_new_rep_buffer = NULL;
 }
+
 void newBuffer(int size) {
   if (g_new_rep_buffer) {
     deleteBuffer();
@@ -82,6 +116,33 @@ void newBuffer(int size) {
 
 %ignore oc_rep_get_encoded_payload_size;
 %ignore oc_rep_get_encoder_buf;
+
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_double "
+/**
+ * Add a double value to the cbor object
+ * <p>
+ * Example:
+ * <p>
+ * To build the an object with the following cbor value
+ * <pre>
+ *     {
+ *       \"pi\": 3.14159
+ *     }
+ * </pre>
+ * <p>
+ * The following code could be used:
+ * <pre>
+ *     CborEncoder root = OCRep.beginRootObject();
+ *     OCRep.setDouble(root, \"pi\", 3.14);
+ *     OCRep.endRootObject();
+ * </pre>
+ *
+ * @param object the CborEncoder holding the double
+ * @param key the name of the double value
+ * @param value the double value to add to the cbor object
+ */
+ public";
 %rename (setDouble) jni_rep_set_double;
 %inline %{
 /* Alt implementation of oc_rep_set_double macro*/
@@ -92,6 +153,34 @@ void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_long "
+/**
+ * Add an integer value to the cbor object
+ * <p>
+ * Example:
+ * <p>
+ * To build the an object with the following cbor value
+ * <pre>
+ *     {
+ *       \"power\": 42
+ *     }
+ * </pre>
+ * <p>
+ * The following code could be used:
+ * <pre>
+ *     CborEncoder root = OCRep.beginRootObject();
+ *     OCRep.setLong(root, \"power\", 42);
+ *     OCRep.endRootObject();
+ * </pre>
+ *
+ * @param object the CborEncoder holding the double
+ * @param key the name of the long value
+ * @param value the long value to add to the cbor object
+ *
+ * @see getLong
+ */
+ public";
 %rename (setLong) jni_rep_set_long;
 %inline %{
 /* Alt implementation of oc_rep_set_int macro */
@@ -102,6 +191,40 @@ void jni_rep_set_long(CborEncoder * object, const char* key, int64_t value) {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_uint "
+/**
+/**
+ * Add an unsigned integer value to the cbor object
+ * <p>
+ * Example:
+ * <p>
+ * To build the an object with the following cbor value
+ * <pre>
+ *     {
+ *       \"power\": 42
+ *     }
+ * </pre>
+ * <p>
+ * The following code could be used:
+ * <pre>
+ *     CborEncoder root = OCRep.beginRootObject();
+ *     OCRep.setUnsignedInt(root, \"power\", 42);
+ *     OCRep.endRootObject();
+ * </pre>
+ * <p>
+ * <strong>Note</strong>: when the cbor object is converted to an
+ * OCRepresentation the data type will be encoded as OCType.OC_REP_INT. There
+ * is no way for a client to know that the server sent the integer as an unsigned
+ * value.
+ *
+ * @param object the CborEncoder object being writen too
+ * @param key the name of the value
+ * @param value the unsigned value to add to the cbor object
+ *
+ * @see getLong
+ */
+ public";
 %rename (setUnsignedInt) jni_rep_set_uint;
 %inline %{
 /* Alt implementation of oc_rep_set_uint macro */
@@ -112,6 +235,34 @@ void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value)
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_boolean "
+/**
+ * Add a boolean value to the cbor object
+ * <p>
+ * Example:
+ * <p>
+ * To build the an object with the following cbor value
+ * <pre>
+ *     {
+ *       \"door_open\": false
+ *     }
+ * </pre>
+ * <p>
+ * The following code could be used:
+ * <pre>
+ *     CborEncoder root = OCRep.beginRootObject();
+ *     OCRep.setBoolean(root, \"door_open\", false);
+ *     OCRep.endRootObject();
+ * </pre>
+ *
+ * @param object the CborEncoder object the boolean object will be writen too
+ * @param key the name of the boolean value
+ * @param value the boolean value to add to the cbor object
+ *
+ * @see getBoolean
+ */
+ public";
 %rename (setBoolean) jni_rep_set_boolean;
 %inline %{
 /* Alt implementation of oc_rep_set_boolean macro */
