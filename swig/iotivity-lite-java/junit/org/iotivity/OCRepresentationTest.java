@@ -728,8 +728,7 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
-        System.out.println(rep.getType());
-        System.out.println(rep.getName());
+
         OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);
 
