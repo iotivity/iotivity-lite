@@ -56,6 +56,37 @@ struct CborEncoder
 %ignore g_err;
 
 %ignore oc_rep_new;
+// DOCUMENTATION workaround
+%javamethodmodifiers newBuffer "/**
+   * Allocate memory needed hold the OCRepresentation object.
+   * <p>
+   * <strong>IMPORTANT</strong>: the memory buffer needed to hold the an
+   * OCRepresentation object is normally created by the IoTivity-lite framework.
+   * It is unlikely that developers will ever need to call this method. Its
+   * primary purpose is for testing.
+   * <p>
+   * <strong>NOTE</strong>: The buffer allocated is a single global buffer
+   * multiple calls to this method will only result in deleteing the old buffer
+   * and changing its size.  The memory allocated by the calling newBuffer is not
+   * managed by the Java VM failure to call {@link  OCRep#deleteBuffer()} will result
+   * in a memory leak.
+   *
+   * @param size the size in bytes for the allocated buffer
+   *
+   * @see OCRep#deleteBuffer()
+   * @see OCRep#getOCRepresentaionFromRootObject()
+   */
+  public";
+// DOCUMENTATION workaround
+%javamethodmodifiers deleteBuffer "/**
+   * Release the memory allocated by the call to {@link OCRep#newBuffer(int)}
+   * <p>
+   * <strong>NOTE</strong>: memory allocated by the call to newBuffer is not
+   * managed by the Java VM failure to call deleteBuffer() will result in a memory leak.
+   *
+   * @see OCRep#newBuffer
+   */
+  public";
 %{
 uint8_t *g_new_rep_buffer = NULL;
 struct oc_memb g_rep_objects;
@@ -65,6 +96,7 @@ void deleteBuffer() {
   free(g_new_rep_buffer);
   g_new_rep_buffer = NULL;
 }
+
 void newBuffer(int size) {
   if (g_new_rep_buffer) {
     deleteBuffer();
@@ -82,6 +114,32 @@ void newBuffer(int size) {
 
 %ignore oc_rep_get_encoded_payload_size;
 %ignore oc_rep_get_encoder_buf;
+
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_double "/**
+   * Add a double value to the cbor object
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"pi\": 3.14159
+   *     }
+   * </pre>
+   * <p>
+   * The following code could be used:
+   * <pre>
+   *     CborEncoder root = OCRep.beginRootObject();
+   *     OCRep.setDouble(root, \"pi\", 3.14);
+   *     OCRep.endRootObject();
+   * </pre>
+   *
+   * @param object the CborEncoder holding the double
+   * @param key the name of the double value
+   * @param value the double value to add to the cbor object
+   */
+  public";
 %rename (setDouble) jni_rep_set_double;
 %inline %{
 /* Alt implementation of oc_rep_set_double macro*/
@@ -92,6 +150,33 @@ void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_long "/**
+   * Add an integer value to the cbor object
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"power\": 42
+   *     }
+   * </pre>
+   * <p>
+   * The following code could be used:
+   * <pre>
+   *     CborEncoder root = OCRep.beginRootObject();
+   *     OCRep.setLong(root, \"power\", 42);
+   *     OCRep.endRootObject();
+   * </pre>
+   *
+   * @param object the CborEncoder holding the double
+   * @param key the name of the long value
+   * @param value the long value to add to the cbor object
+   *
+   * @see OCRep#getLong(OCRepresentation, String)
+   */
+  public";
 %rename (setLong) jni_rep_set_long;
 %inline %{
 /* Alt implementation of oc_rep_set_int macro */
@@ -102,6 +187,38 @@ void jni_rep_set_long(CborEncoder * object, const char* key, int64_t value) {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_uint "/**
+   * Add an unsigned integer value to the cbor object
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"power\": 42
+   *     }
+   * </pre>
+   * <p>
+   * The following code could be used:
+   * <pre>
+   *     CborEncoder root = OCRep.beginRootObject();
+   *     OCRep.setUnsignedInt(root, \"power\", 42);
+   *     OCRep.endRootObject();
+   * </pre>
+   * <p>
+   * <strong>Note</strong>: when the cbor object is converted to an
+   * OCRepresentation the data type will be encoded as OCType.OC_REP_INT. There
+   * is no way for a client to know that the server sent the integer as an unsigned
+   * value.
+   *
+   * @param object the CborEncoder object being writen too
+   * @param key the name of the value
+   * @param value the unsigned value to add to the cbor object
+   *
+   * @see OCRep#getLong(OCRepresentation, String)
+   */
+  public";
 %rename (setUnsignedInt) jni_rep_set_uint;
 %inline %{
 /* Alt implementation of oc_rep_set_uint macro */
@@ -112,6 +229,33 @@ void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value)
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_boolean "/**
+   * Add a boolean value to the cbor object
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"door_open\": false
+   *     }
+   * </pre>
+   * <p>
+   * The following code could be used:
+   * <pre>
+   *     CborEncoder root = OCRep.beginRootObject();
+   *     OCRep.setBoolean(root, \"door_open\", false);
+   *     OCRep.endRootObject();
+   * </pre>
+   *
+   * @param object the CborEncoder object the boolean object will be writen too
+   * @param key the name of the boolean value
+   * @param value the boolean value to add to the cbor object
+   *
+   * @see OCRep#getBoolean(OCRepresentation, String)
+   */
+  public";
 %rename (setBoolean) jni_rep_set_boolean;
 %inline %{
 /* Alt implementation of oc_rep_set_boolean macro */
@@ -122,6 +266,33 @@ void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_set_text_string "/**
+   * Add a string value to the cbor object
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"greeting\": \"Hello, world!\"
+   *     }
+   * </pre>
+   * <p>
+   * The following code could be used:
+   * <pre>
+   *     CborEncoder root = OCRep.beginRootObject();
+   *     OCRep.setTextString(root, \"hello\", \"world\");
+   *     OCRep.endRootObject();
+   * </pre>
+   *
+   * @param object the CborEncoder object the string value will be writen too
+   * @param key the name of the string value
+   * @param value the string value to add to the cbor object
+   *
+   * @see OCRep#getString(OCRepresentation, String)
+   */
+  public";
 %rename (setTextString) jni_rep_set_text_string;
 %inline %{
 /* Alt implementation of oc_rep_set_text_string macro */
@@ -185,16 +356,33 @@ void jni_rep_end_links_array() {
 }
 %}
 
-%rename(beginRootObject) jni_start_root_object;
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_begin_root_object "/**
+   * Begin the root CborEncoder object. Items can be added to the root object
+   * till {@link OCRep#endRootObject()} is called
+   *
+   * @return CborEncoder object representing the root object
+   * @see OCRep#endRootObject()
+   */
+  public";
+%rename(beginRootObject) jni_begin_root_object;
 %inline %{
 /* Alt implementation of oc_rep_start_root_object macro */
-CborEncoder * jni_start_root_object() {
+CborEncoder * jni_begin_root_object() {
   OC_DBG("JNI: %s\n", __func__);
   g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
   return &root_map;
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_end_root_object "/**
+   * End the root CborEncoder object. Items can no longer be added to the root
+   * object.
+   *
+   * @see OCRep#beginRootObject()
+   */
+  public";
 %rename(endRootObject) jni_rep_end_root_object;
 %inline %{
 void jni_rep_end_root_object() {
@@ -203,6 +391,45 @@ void jni_rep_end_root_object() {
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_add_byte_string "/**
+   * Add a byte string value to a parent arrayObject.
+   * <p>
+   * Currently the only way to make an array of byte strings is using this method
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <em>note</em>, base64 encoding used to represent binary array data
+   * <pre>
+   *     {
+   *       \"barray\": [ \"AAECAwQFBg==\", \"AQECAwUIEyE0VYk=\", \"AAD/AAA=\" ]
+   *     }
+   * </pre>
+   * The following code could be used:
+   * <pre>
+   *     byte ba0[] = {0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+   *     byte ba1[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
+   *     byte ba2[] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+   *                      0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42};
+   *     byte ba3[] = {0x00, 0x00, (byte)0xff, 0x00, 0x00};
+   *
+   *     CborEncoder barray = OCRep.openArray(root, \"barray\");
+   *     OCRep.addByteString(barray, ba0);
+   *     OCRep.addByteString(barray, ba1);
+   *     OCRep.addByteString(barray, ba2);
+   *     OCRep.addByteString(barray, ba3);
+   *     OCRep.closeArray(root, barray);
+   *     OCRep.endRootObject();
+   * </pre>
+   *
+   * @param arrayObject CborEncoder object already setup to hold an array using {@link OCRep#openArray(CborEncoder, String)}
+   * @param value a byte array to add to the CborEncoder object
+   *
+   * @see OCRep#openArray(CborEncoder, String)
+   * @see OCRep#closeArray(CborEncoder, CborEncoder)
+   */
+  public";
 %rename(addByteString) jni_rep_add_byte_string;
 %inline %{
 /* Alt implementation of oc_rep_add_byte_string macro */
@@ -214,6 +441,52 @@ void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* valu
 }
 %}
 
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_rep_add_text_string "/**
+   * Add a text string value to a parent array object.
+   * <p>
+   * <strong>NOTE</strong>: This method can be used to add separate strings to
+   * a cbor array object. If the strings are already in an array the
+   * {@link OCRep#setStringArray(CborEncoder, String, String[])} method can be
+   * used instead.
+   * <p>
+   * Example:
+   * <p>
+   * To build the an object with the following cbor value
+   * <pre>
+   *     {
+   *       \"quotes\": [
+   *       \"Do not take life too seriously. You will never get out of it alive.\",
+   *       \"All generalizations are false, including this one.\",
+   *       \"Those who believe in telekinetics, raise my hand.\",
+   *       \"I refuse to join any club that would have me as a member.\"
+   *       ]
+   *     }
+   * </pre>
+   *
+   * The following code could be used:
+   * <pre>
+   *     String quote0 = \"Do not take life too seriously. You will never get out of it alive.\";
+   *     String quote1 = \"All generalizations are false, including this one.\";
+   *     String quote2 = \"Those who believe in telekinetics, raise my hand.\";
+   *     String quote3 = \"I refuse to join any club that would have me as a member.\";
+   *
+   *     CborEncoder quotes = OCRep.openArray(root, \"quotes\");
+   *     OCRep.addByteString(quotes, quote0);
+   *     OCRep.addByteString(quotes, quote1);
+   *     OCRep.addByteString(quotes, quote2);
+   *     OCRep.addByteString(quotes, quote3);
+   *     OCRep.closeArray(root, quotes);
+   *     OCRep.endRootObject();
+   * </pre>
+   * 
+   * @param arrayObject CborEncoder object already setup to hold an array using {@link OCRep#openArray(CborEncoder, String)}
+   * @param value a string to add to the CborEncoder object
+   * 
+   * @see OCRep#openArray(CborEncoder, String)
+   * @see OCRep#closeArray(CborEncoder, CborEncoder)
+   */
+  public";
 %rename(addTextString) jni_rep_add_text_string;
 %inline %{
 /* Alt implementation of oc_rep_add_text_string macro */
