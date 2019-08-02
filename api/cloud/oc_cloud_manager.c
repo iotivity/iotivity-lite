@@ -452,7 +452,7 @@ static void
 refresh_token_handler(oc_client_response_t *data)
 {
   OC_DBG("[CM] refresh token handler(%d)\n", data->code);
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   int ret = _refresh_token_handler(ctx, data);
   if (ret == 0) {
     oc_remove_delayed_callback(ctx, send_ping);
