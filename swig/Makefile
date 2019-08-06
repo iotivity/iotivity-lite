@@ -141,12 +141,6 @@ build_jni_so: $(JNI_SRC)
 
 install_android_libs: build_swig build_jar build_jni_so
 	# copy so and jar files to samples
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_simple_client/SimpleClient/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_simple_server/SimpleServer/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/android_on_boarding_tool/OnBoardingTool/app/libs/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_simple_client/SimpleClient/app/libs/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
