@@ -34,27 +34,27 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
 
         byte[] rootCa1 = getFileBytes("pki_certs/rootca1.pem");
         if (rootCa1 == null) {
-            System.err.println("Failed to read root ca1 certificate");
+            Log.e(TAG, "Failed to read root ca1 certificate");
             return;
         }
 
         int rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa1);
         System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
         if (rootCaCredId < 0) {
-            System.err.println("Error installing root ca1 certificate");
+            Log.e(TAG, "Error installing root ca1 certificate");
             return;
         }
 
         byte[] rootCa2 = getFileBytes("pki_certs/rootca2.pem");
         if (rootCa2 == null) {
-            System.err.println("Failed to read root ca2 certificate");
+            Log.e(TAG, "Failed to read root ca2 certificate");
             return;
         }
 
         rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa2);
         System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
         if (rootCaCredId < 0) {
-            System.err.println("Error installing root ca2 certificate");
+            Log.e(TAG, "Error installing root ca2 certificate");
             return;
         }
     }
