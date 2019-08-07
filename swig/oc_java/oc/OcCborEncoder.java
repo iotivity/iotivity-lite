@@ -159,11 +159,11 @@ public class OcCborEncoder {
         OCRep.addBoolean(getNativeEncoder(), value);
     }
 
-    public void addInt(int value) {
+    public void addLong(long value) {
         if (encoderType != EncoderType.ARRAY) {
             throw new UnsupportedOperationException(getBadEncoderTypeMsg(encoderType, EncoderType.ARRAY));
         }
-        OCRep.addInt(getNativeEncoder(), value);
+        OCRep.addLong(getNativeEncoder(), value);
     }
 
     public void addDouble(double value) {
