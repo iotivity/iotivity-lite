@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07cd3381_358f3730",
+        "filename": "swig/oc_java/oc/OcCborEncoder.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T17:47:41Z",
+      "side": 1,
+      "message": "sorry I missed changing this name when I changed the other API.",
+      "range": {
+        "startLine": 162,
+        "startChar": 23,
+        "endLine": 162,
+        "endChar": 24
+      },
+      "revId": "7cf5c4ea74202025650d4edf1c90bdb72a3c3747",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f7d91b3_e96a5fbb",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T17:47:41Z",
+      "side": 1,
+      "message": "This is not checking the CBorErrno.\n\nI would add \n  \n  if (null !\u003d nativeRep \u0026\u0026 OCRep.getCborErrno() \u003d\u003d 0) {\n    return ...\n  }\n\nif we are not checking the CborErrno then there is not reason to clear the error before each call. This applies to basically all of the OcRepresentation calls.",
+      "revId": "7cf5c4ea74202025650d4edf1c90bdb72a3c3747",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
