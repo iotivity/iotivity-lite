@@ -1,8 +1,12 @@
 package java_oc_onboarding_tool;
 
-import org.iotivity.OCUuid;
+import org.iotivity.*;
+import org.iotivity.oc.*;
 
 public class OcfDeviceInfo {
+
+    private static final String N_KEY = "n";
+    private static final String DI_KEY = "di";
 
     private OCUuid uuid;
     private String name;
@@ -30,5 +34,32 @@ public class OcfDeviceInfo {
     public boolean equals(Object obj) {
         OcfDeviceInfo other = (OcfDeviceInfo) obj;
         return (uuid.equals(other.uuid) && name.equals(other.name));
+    }
+
+    public static OcfDeviceInfo createFromRep(OcRepresentation rep) {
+        OcfDeviceInfo ocfDeviceInfo = null;
+
+        String n = null;
+        String di = null;
+
+        while (rep != null) {
+            try {
+                if (N_KEY.equals(rep.getKey())) {
+                    n = rep.getString(N_KEY);
+                }
+                if (DI_KEY.equals(rep.getKey())) {
+                    di = rep.getString(DI_KEY);
+                }
+            } catch (OcCborException e) {
+                System.err.println(e.getMessage());
+            }
+            rep = rep.getNext();
+        }
+
+        if ((di != null) && (n != null)) {
+            ocfDeviceInfo = new OcfDeviceInfo(OCUuidUtil.stringToUuid(di), n);
+        }
+
+        return ocfDeviceInfo;
     }
 }
