@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a436465e_9741e758",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "does this work without calling returnValue.booleanValue();? Does java automatically change the type from the java.lang.Boolean to the primitive type?",
+      "range": {
+        "startLine": 32,
+        "startChar": 19,
+        "endLine": 32,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9376278_bde93fc1",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "does this work without calling returnValue.longValue();? Does java automatically change the type from the java.lang.Long to the long primitive type?",
+      "range": {
+        "startLine": 40,
+        "startChar": 19,
+        "endLine": 40,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecbbea20_1c9c3f09",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "Does this work without calling returnValue.doubleValue();? Does java automativally cahnge the type from the java.lang.Double to the primitive double type?",
+      "range": {
+        "startLine": 48,
+        "startChar": 19,
+        "endLine": 48,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db0b6798_ccc19bc3",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "does this work without calling returnValue.booleanValue();? Does java automatically change the type from the java.lang.Boolean to the primitive type?",
+      "range": {
+        "startLine": 96,
+        "startChar": 19,
+        "endLine": 96,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c83bc3b7_2d0ed4ef",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "does this work without calling returnValue.longValue();? Does java automatically change the type from the java.lang.Long to the long primitive type?",
+      "range": {
+        "startLine": 104,
+        "startChar": 19,
+        "endLine": 104,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89b84996_0d3fffaf",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T20:19:06Z",
+      "side": 1,
+      "message": "Does this work without calling returnValue.doubleValue();? Does java automativally cahnge the type from the java.lang.Double to the primitive double type?",
+      "range": {
+        "startLine": 112,
+        "startChar": 19,
+        "endLine": 112,
+        "endChar": 30
+      },
+      "revId": "b86c6e20f60532476abd1c8d652bfc125f61628a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
