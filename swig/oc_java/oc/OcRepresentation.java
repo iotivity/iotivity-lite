@@ -6,101 +6,184 @@ public class OcRepresentation {
 
     private OCRepresentation nativeRepresentation;
 
-    // ctor is private, use factory ctor
-    private OcRepresentation(OCRepresentation nativeRep) {
+    public OcRepresentation(OCRepresentation nativeRep) {
         if (nativeRep == null) {
             throw new IllegalArgumentException("Native OCRepresentation cannot be null");
         }
         nativeRepresentation = nativeRep;
     }
 
-    static public OcRepresentation createOcRepresentaionFromRoot() {
+    // for unit testing only
+    static public OcRepresentation createOcRepresentaionFromRoot() throws OcCborException {
         OCRepresentation nativeRep = OCRep.getOCRepresentaionFromRootObject();
-        return new OcRepresentation(nativeRep);
+        if (nativeRep != null) {
+            return new OcRepresentation(nativeRep);
+        }
+        throw new OcCborException("Failed to create OcRepresentation from root object");
     }
 
-    public Boolean getBoolean() {
-        return nativeRepresentation.getValue().getBool();
+    public String getKey() {
+        return nativeRepresentation.getName();
     }
 
-    public Long getLong() {
-        return nativeRepresentation.getValue().getInteger();
+    public boolean getBoolean() throws OcCborException {
+        Boolean returnValue = getValue().getBool();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get boolean");
     }
 
-    public Double getDouble() {
-        return nativeRepresentation.getValue().getDouble();
+    public long getLong() throws OcCborException {
+        Long returnValue = getValue().getInteger();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get long");
     }
 
-    public String getString() {
-        return nativeRepresentation.getValue().getString();
+    public double getDouble() throws OcCborException {
+        Double returnValue = getValue().getDouble();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get double");
     }
 
-    public OCArray getArray() {
-        return nativeRepresentation.getValue().getArray();
+    public String getString() throws OcCborException {
+        String returnValue = getValue().getString();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get string");
     }
 
-    public OcRepresentation getObject() {
-        OCRepresentation nativeRep = nativeRepresentation.getValue().getObject();
-        return new OcRepresentation(nativeRep);
+    public OCArray getArray() throws OcCborException {
+        OCArray returnValue = getValue().getArray();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get array");
     }
 
-    public OcRepresentation getObjectArray() {
-        OCRepresentation nativeRep = nativeRepresentation.getValue().getObjectArray();
-        return new OcRepresentation(nativeRep);
+    public OcRepresentation getObject() throws OcCborException {
+        OCRepresentation nativeRep = getValue().getObject();
+        if (nativeRep != null) {
+            return new OcRepresentation(nativeRep);
+        }
+        throw new OcCborException("Failed to get object");
     }
 
-    public OCValue getValue() {
-        return nativeRepresentation.getValue();
+    public OcRepresentation getObjectArray() throws OcCborException {
+        OCRepresentation nativeRep = getValue().getObjectArray();
+        if (nativeRep != null) {
+            return new OcRepresentation(nativeRep);
+        }
+        throw new OcCborException("Failed to get object array");
     }
 
-    public Boolean getBoolean(String key) {
-        return OCRep.getBoolean(nativeRepresentation, key);
+    public OCValue getValue() throws OcCborException {
+        OCValue returnValue = nativeRepresentation.getValue();
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get value");
     }
 
-    public Long getLong(String key) {
-        return OCRep.getLong(nativeRepresentation, key);
+    public boolean getBoolean(String key) throws OcCborException {
+        Boolean returnValue = OCRep.getBoolean(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get boolean for key " + key);
     }
 
-    public Double getDouble(String key) {
-        return OCRep.getDouble(nativeRepresentation, key);
+    public long getLong(String key) throws OcCborException {
+        Long returnValue = OCRep.getLong(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get long for key " + key);
     }
 
-    public String getString(String key) {
-        return OCRep.getString(nativeRepresentation, key);
+    public double getDouble(String key) throws OcCborException {
+        Double returnValue = OCRep.getDouble(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get double for key " + key);
     }
 
-    public byte[] getByteString(String key) {
-        return OCRep.getByteString(nativeRepresentation, key);
+    public String getString(String key) throws OcCborException {
+        String returnValue = OCRep.getString(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get string for key " + key);
     }
 
-    public OcRepresentation getObject(String key) {
+    public byte[] getByteString(String key) throws OcCborException {
+        byte[] returnValue = OCRep.getByteString(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get byte string for key " + key);
+    }
+
+    public OcRepresentation getObject(String key) throws OcCborException {
         OCRepresentation nativeRep = OCRep.getObject(nativeRepresentation, key);
-        return new OcRepresentation(nativeRep);
+        if (nativeRep != null) {
+            return new OcRepresentation(nativeRep);
+        }
+        throw new OcCborException("Failed to get object for key" + key);
     }
 
-    public boolean[] getBooleanArray(String key) {
-        return OCRep.getBooleanArray(nativeRepresentation, key);
+    public boolean[] getBooleanArray(String key) throws OcCborException {
+        boolean[] returnValue = OCRep.getBooleanArray(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get boolean array for key " + key);
     }
 
-    public long[] getLongArray(String key) {
-        return OCRep.getLongArray(nativeRepresentation, key);
+    public long[] getLongArray(String key) throws OcCborException {
+        long[] returnValue = OCRep.getLongArray(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get long array for key " + key);
     }
 
-    public double[] getDoubleArray(String key) {
-        return OCRep.getDoubleArray(nativeRepresentation, key);
+    public double[] getDoubleArray(String key) throws OcCborException {
+        double[] returnValue = OCRep.getDoubleArray(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get double array for key " + key);
     }
 
-    public String[] getStringArray(String key) {
-        return OCRep.getStringArray(nativeRepresentation, key);
+    public String[] getStringArray(String key) throws OcCborException {
+        String[] returnValue = OCRep.getStringArray(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get string array for key " + key);
     }
 
-    public byte[][] getByteStringArray(String key) {
-        return OCRep.getByteStringArray(nativeRepresentation, key);
+    public byte[][] getByteStringArray(String key) throws OcCborException {
+        byte[][] returnValue = OCRep.getByteStringArray(nativeRepresentation, key);
+        if (returnValue != null) {
+            return returnValue;
+        }
+        throw new OcCborException("Failed to get byte string array for key " + key);
     }
 
-    public OcRepresentation getObjectArray(String key) {
+    public OcRepresentation getObjectArray(String key) throws OcCborException {
         OCRepresentation nativeRep = OCRep.getObjectArray(nativeRepresentation, key);
-        return new OcRepresentation(nativeRep);
+        if (nativeRep != null) {
+            return new OcRepresentation(nativeRep);
+        }
+        throw new OcCborException("Failed to get object array for key" + key);
     }
 
     public OcRepresentation getNext() {
