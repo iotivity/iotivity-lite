@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8ce4a38_3f40ec0c",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "return boolean not Boolean see getBoolean(key) bellow.",
+      "range": {
+        "startLine": 31,
+        "startChar": 11,
+        "endLine": 31,
+        "endChar": 19
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9507483d_aa3c7afd",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "return long not Long see comment on getBoolean bellow.",
+      "range": {
+        "startLine": 39,
+        "startChar": 11,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3074b7f3_c1cbb274",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "return double not Double see comment on getBoolean bellow.",
+      "range": {
+        "startLine": 47,
+        "startChar": 11,
+        "endLine": 47,
+        "endChar": 18
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50893ee8_3cb5c03c",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "After some checking none of the OCRep.get* methods use CborErrno so we can removed it.\n\nWe still want the null check however.",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 30
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc2ca12e_30ba5401",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "since we are checking for null and throwing an exception we no longer need this to be class of class type Boolean but can be the keyword boolean.\n\nthe return would be \n\n  return returnValue.getBoolean();",
+      "range": {
+        "startLine": 96,
+        "startChar": 11,
+        "endLine": 96,
+        "endChar": 19
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa1e69a2_f1d8c359",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "return long not Long see comments on getBoolean",
+      "range": {
+        "startLine": 105,
+        "startChar": 11,
+        "endLine": 105,
+        "endChar": 16
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c75e238a_bc8b4c80",
+        "filename": "swig/oc_java/oc/OcRepresentation.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-07T19:35:44Z",
+      "side": 1,
+      "message": "return double not Double see comments on getBoolean",
+      "range": {
+        "startLine": 114,
+        "startChar": 11,
+        "endLine": 114,
+        "endChar": 18
+      },
+      "revId": "e2cb6b206ad1a584a9966e8fbe192f73a2df8f46",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
