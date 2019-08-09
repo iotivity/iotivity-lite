@@ -1026,7 +1026,7 @@ index b916cb0..27b3753 100644
 +    {
 +        tlen = tlen << 1;
 +    }
-+    *buf = mbedtls_calloc( 1, tlen );
++    *buf = mbedtls_calloc( 1, tlen + 4);
 +    if( *buf )
 +    {
 +        memcpy( *buf, ssl->in.offt, n );
