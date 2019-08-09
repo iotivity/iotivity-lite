@@ -391,9 +391,9 @@ main(void)
   oc_set_mtu_size(16384);
   oc_set_max_app_data_size(16384);
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./simpleserver_pki_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 

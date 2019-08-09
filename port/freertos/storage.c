@@ -15,11 +15,11 @@
 // limitations under the License.
 */
 
-#include "port/oc_storage.h"
+#include "oc_config.h"
 #include "port/oc_assert.h"
+#include "port/oc_storage.h"
 
-#ifdef OC_SECURITY
-
+#ifdef OC_STORAGE
 int
 oc_storage_config(const char *store)
 {
@@ -45,4 +45,4 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   oc_abort(__func__);
   return size;
 }
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */

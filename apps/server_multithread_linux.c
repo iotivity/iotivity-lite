@@ -267,9 +267,9 @@ main(void)
                                        .register_resources =
                                          register_resources };
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./server_multithread_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
     printf("pthread_mutex_init failed!\n");
