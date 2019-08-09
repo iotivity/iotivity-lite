@@ -27,6 +27,11 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE
 #endif /* OC_BLOCK_WISE */
 
+/* library features that require persistent storage */
+#if defined(OC_SECURITY) || defined(OC_IDD_API)
+#define OC_STORAGE
+#endif /* OC_STORAGE */
+
 #ifdef __cplusplus
 }
 #endif

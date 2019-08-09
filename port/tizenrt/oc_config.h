@@ -92,6 +92,11 @@ typedef uint64_t oc_clock_time_t;
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+/* library features that require persistent storage */
+#if defined(OC_SECURITY) || defined(OC_IDD_API)
+#define OC_STORAGE
+#endif /* OC_STORAGE */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

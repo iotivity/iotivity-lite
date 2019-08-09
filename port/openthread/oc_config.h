@@ -61,6 +61,11 @@ typedef uint64_t oc_clock_time_t;
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
 
+/* library features that require persistent storage */
+#if defined(OC_SECURITY) || defined(OC_IDD_API)
+#define OC_STORAGE
+#endif /* OC_STORAGE */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
