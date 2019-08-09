@@ -141,9 +141,9 @@ main(void)
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./temp_sensor_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   int init = oc_main_init(&handler);
 
