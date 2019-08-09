@@ -22,6 +22,11 @@
 #include "oc_swupdate_internal.h"
 #include "security/oc_pstat.h"
 
+#ifndef OC_STORAGE
+#error Preprocessor macro OC_SOFTWARE_UPDATE is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_SOFTWARE_UPDATE is defined.
+#endif
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include <stdlib.h>

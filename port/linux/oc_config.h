@@ -96,6 +96,20 @@ typedef uint64_t oc_clock_time_t;
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+/* library features that require persistent storage */
+#ifdef OC_SECURITY
+#define OC_STORAGE
+#endif
+#ifdef OC_IDD_API
+#define OC_STORAGE
+#endif
+#ifdef OC_CLOUD
+#define OC_STORAGE
+#endif
+#ifdef OC_SOFTWARE_UPDATE
+#define OC_STORAGE
+#endif
+
 #ifdef __cplusplus
 }
 #endif
