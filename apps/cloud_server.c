@@ -296,7 +296,9 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
                                           register_resources };
+#ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
+#endif /* OC_STORAGE */
 
   ret = oc_main_init(&handler);
   if (ret < 0)

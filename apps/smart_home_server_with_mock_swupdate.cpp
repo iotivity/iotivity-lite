@@ -310,9 +310,9 @@ main(void)
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_with_mock_swupdate_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY

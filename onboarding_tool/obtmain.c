@@ -1701,11 +1701,12 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
-
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
+#ifdef OC_STORAGE
   oc_storage_config("./onboarding_tool_creds");
+#endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
