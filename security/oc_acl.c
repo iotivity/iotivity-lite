@@ -433,6 +433,13 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     else {
       oc_sec_cred_t *role_cred = oc_sec_get_roles(peer), *next;
       while (role_cred) {
+
+        if (oc_string_len(role_cred->role.role) == strlen("ocf.role.owner")
+            && memcmp(oc_string(role_cred->role.role),
+            "ocf.role.owner",
+            oc_string_len(role_cred->role.role)) == 0){
+                return true;
+        }
         next = role_cred->next;
         if (oc_certs_validate_role_cert(role_cred->ctx) < 0) {
           oc_sec_free_role(role_cred, peer);
