@@ -22,14 +22,19 @@
 #include "oc_introspection_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
+#include "oc_config.h"
 
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
 #else /* OC_IDD_API */
 
+#if !defined(OC_STORAGE) && defined(OC_IDD_API)
+#error Preprocessor macro OC_IDD_API is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_IDD_API is defined.
+#endif
+
 #define MAX_TAG_LENGTH 20
 
-#ifdef OC_SECURITY
 static void
 gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
 {
@@ -39,19 +44,13 @@ gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
     (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
   idd_tag[idd_tag_len] = '\0';
 }
-#endif /* OC_SECURITY */
 
 void
 oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
 {
-  (void) device;
-  (void) IDD;
-  (void) IDD_size;
-#ifdef OC_SECURITY
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   oc_storage_write(idd_tag, IDD, IDD_size);
-#endif /* OC_SECURITY */
 }
 #endif /*OC_IDD_API*/
 
@@ -73,13 +72,11 @@ oc_core_introspection_data_handler(oc_request_t *request,
   } else {
     IDD_size = -1;
   }
-#else /* OC_IDD_API */
-#ifdef OC_SECURITY
+#else  /* OC_IDD_API */
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", request->resource->device, idd_tag);
   IDD_size = oc_storage_read(
     idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
-#endif /* OC_SECURITY */
 #endif /* OC_IDD_API */
 
   if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {

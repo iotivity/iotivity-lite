@@ -394,9 +394,9 @@ main(void)
                                         .signal_event_loop =
                                           signal_event_loop };
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./client_multithread_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
     printf("pthread_mutex_init failed!\n");

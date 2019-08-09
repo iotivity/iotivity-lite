@@ -155,9 +155,9 @@ main(void)
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./simpleserver_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
   if (init < 0)

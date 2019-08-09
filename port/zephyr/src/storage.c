@@ -14,7 +14,9 @@
  // limitations under the License.
  */
 
-#ifdef OC_SECURITY
+#include "oc_config.h"
+
+#ifdef OC_STORAGE
 
 #include <device.h>
 #include <flash.h>
@@ -386,4 +388,4 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   return size;
 }
 
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
