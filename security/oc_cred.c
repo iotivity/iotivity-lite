@@ -45,6 +45,11 @@ static oc_sec_creds_t *devices;
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#ifdef OC_PKI
+static const char* allowed_roles[] = {"oic.role.owner"};
+static const int allowed_roles_num = sizeof(allowed_roles) / sizeof(char*);
+#endif
+
 oc_sec_creds_t *
 oc_sec_get_creds(size_t device)
 {
@@ -280,7 +285,26 @@ oc_sec_allocate_cred(oc_uuid_t *subjectuuid, oc_sec_credtype_t credtype,
   }
   return cred;
 }
-
+#ifdef OC_PKI
+static int
+check_role_assertion(oc_sec_cred_t *cred)
+{
+  if (oc_string_len(cred->role.role) >= strlen("oic.role.")
+     && memcmp(oc_string(cred->role.role), "oic.role.", strlen("oic.role.")) == 0) {
+    for (int i = 0; i < allowed_roles_num; i++) {
+      if (oc_string_len(cred->role.role) == strlen(allowed_roles[i])
+         && memcmp(oc_string(cred->role.role),
+                   allowed_roles[i],
+                   strlen(allowed_roles[i])) == 0) {
+        return 0;
+      }
+    }
+    OC_ERR("oic.role.* roles assertion is prohibited");
+    return -1;
+  }
+  return 0;
+}
+#endif
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                     int credid, oc_sec_credtype_t credtype,
@@ -418,6 +442,12 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       if (roles_resource) {
         oc_sec_free_role(cred, client);
       }
+      return -1;
+    }
+
+    if(roles_resource && check_role_assertion(cred) < 0)
+    {
+      oc_sec_free_role(cred, client);
       return -1;
     }
   }
