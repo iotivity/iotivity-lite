@@ -29,35 +29,6 @@
 
 #define CLOUD_TAG_MAX (32)
 
-#ifndef OC_SECURITY
-// dummy storage
-int
-oc_storage_config(const char *store)
-{
-  (void)store;
-  return 0;
-}
-
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  (void)buf;
-  (void)size;
-  return -1;
-}
-
-long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  (void)buf;
-  (void)size;
-  return -1;
-}
-
-#endif
-
 static int cloud_store_load_internal(const char *store_name,
                                      oc_cloud_store_t *store);
 static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
