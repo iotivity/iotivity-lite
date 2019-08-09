@@ -349,11 +349,11 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
     o->cb.cb(&o->device->uuid, status, o->cb.data);
     free_device(o->device);
   } else {
-    o->cb.cb(&o->device->uuid, status, o->cb.data);
     if (otm != OC_OBT_RDP) {
       oc_list_remove(oc_cache, o->device);
       oc_list_add(oc_devices, o->device);
     }
+    o->cb.cb(&o->device->uuid, status, o->cb.data);
   }
   oc_memb_free(&oc_otm_ctx_m, o);
 }
