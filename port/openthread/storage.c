@@ -16,6 +16,6 @@
 
 #include "port/oc_storage.h"
 
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) || defined(OC_IDD_API)
 
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY or OC_IDD_API */

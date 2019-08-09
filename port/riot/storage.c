@@ -15,7 +15,7 @@
 */
 
 #include "port/oc_storage.h"
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) || defined(OC_IDD_API)
 // TODO:
 
 int
@@ -42,4 +42,4 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   (void)size;
   return size;
 }
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY or OC_IDD_API */
