@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9f78572_52d5650c",
+        "filename": "include/Certification.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-09T17:28:44Z",
+      "side": 1,
+      "message": "It does not make since to place this in the project include/Certification.h folder.  The `include` directory is basically the the public API list for IoTivity-lite.  There is too much here that is specific to the certification app.  I would suggest placing the Certification.h file in the apps folder with the rest of the certification code.",
+      "revId": "fe7868c120ea3ee6b04d5f5007231a811a739220",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb802508_1e2b9fe1",
+        "filename": "include/server_introspection.dat.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-09T17:28:44Z",
+      "side": 1,
+      "message": "I would adjust your build to define OC_IDD_API then use the oc_set_introspection_data in the init function from the oc_intrspection.h header.  This would make it so you don\u0027t need to add introspection data that is specific to a single project into include folder.",
+      "revId": "fe7868c120ea3ee6b04d5f5007231a811a739220",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc1cb011_64c31315",
+        "filename": "include/server_introspection.dat.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-09T17:28:44Z",
+      "side": 1,
+      "message": "thanks for adding the human readable JSON it helps.",
+      "revId": "fe7868c120ea3ee6b04d5f5007231a811a739220",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
