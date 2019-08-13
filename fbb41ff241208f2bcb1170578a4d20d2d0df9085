@@ -33,6 +33,24 @@
       "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e18537aa_cbab56f1",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-13T08:26:05Z",
+      "side": 1,
+      "message": "/oic/sec/roles resources has no own handler, roles assertion are handled here if roles_resource flag is true",
+      "parentUuid": "cd812c1d_92459312",
+      "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
