@@ -1197,11 +1197,7 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.der", 20) == 0) {
-    if (!oc_rep_get_byte_string(data->payload, "csr", &csr, &csr_len)) {
-      goto err_device_CSR;
-    }
-  } else if (encoding_len == 20 &&
+  if (encoding_len == 20 &&
              memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
     if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
       goto err_device_CSR;
