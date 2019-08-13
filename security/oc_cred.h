@@ -46,7 +46,7 @@ typedef enum oc_sec_encoding_t {
   OC_ENCODING_BASE64,
   OC_ENCODING_RAW,
   OC_ENCODING_PEM,
-  OC_ENCODING_DER
+  OC_ENCODING_HANDLE
 } oc_sec_encoding_t;
 
 typedef struct oc_cred_data_t
