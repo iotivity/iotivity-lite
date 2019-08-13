@@ -129,7 +129,7 @@ int jni_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  jcb->cb_valid = OC_CALLBACK_ID_START_CLOUD_MANAGER;
+  jcb->cb_valid = OC_CALLBACK_VALID_TILL_CLOUD_MANAGER_STOP;
   int return_value = oc_cloud_manager_start(ctx, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
@@ -147,7 +147,7 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 {
 #ifdef OC_CLOUD
   int ret = oc_cloud_manager_stop(ctx);
-  jni_callback_data *item = jni_list_get_item_by_callback_valid(OC_CALLBACK_ID_START_CLOUD_MANAGER);
+  jni_callback_data *item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_CLOUD_MANAGER_STOP);
   jni_list_remove(item);
   return ret;
 #else /* OC_CLOUD*/
