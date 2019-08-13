@@ -51,6 +51,24 @@
       "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38e9dbfd_0afaf760",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-08-13T08:31:22Z",
+      "side": 1,
+      "message": "Got it. So this call would be executed when new /roles entry is added, right?",
+      "parentUuid": "e18537aa_cbab56f1",
+      "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
