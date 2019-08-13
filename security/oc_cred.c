@@ -539,9 +539,9 @@ return_encoding_string(oc_sec_encoding_t encoding)
 #ifdef OC_PKI
   case OC_ENCODING_PEM:
     return "oic.sec.encoding.pem";
-  case OC_ENCODING_DER:
-    return "oic.sec.encoding.der";
 #endif /* OC_PKI */
+  case OC_ENCODING_HANDLE:
+    return "oic.sec.encoding.handle";
   default:
     break;
   }
@@ -639,8 +639,7 @@ oc_sec_encode_cred(bool persist, size_t device)
     /* privatedata */
     oc_rep_set_object(creds, privatedata);
     if (persist) {
-      if (cr->privatedata.encoding == OC_ENCODING_RAW ||
-          cr->privatedata.encoding == OC_ENCODING_DER) {
+      if (cr->privatedata.encoding == OC_ENCODING_RAW) {
         oc_rep_set_byte_string(privatedata, data,
                                oc_cast(cr->privatedata.data, const uint8_t),
                                oc_string_len(cr->privatedata.data));
@@ -649,8 +648,7 @@ oc_sec_encode_cred(bool persist, size_t device)
                                oc_string(cr->privatedata.data));
       }
     } else {
-      if (cr->privatedata.encoding == OC_ENCODING_RAW ||
-          cr->privatedata.encoding == OC_ENCODING_DER) {
+      if (cr->privatedata.encoding == OC_ENCODING_RAW) {
         oc_rep_set_byte_string(privatedata, data,
                                oc_cast(cr->privatedata.data, const uint8_t), 0);
       } else {
@@ -743,16 +741,16 @@ parse_encoding_property(oc_string_t *encoding_string)
              memcmp("oic.sec.encoding.raw", oc_string(*encoding_string), 20) ==
                0) {
     encoding = OC_ENCODING_RAW;
+  } else if (oc_string_len(*encoding_string) == 23 &&
+             memcmp("oic.sec.encoding.handle", oc_string(*encoding_string), 23) ==
+               0) {
+    encoding = OC_ENCODING_HANDLE;
   }
 #ifdef OC_PKI
   else if (oc_string_len(*encoding_string) == 20 &&
            memcmp("oic.sec.encoding.pem", oc_string(*encoding_string), 20) ==
              0) {
     encoding = OC_ENCODING_PEM;
-  } else if (oc_string_len(*encoding_string) == 20 &&
-             memcmp("oic.sec.encoding.der", oc_string(*encoding_string), 20) ==
-               0) {
-    encoding = OC_ENCODING_DER;
   }
 #endif /* OC_PKI */
   return encoding;
