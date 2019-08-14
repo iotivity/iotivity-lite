@@ -55,7 +55,7 @@ public class CloudCertTestsMain {
         if (ctx == null) {
             return;
         }
-        int ret = OCCloud.registerHandler(ctx, cloudRegisterHandler);
+        int ret = OCCloud.registerCloud(ctx, cloudRegisterHandler);
         if (ret < 0) {
             System.out.println("\nCould not issue Cloud Register request.");
         } else {
@@ -99,7 +99,7 @@ public class CloudCertTestsMain {
         if (ctx == null) {
             return;
         }
-        int ret = OCCloud.deregisterHandler(ctx, cloudDeregisterHandler);
+        int ret = OCCloud.deregisterCloud(ctx, cloudDeregisterHandler);
         if (ret < 0) {
             System.out.println("\nCould not issue Cloud DeRegister request");
         } else {
