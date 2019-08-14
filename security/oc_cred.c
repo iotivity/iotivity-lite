@@ -417,6 +417,8 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                                         roles_resource) < 0) {
       if (roles_resource) {
         oc_sec_free_role(cred, client);
+      } else {
+        oc_sec_remove_cred(cred, device);
       }
       return -1;
     }
@@ -1062,7 +1064,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   int credid = 0;
   if (ret != -1) {
     credid = (int)strtoul(query_param, NULL, 10);
-    if (credid != 0) {
+    if (credid >= 0) {
       if (!roles_resource) {
         if (oc_sec_remove_cred_by_credid(credid, request->resource->device)) {
           success = true;
