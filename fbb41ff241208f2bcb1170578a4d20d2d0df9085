@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "ef3e7969_e71e9c67",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-08-14T15:29:28Z",
+      "side": 1,
+      "message": "\u003e Yes, we\u0027re really close to getting that approved to v0.9 (we\u0027re actually waiting for \n\u003e regression run on Lite). It was decided that supporting certificates is not too much overhead, \n\u003e and OBT is still the one deciding which creds to use - PSK is another mandatory option.\n\nJust so I understand, are we making certificate creds mandatory ONLY for OBTs, or for both OBTs and Devices? Doing certificate-based handshakes can be a little heavy for constrained devices.\nThere are at least a couple of vendors I know of who are using MCUs, so it may be good to tread carefully, that\u0027s all.\n\n\u003e As for the #ifdef - I\u0027m worried about maintenance. Do we run Jenkins builds both with AND \n\u003e without OC_PKI?\n\nOh, it is fairly well factored out in the code, so I can tell visually during code reviews,\nand I usually test builds with/without PKI support before merging any security layer patches that touch oc_cred/oc_tls. The default option in the Makefile is to enable PKI support, so that is the build which Jenkins runs. We\u0027d have to (and could) update the Jenkins build to run another build with PKI\u003d0.",
+      "parentUuid": "b42460b8_d07b614d",
+      "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cd812c1d_92459312",
         "filename": "security/oc_cred.c",
         "patchSetId": 4
