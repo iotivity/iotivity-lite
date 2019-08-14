@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b42460b8_d07b614d",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-08-14T05:07:23Z",
+      "side": 1,
+      "message": "Yes, we\u0027re really close to getting that approved to v0.9 (we\u0027re actually waiting for regression run on Lite). It was decided that supporting certificates is not too much overhead, and OBT is still the one deciding which creds to use - PSK is another mandatory option.\nAs for the #ifdef - I\u0027m worried about maintenance. Do we run Jenkins builds both with AND without OC_PKI?",
+      "parentUuid": "277ad01c_3ea267ad",
+      "revId": "fbb41ff241208f2bcb1170578a4d20d2d0df9085",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cd812c1d_92459312",
         "filename": "security/oc_cred.c",
         "patchSetId": 4
