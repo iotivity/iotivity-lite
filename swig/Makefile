@@ -78,6 +78,10 @@ ifneq ($(SECURE),0)
 	EXTRA_FLAG += -DOC_SECURITY
 endif
 
+ifeq ($(IDD), 1)
+	EXTRA_FLAG += -DOC_IDD_API
+endif
+
 ifneq ($(PKI),0)
 	EXTRA_FLAG += -DOC_PKI
 endif

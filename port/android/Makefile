@@ -88,7 +88,7 @@ export CLOUD ?= 1
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
 # default. It also assumes the use of OC_IDD_API is used by default.
 JAVA ?= 1
-IDD ?= 1
+export IDD ?= 1
 
 ROOT_DIR = ../..
 SWIG_DIR = $(ROOT_DIR)/swig
