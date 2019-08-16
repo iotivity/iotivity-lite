@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2337aa72_76b69fb7",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-16T02:51:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2715126d_e33f617d",
+      "range": {
+        "startLine": 744,
+        "startChar": 48,
+        "endLine": 744,
+        "endChar": 50
+      },
+      "revId": "f85c02ebe77310f9db7f2bd5ad527263d24d667f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0371e31f_1e30e1ce",
         "filename": "security/oc_cred.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-08-15T23:44:37Z",
       "side": 1,
       "message": "23",
+      "range": {
+        "startLine": 745,
+        "startChar": 76,
+        "endLine": 745,
+        "endChar": 78
+      },
+      "revId": "f85c02ebe77310f9db7f2bd5ad527263d24d667f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab54b636_0a8ae133",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-16T02:51:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0371e31f_1e30e1ce",
       "range": {
         "startLine": 745,
         "startChar": 76,
