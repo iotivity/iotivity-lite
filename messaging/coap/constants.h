@@ -116,7 +116,7 @@ typedef enum {
 } coap_message_type_t;
 
 /* CoAP request method codes */
-typedef enum { COAP_GET = 1, COAP_POST, COAP_PUT, COAP_DELETE } coap_method_t;
+typedef enum { COAP_EMPTY, COAP_GET, COAP_POST, COAP_PUT, COAP_DELETE } coap_method_t;
 
 /* CoAP response codes */
 typedef enum {
