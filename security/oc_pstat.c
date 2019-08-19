@@ -180,6 +180,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     if (fp->cb != NULL) {
       fp->cb(device, fp->data);
     }
+    coap_status_code = CLOSE_ALL_TLS_SESSIONS;
     ps->p = false;
   } break;
   case OC_DOS_RFPRO: {
