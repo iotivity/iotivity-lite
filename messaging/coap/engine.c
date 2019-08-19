@@ -98,20 +98,20 @@ check_if_duplicate(uint16_t mid, uint8_t device)
 }
 
 static void
-coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
+coap_send_empty_reponse(coap_message_type_t type, uint16_t mid, oc_endpoint_t *endpoint)
 {
-  coap_packet_t ack[1];
-  coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
-  if (ack_message) {
-    memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
-    size_t len = coap_serialize_message(ack, ack_message->data);
+  coap_packet_t resp[1];
+  coap_udp_init_message(resp, type, 0, mid);
+  oc_message_t *resp_message = oc_internal_allocate_outgoing_message();
+  if (resp_message) {
+    memcpy(&resp_message->endpoint, endpoint, sizeof(*endpoint));
+    size_t len = coap_serialize_message(resp, resp_message->data);
     if (len > 0) {
-      ack_message->length = len;
-      coap_send_message(ack_message);
+      resp_message->length = len;
+      coap_send_message(resp_message);
     }
-    if (ack_message->ref_count == 0) {
-      oc_message_unref(ack_message);
+    if (resp_message->ref_count == 0) {
+      oc_message_unref(resp_message);
     }
   }
 }
@@ -472,7 +472,7 @@ coap_receive(oc_message_t *msg)
             response_buffer->ref_count = 0;
         }
 #endif /* OC_BLOCK_WISE */
-        if (response->code != 0) {
+        if (response->code != COAP_EMPTY) {
           goto send_message;
         }
       }
@@ -496,7 +496,11 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_CLIENT */
 
       if (message->type == COAP_TYPE_CON) {
-        coap_send_empty_ack(message->mid, &msg->endpoint);
+        coap_message_type_t type = COAP_TYPE_ACK;
+        if (message->code == COAP_EMPTY) {
+          type = COAP_TYPE_RST;
+        }
+        coap_send_empty_reponse(type, message->mid, &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
       } else if (message->type == COAP_TYPE_RST) {
 #ifdef OC_SERVER
