@@ -899,13 +899,10 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
   selected_mfg_cred = -1;
   selected_id_cred = -1;
 #endif /* OC_PKI */
-#ifdef OC_SERVER
   oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
     ciphers = (int *)anon_ecdh_priority;
-  } else
-#endif /* OC_SERVER */
-    if (!ciphers) {
+  } else if (!ciphers) {
     ciphers = (int *)psk_priority;
 #ifdef OC_CLIENT
     oc_sec_cred_t *cred =
@@ -918,9 +915,6 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
       ciphers = (int *)cert_priority;
     }
 #endif /* OC_PKI */
-    else {
-      ciphers = (int *)anon_ecdh_priority;
-    }
 #endif /* OC_CLIENT */
   }
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
