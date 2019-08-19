@@ -233,7 +233,7 @@ public class ObtMain {
         }
 
         OtmRandomPinHandler otmRandomPinHandler = new OtmRandomPinHandler(uds[userInput]);
-        int ret = OCObt.performRandomPinOtm(uds[userInput].uuid, pin, pin.length(), otmRandomPinHandler);
+        int ret = OCObt.performRandomPinOtm(uds[userInput].uuid, pin, otmRandomPinHandler);
         if (ret >= 0) {
             System.out.println("\nSuccessfully issued request to perform Random PIN OTM");
         } else {

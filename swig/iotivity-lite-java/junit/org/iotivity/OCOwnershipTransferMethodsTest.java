@@ -162,7 +162,7 @@ public class OCOwnershipTransferMethodsTest {
             });
             assertTrue(requestRandomPinExecuted.await(WAIT_TIME_MED, TimeUnit.SECONDS));
             CountDownLatch randomPinOtmHandlerExecuted = new CountDownLatch(1);
-            assertEquals(0 , OCObt.performRandomPinOtm(OCCoreRes.getDeviceId(1), testRandomPinHandler.pin, testRandomPinHandler.pin.length(), new OCObtDeviceStatusHandler() {
+            assertEquals(0 , OCObt.performRandomPinOtm(OCCoreRes.getDeviceId(1), testRandomPinHandler.pin, new OCObtDeviceStatusHandler() {
                 @Override
                 public void handler(OCUuid uuid, int status) {
                     assertEquals(0, status);

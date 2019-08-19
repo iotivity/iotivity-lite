@@ -45,7 +45,7 @@ public class OcObt {
     }
 
     public int performRandomPinOtm(OCUuid uuid, String pin, OCObtDeviceStatusHandler otmRandomPinHandler) {
-        return OCObt.performRandomPinOtm(uuid, pin, pin.length(), otmRandomPinHandler);
+        return OCObt.performRandomPinOtm(uuid, pin, otmRandomPinHandler);
     }
 
     public int performCertOtm(OCUuid uuid, OCObtDeviceStatusHandler otmCertHandler) {
