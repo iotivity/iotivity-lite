@@ -16,6 +16,24 @@
       "revId": "5d669dc80b1279639d4fa4bfb8afaeb9603145a6",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99eb9b3b_185f7347",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-19T22:27:57Z",
+      "side": 1,
+      "message": "The pin_len param is needed here.  This is C code not Java.  The Typemaps above are what tell swig how to convert the single java param to to the two C params. I still need to have the pin_len so I can pass it onto the oc_obt_perform_random_pin_otm bellow.",
+      "parentUuid": "ceceb6a5_2f0df956",
+      "revId": "5d669dc80b1279639d4fa4bfb8afaeb9603145a6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
