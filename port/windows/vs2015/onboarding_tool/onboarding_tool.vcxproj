@@ -98,7 +98,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)\$(Configuration)\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q
+if exist $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs /s /q
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs\</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds</Command>
@@ -120,7 +122,9 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q
+if exist $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs /s /q
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs\</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds</Command>
@@ -146,7 +150,9 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q
+if exist $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs /s /q
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs\</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds</Command>
@@ -172,7 +178,9 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds /s /q
+if exist $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs rmdir  $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs /s /q
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\$(Platform)\$(Configuration)\pki_certs\</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>mkdir $(SolutionDir)\$(Platform)\$(Configuration)\onboarding_tool_creds</Command>
