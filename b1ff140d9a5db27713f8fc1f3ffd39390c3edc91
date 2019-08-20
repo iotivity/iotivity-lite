@@ -22,6 +22,53 @@
       "revId": "b1ff140d9a5db27713f8fc1f3ffd39390c3edc91",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec81469a_a724f0a7",
+        "filename": ".gitattributes",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-20T22:19:02Z",
+      "side": 1,
+      "message": "Strictly speaking no this is not necessary. the only line in this file that is necessary is line 17.\n\nThis will actually help prevent people committing (c, h, and java) files with windows style line endings to the repository. Since it explicitly tells git that they are text files that are safe to change the line endings.\n\nBy default it will always commit files with the lf line ending.\n\nIf it makes you more comfortable I will remove these.",
+      "parentUuid": "e78e7a79_c0f55825",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 11
+      },
+      "revId": "b1ff140d9a5db27713f8fc1f3ffd39390c3edc91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5c1ac1e_948eddb0",
+        "filename": ".gitattributes",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-20T22:19:02Z",
+      "side": 1,
+      "message": "need to add text eol\u003dcrlf to lines 13 and 14.",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 14
+      },
+      "revId": "b1ff140d9a5db27713f8fc1f3ffd39390c3edc91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
