@@ -600,6 +600,43 @@ err_obt_rdp_3:
 }
 
 static void
+obt_rdp_2a(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_rdp_2a");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_obt_rdp_2a;
+  }
+
+  /** 2a)  post doxm deviceuuid
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_3, HIGH_QOS, o)) {
+    oc_uuid_t dev_uuid;
+    oc_gen_uuid(&dev_uuid);
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
+
+    oc_rep_start_root_object();
+    /* Set random uuid as deviceuuid */
+    oc_rep_set_text_string(root, deviceuuid, uuid);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_obt_rdp_2a:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+}
+
+
+static void
 obt_rdp_2(oc_client_response_t *data)
 {
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
@@ -620,7 +657,7 @@ obt_rdp_2(oc_client_response_t *data)
      */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_3, HIGH_QOS, o)) {
+    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_2a, HIGH_QOS, o)) {
       oc_uuid_t *my_uuid = oc_core_get_device_id(0);
       char ouuid[OC_UUID_LEN];
       oc_uuid_to_str(my_uuid, ouuid, OC_UUID_LEN);
@@ -643,6 +680,7 @@ err_obt_rdp_2:
   OTM sequence:
   1) provision PSK cred locally+<Open-TLS-PSK>+get /oic/d
   2) post doxm devowneruuid
+  2a) post random doxm deviceuuid (CR2935)
   3) post pstat om=4
   4) get doxm
   5) <store peer uuid> ; post doxm rowneruuid
