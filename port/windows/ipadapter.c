@@ -440,9 +440,11 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
+#ifdef OC_DEBUG
       PRINT("Adding address for interface %d\n", ifaddr->if_index);
       PRINTipaddr(ep);
       PRINT("\n\n");
+#endif /* OC_DEBUG */
       continue;
     }
 #ifdef OC_IPV4
@@ -458,9 +460,11 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
+#ifdef OC_DEBUG
       PRINT("Adding address for interface %d\n", ifaddr->if_index);
       PRINTipaddr(ep);
       PRINT("\n\n");
+#endif /* OC_DEBUG */
       continue;
     }
 #endif
