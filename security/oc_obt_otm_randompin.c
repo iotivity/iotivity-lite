@@ -429,42 +429,10 @@ obt_rdp_5(oc_client_response_t *data)
     goto err_obt_rdp_5;
   }
 
-  oc_uuid_t peer;
-  oc_rep_t *rep = data->payload;
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (oc_string_len(rep->name) == 10 &&
-          memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string), &peer);
-      }
-      break;
-    default:
-      break;
-    }
-    rep = rep->next;
-  }
-
-  /**  5) <store peer uuid> ; post doxm rowneruuid
+  /**  5) post doxm rowneruuid
    */
   oc_device_t *device = o->device;
-
-  /* Free temporary PSK credential that was created for this handshake
-   * and has served its purpose.
-   */
-  char suuid[37];
-  oc_uuid_to_str(&device->uuid, suuid, 37);
-  oc_cred_remove_subject(suuid, 0);
-
-  /* Store peer device's now fixed uuid in local device object */
-  memcpy(device->uuid.id, peer.id, 16);
-  oc_endpoint_t *ep = device->endpoint;
-  while (ep) {
-    memcpy(ep->di.id, peer.id, 16);
-    ep = ep->next;
-  }
-
-  ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
 
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_6, HIGH_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
@@ -497,12 +465,40 @@ obt_rdp_4(oc_client_response_t *data)
     goto err_obt_rdp_4;
   }
 
-  /**  4) get doxm
+  /** 4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
    */
+  oc_uuid_t dev_uuid;
+  oc_gen_uuid(&dev_uuid);
+  char uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
+  OC_DBG("generated deviceuuid: %s", uuid);
+
   oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &obt_rdp_5, HIGH_QOS, o)) {
-    return;
+    /* Free temporary PSK credential that was created for this handshake
+   * and has served its purpose.
+   */
+  char suuid[37];
+  oc_uuid_to_str(&device->uuid, suuid, 37);
+  oc_cred_remove_subject(suuid, 0);
+
+  /* Store peer device's random uuid in local device object */
+  memcpy(device->uuid.id, dev_uuid.id, 16);
+  oc_endpoint_t *ep = device->endpoint;
+  while (ep) {
+    memcpy(ep->di.id, dev_uuid.id, 16);
+    ep = ep->next;
+  }
+
+  ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_5, HIGH_QOS, o)) {
+
+    oc_rep_start_root_object();
+    /* Set random uuid as deviceuuid */
+    oc_rep_set_text_string(root, deviceuuid, uuid);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
   }
 
 err_obt_rdp_4:
@@ -522,13 +518,18 @@ obt_rdp_3(oc_client_response_t *data)
     goto err_obt_rdp_3;
   }
 
-  /**  3) post pstat om=4
+  /**  3) post doxm devowneruuid
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_4, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_4, HIGH_QOS, o)) {
+    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    char ouuid[OC_UUID_LEN];
+    oc_uuid_to_str(my_uuid, ouuid, OC_UUID_LEN);
+ 
     oc_rep_start_root_object();
-    oc_rep_set_int(root, om, 4);
+    /* Set OBT's uuid as devowneruuid */
+    oc_rep_set_text_string(root, devowneruuid, ouuid);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       return;
@@ -556,18 +557,13 @@ obt_rdp_2(oc_client_response_t *data)
   size_t icv_len = 0;
   if (oc_rep_get_string(data->payload, "icv", &icv, &icv_len)) {
     /* TODO: Record icv here */
-    /**  2) post doxm devowneruuid
+    /**  2) post pstat om=4
      */
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-    if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_3, HIGH_QOS, o)) {
-      oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-      char ouuid[OC_UUID_LEN];
-      oc_uuid_to_str(my_uuid, ouuid, OC_UUID_LEN);
-
+    if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_3, HIGH_QOS, o)) {
       oc_rep_start_root_object();
-      /* Set OBT's uuid as devowneruuid */
-      oc_rep_set_text_string(root, devowneruuid, ouuid);
+      oc_rep_set_int(root, om, 4);
       oc_rep_end_root_object();
       if (oc_do_post()) {
         return;
@@ -582,10 +578,10 @@ err_obt_rdp_2:
 /*
   OTM sequence:
   1) provision PSK cred locally+<Open-TLS-PSK>+get /oic/d
-  2) post doxm devowneruuid
-  3) post pstat om=4
-  4) get doxm
-  5) <store peer uuid> ; post doxm rowneruuid
+  2) post pstat om=4
+  3) post doxm devowneruuid
+  4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  5) post doxm rowneruuid
   6) post acl rowneruuid
   7) post pstat rowneruuid
   8) post cred rowneruuid, cred

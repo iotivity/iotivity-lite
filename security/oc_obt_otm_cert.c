@@ -429,35 +429,10 @@ obt_cert_6(oc_client_response_t *data)
     goto err_obt_cert_6;
   }
 
-  oc_uuid_t peer;
-  oc_rep_t *rep = data->payload;
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (oc_string_len(rep->name) == 10 &&
-          memcmp(oc_string(rep->name), "deviceuuid", 10) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string), &peer);
-      }
-      break;
-    default:
-      break;
-    }
-    rep = rep->next;
-  }
-
-  /**  6) <store peer uuid> ; post doxm rowneruuid
+  /**  6) post doxm rowneruuid
    */
   oc_device_t *device = o->device;
-
-  /* Store peer device's now fixed uuid in local device object */
-  memcpy(device->uuid.id, peer.id, 16);
-  oc_endpoint_t *ep = device->endpoint;
-  while (ep) {
-    memcpy(ep->di.id, peer.id, 16);
-    ep = ep->next;
-  }
-
-  ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
 
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_cert_7, HIGH_QOS, o)) {
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
@@ -490,12 +465,32 @@ obt_cert_5(oc_client_response_t *data)
     goto err_obt_cert_5;
   }
 
-  /**  5) get doxm
+  /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
    */
+  oc_uuid_t dev_uuid;
+  oc_gen_uuid(&dev_uuid);
+  char uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
+  OC_DBG("generated deviceuuid: %s", uuid);
+
   oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &obt_cert_6, HIGH_QOS, o)) {
-    return;
+  /* Store peer device's random uuid in local device object */
+  memcpy(device->uuid.id, dev_uuid.id, 16);
+  oc_endpoint_t *ep = device->endpoint;
+  while (ep) {
+    memcpy(ep->di.id, dev_uuid.id, 16);
+    ep = ep->next;
+  }
+
+  ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_cert_6, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    /* Set random uuid as deviceuuid */
+    oc_rep_set_text_string(root, deviceuuid, uuid);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
   }
 
 err_obt_cert_5:
@@ -515,13 +510,18 @@ obt_cert_4(oc_client_response_t *data)
     goto err_obt_cert_4;
   }
 
-  /**  4) post pstat om=4
+  /** 4) post doxm devowneruuid
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_cert_5, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_cert_5, HIGH_QOS, o)) {
+    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
+
     oc_rep_start_root_object();
-    oc_rep_set_int(root, om, 4);
+    /* Set OBT's uuid as devowneruuid */
+    oc_rep_set_text_string(root, devowneruuid, uuid);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       return;
@@ -545,20 +545,14 @@ obt_cert_3(oc_client_response_t *data)
     goto err_obt_cert_3;
   }
 
-  /** 3) <Open-TLS_ECDSA+post doxm devowneruuid
+  /**  3) <Open-TLS_ECDSA_with_Mfg_Cert>+post pstat om=4
    */
   oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_select_cert_ciphersuite();
-
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_cert_4, HIGH_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-    char uuid[OC_UUID_LEN];
-    oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
-
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_cert_4, HIGH_QOS, o)) {
     oc_rep_start_root_object();
-    /* Set OBT's uuid as devowneruuid */
-    oc_rep_set_text_string(root, devowneruuid, uuid);
+    oc_rep_set_int(root, om, 4);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       return;
@@ -608,10 +602,10 @@ err_obt_cert_2:
   OTM sequence:
   1) get /oic/d
   2) post doxm oxmsel=2
-  3) <Open-TLS_ECDSA_with_Mfg_Cert>+post doxm devowneruuid
-  4) post pstat om=4
-  5) get doxm
-  6) <store peer uuid> ; post doxm rowneruuid
+  3) <Open-TLS_ECDSA_with_Mfg_Cert>+post pstat om=4
+  4) post doxm devowneruuid
+  5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  6) post doxm rowneruuid
   7) post acl rowneruuid
   8) post pstat rowneruuid
   9) post cred rowneruuid, cred
