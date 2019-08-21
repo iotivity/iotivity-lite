@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "ccc6b7f5_f4a8141c",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-08-21T13:55:44Z",
+      "side": 1,
+      "message": "in this case the oc_free_string() call will be omitted",
+      "parentUuid": "293bdeb9_762439f3",
+      "range": {
+        "startLine": 325,
+        "startChar": 6,
+        "endLine": 325,
+        "endChar": 63
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "caba9ecf_7189f1ac",
         "filename": "security/oc_cred.c",
         "patchSetId": 1
@@ -174,6 +198,30 @@
       "writtenOn": "2019-08-21T13:29:29Z",
       "side": 1,
       "message": "Using bool type is aligned with overall codestyle?",
+      "range": {
+        "startLine": 397,
+        "startChar": 8,
+        "endLine": 397,
+        "endChar": 9
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b08d943_3f812540",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-08-21T13:55:44Z",
+      "side": 1,
+      "message": "please see unique_credid() call below",
+      "parentUuid": "9d134326_e6ba7b2f",
       "range": {
         "startLine": 397,
         "startChar": 8,
