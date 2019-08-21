@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ddc1f6c_d1e65298",
+        "filename": "security/oc_certs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "Call func inside the if condition, instead of ret variable using",
+      "range": {
+        "startLine": 274,
+        "startChar": 0,
+        "endLine": 275,
+        "endChar": 16
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "412502b0_4a9e797a",
+        "filename": "security/oc_certs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "same",
+      "range": {
+        "startLine": 280,
+        "startChar": 0,
+        "endLine": 282,
+        "endChar": 16
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "324f399f_e854cb38",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "is it necessary?",
+      "range": {
+        "startLine": 312,
+        "startChar": 37,
+        "endLine": 312,
+        "endChar": 75
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e050d9cf_c691caec",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "check prev comment pls",
+      "range": {
+        "startLine": 315,
+        "startChar": 2,
+        "endLine": 315,
+        "endChar": 28
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f78725f_fa158837",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "redundant",
+      "range": {
+        "startLine": 317,
+        "startChar": 0,
+        "endLine": 317,
+        "endChar": 19
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "293bdeb9_762439f3",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "return (memcmp(oc_string(uuid), duuid, OC_UUID_LEN) \u003d\u003d 0);\nno res variable is needed",
+      "range": {
+        "startLine": 325,
+        "startChar": 6,
+        "endLine": 325,
+        "endChar": 63
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caba9ecf_7189f1ac",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "return false",
+      "range": {
+        "startLine": 330,
+        "startChar": 2,
+        "endLine": 330,
+        "endChar": 12
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d134326_e6ba7b2f",
+        "filename": "security/oc_cred.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T13:29:29Z",
+      "side": 1,
+      "message": "Using bool type is aligned with overall codestyle?",
+      "range": {
+        "startLine": 397,
+        "startChar": 8,
+        "endLine": 397,
+        "endChar": 9
+      },
+      "revId": "84503f62b9ebbe6d5ede7bc4540fdd99f1e7f48b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
