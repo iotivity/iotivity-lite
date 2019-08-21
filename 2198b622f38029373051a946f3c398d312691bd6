@@ -16,6 +16,24 @@
       "revId": "2198b622f38029373051a946f3c398d312691bd6",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2072953_54c65ea3",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-08-21T10:24:08Z",
+      "side": 1,
+      "message": "OC_STATUS_NOT_FOUND errcode checking was added due to  request in the Jira task \"Some devices that utilize persistent UUID may reject this provisioning with PROPERTY_NOT_FOUND\"\nBut since coap has no defined error code for the PROPERTY_NOT_FOUND, OC_STATUS_NOT_FOUND was temporary used.\nI think to reject uuid provisioning  OC_STATUS_BAD_OPTION or OC_STATUS_NOT_ACCEPTABLE errcodes can be selected. Anyway only single errcode must be selected for such case.",
+      "parentUuid": "631c8b9e_d22532f3",
+      "revId": "2198b622f38029373051a946f3c398d312691bd6",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
