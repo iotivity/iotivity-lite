@@ -70,7 +70,8 @@ ifeq ($(DEBUG),1)
 endif
 
 ifeq ($(CLOUD),1)
-	EXTRA_FLAG += -DOC_CLOUD -DOC_TCP
+	TCP=1
+	EXTRA_FLAG += -DOC_CLOUD
 	CLOUD_OBJ_DIR = $(PORT_OBJ_DIR)cloud/*.o
 endif
 
@@ -84,6 +85,10 @@ endif
 
 ifneq ($(PKI),0)
 	EXTRA_FLAG += -DOC_PKI
+endif
+
+ifeq ($(TCP),1)
+	EXTRA_CFLAG += -DOC_TCP
 endif
 
 SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_core_res \
