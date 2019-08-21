@@ -42,6 +42,7 @@ void oc_message_unref(oc_message_t *message);
 
 void oc_recv_message(oc_message_t *message);
 void oc_send_message(oc_message_t *message);
+void oc_close_all_tls_sessions(size_t device);
 
 #ifdef __cplusplus
 }
