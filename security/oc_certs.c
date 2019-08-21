@@ -264,6 +264,28 @@ oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
   return 0;
 }
 
+int
+oc_certs_parse_CN_for_UUID_raw(const unsigned char *cert, size_t cert_size,
+                               oc_string_t *uuid)
+{
+  int ret = -1;
+
+  mbedtls_x509_crt crt;
+  mbedtls_x509_crt_init(&crt);
+
+  if ((ret = mbedtls_x509_crt_parse(&crt, cert, cert_size)) != 0) {
+    OC_ERR("could not parse the provided cert %d", ret);
+  } else {
+    if ((ret = oc_certs_parse_CN_for_UUID(&crt, uuid)) != 0) {
+      OC_ERR("could not extract common name from cert %d", ret);
+    }
+  }
+
+  mbedtls_x509_crt_free(&crt);
+
+  return ret;
+}
+
 static int
 oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
                           size_t output_buffer_len)

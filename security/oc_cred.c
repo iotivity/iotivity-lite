@@ -305,6 +305,29 @@ check_role_assertion(oc_sec_cred_t *cred)
   return 0;
 }
 #endif
+
+#ifdef OC_PKI
+static bool
+check_device_uuid_from_identity_cert(size_t device,
+                                     size_t publicdata_size, const uint8_t *publicdata)
+{
+  bool res = false;
+
+  oc_string_t uuid;
+  if (oc_certs_parse_CN_for_UUID_raw(publicdata, publicdata_size, &uuid) == 0) {
+    oc_sec_doxm_t* doxm = oc_sec_get_doxm(device);
+    if (doxm) {
+      char duuid[OC_UUID_LEN];
+      oc_uuid_to_str(&doxm->deviceuuid, duuid, OC_UUID_LEN);
+      res = (memcmp(oc_string(uuid), duuid, OC_UUID_LEN) == 0);
+    }
+    oc_free_string(&uuid);
+  }
+
+  return res;
+}
+#endif
+
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                     int credid, oc_sec_credtype_t credtype,
@@ -364,6 +387,10 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       return -1;
     }
     if (memcmp(kp->public_key, public_key, OC_KEYPAIR_PUBKEY_SIZE) != 0) {
+      return -1;
+    }
+    if (!check_device_uuid_from_identity_cert(device,
+                                              publicdata_size + 1, publicdata)) {
       return -1;
     }
   }
