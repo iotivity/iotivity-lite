@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d8a0b08_f404cdc3",
+        "filename": "swig/iotivity-lite-java/junit/org/iotivity/OCEndpointTest.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-22T23:02:45Z",
+      "side": 1,
+      "message": "considering breaking this into smaller tests since I know 3 or the 4 strings will fail on windows due to the fact windows does not have dns lookup for openconnectivity.org.",
+      "revId": "46a511ca6353154b784ad933c1bc2f7afe46bede",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
