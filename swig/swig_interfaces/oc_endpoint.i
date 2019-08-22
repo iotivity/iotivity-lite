@@ -87,8 +87,21 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
-/* TODO check the string_to_endpoint function output */
-%rename(stringToEndpoint) oc_string_to_endpoint;
+/* TODO figure out a clean way to return the uri param not as an array value */
+%ignore oc_string_to_endpoint;
+%rename(stringToEndpoint) jni_string_to_endpoint;
+%inline %{
+oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_endpoint_t *ep = oc_new_endpoint();
+  if(oc_string_to_endpoint(endpoint_str, ep, uri) < 0) {
+    OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
+    oc_free_endpoint(ep);
+    return NULL;
+  }
+  return ep;
+}
+%}
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(compare) oc_endpoint_compare;
 %rename(compareAddress) oc_endpoint_compare_address;
