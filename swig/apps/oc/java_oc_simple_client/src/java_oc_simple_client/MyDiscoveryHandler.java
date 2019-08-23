@@ -8,7 +8,7 @@ import org.iotivity.oc.*;
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
             int resourcePropertiesMask) {
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
@@ -91,18 +91,16 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                     server = new OcfServer();
                 }
 
-                server.setServerEndpoint(endpoint);
+                server.setServerEndpoint(endpoints[0]);
                 server.setServerUri(uri);
                 msg.append("\tResource " + server.getServerUri() + " hosted at endpoint(s):\n");
-                OCEndpoint ep = endpoint;
-                while (ep != null) {
+                for (OCEndpoint ep : endpoints ) {
                     String endpointStr = OcUtils.endpointToString(ep);
                     msg.append("\t\tendpoint: " + endpointStr + "\n");
                     msg.append("\t\t\tendpoint.device " + ep.getDevice() + "\n");
                     msg.append("\t\t\tendpoint.flags " + ep.getFlags() + "\n");
                     msg.append("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex() + "\n");
                     msg.append("\t\t\tendpoint.version " + ep.getVersion().toString() + "\n");
-                    ep = ep.getNext();
                 }
                 System.out.print(msg);
 
@@ -119,7 +117,6 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OcUtils.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }
