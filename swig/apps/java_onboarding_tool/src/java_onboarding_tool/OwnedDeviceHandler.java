@@ -11,17 +11,15 @@ import org.iotivity.OCUuid;
 public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
 
     @Override
-    public void handler(OCUuid uuid, OCEndpoint endpoints) {
+    public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
         String deviceId = OCUuidUtil.uuidToString(uuid);
         System.out.println("\nDiscovered owned device: "+ deviceId + " at:");
-        OCEndpoint ep = endpoints;
-        while (endpoints != null) {
-            String endpointStr = OCEndpointUtil.toString(endpoints);
+        for (OCEndpoint endpoint : endpoints) {
+            String endpointStr = OCEndpointUtil.toString(endpoint);
             System.out.println(endpointStr);
-            endpoints = endpoints.getNext();
         }
 
-        OCMain.doGet("/oic/d", ep, null, getOwnedDeviceNameHandler, OCQos.LOW_QOS);
+        OCMain.doGet("/oic/d", endpoints[0], null, getOwnedDeviceNameHandler, OCQos.LOW_QOS);
     }
 
     public static GetOwnedDeviceNameHandler getOwnedDeviceNameHandler = new GetOwnedDeviceNameHandler();

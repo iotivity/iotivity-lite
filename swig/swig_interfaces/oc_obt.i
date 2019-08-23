@@ -86,7 +86,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         (data->jenv),
         cls_OCObtDiscoveryHandler,
         "handler",
-        "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;)V");
+        "(Lorg/iotivity/OCUuid;[Lorg/iotivity/OCEndpoint;)V");
   assert(mid_handler);
 
   assert(cls_OCUuid);
@@ -101,6 +101,42 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         "(JZ)V");
   assert(mid_OCEndpoint_init);
 
+  // convert the endpoint linked list to an OCEndpoint array
+  // get the number of elements in the endpoint linked list
+  size_t ep_size = 1;
+  oc_endpoint_t * ep = eps;
+  while (ep->next) {
+    ep_size++;
+    ep = ep->next;
+  }
+
+  jobjectArray jendpoints = JCALL3(NewObjectArray,
+                                   (data->jenv),
+                                   (jsize)ep_size,
+                                   cls_OCEndpoint,
+                                   0);
+
+  ep = eps;
+  ep_size = 0;
+  if (ep != NULL) {
+    do {
+      // Make a deep copy of the endpoint and pass ownership of that copy to Java.
+      oc_endpoint_t *ep_copy = oc_new_endpoint();
+      memcpy(ep_copy, ep, sizeof(oc_endpoint_t));
+      ep_copy->next = NULL;
+      jobject jendpoint = JCALL4(NewObject,
+                                 (data->jenv),
+                                 cls_OCEndpoint,
+                                 mid_OCEndpoint_init,
+                                 (jlong)ep_copy,
+                                 true);
+      JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size, jendpoint);
+      ep = ep->next;
+      ep_size++;
+    } while(ep != NULL);
+  }
+
+
   /* make copy of uuid that will be owned by Java code */
   oc_uuid_t *juuid = malloc(sizeof(oc_uuid_t));
   memcpy(juuid->id, uuid->id, 16);
@@ -110,7 +146,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         data->jcb_obj,
         mid_handler,
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
+        jendpoints);
 
   release_jni_env(getEnvResult);
 }

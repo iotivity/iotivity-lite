@@ -37,6 +37,7 @@
   }
 }
 %rename(OCEndpoint) oc_endpoint_t;
+%ignore oc_endpoint_t::next;
 // must use the oc_endpoint_set_di function to set di.
 %immutable oc_endpoint_t::di;
 // transport flags are pulled from hand generated class as `int` not `enum`
@@ -53,7 +54,9 @@
 %rename(OCFVersion) ocf_version_t;
 %rename(interfaceIndex) interface_index;
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
-%rename(newEndpoint) oc_new_endpoint;
+// new and free endpoint are exposed using the %extend oc_endpoint_t above.
+%ignore oc_new_endpoint;
+
 %ignore oc_free_endpoint;
 %rename(freeEndpoint) jni_free_endpoint;
 %inline %{
@@ -108,6 +111,7 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
 /* TODO figure out a clean way to return the uri param not as an array value */
 %ignore oc_string_to_endpoint;
+%newobject jni_string_to_endpoint;
 %rename(stringToEndpoint) jni_string_to_endpoint;
 %inline %{
 oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
