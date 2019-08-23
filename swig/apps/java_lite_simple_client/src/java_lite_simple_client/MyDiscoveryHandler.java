@@ -18,7 +18,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                                     String uri,
                                     String[] types,
                                     int interfaceMask,
-                                    OCEndpoint endpoint,
+                                    OCEndpoint[] endpoints,
                                     int resourcePropertiesMask) {
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
@@ -93,25 +93,22 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
         for (String type: types) {
             if(type.equals("core.light")) {
-                Light.serverEndpoint = endpoint;
+                Light.serverEndpoint = endpoints[0];
                 Light.serverUri = uri;
                 System.out.println("\tResource " + Light.serverUri + " hosted at endpoint(s):");
-                OCEndpoint ep = endpoint;
-                while (ep != null) {
+                for (OCEndpoint ep : endpoints) {
                     String endpointStr = OCEndpointUtil.toString(ep);
                     System.out.println("\t\tendpoint: " + endpointStr);
                     System.out.println("\t\t\tendpoint.device " + ep.getDevice());
                     System.out.println("\t\t\tendpoint.flags " + ep.getFlags());
                     System.out.println("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex());
                     System.out.println("\t\t\tendpoint.version " + ep.getVersion().toString());
-                    ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
                 OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OCMain.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }

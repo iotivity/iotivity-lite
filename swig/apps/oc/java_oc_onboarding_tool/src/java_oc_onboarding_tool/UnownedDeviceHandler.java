@@ -6,16 +6,14 @@ import org.iotivity.oc.*;
 public class UnownedDeviceHandler implements OCObtDiscoveryHandler {
 
     @Override
-    public void handler(OCUuid uuid, OCEndpoint endpoints) {
-        OCEndpoint ep = endpoints;
+    public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
         String deviceId = OCUuidUtil.uuidToString(uuid);
         System.out.println("\nDiscovered unowned device: " + deviceId + " at:");
-        while (endpoints != null) {
-            String endpointStr = OcUtils.endpointToString(endpoints);
+        for (OCEndpoint endpoint : endpoints) {
+            String endpointStr = OcUtils.endpointToString(endpoint);
             System.out.println(endpointStr);
-            endpoints = endpoints.getNext();
         }
 
-        OcUtils.doGet("/oic/d", ep, null, new GetUnownedDeviceNameHandler(), OCQos.LOW_QOS);
+        OcUtils.doGet("/oic/d", endpoints[0], null, new GetUnownedDeviceNameHandler(), OCQos.LOW_QOS);
     }
 }

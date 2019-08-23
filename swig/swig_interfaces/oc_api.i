@@ -995,12 +995,39 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                                                "<init>",
                                                "(JZ)V");
   assert(mid_OCEndpoint_init);
-  jobject jendpoint = JCALL4(NewObject,
-                             (data->jenv),
-                             cls_OCEndpoint,
-                             mid_OCEndpoint_init,
-                             (jlong)endpoint,
-                             false);
+
+  // convert the endpoint linked list to an OCEndpoint array
+  // get the number of elements in the endpoint linked list
+  size_t ep_size = 1;
+  oc_endpoint_t * ep = endpoint;
+  while (ep->next) {
+    ep_size++;
+    ep = ep->next;
+  }
+
+  jobjectArray jendpoints = JCALL3(NewObjectArray,
+                                   (data->jenv),
+                                   (jsize)ep_size,
+                                   cls_OCEndpoint,
+                                   0);
+
+  ep = endpoint;
+  ep_size = 0;
+  if (ep != NULL) {
+    do {
+      jobject jendpoint = JCALL4(NewObject,
+                                 (data->jenv),
+                                 cls_OCEndpoint,
+                                 mid_OCEndpoint_init,
+                                 (jlong)ep,
+                                 true);
+      JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size, jendpoint);
+      oc_endpoint_t *last_ep = ep;
+      ep = ep->next;
+      ep_size++;
+      last_ep->next = NULL;
+    } while(ep != NULL);
+  }
 
   jint jresourcePropertiesMask = (jint)bm;
   assert(cls_OCDiscoveryHandler);
@@ -1008,7 +1035,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
           (data->jenv),
           cls_OCDiscoveryHandler,
           "handler",
-          "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILorg/iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
+          "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;I[Lorg/iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
   assert(mid_handler);
   jobject jDiscoveryFlag = JCALL8(CallObjectMethod,
                                   (data->jenv),
@@ -1018,7 +1045,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                                   juri,
                                   jtypes,
                                   jinterfaceMask,
-                                  jendpoint,
+                                  jendpoints,
                                   jresourcePropertiesMask);
   jclass cls_DiscoveryFlags = JCALL1(GetObjectClass, (data->jenv), jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
@@ -1350,17 +1377,6 @@ void jni_stop_multicast(oc_client_response_t *response) {
 %}
 
 %ignore oc_free_server_endpoints;
-%rename(freeServerEndpoints) jni_free_server_endpoints;
-%inline %{
-void jni_free_server_endpoints(oc_endpoint_t *endpoint) {
-  OC_DBG("JNI: - lock %s\n", __func__);
-  jni_mutex_lock(jni_sync_lock);
-  oc_free_server_endpoints(endpoint);
-  jni_mutex_unlock(jni_sync_lock);
-  OC_DBG("JNI: - unlock %s\n", __func__);
-}
-%}
-
 %rename(closeSession) oc_close_session;
 %rename(OCRole) oc_role_t;
 %ignore oc_get_all_roles;
