@@ -68,8 +68,6 @@ public class OcGetRemoteDeviceHandler implements OCResponseHandler {
                     System.err.println("Error issuing resource discovery all request for uuid " + di + " at endpoint "
                             + OcUtils.endpointToString(endpoint));
                 }
-
-                endpoint = endpoint.getNext();
             }
 
             System.err.println("Cannot issue resource discovery all request to any 'coap://' endpoint");
