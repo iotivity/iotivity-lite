@@ -133,8 +133,4 @@ public class OcUtils {
     public static void closeSession(OCEndpoint endpoint) {
         OCMain.closeSession(endpoint);
     }
-
-    public static void freeServerEndpoints(OCEndpoint endpoint) {
-        OCMain.freeServerEndpoints(endpoint);
-    }
 }
