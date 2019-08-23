@@ -110,7 +110,7 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         data->jcb_obj,
         mid_handler,
         JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
+        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, true));
 
   release_jni_env(getEnvResult);
 }
