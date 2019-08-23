@@ -1149,19 +1149,48 @@ jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
   const jmethodID mid_OCEndpoint_init =
     JCALL3(GetMethodID, (data->jenv), cls_OCEndpoint, "<init>", "(JZ)V");
   assert(mid_OCEndpoint_init);
-  jobject jendpoint = JCALL4(NewObject, (data->jenv), cls_OCEndpoint,
-                             mid_OCEndpoint_init, (jlong)endpoint, false);
+
+  oc_endpoint_t *endpoint_copy;
+  oc_endpoint_list_copy(&endpoint_copy, endpoint);
+  // convert the endpoint linked list to an OCEndpoint array
+  // get the number of elements in the endpoint linked list
+  size_t ep_size = oc_list_length(&endpoint_copy);
+  // create new endpoint array of ep_size
+  jobjectArray jendpoints = JCALL3(NewObjectArray, (data->jenv), (jsize)ep_size, cls_OCEndpoint, 0);
+
+  // add each enpoint to the enpoint array one-by-one
+  //oc_endpoint_t *ep = endpoint_copy;
+  //ep_size = 0;
+  //if (ep != NULL) {
+  //  do {
+  //    jobject jendpoint = JCALL4(NewObject, (data->jenv), cls_OCEndpoint,
+  //                               mid_OCEndpoint_init, (jlong)ep, true);
+  //    JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size,
+  //           jendpoint);
+  //    oc_endpoint_t *last_ep = ep;
+  //    ep = ep->next;
+  //    ep_size++;
+  //    last_ep->next = NULL;
+  //  } while (ep != NULL);
+  //}
+  oc_endpoint_t *ep;
+  for (ep = endpoint_copy, ep_size = 0; ep != NULL; ep = ep->next, ++ep_size)
+  {
+      jobject jendpoint = JCALL4(NewObject, (data->jenv),
+                                 cls_OCEndpoint, mid_OCEndpoint_init, (jlong)ep, true);
+      JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size, jendpoint);
+  }
 
   jint jresourcePropertiesMask = (jint)bm;
   assert(cls_OCDiscoveryHandler);
   const jmethodID mid_handler =
     JCALL3(GetMethodID, (data->jenv), cls_OCDiscoveryHandler, "handler",
-           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILorg/"
+           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;I[Lorg/"
            "iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
   assert(mid_handler);
   jobject jDiscoveryFlag =
     JCALL8(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, janchor,
-           juri, jtypes, jinterfaceMask, jendpoint, jresourcePropertiesMask);
+           juri, jtypes, jinterfaceMask, jendpoints, jresourcePropertiesMask);
   jclass cls_DiscoveryFlags =
     JCALL1(GetObjectClass, (data->jenv), jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
@@ -1784,6 +1813,15 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %rename(OCClientResponse) oc_client_response_t;
 %ignore user_data;
 %ignore client_cb;
+%ignore oc_client_response_t::endpoint;
+%newobject oc_client_response_t::getEndpoint;
+%extend oc_client_response_t {
+  oc_endpoint_t *getEndpoint() {
+    oc_endpoint_t *ep_copy();
+    oc_endpoint_copy(&ep_copy, $self);
+    return ep_copy;
+  }
+}
 %rename(OCDiscoveryFlags) oc_discovery_flags_t;
 %ignore oc_client_handler_s;
 %ignore oc_client_handler_t;
@@ -1793,6 +1831,15 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %rename (OCClientCallback) oc_client_cb_t;
 %ignore oc_client_cb_t::handler; /*part of the oc_client_cb_t */
 %ignore oc_client_cb_t::user_data;
+%ignore oc_client_cb_t::endpoint;
+%newobject oc_client_cb_t::getEndpoint;
+%extend oc_client_cb_t {
+  oc_endpoint_t *getEndpoint() {
+    oc_endpoint_t *ep_copy();
+    oc_endpoint_copy(&ep_copy, $self);
+    return ep_copy;
+  }
+}
 %rename(observeSeq) oc_client_cb_t::observe_seq;
 %rename(tokenLen) oc_client_cb_t::token_len;
 %rename(stopMulticastReceive) oc_client_cb_t::stop_multicast_receive;

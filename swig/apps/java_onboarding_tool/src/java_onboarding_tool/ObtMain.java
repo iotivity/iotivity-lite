@@ -62,6 +62,13 @@ public class ObtMain {
         }
     };
 
+    public static int getIntUserInput() {
+        while(!scanner.hasNextInt()) {
+            System.out.println("Invalid input. Integer expected.");
+            scanner.nextLine();
+        }
+        return scanner.nextInt();
+    }
     public static void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
@@ -171,7 +178,7 @@ public class ObtMain {
         devicesMenu.append("\n\nSelect device: ");
         System.out.print(devicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -204,7 +211,7 @@ public class ObtMain {
         unownedDevicesMenu.append("\n\nSelect device: ");
         System.out.print(unownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -243,7 +250,7 @@ public class ObtMain {
         unownedDevicesMenu.append("\n\nSelect device: ");
         System.out.print(unownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -275,7 +282,7 @@ public class ObtMain {
         unownedDevicesMenu.append("\n\nSelect device: ");
         System.out.print(unownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -321,7 +328,7 @@ public class ObtMain {
         unownedDevicesMenu.append("\n\nSelect device: ");
         System.out.print(unownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -359,14 +366,14 @@ public class ObtMain {
         }
         ownedDevicesMenu.append("\nSelect device 1: ");
         System.out.print(ownedDevicesMenu);
-        int userInput1 = scanner.nextInt();
+        int userInput1 = getIntUserInput();
         if (userInput1 < 0 || userInput1 >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
         }
 
         System.out.print("\nSelect device 2: ");
-        int userInput2 = scanner.nextInt();
+        int userInput2 = getIntUserInput();
         if (userInput2 < 0 || userInput2 >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -409,7 +416,7 @@ public class ObtMain {
 
         ownedDevicesMenu.append("\n\nSelect device for provisioning: ");
         System.out.print(ownedDevicesMenu);
-        int dev = scanner.nextInt();
+        int dev = getIntUserInput();
         if (dev < 0 || dev >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -427,7 +434,7 @@ public class ObtMain {
         }
         subjectsMenu.append("\nSelect subject: ");
         System.out.print(subjectsMenu);
-        int sub = scanner.nextInt();
+        int sub = getIntUserInput();
 
         if (sub >= (i + 3)) {
             System.out.println("ERROR: Invalid selection");
@@ -451,7 +458,7 @@ public class ObtMain {
                 }
                 String authority = null;
                 System.out.print("Authority? [0-No, 1-Yes]: ");
-                int c = scanner.nextInt();
+                int c = getIntUserInput();
                 if (c == 1) {
                     System.out.print("\nEnter authority: ");
                     authority = scanner.next();
@@ -475,7 +482,7 @@ public class ObtMain {
                 System.out.println("\n\nERROR: Enter valid number\n");
             }
             System.out.print("\nEnter number of resources in this ACE: ");
-            num_resources = scanner.nextInt();
+            num_resources = getIntUserInput();
         }
 
         System.out.println("\nResource properties");
@@ -490,7 +497,7 @@ public class ObtMain {
             }
 
             System.out.print("Have resource href? [0-No, 1-Yes]: ");
-            int c = scanner.nextInt();
+            int c = getIntUserInput();
             if (c == 1) {
                 System.out.print("Enter resource href (eg. /a/light): ");
                 String href;
@@ -505,7 +512,7 @@ public class ObtMain {
                 OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_NO_WC);
             } else {
                 System.out.print("\nSet wildcard resource? [0-No, 1-Yes]: ");
-                c = scanner.nextInt();
+                c = getIntUserInput();
                 if (c == 1) {
                     StringBuilder wildcardMenu = new StringBuilder();
                     wildcardMenu.append("[1]: All NCRs '*'\n");
@@ -513,7 +520,7 @@ public class ObtMain {
                     wildcardMenu.append("[3]: All NCRs with >=1 unsecured endpoint '-'\n");
                     wildcardMenu.append("\nSelect wildcard resource: ");
                     System.out.print(wildcardMenu);
-                    c = scanner.nextInt();
+                    c = getIntUserInput();
                     switch (c) {
                     case 1:
                         OCObt.aceResourceSetWc(res, OCAceWildcard.OC_ACE_WC_ALL);
@@ -534,27 +541,27 @@ public class ObtMain {
 
         System.out.println("\nSet ACE2 permissions");
         System.out.print("CREATE [0-No, 1-Yes]: ");
-        int c = scanner.nextInt();
+        int c = getIntUserInput();
         if (c == 1) {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.CREATE);
         }
         System.out.print("RETRIEVE [0-No, 1-Yes]: ");
-        c = scanner.nextInt();
+        c = getIntUserInput();
         if (c == 1) {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.RETRIEVE);
         }
         System.out.print("UPDATE [0-No, 1-Yes]: ");
-        c = scanner.nextInt();
+        c = getIntUserInput();
         if (c == 1) {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.UPDATE);
         }
         System.out.print("DELETE [0-No, 1-Yes]: ");
-        c = scanner.nextInt();
+        c = getIntUserInput();
         if (c == 1) {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.DELETE);
         }
         System.out.print("NOTIFY [0-No, 1-Yes]: ");
-        c = scanner.nextInt();
+        c = getIntUserInput();
         if (c == 1) {
             OCObt.aceAddPermission(ace, OCAcePermissionsMask.NOTIFY);
         }
@@ -586,7 +593,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -651,7 +658,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -684,14 +691,14 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
         }
 
         System.out.print("\nEnter credid: ");
-        int credid = scanner.nextInt();
+        int credid = getIntUserInput();
 
         int ret = OCObt.deleteCredByCredId(ods[userInput].uuid, credid, new DeleteCredentialIdHandler());
         if (ret >= 0) {
@@ -720,7 +727,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -753,14 +760,14 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
         }
 
         System.out.print("\nEnter aceid: ");
-        int aceid = scanner.nextInt();
+        int aceid = getIntUserInput();
 
         int ret = OCObt.deleteAceByAceId(ods[userInput].uuid, aceid, new DeleteAceByAceIdHandler());
         if (ret >= 0) {
@@ -778,7 +785,7 @@ public class ObtMain {
     public static void deleteOwnCredentialByCredentialId()
     {
         System.out.print("\nEnter credid: ");
-        int credid = scanner.nextInt();
+        int credid = getIntUserInput();
 
         int ret = OCObt.deleteOwnCredByCredId(credid);
         if (ret >= 0) {
@@ -807,7 +814,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -821,7 +828,7 @@ public class ObtMain {
         }
         String authority = null;
         System.out.print("Authority? [0-No, 1-Yes]: ");
-        int c = scanner.nextInt();
+        int c = getIntUserInput();
         if (c == 1) {
             System.out.print("\nEnter authority: ");
             authority = scanner.next();
@@ -856,7 +863,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -888,7 +895,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device for provisioning: ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -905,7 +912,7 @@ public class ObtMain {
             }
             String authority = null;
             System.out.print("Authority? [0-No, 1-Yes]: ");
-            c = scanner.nextInt();
+            c = getIntUserInput();
             if (c == 1) {
                 System.out.print("\nEnter authority: ");
                 authority = scanner.next();
@@ -916,7 +923,7 @@ public class ObtMain {
             }
             roles = OCObt.addRoleId(roles, role, authority);
             System.out.print("\nMore Roles? [0-No, 1-Yes]: ");
-            c = scanner.nextInt();
+            c = getIntUserInput();
         } while (c == 1);
         int ret = OCObt.provisionRoleCertificate(roles, ods[userInput].uuid, provisionRoleCertificateHandler);
         if (ret >= 0) {
@@ -967,7 +974,7 @@ public class ObtMain {
         ownedDevicesMenu.append("\nSelect device : ");
         System.out.print(ownedDevicesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             return;
@@ -1015,7 +1022,7 @@ public class ObtMain {
             displayMenu();
             int userInput = 0;
             try {
-                userInput = scanner.nextInt();
+                userInput = getIntUserInput();
             } catch (InputMismatchException e) {
                 System.out.println("Invalid Input.");
                 userInput = 0;
