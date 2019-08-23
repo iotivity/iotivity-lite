@@ -34,7 +34,7 @@ extern "C"
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
-typedef struct
+typedef struct oc_client_response_t
 {
   oc_rep_t *payload;
   oc_endpoint_t *endpoint;

@@ -81,7 +81,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverUnownedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverUnownedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverUnownedDevicesHandlerExecuted.countDown();
                     }
@@ -101,7 +101,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverOwnedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverOwnedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverOwnedDevicesHandlerExecuted.countDown();
                     }
@@ -139,7 +139,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverUnownedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverUnownedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverUnownedDevicesHandlerExecuted.countDown();
                     }
@@ -174,7 +174,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverOwnedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverOwnedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverOwnedDevicesHandlerExecuted.countDown();
                     }
