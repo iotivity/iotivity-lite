@@ -1000,7 +1000,7 @@ oc_discovery_flags_t jni_oc_discovery_handler_callback(const char *anchor,
                              cls_OCEndpoint,
                              mid_OCEndpoint_init,
                              (jlong)endpoint,
-                             false);
+                             true);
 
   jint jresourcePropertiesMask = (jint)bm;
   assert(cls_OCDiscoveryHandler);
