@@ -22,7 +22,12 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint, int resourcePropertiesMask) {
+    public OCDiscoveryFlags handler(String anchor,
+                                    String uri,
+                                    String[] types,
+                                    int interfaceMask,
+                                    OCEndpoint endpoints[],
+                                    int resourcePropertiesMask) {
         activity.msg("DiscoveryHandler:");
         activity.msg("\tanchor: " + anchor);
         activity.msg("\turi: " + uri);
@@ -97,18 +102,16 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
         for (String type : types) {
             if (type.equals("core.light")) {
                 light = new Light();
-                light.serverEndpoint = endpoint;
+                light.serverEndpoint = endpoints[0];
                 light.serverUri = uri;
                 activity.msg("\tResource " + light.serverUri + " hosted at endpoint(s):");
-                OCEndpoint ep = endpoint;
-                while (ep != null) {
+                for( OCEndpoint ep : endpoints ) {
                     String endpointStr = OcUtils.endpointToString(ep);
                     activity.msg("\t\tendpoint: " + endpointStr);
                     activity.msg("\t\t\tendpoint.device " + ep.getDevice());
                     activity.msg("\t\t\tendpoint.flags " + ep.getFlags());
                     activity.msg("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex());
                     activity.msg("\t\t\tendpoint.version " + ep.getVersion().toString());
-                    ep = ep.getNext();
                 }
                 activity.printLine();
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler(activity, light);
@@ -116,7 +119,6 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OcUtils.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }
