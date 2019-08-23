@@ -25,7 +25,7 @@ public class OcfServer {
     }
 
     public void setServerEndpoint(OCEndpoint serverEndpoint) {
-        this.serverEndpoint = OCEndpointUtil.listCopy(serverEndpoint);
+        this.serverEndpoint = serverEndpoint;
     }
 
     public String getServerUri() {
