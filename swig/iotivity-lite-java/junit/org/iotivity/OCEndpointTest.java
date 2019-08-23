@@ -7,6 +7,12 @@ import org.junit.Test;
 public class OCEndpointTest {
 
     @Test
+    public void testNewEndpoint() {
+        OCEndpoint ep = new OCEndpoint();
+        assertTrue(ep.swigCMemOwn);
+    }
+
+    @Test
     public void testStringToEndpoint() {
         String[] uri = new String[1];
         // IPV4 with port and uri
@@ -18,13 +24,13 @@ public class OCEndpointTest {
             fail("stringToEndpoint threw exception when it was not expected.");
         }
         assertNotNull(ep);
+        assertTrue(ep.swigCMemOwn);
         assertEquals(OCTransportFlags.IPV4, ep.getFlags() & OCTransportFlags.IPV4);
         assertEquals(OCTransportFlags.SECURED, ep.getFlags() & OCTransportFlags.SECURED);
         assertNotEquals(OCTransportFlags.TCP, ep.getFlags() & OCTransportFlags.TCP);
         assertEquals(56789, ep.getAddr().getIpv4().getPort());
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{10, 211, 55, 3}, ep.getAddr().getIpv4().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6
         try {
@@ -34,6 +40,7 @@ public class OCEndpointTest {
             fail("stringToEndpoint threw exception when it was not expected.");
         }
         assertNotNull(ep);
+        assertTrue(ep.swigCMemOwn);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertNotEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
         assertNotEquals(OCTransportFlags.TCP, (ep.getFlags() & OCTransportFlags.TCP));
@@ -41,7 +48,6 @@ public class OCEndpointTest {
         assertNull(uri[0]);
         assertArrayEquals(new short[]{0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6 with uri
         try {
@@ -51,6 +57,7 @@ public class OCEndpointTest {
             fail("stringToEndpoint threw exception when it was not expected.");
         }
         assertNotNull(ep);
+        assertTrue(ep.swigCMemOwn);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
         assertNotEquals(OCTransportFlags.TCP, (ep.getFlags() & OCTransportFlags.TCP));
@@ -58,7 +65,6 @@ public class OCEndpointTest {
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6 with port and uri
         try {
@@ -68,6 +74,7 @@ public class OCEndpointTest {
             fail("stringToEndpoint threw exception when it was not expected.");
         }
         assertNotNull(ep);
+        assertTrue(ep.swigCMemOwn);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
         assertNotEquals(OCTransportFlags.TCP, (ep.getFlags() & OCTransportFlags.TCP));
@@ -75,7 +82,6 @@ public class OCEndpointTest {
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x12},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
     }
 
     // The tests will fail on Windows. It does not yet support dns lookup.
@@ -97,7 +103,6 @@ public class OCEndpointTest {
         assertNotEquals(OCTransportFlags.TCP, ep.getFlags() & OCTransportFlags.TCP);
         assertEquals(5683, ep.getAddr().getIpv4().getPort());
         assertNull(uri[0]);
-        OCEndpointUtil.freeEndpoint(ep);
 
         // dns lookup with uri
         try {
@@ -113,7 +118,6 @@ public class OCEndpointTest {
         assertNotEquals(OCTransportFlags.TCP, ep.getFlags() & OCTransportFlags.TCP);
         assertEquals(5683, ep.getAddr().getIpv4().getPort());
         assertEquals("/alpha", uri[0]);
-        OCEndpointUtil.freeEndpoint(ep);
 
         // dns lookup with port and uri
         try {
@@ -129,7 +133,6 @@ public class OCEndpointTest {
         assertNotEquals(OCTransportFlags.TCP, ep.getFlags() & OCTransportFlags.TCP);
         assertEquals(3456, ep.getAddr().getIpv4().getPort());
         assertEquals("/alpha", uri[0]);
-        OCEndpointUtil.freeEndpoint(ep);
     }
 
     // The tests will fail on Windows. It does not yet support tcp.
@@ -151,7 +154,6 @@ public class OCEndpointTest {
         assertEquals(5684, ep.getAddr().getIpv4().getPort());
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{10, 211, 55, 3}, ep.getAddr().getIpv4().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPv4 over tcp and port
         try {
@@ -167,7 +169,6 @@ public class OCEndpointTest {
         assertEquals(2568, ep.getAddr().getIpv4().getPort());
         assertNull(uri[0]);
         assertArrayEquals(new short[]{1, 2, 3, 4}, ep.getAddr().getIpv4().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp  
         try {
@@ -184,7 +185,6 @@ public class OCEndpointTest {
         assertNull(uri[0]);
         assertArrayEquals(new short[]{0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp with uri
         try {
@@ -201,7 +201,6 @@ public class OCEndpointTest {
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp with port and uri 
         try {
@@ -218,7 +217,6 @@ public class OCEndpointTest {
         assertEquals("/a/light", uri[0]);
         assertArrayEquals(new short[]{0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x12},
                 ep.getAddr().getIpv6().getAddress());
-        OCEndpointUtil.freeEndpoint(ep);
     }
 
     // The tests will fail on Windows. It does not yet support tcp or dns lookup.
@@ -240,7 +238,6 @@ public class OCEndpointTest {
         assertEquals(OCTransportFlags.TCP, ep.getFlags() & OCTransportFlags.TCP);
         assertEquals(3456, ep.getAddr().getIpv4().getPort());
         assertNull(uri[0]);
-        OCEndpointUtil.freeEndpoint(ep);
     }
 
     @Test

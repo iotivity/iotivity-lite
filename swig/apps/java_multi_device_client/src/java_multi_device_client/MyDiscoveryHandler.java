@@ -15,7 +15,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                                     String uri,
                                     String[] types,
                                     int interfaceMask,
-                                    OCEndpoint endpoints,
+                                    OCEndpoint[] endpoints,
                                     int resourcePropertiesMask) {
         for (String type : types) {
             if (type.equals("oic.r.refrigeration")) {
@@ -31,7 +31,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
             } else if (type.equals("oic.r.temperature")) {
                 Thermostat.serverUri = uri;
-                Thermostat.serverEndpoint = OCEndpointUtil.listCopy(endpoints);
+                Thermostat.serverEndpoint = endpoints[0];
 
                 System.out.println("Temperature resource " + uri + " hosted in device " + anchor + " at endpoints:");
                 OCEndpoint ep = endpoints;
