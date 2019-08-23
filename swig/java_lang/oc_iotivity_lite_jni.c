@@ -466,19 +466,44 @@ jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
   const jmethodID mid_OCEndpoint_init =
     JCALL3(GetMethodID, (data->jenv), cls_OCEndpoint, "<init>", "(JZ)V");
   assert(mid_OCEndpoint_init);
-  jobject jendpoint = JCALL4(NewObject, (data->jenv), cls_OCEndpoint,
-                             mid_OCEndpoint_init, (jlong)endpoint, false);
+
+  // convert the endpoint linked list to an OCEndpoint array
+  // get the number of elements in the endpoint linked list
+  size_t ep_size = 1;
+  oc_endpoint_t *ep = endpoint;
+  while (ep->next) {
+    ep_size++;
+    ep = ep->next;
+  }
+
+  jobjectArray jendpoints =
+    JCALL3(NewObjectArray, (data->jenv), (jsize)ep_size, cls_OCEndpoint, 0);
+
+  ep = endpoint;
+  ep_size = 0;
+  if (ep != NULL) {
+    do {
+      jobject jendpoint = JCALL4(NewObject, (data->jenv), cls_OCEndpoint,
+                                 mid_OCEndpoint_init, (jlong)ep, true);
+      JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size,
+             jendpoint);
+      // oc_endpoint_t *last_ep = ep;
+      ep = ep->next;
+      ep_size++;
+      // last_ep->next = NULL;
+    } while (ep != NULL);
+  }
 
   jint jresourcePropertiesMask = (jint)bm;
   assert(cls_OCDiscoveryHandler);
   const jmethodID mid_handler =
     JCALL3(GetMethodID, (data->jenv), cls_OCDiscoveryHandler, "handler",
-           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILorg/"
+           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;I[Lorg/"
            "iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
   assert(mid_handler);
   jobject jDiscoveryFlag =
     JCALL8(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, janchor,
-           juri, jtypes, jinterfaceMask, jendpoint, jresourcePropertiesMask);
+           juri, jtypes, jinterfaceMask, jendpoints, jresourcePropertiesMask);
   jclass cls_DiscoveryFlags =
     JCALL1(GetObjectClass, (data->jenv), jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
