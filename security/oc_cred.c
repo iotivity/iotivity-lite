@@ -45,6 +45,11 @@ static oc_sec_creds_t *devices;
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#ifdef OC_PKI
+static const char *allowed_roles[] = { "oic.role.owner" };
+static const int allowed_roles_num = sizeof(allowed_roles) / sizeof(char *);
+#endif
+
 oc_sec_creds_t *
 oc_sec_get_creds(size_t device)
 {
@@ -280,7 +285,26 @@ oc_sec_allocate_cred(oc_uuid_t *subjectuuid, oc_sec_credtype_t credtype,
   }
   return cred;
 }
-
+#ifdef OC_PKI
+static int
+check_role_assertion(oc_sec_cred_t *cred)
+{
+  if (oc_string_len(cred->role.role) >= strlen("oic.role.") &&
+      memcmp(oc_string(cred->role.role), "oic.role.", strlen("oic.role.")) ==
+        0) {
+    for (int i = 0; i < allowed_roles_num; i++) {
+      if (oc_string_len(cred->role.role) == strlen(allowed_roles[i]) &&
+          memcmp(oc_string(cred->role.role), allowed_roles[i],
+                 strlen(allowed_roles[i])) == 0) {
+        return 0;
+      }
+    }
+    OC_ERR("oic.role.* roles assertion is prohibited");
+    return -1;
+  }
+  return 0;
+}
+#endif
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                     int credid, oc_sec_credtype_t credtype,
@@ -422,6 +446,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       }
       return -1;
     }
+
+    if (roles_resource && check_role_assertion(cred) < 0) {
+      oc_sec_free_role(cred, client);
+      return -1;
+    }
   }
 #endif /* OC_PKI */
 
@@ -541,9 +570,9 @@ return_encoding_string(oc_sec_encoding_t encoding)
 #ifdef OC_PKI
   case OC_ENCODING_PEM:
     return "oic.sec.encoding.pem";
-  case OC_ENCODING_DER:
-    return "oic.sec.encoding.der";
 #endif /* OC_PKI */
+  case OC_ENCODING_HANDLE:
+    return "oic.sec.encoding.handle";
   default:
     break;
   }
@@ -641,8 +670,7 @@ oc_sec_encode_cred(bool persist, size_t device)
     /* privatedata */
     oc_rep_set_object(creds, privatedata);
     if (persist) {
-      if (cr->privatedata.encoding == OC_ENCODING_RAW ||
-          cr->privatedata.encoding == OC_ENCODING_DER) {
+      if (cr->privatedata.encoding == OC_ENCODING_RAW) {
         oc_rep_set_byte_string(privatedata, data,
                                oc_cast(cr->privatedata.data, const uint8_t),
                                oc_string_len(cr->privatedata.data));
@@ -651,8 +679,7 @@ oc_sec_encode_cred(bool persist, size_t device)
                                oc_string(cr->privatedata.data));
       }
     } else {
-      if (cr->privatedata.encoding == OC_ENCODING_RAW ||
-          cr->privatedata.encoding == OC_ENCODING_DER) {
+      if (cr->privatedata.encoding == OC_ENCODING_RAW) {
         oc_rep_set_byte_string(privatedata, data,
                                oc_cast(cr->privatedata.data, const uint8_t), 0);
       } else {
@@ -745,16 +772,16 @@ parse_encoding_property(oc_string_t *encoding_string)
              memcmp("oic.sec.encoding.raw", oc_string(*encoding_string), 20) ==
                0) {
     encoding = OC_ENCODING_RAW;
+  } else if (oc_string_len(*encoding_string) == 23 &&
+             memcmp("oic.sec.encoding.handle", oc_string(*encoding_string),
+                    23) == 0) {
+    encoding = OC_ENCODING_HANDLE;
   }
 #ifdef OC_PKI
   else if (oc_string_len(*encoding_string) == 20 &&
            memcmp("oic.sec.encoding.pem", oc_string(*encoding_string), 20) ==
              0) {
     encoding = OC_ENCODING_PEM;
-  } else if (oc_string_len(*encoding_string) == 20 &&
-             memcmp("oic.sec.encoding.der", oc_string(*encoding_string), 20) ==
-               0) {
-    encoding = OC_ENCODING_DER;
   }
 #endif /* OC_PKI */
   return encoding;

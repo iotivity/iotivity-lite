@@ -21,11 +21,11 @@
 
 TEST(OCEndpoints, StringToEndpoint)
 {
-  const char *spu[10] = { "coaps://10.211.55.3:56789/a/light",
+  const char *spu[4] = { "coaps://10.211.55.3:56789/a/light",
                           "coap://openconnectivity.org",
                           "coap://openconnectivity.org/alpha",
                           "coaps://openconnectivity.org:3456/alpha" };
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 4; i++) {
     oc_string_t s;
     oc_new_string(&s, spu[i], strlen(spu[i]));
     oc_endpoint_t ep;
@@ -81,7 +81,7 @@ TEST(OCEndpoints, StringToEndpoint)
                             "coap+tcp://[ff02::158]",
                             "coaps+tcp://[ff02::158]/a/light",
                             "coaps+tcp://[fe80::12]:2439/a/light" };
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 6; i++) {
       oc_string_t s;
       oc_new_string(&s, spu2[i], strlen(spu2[i]));
       oc_endpoint_t ep;

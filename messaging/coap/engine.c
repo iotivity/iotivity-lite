@@ -51,8 +51,12 @@
 #include <string.h>
 
 #include "api/oc_events.h"
+#include "oc_api.h"
 #include "oc_buffer.h"
-#include "oc_ri.h"
+
+#ifdef OC_SECURITY
+#include "security/oc_tls.h"
+#endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
@@ -670,7 +674,11 @@ init_reset_message:
 #endif /* OC_BLOCK_WISE */
 
 send_message:
-  if (coap_status_code == COAP_NO_ERROR) {
+  if (coap_status_code == COAP_NO_ERROR
+#ifdef OC_SECURITY
+      || coap_status_code == CLOSE_ALL_TLS_SESSIONS
+#endif /* OC_SECURITY */
+  ) {
     if (transaction) {
       if (response->type != COAP_TYPE_RST && message->token_len) {
         if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
@@ -706,6 +714,12 @@ send_message:
   } else if (coap_status_code == CLEAR_TRANSACTION) {
     coap_clear_transaction(transaction);
   }
+
+#ifdef OC_SECURITY
+  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+    oc_close_all_tls_sessions(msg->endpoint.device);
+  }
+#endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers();

@@ -409,6 +409,9 @@
     <ClCompile Include="..\..\..\security\oc_obt_otm_cert.c">
       <Filter>Security</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_mnt.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -632,6 +635,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_obt_internal.h">
       <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_mnt.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

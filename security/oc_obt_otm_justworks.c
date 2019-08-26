@@ -31,56 +31,6 @@
 
 /* Just-works ownership transfer */
 static void
-obt_jw_17(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_jw_17");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
-    return;
-  }
-
-  /**  17) <close DTLS>
-   */
-  oc_dostype_t s = oc_obt_parse_dos(data->payload);
-  if (s == OC_DOS_RFNOP) {
-    oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_JW);
-  } else {
-    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
-  }
-}
-
-static void
-obt_jw_16(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_jw_16");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_jw_16;
-  }
-
-  /**  16) get pstat s=rfnop?
-   */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-
-  if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_17, HIGH_QOS, o)) {
-    return;
-  }
-
-err_obt_jw_16:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
-}
-
-static void
 obt_jw_15(oc_client_response_t *data)
 {
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
@@ -90,26 +40,13 @@ obt_jw_15(oc_client_response_t *data)
   OC_DBG("In obt_jw_15");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_jw_15;
+    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
+    return;
   }
 
-  /**  15) post pstat s=rfnop
+  /**  15) <close DTLS>
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_16, HIGH_QOS, o)) {
-    oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
-    oc_rep_close_object(root, dos);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
-  }
-
-err_obt_jw_15:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
+  oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_JW);
 }
 
 static void
@@ -125,11 +62,43 @@ obt_jw_14(oc_client_response_t *data)
     goto err_obt_jw_14;
   }
 
-  /**  14) post acl2 with ACEs for res, p, d, csr, sp
+  /**  14) post pstat s=rfnop
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_15, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_15, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    oc_rep_set_object(root, dos);
+    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
+    oc_rep_close_object(root, dos);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_obt_jw_14:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
+}
+
+static void
+obt_jw_13(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_jw_13");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_obt_jw_13;
+  }
+
+  /**  13) post acl2 with ACEs for res, p, d, csr, sp
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_14, HIGH_QOS, o)) {
     char uuid[OC_UUID_LEN];
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -210,34 +179,6 @@ obt_jw_14(oc_client_response_t *data)
     }
   }
 
-err_obt_jw_14:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
-}
-
-static void
-obt_jw_13(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_jw_13");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_jw_13;
-  }
-
-  oc_dostype_t s = oc_obt_parse_dos(data->payload);
-  if (s == OC_DOS_RFPRO) {
-    /**  13) delete acl2
-     */
-    oc_device_t *device = o->device;
-    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-    if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_jw_14, HIGH_QOS, o)) {
-      return;
-    }
-  }
-
 err_obt_jw_13:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
@@ -255,11 +196,11 @@ obt_jw_12(oc_client_response_t *data)
     goto err_obt_jw_12;
   }
 
-  /**  12) get pstat s=rfpro?
+  /**  12) delete acl2
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
+  if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
     return;
   }
 
@@ -280,10 +221,11 @@ obt_jw_11(oc_client_response_t *data)
     goto err_obt_jw_11;
   }
 
-  /**  11) post pstat s=rfpro
-    */
+  /**  11) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_tls_close_connection(ep);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -314,12 +256,10 @@ obt_jw_10(oc_client_response_t *data)
 
   oc_sec_dump_cred(0);
 
-  /**  10) <close DTLS>+<Open-TLS-PSK>+ post doxm owned = true
+  /**  10) post doxm owned = true
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_tls_close_connection(ep);
-
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_jw_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, owned, true);
@@ -673,14 +613,12 @@ err_obt_jw_2:
   7) post acl rowneruuid
   8) post pstat rowneruuid
   9) post cred rowneruuid, cred
-  10) <close DTLS>+<Open-TLS-PSK>+ post doxm owned = true
-  11) post pstat s=rfpro
-  12) get pstat s=rfpro?
-  13) delete acl2
-  14) post acl2 with ACEs for res, p, d, csr, sp
-  15) post pstat s=rfnop
-  16) get pstat s=rfnop?
-  17) <close DTLS>
+  10) post doxm owned = true
+  11) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  12) delete acl2
+  13) post acl2 with ACEs for res, p, d, csr, sp
+  14) post pstat s=rfnop
+  15) <close DTLS>
 */
 int
 oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,

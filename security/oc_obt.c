@@ -662,6 +662,9 @@ oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 static void
 free_switch_dos_state(oc_switch_dos_ctx_t *d)
 {
+  if (!is_item_in_list(oc_switch_dos_ctx_l, d)) {
+    return;
+  }
   oc_list_remove(oc_switch_dos_ctx_l, d);
   oc_memb_free(&oc_switch_dos_ctx_m, d);
 }
@@ -672,28 +675,6 @@ free_switch_dos_ctx(oc_switch_dos_ctx_t *d, int status)
   oc_status_cb_t cb = d->cb;
   free_switch_dos_state(d);
   cb.cb(status, cb.data);
-}
-
-static void
-pstat_GET_dos2(oc_client_response_t *data)
-{
-  if (!is_item_in_list(oc_switch_dos_ctx_l, data->user_data)) {
-    return;
-  }
-
-  oc_switch_dos_ctx_t *d = (oc_switch_dos_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_switch_dos_ctx(d, -1);
-    return;
-  }
-
-  oc_dostype_t s = oc_obt_parse_dos(data->payload);
-  oc_dostype_t r = d->dos;
-  if (s == r || (r == OC_DOS_RESET && s == OC_DOS_RFOTM)) {
-    free_switch_dos_ctx(d, 0);
-  } else {
-    free_switch_dos_ctx(d, -1);
-  }
 }
 
 static void
@@ -710,10 +691,7 @@ pstat_POST_dos1_to_dos2(oc_client_response_t *data)
     return;
   }
 
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(d->device->endpoint);
-  if (!oc_do_get("/oic/sec/pstat", ep, NULL, &pstat_GET_dos2, HIGH_QOS, d)) {
-    free_switch_dos_ctx(d, -1);
-  }
+  free_switch_dos_ctx(d, 0);
 }
 
 static oc_switch_dos_ctx_t *
@@ -1197,12 +1175,7 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.der", 20) == 0) {
-    if (!oc_rep_get_byte_string(data->payload, "csr", &csr, &csr_len)) {
-      goto err_device_CSR;
-    }
-  } else if (encoding_len == 20 &&
-             memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
+  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
     if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
       goto err_device_CSR;
     }
