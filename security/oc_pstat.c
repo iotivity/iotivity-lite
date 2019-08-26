@@ -18,6 +18,7 @@
 #include "oc_pstat.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/oc_main.h"
+#include "messaging/coap/observe.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -154,6 +155,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
 #endif /* OC_CLIENT */
 #endif /* OC_SERVER */
     store_unique_ids = true;
+#ifdef OC_SERVER
+    coap_remove_observers_on_dos_change(device);
+#endif /* OC_SERVER */
     ps->p = false;
   }
   /* fall through */
@@ -176,6 +180,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     if (fp->cb != NULL) {
       fp->cb(device, fp->data);
     }
+    coap_status_code = CLOSE_ALL_TLS_SESSIONS;
     ps->p = false;
   } break;
   case OC_DOS_RFPRO: {
@@ -233,6 +238,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     ps->p = false;
   } break;
   case OC_DOS_RFNOP: {
+#ifdef OC_SERVER
+    coap_remove_observers_on_dos_change(device);
+#endif /* OC_SERVER */
     ps->p = true;
     ps->cm = 0;
     ps->tm = 0;
@@ -530,6 +538,13 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
+}
+
+bool
+oc_pstat_reset_device(size_t device)
+{
+  oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
+  return oc_pstat_handle_state(&ps, device);
 }
 
 void

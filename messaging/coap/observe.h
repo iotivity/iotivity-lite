@@ -101,6 +101,8 @@ int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                          oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
 
+int coap_remove_observers_on_dos_change(size_t device);
+
 #ifdef __cplusplus
 }
 #endif

@@ -439,6 +439,12 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
           role_cred = next;
           continue;
         }
+        if (oc_string_len(role_cred->role.role) == strlen("oic.role.owner") &&
+            memcmp(oc_string(role_cred->role.role), "oic.role.owner",
+                   oc_string_len(role_cred->role.role)) == 0) {
+          OC_DBG("oc_acl: peer's role matches \"oic.role.owner\"");
+          return true;
+        }
         permission |= get_role_permissions(role_cred, resource, iface_mask,
                                            endpoint->device, is_DCR, is_public);
         role_cred = role_cred->next;

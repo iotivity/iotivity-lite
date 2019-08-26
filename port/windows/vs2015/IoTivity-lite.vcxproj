@@ -217,6 +217,7 @@
     <ClInclude Include="..\..\..\api\oc_events.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />
+    <ClInclude Include="..\..\..\api\oc_mnt.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
@@ -311,6 +312,7 @@
     <ClCompile Include="..\..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
     <ClCompile Include="..\..\..\api\oc_main.c" />
+    <ClCompile Include="..\..\..\api\oc_mnt.c" />
     <ClCompile Include="..\..\..\api\oc_network_events.c" />
     <ClCompile Include="..\..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\..\api\oc_ri.c" />

@@ -32,56 +32,6 @@
 /* Random PIN OTM */
 
 static void
-obt_rdp_16(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_rdp_16");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-    return;
-  }
-
-  /**  16) <close DTLS>
-   */
-  oc_dostype_t s = oc_obt_parse_dos(data->payload);
-  if (s == OC_DOS_RFNOP) {
-    oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_RDP);
-  } else {
-    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-  }
-}
-
-static void
-obt_rdp_15(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_rdp_15");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_rdp_15;
-  }
-
-  /**  15) get pstat s=rfnop?
-   */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-
-  if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_rdp_16, HIGH_QOS, o)) {
-    return;
-  }
-
-err_obt_rdp_15:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-}
-
-static void
 obt_rdp_14(oc_client_response_t *data)
 {
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
@@ -91,26 +41,13 @@ obt_rdp_14(oc_client_response_t *data)
   OC_DBG("In obt_rdp_14");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_rdp_14;
+    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+    return;
   }
 
-  /**  14) post pstat s=rfnop
+  /**  14) <close DTLS>
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_15, HIGH_QOS, o)) {
-    oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
-    oc_rep_close_object(root, dos);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
-  }
-
-err_obt_rdp_14:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+  oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_RDP);
 }
 
 static void
@@ -126,11 +63,43 @@ obt_rdp_13(oc_client_response_t *data)
     goto err_obt_rdp_13;
   }
 
-  /**  13) post acl2 with ACEs for res, p, d, csr, sp
+  /**  13) post pstat s=rfnop
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    oc_rep_set_object(root, dos);
+    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
+    oc_rep_close_object(root, dos);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_obt_rdp_13:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+}
+
+static void
+obt_rdp_12(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_rdp_12");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_obt_rdp_12;
+  }
+
+  /**  12) post acl2 with ACEs for res, p, d, csr, sp
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_13, HIGH_QOS, o)) {
     char uuid[OC_UUID_LEN];
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -211,34 +180,6 @@ obt_rdp_13(oc_client_response_t *data)
     }
   }
 
-err_obt_rdp_13:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-}
-
-static void
-obt_rdp_12(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_rdp_12");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_rdp_12;
-  }
-
-  oc_dostype_t s = oc_obt_parse_dos(data->payload);
-  if (s == OC_DOS_RFPRO) {
-    /**  12) delete acl2
-     */
-    oc_device_t *device = o->device;
-    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-    if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_rdp_13, HIGH_QOS, o)) {
-      return;
-    }
-  }
-
 err_obt_rdp_12:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
@@ -256,11 +197,11 @@ obt_rdp_11(oc_client_response_t *data)
     goto err_obt_rdp_11;
   }
 
-  /**  11) get pstat s=rfpro?
+  /**  11) delete acl2
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/pstat", ep, NULL, &obt_rdp_12, HIGH_QOS, o)) {
+  if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_rdp_12, HIGH_QOS, o)) {
     return;
   }
 
@@ -281,10 +222,11 @@ obt_rdp_10(oc_client_response_t *data)
     goto err_obt_rdp_10;
   }
 
-  /**  10) post pstat s=rfpro
-    */
+  /**  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_tls_close_connection(ep);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -315,12 +257,10 @@ obt_rdp_9(oc_client_response_t *data)
 
   oc_sec_dump_cred(0);
 
-  /**  9) <close DTLS>+<Open-TLS-PSK>+ post doxm owned = true
+  /**  9) post doxm owned = true
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_tls_close_connection(ep);
-
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_10, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, owned, true);
@@ -649,14 +589,12 @@ err_obt_rdp_2:
   6) post acl rowneruuid
   7) post pstat rowneruuid
   8) post cred rowneruuid, cred
-  9) <close DTLS>+<Open-TLS-PSK>+ post doxm owned = true
-  10) post pstat s=rfpro
-  11) get pstat s=rfpro?
-  12) delete acl2
-  13) post acl2 with ACEs for res, p, d, csr, sp
-  14) post pstat s=rfnop
-  15) get pstat s=rfnop?
-  16) <close DTLS>
+  9) post doxm owned = true
+  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  11) delete acl2
+  12) post acl2 with ACEs for res, p, d, csr, sp
+  13) post pstat s=rfnop
+  14) <close DTLS>
 */
 int
 oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,

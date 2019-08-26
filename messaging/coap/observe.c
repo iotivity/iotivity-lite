@@ -54,6 +54,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "oc_buffer.h"
+#ifdef OC_SECURITY
+#include "security/oc_acl.h"
+#include "security/oc_pstat.h"
+#endif /* OC_SECURITY */
+
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
@@ -158,7 +164,7 @@ coap_remove_observer(coap_observer_t *o)
     response_state->ref_count = 0;
   }
 #endif /* OC_BLOCK_WISE */
-
+  o->resource->num_observers--;
   oc_free_string(&o->url);
   oc_list_remove(observers_list, o);
   oc_memb_free(&observers_memb, o);
@@ -187,7 +193,6 @@ coap_remove_observer_by_client(oc_endpoint_t *endpoint)
   while (obs) {
     next = obs->next;
     if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0) {
-      obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
     }
@@ -209,7 +214,6 @@ coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
     if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0 &&
         obs->token_len == token_len &&
         memcmp(obs->token, token, token_len) == 0) {
-      obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
       break;
@@ -231,7 +235,6 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
        obs = obs->next) {
     if (oc_endpoint_compare(&obs->endpoint, endpoint) == 0 &&
         obs->last_mid == mid) {
-      obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
       break;
@@ -254,7 +257,6 @@ coap_remove_observer_by_resource(const oc_resource_t *rsc)
          oc_string_len(obs->url) == (oc_string_len(rsc->uri) - 1) &&
          memcmp(oc_string(obs->url), oc_string(rsc->uri) + 1,
                 oc_string_len(rsc->uri) - 1) == 0)) {
-      obs->resource->num_observers--;
       coap_remove_observer(obs);
       removed++;
     }
@@ -377,7 +379,7 @@ coap_notify_collections(oc_resource_t *resource)
 #ifdef OC_TCP
         if (!(obs->endpoint.flags & TCP) &&
             obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
         if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
           OC_DBG(
@@ -425,6 +427,50 @@ leave_notify_collections:
 }
 #endif /* OC_COLLECTIONS */
 
+#ifdef OC_SECURITY
+int
+coap_remove_observers_on_dos_change(size_t device)
+{
+  /* iterate over observers */
+  coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
+  while (obs != NULL) {
+    if (obs->endpoint.device == device &&
+        !oc_sec_check_acl(OC_GET, obs->resource,
+                          obs->resource->default_interface, &obs->endpoint)) {
+      coap_observer_t *o = obs;
+      coap_packet_t notification[1];
+#ifdef OC_TCP
+      if (obs->endpoint.flags & TCP) {
+        coap_tcp_init_message(notification, SERVICE_UNAVAILABLE_5_03);
+      } else
+#endif
+      {
+        coap_udp_init_message(notification, COAP_TYPE_NON,
+                              SERVICE_UNAVAILABLE_5_03, 0);
+      }
+      coap_set_token(notification, obs->token, obs->token_len);
+      coap_transaction_t *transaction =
+        coap_new_transaction(coap_get_mid(), &obs->endpoint);
+      if (transaction) {
+        notification->mid = transaction->mid;
+        transaction->message->length =
+          coap_serialize_message(notification, transaction->message->data);
+        if (transaction->message->length > 0) {
+          coap_send_transaction(transaction);
+        } else {
+          coap_clear_transaction(transaction);
+        }
+      } // transaction
+      obs = obs->next;
+      coap_remove_observer(o);
+      continue;
+    }
+    obs = obs->next;
+  }
+  return 0;
+}
+#endif /* OC_SECURITY */
+
 int
 coap_notify_observers(oc_resource_t *resource,
                       oc_response_buffer_t *response_buf,
@@ -434,6 +480,14 @@ coap_notify_observers(oc_resource_t *resource,
     OC_WRN("coap_notify_observers: no resource passed; returning");
     return 0;
   }
+
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(resource->device);
+  if (ps->s != OC_DOS_RFNOP) {
+    OC_WRN("coap_notify_observers: device not in RFNOP; skipping notification");
+    return 0;
+  }
+#endif /* OC_SECURITY */
 
   coap_observer_t *obs = NULL;
   if (resource->num_observers > 0) {
@@ -475,10 +529,11 @@ coap_notify_observers(oc_resource_t *resource,
     }   //! response_buf && resource
 
     /* iterate over observers */
-    for (obs = (coap_observer_t *)oc_list_head(observers_list); obs != NULL;
-         obs = obs->next) {
+    obs = (coap_observer_t *)oc_list_head(observers_list);
+    while (obs != NULL) {
       if ((obs->resource != resource) ||
           (endpoint && oc_endpoint_compare(&obs->endpoint, endpoint) != 0)) {
+        obs = obs->next;
         continue;
       } // obs->resource != resource || endpoint != obs->endpoint
 
@@ -570,7 +625,7 @@ coap_notify_observers(oc_resource_t *resource,
 #ifdef OC_TCP
             if (!(obs->endpoint.flags & TCP) &&
                 obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
             if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
               OC_DBG(
@@ -614,7 +669,8 @@ coap_notify_observers(oc_resource_t *resource,
           } // transaction
         }   // response_buf != NULL
       }     //! separate response
-    }       // iterate over observers
+      obs = obs->next;
+    } // iterate over observers
   leave_notify_observers:
 #ifdef OC_DYNAMIC_ALLOCATION
     if (buffer) {
