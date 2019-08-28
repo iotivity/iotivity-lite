@@ -120,7 +120,8 @@
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)..\..\..\swig\apps\java_onboarding_tool\pki_certs\</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -157,7 +158,8 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)..\..\..\swig\apps\java_onboarding_tool\pki_certs\</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -198,7 +200,8 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)..\..\..\swig\apps\java_onboarding_tool\pki_certs\</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -239,7 +242,8 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
       <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
 xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc
+xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)..\..\..\swig\apps\java_onboarding_tool\pki_certs\</Command>
       <Message>Copying dependency files into project.</Message>
     </PreBuildEvent>
     <CustomBuildStep>

@@ -22,11 +22,12 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
         ObtMain.unownedDevices.clear();
         OCObt.init();
 
-        byte[] rootCa1 = getFileBytes("../../../apps/pki_certs/rootca1.pem");
+        byte[] rootCa1 = getFileBytes("pki_certs/rootca1.pem");
         if (rootCa1 == null) {
             System.err.println("Failed to read root ca1 certificate");
             return;
         }
+        System.out.println(">>>> rootca1 loaded");
 
         int rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa1);
         System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
@@ -35,12 +36,13 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
             return;
         }
 
-        byte[] rootCa2 = getFileBytes("../../../apps/pki_certs/rootca2.pem");
+        byte[] rootCa2 = getFileBytes("pki_certs/rootca2.pem");
         if (rootCa2 == null) {
             System.err.println("Failed to read root ca2 certificate");
             return;
         }
-
+        System.out.println(">>>> rootca2 loaded");
+        
         rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa2);
         System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
         if (rootCaCredId < 0) {
