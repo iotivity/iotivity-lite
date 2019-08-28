@@ -21,5 +21,9 @@ public class MyInitHandler implements OCMainInitHandler {
         System.out.println("inside MyInitHandler.requestEntry()");
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler();
         OCMain.doIPDiscovery("core.light", discoveryHandler);
+        MultiDeviceDiscoveryHandler mddHandler = new MultiDeviceDiscoveryHandler();
+        //OCMain.doIPDiscovery(null, mddHandler);
+        OCMain.doIPDiscovery("oic.r.refrigeration", mddHandler);
+        //OCMain.doIPDiscovery("oic.r.temperature", mddHandler);
     }
 }

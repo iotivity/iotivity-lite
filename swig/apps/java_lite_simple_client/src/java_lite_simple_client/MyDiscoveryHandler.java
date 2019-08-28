@@ -3,6 +3,7 @@ package java_lite_simple_client;
 import java.util.Arrays;
 
 import org.iotivity.OCDiscoveryHandler;
+import org.iotivity.OCClientResponse;
 import org.iotivity.OCDiscoveryFlags;
 import org.iotivity.OCEndpoint;
 import org.iotivity.OCEndpointUtil;
@@ -10,6 +11,7 @@ import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCQos;
 import org.iotivity.OCResourcePropertiesMask;
+import org.iotivity.OCResponseHandler;
 
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
@@ -107,7 +109,21 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                     ep = ep.getNext();
                 }
                 GetLightResponseHandler responseHandler = new GetLightResponseHandler();
-                OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS);
+                //OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, responseHandler, OCQos.LOW_QOS);
+                OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, new OCResponseHandler() {
+
+                    @Override
+                    public void handler(OCClientResponse response) {
+                        System.out.println("DO GET HANDLER 1");
+                    }
+                }, OCQos.LOW_QOS);
+                OCMain.doGet(Light.serverUri, Light.serverEndpoint, null, new OCResponseHandler() {
+
+                    @Override
+                    public void handler(OCClientResponse response) {
+                        System.out.println("DO GET HANDLER 2");
+                    }
+                }, OCQos.LOW_QOS);
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
