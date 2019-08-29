@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c5e7d4fe_78b44f36",
+        "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/MyDiscoveryHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-29T20:33:15Z",
+      "side": 1,
+      "message": "No it does not need to be an array it can accept a single endpoint.  However we do need to update the code to properly track the lifetime of that endpoint.",
+      "parentUuid": "63d23a67_d37b10ab",
+      "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "91388031_dd93e12a",
         "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/MyDiscoveryHandler.java",
         "patchSetId": 4
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "e1b8a112_13e1d41b",
+        "filename": "swig/apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/OwnedDeviceHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-29T20:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "847207db_a4566ac8",
+      "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e9766d3_3e487988",
         "filename": "swig/apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/UnownedDeviceHandler.java",
         "patchSetId": 4
@@ -67,6 +103,24 @@
       "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8572b419_e14ce22c",
+        "filename": "swig/apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/UnownedDeviceHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-29T20:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e9766d3_3e487988",
+      "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
