@@ -24,6 +24,18 @@
 %}
 
 /*******************Begin oc_endpoint.h*********************/
+%extend oc_endpoint_t {
+  oc_endpoint_t() {
+    OC_DBG("JNI: %s\n", __func__);
+    return oc_new_endpoint();
+  }
+
+  ~oc_endpoint_t() {
+   OC_DBG("JNI: %s\n", __func__);
+   oc_free_endpoint($self);
+   $self = NULL;
+  }
+}
 %rename(OCEndpoint) oc_endpoint_t;
 // must use the oc_endpoint_set_di function to set di.
 %immutable oc_endpoint_t::di;
@@ -42,7 +54,14 @@
 %rename(interfaceIndex) interface_index;
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
 %rename(newEndpoint) oc_new_endpoint;
-%rename(freeEndpoint) oc_free_endpoint;
+%ignore oc_free_endpoint;
+%rename(freeEndpoint) jni_free_endpoint;
+%inline %{
+void jni_free_endpoint(oc_endpoint_t *endpoint) {
+  oc_free_endpoint(endpoint);
+  endpoint = NULL;
+}
+%}
 %rename(setDi) oc_endpoint_set_di;
 %ignore oc_endpoint_to_string;
 

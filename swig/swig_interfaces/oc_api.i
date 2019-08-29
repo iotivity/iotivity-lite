@@ -1352,10 +1352,11 @@ void jni_stop_multicast(oc_client_response_t *response) {
 %ignore oc_free_server_endpoints;
 %rename(freeServerEndpoints) jni_free_server_endpoints;
 %inline %{
-void jni_free_server_endpoints(oc_endpoint_t *endpoint) {
+void jni_free_server_endpoints(oc_endpoint_t *endpoints) {
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  oc_free_server_endpoints(endpoint);
+  oc_free_server_endpoints(endpoints);
+  endpoints = NULL;
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
 }
