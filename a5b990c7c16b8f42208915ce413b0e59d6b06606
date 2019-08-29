@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "505508c9_e8c4f396",
+        "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/MyDiscoveryHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-08-29T20:38:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c5e7d4fe_78b44f36",
+      "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91388031_dd93e12a",
         "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/MyDiscoveryHandler.java",
         "patchSetId": 4
@@ -51,6 +69,24 @@
       "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b91a18a4_c5a67029",
+        "filename": "swig/apps/java_lite_simple_client/src/java_lite_simple_client/MyDiscoveryHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-08-29T20:38:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "91388031_dd93e12a",
+      "revId": "a5b990c7c16b8f42208915ce413b0e59d6b06606",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
