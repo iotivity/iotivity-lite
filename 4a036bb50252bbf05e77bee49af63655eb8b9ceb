@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18ccc574_4d0cbfd7",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-08-29T20:21:52Z",
+      "side": 1,
+      "message": "Can we not remove step 5 altogether?\n\nCould we do the following?\n\n-Update step 3a to store the randomly generated UUID into the oc_device_t for that Device\nbefore issuing the POST doxm request with the \"deviceuuid\".\n\n-Rename step 3a to step 4 (I just prefer it clean. .thats all :-))\n\n-Remove step 5 (previously the only purpose of that step was to obtain the device\u0027s persistent/semi-persistent UUID, which as you can see was stored into oc_device_t in step 6. But now the OBT will directly do that in the new step 4).\n\nFollowing these changes, the updated OTM sequence would look like this:\n\n  OTM sequence:\n\n  1) get /oic/d\n\n  2) post doxm oxmsel\u003d0\n\n  3) \u003cOpen-anon-ecdh\u003e+post doxm devowneruuid\n\n  4) generate random deviceuuid; \u003cstore new uuid\u003e; post doxm deviceuuid\n\n  5) post pstat om\u003d4\n\n  6) post doxm rowneruuid\n\n....\n\nFollow this pattern in all 3 OTMs.",
+      "range": {
+        "startLine": 707,
+        "startChar": 0,
+        "endLine": 707,
+        "endChar": 42
+      },
+      "revId": "4a036bb50252bbf05e77bee49af63655eb8b9ceb",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
