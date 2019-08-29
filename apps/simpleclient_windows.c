@@ -225,10 +225,44 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
+static oc_discovery_flags_t
+discovery1(const char *anchor, const char *uri, oc_string_array_t types,
+           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+           oc_resource_properties_t bm, void *user_data)
+{
+  (void)anchor;
+  (void)uri;
+  (void)types;
+  (void)iface_mask;
+  (void)bm;
+  (void)user_data;
+  printf("DISCOVERY 1 CALLED\n");
+  oc_free_server_endpoints(endpoint);
+  return OC_CONTINUE_DISCOVERY;
+}
+
+static oc_discovery_flags_t
+discovery2(const char *anchor, const char *uri, oc_string_array_t types,
+           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+           oc_resource_properties_t bm, void *user_data)
+{
+  (void)anchor;
+  (void)uri;
+  (void)types;
+  (void)iface_mask;
+  (void)bm;
+  (void)user_data;
+  printf("DISCOVERY 2 CALLED\n");
+  oc_free_server_endpoints(endpoint);
+  return OC_CONTINUE_DISCOVERY;
+}
+
 static void
 issue_requests(void)
 {
-  oc_do_ip_discovery("core.light", &discovery, NULL);
+  // oc_do_ip_discovery("core.light", &discovery, NULL);
+  oc_do_ip_discovery("core.light", &discovery1, NULL);
+  oc_do_ip_discovery("core.light", &discovery2, NULL);
 }
 
 static void
