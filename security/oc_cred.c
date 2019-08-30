@@ -308,25 +308,34 @@ check_role_assertion(oc_sec_cred_t *cred)
 
 #ifdef OC_PKI
 static bool
-check_device_uuid_from_identity_cert(size_t device,
-                                     size_t publicdata_size, const uint8_t *publicdata)
+check_uuid_from_cert_raw(size_t publicdata_size, const uint8_t *publicdata,
+                         const oc_uuid_t* uuid)
 {
   bool res = false;
 
-  oc_string_t uuid;
-  if (oc_certs_parse_CN_for_UUID_raw(publicdata, publicdata_size, &uuid) == 0) {
-    oc_sec_doxm_t* doxm = oc_sec_get_doxm(device);
-    if (doxm) {
-      char duuid[OC_UUID_LEN];
-      oc_uuid_to_str(&doxm->deviceuuid, duuid, OC_UUID_LEN);
-      res = (memcmp(oc_string(uuid), duuid, OC_UUID_LEN) == 0);
-    }
-    oc_free_string(&uuid);
+  if (!publicdata || !uuid) {
+    return false;
+  }
+
+  oc_string_t uuid_from_cert;
+  if (oc_certs_parse_CN_for_UUID_raw(publicdata, publicdata_size,
+                                     &uuid_from_cert) == 0) {
+    char uuid_str[OC_UUID_LEN];
+    oc_uuid_to_str(uuid, uuid_str, OC_UUID_LEN);
+    res = (memcmp(oc_string(uuid_from_cert), uuid_str, OC_UUID_LEN) == 0);
+    oc_free_string(&uuid_from_cert);
   }
 
   return res;
 }
 #endif
+
+static const oc_uuid_t *
+get_device_uuid(size_t device)
+{
+  oc_sec_doxm_t* doxm = oc_sec_get_doxm(device);
+  return doxm ? &doxm->deviceuuid : NULL;
+}
 
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
@@ -339,9 +348,6 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                     const char *role, const char *authority)
 {
   (void)publicdata_encoding;
-  (void)publicdata_size;
-  (void)publicdata;
-  (void)roles_resource;
 
 #ifdef OC_PKI
   uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE] = { 0 };
@@ -356,6 +362,10 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       return -1;
     }
     if (memcmp(public_key, client->public_key, OC_KEYPAIR_PUBKEY_SIZE) != 0) {
+      return -1;
+    }
+    if (!check_uuid_from_cert_raw(publicdata_size + 1, publicdata,
+                                  &client->uuid)) {
       return -1;
     }
   }
@@ -389,8 +399,8 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
     if (memcmp(kp->public_key, public_key, OC_KEYPAIR_PUBKEY_SIZE) != 0) {
       return -1;
     }
-    if (!check_device_uuid_from_identity_cert(device,
-                                              publicdata_size + 1, publicdata)) {
+    if (!check_uuid_from_cert_raw(publicdata_size + 1, publicdata,
+                                  get_device_uuid(device))) {
       return -1;
     }
   }
