@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6c4accf1_637b7be8",
+        "filename": "swig/apps/java_multi_device_server/.gitignore",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-30T01:12:29Z",
+      "side": 1,
+      "message": "thanks I missed this one. I based the sample off of simplerserver so that is how this made it in here.",
+      "parentUuid": "d5b92d55_55c4620f",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "584f0abb_724183df",
         "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/PostFridge.java",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "90e78f91_1efec9bd",
+        "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/PostFridge.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-30T01:12:29Z",
+      "side": 1,
+      "message": "thanks I will fix.",
+      "parentUuid": "584f0abb_724183df",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a6fdda3_699d0493",
         "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/Server.java",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2019-07-09T22:29:19Z",
       "side": 1,
       "message": "perhaps multi_device_server_creds",
+      "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49c6deba_df1fb74c",
+        "filename": "swig/apps/java_multi_device_server/src/java_multi_device_server/Server.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-08-30T01:12:29Z",
+      "side": 1,
+      "message": "You are correct I will fix.",
+      "parentUuid": "9a6fdda3_699d0493",
       "revId": "bcdb113da553d24db0ec9930e764f1517b7d7b3f",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
