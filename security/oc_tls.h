@@ -88,6 +88,11 @@ void oc_tls_select_cloud_ciphersuite(void);
 /* Internal interface for generating a random PIN */
 void oc_tls_generate_random_pin(void);
 
+/* Internal interface for changing psk authority hint */
+#ifdef OC_CLIENT
+void oc_tls_use_pin_obt_psk_identity(void);
+#endif /* OC_CLIENT */
+
 /* Internal interface for deriving a PSK for the Random PIN OTM */
 int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
                   unsigned int c, uint8_t *key, uint32_t key_len);

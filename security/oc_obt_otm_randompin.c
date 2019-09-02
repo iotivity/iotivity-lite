@@ -644,6 +644,7 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
   oc_tls_select_psk_ciphersuite();
+  oc_tls_use_pin_obt_psk_identity();
   if (oc_do_get("/oic/d", ep, NULL, &obt_rdp_2, HIGH_QOS, o)) {
     oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
