@@ -83,6 +83,16 @@ oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
   random_pin.data = data;
 }
 
+#ifdef OC_CLIENT
+static bool rdp_auth_enabled = true;
+void
+oc_tls_enable_random_pin_auth(bool enable)
+{
+  rdp_auth_enabled = enable;
+}
+#endif /* OC_CLIENT */
+
+
 #ifdef OC_PKI
 static bool auto_assert_all_roles = true;
 void
@@ -1076,7 +1086,14 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   }
 
   oc_uuid_t *device_id = oc_core_get_device_id(device);
+#ifdef OC_CLIENT
+  const unsigned char *id = rdp_auth_enabled 
+                            ? (const unsigned char *)"oic.sec.doxm.rdp"
+                            : device_id->id;
+  if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, id, 16) != 0) {
+#else
   if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
+#endif
     return -1;
   }
 

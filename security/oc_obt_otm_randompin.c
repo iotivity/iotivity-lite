@@ -227,6 +227,7 @@ obt_rdp_10(oc_client_response_t *data)
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
+  oc_tls_enable_random_pin_auth(false);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -646,6 +647,7 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_select_psk_ciphersuite();
+  oc_tls_enable_random_pin_auth(true);
 
   if (oc_do_get("/oic/d", ep, NULL, &obt_rdp_2, HIGH_QOS, o)) {
     oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
