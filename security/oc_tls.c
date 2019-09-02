@@ -83,6 +83,15 @@ oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
   random_pin.data = data;
 }
 
+#ifdef OC_CLIENT
+static bool use_pin_obt_psk_identity = false;
+void
+oc_tls_use_pin_obt_psk_identity(void)
+{
+  use_pin_obt_psk_identity = true;
+}
+#endif /* OC_CLIENT */
+
 #ifdef OC_PKI
 static bool auto_assert_all_roles = true;
 void
@@ -1150,8 +1159,18 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   }
 
   oc_uuid_t *device_id = oc_core_get_device_id(device);
-  if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
-    return -1;
+#ifdef OC_CLIENT
+  if (role == MBEDTLS_SSL_IS_CLIENT && use_pin_obt_psk_identity) {
+    use_pin_obt_psk_identity = false;
+    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, (const unsigned char *)"oic.sec.doxm.rdp", 16) != 0) {
+      return -1;
+    }
+  } else
+#endif /* OC_CLIENT */
+  {
+    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
+      return -1;
+    }
   }
 
 #ifdef OC_DEBUG
