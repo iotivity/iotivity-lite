@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42bb0ef7_723af968",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetFridgeResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "initPost()",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "165329d3_9353c7c3",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetFridgeResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "doPost()",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c62baab_80d996e8",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetFridgeResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1d24379_0f45375b",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetFridgeResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "451f2715_00a427ba",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetFridgeResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "059ad31a_3a1ce46b",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetTemperatureResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "initPost()",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "337d1b13_73bc29cf",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetTemperatureResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "doPost()",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae9ce178_c328ed24",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetTemperatureResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8863a35e_766611e3",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetTemperatureResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "077e2f4f_836643f7",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/GetTemperatureResponseHandler.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-03T17:55:52Z",
+      "side": 1,
+      "message": "POST",
+      "revId": "2d1c32cf24624d85eddb22db4d7175ce4609e309",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
