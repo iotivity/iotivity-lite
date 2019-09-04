@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0e2942f_a677d7b7",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-09-04T08:45:05Z",
+      "side": 1,
+      "message": "I think dos.s check should be before this one, but it doesn\u0027t make a big difference.",
+      "revId": "41d0abb844fc3efbf9d53ad762a29077bd9d691e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
