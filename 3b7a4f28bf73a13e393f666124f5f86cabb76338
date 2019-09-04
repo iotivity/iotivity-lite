@@ -94,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "34d8ad91_e0e9d33b",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-09-04T22:17:59Z",
+      "side": 1,
+      "message": "We could add a utility function to copy an oc_uuid_t* to an oc_uuid_t*.\n\nBut for logging the UUID change, we could log that right here.",
+      "parentUuid": "5df86380_42ca12e5",
+      "range": {
+        "startLine": 505,
+        "startChar": 0,
+        "endLine": 505,
+        "endChar": 43
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98de55e9_4e6b6f5f",
         "filename": "security/oc_obt_otm_cert.c",
         "patchSetId": 11
