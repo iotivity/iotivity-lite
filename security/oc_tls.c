@@ -492,6 +492,10 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       return 0;
     } else {
       OC_DBG("oc_tls: deriving PPSK for PIN OTM");
+      if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16)) {
+        OC_ERR("oc_tls: can't derive PPSK. Wrong identity");
+        return -1;
+      }
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
       oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
       if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
