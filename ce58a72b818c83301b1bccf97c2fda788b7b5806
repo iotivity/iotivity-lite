@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff5518b6_e8c7c63d",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/PostFridgeResponseHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-04T20:35:39Z",
+      "side": 1,
+      "message": "after failure need to set \n\nClient.stopGetPost \u003d true;\n\notherwise this will loop endlessly",
+      "revId": "ce58a72b818c83301b1bccf97c2fda788b7b5806",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "786c8f62_80acfec9",
+        "filename": "swig/apps/java_multi_device_client/src/java_multi_device_client/PostTemperatureResponseHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-09-04T20:35:39Z",
+      "side": 1,
+      "message": "after failure need to set \n\nClient.stopGetPost \u003d true;\n\notherwise this will loop endlessly",
+      "revId": "ce58a72b818c83301b1bccf97c2fda788b7b5806",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
