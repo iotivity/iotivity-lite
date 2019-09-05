@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c32e8406_a66db17b",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e106db1f_ccb44daa",
+      "range": {
+        "startLine": 432,
+        "startChar": 7,
+        "endLine": 432,
+        "endChar": 8
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cfa7c4c0_bef87536",
         "filename": "security/oc_obt_otm_cert.c",
         "patchSetId": 11
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a2558bcf_84dbed38",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cfa7c4c0_bef87536",
+      "range": {
+        "startLine": 468,
+        "startChar": 1,
+        "endLine": 468,
+        "endChar": 9
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "54313f95_951758d9",
         "filename": "security/oc_obt_otm_cert.c",
         "patchSetId": 11
@@ -59,6 +107,30 @@
       "writtenOn": "2019-09-04T15:57:22Z",
       "side": 1,
       "message": "numbering",
+      "range": {
+        "startLine": 498,
+        "startChar": 0,
+        "endLine": 498,
+        "endChar": 7
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0441672_66e67831",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54313f95_951758d9",
       "range": {
         "startLine": 498,
         "startChar": 0,
@@ -118,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "45e2cc8e_c4524c3c",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Since uuid copy api isn\u0027t existed I used memcpy.\nuuid logging is added.",
+      "parentUuid": "34d8ad91_e0e9d33b",
+      "range": {
+        "startLine": 505,
+        "startChar": 0,
+        "endLine": 505,
+        "endChar": 43
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98de55e9_4e6b6f5f",
         "filename": "security/oc_obt_otm_cert.c",
         "patchSetId": 11
@@ -129,6 +225,30 @@
       "writtenOn": "2019-09-04T15:57:22Z",
       "side": 1,
       "message": "the \"post doxm deviceuuid\" comes after the \"post pstat om\u003d4\" step (#5 below); looks like the code above is correct order-wise, but the comments are off there and here.",
+      "range": {
+        "startLine": 606,
+        "startChar": 56,
+        "endLine": 606,
+        "endChar": 85
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad94b0a2_cf36e9c5",
+        "filename": "security/oc_obt_otm_cert.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98de55e9_4e6b6f5f",
       "range": {
         "startLine": 606,
         "startChar": 56,
@@ -164,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "0224291e_1d7dc98c",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "421f6944_bc723c9b",
+      "range": {
+        "startLine": 431,
+        "startChar": 3,
+        "endLine": 431,
+        "endChar": 8
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c178ece7_a5717be4",
         "filename": "security/oc_obt_otm_justworks.c",
         "patchSetId": 11
@@ -175,6 +319,30 @@
       "writtenOn": "2019-09-04T15:57:22Z",
       "side": 1,
       "message": "check numbering",
+      "range": {
+        "startLine": 467,
+        "startChar": 0,
+        "endLine": 467,
+        "endChar": 7
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd06ca43_a66eaccd",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c178ece7_a5717be4",
       "range": {
         "startLine": 467,
         "startChar": 0,
@@ -210,6 +378,30 @@
     },
     {
       "key": {
+        "uuid": "d7b0886f_82a52541",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": ".",
+      "parentUuid": "41af2967_02528439",
+      "range": {
+        "startLine": 474,
+        "startChar": 2,
+        "endLine": 474,
+        "endChar": 8
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f75394ad_a509b32d",
         "filename": "security/oc_obt_otm_justworks.c",
         "patchSetId": 11
@@ -221,6 +413,30 @@
       "writtenOn": "2019-09-04T15:57:22Z",
       "side": 1,
       "message": "numbering",
+      "range": {
+        "startLine": 511,
+        "startChar": 0,
+        "endLine": 511,
+        "endChar": 7
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86b04840_d71753c5",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f75394ad_a509b32d",
       "range": {
         "startLine": 511,
         "startChar": 0,
@@ -256,6 +472,30 @@
     },
     {
       "key": {
+        "uuid": "d553fd2b_4b391f48",
+        "filename": "security/oc_obt_otm_justworks.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d8d8417_f12110ff",
+      "range": {
+        "startLine": 546,
+        "startChar": 7,
+        "endLine": 546,
+        "endChar": 8
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d2b2b947_c1d1df22",
         "filename": "security/oc_obt_otm_randompin.c",
         "patchSetId": 11
@@ -279,6 +519,30 @@
     },
     {
       "key": {
+        "uuid": "cf8e24ee_a5b900e9",
+        "filename": "security/oc_obt_otm_randompin.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d2b2b947_c1d1df22",
+      "range": {
+        "startLine": 432,
+        "startChar": 7,
+        "endLine": 432,
+        "endChar": 8
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "848ab03d_ada7b593",
         "filename": "security/oc_obt_otm_randompin.c",
         "patchSetId": 11
@@ -290,6 +554,30 @@
       "writtenOn": "2019-09-04T15:57:22Z",
       "side": 1,
       "message": "numbering",
+      "range": {
+        "startLine": 468,
+        "startChar": 6,
+        "endLine": 468,
+        "endChar": 7
+      },
+      "revId": "3b7a4f28bf73a13e393f666124f5f86cabb76338",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02bde66f_50057283",
+        "filename": "security/oc_obt_otm_randompin.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-05T12:33:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "848ab03d_ada7b593",
       "range": {
         "startLine": 468,
         "startChar": 6,
