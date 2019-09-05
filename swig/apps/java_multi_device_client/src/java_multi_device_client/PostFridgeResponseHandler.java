@@ -17,6 +17,7 @@ public class PostFridgeResponseHandler implements OCResponseHandler {
             System.out.println("\tPOST response: CREATED");
         } else {
             System.out.println("\tPOST response code " + response.getCode().toString() + " (" + response.getCode().ordinal() + ")");
+            Client.stopGetPost = true;
         }
 
         if (!Client.stopGetPost) {
