@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cea015f7_7bf8e998",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-09-05T00:12:05Z",
+      "side": 1,
+      "message": "I think this might break the notifications mechanism as every n\u0027th notification is sent by Servers as CON as a liveness checking measure, the idea being that when the retransmissions of those notifications timeout, Servers clear all Observations by the Client.\n\nSo, what would you suggest?",
+      "range": {
+        "startLine": 500,
+        "startChar": 0,
+        "endLine": 502,
+        "endChar": 9
+      },
+      "revId": "90a8afbaf5eb0ef5cd4b0332d00d1710259491d1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
