@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "64c6277b_7b81f9bf",
+        "filename": "security/oc_obt_otm_randompin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54b71eb0_b2b12e2f",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 230,
+        "endChar": 39
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d301b22d_bc637071",
         "filename": "security/oc_obt_otm_randompin.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-09-04T23:37:09Z",
       "side": 1,
       "message": "Change to:\n\noc_tls_use_pin_obt_psk_identity();",
+      "range": {
+        "startLine": 650,
+        "startChar": 0,
+        "endLine": 650,
+        "endChar": 38
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39189b36_eb377d6a",
+        "filename": "security/oc_obt_otm_randompin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d301b22d_bc637071",
       "range": {
         "startLine": 650,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "31fcedac_05a67664",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8daed874_103a368a",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 28
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4c1291e3_a5d50236",
         "filename": "security/oc_tls.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-09-04T23:37:09Z",
       "side": 1,
       "message": "Change to oc_tls_use_pin_obt_psk_identity(void).",
+      "range": {
+        "startLine": 89,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 42
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b91d40b6_6074f779",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4c1291e3_a5d50236",
       "range": {
         "startLine": 89,
         "startChar": 1,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "237f16f1_d8919725",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "18fce924_654147ea",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 28
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9aba65ca_db6cd9fc",
         "filename": "security/oc_tls.c",
         "patchSetId": 1
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "24a7d564_e3b979a7",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9aba65ca_db6cd9fc",
+      "range": {
+        "startLine": 1088,
+        "startChar": 0,
+        "endLine": 1096,
+        "endChar": 6
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c3e1e186_c46ffab6",
         "filename": "security/oc_tls.h",
         "patchSetId": 1
@@ -151,6 +295,30 @@
       "writtenOn": "2019-09-04T23:37:09Z",
       "side": 1,
       "message": "Change to oc_tls_use_pin_obt_psk_identity(void).",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 48
+      },
+      "revId": "a1e3f2eb7157299d4f722ea9372fd66d04052b42",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6e414a2_c63817df",
+        "filename": "security/oc_tls.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-09-06T08:17:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c3e1e186_c46ffab6",
       "range": {
         "startLine": 92,
         "startChar": 0,
