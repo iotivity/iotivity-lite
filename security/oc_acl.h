@@ -41,8 +41,6 @@ struct oc_ace_res_s
 {
   struct oc_ace_res_s *next;
   oc_string_t href;
-  oc_interface_mask_t interfaces;
-  oc_string_array_t types;
   oc_ace_wildcard_t wildcard;
 };
 
@@ -86,7 +84,7 @@ void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                      oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint);
+                      oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(size_t device);
 
 #ifdef __cplusplus
