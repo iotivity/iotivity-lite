@@ -43,7 +43,7 @@ void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                      oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint);
+                      oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(size_t device);
 void oc_sec_ace_clear_bootstrap_aces(size_t device);
 bool oc_sec_acl_add_created_resource_ace(const char *href,

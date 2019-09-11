@@ -753,7 +753,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 #ifdef OC_SECURITY
               if (request && request->origin &&
                   !oc_sec_check_acl(method, link->resource,
-                                    link->resource->default_interface,
                                     request->origin)) {
                 response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
               } else

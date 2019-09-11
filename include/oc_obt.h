@@ -86,10 +86,6 @@ oc_sec_ace_t *oc_obt_new_ace_for_connection(oc_ace_connection_type_t conn);
 oc_sec_ace_t *oc_obt_new_ace_for_role(const char *role, const char *authority);
 oc_ace_res_t *oc_obt_ace_new_resource(oc_sec_ace_t *ace);
 void oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href);
-void oc_obt_ace_resource_set_num_rt(oc_ace_res_t *resource, int num_resources);
-void oc_obt_ace_resource_bind_rt(oc_ace_res_t *resource, const char *rt);
-void oc_obt_ace_resource_bind_if(oc_ace_res_t *resource,
-                                 oc_interface_mask_t iface_mask);
 void oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc);
 void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
                                oc_ace_permissions_t permission);

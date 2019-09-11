@@ -97,9 +97,7 @@ get_new_aceid(size_t device)
 
 static oc_ace_res_t *
 oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
-                         const char *href, oc_string_array_t *rt,
-                         oc_interface_mask_t iface_mask,
-                         oc_ace_wildcard_t wildcard)
+                         const char *href, oc_ace_wildcard_t wildcard)
 {
   int skip = 0;
   if (href && href[0] != '/')
@@ -117,37 +115,6 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
       if ((strlen(href) + skip) != oc_string_len(res->href) ||
           memcmp(oc_string(res->href) + skip, href,
                  oc_string_len(res->href) - skip) != 0) {
-        match = false;
-      } else {
-        positive = true;
-      }
-    }
-
-    if (match && rt && oc_string_array_get_allocated_size(res->types) > 0) {
-      size_t i, j;
-      bool rt_match = false;
-      for (i = 0; i < oc_string_array_get_allocated_size(*rt); i++) {
-        const char *t = oc_string_array_get_item(*rt, i);
-        for (j = 0; j < oc_string_array_get_allocated_size(res->types); j++) {
-          const char *u = oc_string_array_get_item(res->types, j);
-          if (strlen(u) == 1 && u[0] == '*') {
-            break;
-          }
-          if (strlen(t) == strlen(u) && memcmp(t, u, strlen(t)) == 0) {
-            rt_match = true;
-            break;
-          }
-        }
-      }
-      if (!rt_match) {
-        match = false;
-      } else {
-        positive = true;
-      }
-    }
-
-    if (match && iface_mask != 0 && res->interfaces != 0) {
-      if ((iface_mask & res->interfaces) == 0) {
         match = false;
       } else {
         positive = true;
@@ -231,8 +198,7 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 
 static uint16_t
 oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
-                      oc_interface_mask_t iface_mask, bool is_DCR,
-                      bool is_public)
+                      bool is_DCR, bool is_public)
 {
   uint16_t permission = 0;
 
@@ -257,13 +223,12 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource,
   }
 
   oc_ace_res_t *res = oc_sec_ace_find_resource(
-    NULL, ace, oc_string(resource->uri), &resource->types, iface_mask, wc);
+    NULL, ace, oc_string(resource->uri), wc);
 
   while (res != NULL) {
     permission |= ace->permission;
 
-    res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri),
-                                   &resource->types, iface_mask, wc);
+    res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri), wc);
   }
 
   return permission;
@@ -332,8 +297,7 @@ dump_acl(size_t device)
 
 static uint16_t
 get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
-                     oc_interface_mask_t iface_mask, size_t device, bool is_DCR,
-                     bool is_public)
+                     size_t device, bool is_DCR, bool is_public)
 {
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
@@ -344,7 +308,7 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
 
     if (match) {
       permission |=
-        oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
+        oc_ace_get_permission(match, resource, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for matching role",
              permission);
     }
@@ -354,7 +318,7 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
 
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint)
+                 oc_endpoint_t *endpoint)
 {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
@@ -422,7 +386,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
       if (match) {
         permission |=
-          oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
+          oc_ace_get_permission(match, resource, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for subject UUID",
                permission);
       }
@@ -432,7 +396,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       oc_sec_cred_t *role_cred = oc_sec_find_cred(
         uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
-        permission |= get_role_permissions(role_cred, resource, iface_mask,
+        permission |= get_role_permissions(role_cred, resource,
                                            endpoint->device, is_DCR, is_public);
       }
     }
@@ -452,7 +416,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
           OC_DBG("oc_acl: peer's role matches \"oic.role.owner\"");
           return true;
         }
-        permission |= get_role_permissions(role_cred, resource, iface_mask,
+        permission |= get_role_permissions(role_cred, resource,
                                            endpoint->device, is_DCR, is_public);
         role_cred = role_cred->next;
       }
@@ -469,7 +433,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                       0, endpoint->device);
       if (match) {
         permission |=
-          oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
+          oc_ace_get_permission(match, resource, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
                "connection",
                permission);
@@ -485,7 +449,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                                     endpoint->device);
     if (match) {
       permission |=
-        oc_ace_get_permission(match, resource, iface_mask, is_DCR, is_public);
+        oc_ace_get_permission(match, resource, is_DCR, is_public);
       OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
              "connection",
              permission);
@@ -558,13 +522,6 @@ oc_sec_encode_acl(size_t device)
 
     while (res != NULL) {
       oc_rep_object_array_start_item(resources);
-      if (res->interfaces != 0) {
-        oc_core_encode_interfaces_mask(oc_rep_object(resources),
-                                       res->interfaces);
-      }
-      if (oc_string_array_get_allocated_size(res->types) > 0) {
-        oc_rep_set_string_array(resources, rt, res->types);
-      }
       if (oc_string_len(res->href) > 0) {
         oc_rep_set_text_string(resources, href, oc_string(res->href));
       } else {
@@ -602,7 +559,6 @@ oc_sec_encode_acl(size_t device)
 static oc_ace_res_t *
 oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                    const char *href, oc_ace_wildcard_t wildcard,
-                   oc_string_array_t *rt, oc_interface_mask_t iface_mask,
                    int aceid, uint16_t permission, size_t device, bool create)
 {
   oc_sec_ace_t *ace =
@@ -620,7 +576,7 @@ oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
   goto done;
 
 got_ace:
-  res = oc_sec_ace_find_resource(NULL, ace, href, rt, iface_mask, wildcard);
+  res = oc_sec_ace_find_resource(NULL, ace, href, wildcard);
   if (!res && create) {
     goto new_res;
   }
@@ -703,16 +659,6 @@ new_res:
       OC_DBG("Adding resource %s with permission %d", href, permission);
     }
 
-    if (rt) {
-      oc_new_string_array(&res->types, oc_string_array_get_allocated_size(*rt));
-      int i;
-      for (i = 0; i < (int)oc_string_array_get_allocated_size(*rt); i++) {
-        oc_string_array_add_item(res->types, oc_string_array_get_item(*rt, i));
-      }
-    }
-
-    res->interfaces = iface_mask;
-
     oc_list_add(ace->resources, res);
   } else {
     OC_WRN("insufficient memory to add new resource to ACE");
@@ -725,10 +671,9 @@ done:
 static bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       int aceid, uint16_t permission, const char *href,
-                      oc_ace_wildcard_t wildcard, oc_string_array_t *rt,
-                      oc_interface_mask_t iface_mask, size_t device)
+                      oc_ace_wildcard_t wildcard, size_t device)
 {
-  if (oc_sec_ace_get_res(type, subject, href, wildcard, rt, iface_mask, aceid,
+  if (oc_sec_ace_get_res(type, subject, href, wildcard, aceid,
                          permission, device, true))
     return true;
   return false;
@@ -744,9 +689,6 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
     if (href == NULL ||
         (oc_string_len(res->href) == strlen(href) &&
          memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
-      if (oc_string_array_get_allocated_size(res->types) > 0) {
-        oc_free_string_array(&res->types);
-      }
       if (oc_string_len(res->href) > 0) {
         oc_free_string(&res->href);
       }
@@ -875,7 +817,7 @@ oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
     perm |= OC_PERM_CREATE;
   }
 
-  oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm, href, 0, 0, 0,
+  oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm, href, 0,
                         device);
 
   return true;
@@ -903,7 +845,7 @@ oc_sec_acl_default(size_t device)
     if (i <= OCF_RES || i == OCF_D) {
       success &=
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
-                              oc_string(resource->uri), 0, NULL, 0, device);
+                              oc_string(resource->uri), 0, device);
     }
     if (i >= OCF_SEC_DOXM &&
 #ifdef OC_PKI
@@ -914,7 +856,7 @@ oc_sec_acl_default(size_t device)
     {
       success &=
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
-                              oc_string(resource->uri), -1, NULL, 0, device);
+                              oc_string(resource->uri), -1, device);
     }
   }
   OC_DBG("ACL for core resources initialized %d", success);
@@ -1040,9 +982,6 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           oc_resource_properties_t wc_r = 0;
       #endif
           */
-          oc_interface_mask_t iface_mask = 0;
-          oc_string_array_t *rt = 0;
-          int i;
 
           while (resource != NULL) {
             switch (resource->type) {
@@ -1078,27 +1017,6 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                 }
               }
               break;
-            case OC_REP_STRING_ARRAY: {
-              if (oc_string_len(resource->name) == 2) {
-                if (memcmp(oc_string(resource->name), "if", 2) == 0) {
-                  for (i = 0; i < (int)oc_string_array_get_allocated_size(
-                                    resource->value.array);
-                       i++) {
-                    const char *f =
-                      oc_string_array_get_item(resource->value.array, i);
-                    if (strlen(f) == 1 && f[0] == '*') {
-                      iface_mask |= 0xFE;
-                      break;
-                    }
-                    iface_mask |=
-                      oc_ri_get_interface_mask((char *)f, strlen(f));
-                  }
-                } else if (strncasecmp(oc_string(resource->name), "rt", 2) ==
-                           0) {
-                  rt = &resource->value.array;
-                }
-              }
-            } break;
             default:
               break;
             }
@@ -1107,7 +1025,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           }
 
           oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
-                                wc, rt, iface_mask, device);
+                                wc, device);
 
           /* The following code block attaches "coap" endpoints to
                    resources linked to an anon-clear ACE. This logic is being

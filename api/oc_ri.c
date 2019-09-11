@@ -850,7 +850,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * the requestor (the subject) is authorized to issue this request to
      * the resource.
      */
-    if (!oc_sec_check_acl(method, cur_resource, iface_mask, endpoint)) {
+    if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
     } else
 #endif /* OC_SECURITY */
@@ -983,7 +983,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
               if (links->resource &&
                   links->resource->properties & OC_OBSERVABLE) {
                 if (!oc_sec_check_acl(OC_GET, links->resource,
-                                      links->resource->default_interface,
                                       endpoint)) {
                   set_observe_option = false;
                   break;
