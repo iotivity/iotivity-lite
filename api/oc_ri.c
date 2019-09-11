@@ -850,7 +850,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * the requestor (the subject) is authorized to issue this request to
      * the resource.
      */
-    if (!oc_sec_check_acl(method, cur_resource, iface_mask, endpoint)) {
+    if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
     } else
 #endif /* OC_SECURITY */

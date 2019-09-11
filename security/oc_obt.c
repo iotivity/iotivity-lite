@@ -1603,34 +1603,6 @@ oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
 }
 
 void
-oc_obt_ace_resource_set_num_rt(oc_ace_res_t *resource, int num_resources)
-{
-  if (resource) {
-    if (oc_string_array_get_allocated_size(resource->types) > 0) {
-      oc_free_string_array(&resource->types);
-    }
-    oc_new_string_array(&resource->types, num_resources);
-  }
-}
-
-void
-oc_obt_ace_resource_bind_rt(oc_ace_res_t *resource, const char *rt)
-{
-  if (resource) {
-    oc_string_array_add_item(resource->types, rt);
-  }
-}
-
-void
-oc_obt_ace_resource_bind_if(oc_ace_res_t *resource,
-                            oc_interface_mask_t interface)
-{
-  if (resource) {
-    resource->interfaces = interface;
-  }
-}
-
-void
 oc_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc)
 {
   if (resource) {
@@ -1654,9 +1626,6 @@ free_ace(oc_sec_ace_t *ace)
     while (res != NULL) {
       if (oc_string_len(res->href) > 0) {
         oc_free_string(&res->href);
-      }
-      if (oc_string_array_get_allocated_size(res->types) > 0) {
-        oc_free_string_array(&res->types);
       }
       oc_memb_free(&oc_res_m, res);
       res = (oc_ace_res_t *)oc_list_pop(ace->resources);
@@ -1803,13 +1772,6 @@ provision_ace(int status, void *data)
       oc_rep_set_array(aclist2, resources);
       while (res != NULL) {
         oc_rep_object_array_start_item(resources);
-        if (res->interfaces != 0) {
-          oc_core_encode_interfaces_mask(oc_rep_object(resources),
-                                         res->interfaces);
-        }
-        if (oc_string_array_get_allocated_size(res->types) > 0) {
-          oc_rep_set_string_array(resources, rt, res->types);
-        }
         if (oc_string_len(res->href) > 0) {
           oc_rep_set_text_string(resources, href, oc_string(res->href));
         } else {
