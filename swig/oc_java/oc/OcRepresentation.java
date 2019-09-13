@@ -135,7 +135,7 @@ public class OcRepresentation {
         if (nativeRep != null) {
             return new OcRepresentation(nativeRep);
         }
-        throw new OcCborException("Failed to get object for key" + key);
+        throw new OcCborException("Failed to get object for key " + key);
     }
 
     public boolean[] getBooleanArray(String key) throws OcCborException {
@@ -183,7 +183,7 @@ public class OcRepresentation {
         if (nativeRep != null) {
             return new OcRepresentation(nativeRep);
         }
-        throw new OcCborException("Failed to get object array for key" + key);
+        throw new OcCborException("Failed to get object array for key " + key);
     }
 
     public OcRepresentation getNext() {
