@@ -79,7 +79,7 @@ oc_new_link(oc_resource_t *resource)
       link->resource = resource;
       resource->num_links++;
       link->next = 0;
-      memset(&link->ins, 0, sizeof(oc_string_t));
+      link->ins = (int64_t)oc_random_value();
       return link;
     }
     OC_WRN("insufficient memory to create new link");
@@ -94,18 +94,9 @@ oc_delete_link(oc_link_t *link)
     if (link->resource) {
       link->resource->num_links--;
     }
-    if (oc_string_len(link->ins) > 0) {
-      oc_free_string(&(link->ins));
-    }
     oc_free_string_array(&(link->rel));
     oc_memb_free(&oc_links_s, link);
   }
-}
-
-void
-oc_link_set_ins(oc_link_t *link, const char *ins)
-{
-  oc_new_string(&link->ins, ins, strlen(ins));
 }
 
 void
@@ -128,11 +119,11 @@ oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
 }
 
 oc_link_t *
-oc_collection_get_links(oc_resource_t* collection)
+oc_collection_get_links(oc_resource_t *collection)
 {
-    if (collection)
-      return (oc_link_t*)oc_list_head(((oc_collection_t*)collection)->links);
-    return NULL;
+  if (collection)
+    return (oc_link_t *)oc_list_head(((oc_collection_t *)collection)->links);
+  return NULL;
 }
 
 void
@@ -142,7 +133,8 @@ oc_link_add_rel(oc_link_t *link, const char *rel)
 }
 
 oc_collection_t *
-oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, size_t device)
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len,
+                         size_t device)
 {
   while (uri_path[0] == '/') {
     uri_path++;
@@ -160,7 +152,8 @@ oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len, size_t devic
 }
 
 oc_link_t *
-oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_path_len)
+oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
+                   int uri_path_len)
 {
   oc_link_t *link = NULL;
 
@@ -174,7 +167,8 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path, int uri_pa
     while (link != NULL) {
       if (link->resource &&
           (int)oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
-          strncmp(oc_string(link->resource->uri) + 1, uri_path, uri_path_len) == 0) {
+          strncmp(oc_string(link->resource->uri) + 1, uri_path, uri_path_len) ==
+            0) {
         break;
       }
       link = link->next;
@@ -290,9 +284,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           oc_core_encode_interfaces_mask(oc_rep_object(links),
                                          link->resource->interfaces);
           oc_rep_set_string_array(links, rel, link->rel);
-          if (oc_string_len(link->ins) > 0) {
-            oc_rep_set_text_string(links, ins, oc_string(link->ins));
-          }
+          oc_rep_set_int(links, ins, link->ins);
           oc_rep_set_object(links, p);
           oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                            ~(OC_PERIODIC | OC_SECURE)));
@@ -348,9 +340,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_core_encode_interfaces_mask(oc_rep_object(links),
                                        link->resource->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
-        if (oc_string_len(link->ins) > 0) {
-          oc_rep_set_text_string(links, ins, oc_string(link->ins));
-        }
+        oc_rep_set_int(links, ins, link->ins);
         oc_rep_set_object(links, p);
         oc_rep_set_uint(p, bm, (uint8_t)(link->resource->properties &
                                          ~(OC_PERIODIC | OC_SECURE)));

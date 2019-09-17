@@ -29,7 +29,7 @@
 
 static void
 _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
-                      char *ins)
+                      int64_t ins)
 {
   if (!parent || !resource) {
     OC_ERR("Error of input parameters");
@@ -41,10 +41,7 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
   oc_core_encode_interfaces_mask(oc_rep_object(links), resource->interfaces);
   if (rel)
     oc_rep_set_text_string(links, rel, rel);
-  int ins_int = 0;
-  if (ins)
-    ins_int = atoi(ins);
-  oc_rep_set_int(links, ins, ins_int);
+  oc_rep_set_int(links, ins, ins);
   oc_rep_set_object(links, p);
   oc_rep_set_uint(p, bm,
                   (uint8_t)(resource->properties & ~(OC_PERIODIC | OC_SECURE)));
@@ -74,8 +71,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     oc_link_t *link = links;
     while (link != NULL) {
       _add_resource_payload(oc_rep_array(links), link->resource,
-                            oc_string_array_get_item(link->rel, 0),
-                            oc_string(link->ins));
+                            oc_string_array_get_item(link->rel, 0), link->ins);
       link = link->next;
     }
     oc_rep_close_array(root, links);
@@ -130,17 +126,16 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     return false;
   }
 
-  oc_string_t uri_query;
-  memset(&uri_query, 0, sizeof(oc_string_t));
-  oc_concat_strings(&uri_query, "di=", id);
+  char uri_query[256];
+  snprintf(uri_query, 255, "di=%s", id);
   while (links) {
-    oc_concat_strings(&uri_query, "&ins=", oc_string(links->ins));
+    snprintf(uri_query + strlen(uri_query), (255 - strlen(uri_query)),
+             "&ins=%ld", links->ins);
     links = links->next;
   }
 
-  bool ret = oc_do_delete(OC_RSRVD_RD_URI, endpoint, oc_string(uri_query),
-                          handler, qos, user_data);
-  oc_free_string(&uri_query);
+  bool ret =
+    oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos, user_data);
   return ret;
 }
 

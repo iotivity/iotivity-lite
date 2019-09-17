@@ -192,13 +192,6 @@ void oc_delete_link(oc_link_t *link);
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 
 /**
-  @brief Sets the unique link instance on the link.
-  @param link The link to set the instance on. Must not be NULL.
-  @param ins The link instance to set. Must not be NULL.
-*/
-void oc_link_set_ins(oc_link_t *link, const char *ins);
-
-/**
   @brief Adds the link to the collection.
   @param collection Collection to add the link to. Must not be NULL.
   @param link Link to add to the collection. The link is not copied.
