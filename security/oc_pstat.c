@@ -415,7 +415,7 @@ dump_unique_ids(void *data)
 bool
 oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
 {
-  bool transition_state = false;
+  bool transition_state = false, target_mode = false;
   oc_sec_pstat_t ps;
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
 
@@ -467,6 +467,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
       if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
         ps.cm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
+        target_mode = true;
         ps.tm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "om", 2) == 0) {
         ps.om = (int)rep->value.integer;
@@ -495,6 +496,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
     }
     rep = rep->next;
   }
+  (void)target_mode;
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
@@ -532,6 +534,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)data;
   size_t device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
+    request->response->response_buffer->response_length = 0;
     oc_send_response(request, OC_STATUS_CHANGED);
     request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);

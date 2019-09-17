@@ -32,13 +32,19 @@ typedef enum {
   OC_DOS_SRESET
 } oc_dostype_t;
 
+typedef enum {
+  OC_DPM_SVV = 64,
+  OC_DPM_SSV = 128,
+  OC_DPM_NSA = 256
+} oc_dpmtype_t;
+
 typedef struct
 {
   oc_dostype_t s;
   bool p;
   bool isop;
-  int cm;
-  int tm;
+  oc_dpmtype_t cm;
+  oc_dpmtype_t tm;
   int om;
   int sm;
   oc_uuid_t rowneruuid;

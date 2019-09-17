@@ -46,8 +46,9 @@ oc_sec_create_svr(void)
                               OC_IF_BASELINE, OC_DISCOVERABLE, get_doxm, 0,
                               post_doxm, 0, 1, "oic.r.doxm");
     oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
-                              OC_IF_BASELINE, OC_IF_BASELINE, OC_DISCOVERABLE,
-                              get_pstat, 0, post_pstat, 0, 1, "oic.r.pstat");
+                              OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
+                              post_pstat, 0, 1, "oic.r.pstat");
     oc_core_populate_resource(OCF_SEC_ACL, i, "/oic/sec/acl2", OC_IF_BASELINE,
                               OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
                               get_acl, 0, post_acl, delete_acl, 1,
