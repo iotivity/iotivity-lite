@@ -124,12 +124,6 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 {
   oc_rep_set_key((parent), "if");
   oc_rep_start_array((parent), if);
-  if (iface_mask & OC_IF_LL) {
-    oc_rep_add_text_string(if, "oic.if.ll");
-  }
-  if (iface_mask & OC_IF_B) {
-    oc_rep_add_text_string(if, "oic.if.b");
-  }
   if (iface_mask & OC_IF_R) {
     oc_rep_add_text_string(if, "oic.if.r");
   }
@@ -141,6 +135,15 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   }
   if (iface_mask & OC_IF_S) {
     oc_rep_add_text_string(if, "oic.if.s");
+  }
+  if (iface_mask & OC_IF_LL) {
+    oc_rep_add_text_string(if, "oic.if.ll");
+  }
+  if (iface_mask & OC_IF_CREATE) {
+    oc_rep_add_text_string(if, "oic.if.create");
+  }
+  if (iface_mask & OC_IF_B) {
+    oc_rep_add_text_string(if, "oic.if.b");
   }
   if (iface_mask & OC_IF_BASELINE) {
     oc_rep_add_text_string(if, "oic.if.baseline");

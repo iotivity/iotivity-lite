@@ -571,6 +571,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_A;
   if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0)
     iface_mask |= OC_IF_S;
+  if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
+    iface_mask |= OC_IF_CREATE;
   return iface_mask;
 }
 
@@ -597,6 +599,7 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_RW:
   case OC_IF_B:
   case OC_IF_BASELINE:
+  case OC_IF_CREATE:
   /* Per section 7.5.3 of the OCF Core spec, the following interface
    * supports CREATE, RETRIEVE and UPDATE.
    */
@@ -968,20 +971,23 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
            * via
            * only the batch interface.
            */
-          if (iface_mask != OC_IF_B) {
+          if (iface_mask != OC_IF_B && iface_mask != OC_IF_LL &&
+              iface_mask != OC_IF_CREATE) {
             set_observe_option = false;
           } else {
-            oc_collection_t *collection = (oc_collection_t *)cur_resource;
-            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
-            while (links) {
-              if (links->resource &&
-                  (links->resource->properties & OC_PERIODIC)) {
-                if (!add_periodic_observe_callback(links->resource)) {
-                  set_observe_option = false;
-                  break;
+            if (iface_mask == OC_IF_B) {
+              oc_collection_t *collection = (oc_collection_t *)cur_resource;
+              oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+              while (links) {
+                if (links->resource &&
+                    (links->resource->properties & OC_PERIODIC)) {
+                  if (!add_periodic_observe_callback(links->resource)) {
+                    set_observe_option = false;
+                    break;
+                  }
                 }
+                links = links->next;
               }
-              links = links->next;
             }
           }
         }
