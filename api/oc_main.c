@@ -47,6 +47,9 @@
 #include "api/cloud/oc_cloud_internal.h"
 #endif /* OC_CLOUD */
 
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate_internal.h"
+#endif /* OC_SOFTWARE_UPDATE */
 #ifdef OC_MEMORY_TRACE
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
@@ -212,6 +215,10 @@ oc_main_init(const oc_handler_t *handler)
   oc_cloud_init();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_init();
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_SERVER
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
@@ -283,6 +290,10 @@ oc_main_shutdown(void)
 #endif /* OC_PKI */
   oc_tls_shutdown();
 #endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
 
   oc_shutdown_all_devices();
 

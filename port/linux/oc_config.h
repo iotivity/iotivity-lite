@@ -24,6 +24,9 @@ typedef uint64_t oc_clock_time_t;
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
 
+/* Add support for software update */
+//#define OC_SOFTWARE_UPDATE
+
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_LOOKUP_IPV6

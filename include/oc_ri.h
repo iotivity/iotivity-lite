@@ -97,6 +97,9 @@ typedef enum {
 #ifdef OC_CLOUD
   OCF_COAPCLOUDCONF,
 #endif /* OC_CLOUD */
+#ifdef OC_SOFTWARE_UPDATE
+  OCF_SW_UPDATE,
+#endif /* OC_SOFTWARE_UPDATE */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
