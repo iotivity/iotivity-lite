@@ -266,8 +266,8 @@ notify_add_handler(void *value)
     return NULL;
   }
 
-  int len = strlen(uri) + 1;
-  notify_item->uri = (char *)malloc(sizeof(char) * len);
+  int len = strlen(uri);
+  notify_item->uri = (char *)malloc(sizeof(char) * (len + 1));
   strncpy(notify_item->uri, uri, len);
   notify_item->uri[len] = '\0';
 
