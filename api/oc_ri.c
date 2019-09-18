@@ -948,10 +948,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (observe == 0) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint) >= 0) {
+                                 endpoint, iface_mask) >= 0) {
 #else  /* OC_BLOCK_WISE */
-        if (coap_observe_handler(request, response, cur_resource, endpoint) >=
-            0) {
+        if (coap_observe_handler(request, response, cur_resource, endpoint,
+                                 iface_mask) >= 0) {
 #endif /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
@@ -1007,10 +1007,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       else if (observe == 1) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint) > 0) {
+                                 endpoint, iface_mask) > 0) {
 #else  /* OC_BLOCK_WISE */
-        if (coap_observe_handler(request, response, cur_resource, endpoint) >
-            0) {
+        if (coap_observe_handler(request, response, cur_resource, endpoint,
+                                 iface_mask) > 0) {
 #endif /* !OC_BLOCK_WISE */
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);

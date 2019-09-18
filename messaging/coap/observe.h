@@ -75,7 +75,7 @@ typedef struct coap_observer
 #endif /* OC_BLOCK_WISE */
 
   int32_t obs_counter;
-
+  oc_interface_mask_t iface_mask;
   struct oc_etimer retrans_timer;
   uint8_t retrans_counter;
 } coap_observer_t;
@@ -88,17 +88,22 @@ int coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
 int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
 int coap_remove_observer_by_resource(const oc_resource_t *rsc);
 void coap_free_all_observers(void);
-
+int coap_notify_collection_observers(oc_resource_t *resource,
+                                     oc_response_buffer_t *response_buf,
+                                     oc_interface_mask_t iface_mask);
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           oc_endpoint_t *endpoint);
+int coap_notify_links_list(oc_collection_t *collection);
 
 #ifdef OC_BLOCK_WISE
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                         uint16_t block2_size, oc_endpoint_t *endpoint);
+                         uint16_t block2_size, oc_endpoint_t *endpoint,
+                         oc_interface_mask_t iface_mask);
 #else  /* OC_BLOCK_WISE */
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                         oc_endpoint_t *endpoint);
+                         oc_endpoint_t *endpoint,
+                         oc_interface_mask_t iface_mask);
 #endif /* !OC_BLOCK_WISE */
 
 int coap_remove_observers_on_dos_change(size_t device);
