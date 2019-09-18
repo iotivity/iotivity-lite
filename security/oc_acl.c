@@ -439,12 +439,11 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
           role_cred = next;
           continue;
         }
-        if (oc_string_len(role_cred->role.role) == strlen("oic.role.owner")
-            && memcmp(oc_string(role_cred->role.role),
-                      "oic.role.owner",
-                      oc_string_len(role_cred->role.role)) == 0){
-                OC_DBG("oc_acl: peer's role matches \"oic.role.owner\"");
-                return true;
+        if (oc_string_len(role_cred->role.role) == strlen("oic.role.owner") &&
+            memcmp(oc_string(role_cred->role.role), "oic.role.owner",
+                   oc_string_len(role_cred->role.role)) == 0) {
+          OC_DBG("oc_acl: peer's role matches \"oic.role.owner\"");
+          return true;
         }
         permission |= get_role_permissions(role_cred, resource, iface_mask,
                                            endpoint->device, is_DCR, is_public);
@@ -814,6 +813,37 @@ oc_sec_acl_free(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+bool
+oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
+                                    size_t device, bool collection)
+{
+  oc_uuid_t *uuid = NULL;
+  oc_tls_peer_t *peer = oc_tls_get_peer(client);
+  if (peer) {
+    uuid = &peer->uuid;
+  } else {
+    return false;
+  }
+
+  oc_ace_subject_t subject;
+  memset(&subject, 0, sizeof(oc_ace_subject_t));
+  memcpy(subject.uuid.id, uuid->id, sizeof(oc_uuid_t));
+
+  oc_ace_permissions_t perm =
+    OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
+  if (collection) {
+    perm |= OC_PERM_CREATE;
+  }
+
+  oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm, href, 0, 0, 0,
+                        device);
+
+  return true;
+}
+#endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
+
 void
 oc_sec_acl_default(size_t device)
 {
@@ -837,13 +867,6 @@ oc_sec_acl_default(size_t device)
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
                               oc_string(resource->uri), 0, NULL, 0, device);
     }
-#ifdef OC_CLOUD
-    if (i == OCF_COAPCLOUDCONF) {
-      success &=
-        oc_sec_ace_update_res(OC_SUBJECT_CONN, &_auth_crypt, -1, 6,
-                              "/CoapCloudConfResURI", 0, NULL, 0, device);
-    }
-#endif /* OC_CLOUD */
     if (i >= OCF_SEC_DOXM && i < OCF_D) {
       success &=
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
