@@ -41,12 +41,122 @@ static oc_endpoint_t *lights_server;
 static bool do_once = true;
 static void get_lights_oic_if_b(oc_client_response_t *data);
 
+#ifdef OC_COLLECTIONS_IF_CREATE
+static oc_discovery_flags_t
+dishand(const char *anchor, const char *uri, oc_string_array_t types,
+        oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+        oc_resource_properties_t bm, void *user_data)
+{
+  (void)anchor;
+  (void)interfaces;
+  (void)user_data;
+  (void)bm;
+  (void)endpoint;
+
+  PRINT("\n\nURI %s\n\n", uri);
+
+  (void)types;
+  (void)interfaces;
+
+  return OC_CONTINUE_DISCOVERY;
+}
+
+static void
+post_lights_oic_if_create(oc_client_response_t *data)
+{
+  (void)data;
+  PRINT("\n\nPOST_lights:oic_if_create\n\n");
+
+  oc_rep_t *rep = data->payload;
+
+  while (rep) {
+    PRINT("\n\nKey: %s\t\t", oc_string(rep->name));
+
+    switch (rep->type) {
+    case OC_REP_STRING:
+      PRINT("%s\n\n", oc_string(rep->value.string));
+      break;
+    case OC_REP_STRING_ARRAY: {
+      size_t i;
+      for (i = 0; i < oc_string_array_get_allocated_size(rep->value.array);
+           i++) {
+
+        PRINT(" %s ", oc_string_array_get_item(rep->value.array, i));
+      }
+      PRINT("\n");
+    } break;
+    case OC_REP_INT:
+      PRINT(" %d\n", rep->value.integer);
+      break;
+    case OC_REP_OBJECT: {
+      oc_rep_t *policy = rep->value.object;
+      ;
+
+      while (policy) {
+        PRINT("\t\t%s\t\t", oc_string(policy->name));
+        switch (policy->type) {
+        case OC_REP_INT:
+          PRINT(" %d ", policy->value.integer);
+          break;
+        default:
+          break;
+        }
+        policy = policy->next;
+      }
+    } break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+
+  oc_do_ip_discovery_at_endpoint(NULL, dishand, lights_server, NULL);
+}
+#endif /* OC_COLLECTIONS_IF_CREATE */
+
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(lights, lights_server);
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+  PRINT("\nSending POST %s?if=oic.if.create \n", lights);
+
+  if (oc_init_post(lights, lights_server, "if=oic.if.create",
+                   &post_lights_oic_if_create, LOW_QOS, NULL)) {
+    oc_rep_start_root_object();
+    oc_rep_set_array(root, rt);
+    oc_rep_add_text_string(rt, "oic.r.energy.consumption");
+    oc_rep_close_array(root, rt);
+    oc_rep_set_array(root, if);
+    oc_rep_add_text_string(if, "oic.if.s");
+    oc_rep_add_text_string(if, "oic.if.baseline");
+    oc_rep_close_array(root, if);
+    oc_rep_set_object(root, p);
+    oc_rep_set_uint(p, bm, 3);
+    oc_rep_close_object(root, p);
+    oc_rep_set_object(root, rep);
+    oc_rep_set_array(rep, rt);
+    oc_rep_add_text_string(rt, "oic.r.energy.consumption");
+    oc_rep_close_array(rep, rt);
+    oc_rep_set_array(rep, if);
+    oc_rep_add_text_string(if, "oic.if.s");
+    oc_rep_add_text_string(if, "oic.if.baseline");
+    oc_rep_close_array(rep, if);
+    oc_rep_set_double(rep, power, 25.0);
+    oc_rep_set_double(rep, energy, 30.0);
+    oc_rep_close_object(root, rep);
+    oc_rep_end_root_object();
+
+    if (oc_do_post())
+      PRINT("Sent POST request\n\n");
+    else
+      PRINT("Could not send POST\n\n");
+  } else
+    PRINT("Could not init POST\n\n");
+#endif /* OC_COLLECTIONS_IF_CREATE */
   return OC_EVENT_DONE;
 }
 
@@ -100,7 +210,7 @@ post_lights_oic_if_b(oc_client_response_t *data)
 
   oc_do_observe(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b,
                 LOW_QOS, NULL);
-  oc_set_delayed_callback(NULL, &stop_observe, 20);
+  oc_set_delayed_callback(NULL, &stop_observe, 5);
 }
 
 static void

@@ -26,18 +26,20 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static double temp_C = 5.0, min_C = 0.0, max_C = 100.0, min_K = 273.15,
-              max_K = 373.15, min_F = 32, max_F = 212;
+static double temp = 5.0, temp_K = (5.0 + 273.15), temp_F = (5.0 * 9 / 5 + 32),
+              min_C = 0.0, max_C = 100.0, min_K = 273.15, max_K = 373.15,
+              min_F = 32, max_F = 212;
 typedef enum { C = 100, F, K } units_t;
-static bool switch_state, pswitch_state;
+units_t temp_units = C;
+static bool switch_state;
 
 static int
 app_init(void)
 {
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
+                       "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   return err;
 }
 
@@ -47,39 +49,40 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   (void)user_data;
   PRINT("GET_temp:\n");
   bool invalid_query = false;
-  double temp = temp_C;
-  units_t temp_units = C;
   char *units;
+  units_t u = temp_units;
   int units_len = oc_get_query_value(request, "units", &units);
   if (units_len != -1) {
     if (units[0] == 'K') {
-      temp = temp_C + 273.15;
-      temp_units = K;
+      u = K;
     } else if (units[0] == 'F') {
-      temp = (temp_C / 100) * 180 + 32;
-      temp_units = F;
-    } else if (units[0] != 'C')
+      u = F;
+    } else if (units[0] != 'C') {
+      u = C;
+    } else {
       invalid_query = true;
+    }
   }
 
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-    oc_rep_set_text_string(root, id, "home_thermostat");
   /* fall through */
   case OC_IF_A:
   case OC_IF_S:
-    oc_rep_set_double(root, temperature, temp);
-    switch (temp_units) {
+    switch (u) {
     case C:
       oc_rep_set_text_string(root, units, "C");
+      oc_rep_set_double(root, temperature, temp);
       break;
     case F:
       oc_rep_set_text_string(root, units, "F");
+      oc_rep_set_double(root, temperature, temp_F);
       break;
     case K:
       oc_rep_set_text_string(root, units, "K");
+      oc_rep_set_double(root, temperature, temp_K);
       break;
     }
     break;
@@ -87,24 +90,22 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
     break;
   }
 
-  if (!invalid_query) {
-    oc_rep_set_array(root, range);
-    switch (temp_units) {
-    case C:
-      oc_rep_add_double(range, min_C);
-      oc_rep_add_double(range, max_C);
-      break;
-    case K:
-      oc_rep_add_double(range, min_K);
-      oc_rep_add_double(range, max_K);
-      break;
-    case F:
-      oc_rep_add_double(range, min_F);
-      oc_rep_add_double(range, max_F);
-      break;
-    }
-    oc_rep_close_array(root, range);
+  oc_rep_set_array(root, range);
+  switch (u) {
+  case C:
+    oc_rep_add_double(range, min_C);
+    oc_rep_add_double(range, max_C);
+    break;
+  case K:
+    oc_rep_add_double(range, min_K);
+    oc_rep_add_double(range, max_K);
+    break;
+  case F:
+    oc_rep_add_double(range, min_F);
+    oc_rep_add_double(range, max_F);
+    break;
   }
+  oc_rep_close_array(root, range);
 
   oc_rep_end_root_object();
 
@@ -115,109 +116,99 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 }
 
 static void
-post_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_temp:\n");
   bool out_of_range = false;
-  double temp = -1;
-
+  double t = -1;
+  units_t units = C;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_DOUBLE:
-      temp = rep->value.double_p;
+      t = rep->value.double_p;
+      break;
+    case OC_REP_STRING:
+      if (oc_string(rep->value.string)[0] == 'C') {
+        units = C;
+      } else if (oc_string(rep->value.string)[0] == 'F') {
+        units = F;
+      } else if (oc_string(rep->value.string)[0] == 'K') {
+        units = K;
+      } else {
+        out_of_range = true;
+      }
       break;
     default:
+      out_of_range = true;
       break;
     }
     rep = rep->next;
   }
 
-  if (temp < min_C || temp > max_C)
+  if (t == -1) {
     out_of_range = true;
+  }
 
-  temp_C = temp;
+  if (!out_of_range && t != -1 && ((units == C && t < min_C && t > max_C) ||
+                                   (units == F && t < min_F && t > max_F) ||
+                                   (units == K && t < min_K && t > max_K))) {
+    out_of_range = true;
+  }
+
+  if (!out_of_range) {
+    if (units == C) {
+      temp = t;
+      temp_F = (temp * 9 / 5) + 32;
+      temp_K = (temp + 273.15);
+    } else if (units == F) {
+      temp_F = t;
+      temp = (temp_F - 32) * 5 / 9;
+      temp_K = (temp + 273.15);
+    } else if (units == K) {
+      temp_K = t;
+      temp = (temp_K - 273.15);
+      temp_F = (temp * 9 / 5) + 32;
+    }
+    temp_units = units;
+  }
 
   oc_rep_start_root_object();
-  oc_rep_set_text_string(root, id, "home_thermostat");
-  oc_rep_set_double(root, temperature, temp_C);
-  oc_rep_set_text_string(root, units, "C");
-  oc_rep_set_array(root, range);
-  oc_rep_add_double(range, min_C);
-  oc_rep_add_double(range, max_C);
-  oc_rep_close_array(root, range);
+  switch (temp_units) {
+  case C:
+    oc_rep_set_double(root, temperature, temp);
+    oc_rep_set_text_string(root, units, "C");
+    oc_rep_set_array(root, range);
+    oc_rep_add_double(range, min_C);
+    oc_rep_add_double(range, max_C);
+    oc_rep_close_array(root, range);
+    break;
+  case F:
+    oc_rep_set_double(root, temperature, temp_F);
+    oc_rep_set_text_string(root, units, "F");
+    oc_rep_set_array(root, range);
+    oc_rep_add_double(range, min_F);
+    oc_rep_add_double(range, max_F);
+    oc_rep_close_array(root, range);
+    break;
+  case K:
+    oc_rep_set_double(root, temperature, temp_K);
+    oc_rep_set_array(root, range);
+    oc_rep_add_double(range, min_K);
+    oc_rep_add_double(range, max_K);
+    oc_rep_close_array(root, range);
+    oc_rep_set_text_string(root, units, "K");
+    break;
+  }
   oc_rep_end_root_object();
 
   if (out_of_range)
     oc_send_response(request, OC_STATUS_FORBIDDEN);
   else
     oc_send_response(request, OC_STATUS_CHANGED);
-}
-
-static void
-get_pswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-            void *user_data)
-{
-  (void)user_data;
-  PRINT("GET_pswitch:\n");
-  oc_rep_start_root_object();
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-    oc_rep_set_text_string(root, id, "purifier_switch");
-  /* fall through */
-  case OC_IF_A:
-    oc_rep_set_boolean(root, value, pswitch_state);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
-
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-post_pswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *user_data)
-{
-  (void)iface_mask;
-  (void)user_data;
-  PRINT("POST_pswitch:\n");
-  bool state = false, bad_request = false;
-  oc_rep_t *rep = request->request_payload;
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_BOOL:
-      state = rep->value.boolean;
-      break;
-    default:
-      if (oc_string_len(rep->name) > 2) {
-        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
-          break;
-        }
-      }
-      bad_request = true;
-      break;
-    }
-    rep = rep->next;
-  }
-
-  if (!bad_request) {
-    pswitch_state = state;
-  }
-
-  oc_rep_start_root_object();
-  oc_rep_set_boolean(root, value, pswitch_state);
-  oc_rep_end_root_object();
-
-  if (!bad_request) {
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
 }
 
 static void
@@ -230,7 +221,6 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-    oc_rep_set_text_string(root, id, "thermostat_switch");
   /* fall through */
   case OC_IF_A:
     oc_rep_set_boolean(root, value, switch_state);
@@ -284,10 +274,162 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
+#ifdef OC_COLLECTIONS_IF_CREATE
+/* Resource creation and request handlers for oic.r.switch.binary instances */
+typedef struct oc_switch_t
+{
+  struct oc_switch_t *next;
+  oc_resource_t *resource;
+  bool state;
+} oc_switch_t;
+OC_MEMB(switch_s, oc_switch_t, 1);
+OC_LIST(switches);
+
+bool
+set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  oc_switch_t *cswitch = (oc_switch_t *)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      cswitch->state = rep->value.boolean;
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+void
+get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                      void *data)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)data;
+  oc_rep_start_root_object();
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(resource);
+  /* fall through */
+  case OC_IF_A:
+    oc_rep_set_boolean(root, value, cswitch->state);
+    break;
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+}
+
+void
+post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
+  (void)iface_mask;
+  oc_switch_t *cswitch = (oc_switch_t *)user_data;
+  oc_rep_t *rep = request->request_payload;
+  bool bad_request = false;
+  while (rep) {
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      if (oc_string_len(rep->name) != 5 ||
+          memcmp(oc_string(rep->name), "value", 5) != 0) {
+        bad_request = true;
+      }
+      break;
+    default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
+      bad_request = true;
+      break;
+    }
+    rep = rep->next;
+  }
+
+  if (!bad_request) {
+    set_switch_properties(request->resource, request->request_payload, cswitch);
+  }
+
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, value, cswitch->state);
+  oc_rep_end_root_object();
+
+  if (!bad_request) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+void
+get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
+  get_switch_properties(request->resource, iface_mask, user_data);
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+oc_resource_t *
+get_switch_instance(const char *href, oc_string_array_t *types,
+                    oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                    size_t device)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
+  if (cswitch) {
+    cswitch->resource = oc_new_resource(
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
+    if (cswitch->resource) {
+      size_t i;
+      for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
+        const char *rt = oc_string_array_get_item(*types, i);
+        oc_resource_bind_resource_type(cswitch->resource, rt);
+      }
+      oc_resource_bind_resource_interface(cswitch->resource, iface_mask);
+      cswitch->resource->properties = bm;
+      oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
+      oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
+                                      cswitch);
+      oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
+                                      cswitch);
+      oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
+                                     cswitch, set_switch_properties, cswitch);
+      oc_add_resource(cswitch->resource);
+
+      oc_list_add(switches, cswitch);
+      return cswitch->resource;
+    } else {
+      oc_memb_free(&switch_s, cswitch);
+    }
+  }
+  return NULL;
+}
+
+void
+free_switch_instance(oc_resource_t *resource)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
+  while (cswitch) {
+    if (cswitch->resource == resource) {
+      oc_delete_resource(resource);
+      oc_list_remove(switches, cswitch);
+      oc_memb_free(&switch_s, cswitch);
+      return;
+    }
+    cswitch = cswitch->next;
+  }
+}
+
+#endif /* OC_COLLECTIONS_IF_CREATE */
+/* */
+
 static void
 register_resources(void)
 {
-  oc_resource_t *temp = oc_new_resource("tempsensor", "/temp", 1, 0);
+  oc_resource_t *temp = oc_new_resource(NULL, "/temp", 1, 0);
   oc_resource_bind_resource_type(temp, "oic.r.temperature");
   oc_resource_bind_resource_interface(temp, OC_IF_A);
   oc_resource_bind_resource_interface(temp, OC_IF_S);
@@ -298,7 +440,7 @@ register_resources(void)
   oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
   oc_add_resource(temp);
 
-  oc_resource_t *bswitch = oc_new_resource("smartbutton", "/switch", 1, 0);
+  oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
   oc_resource_set_default_interface(bswitch, OC_IF_A);
@@ -307,32 +449,20 @@ register_resources(void)
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
   oc_add_resource(bswitch);
 
-  oc_resource_t *pbswitch =
-    oc_new_resource("purifierswitch", "/purifier_switch", 1, 0);
-  oc_resource_bind_resource_type(pbswitch, "oic.r.switch.binary");
-  oc_resource_bind_resource_interface(pbswitch, OC_IF_A);
-  oc_resource_set_default_interface(pbswitch, OC_IF_A);
-  oc_resource_set_discoverable(pbswitch, true);
-  oc_resource_set_request_handler(pbswitch, OC_GET, get_pswitch, NULL);
-  oc_resource_set_request_handler(pbswitch, OC_POST, post_pswitch, NULL);
-  oc_add_resource(pbswitch);
-
 #ifdef OC_COLLECTIONS
-  oc_resource_t *col = oc_new_collection("dashboard", "/platform", 1, 2, 2, 0);
+  oc_resource_t *col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
-  oc_collection_add_supported_rt(col, "oic.r.temperature");
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.temperature");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
-  oc_link_t *l1 = oc_new_link(temp);
-  oc_collection_add_link(col, l1);
 
+  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
+  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                free_switch_instance);
+#endif /* OC_COLLECTIONS_IF_CREATE */
   oc_link_t *l2 = oc_new_link(bswitch);
   oc_collection_add_link(col, l2);
-
-  oc_link_t *l3 = oc_new_link(pbswitch);
-  oc_collection_add_link(col, l3);
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
 }
@@ -479,8 +609,7 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-  oc_set_mtu_size(16384);
-  oc_set_max_app_data_size(16384);
+// oc_set_mtu_size(50000);
 
 #ifdef OC_SECURITY
   oc_storage_config("./smart_home_server_linux_creds");

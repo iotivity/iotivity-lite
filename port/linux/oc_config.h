@@ -6,7 +6,8 @@
 #include <time.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef uint64_t oc_clock_time_t;
@@ -30,7 +31,8 @@ typedef uint64_t oc_clock_time_t;
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_LOOKUP_IPV6
-
+/* Add support for the oic.if.create interface in Collections */
+#define OC_COLLECTIONS_IF_CREATE
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS

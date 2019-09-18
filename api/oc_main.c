@@ -29,6 +29,11 @@
 #include "oc_introspection_internal.h"
 #include "oc_signal_event_loop.h"
 
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
+
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
 #include "security/oc_cred.h"
@@ -276,6 +281,10 @@ oc_main_shutdown(void)
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_cloud_shutdown();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+  oc_collections_free_rt_factories();
+#endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
   oc_ri_shutdown();
 

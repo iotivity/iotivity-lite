@@ -143,9 +143,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   @see oc_collection_add_link
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types,
-                                 uint8_t num_supported_rts,
-                                 uint8_t num_mandatory_rts, size_t device);
+                                 uint8_t num_resource_types, size_t device);
 
 /**
   @brief Deletes the specified collection.
@@ -249,6 +247,17 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
+typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
+                                                     oc_string_array_t *,
+                                                     oc_resource_properties_t,
+                                                     oc_interface_mask_t,
+                                                     size_t);
+
+typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
+
+bool oc_collections_add_rt_factory(const char *rt,
+                                   oc_resource_get_instance_t get_instance,
+                                   oc_resource_free_instance_t free_instance);
 /** @} */ // end of oc_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
