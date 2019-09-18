@@ -28,6 +28,9 @@
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#ifdef OC_COLLECTIONS
+#include "api/oc_resource_factory.h"
+#endif /* OC_COLLECTIONS */
 
 #ifdef OC_SOFTWARE_UPDATE
 #include "api/oc_swupdate_internal.h"
@@ -161,6 +164,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     store_unique_ids = true;
 #ifdef OC_SERVER
     coap_remove_observers_on_dos_change(device);
+#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
+    oc_rt_factory_free_created_resources(device);
+#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_SERVER */
     ps->p = false;
   }
