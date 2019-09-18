@@ -261,6 +261,11 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
                                      void *user_data);
+void oc_resource_set_properties_cbs(oc_resource_t *resource,
+                                    oc_get_properties_cb_t get_properties,
+                                    void *get_propr_user_data,
+                                    oc_set_properties_cb_t set_properties,
+                                    void *set_props_user_data);
 bool oc_add_resource(oc_resource_t *resource);
 bool oc_delete_resource(oc_resource_t *resource);
 

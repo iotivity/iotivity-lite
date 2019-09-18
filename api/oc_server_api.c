@@ -109,8 +109,8 @@ oc_init_query_iterator(void)
 }
 
 int
-oc_iterate_query(oc_request_t *request, char **key, size_t *key_len, char **value,
-                 size_t *value_len)
+oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
+                 char **value, size_t *value_len)
 {
   query_iterator++;
   return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
@@ -202,7 +202,7 @@ oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
 void
 oc_delete_collection(oc_resource_t *collection)
 {
-  oc_collection_free((oc_collection_t*)collection);
+  oc_collection_free((oc_collection_t *)collection);
 }
 
 void
@@ -215,12 +215,13 @@ oc_add_collection(oc_resource_t *collection)
 oc_resource_t *
 oc_collection_get_collections(void)
 {
-  return (oc_resource_t*)oc_collection_get_all();
+  return (oc_resource_t *)oc_collection_get_all();
 }
 #endif /* OC_COLLECTIONS */
 
 void
-oc_resource_bind_resource_interface(oc_resource_t *resource, oc_interface_mask_t iface_mask)
+oc_resource_bind_resource_interface(oc_resource_t *resource,
+                                    oc_interface_mask_t iface_mask)
 {
   resource->interfaces |= iface_mask;
 }
@@ -269,6 +270,19 @@ oc_resource_set_periodic_observable(oc_resource_t *resource, uint16_t seconds)
 {
   resource->properties |= OC_OBSERVABLE | OC_PERIODIC;
   resource->observe_period_seconds = seconds;
+}
+
+void
+oc_resource_set_properties_cbs(oc_resource_t *resource,
+                               oc_get_properties_cb_t get_properties,
+                               void *get_props_user_data,
+                               oc_set_properties_cb_t set_properties,
+                               void *set_props_user_data)
+{
+  resource->get_properties.cb.get_props = get_properties;
+  resource->get_properties.user_data = get_props_user_data;
+  resource->set_properties.cb.set_props = set_properties;
+  resource->set_properties.user_data = set_props_user_data;
 }
 
 void
