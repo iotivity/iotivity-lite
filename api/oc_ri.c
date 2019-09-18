@@ -975,18 +975,30 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
               iface_mask != OC_IF_CREATE) {
             set_observe_option = false;
           } else {
-            if (iface_mask == OC_IF_B) {
-              oc_collection_t *collection = (oc_collection_t *)cur_resource;
-              oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
-              while (links) {
-                if (links->resource &&
-                    (links->resource->properties & OC_PERIODIC)) {
-                  if (!add_periodic_observe_callback(links->resource)) {
-                    set_observe_option = false;
-                    break;
-                  }
+            oc_collection_t *collection = (oc_collection_t *)cur_resource;
+            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+            while (links) {
+              if (links->resource &&
+                  links->resource->properties & OC_OBSERVABLE) {
+                if (!oc_sec_check_acl(OC_GET, links->resource,
+                                      links->resource->default_interface,
+                                      endpoint)) {
+                  set_observe_option = false;
+                  break;
                 }
-                links = links->next;
+              }
+              links = links->next;
+            }
+            if (set_observe_option) {
+              if (iface_mask == OC_IF_B) {
+                links = (oc_link_t *)oc_list_head(collection->links);
+                while (links) {
+                  if (links->resource &&
+                      links->resource->properties & OC_PERIODIC) {
+                    add_periodic_observe_callback(links->resource);
+                  }
+                  links = links->next;
+                }
               }
             }
           }

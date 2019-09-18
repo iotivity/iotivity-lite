@@ -25,6 +25,9 @@
 #include "security/oc_acl.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #include "util/oc_memb.h"
+#ifdef OC_SECURITY
+#include "security/oc_acl.h"
+#endif /* OC_SECURITY */
 
 OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);
 OC_LIST(oc_collections);
@@ -731,7 +734,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                           oc_string_len(href))) != 0) {
                 goto next;
               }
-
               memcpy(&prev_link, &links_array, sizeof(CborEncoder));
               oc_rep_object_array_start_item(links);
 
@@ -749,39 +751,46 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               response_buffer.response_length = 0;
               method_not_found = false;
 
-              switch (method) {
-              case OC_GET:
-                if (link->resource->get_handler.cb)
-                  link->resource->get_handler.cb(
-                    &rest_request, link->resource->default_interface,
-                    link->resource->get_handler.user_data);
-                else
-                  method_not_found = true;
-                break;
-              case OC_PUT:
-                if (link->resource->put_handler.cb)
-                  link->resource->put_handler.cb(
-                    &rest_request, link->resource->default_interface,
-                    link->resource->put_handler.user_data);
-                else
-                  method_not_found = true;
-                break;
-              case OC_POST:
-                if (link->resource->post_handler.cb)
-                  link->resource->post_handler.cb(
-                    &rest_request, link->resource->default_interface,
-                    link->resource->post_handler.user_data);
-                else
-                  method_not_found = true;
-                break;
-              case OC_DELETE:
-                if (link->resource->delete_handler.cb)
-                  link->resource->delete_handler.cb(
-                    &rest_request, link->resource->default_interface,
-                    link->resource->delete_handler.user_data);
-                else
-                  method_not_found = true;
-                break;
+              if (request && request->origin &&
+                  !oc_sec_check_acl(method, link->resource,
+                                    link->resource->default_interface,
+                                    request->origin)) {
+                response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
+              } else {
+                switch (method) {
+                case OC_GET:
+                  if (link->resource->get_handler.cb)
+                    link->resource->get_handler.cb(
+                      &rest_request, link->resource->default_interface,
+                      link->resource->get_handler.user_data);
+                  else
+                    method_not_found = true;
+                  break;
+                case OC_PUT:
+                  if (link->resource->put_handler.cb)
+                    link->resource->put_handler.cb(
+                      &rest_request, link->resource->default_interface,
+                      link->resource->put_handler.user_data);
+                  else
+                    method_not_found = true;
+                  break;
+                case OC_POST:
+                  if (link->resource->post_handler.cb)
+                    link->resource->post_handler.cb(
+                      &rest_request, link->resource->default_interface,
+                      link->resource->post_handler.user_data);
+                  else
+                    method_not_found = true;
+                  break;
+                case OC_DELETE:
+                  if (link->resource->delete_handler.cb)
+                    link->resource->delete_handler.cb(
+                      &rest_request, link->resource->default_interface,
+                      link->resource->delete_handler.user_data);
+                  else
+                    method_not_found = true;
+                  break;
+                }
               }
 
               if (method_not_found ||
@@ -801,6 +810,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
                   pcode = response_buffer.code;
+                } else {
+                  ecode = response_buffer.code;
                 }
                 int size_after = oc_rep_get_encoded_payload_size();
                 if (size_before == size_after) {
