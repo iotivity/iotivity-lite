@@ -510,13 +510,13 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   if (privatedata && privatedata_size > 0) {
     if (credtype == OC_CREDTYPE_PSK &&
         privatedata_encoding == OC_ENCODING_BASE64) {
-      if (privatedata_size != 24) {
+      if (privatedata_size > 64) {
         oc_sec_remove_cred(cred, device);
         return -1;
       }
-      uint8_t key[24];
-      memcpy(key, privatedata, 24);
-      int key_size = oc_base64_decode(key, 24);
+      uint8_t key[64];
+      memcpy(key, privatedata, privatedata_size);
+      int key_size = oc_base64_decode(key, privatedata_size);
       if (key_size < 0) {
         oc_sec_remove_cred(cred, device);
         return -1;
