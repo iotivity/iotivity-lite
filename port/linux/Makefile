@@ -2,6 +2,7 @@ CC = gcc
 SED = sed
 INSTALL = install
 OS = linux
+DEBUG = 1
 ROOT_DIR = ../..
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
@@ -110,7 +111,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux euicc_easysetup_enrollee
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
 endif
@@ -122,6 +123,13 @@ ifeq ($(CLOUD),1)
 endif
 
 OBT = onboarding_tool
+
+# Easy Setup
+SRC_ES=$(wildcard ../../api/easysetup/*.c)
+CFLAGS += -I../../api/easysetup -I../../port -I../../include
+CFLAGS += -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP -DOC_SERVER
+OBJ_ES=$(addprefix obj/easysetup/,$(notdir $(SRC_ES:.c=.o)))
+
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
@@ -163,7 +171,9 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
-
+ifneq ($(OIC),0)
+	EXTRA_CFLAGS += -DOC_SPEC_VER_OIC
+endif
 
 CFLAGS += $(EXTRA_CFLAGS)
 
@@ -175,10 +185,12 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
 		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a \
+		   libiotivity-constrained-easysetup.a libiotivity-constrained-easysetup.so
+
 
 PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
-     iotivity-constrained-client-server.pc
+     iotivity-constrained-client-server.pc iotivity-constrained-easysetup.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
@@ -247,6 +259,11 @@ obj/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+obj/easysetup/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP
+
+
 obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
@@ -255,23 +272,31 @@ obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
 
-libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-constrained-easysetup.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
-libiotivity-constrained-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
+libiotivity-constrained-easysetup.so: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES) $(LIBS)
 
-libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
-libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
+libiotivity-constrained-server.so: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES) $(LIBS)
+
+libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+
+libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES) $(LIBS)
 
 libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
 libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
+
+
 
 server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_linux.c
 	@mkdir -p $@_creds
@@ -280,6 +305,14 @@ server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_linux.c
 client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+
+euicc_easysetup_enrollee: libiotivity-constrained-easysetup.a $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c
+	@mkdir -p $@_creds
+	${CC} -o $@ $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c libiotivity-constrained-easysetup.a ${CFLAGS} ${LIBS}
+
+euicc_easysetup_mediator: libiotivity-constrained-easysetup.a $(ROOT_DIR)/apps/euicc_easysetup_mediator.c
+	@mkdir -p $@_creds
+	${CC} -o $@ $(ROOT_DIR)/apps/euicc_easysetup_mediator.c libiotivity-constrained-easysetup.a ${CFLAGS} ${LIBS}
 
 smart_lock: libiotivity-constrained-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
@@ -392,6 +425,15 @@ iotivity-constrained-cloud.pc: iotivity-constrained-cloud.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
+iotivity-constrained-easysetup.pc: iotivity-constrained-easysetup.pc.in
+	$(SED) > $@ < $< \
+		-e 's,@prefix@,$(prefix),' \
+		-e 's,@exec_prefix@,$(exec_prefix),' \
+		-e 's,@libdir@,$(libdir),' \
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
@@ -411,7 +453,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES) $(OBJ_ES)
 	rm -rf pki_certs
 
 cleanall: clean
