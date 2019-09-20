@@ -24,6 +24,7 @@
 #include "oc_discovery.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
+#include "oc_easysetup_enrollee.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
@@ -352,6 +353,13 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#if defined(OC_WIFI_EASYSETUP)
+  oc_create_wifi_easysetup_resource(device_count);
+#endif
+#if defined(OC_ESIM_EASYSETUP)
+  oc_create_esim_easysetup_resource(device_count);
+#endif
 
   oc_device_info[device_count].data = data;
 
