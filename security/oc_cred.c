@@ -568,8 +568,10 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       oc_tls_refresh_trust_anchors();
     }
 #if defined(OC_PKI) && defined(OC_CLIENT)
-    if (!roles_resource && credusage == OC_CREDUSAGE_ROLE_CERT && role) {
-      oc_sec_add_role_cred(role, authority);
+    if (!roles_resource && credusage == OC_CREDUSAGE_ROLE_CERT &&
+        oc_string_len(cred->role.role) > 0) {
+      oc_sec_add_role_cred(oc_string(cred->role.role),
+                           oc_string(cred->role.authority));
     }
 #endif /* OC_PKI && OC_CLIENT */
   }
@@ -636,16 +638,6 @@ oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
     oc_rep_set_int(roles, credid, cr->credid);
     /* credtype */
     oc_rep_set_int(roles, credtype, cr->credtype);
-    /* roleid */
-    if (oc_string_len(cr->role.role) > 0) {
-      oc_rep_set_object(roles, roleid);
-      oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
-      if (oc_string_len(cr->role.authority) > 0) {
-        oc_rep_set_text_string(roleid, authority,
-                               oc_string(cr->role.authority));
-      }
-      oc_rep_close_object(roles, roleid);
-    }
     /* credusage */
     const char *credusage_string = return_credusage_string(cr->credusage);
     if (credusage_string) {
@@ -700,7 +692,8 @@ oc_sec_encode_cred(bool persist, size_t device)
       oc_rep_set_text_string(creds, subjectuuid, uuid);
     }
     /* roleid */
-    if (oc_string_len(cr->role.role) > 0) {
+    if ((persist || cr->credtype == OC_CREDTYPE_PSK) &&
+        oc_string_len(cr->role.role) > 0) {
       oc_rep_set_object(creds, roleid);
       oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
       if (oc_string_len(cr->role.authority) > 0) {
@@ -815,8 +808,8 @@ parse_encoding_property(oc_string_t *encoding_string)
                0) {
     encoding = OC_ENCODING_RAW;
   } else if (oc_string_len(*encoding_string) == 23 &&
-             memcmp("oic.sec.encoding.handle", oc_string(*encoding_string), 23) ==
-               0) {
+             memcmp("oic.sec.encoding.handle", oc_string(*encoding_string),
+                    23) == 0) {
     encoding = OC_ENCODING_HANDLE;
   }
 #ifdef OC_PKI
