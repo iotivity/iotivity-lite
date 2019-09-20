@@ -114,6 +114,16 @@ typedef enum {
   OCF_SEC_ROLES,
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
+#ifdef OC_WIFI_EASYSETUP
+  OCF_ES,
+  OCF_ES_WIFI,
+  OCF_ES_DEVICE,
+#endif /* OC_WIFI_EASYSETUP */
+ #ifdef OC_ESIM_EASYSETUP
+  OCF_EES,
+  OCF_EES_RSP,
+  OCF_EES_RSP_CAP,
+#endif /* OC_ESM_EASYSETUP */
   OCF_D
   /* List of Device Configuration Resources (DCRs): end */
   /* List of resources on a logical device: end */
