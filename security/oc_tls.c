@@ -1536,6 +1536,14 @@ oc_tls_connected(oc_endpoint_t *endpoint)
   return false;
 }
 
+#if defined(OC_PKI) && defined(OC_CLIENT)
+static void
+assert_all_roles_internal(oc_client_response_t *data)
+{
+  oc_tls_handler_schedule_write(data->user_data);
+}
+#endif /* OC_PKI && OC_CLIENT */
+
 static void
 read_application_data(oc_tls_peer_t *peer)
 {
@@ -1589,18 +1597,18 @@ read_application_data(oc_tls_peer_t *peer)
       OC_DBG("oc_tls: (D)TLS Session is connected via ciphersuite [0x%x]",
              peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
-#if defined(OC_PKI) && defined(OC_CLIENT)
-      if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer)) {
-        oc_assert_all_roles(&peer->endpoint);
-      }
-#endif /* OC_PKI && OC_CLIENT */
-    }
-
 #ifdef OC_CLIENT
-    if (ret == 0) {
-      oc_tls_handler_schedule_write(peer);
-    }
+#ifdef OC_PKI
+      if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
+          oc_get_all_roles()) {
+        oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal);
+      } else
+#endif /* OC_PKI */
+      {
+        oc_tls_handler_schedule_write(peer);
+      }
 #endif /* OC_CLIENT */
+    }
   } else {
     oc_message_t *message = oc_allocate_message();
     if (message) {
