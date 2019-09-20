@@ -1379,6 +1379,9 @@ oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
 
   /**  1) switch dos to RFPRO
    */
+
+  oc_tls_select_psk_ciphersuite();
+
   p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
   if (!p->switch_dos) {
     oc_memb_free(&oc_credprov_ctx_m, p);
@@ -1426,6 +1429,9 @@ oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
 
   /**  1) switch dos to RFPRO
    */
+
+  oc_tls_select_psk_ciphersuite();
+
   p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
   if (!p->switch_dos) {
     oc_memb_free(&oc_credprov_ctx_m, p);
@@ -1471,6 +1477,8 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
   p->cb.data = data;
   p->device1 = device1;
   p->device2 = device2;
+
+  oc_tls_select_psk_ciphersuite();
 
   p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1_RFPRO, p);
   if (!p->switch_dos) {
@@ -1888,6 +1896,8 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
   r->cb.data = data;
   r->ace = ace;
   r->device = device;
+
+  oc_tls_select_psk_ciphersuite();
 
   r->switch_dos = switch_dos(device, OC_DOS_RFPRO, provision_ace, r);
   if (!r->switch_dos) {
