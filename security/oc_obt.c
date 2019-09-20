@@ -73,19 +73,35 @@ int root_cert_credid;
 oc_endpoint_t *
 oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint)
 {
-  while (endpoint && endpoint->next != NULL && endpoint->flags & SECURED) {
+  oc_endpoint_t *ep_last_v4 = NULL;
+  do {
+    if (!(endpoint->flags & SECURED)) {
+      ep_last_v4 = endpoint;
+    }
+    if (ep_last_v4 && (ep_last_v4->flags & IPV4)) {
+      return ep_last_v4;
+    }
     endpoint = endpoint->next;
-  }
-  return endpoint;
+  } while (endpoint);
+
+  return ep_last_v4;
 }
 
 oc_endpoint_t *
 oc_obt_get_secure_endpoint(oc_endpoint_t *endpoint)
 {
-  while (endpoint && endpoint->next != NULL && !(endpoint->flags & SECURED)) {
+  oc_endpoint_t *ep_last_v4 = NULL;
+  do {
+    if (endpoint->flags & SECURED) {
+      ep_last_v4 = endpoint;
+    }
+    if (ep_last_v4 && (ep_last_v4->flags & IPV4)) {
+      return ep_last_v4;
+    }
     endpoint = endpoint->next;
-  }
-  return endpoint;
+  } while (endpoint);
+
+  return ep_last_v4;
 }
 
 static oc_device_t *
