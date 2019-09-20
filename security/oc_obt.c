@@ -386,10 +386,13 @@ free_discovery_cb(void *data)
 static void
 get_endpoints(oc_client_response_t *data)
 {
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return;
+  }
   oc_rep_t *links = data->payload;
 
   oc_uuid_t di;
-  oc_rep_t *link = links->value.object;
+  oc_rep_t *link = (links) ? links->value.object : NULL;
   while (link != NULL) {
     switch (link->type) {
     case OC_REP_STRING: {
@@ -415,7 +418,7 @@ get_endpoints(oc_client_response_t *data)
   oc_client_cb_t *ccb = (oc_client_cb_t *)data->client_cb;
   if (ccb->multicast) {
     cb = (oc_discovery_cb_t *)data->user_data;
-    if (oc_obt_is_owned_device(&di)) {
+    if (links && oc_obt_is_owned_device(&di)) {
       device = cache_new_device(oc_devices, &di, data->endpoint);
     }
   } else {
@@ -1175,8 +1178,7 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  if (encoding_len == 20 &&
-             memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
+  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
     if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
       goto err_device_CSR;
     }
@@ -1833,8 +1835,6 @@ provision_ace(int status, void *data)
       oc_rep_close_array(aclist2, resources);
 
       oc_rep_set_uint(aclist2, permission, ace->permission);
-
-      oc_rep_set_int(aclist2, aceid, ace->aceid);
 
       oc_rep_object_array_end_item(aclist2);
       oc_rep_close_array(root, aclist2);
