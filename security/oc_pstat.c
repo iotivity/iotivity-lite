@@ -28,9 +28,9 @@
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
-#ifdef OC_COLLECTIONS_IF_CREATE
+#ifdef OC_COLLECTIONS
 #include "api/oc_resource_factory.h"
-#endif /* OC_COLLECTIONS_IF_CREATE */
+#endif /* OC_COLLECTIONS */
 
 #ifdef OC_SOFTWARE_UPDATE
 #include "api/oc_swupdate_internal.h"

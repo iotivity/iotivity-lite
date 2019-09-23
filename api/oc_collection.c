@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "api/oc_resource_factory.h"
+#include "security/oc_acl.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #include "util/oc_memb.h"
 #ifdef OC_SECURITY

@@ -14,11 +14,11 @@
 // limitations under the License.
 */
 
+#include "api/oc_resource_factory.h"
 #include "oc_collection.h"
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
-#include "api/oc_resource_factory.h"
 
 OC_MEMB(rtc_s, oc_rt_created_t, 1);
 OC_LIST(created_res);
