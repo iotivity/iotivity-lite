@@ -86,6 +86,11 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
          request->origin->interface_index != eps->interface_index)) {
       goto next_eps;
     }
+    if (request->origin &&
+        (((request->origin->flags & IPV4) && (eps->flags & IPV6)) ||
+         ((request->origin->flags & IPV6) && (eps->flags & IPV4)))) {
+      goto next_eps;
+    }
     oc_rep_object_array_start_item(eps);
     oc_string_t ep;
     if (oc_endpoint_to_string(eps, &ep) == 0) {
@@ -640,6 +645,10 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                   memcmp(oc_string(ep->name), "ep", 2) == 0) {
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
+                  if (((endpoint->flags & IPV4) && (temp_ep.flags & IPV6)) ||
+                      ((endpoint->flags & IPV6) && (temp_ep.flags & IPV4))) {
+                    goto next_ep;
+                  }
                   if (eps_cur) {
                     eps_cur->next = oc_new_endpoint();
                     eps_cur = eps_cur->next;
@@ -669,6 +678,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
             }
             ep = ep->next;
           }
+        next_ep:
           eps = eps->next;
         }
       } break;
