@@ -1049,6 +1049,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif /* OC_SERVER */
 
+  if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
+      response_buffer.code >= oc_status_code(OC_STATUS_BAD_REQUEST)) {
+    response_buffer.code = OC_IGNORE;
+  }
+
 #ifdef OC_SERVER
   /* The presence of a separate response handle here indicates a
    * successful handling of the request by a slow resource.
