@@ -86,7 +86,9 @@ oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
 
 bool oc_check_if_collection(oc_resource_t *resource);
 void oc_collection_add(oc_collection_t *collection);
+#ifdef OC_COLLECTIONS_IF_CREATE
 void oc_collections_free_rt_factories(void);
+#endif /* OC_COLLECTIONS_IF_CREATE */
 
 #ifdef __cplusplus
 }
