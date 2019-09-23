@@ -247,6 +247,7 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
+#ifdef OC_COLLECTIONS_IF_CREATE
 typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
                                                      oc_string_array_t *,
                                                      oc_resource_properties_t,
@@ -258,6 +259,7 @@ typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
 bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
+#endif    /* OC_COLLECTIONS_IF_CREATE */
 /** @} */ // end of oc_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
