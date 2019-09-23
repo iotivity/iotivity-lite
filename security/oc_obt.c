@@ -449,6 +449,12 @@ get_endpoints(oc_client_response_t *data)
                 memcmp(oc_string(ep->name), "ep", 2) == 0) {
               if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                   0) {
+                if (((data->endpoint->flags & IPV4) &&
+                     (temp_ep.flags & IPV6)) ||
+                    ((data->endpoint->flags & IPV6) &&
+                     (temp_ep.flags & IPV4))) {
+                  goto next_ep;
+                }
                 if (eps_cur) {
                   eps_cur->next = oc_new_endpoint();
                   eps_cur = eps_cur->next;
@@ -477,6 +483,7 @@ get_endpoints(oc_client_response_t *data)
           }
           ep = ep->next;
         }
+      next_ep:
         eps = eps->next;
       }
     } break;
