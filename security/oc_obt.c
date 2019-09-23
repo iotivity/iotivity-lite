@@ -1914,6 +1914,8 @@ oc_obt_init(void)
     ps->isop = true;
     ps->s = OC_DOS_RFNOP;
 
+    oc_sec_ace_clear_bootstrap_aces(0);
+
     oc_sec_dump_pstat(0);
     oc_sec_dump_doxm(0);
     oc_sec_dump_cred(0);
