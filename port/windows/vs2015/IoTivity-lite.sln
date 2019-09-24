@@ -14,6 +14,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onboarding_tool", "onboardi
 		{1866D7A4-FC11-46CA-9377-3BAA69D4BF58} = {1866D7A4-FC11-46CA-9377-3BAA69D4BF58}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CloudServer", "CloudServer.vcxproj", "{8FEC3CA4-2A62-459A-9880-C93DF5839A06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -55,6 +57,14 @@ Global
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Release|x64.Build.0 = Release|x64
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Release|x86.ActiveCfg = Release|Win32
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Release|x86.Build.0 = Release|Win32
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Debug|x64.ActiveCfg = Debug|x64
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Debug|x64.Build.0 = Debug|x64
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Debug|x86.ActiveCfg = Debug|Win32
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Debug|x86.Build.0 = Debug|Win32
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Release|x64.ActiveCfg = Release|x64
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Release|x64.Build.0 = Release|x64
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Release|x86.ActiveCfg = Release|Win32
+		{8FEC3CA4-2A62-459A-9880-C93DF5839A06}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
