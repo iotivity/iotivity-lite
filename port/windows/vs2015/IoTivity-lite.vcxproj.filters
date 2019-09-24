@@ -391,6 +391,39 @@
     <ClCompile Include="..\..\..\api\oc_mnt.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\tcpadapter.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\messaging\coap\coap_signal.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\network_addresses.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_apis.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_manager.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_rd.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\rd_client.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mutex.c">
+      <Filter>Port</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -620,6 +653,27 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_swupdate.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ipcontext.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tcpadapter.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\messaging\coap\coap_signal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\network_addresses.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\rd_client.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mutex.h">
+      <Filter>Port</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -132,7 +132,7 @@ ifeq ($(CLOUD),1)
 	CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
-	SAMPLES += cloud_linux cloud_tests
+	SAMPLES += cloud_server cloud_tests
 endif
 
 OBT = onboarding_tool
@@ -351,9 +351,9 @@ multi_device_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/multi_device_cli
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
+cloud_server: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_server.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+	${CC} -o $@ ../../apps/cloud_server.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
 cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
 	@mkdir -p $@_creds
