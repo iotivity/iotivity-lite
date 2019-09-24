@@ -188,6 +188,11 @@ static const int otm_priority[3] = {
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
+static const int cloud_priority[3] = {
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 0
+};
+
 static const int cert_priority[7] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
@@ -862,6 +867,12 @@ void
 oc_tls_select_cert_ciphersuite(void)
 {
   ciphers = (int *)cert_priority;
+}
+
+void
+oc_tls_select_cloud_ciphersuite(void)
+{
+  ciphers = (int *)cloud_priority;
 }
 #endif /* OC_CLIENT */
 
