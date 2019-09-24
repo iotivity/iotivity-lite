@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,17 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\apps\cloud_server.c" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="IoTivity-lite.vcxproj">
       <Project>{1866d7a4-fc11-46ca-9377-3baa69d4bf58}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\apps\simpleserver_windows.c" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{49A279BB-F431-4310-BEA2-CEDAC797D9E1}</ProjectGuid>
-    <RootNamespace>SimpleServer</RootNamespace>
+    <ProjectGuid>{8FEC3CA4-2A62-459A-9880-C93DF5839A06}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>CloudServer</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -98,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILE_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILE_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -107,10 +107,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -118,7 +118,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILE_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILE_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -127,10 +127,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds /s /q</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,7 +140,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILENDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILENDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -151,10 +151,10 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,7 +165,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILENDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_FILE;OC_IDD_FILENDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -174,10 +174,10 @@
       <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds /s /q</Command>
+      <Command>if exist $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds rmdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds /s /q</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\simpleserver_creds</Command>
+      <Command>mkdir $(SolutionDir)$(Platform)\$(Configuration)\cloud_server_creds</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
