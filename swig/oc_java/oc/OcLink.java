@@ -8,10 +8,10 @@ public class OcLink {
     private OCLink nativeLink;
 
     public OcLink(OcResource resource) {
-        this(resource, null, null);
+        this(resource, 0, null);
     }
 
-    public OcLink(OcResource resource, String instance, String[] relations) {
+    public OcLink(OcResource resource, long instance, String[] relations) {
         if (resource != null) {
             nativeLink = OCMain.newLink(resource.getNativeResource());
             if (nativeLink != null) {
@@ -28,13 +28,13 @@ public class OcLink {
         return resource;
     }
 
-    public String getInstance() {
+    public long getInstance() {
         return nativeLink.getIns();
     }
 
-    public void setInstance(String instance) {
-        if (instance != null) {
-            OCMain.linkSetInstance(nativeLink, instance);
+    public void setInstance(long instance) {
+        if (instance != 0) {
+            nativeLink.setIns(instance);
         }
     }
 

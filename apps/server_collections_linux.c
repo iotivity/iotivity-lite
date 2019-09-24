@@ -38,7 +38,8 @@ app_init(void)
 }
 
 static void
-get_count(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_count(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)user_data;
   PRINT("GET_count:\n");
@@ -87,7 +88,8 @@ post_count(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)user_data;
   PRINT("GET_light:\n");
@@ -135,12 +137,125 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
   post_light(request, iface_mask, user_data);
 }
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+/* Resource creation and request handlers for oic.r.energy.consumption instances
+ */
+typedef struct oc_ec_t
+{
+  struct oc_ec_t *next;
+  oc_resource_t *resource;
+  double power;
+  double energy;
+} oc_ec_t;
+OC_MEMB(ec_s, oc_ec_t, 1);
+OC_LIST(ecs);
+
+bool
+set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  oc_ec_t *ec = (oc_ec_t *)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_DOUBLE:
+      if (oc_string_len(rep->name) == 5 &&
+          memcmp(oc_string(rep->name), "power", 5) == 0) {
+        ec->power = rep->value.double_p;
+      } else if (oc_string_len(rep->name) == 6 &&
+                 memcmp(oc_string(rep->name), "energy", 6) == 0) {
+        ec->energy = rep->value.double_p;
+      }
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+void
+get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                  void *data)
+{
+  oc_ec_t *ec = (oc_ec_t *)data;
+  oc_rep_start_root_object();
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(resource);
+  /* fall through */
+  case OC_IF_S:
+    oc_rep_set_double(root, power, ec->power);
+    oc_rep_set_double(root, energy, ec->energy);
+    break;
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+}
+
+void
+get_ec(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+  get_ec_properties(request->resource, iface_mask, user_data);
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+oc_resource_t *
+get_ec_instance(const char *href, oc_string_array_t *types,
+                oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                size_t device)
+{
+  oc_ec_t *ec = (oc_ec_t *)oc_memb_alloc(&ec_s);
+  if (ec) {
+    ec->resource = oc_new_resource(
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
+    if (ec->resource) {
+      size_t i;
+      for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
+        const char *rt = oc_string_array_get_item(*types, i);
+        oc_resource_bind_resource_type(ec->resource, rt);
+      }
+      oc_resource_bind_resource_interface(ec->resource, iface_mask);
+      ec->resource->properties = bm;
+      oc_resource_set_default_interface(ec->resource, OC_IF_A);
+      oc_resource_set_request_handler(ec->resource, OC_GET, get_ec, ec);
+      oc_resource_set_properties_cbs(ec->resource, get_ec_properties, ec,
+                                     set_ec_properties, ec);
+      oc_add_resource(ec->resource);
+
+      oc_list_add(ecs, ec);
+      return ec->resource;
+    } else {
+      oc_memb_free(&ec_s, ec);
+    }
+  }
+  return NULL;
+}
+
+void
+free_ec_instance(oc_resource_t *resource)
+{
+  oc_ec_t *ec = (oc_ec_t *)oc_list_head(ecs);
+  while (ec) {
+    if (ec->resource == resource) {
+      oc_delete_resource(resource);
+      oc_list_remove(ecs, ec);
+      oc_memb_free(&ec_s, ec);
+      return;
+    }
+    ec = ec->next;
+  }
+}
+#endif /* OC_COLLECTIONS_IF_CREATE */
 
 static void
 register_resources(void)
@@ -167,7 +282,7 @@ register_resources(void)
   oc_add_resource(res2);
 
 #if defined(OC_COLLECTIONS)
-  oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0, 0, 0);
+  oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
@@ -176,6 +291,16 @@ register_resources(void)
 
   oc_link_t *l2 = oc_new_link(res2);
   oc_collection_add_link(col, l2);
+
+  oc_collection_add_supported_rt(col, "oic.r.counter");
+  oc_collection_add_supported_rt(col, "oic.r.light");
+  oc_collection_add_supported_rt(col, "oic.r.energy.consumption");
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+  oc_collections_add_rt_factory("oic.r.energy.consumption", get_ec_instance,
+                                free_ec_instance);
+#endif /* OC_COLLECTIONS_IF_CREATE */
+
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
 }

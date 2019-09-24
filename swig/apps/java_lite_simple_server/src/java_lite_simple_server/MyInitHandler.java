@@ -55,7 +55,7 @@ public class MyInitHandler implements OCMainInitHandler {
         OCMain.resourceSetRequestHandler(resource2, OCMethod.OC_POST, new PostCounter());
         OCMain.addResource(resource2);
 
-        OCResource collection = OCMain.newCollection("roomlights", "/lights", (short) 1, (short) 0, (short) 0, 0);
+        OCResource collection = OCMain.newCollection("roomlights", "/lights", (short) 1, 0);
         OCMain.resourceBindResourceType(collection, "oic.wk.col");
         OCMain.resourceSetDiscoverable(collection, true);
 

@@ -32,13 +32,19 @@ typedef enum {
   OC_DOS_SRESET
 } oc_dostype_t;
 
+typedef enum {
+  OC_DPM_SVV = 64,
+  OC_DPM_SSV = 128,
+  OC_DPM_NSA = 256
+} oc_dpmtype_t;
+
 typedef struct
 {
   oc_dostype_t s;
   bool p;
   bool isop;
-  int cm;
-  int tm;
+  oc_dpmtype_t cm;
+  oc_dpmtype_t tm;
   int om;
   int sm;
   oc_uuid_t rowneruuid;
@@ -56,6 +62,8 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_pstat_reset_device(size_t device);
+
+void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
 
 #ifdef __cplusplus
 }

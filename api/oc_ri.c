@@ -571,6 +571,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_A;
   if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0)
     iface_mask |= OC_IF_S;
+  if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
+    iface_mask |= OC_IF_CREATE;
   return iface_mask;
 }
 
@@ -597,6 +599,7 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_RW:
   case OC_IF_B:
   case OC_IF_BASELINE:
+  case OC_IF_CREATE:
   /* Per section 7.5.3 of the OCF Core spec, the following interface
    * supports CREATE, RETRIEVE and UPDATE.
    */
@@ -935,7 +938,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    *  observe option.
    */
   uint32_t observe = 2;
-  if (success && coap_get_header_observe(request, &observe)) {
+  if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST) &&
+      coap_get_header_observe(request, &observe)) {
     /* Check if the resource is OBSERVABLE */
     if (cur_resource->properties & OC_OBSERVABLE) {
       bool set_observe_option = true;
@@ -945,10 +949,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (observe == 0) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint) >= 0) {
+                                 endpoint, iface_mask) >= 0) {
 #else  /* OC_BLOCK_WISE */
-        if (coap_observe_handler(request, response, cur_resource, endpoint) >=
-            0) {
+        if (coap_observe_handler(request, response, cur_resource, endpoint,
+                                 iface_mask) >= 0) {
 #endif /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
@@ -968,20 +972,37 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
            * via
            * only the batch interface.
            */
-          if (iface_mask != OC_IF_B) {
+          if (iface_mask != OC_IF_B && iface_mask != OC_IF_LL &&
+              iface_mask != OC_IF_CREATE) {
             set_observe_option = false;
           } else {
             oc_collection_t *collection = (oc_collection_t *)cur_resource;
             oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+#ifdef OC_SECURITY
             while (links) {
               if (links->resource &&
-                  (links->resource->properties & OC_PERIODIC)) {
-                if (!add_periodic_observe_callback(links->resource)) {
+                  links->resource->properties & OC_OBSERVABLE) {
+                if (!oc_sec_check_acl(OC_GET, links->resource,
+                                      links->resource->default_interface,
+                                      endpoint)) {
                   set_observe_option = false;
                   break;
                 }
               }
               links = links->next;
+            }
+#endif /* OC_SECURITY */
+            if (set_observe_option) {
+              if (iface_mask == OC_IF_B) {
+                links = (oc_link_t *)oc_list_head(collection->links);
+                while (links) {
+                  if (links->resource &&
+                      links->resource->properties & OC_PERIODIC) {
+                    add_periodic_observe_callback(links->resource);
+                  }
+                  links = links->next;
+                }
+              }
             }
           }
         }
@@ -1001,10 +1022,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       else if (observe == 1) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint) > 0) {
+                                 endpoint, iface_mask) > 0) {
 #else  /* OC_BLOCK_WISE */
-        if (coap_observe_handler(request, response, cur_resource, endpoint) >
-            0) {
+        if (coap_observe_handler(request, response, cur_resource, endpoint,
+                                 iface_mask) > 0) {
 #endif /* !OC_BLOCK_WISE */
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
@@ -1027,6 +1048,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 #endif /* OC_SERVER */
+
+  if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
+      response_buffer.code >= oc_status_code(OC_STATUS_BAD_REQUEST)) {
+    response_buffer.code = OC_IGNORE;
+  }
 
 #ifdef OC_SERVER
   /* The presence of a separate response handle here indicates a

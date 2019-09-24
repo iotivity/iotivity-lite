@@ -17,6 +17,7 @@
 #ifndef OC_EVENTS_H
 #define OC_EVENTS_H
 
+#include "oc_config.h"
 #include "util/oc_process.h"
 
 #ifdef __cplusplus
@@ -36,6 +37,12 @@ typedef enum {
   INTERFACE_DOWN,
   INTERFACE_UP,
   TLS_CLOSE_ALL_SESSIONS,
+#ifdef OC_SOFTWARE_UPDATE
+  SW_UPDATE_NSA,
+  SW_UPDATE_DOWNLOADED,
+  SW_UPDATE_UPGRADING,
+  SW_UPDATE_DONE,
+#endif /* OC_SOFTWARE_UPDATE */
   __NUM_OC_EVENT_TYPES__
 } oc_events_t;
 

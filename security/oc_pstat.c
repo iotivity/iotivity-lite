@@ -28,6 +28,13 @@
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#ifdef OC_COLLECTIONS_IF_CREATE
+#include "api/oc_resource_factory.h"
+#endif /* OC_COLLECTIONS_IF_CREATE */
+
+#ifdef OC_SOFTWARE_UPDATE
+#include "api/oc_swupdate_internal.h"
+#endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
@@ -157,6 +164,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     store_unique_ids = true;
 #ifdef OC_SERVER
     coap_remove_observers_on_dos_change(device);
+#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
+    oc_rt_factory_free_created_resources(device);
+#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_SERVER */
     ps->p = false;
   }
@@ -412,10 +422,37 @@ dump_unique_ids(void *data)
   return OC_EVENT_DONE;
 }
 
+#ifdef OC_SOFTWARE_UPDATE
+static void
+oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
+{
+  if (*tm == OC_DPM_NSA) {
+    oc_swupdate_perform_action(OC_SWUPDATE_ISAC, device);
+    *tm = 0;
+  } else if (*tm == OC_DPM_SVV) {
+    oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
+    *tm = 0;
+  } else if (*tm == OC_DPM_SSV) {
+    oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
+    *tm = 0;
+  }
+}
+
+void
+oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
+{
+  oc_sec_pstat_t *ps = &pstat[device];
+  ps->cm = cm;
+#ifdef OC_SERVER
+  oc_notify_observers(oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+#endif /* OC_SERVER */
+}
+#endif /* OC_SOFTWARE_UPDATE */
+
 bool
 oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
 {
-  bool transition_state = false;
+  bool transition_state = false, target_mode = false;
   oc_sec_pstat_t ps;
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
 
@@ -467,6 +504,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
       if (from_storage && memcmp(oc_string(rep->name), "cm", 2) == 0) {
         ps.cm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "tm", 2) == 0) {
+        target_mode = true;
         ps.tm = (int)rep->value.integer;
       } else if (memcmp(oc_string(rep->name), "om", 2) == 0) {
         ps.om = (int)rep->value.integer;
@@ -495,6 +533,12 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
     }
     rep = rep->next;
   }
+  (void)target_mode;
+#ifdef OC_SOFTWARE_UPDATE
+  if (target_mode) {
+    oc_pstat_handle_target_mode(device, &ps.tm);
+  }
+#endif /* OC_SOFTWARE_UPDATE */
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success = oc_pstat_handle_state(&ps, device);
@@ -532,6 +576,7 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)data;
   size_t device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
+    request->response->response_buffer->response_length = 0;
     oc_send_response(request, OC_STATUS_CHANGED);
     request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);

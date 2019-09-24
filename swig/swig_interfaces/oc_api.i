@@ -1395,6 +1395,7 @@ bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *end
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
+
 %ignore oc_auto_assert_roles;
 %rename(autoAssertRoles) jni_auto_assert_roles;
 %inline %{
@@ -1405,13 +1406,18 @@ void jni_auto_assert_roles(bool auto_assert) {
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
+
 %ignore oc_assert_all_roles;
 %rename(assertAllRoles) jni_assert_all_roles;
 %inline %{
-void jni_assert_all_roles(oc_endpoint_t *endpoint) {
+void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler) {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
-  oc_assert_all_roles(endpoint);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  oc_assert_all_roles(endpoint, handler);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}

@@ -194,6 +194,10 @@ ifeq ($(IDD), 1)
 	EXTRA_CFLAGS += -DOC_IDD_API
 endif
 
+ifeq ($(SWUPDATE),1)
+	EXTRA_CFLAGS += -DOC_SOFTWARE_UPDATE
+endif
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c \
 		oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c \

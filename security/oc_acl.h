@@ -36,7 +36,6 @@ typedef enum {
   OC_SUBJECT_CONN
 } oc_ace_subject_type_t;
 
-
 struct oc_ace_res_s
 {
   struct oc_ace_res_s *next;
@@ -81,13 +80,18 @@ void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device);
 bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_acl_init(void);
-void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
+              void *data);
 void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                       oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint);
 void oc_sec_set_post_otm_acl(size_t device);
+void oc_sec_ace_clear_bootstrap_aces(size_t device);
+bool oc_sec_acl_add_created_resource_ace(const char *href,
+                                         oc_endpoint_t *client, size_t device,
+                                         bool collection);
 
 #ifdef __cplusplus
 }

@@ -127,16 +127,7 @@ publish_resources_handler(oc_client_response_t *data)
         oc_link_t *l =
           rd_link_find_by_href(ctx->rd_publish_resources, href, href_size);
         if (l) {
-          char buf[16];
-          int n =
-            snprintf(buf, sizeof(buf) - 1, "%lld", (long long)instance_id);
-          if (n < 1) {
-            continue;
-          }
-          if (oc_string(l->ins)) {
-            oc_free_string(&l->ins);
-          }
-          oc_new_string(&l->ins, buf, n);
+          l->ins = instance_id;
           rd_link_remove(&ctx->rd_publish_resources, l);
           rd_link_add(&ctx->rd_publish_resources, l);
         }

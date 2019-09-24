@@ -83,6 +83,7 @@ typedef enum {
   OC_IF_RW = 1 << 5,
   OC_IF_A = 1 << 6,
   OC_IF_S = 1 << 7,
+  OC_IF_CREATE = 1 << 8
 } oc_interface_mask_t;
 
 typedef enum {
@@ -97,6 +98,9 @@ typedef enum {
 #ifdef OC_CLOUD
   OCF_COAPCLOUDCONF,
 #endif /* OC_CLOUD */
+#ifdef OC_SOFTWARE_UPDATE
+  OCF_SW_UPDATE,
+#endif /* OC_SOFTWARE_UPDATE */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
@@ -136,6 +140,20 @@ typedef struct oc_request_handler_s
   void *user_data;
 } oc_request_handler_t;
 
+typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
+typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
+                                       void *);
+
+typedef struct oc_properties_cb_t
+{
+  union
+  {
+    oc_set_properties_cb_t set_props;
+    oc_get_properties_cb_t get_props;
+  } cb;
+  void *user_data;
+} oc_properties_cb_t;
+
 struct oc_resource_s
 {
   struct oc_resource_s *next;
@@ -155,6 +173,8 @@ struct oc_resource_s
   uint8_t num_links;
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
+  oc_properties_cb_t get_properties;
+  oc_properties_cb_t set_properties;
 };
 
 typedef struct oc_link_s oc_link_t;

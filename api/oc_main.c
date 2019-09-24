@@ -29,6 +29,11 @@
 #include "oc_introspection_internal.h"
 #include "oc_signal_event_loop.h"
 
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
+
 #ifdef OC_SECURITY
 #include "security/oc_acl.h"
 #include "security/oc_cred.h"
@@ -47,6 +52,9 @@
 #include "api/cloud/oc_cloud_internal.h"
 #endif /* OC_CLOUD */
 
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate_internal.h"
+#endif /* OC_SOFTWARE_UPDATE */
 #ifdef OC_MEMORY_TRACE
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
@@ -212,6 +220,10 @@ oc_main_init(const oc_handler_t *handler)
   oc_cloud_init();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_init();
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_SERVER
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
@@ -269,6 +281,10 @@ oc_main_shutdown(void)
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_cloud_shutdown();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+  oc_collections_free_rt_factories();
+#endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
   oc_ri_shutdown();
 
@@ -283,6 +299,10 @@ oc_main_shutdown(void)
 #endif /* OC_PKI */
   oc_tls_shutdown();
 #endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
 
   oc_shutdown_all_devices();
 

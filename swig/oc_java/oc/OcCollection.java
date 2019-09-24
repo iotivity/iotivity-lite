@@ -27,7 +27,7 @@ public class OcCollection extends OcResource {
         mandatoryRts = (mRts != null) ? mRts : new String[0];
 
         nativeResource = OCMain.newCollection(this.name, this.uri, (short) this.resourceTypes.length,
-                (short) supportedRts.length, (short) mandatoryRts.length, device.getDeviceIndex());
+                device.getDeviceIndex());
 
         if (nativeResource != null) {
             for (String resourceType : this.resourceTypes) {

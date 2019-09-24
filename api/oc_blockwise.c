@@ -53,6 +53,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, size_t href_len
     buffer->method = method;
     buffer->role = role;
     memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
+    buffer->endpoint.next = NULL;
     oc_new_string(&buffer->href, href, href_len);
     buffer->next = NULL;
 #ifdef OC_CLIENT

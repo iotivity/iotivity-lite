@@ -94,8 +94,8 @@ public class OcUtils {
         return OCMain.sendPing(custody, endpoint, timeoutSeconds, handler);
     }
 
-    public static void assertAllRoles(OCEndpoint endpoint) {
-        OCMain.assertAllRoles(endpoint);
+    public static void assertAllRoles(OCEndpoint endpoint, OCResponseHandler handler) {
+        OCMain.assertAllRoles(endpoint, handler);
     }
 
     public static boolean assertRole(String role, String authority, OCEndpoint endpoint, OCResponseHandler handler) {

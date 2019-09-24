@@ -143,9 +143,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
   @see oc_collection_add_link
 */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types,
-                                 uint8_t num_supported_rts,
-                                 uint8_t num_mandatory_rts, size_t device);
+                                 uint8_t num_resource_types, size_t device);
 
 /**
   @brief Deletes the specified collection.
@@ -190,13 +188,6 @@ void oc_delete_link(oc_link_t *link);
   @param rel Relation to add. Must not be NULL.
 */
 void oc_link_add_rel(oc_link_t *link, const char *rel);
-
-/**
-  @brief Sets the unique link instance on the link.
-  @param link The link to set the instance on. Must not be NULL.
-  @param ins The link instance to set. Must not be NULL.
-*/
-void oc_link_set_ins(oc_link_t *link, const char *ins);
 
 /**
   @brief Adds the link to the collection.
@@ -256,6 +247,19 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
+#ifdef OC_COLLECTIONS_IF_CREATE
+typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
+                                                     oc_string_array_t *,
+                                                     oc_resource_properties_t,
+                                                     oc_interface_mask_t,
+                                                     size_t);
+
+typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
+
+bool oc_collections_add_rt_factory(const char *rt,
+                                   oc_resource_get_instance_t get_instance,
+                                   oc_resource_free_instance_t free_instance);
+#endif    /* OC_COLLECTIONS_IF_CREATE */
 /** @} */ // end of oc_collections
 
 void oc_resource_make_public(oc_resource_t *resource);
@@ -268,6 +272,11 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
                                      void *user_data);
+void oc_resource_set_properties_cbs(oc_resource_t *resource,
+                                    oc_get_properties_cb_t get_properties,
+                                    void *get_propr_user_data,
+                                    oc_set_properties_cb_t set_properties,
+                                    void *set_props_user_data);
 bool oc_add_resource(oc_resource_t *resource);
 bool oc_delete_resource(oc_resource_t *resource);
 
@@ -414,7 +423,9 @@ bool oc_assert_role(const char *role, const char *authority,
                     oc_endpoint_t *endpoint, oc_response_handler_t handler,
                     void *user_data);
 void oc_auto_assert_roles(bool auto_assert);
-void oc_assert_all_roles(oc_endpoint_t *endpoint);
+
+void oc_assert_all_roles(oc_endpoint_t *endpoint,
+                         oc_response_handler_t handler);
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,

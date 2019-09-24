@@ -386,10 +386,13 @@ free_discovery_cb(void *data)
 static void
 get_endpoints(oc_client_response_t *data)
 {
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return;
+  }
   oc_rep_t *links = data->payload;
 
   oc_uuid_t di;
-  oc_rep_t *link = links->value.object;
+  oc_rep_t *link = (links) ? links->value.object : NULL;
   while (link != NULL) {
     switch (link->type) {
     case OC_REP_STRING: {
@@ -415,7 +418,7 @@ get_endpoints(oc_client_response_t *data)
   oc_client_cb_t *ccb = (oc_client_cb_t *)data->client_cb;
   if (ccb->multicast) {
     cb = (oc_discovery_cb_t *)data->user_data;
-    if (oc_obt_is_owned_device(&di)) {
+    if (links && oc_obt_is_owned_device(&di)) {
       device = cache_new_device(oc_devices, &di, data->endpoint);
     }
   } else {
@@ -446,6 +449,12 @@ get_endpoints(oc_client_response_t *data)
                 memcmp(oc_string(ep->name), "ep", 2) == 0) {
               if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                   0) {
+                if (((data->endpoint->flags & IPV4) &&
+                     (temp_ep.flags & IPV6)) ||
+                    ((data->endpoint->flags & IPV6) &&
+                     (temp_ep.flags & IPV4))) {
+                  goto next_ep;
+                }
                 if (eps_cur) {
                   eps_cur->next = oc_new_endpoint();
                   eps_cur = eps_cur->next;
@@ -474,6 +483,7 @@ get_endpoints(oc_client_response_t *data)
           }
           ep = ep->next;
         }
+      next_ep:
         eps = eps->next;
       }
     } break;
@@ -1360,6 +1370,9 @@ oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
 
   /**  1) switch dos to RFPRO
    */
+
+  oc_tls_select_psk_ciphersuite();
+
   p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
   if (!p->switch_dos) {
     oc_memb_free(&oc_credprov_ctx_m, p);
@@ -1407,6 +1420,9 @@ oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
 
   /**  1) switch dos to RFPRO
    */
+
+  oc_tls_select_psk_ciphersuite();
+
   p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
   if (!p->switch_dos) {
     oc_memb_free(&oc_credprov_ctx_m, p);
@@ -1452,6 +1468,8 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
   p->cb.data = data;
   p->device1 = device1;
   p->device2 = device2;
+
+  oc_tls_select_psk_ciphersuite();
 
   p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1_RFPRO, p);
   if (!p->switch_dos) {
@@ -1833,8 +1851,6 @@ provision_ace(int status, void *data)
 
       oc_rep_set_uint(aclist2, permission, ace->permission);
 
-      oc_rep_set_int(aclist2, aceid, ace->aceid);
-
       oc_rep_object_array_end_item(aclist2);
       oc_rep_close_array(root, aclist2);
 
@@ -1871,6 +1887,8 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
   r->cb.data = data;
   r->ace = ace;
   r->device = device;
+
+  oc_tls_select_psk_ciphersuite();
 
   r->switch_dos = switch_dos(device, OC_DOS_RFPRO, provision_ace, r);
   if (!r->switch_dos) {
@@ -1912,6 +1930,8 @@ oc_obt_init(void)
     ps->tm = ps->cm = 0;
     ps->isop = true;
     ps->s = OC_DOS_RFNOP;
+
+    oc_sec_ace_clear_bootstrap_aces(0);
 
     oc_sec_dump_pstat(0);
     oc_sec_dump_doxm(0);
