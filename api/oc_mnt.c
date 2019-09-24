@@ -14,8 +14,9 @@
  // limitations under the License.
  */
 
-#include "api/oc_mnt.h"
 #include "oc_api.h"
+#ifdef OC_MNT
+#include "api/oc_mnt.h"
 #include "oc_core_res.h"
 #include <stdio.h>
 #ifdef OC_SECURITY
@@ -81,3 +82,4 @@ oc_create_maintenance_resource(size_t device)
     OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
     OC_SECURE | OC_DISCOVERABLE, get_mnt, 0, post_mnt, 0, 1, "oic.wk.mnt");
 }
+#endif /* OC_MNT */

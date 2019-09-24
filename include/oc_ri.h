@@ -94,7 +94,9 @@ typedef enum {
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
   OCF_RES,
+#ifdef OC_MNT
   OCF_MNT,
+#endif /* OC_MNT */
 #ifdef OC_CLOUD
   OCF_COAPCLOUDCONF,
 #endif /* OC_CLOUD */
