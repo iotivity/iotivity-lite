@@ -100,23 +100,6 @@ cloud_close_endpoint(oc_endpoint_t *cloud_ep)
   }
 }
 
-static void
-cloud_register_internal_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                           void *data)
-{
-  (void)ctx;
-  (void)status;
-  (void)data;
-}
-
-static oc_event_callback_retval_t
-cloud_register_internal(void *user_data)
-{
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
-  oc_cloud_register(ctx, cloud_register_internal_cb, NULL);
-  return OC_EVENT_DONE;
-}
-
 #ifdef OC_SECURITY
 static void
 cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
@@ -179,8 +162,6 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
-  } else {
-    oc_set_delayed_callback(ctx, cloud_register_internal, 0);
   }
 }
 
