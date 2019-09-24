@@ -135,6 +135,7 @@ static bool oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device);
 static bool
 oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
 {
+  OC_DBG("oc_pstat: Entering pstat_handle_state");
   oc_sec_acl_t *acl = oc_sec_get_acl(device);
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   oc_sec_creds_t *creds = oc_sec_get_creds(device);
@@ -188,7 +189,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
+      memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
+      OC_DBG("oc_pstat: invoking the factory presets callback");
       fp->cb(device, fp->data);
+      OC_DBG("oc_pstat: returned from the factory presets callback");
+      memcpy(ps, &pstat[device], sizeof(oc_sec_pstat_t));
     }
     coap_status_code = CLOSE_ALL_TLS_SESSIONS;
     ps->p = false;
@@ -363,8 +368,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     break;
   }
   memmove(&pstat[device], ps, sizeof(oc_sec_pstat_t));
+  OC_DBG("oc_pstat: leaving pstat_handle_state");
   return true;
 pstat_state_error:
+  OC_DBG("oc_pstat: leaving pstat_handle_state");
   return false;
 }
 
@@ -386,8 +393,9 @@ oc_sec_is_operational(size_t device)
 void
 oc_sec_pstat_default(size_t device)
 {
-  pstat[device].s = OC_DOS_RESET;
-  oc_pstat_handle_state(&pstat[device], device);
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
+  oc_pstat_handle_state(&ps, device);
+  oc_sec_dump_pstat(device);
 }
 
 void
@@ -589,7 +597,9 @@ bool
 oc_pstat_reset_device(size_t device)
 {
   oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
-  return oc_pstat_handle_state(&ps, device);
+  bool ret = oc_pstat_handle_state(&ps, device);
+  oc_sec_dump_pstat(device);
+  return ret;
 }
 
 void
@@ -597,7 +607,7 @@ oc_reset()
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_pstat_default(device);
+    oc_pstat_reset_device(device);
   }
 }
 #endif /* OC_SECURITY */
