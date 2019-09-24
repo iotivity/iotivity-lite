@@ -1165,11 +1165,12 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 void
 oc_tls_close_all_connections(size_t device)
 {
+  OC_DBG("oc_tls: clossing all open (D)TLS sessions on device %zd", device);
   oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
   while (p != NULL) {
     next = p->next;
     if (p->endpoint.device == device) {
-      oc_tls_free_peer(p, false);
+      oc_tls_close_connection(&p->endpoint);
     }
     p = next;
   }

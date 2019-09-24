@@ -131,9 +131,9 @@ valid_transition(size_t device, oc_dostype_t state)
   return true;
 }
 
-static bool oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device);
 static bool
-oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
+oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
+                      bool self_reset)
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   oc_sec_acl_t *acl = oc_sec_get_acl(device);
@@ -151,6 +151,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
+    if (!from_storage) {
+      oc_device_info_t *di = oc_core_get_device_info(device);
+      oc_free_string(&di->name);
+    }
 #ifdef OC_PKI
     oc_sec_free_roles_for_device(device);
     oc_sec_sp_default(device);
@@ -189,6 +193,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device)
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
+      if (self_reset) {
+        oc_tls_close_all_connections(device);
+      }
       memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
       OC_DBG("oc_pstat: invoking the factory presets callback");
       fp->cb(device, fp->data);
@@ -394,7 +401,7 @@ void
 oc_sec_pstat_default(size_t device)
 {
   oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
-  oc_pstat_handle_state(&ps, device);
+  oc_pstat_handle_state(&ps, device, true, false);
   oc_sec_dump_pstat(device);
 }
 
@@ -549,7 +556,8 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
 #endif /* OC_SOFTWARE_UPDATE */
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
-      bool transition_success = oc_pstat_handle_state(&ps, device);
+      bool transition_success =
+        oc_pstat_handle_state(&ps, device, from_storage, false);
       if (transition_success && ps.s == OC_DOS_RFNOP && store_unique_ids) {
         size_t d = (size_t)device;
         oc_ri_add_timed_event_callback_ticks((void *)d, &dump_unique_ids, 0);
@@ -597,7 +605,7 @@ bool
 oc_pstat_reset_device(size_t device)
 {
   oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
-  bool ret = oc_pstat_handle_state(&ps, device);
+  bool ret = oc_pstat_handle_state(&ps, device, false, true);
   oc_sec_dump_pstat(device);
   return ret;
 }
