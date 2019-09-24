@@ -419,7 +419,11 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (('A' <= address[address_len - 1] && 'Z' >= address[address_len - 1]) ||
       ('a' <= address[address_len - 1] && 'z' >= address[address_len - 1])) {
 #ifdef OC_DNS_LOOKUP
-    char domain[address_len + 1];
+    if (address_len > 254) {
+      // https://www.rfc-editor.org/rfc/rfc1035.html#section-2.3.4
+      return -1;
+    }
+    char domain[255];
     strncpy(domain, address, address_len);
     domain[address_len] = '\0';
 #ifdef OC_DNS_LOOKUP_IPV6

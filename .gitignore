@@ -36,6 +36,10 @@ port/windows/vs2015/.vs/
 port/windows/vs2015/Debug/
 port/windows/vs2015/Release/
 port/windows/vs2015/simpleserver_creds/
+port/windows/vs2015/Win32/
+port/windows/vs2015/x64/
+port/windows/vs2015/onboarding_tool/Debug
+port/windows/vs2015/onboarding_tool/x64
 port/windows/vs2015/*.VC.opendb
 port/windows/vs2015/*.VC.db
 port/windows/vs2015/*.vcxproj.user
