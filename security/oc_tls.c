@@ -132,36 +132,54 @@ static unsigned char alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #define CCM_IV_LENGTH (4)
 #define GCM_IV_LENGTH (12)
 #define AES128_KEY_LENGTH (16)
+#define AES256_KEY_LENGTH (32)
 #define SHA256_MAC_KEY_LENGTH (32)
 
 static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-static const int psk_priority[6] = {
-#else  /* OC_PKI */
+
+#ifdef OC_CLIENT
 static const int psk_priority[2] = {
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+#endif /* OC_CLIENT */
+
+static const int default_priority[8] = {
+#else  /* OC_PKI */
+static const int default_priority[2] = {
 #endif /* !OC_PKI */
   MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
 #ifdef OC_PKI
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
 
+#ifdef OC_CLIENT
+static const int anon_ecdh_priority[2] = {
+  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256, 0
+};
+#endif /* OC_CLIENT */
+
 #ifdef OC_PKI
-static const int anon_ecdh_priority[7] = {
+static const int otm_priority[9] = {
 #else  /* OC_PKI */
-static const int anon_ecdh_priority[3] = {
+static const int otm_priority[3] = {
 #endif /* !OC_PKI */
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
   MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
 #ifdef OC_PKI
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
@@ -170,12 +188,13 @@ static const int anon_ecdh_priority[3] = {
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
-static const int cert_priority[6] = {
+static const int cert_priority[7] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
   0
 };
 #endif /* OC_PKI */
@@ -901,20 +920,22 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 #endif /* OC_PKI */
   oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
-    ciphers = (int *)anon_ecdh_priority;
+    ciphers = (int *)otm_priority;
   } else if (!ciphers) {
-    ciphers = (int *)psk_priority;
+    ciphers = (int *)default_priority;
 #ifdef OC_CLIENT
-    oc_sec_cred_t *cred =
-      oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
-    if (cred && cred->credtype == OC_CREDTYPE_PSK) {
-      ciphers = (int *)psk_priority;
-    }
+    if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+      oc_sec_cred_t *cred =
+        oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
+      if (cred && cred->credtype == OC_CREDTYPE_PSK) {
+        ciphers = (int *)psk_priority;
+      }
 #ifdef OC_PKI
-    else if (loaded_chain) {
-      ciphers = (int *)cert_priority;
-    }
+      else if (loaded_chain) {
+        ciphers = (int *)cert_priority;
+      }
 #endif /* OC_PKI */
+    }
 #endif /* OC_CLIENT */
   }
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
@@ -1384,6 +1405,14 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
     mac_key_len = CCM_MAC_KEY_LENGTH;
     iv_size = CCM_IV_LENGTH;
     key_size = AES128_KEY_LENGTH;
+  } else if (peer->ssl_ctx.session->ciphersuite ==
+               MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM ||
+             peer->ssl_ctx.session->ciphersuite ==
+               MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8) {
+    // 2 * (0 + 4 + 32) = 72
+    mac_key_len = CCM_MAC_KEY_LENGTH;
+    iv_size = CCM_IV_LENGTH;
+    key_size = AES256_KEY_LENGTH;
   } else if (MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 ==
              peer->ssl_ctx.session->ciphersuite) {
     // 2 * ( 32 + 12 + 16 ) = 120
