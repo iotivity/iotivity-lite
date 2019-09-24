@@ -42,6 +42,14 @@ typedef enum {
   OC_CLOUD_DEREGISTERED = 64
 } oc_cloud_status_t;
 
+typedef enum oc_cps_t {
+  OC_CPS_UNINITIALIZED = 0,
+  OC_CPS_READYTOREGISTER,
+  OC_CPS_REGISTERING,
+  OC_CPS_REGISTERED,
+  OC_CPS_FAILED
+} oc_cps_t;
+
 typedef struct oc_cloud_store_t
 {
   oc_string_t ci_server;
@@ -92,6 +100,8 @@ typedef struct oc_cloud_context_t
   oc_link_t *rd_published_resources;
   oc_link_t *rd_delete_resources;
   bool rd_delete_all;
+
+  oc_cps_t cps;
 
   oc_resource_t *cloud_conf;
 

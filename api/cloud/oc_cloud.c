@@ -111,6 +111,7 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
   cloud_store_deinit(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
+  ctx->cps = 0;
 }
 #endif /* OC_SECURITY */
 
@@ -134,6 +135,7 @@ oc_cloud_reset_context(size_t device)
   cloud_store_deinit(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
+  ctx->cps = 0;
   return 0;
 }
 
@@ -160,6 +162,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
     cloud_set_string(&ctx->store.sid, data->sid, data->sid_len);
   }
   ctx->store.status = OC_CLOUD_INITIALIZED;
+  ctx->cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
   }

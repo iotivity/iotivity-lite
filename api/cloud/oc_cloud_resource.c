@@ -30,6 +30,26 @@
 #define OC_RSRVD_SERVERID "sid"
 #define OC_RSRVD_LAST_ERROR_CODE "clec"
 
+static const char *
+cps_to_str(oc_cps_t cps)
+{
+  switch (cps) {
+  case OC_CPS_UNINITIALIZED:
+    return "uninitialized";
+  case OC_CPS_READYTOREGISTER:
+    return "readytoregister";
+  case OC_CPS_REGISTERING:
+    return "registering";
+  case OC_CPS_REGISTERED:
+    return "registered";
+  case OC_CPS_FAILED:
+    return "failed";
+  default:
+    break;
+  }
+  return NULL;
+}
+
 static void
 cloud_response(oc_cloud_context_t *ctx)
 {
@@ -46,6 +66,10 @@ cloud_response(oc_cloud_context_t *ctx)
   oc_rep_set_text_string(root, at, "");
   oc_rep_set_int(root, clec, (int)ctx->last_error);
 
+  const char *cps = cps_to_str(ctx->cps);
+  if (cps) {
+    oc_rep_set_text_string(root, cps, cps);
+  }
   oc_rep_end_root_object();
 }
 
@@ -112,6 +136,24 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   }
   OC_DBG("POST request received");
   (void)interface;
+
+  switch (ctx->cps) {
+  case OC_CPS_UNINITIALIZED:
+  case OC_CPS_READYTOREGISTER:
+  case OC_CPS_FAILED:
+    break;
+  default: {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+  }
+
+  char *cps;
+  size_t cps_len = 0;
+  if (oc_rep_get_string(request->request_payload, "cps", &cps, &cps_len)) {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
 
   bool changed = cloud_update_from_request(ctx, request);
   cloud_response(ctx);
