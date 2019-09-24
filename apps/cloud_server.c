@@ -18,13 +18,119 @@
  ****************************************************************************/
 
 #include "oc_api.h"
-#include "oc_cloud.h"
-#include "oc_core_res.h"
-#include "port/oc_clock.h"
-#include "rd_client.h"
-#include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
+#include <inttypes.h>
+
+static int quit;
+
+#if defined(_WIN32)
+#include <windows.h>
+
+static CONDITION_VARIABLE cv;
+static CRITICAL_SECTION cs;
+
+static void
+signal_event_loop(void)
+{
+  WakeConditionVariable(&cv);
+}
+
+void
+handle_signal(int signal)
+{
+  signal_event_loop();
+  quit = 1;
+}
+
+static int
+init(void)
+{
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+
+  signal(SIGINT, handle_signal);
+  return 0;
+}
+
+static void
+run(void)
+{
+  while (quit != 1) {
+    oc_clock_time_t next_event = oc_main_poll();
+    if (next_event == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now = oc_clock_time();
+      if (now < next_event) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
+}
+
+#elif defined(__linux__) || defined(__ANDROID_API__)
+#include <pthread.h>
+
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+
+static void
+signal_event_loop(void)
+{
+  pthread_mutex_lock(&mutex);
+  pthread_cond_signal(&cv);
+  pthread_mutex_unlock(&mutex);
+}
+
+void
+handle_signal(int signal)
+{
+  if (signal == SIGPIPE) {
+    return;
+  }
+  signal_event_loop();
+  quit = 1;
+}
+
+static int
+init(void)
+{
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+  sigaction(SIGPIPE, &sa, NULL);
+
+  if (pthread_mutex_init(&mutex, NULL) < 0) {
+    OC_ERR("pthread_mutex_init failed!");
+    return -1;
+  }
+  return 0;
+}
+
+static void
+run(void)
+{
+  while (quit != 1) {
+    oc_clock_time_t next_event = oc_main_poll();
+    pthread_mutex_lock(&mutex);
+    if (next_event == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec ts;
+      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      pthread_cond_timedwait(&cv, &mutex, &ts);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+}
+
+#else
+#error "Unsupported OS"
+#endif
 
 // define application specific values.
 static const char *spec_version = "ocf.1.0.0";
@@ -36,13 +142,8 @@ static const char *device_name = "Cloud Device";
 
 static const char *manufacturer = "ocfcloud.com";
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-
 oc_resource_t *res1;
 oc_resource_t *res2;
-
-int quit = 0;
 
 static void
 cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
@@ -90,22 +191,21 @@ app_init(void)
 struct light_t
 {
   bool state;
-  int power;
+  int64_t power;
 };
 
 struct light_t light1 = { 0 };
 struct light_t light2 = { 0 };
 
 static void
-get_handler(oc_request_t *request, oc_interface_mask_t interface,
-            void *user_data)
+get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
 {
   struct light_t *light = (struct light_t *)user_data;
 
-  printf("get_handler:\n");
+  PRINT("get_handler:\n");
 
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
@@ -136,7 +236,7 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
       switch (rep->type) {
       case OC_REP_BOOL:
         light->state = rep->value.boolean;
-        printf("value: %d\n", light->state);
+        PRINT("value: %d\n", light->state);
         break;
       default:
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -146,7 +246,7 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
       switch (rep->type) {
       case OC_REP_INT:
         light->power = rep->value.integer;
-        printf("value: %d\n", light->power);
+        PRINT("value: %" PRId64 "\n", light->power);
         break;
       default:
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -184,66 +284,31 @@ register_resources(void)
   oc_add_resource(res2);
 }
 
-static void
-signal_event_loop(void)
-{
-  pthread_mutex_lock(&mutex);
-  pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
-}
-
-void
-handle_signal(int signal)
-{
-  (void)signal;
-  signal_event_loop();
-  quit = 1;
-}
-
 int
 main(void)
 {
-  int init;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
-
-  oc_storage_config("./cloud_linux_creds");
-
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
-    printf("pthread_mutex_init failed!\n");
-    return -1;
+  int ret = init();
+  if (ret < 0) {
+    return ret;
   }
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
+  oc_storage_config("./cloud_server_creds/");
+
+  ret = oc_main_init(&handler);
+  if (ret < 0)
+    return ret;
 
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
   }
 
-  while (quit != 1) {
-    oc_clock_time_t next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      struct timespec ts;
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
+  run();
+
   oc_cloud_manager_stop(ctx);
   oc_main_shutdown();
   return 0;
