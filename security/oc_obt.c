@@ -1908,7 +1908,9 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
 int
 oc_obt_init(void)
 {
+  OC_DBG("oc_obt:OBT init");
   if (!oc_sec_is_operational(0)) {
+    OC_DBG("oc_obt: performing self-onboarding");
     oc_uuid_t *uuid = oc_core_get_device_id(0);
 
     oc_sec_acl_t *acl = oc_sec_get_acl(0);
