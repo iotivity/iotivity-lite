@@ -866,12 +866,14 @@ oc_tls_refresh_trust_anchors(void)
 void
 oc_tls_select_cert_ciphersuite(void)
 {
+  OC_DBG("oc_tls: client requesting cert ciphersuite priority");
   ciphers = (int *)cert_priority;
 }
 
 void
 oc_tls_select_cloud_ciphersuite(void)
 {
+  OC_DBG("oc_tls: client requesting cloud ciphersuite priority");
   ciphers = (int *)cloud_priority;
 }
 #endif /* OC_CLIENT */
@@ -931,18 +933,26 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 #endif /* OC_PKI */
   oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
+    OC_DBG(
+      "oc_tls_set_ciphersuites: server selecting OTM ciphersuite priority");
     ciphers = (int *)otm_priority;
   } else if (!ciphers) {
+    OC_DBG(
+      "oc_tls_set_ciphersuites: server selecting default ciphersuite priority");
     ciphers = (int *)default_priority;
 #ifdef OC_CLIENT
     if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
       oc_sec_cred_t *cred =
         oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
       if (cred && cred->credtype == OC_CREDTYPE_PSK) {
+        OC_DBG(
+          "oc_tls_set_ciphersuites: client selecting PSK ciphersuite priority");
         ciphers = (int *)psk_priority;
       }
 #ifdef OC_PKI
       else if (loaded_chain) {
+        OC_DBG("oc_tls_set_ciphersuites: client selecting cert ciphersuite "
+               "priority");
         ciphers = (int *)cert_priority;
       }
 #endif /* OC_PKI */
@@ -951,18 +961,21 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
   }
   mbedtls_ssl_conf_ciphersuites(conf, ciphers);
   ciphers = NULL;
+  OC_DBG("oc_tls: resetting ciphersuite selection for next handshakes");
 }
 
 #ifdef OC_CLIENT
 void
 oc_tls_select_psk_ciphersuite(void)
 {
+  OC_DBG("oc_tls: client requesting PSK ciphersuite priority");
   ciphers = (int *)psk_priority;
 }
 
 void
 oc_tls_select_anon_ciphersuite(void)
 {
+  OC_DBG("oc_tls: client requesting anon ECDH ciphersuite priority");
   ciphers = (int *)anon_ecdh_priority;
 }
 #endif /* OC_CLIENT */
@@ -1197,7 +1210,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 void
 oc_tls_close_all_connections(size_t device)
 {
-  OC_DBG("oc_tls: clossing all open (D)TLS sessions on device %zd", device);
+  OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
   oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
   while (p != NULL) {
     next = p->next;
