@@ -227,6 +227,7 @@ obt_rdp_10(oc_client_response_t *data)
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
+  oc_tls_select_psk_ciphersuite();
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -465,16 +466,16 @@ obt_rdp_4(oc_client_response_t *data)
     goto err_obt_rdp_4;
   }
 
-  /** 4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  /** 4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid;
+  oc_uuid_t dev_uuid = { 0 };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
   OC_DBG("generated deviceuuid: %s", uuid);
 
   oc_device_t *device = o->device;
-    /* Free temporary PSK credential that was created for this handshake
+  /* Free temporary PSK credential that was created for this handshake
    * and has served its purpose.
    */
   char suuid[37];
@@ -580,7 +581,7 @@ err_obt_rdp_2:
   1) provision PSK cred locally+<Open-TLS-PSK>+get /oic/d
   2) post pstat om=4
   3) post doxm devowneruuid
-  4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  4) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
   5) post doxm rowneruuid
   6) post acl rowneruuid
   7) post pstat rowneruuid

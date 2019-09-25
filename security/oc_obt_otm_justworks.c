@@ -226,6 +226,7 @@ obt_jw_11(oc_client_response_t *data)
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
+  oc_tls_select_psk_ciphersuite();
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_12, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -464,9 +465,9 @@ obt_jw_5(oc_client_response_t *data)
     goto err_obt_jw_5;
   }
 
-  /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid;
+  oc_uuid_t dev_uuid = { 0 };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
@@ -603,7 +604,7 @@ err_obt_jw_2:
   2) post doxm oxmsel=0
   3) <Open-anon-ecdh>+post pstat om=4
   4) post doxm devowneruuid
-  5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid (CR2935)
+  5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
   6) post doxm rowneruuid
   7) post acl rowneruuid
   8) post pstat rowneruuid
