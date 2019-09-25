@@ -527,7 +527,7 @@ obt_rdp_3(oc_client_response_t *data)
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char ouuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, ouuid, OC_UUID_LEN);
- 
+
     oc_rep_start_root_object();
     /* Set OBT's uuid as devowneruuid */
     oc_rep_set_text_string(root, devowneruuid, ouuid);
@@ -642,8 +642,8 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
   /**  1) <Open-TLS-PSK>+get /oic/d
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_tls_close_connection(ep);
   oc_tls_select_psk_ciphersuite();
-
   if (oc_do_get("/oic/d", ep, NULL, &obt_rdp_2, HIGH_QOS, o)) {
     oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;

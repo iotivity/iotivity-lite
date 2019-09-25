@@ -548,8 +548,9 @@ obt_jw_3(oc_client_response_t *data)
   /**  3) <Open-anon-ecdh>+post pstat om=4
    */
   oc_device_t *device = o->device;
-  oc_tls_select_anon_ciphersuite();
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_tls_close_connection(ep);
+  oc_tls_select_anon_ciphersuite();
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_4, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_int(root, om, 4);
