@@ -25,8 +25,10 @@
 #include "oc_cloud_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_log.h"
+#ifdef OC_SECURITY
 #include "security/oc_pstat.h"
-
+#include "security/oc_tls.h"
+#endif /* OC_SECURITY */
 /** Account URI.*/
 #ifdef OC_SPEC_VER_OIC
 #define OC_RSRVD_ACCOUNT_URI "/oic/account"
@@ -94,6 +96,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
             ctx->device, oc_cloud_register_handler, p)) {
         cannotConnect = false;
+        ctx->cps = OC_CPS_REGISTERING;
       }
       if (cannotConnect) {
         cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -227,6 +230,8 @@ cloud_deregistered_internal(oc_client_response_t *data)
     ctx->store.status = OC_CLOUD_DEREGISTERED;
   }
 
+  ctx->cps = OC_CPS_READYTOREGISTER;
+
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
   }
@@ -329,6 +334,10 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
     return false;
   }
 
+#ifdef OC_SECURITY
+  oc_tls_select_cloud_ciphersuite();
+#endif /* OC_SECURITY */
+
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
                    user_data)) {
     char uuid[OC_UUID_LEN] = { 0 };
@@ -378,6 +387,11 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
   oc_string_t u_id;
   oc_concat_strings(&u_id, "&uid=", uid);
   oc_concat_strings(&d, oc_string(at), oc_string(u_id));
+
+#ifdef OC_SECURITY
+  oc_tls_select_cloud_ciphersuite();
+#endif /* OC_SECURITY */
+
   bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(d), handler,
                         HIGH_QOS, user_data);
   oc_free_string(&d);
@@ -402,6 +416,10 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
+
+#ifdef OC_SECURITY
+  oc_tls_select_cloud_ciphersuite();
+#endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {
@@ -457,6 +475,10 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
+
+#ifdef OC_SECURITY
+  oc_tls_select_cloud_ciphersuite();
+#endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {

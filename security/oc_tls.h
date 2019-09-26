@@ -83,6 +83,7 @@ void oc_tls_select_mfg_cert_chain(int credid);
 void oc_tls_select_identity_cert_chain(int credid);
 void oc_tls_select_psk_ciphersuite(void);
 void oc_tls_select_anon_ciphersuite(void);
+void oc_tls_select_cloud_ciphersuite(void);
 
 /* Internal interface for generating a random PIN */
 void oc_tls_generate_random_pin(void);

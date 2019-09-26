@@ -100,23 +100,6 @@ cloud_close_endpoint(oc_endpoint_t *cloud_ep)
   }
 }
 
-static void
-cloud_register_internal_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                           void *data)
-{
-  (void)ctx;
-  (void)status;
-  (void)data;
-}
-
-static oc_event_callback_retval_t
-cloud_register_internal(void *user_data)
-{
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
-  oc_cloud_register(ctx, cloud_register_internal_cb, NULL);
-  return OC_EVENT_DONE;
-}
-
 #ifdef OC_SECURITY
 static void
 cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
@@ -128,6 +111,7 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
   cloud_store_deinit(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
+  ctx->cps = 0;
 }
 #endif /* OC_SECURITY */
 
@@ -151,6 +135,7 @@ oc_cloud_reset_context(size_t device)
   cloud_store_deinit(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
+  ctx->cps = 0;
   return 0;
 }
 
@@ -177,10 +162,9 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
     cloud_set_string(&ctx->store.sid, data->sid, data->sid_len);
   }
   ctx->store.status = OC_CLOUD_INITIALIZED;
+  ctx->cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
-  } else {
-    oc_set_delayed_callback(ctx, cloud_register_internal, 0);
   }
 }
 
