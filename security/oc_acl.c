@@ -403,6 +403,15 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid");
       return true;
     }
+
+    if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
+         pstat->s == OC_DOS_SRESET) &&
+        oc_string_len(resource->uri) == 14 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/roles", 14) == 0) {
+      OC_DBG("oc_acl: peer has implicit access to /oic/sec/roles in RFPRO, "
+             "RFNOP, SRESET");
+      return true;
+    }
   }
 
   uint16_t permission = 0;
@@ -898,7 +907,13 @@ oc_sec_acl_default(size_t device)
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
                               oc_string(resource->uri), 0, NULL, 0, device);
     }
-    if (i >= OCF_SEC_DOXM && i < OCF_D) {
+    if (i >= OCF_SEC_DOXM &&
+#ifdef OC_PKI
+        i < OCF_SEC_ROLES)
+#else  /* OC_PKI */
+        i <= OCF_SEC_CRED)
+#endif /* !OC_PKI */
+    {
       success &=
         oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
                               oc_string(resource->uri), -1, NULL, 0, device);
