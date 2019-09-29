@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -513,7 +513,10 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         bad_request = true;
       }
     } else {
-      if (method != OC_GET) {
+      if (method == OC_GET) {
+        oc_rep_start_root_object();
+        oc_rep_end_root_object();
+      } else {
         bad_request = true;
       }
     }
@@ -685,7 +688,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     oc_response_buffer_t response_buffer;
     bool method_not_found = false, get_delete = false;
     oc_rep_t *rep = request->request_payload;
-    oc_string_t href = { 0 };
+    oc_string_t *href = NULL;
 
     response.response_buffer = &response_buffer;
     rest_request.response = &response;
@@ -704,13 +707,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     while (rep != NULL) {
       switch (rep->type) {
       case OC_REP_OBJECT: {
-        memset(&href, 0, sizeof(oc_string_t));
+        href = NULL;
         oc_rep_t *pay = rep->value.object;
         while (pay != NULL) {
           switch (pay->type) {
           case OC_REP_STRING:
-            oc_new_string(&href, oc_string(pay->value.string),
-                          oc_string_len(pay->value.string));
+            href = &pay->value.string;
             break;
           case OC_REP_OBJECT:
             rest_request.request_payload = pay->value.object;
@@ -726,10 +728,10 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           if (link->resource &&
               (!notify_resource == !(link->resource == notify_resource))) {
             if (oc_filter_resource_by_rt(link->resource, request)) {
-              if (!get_delete && oc_string_len(href) > 0 &&
-                  (oc_string_len(href) != oc_string_len(link->resource->uri) ||
-                   memcmp(oc_string(href), oc_string(link->resource->uri),
-                          oc_string_len(href))) != 0) {
+              if (!get_delete && href && oc_string_len(*href) > 0 &&
+                  (oc_string_len(*href) != oc_string_len(link->resource->uri) ||
+                   memcmp(oc_string(*href), oc_string(link->resource->uri),
+                          oc_string_len(*href))) != 0) {
                 goto next;
               }
               memcpy(&prev_link, &links_array, sizeof(CborEncoder));
@@ -794,7 +796,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               }
 
               if (method_not_found ||
-                  (oc_string_len(href) > 0 &&
+                  (href && oc_string_len(*href) > 0 &&
                    response_buffer.code >=
                      oc_status_code(OC_STATUS_BAD_REQUEST))) {
                 ecode = response_buffer.code;
@@ -830,9 +832,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         if (get_delete) {
           goto processed_request;
         }
-        if (oc_string_len(href) > 0) {
-          oc_free_string(&href);
-        }
       } break;
       default:
         break;
@@ -855,11 +854,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       pcode < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     switch (method) {
     case OC_GET:
-      if (size > 0) {
-        code = oc_status_code(OC_STATUS_OK);
-      } else {
-        code = oc_status_code(OC_STATUS_NOT_MODIFIED);
-      }
+      code = oc_status_code(OC_STATUS_OK);
       break;
     case OC_POST:
     case OC_PUT:
