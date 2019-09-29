@@ -602,10 +602,10 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 bool
-oc_pstat_reset_device(size_t device)
+oc_pstat_reset_device(size_t device, bool self_reset)
 {
   oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
-  bool ret = oc_pstat_handle_state(&ps, device, false, true);
+  bool ret = oc_pstat_handle_state(&ps, device, false, self_reset);
   oc_sec_dump_pstat(device);
   return ret;
 }
@@ -615,7 +615,7 @@ oc_reset()
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_pstat_reset_device(device);
+    oc_pstat_reset_device(device, true);
   }
 }
 #endif /* OC_SECURITY */

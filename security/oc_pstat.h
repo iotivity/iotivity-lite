@@ -61,7 +61,7 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-bool oc_pstat_reset_device(size_t device);
+bool oc_pstat_reset_device(size_t device, bool self_reset);
 
 void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
 
