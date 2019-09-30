@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #ifndef OC_ACL_H
 #define OC_ACL_H
 
-#include "oc_obt.h"
+#include "oc_acl_common.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "port/oc_log.h"

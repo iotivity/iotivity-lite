@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -207,7 +207,7 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
   return 0;
 }
 
-#else /* OC_PKI */
+#else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */
 #endif /* OC_SECURITY */
