@@ -111,6 +111,8 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
+void oc_device_bind_resource_type(size_t device, const char *type);
+
 void oc_process_baseline_interface(oc_resource_t *resource);
 
 /**
