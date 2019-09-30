@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -580,10 +580,20 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   return cred->credid;
 }
 
-#ifdef OC_PKI
+const char *
+oc_cred_credtype_string(oc_sec_credtype_t credtype)
+{
+  if (credtype == 1) {
+    return "Symmetric pair-wise key";
+  } else if (credtype == 8) {
+    return "Asymmetric signing key with certificate";
+  }
+  return "Unknown";
+}
 
-static const char *
-return_credusage_string(oc_sec_credusage_t credusage)
+#ifdef OC_PKI
+const char *
+oc_cred_read_credusage(oc_sec_credusage_t credusage)
 {
   switch (credusage) {
   case OC_CREDUSAGE_TRUSTCA:
@@ -599,12 +609,12 @@ return_credusage_string(oc_sec_credusage_t credusage)
   default:
     break;
   }
-  return NULL;
+  return "None";
 }
 #endif /* OC_PKI */
 
-static const char *
-return_encoding_string(oc_sec_encoding_t encoding)
+const char *
+oc_cred_read_encoding(oc_sec_encoding_t encoding)
 {
   switch (encoding) {
   case OC_ENCODING_BASE64:
@@ -620,7 +630,7 @@ return_encoding_string(oc_sec_encoding_t encoding)
   default:
     break;
   }
-  return NULL;
+  return "Unknown";
 }
 
 #ifdef OC_PKI
@@ -639,8 +649,8 @@ oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
     /* credtype */
     oc_rep_set_int(roles, credtype, cr->credtype);
     /* credusage */
-    const char *credusage_string = return_credusage_string(cr->credusage);
-    if (credusage_string) {
+    const char *credusage_string = oc_cred_read_credusage(cr->credusage);
+    if (strlen(credusage_string) > 4) {
       oc_rep_set_text_string(roles, credusage, credusage_string);
     }
     /* publicdata */
@@ -655,8 +665,8 @@ oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
                                oc_string_len(cr->publicdata.data));
       }
       const char *encoding_string =
-        return_encoding_string(cr->publicdata.encoding);
-      if (encoding_string) {
+        oc_cred_read_encoding(cr->publicdata.encoding);
+      if (strlen(encoding_string) > 7) {
         oc_rep_set_text_string(publicdata, encoding, encoding_string);
       }
       oc_rep_close_object(roles, publicdata);
@@ -722,8 +732,8 @@ oc_sec_encode_cred(bool persist, size_t device)
       }
     }
     const char *encoding_string =
-      return_encoding_string(cr->privatedata.encoding);
-    if (encoding_string) {
+      oc_cred_read_encoding(cr->privatedata.encoding);
+    if (strlen(encoding_string) > 7) {
       oc_rep_set_text_string(privatedata, encoding, encoding_string);
     } else {
       oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
@@ -731,8 +741,8 @@ oc_sec_encode_cred(bool persist, size_t device)
     oc_rep_close_object(creds, privatedata);
 #ifdef OC_PKI
     /* credusage */
-    const char *credusage_string = return_credusage_string(cr->credusage);
-    if (credusage_string) {
+    const char *credusage_string = oc_cred_read_credusage(cr->credusage);
+    if (strlen(credusage_string) > 4) {
       oc_rep_set_text_string(creds, credusage, credusage_string);
     }
     /* publicdata */
@@ -747,8 +757,8 @@ oc_sec_encode_cred(bool persist, size_t device)
                                oc_string_len(cr->publicdata.data));
       }
       const char *encoding_string =
-        return_encoding_string(cr->publicdata.encoding);
-      if (encoding_string) {
+        oc_cred_read_encoding(cr->publicdata.encoding);
+      if (strlen(encoding_string) > 7) {
         oc_rep_set_text_string(publicdata, encoding, encoding_string);
       }
       oc_rep_close_object(creds, publicdata);
@@ -768,8 +778,8 @@ oc_sec_encode_cred(bool persist, size_t device)
 }
 
 #ifdef OC_PKI
-static oc_sec_credusage_t
-parse_credusage_property(oc_string_t *credusage_string)
+oc_sec_credusage_t
+oc_cred_parse_credusage(oc_string_t *credusage_string)
 {
   oc_sec_credusage_t credusage = 0;
   if (oc_string_len(*credusage_string) == 20 &&
@@ -796,8 +806,8 @@ parse_credusage_property(oc_string_t *credusage_string)
 }
 #endif /* OC_PKI */
 
-static oc_sec_encoding_t
-parse_encoding_property(oc_string_t *encoding_string)
+oc_sec_encoding_t
+oc_cred_parse_encoding(oc_string_t *encoding_string)
 {
   oc_sec_encoding_t encoding = 0;
   if (oc_string_len(*encoding_string) == 23 &&
@@ -911,7 +921,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #ifdef OC_PKI
               else if (len == 9 &&
                        memcmp(oc_string(cred->name), "credusage", 9) == 0) {
-                credusage = parse_credusage_property(&cred->value.string);
+                credusage = oc_cred_parse_credusage(&cred->value.string);
               }
 #endif /* OC_PKI */
               break;
@@ -945,7 +955,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   case OC_REP_STRING: {
                     if (oc_string_len(data->name) == 8 &&
                         memcmp("encoding", oc_string(data->name), 8) == 0) {
-                      *encoding = parse_encoding_property(&data->value.string);
+                      *encoding = oc_cred_parse_encoding(&data->value.string);
                       if (*encoding == 0) {
                         /* Unsupported encoding */
                         return false;
