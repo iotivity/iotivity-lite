@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,8 +41,6 @@ static oc_sec_acl_t *aclist;
 static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-static const char *auth_crypt = "auth-crypt";
-static const char *anon_clear = "anon-clear";
 static const char *wc_all = "*";
 static const char *wc_secured = "+";
 static const char *wc_public = "-";
@@ -545,10 +543,10 @@ oc_sec_encode_acl(size_t device)
     case OC_SUBJECT_CONN: {
       switch (sub->subject.conn) {
       case OC_CONN_AUTH_CRYPT:
-        oc_rep_set_text_string(subject, conntype, auth_crypt);
+        oc_rep_set_text_string(subject, conntype, "auth-crypt");
         break;
       case OC_CONN_ANON_CLEAR:
-        oc_rep_set_text_string(subject, conntype, anon_clear);
+        oc_rep_set_text_string(subject, conntype, "anon-clear");
         break;
       }
     } break;
@@ -1009,14 +1007,13 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                 subject_type = OC_SUBJECT_ROLE;
               } else if (len == 8 &&
                          memcmp(oc_string(sub->name), "conntype", 8) == 0) {
-                if (oc_string_len(sub->value.string) == strlen(auth_crypt) &&
-                    memcmp(oc_string(sub->value.string), auth_crypt,
-                           strlen(auth_crypt)) == 0) {
+                if (oc_string_len(sub->value.string) == 10 &&
+                    memcmp(oc_string(sub->value.string), "auth-crypt", 10) ==
+                      0) {
                   subject.conn = OC_CONN_AUTH_CRYPT;
-                } else if (oc_string_len(sub->value.string) ==
-                             strlen(anon_clear) &&
-                           memcmp(oc_string(sub->value.string), anon_clear,
-                                  strlen(anon_clear)) == 0) {
+                } else if (oc_string_len(sub->value.string) == 10 &&
+                           memcmp(oc_string(sub->value.string), "anon-clear",
+                                  10) == 0) {
                   subject.conn = OC_CONN_ANON_CLEAR;
                 }
                 subject_type = OC_SUBJECT_CONN;

@@ -30,49 +30,6 @@ extern "C"
 {
 #endif
 
-typedef enum {
-  OC_SUBJECT_UUID = 0,
-  OC_SUBJECT_ROLE,
-  OC_SUBJECT_CONN
-} oc_ace_subject_type_t;
-
-struct oc_ace_res_s
-{
-  struct oc_ace_res_s *next;
-  oc_string_t href;
-  oc_interface_mask_t interfaces;
-  oc_string_array_t types;
-  oc_ace_wildcard_t wildcard;
-};
-
-typedef union
-{
-  oc_uuid_t uuid;
-  struct
-  {
-    oc_string_t role;
-    oc_string_t authority;
-  } role;
-  oc_ace_connection_type_t conn;
-} oc_ace_subject_t;
-
-struct oc_sec_ace_s
-{
-  struct oc_sec_ace_s *next;
-  OC_LIST_STRUCT(resources);
-  oc_ace_subject_type_t subject_type;
-  oc_ace_subject_t subject;
-  int aceid;
-  oc_ace_permissions_t permission;
-  // TODO: Add "validity" for ACE. It is currently not a mandatory property
-};
-
-typedef struct
-{
-  OC_LIST_STRUCT(subjects);
-  oc_uuid_t rowneruuid;
-} oc_sec_acl_t;
-
 void oc_sec_acl_init(void);
 void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
