@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@
 #include "security/oc_tls.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Used on the server-side for handling role assertions via /oic/sec/roles */

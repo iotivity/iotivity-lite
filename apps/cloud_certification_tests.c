@@ -441,6 +441,7 @@ ocf_event_thread(void *data)
     printf("pthread_mutex_init failed!\n");
     return NULL;
   }
+  oc_set_con_res_announced(false);
   oc_set_max_app_data_size(6000);
   int init = oc_main_init(&handler);
   if (init < 0)

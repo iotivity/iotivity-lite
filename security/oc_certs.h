@@ -23,13 +23,14 @@
 #include "security/oc_cred.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 int oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
                                oc_string_t *subjectuuid);
 int oc_certs_parse_CN_for_UUID_raw(const unsigned char *cert, size_t cert_size,
-                                  oc_string_t *uuid);
+                                   oc_string_t *uuid);
 int oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len);
 int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
                                     char *output_buffer,
