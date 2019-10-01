@@ -50,6 +50,9 @@ int oc_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                    void *data);
 int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                                   void *data);
+
+int oc_obt_discover_all_resources(oc_uuid_t *uuid,
+                                  oc_discovery_handler_t handler, void *data);
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);
