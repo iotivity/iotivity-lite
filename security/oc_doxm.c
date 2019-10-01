@@ -71,7 +71,10 @@ oc_sec_doxm_default(size_t device)
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
-  oc_core_regen_unique_ids(device);
+  /* Generate a new temporary device UUID */
+  oc_device_info_t *d = oc_core_get_device_info(device);
+  oc_gen_uuid(&doxm[device].deviceuuid);
+  memcpy(d->di.id, doxm[device].deviceuuid.id, 16);
   oc_sec_dump_doxm(device);
 }
 
@@ -256,17 +259,6 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
                  memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
                        &doxm[device].devowneruuid);
-        if (!from_storage) {
-          int i;
-          for (i = 0; i < 16; i++) {
-            if (doxm[device].devowneruuid.id[i] != 0) {
-              break;
-            }
-          }
-          if (i != 16) {
-            oc_core_regen_unique_ids(device);
-          }
-        }
       } else if (len == 10 &&
                  memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm[device].rowneruuid);
