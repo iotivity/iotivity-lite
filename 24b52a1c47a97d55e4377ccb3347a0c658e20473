@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8ee566e_55b87e31",
+        "filename": "api/easysetup/oc_easysetup_enrollee.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "This resource must be instantiated in the \"Core\" module of the stack. It must be declared in the enum for Core Resources in include/oc_ri.h, and must further be instantiated via an internal API defined in oc_core_res.c. Look inside oc_introspection or oc_cloud_resource for examples of how this is done.\n\nIt needs to be this way because from the context of the Security model, WES resources as classified as Device Configuration Resources (DCRs), and every logical device in the application\nwill have its copy of any top-level resources.",
+      "range": {
+        "startLine": 35,
+        "startChar": 2,
+        "endLine": 35,
+        "endChar": 24
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ad7b9bf_b1b41a14",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "I\u0027m assuming es_common.h was intended to be an internal header. If so, could you extract the specific portions that should be public structures/functions and put them here?\n\nFor e.g. oc_es_result, oc_es_provisioning_callbacks... Also, they should be named for e.g. oc_es_result_t (not ..._e)",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 22
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da80b3d9_0a4b7b93",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "oc_es_xxx_cb_t",
+      "range": {
+        "startLine": 46,
+        "startChar": 33,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33431b03_3bdd9887",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "oc_xxx_cb_t",
+      "range": {
+        "startLine": 62,
+        "startChar": 32,
+        "endLine": 62,
+        "endChar": 34
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5555be6_bb6530d2",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "oc_es_free_userdata_t",
+      "range": {
+        "startLine": 73,
+        "startChar": 15,
+        "endLine": 73,
+        "endChar": 31
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "029a87f5_b94a965e",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "Being a public header, could you prefix this with oc_*?",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 11
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58587cad_005e9eb4",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "oc_es_resource_mask_t",
+      "range": {
+        "startLine": 91,
+        "startChar": 46,
+        "endLine": 91,
+        "endChar": 64
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56eedae0_10a5a19b",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "Why do we need this? AFAIK Security isn\u0027t an option for OCF resources in general.",
+      "range": {
+        "startLine": 91,
+        "startChar": 29,
+        "endLine": 91,
+        "endChar": 44
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2e6e3c7_39f3062c",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-01T04:54:16Z",
+      "side": 1,
+      "message": "Being a public header, could you prefix this with oc_*?",
+      "range": {
+        "startLine": 92,
+        "startChar": 29,
+        "endLine": 92,
+        "endChar": 56
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
