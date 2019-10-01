@@ -58,9 +58,6 @@ OC_MEMB(oc_devices_s, oc_device_t, 1);
 OC_LIST(oc_devices);
 OC_LIST(oc_cache);
 
-/* Persisted state */
-static int id = 1000;
-
 /* Public/Private key-pair for the local domain's root of trust */
 #ifdef OC_PKI
 const char *root_subject = "C=US, O=OCF, CN=IoTivity-Lite OBT Root";
@@ -209,6 +206,7 @@ free_device(void *data)
   return OC_EVENT_DONE;
 }
 
+#ifdef OC_PKI
 static void
 oc_obt_dump_state(void)
 {
@@ -218,11 +216,8 @@ oc_obt_dump_state(void)
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
-  oc_rep_set_int(root, id, id);
-#ifdef OC_PKI
   oc_rep_set_byte_string(root, private_key, private_key, private_key_size);
   oc_rep_set_int(root, credid, root_cert_credid);
-#endif /* OC_PKI */
   oc_rep_end_root_object();
 
   int size = oc_rep_get_encoded_payload_size();
@@ -255,15 +250,8 @@ oc_obt_load_state(void)
       while (rep != NULL) {
         switch (rep->type) {
         case OC_REP_INT:
-          if (oc_string_len(rep->name) == 2 &&
-              memcmp(oc_string(rep->name), "id", 2) == 0) {
-            id = (int)rep->value.integer;
-          }
-#ifndef OC_PKI
-          break;
-#else  /* !OC_PKI */
-          else if (oc_string_len(rep->name) == 6 &&
-                   memcmp(oc_string(rep->name), "credid", 6) == 0) {
+          if (oc_string_len(rep->name) == 6 &&
+              memcmp(oc_string(rep->name), "credid", 6) == 0) {
             root_cert_credid = (int)rep->value.integer;
           }
           break;
@@ -274,7 +262,6 @@ oc_obt_load_state(void)
             memcpy(private_key, oc_string(rep->value.string), private_key_size);
           }
           break;
-#endif /* OC_PKI */
         default:
           break;
         }
@@ -282,19 +269,10 @@ oc_obt_load_state(void)
       }
     }
     oc_free_rep(head);
-  } else {
-    id = 1000;
   }
   free(buf);
 }
-
-static int
-oc_obt_get_next_id(void)
-{
-  ++id;
-  oc_obt_dump_state();
-  return id;
-}
+#endif /* OC_PKI */
 
 struct list
 {
@@ -1555,7 +1533,6 @@ oc_obt_new_ace(void)
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_memb_alloc(&oc_aces_m);
   if (ace) {
     OC_LIST_STRUCT_INIT(ace, resources);
-    ace->aceid = oc_obt_get_next_id();
   }
   return ace;
 }
@@ -1925,7 +1902,9 @@ oc_obt_init(void)
     return -1;
 #endif /* OC_PKI */
   } else {
+#ifdef OC_PKI
     oc_obt_load_state();
+#endif /* OC_PKI */
   }
   return 0;
 }
@@ -1946,4 +1925,5 @@ oc_obt_shutdown(void)
     device = (oc_device_t *)oc_list_pop(oc_devices);
   }
 }
+
 #endif /* OC_SECURITY */
