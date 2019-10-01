@@ -155,12 +155,9 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 
 #ifdef OC_SECURITY
 void
-oc_core_regen_unique_ids(size_t device)
+oc_core_gen_unique_ids(size_t device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  oc_device_info_t *d = &oc_device_info[device];
-  oc_gen_uuid(&doxm->deviceuuid);
-  memcpy(d->di.id, doxm->deviceuuid.id, 16);
+  oc_device_info_t *d = oc_core_get_device_info(device);
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
 }
