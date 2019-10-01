@@ -47,8 +47,8 @@ OC_LIST(oc_hard_reset_ctx_l);
 OC_MEMB(oc_credprov_ctx_m, oc_credprov_ctx_t, 1);
 OC_LIST(oc_credprov_ctx_l);
 
-OC_MEMB(oc_acl2prov_m, oc_acl2prov_ctx_t, 1);
-OC_LIST(oc_acl2prov_l);
+OC_MEMB(oc_acl2prov_ctx_m, oc_acl2prov_ctx_t, 1);
+OC_LIST(oc_acl2prov_ctx_l);
 
 OC_MEMB(oc_aces_m, oc_sec_ace_t, 1);
 OC_MEMB(oc_res_m, oc_ace_res_t, 1);
@@ -1677,10 +1677,10 @@ oc_obt_free_ace(oc_sec_ace_t *ace)
 static void
 free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
 {
-  if (!is_item_in_list(oc_acl2prov_l, request)) {
+  if (!is_item_in_list(oc_acl2prov_ctx_l, request)) {
     return;
   }
-  oc_list_remove(oc_acl2prov_l, request);
+  oc_list_remove(oc_acl2prov_ctx_l, request);
   free_ace(request->ace);
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(request->device->endpoint);
   oc_tls_close_connection(ep);
@@ -1688,7 +1688,7 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
     free_switch_dos_state(request->switch_dos);
   }
   request->cb.cb(&request->device->uuid, status, request->cb.data);
-  oc_memb_free(&oc_acl2prov_m, request);
+  oc_memb_free(&oc_acl2prov_ctx_m, request);
 }
 
 static oc_event_callback_retval_t
@@ -1708,7 +1708,7 @@ free_acl2prov_ctx(oc_acl2prov_ctx_t *r, int status)
 static void
 provision_ace_complete(int status, void *data)
 {
-  if (!is_item_in_list(oc_acl2prov_l, data)) {
+  if (!is_item_in_list(oc_acl2prov_ctx_l, data)) {
     return;
   }
 
@@ -1725,7 +1725,7 @@ provision_ace_complete(int status, void *data)
 static void
 acl2_response(oc_client_response_t *data)
 {
-  if (!is_item_in_list(oc_acl2prov_l, data->user_data)) {
+  if (!is_item_in_list(oc_acl2prov_ctx_l, data->user_data)) {
     return;
   }
 
@@ -1746,7 +1746,7 @@ acl2_response(oc_client_response_t *data)
 static void
 provision_ace(int status, void *data)
 {
-  if (!is_item_in_list(oc_acl2prov_l, data)) {
+  if (!is_item_in_list(oc_acl2prov_ctx_l, data)) {
     return;
   }
 
@@ -1840,7 +1840,7 @@ int
 oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
                      oc_obt_device_status_cb_t cb, void *data)
 {
-  oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_m);
+  oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
   if (!r) {
     return -1;
   }
@@ -1864,11 +1864,11 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
   r->switch_dos = switch_dos(device, OC_DOS_RFPRO, provision_ace, r);
   if (!r->switch_dos) {
     free_ace(ace);
-    oc_memb_free(&oc_acl2prov_m, r);
+    oc_memb_free(&oc_acl2prov_ctx_m, r);
     return -1;
   }
 
-  oc_list_add(oc_acl2prov_l, r);
+  oc_list_add(oc_acl2prov_ctx_l, r);
   oc_set_delayed_callback(r, acl2prov_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
