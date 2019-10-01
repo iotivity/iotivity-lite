@@ -53,6 +53,10 @@ OC_LIST(oc_acl2prov_l);
 OC_MEMB(oc_aces_m, oc_sec_ace_t, 1);
 OC_MEMB(oc_res_m, oc_ace_res_t, 1);
 
+#ifdef OC_PKI
+OC_MEMB(oc_roles, oc_role_t, 1);
+#endif /* OC_PKI */
+
 /* Owned/unowned device caches */
 OC_MEMB(oc_devices_s, oc_device_t, 1);
 OC_LIST(oc_devices);
@@ -1013,9 +1017,55 @@ device1_RFPRO(int status, void *data)
   }
 }
 
+int
+oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
+                                      oc_obt_status_cb_t cb, void *data)
+{
+  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
+  if (!p) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid1)) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid2)) {
+    return -1;
+  }
+
+  oc_device_t *device1 = oc_obt_get_owned_device_handle(uuid1);
+  if (!device1) {
+    return -1;
+  }
+
+  oc_device_t *device2 = oc_obt_get_owned_device_handle(uuid2);
+  if (!device2) {
+    return -1;
+  }
+
+  p->cb.cb = cb;
+  p->cb.data = data;
+  p->device1 = device1;
+  p->device2 = device2;
+
+  oc_tls_select_psk_ciphersuite();
+
+  p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1_RFPRO, p);
+  if (!p->switch_dos) {
+    oc_memb_free(&oc_credprov_ctx_m, p);
+    return -1;
+  }
+
+  oc_list_add(oc_credprov_ctx_l, p);
+  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+
+  return 0;
+}
+/* End of provision pair-wise credentials sequence */
+
 #ifdef OC_PKI
-/** Construct list of role ids to encode into a role certificate **/
-OC_MEMB(oc_roles, oc_role_t, 1);
+/* Construct list of role ids to encode into a role certificate */
 
 oc_role_t *
 oc_obt_add_roleid(oc_role_t *roles, const char *role, const char *authority)
@@ -1046,7 +1096,7 @@ oc_obt_free_roleid(oc_role_t *roles)
   }
 }
 
-/** Provision identity/role certificates **/
+/* Provision identity/role certificates */
 
 static void
 device_RFNOP(int status, void *data)
@@ -1078,7 +1128,7 @@ device_authcrypt_roles(oc_client_response_t *data)
     goto err_device_authcrypt_roles;
   }
 
-  /**  6) switch dos to RFNOP
+  /**  7) switch dos to RFNOP
    */
   p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device_RFNOP, p);
   if (p->switch_dos) {
@@ -1102,7 +1152,7 @@ device_cred(oc_client_response_t *data)
     goto err_device_cred;
   }
 
-  /**  5) post acl2 with auth-crypt RW ACE for /oic/sec/roles
+  /**  6) post acl2 with auth-crypt RW ACE for /oic/sec/roles
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
   if (oc_init_post("/oic/sec/acl2", ep, NULL, &device_authcrypt_roles, HIGH_QOS,
@@ -1173,7 +1223,7 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  /**  4) validate csr
+  /**  5) validate csr
    */
   int ret = oc_certs_validate_csr((const unsigned char *)csr, csr_len, &subject,
                                   pub_key);
@@ -1183,13 +1233,13 @@ device_CSR(oc_client_response_t *data)
   }
 
   if (!p->roles) {
-    /**  4) generate identity cert
+    /**  5) generate identity cert
      */
     ret = oc_obt_generate_identity_cert(oc_string(subject), pub_key,
                                         OC_KEYPAIR_PUBKEY_SIZE, root_subject,
                                         private_key, private_key_size, &cert);
   } else {
-    /**  4) generate role cert
+    /**  5) generate role cert
      */
     ret = oc_obt_generate_role_cert(p->roles, oc_string(subject), pub_key,
                                     OC_KEYPAIR_PUBKEY_SIZE, root_subject,
@@ -1199,7 +1249,7 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  /**  4) post cred with identity/role cert
+  /**  5) post cred with identity/role cert
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
@@ -1252,7 +1302,7 @@ device_root(oc_client_response_t *data)
     goto err_device_root;
   }
 
-  /**  3) get csr
+  /**  4) get csr
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
   if (oc_do_get("/oic/sec/csr", ep, NULL, &device_CSR, HIGH_QOS, p)) {
@@ -1279,7 +1329,7 @@ device_RFPRO(int status, void *data)
       goto err_device_RFPRO;
     }
 
-    /**  2) post cred with trustca
+    /**  3) post cred with trustca
      */
     oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
     if (oc_init_post("/oic/sec/cred", ep, NULL, &device_root, HIGH_QOS, p)) {
@@ -1311,14 +1361,45 @@ err_device_RFPRO:
   free_credprov_state(p, -1);
 }
 
+static void
+supports_cert_creds(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_supports_cert_creds;
+  }
+
+  int64_t sct = 0;
+  if (oc_rep_get_int(data->payload, "sct", &sct)) {
+    /* Confirm that the device handles certificate credentials */
+    if (sct & 0x0000000000000008) {
+      /**  2) switch dos to RFPRO
+       */
+      p->switch_dos = switch_dos(p->device1, OC_DOS_RFPRO, device_RFPRO, p);
+      if (p->switch_dos) {
+        return;
+      }
+    }
+  }
+
+err_supports_cert_creds:
+  free_credprov_state(p, -1);
+}
+
 /*
   Provision role certificate:
-  1) switch dos to RFPRO
-  2) post cred with trustca
-  3) get csr
-  4) validate csr, generate role cert, post cred with role cert
-  5) post acl2 with auth-crypt RW ACE for /oic/sec/roles
-  6) switch dos to RFNOP
+  1) get doxm
+  2) switch dos to RFPRO
+  3) post cred with trustca
+  4) get csr
+  5) validate csr, generate role cert, post cred with role cert
+  6) post acl2 with auth-crypt RW ACE for /oic/sec/roles
+  7) switch dos to RFNOP
 */
 int
 oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
@@ -1347,22 +1428,20 @@ oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
   p->device2 = NULL;
   p->roles = roles;
 
-  /**  1) switch dos to RFPRO
-   */
-
   oc_tls_select_psk_ciphersuite();
 
-  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_credprov_ctx_m, p);
-    OC_ERR("could not issue switch_dos request");
-    return -1;
+  /**  1) get doxm
+   */
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS, p)) {
+    oc_list_add(oc_credprov_ctx_l, p);
+    oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+    return 0;
   }
 
-  oc_list_add(oc_credprov_ctx_l, p);
-  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+  oc_memb_free(&oc_credprov_ctx_m, p);
 
-  return 0;
+  return -1;
 }
 
 /*
@@ -1397,71 +1476,23 @@ oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
   p->device1 = device;
   p->device2 = NULL;
 
-  /**  1) switch dos to RFPRO
-   */
-
   oc_tls_select_psk_ciphersuite();
 
-  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_credprov_ctx_m, p);
-    return -1;
+  /**  1) get doxm
+   */
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS, p)) {
+    oc_list_add(oc_credprov_ctx_l, p);
+    oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+    return 0;
   }
 
-  oc_list_add(oc_credprov_ctx_l, p);
-  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
+  oc_memb_free(&oc_credprov_ctx_m, p);
 
-  return 0;
+  return -1;
 }
 
 #endif /* OC_PKI */
-
-int
-oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
-                                      oc_obt_status_cb_t cb, void *data)
-{
-  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
-  if (!p) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid1)) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid2)) {
-    return -1;
-  }
-
-  oc_device_t *device1 = oc_obt_get_owned_device_handle(uuid1);
-  if (!device1) {
-    return -1;
-  }
-
-  oc_device_t *device2 = oc_obt_get_owned_device_handle(uuid2);
-  if (!device2) {
-    return -1;
-  }
-
-  p->cb.cb = cb;
-  p->cb.data = data;
-  p->device1 = device1;
-  p->device2 = device2;
-
-  oc_tls_select_psk_ciphersuite();
-
-  p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_credprov_ctx_m, p);
-    return -1;
-  }
-
-  oc_list_add(oc_credprov_ctx_l, p);
-  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
-
-  return 0;
-}
-/* End of provision pair-wise credentials sequence */
 
 /* Provision role ACE for wildcard "*" resource with RW permissions */
 int
