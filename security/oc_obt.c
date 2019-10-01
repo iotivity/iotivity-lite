@@ -650,6 +650,37 @@ oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 }
 /* End of device discovery */
 
+/* Resource discovery */
+
+int
+oc_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler,
+                              void *data)
+{
+  oc_endpoint_t *ep = NULL;
+  oc_device_t *device = get_device_handle(uuid, oc_devices);
+
+  if (device) {
+    ep = oc_obt_get_secure_endpoint(device->endpoint);
+  } else {
+    device = get_device_handle(uuid, oc_cache);
+    if (device) {
+      ep = oc_obt_get_unsecure_endpoint(device->endpoint);
+    }
+  }
+
+  if (!device || !ep) {
+    return -1;
+  }
+
+  if (oc_do_ip_discovery_at_endpoint(NULL, handler, ep, data)) {
+    return 0;
+  }
+
+  return -1;
+}
+
+/* End of resource discovery */
+
 /* Helper sequence to switch between pstat device states */
 static void
 free_switch_dos_state(oc_switch_dos_ctx_t *d)
