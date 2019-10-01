@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include "oc_api.h"
 #include "oc_endpoint.h"
+#include "oc_obt.h"
 #include "oc_uuid.h"
 #include "security/oc_pstat.h"
 #include "util/oc_list.h"
@@ -106,6 +107,24 @@ typedef struct oc_credprov_ctx_t
   oc_role_t *roles;
 } oc_credprov_ctx_t;
 
+/* Context over a RETRIEVE credentials request */
+typedef struct oc_credret_ctx_t
+{
+  struct oc_credret_ctx_t *next;
+  oc_obt_creds_cb_t cb;
+  void *data;
+} oc_credret_ctx_t;
+
+/* Context over a DELETE credentials request */
+typedef struct oc_creddel_ctx_t
+{
+  struct oc_creddel_ctx_t *next;
+  oc_status_cb_t cb;
+  oc_switch_dos_ctx_t *switch_dos;
+  oc_device_t *device;
+  int credid;
+} oc_creddel_ctx_t;
+
 /* Context to be maintained over ACE provisioning sequence */
 typedef struct oc_acl2prov_ctx_t
 {
@@ -115,6 +134,24 @@ typedef struct oc_acl2prov_ctx_t
   oc_sec_ace_t *ace;
   oc_switch_dos_ctx_t *switch_dos;
 } oc_acl2prov_ctx_t;
+
+/* Context over a RETRIEVE ACL request */
+typedef struct oc_aclret_ctx_t
+{
+  struct oc_aclret_ctx_t *next;
+  oc_obt_acl_cb_t cb;
+  void *data;
+} oc_aclret_ctx_t;
+
+/* Context over a DELETE ACE request */
+typedef struct oc_acedel_ctx_t
+{
+  struct oc_acedel_ctx_t *next;
+  oc_status_cb_t cb;
+  oc_switch_dos_ctx_t *switch_dos;
+  oc_device_t *device;
+  int aceid;
+} oc_acedel_ctx_t;
 
 typedef enum {
   OC_OBT_OTM_JW = 0,
