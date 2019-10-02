@@ -142,6 +142,25 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCTriggerHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocTriggerHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocTriggerHandlerClass);
 
+    jclass ocGetPropertiesHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCGetPropertiesHandler");
+    assert(ocGetPropertiesHandlerClass);
+    cls_OCGetPropertiesHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocGetPropertiesHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocGetPropertiesHandlerClass);
+
+    jclass ocSetPropertiesHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCSetPropertiesHandler");
+    assert(ocSetPropertiesHandlerClass);
+    cls_OCSetPropertiesHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocSetPropertiesHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocSetPropertiesHandlerClass);
+
+    jclass ocResourceClass = JCALL1(FindClass, jenv, "org/iotivity/OCResource");
+    assert(ocResourceClass);
+    cls_OCResource = (jclass)(JCALL1(NewGlobalRef, jenv, ocResourceClass));
+    JCALL1(DeleteLocalRef, jenv, ocResourceClass);
+
     jclass ocUuidClass = JCALL1(FindClass, jenv, "org/iotivity/OCUuid");
     assert(ocUuidClass);
     cls_OCUuid = (jclass)(JCALL1(NewGlobalRef, jenv, ocUuidClass));

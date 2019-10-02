@@ -134,6 +134,10 @@ jclass cls_OCRequestHandler;
 jclass cls_OCResponseHandler;
 jclass cls_OCTriggerHandler;
 
+jclass cls_OCGetPropertiesHandler;
+jclass cls_OCSetPropertiesHandler;
+jclass cls_OCResource;
+
 jclass cls_OCCoreAddDeviceHandler;
 jclass cls_OCCoreInitPlatformHandler;
 jclass cls_OCEndpoint;
