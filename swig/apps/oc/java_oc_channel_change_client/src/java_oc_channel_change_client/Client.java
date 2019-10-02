@@ -145,9 +145,17 @@ public class Client {
     }
 
     static private void sendMessage(String key, String value, int channelId) {
+        String query = null;
+        if (value != null) {
+            query = key + "=" + value;
+        }
+        if (channelId > 0) {
+            query = key + "=" + channelId;
+        }
+
         PostChannelChangeResourceResponseHandler postHandler = new PostChannelChangeResourceResponseHandler(
                 channelChangeResource);
-        if (OcUtils.initPost(channelChangeResource.getServerUri(), channelChangeResource.getServerEndpoint(), null,
+        if (OcUtils.initPost(channelChangeResource.getServerUri(), channelChangeResource.getServerEndpoint(), query,
                 postHandler, OCQos.LOW_QOS)) {
 
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
