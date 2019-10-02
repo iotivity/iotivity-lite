@@ -22,6 +22,30 @@
       "revId": "c7848babeede60bd934f51a2a2d95b2bd9834a6d",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54d47deb_6fcea80a",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1657,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-02T21:46:46Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "eab5ff48_6ae56d93",
+      "range": {
+        "startLine": 1657,
+        "startChar": 28,
+        "endLine": 1657,
+        "endChar": 60
+      },
+      "revId": "c7848babeede60bd934f51a2a2d95b2bd9834a6d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
