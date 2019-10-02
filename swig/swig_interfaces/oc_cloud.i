@@ -89,6 +89,7 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 
 // oc_cloud_status is a bitmask exposed through OCCloudStatusMask.java as ints
 %ignore oc_cloud_status_t;
+%ignore oc_cps_t;
 %rename (OCCloudStore) oc_cloud_store_t;
 %rename (OCCloudError) oc_cloud_error_t;
 %rename (OCCloudContext) oc_cloud_context_t;
@@ -104,6 +105,7 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 %rename (rdPublishedResources) oc_cloud_context_t::rd_published_resources;
 %rename (rdDeleteResources) oc_cloud_context_t::rd_delete_resources;
 %rename (rdDeleteAll) oc_cloud_context_t::rd_delete_all;
+%ignore oc_cloud_context_t::cps;
 %rename (cloudConf) oc_cloud_context_t::cloud_conf;
 %rename (cloudManager) oc_cloud_context_t::cloud_manager;
 
