@@ -101,7 +101,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCFactoryPresetsHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocFactoryPresetsHandler));
     JCALL1(DeleteLocalRef, jenv, ocFactoryPresetsHandler);
 
-    jclass ocInitPlatformHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCInitPlatformHandler");
+    jclass ocGetPropertiesHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCGetPropertiesHandler");
+    assert(ocGetPropertiesHandlerClass);
+    cls_OCGetPropertiesHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocGetPropertiesHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocGetPropertiesHandlerClass);
+
+    jclass ocInitPlatformHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCInitPlatformHandler");
     assert(ocInitPlatformHandlerClass);
     cls_OCInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocInitPlatformHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocInitPlatformHandlerClass);
@@ -137,9 +145,23 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCResponseHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocResponseHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocResponseHandlerClass);
 
-    jclass ocTriggerHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCTriggerHandler");
+    jclass ocResourceClass = JCALL1(FindClass, jenv, "org/iotivity/OCResource");
+    assert(ocResourceClass);
+    cls_OCResource = (jclass)(JCALL1(NewGlobalRef, jenv, ocResourceClass));
+    JCALL1(DeleteLocalRef, jenv, ocResourceClass);
+
+    jclass ocSetPropertiesHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCSetPropertiesHandler");
+    assert(ocSetPropertiesHandlerClass);
+    cls_OCSetPropertiesHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocSetPropertiesHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocSetPropertiesHandlerClass);
+
+    jclass ocTriggerHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCTriggerHandler");
     assert(ocTriggerHandlerClass);
-    cls_OCTriggerHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocTriggerHandlerClass));
+    cls_OCTriggerHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocTriggerHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocTriggerHandlerClass);
 
     jclass ocUuidClass = JCALL1(FindClass, jenv, "org/iotivity/OCUuid");

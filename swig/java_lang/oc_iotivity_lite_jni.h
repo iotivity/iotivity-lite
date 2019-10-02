@@ -125,6 +125,7 @@ jclass cls_OCCloudContext;
 jclass cls_OCConWriteHandler;
 jclass cls_OCDiscoveryHandler;
 jclass cls_OCFactoryPresetsHandler;
+jclass cls_OCGetPropertiesHandler;
 jclass cls_OCInitPlatformHandler;
 jclass cls_OCQueryValue;
 jclass cls_OCRandomPinHandler;
@@ -132,6 +133,8 @@ jclass cls_OCRepresentation;
 jclass cls_OCRequest;
 jclass cls_OCRequestHandler;
 jclass cls_OCResponseHandler;
+jclass cls_OCResource;
+jclass cls_OCSetPropertiesHandler;
 jclass cls_OCTriggerHandler;
 
 jclass cls_OCCoreAddDeviceHandler;
