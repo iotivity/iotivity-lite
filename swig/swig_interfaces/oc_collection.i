@@ -12,16 +12,18 @@
 %}
 
 /*******************Begin oc_collection.h*******************/
+%ignore oc_link_params_t;
 typedef struct oc_link_s oc_link_t;
 %rename(OCLink) oc_link_s;
+%ignore oc_link_s::OC_LIST_STRUCT(params);
 typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::get_handler;
 %ignore oc_collection_s::put_handler;
 %ignore oc_collection_s::post_handler;
 %ignore oc_collection_s::delete_handler;
 %rename (numLinks) oc_collection_s::num_links;
-%rename (supportedRts) oc_collection_s::supported_rts;
-%rename (mandatoryRts) oc_collection_s::mandatory_rts;
+%ignore oc_collection_s::OC_LIST_STRUCT(mandatory_rts);
+%ignore oc_collection_s::OC_LIST_STRUCT(supported_rts);
 %ignore oc_collection_s::OC_LIST_STRUCT(links);
 %rename(OCCollection) oc_collection_s;
 %rename(handleCollectionRequest) oc_handle_collection_request;

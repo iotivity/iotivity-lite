@@ -8,4 +8,5 @@ public class OCInterfaceMask {
     public static final int RW = 1 << 5;
     public static final int A = 1 << 6;
     public static final int S = 1 << 7;
+    public static final int CREATE = 1 << 8;
 }
