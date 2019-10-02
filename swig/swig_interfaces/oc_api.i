@@ -598,15 +598,6 @@ void jni_reset() {
   public";
 %rename(linkAddRelation) oc_link_add_rel;
 // DOCUMENTATION workaround
-%javamethodmodifiers oc_link_set_ins "/**
-   * Sets the unique link instance on the link.
-   *
-   * @param link The link to set the instance on. Must not be NULL
-   * @param ins The link instance to set. Must not be NULL
-   */
-  public";
-%rename(linkSetInstance) oc_link_set_ins;
-// DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_add_link "/**
    * Adds the link to the collection.
    * <p>
@@ -754,11 +745,131 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
                                           oc_request_callback_t callback,
                                           jni_callback_data *jcb)
 {
-  OC_DBG("JNI: %s\n", __func__);
-  oc_resource_set_request_handler(resource, method, callback, jcb);
+  // TODO
 }
 %}
+/* Code and typemaps for mapping the oc_get_properties_cb_t to the java OCGetPropertiesHandler */
+%{
+void jni_oc_get_properties_callback(oc_resource_t *resource, oc_interface_mask_t iface_mask, void *user_data) {
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
 
+  assert(cls_OCGetPropertiesHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+                                       (data->jenv),
+                                       cls_OCGetPropertiesHandler,
+                                       "handler",
+                                       "(Lorg/iotivity/OCResource;I)V");
+  assert(mid_handler);
+
+
+  assert(cls_OCResource);
+  const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
+  assert(mid_OCRequest_init);
+  JCALL4(CallVoidMethod,
+         (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+        JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false),
+        (jint)iface_mask);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
+  release_jni_env(getEnvResult);
+}
+%}
+%typemap(jni)    oc_get_properties_cb_t getPropertiesHandler "jobject";
+%typemap(jtype)  oc_get_properties_cb_t getPropertiesHandler "OCGetPropertiesHandler";
+%typemap(jstype) oc_get_properties_cb_t getPropertiesHandler "OCGetPropertiesHandler";
+%typemap(javain) oc_get_properties_cb_t getPropertiesHandler "$javainput";
+%typemap(in,numinputs=1) (oc_get_properties_cb_t getPropertiesHandler, jni_callback_data *get_properties_jcb)
+{
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  // see jni_delete_resource for the deletion of the GlobalRef in the jni_list_remove calls
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_oc_get_properties_callback;
+  $2 = user_data;
+}
+
+/* Code and typemaps for mapping the oc_set_properties_cb_t to the java OCSetPropertiesHandler */
+%{
+bool jni_oc_set_properties_callback(oc_resource_t *resource, oc_rep_t *rep, void *user_data) {
+  // TODO
+    OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  assert(cls_OCSetPropertiesHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+                                       (data->jenv),
+                                       cls_OCSetPropertiesHandler,
+                                       "handler",
+                                       "(Lorg/iotivity/OCResource;Lorg/iotivity/OCRepresentation;)Z");
+  assert(mid_handler);
+
+  assert(cls_OCResource);
+  const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
+  assert(mid_OCRequest_init);
+  assert(cls_OCRepresentation);
+  const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
+                                                     (data->jenv),
+                                                     cls_OCRepresentation, "<init>",
+                                                     "(JZ)V");
+  assert(mid_OCRepresentation_init);
+
+  bool returnValue = JCALL4(CallBooleanMethod,
+         (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+        JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false),
+        JCALL4(NewObject, (data->jenv), cls_OCRepresentation, mid_OCRepresentation_init, (jlong)rep, false));
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+
+  release_jni_env(getEnvResult);
+  return returnValue;
+}
+%}
+%typemap(jni)    oc_set_properties_cb_t setPropertiesHandler "jobject";
+%typemap(jtype)  oc_set_properties_cb_t setPropertiesHandler "OCSetPropertiesHandler";
+%typemap(jstype) oc_set_properties_cb_t setPropertiesHandler "OCSetPropertiesHandler";
+%typemap(javain) oc_set_properties_cb_t setPropertiesHandler "$javainput";
+%typemap(in,numinputs=1) (oc_set_properties_cb_t setPropertiesHandler, jni_callback_data *set_properties_jcb)
+{
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  // see jni_delete_resource for the deletion of the GlobalRef in the jni_list_remove calls
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_oc_set_properties_callback;
+  $2 = user_data;
+}
+
+%ignore oc_resource_set_properties_cbs;
+%rename(resourceSetPropertiesHandlers) jni_resource_set_properties_cbs;
+%inline %{
+void jni_resource_set_properties_cbs(oc_resource_t *resource,
+                                    oc_get_properties_cb_t getPropertiesHandler,
+                                    jni_callback_data *get_properties_jcb,
+                                    oc_set_properties_cb_t setPropertiesHandler,
+                                    jni_callback_data *set_properties_jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_resource_set_properties_cbs(resource, getPropertiesHandler, get_properties_jcb,  setPropertiesHandler, set_properties_jcb);
+}
+%}
 %rename(addResource) oc_add_resource;
 %ignore oc_delete_resource;
 %rename(deleteResource) jni_delete_resource;
