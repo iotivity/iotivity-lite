@@ -34,6 +34,9 @@
 %rename (requestPayload) oc_request_t::request_payload;
 %ignore oc_request_handler_s;
 
+%ignore oc_properties_cb_t;
+%ignore oc_properties_cb_t_cb;
+
 %rename(OCResource) oc_resource_s;
 %rename("%(lowercamelcase)s") default_interface;
 // handlers are added to the code using the mainInit function and are not expected to be read by Java code
@@ -41,6 +44,8 @@
 %ignore oc_resource_s::put_handler;
 %ignore oc_resource_s::post_handler;
 %ignore oc_resource_s::delete_handler;
+%ignore oc_resource_s::get_properties;
+%ignore oc_resource_s::set_properties;
 %rename("%(lowercamelcase)s") observe_period_seconds;
 %rename("%(lowercamelcase)s") num_observers;
 
