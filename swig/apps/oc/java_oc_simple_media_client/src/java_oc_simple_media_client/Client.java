@@ -300,7 +300,7 @@ public class Client {
         PostMediaControlResourceResponseHandler postHandler = new PostMediaControlResourceResponseHandler(
                 currentMediaControlResource);
         if (OcUtils.initPost(currentMediaControlResource.getServerUri(),
-                currentMediaControlResource.getServerEndpoint(), null, postHandler, OCQos.LOW_QOS)) {
+                currentMediaControlResource.getServerEndpoint(), uriExp, postHandler, OCQos.LOW_QOS)) {
 
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
             root.setTextString("uriexp", uriExp);
