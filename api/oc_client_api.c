@@ -702,17 +702,14 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
 }
 
 void
-oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler)
+oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                    void *user_data)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (oc_tls_uses_psk_cred(peer)) {
-    return;
-  }
   oc_tls_select_cert_ciphersuite();
   oc_role_t *roles = oc_get_all_roles();
   if (roles) {
     if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
-                     peer)) {
+                     user_data)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, roles);
 

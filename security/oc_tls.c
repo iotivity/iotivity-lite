@@ -1653,7 +1653,8 @@ read_application_data(oc_tls_peer_t *peer)
 #ifdef OC_PKI
       if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
-        oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal);
+        oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal,
+                            oc_tls_get_peer(&peer->endpoint));
       } else
 #endif /* OC_PKI */
       {
