@@ -642,6 +642,15 @@
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_acl_common.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_cred_common.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_swupdate.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">

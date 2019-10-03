@@ -593,9 +593,14 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     }
   }
 
+  send_sock = get_session_socket(&message->endpoint);
+  if (send_sock < 0) {
+    goto oc_tcp_send_buffer_done;
+  }
+
   do {
     ssize_t send_len = send(send_sock, message->data + bytes_sent,
-                            message->length - bytes_sent, 0);
+                            message->length - bytes_sent, MSG_NOSIGNAL);
     if (send_len < 0) {
       OC_WRN("send() returned errno %d", errno);
       goto oc_tcp_send_buffer_done;

@@ -131,12 +131,13 @@ endif
 OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g -O0
+	EXTRA_CFLAGS += -DOC_DEBUG -g -O0
 ifeq ($(DEBUG_TLS),1)
-	CFLAGS += -DOC_DEBUG_TLS
+	EXTRA_CFLAGS += -DOC_DEBUG_TLS
 endif
 else
 	CFLAGS += -Wl,--gc-sections
+	CXXFLAGS += -Wl,--gc-sections
 endif
 
 ifeq ($(PKI),1)
