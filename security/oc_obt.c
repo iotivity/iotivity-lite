@@ -334,7 +334,7 @@ oc_obt_alloc_otm_ctx(void)
 
 /* Ownership Transfer */
 static void
-free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
+free_otm_state(oc_otm_ctx_t *o, int status)
 {
   if (!is_item_in_list(oc_otm_ctx_l, o)) {
     return;
@@ -349,7 +349,7 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
     o->cb.cb(&o->device->uuid, status, o->cb.data);
     free_device(o->device);
   } else {
-    if (otm != OC_OBT_RDP) {
+    if (o->otm != OC_OBT_RDP) {
       oc_list_remove(oc_cache, o->device);
       oc_list_add(oc_devices, o->device);
     }
@@ -361,15 +361,15 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
 oc_event_callback_retval_t
 oc_obt_otm_request_timeout_cb(void *data)
 {
-  free_otm_state(data, -1, 0);
+  free_otm_state(data, -1);
   return OC_EVENT_DONE;
 }
 
 void
-oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t otm)
+oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status)
 {
   oc_remove_delayed_callback(ctx, oc_obt_otm_request_timeout_cb);
-  free_otm_state(ctx, status, otm);
+  free_otm_state(ctx, status);
 }
 
 /* Device discovery */
