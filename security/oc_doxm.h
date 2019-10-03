@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,8 @@ bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_doxm(size_t device);
 oc_sec_doxm_t *oc_sec_get_doxm(size_t device);
 void oc_sec_doxm_default(size_t device);
-void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
+              void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 

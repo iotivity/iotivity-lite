@@ -10,13 +10,11 @@ import org.iotivity.OCAceConnectionType;
 import org.iotivity.OCAcePermissionsMask;
 import org.iotivity.OCAceResource;
 import org.iotivity.OCAceWildcard;
-import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCObt;
 import org.iotivity.OCRole;
 import org.iotivity.OCSecurityAce;
 import org.iotivity.OCStorage;
-import org.iotivity.OCUuid;
 import org.iotivity.OCUuidUtil;
 
 public class ObtMain {
@@ -26,7 +24,6 @@ public class ObtMain {
 
     /* Constants */
     private static final int MAX_NUM_RESOURCES = 100;
-    private static final int MAX_NUM_RT = 50;
 
     /* Sets containing discovered owned and un-owned devices */
     public static Set<OCFDeviceInfo> unownedDevices = Collections.synchronizedSet(new LinkedHashSet<OCFDeviceInfo>());
@@ -472,70 +469,6 @@ public class ObtMain {
                         break;
                     }
                 }
-            }
-
-            System.out.print("Enter number of resource types [0-None]: ");
-            c = scanner.nextInt();
-            if (c > 0 && c <= MAX_NUM_RT) {
-                OCObt.aceResourceSetNumRt(res, c);
-
-                int j = 0;
-                while (j < c) {
-                    System.out.print("Enter resource type [" + (j + 1) + "]: ");
-                    String rt = scanner.next();
-                    if (rt.length() > 127) {
-                        rt = rt.substring(0, 127);
-                    }
-                    OCObt.aceResourceBindRt(res, rt);
-                    j++;
-                }
-            }
-            System.out.print("Enter number of interfaces [0-None]: ");
-            c = scanner.nextInt();
-            if (c > 0 && c <= 7) {
-                int j = 0;
-                while (j < c) {
-                    int k;
-                    StringBuilder interfacesMenu = new StringBuilder();
-                    interfacesMenu.append("\n[1]: oic.if.baseline\n");
-                    interfacesMenu.append("[2]: oic.if.ll\n");
-                    interfacesMenu.append("[3]: oic.if.b\n");
-                    interfacesMenu.append("[4]: oic.if.r\n");
-                    interfacesMenu.append("[5]: oic.if.rw\n");
-                    interfacesMenu.append("[6]: oic.if.a\n");
-                    interfacesMenu.append("[7]: oic.if.s\n");
-                    interfacesMenu.append("\nSelect interface [" + (j + 1) + "]: ");
-                    System.out.print(interfacesMenu);
-                    k = scanner.nextInt();
-                    switch (k) {
-                    case 1:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.BASELINE);
-                        break;
-                    case 2:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.LL);
-                        break;
-                    case 3:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.B);
-                        break;
-                    case 4:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.R);
-                        break;
-                    case 5:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.RW);
-                        break;
-                    case 6:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.A);
-                        break;
-                    case 7:
-                        OCObt.aceResourceBindIf(res, OCInterfaceMask.S);
-                        break;
-                    default:
-                        break;
-                    }
-                    j++;
-                }
-            } else if (c < 0 || c > 7) {
-                System.out.println("\nWARNING: Invalid number of interfaces... skipping interface selection");
             }
             i++;
         }

@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,6 +110,8 @@ void oc_resource_bind_resource_interface(oc_resource_t *resource,
 void oc_resource_set_default_interface(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
+
+void oc_device_bind_resource_type(size_t device, const char *type);
 
 void oc_process_baseline_interface(oc_resource_t *resource);
 
@@ -424,8 +426,8 @@ bool oc_assert_role(const char *role, const char *authority,
                     void *user_data);
 void oc_auto_assert_roles(bool auto_assert);
 
-void oc_assert_all_roles(oc_endpoint_t *endpoint,
-                         oc_response_handler_t handler);
+void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
+                         void *user_data);
 #ifdef OC_TCP
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,

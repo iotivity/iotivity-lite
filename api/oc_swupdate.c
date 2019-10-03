@@ -125,15 +125,16 @@ oc_swupdate_free(void)
 {
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
+    oc_swupdate_t *s = &sw[i];
     oc_dump_sw(i);
-    if (oc_string_len(sw[i].purl) > 0) {
-      oc_free_string(&sw[i].purl);
+    if (oc_string_len(s->purl) > 0) {
+      oc_free_string(&s->purl);
     }
-    if (oc_string_len(sw[i].nv) > 0) {
-      oc_free_string(&sw[i].nv);
+    if (oc_string_len(s->nv) > 0) {
+      oc_free_string(&s->nv);
     }
-    if (oc_string_len(sw[i].signage) > 0) {
-      oc_free_string(&sw[i].signage);
+    if (oc_string_len(s->signage) > 0) {
+      oc_free_string(&s->signage);
     }
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -400,25 +401,25 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
         memcmp(oc_string(rep->name), "nv", 2) == 0) {
       if (oc_string_len(s->nv) > 0) {
         oc_free_string(&s->nv);
+        oc_new_string(&s->nv, oc_string(rep->value.string),
+                      oc_string_len(rep->value.string));
       }
-      oc_new_string(&s->nv, oc_string(rep->value.string),
-                    oc_string_len(rep->value.string));
     }
     if (oc_string_len(rep->name) == 4 &&
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
       if (oc_string_len(s->purl) > 0) {
         oc_free_string(&s->purl);
+        oc_new_string(&s->purl, oc_string(rep->value.string),
+                      oc_string_len(rep->value.string));
       }
-      oc_new_string(&s->purl, oc_string(rep->value.string),
-                    oc_string_len(rep->value.string));
     }
     if (oc_string_len(rep->name) == 6 &&
         memcmp(oc_string(rep->name), "signed", 6) == 0) {
       if (oc_string_len(s->signage) > 0) {
         oc_free_string(&s->signage);
+        oc_new_string(&s->signage, oc_string(rep->value.string),
+                      oc_string_len(rep->value.string));
       }
-      oc_new_string(&s->signage, oc_string(rep->value.string),
-                    oc_string_len(rep->value.string));
     }
     if (oc_string_len(rep->name) == 14 &&
         memcmp(oc_string(rep->name), "swupdateaction", 14) == 0) {

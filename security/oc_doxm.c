@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ oc_sec_doxm_init(void)
 void
 oc_sec_doxm_default(size_t device)
 {
-  doxm[device].oxmsel = -1;
+  doxm[device].oxmsel = 0;
 #ifdef OC_PKI
   doxm[device].sct = 9;
 #else  /* OC_PKI */
