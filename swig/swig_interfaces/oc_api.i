@@ -769,7 +769,7 @@ void jni_oc_get_properties_callback(oc_resource_t *resource, oc_interface_mask_t
 
   assert(cls_OCResource);
   const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
-  assert(mid_OCRequest_init);
+  assert(mid_OCResource_init);
   JCALL4(CallVoidMethod,
          (data->jenv),
          data->jcb_obj,
@@ -819,7 +819,7 @@ bool jni_oc_set_properties_callback(oc_resource_t *resource, oc_rep_t *rep, void
 
   assert(cls_OCResource);
   const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
-  assert(mid_OCRequest_init);
+  assert(mid_OCResource_init);
   assert(cls_OCRepresentation);
   const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
                                                      (data->jenv),
@@ -1521,12 +1521,12 @@ void jni_auto_assert_roles(bool auto_assert) {
 %ignore oc_assert_all_roles;
 %rename(assertAllRoles) jni_assert_all_roles;
 %inline %{
-void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler) {
+void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler, jni_callback_data *jcb) {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  oc_assert_all_roles(endpoint, handler);
+  oc_assert_all_roles(endpoint, handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
 #endif /* OC_SECURITY && OC_PKI */
