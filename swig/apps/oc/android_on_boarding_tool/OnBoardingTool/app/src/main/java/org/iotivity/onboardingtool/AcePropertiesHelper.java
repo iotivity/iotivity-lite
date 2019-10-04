@@ -73,7 +73,7 @@ class AcePropertiesHelper {
                     aceResource.setHref(href);
                     aceResource.setWildcard(OCAceWildcard.OC_ACE_NO_WC);
 
-                    getResourceTypes(ace, aceResource);
+                    getPermissions(ace);
 
                 } else {
                     AlertDialog.Builder wildcardAlertDialogBuilder = new AlertDialog.Builder(activity);
@@ -99,7 +99,7 @@ class AcePropertiesHelper {
                                     break;
                             }
 
-                            getResourceTypes(ace, aceResource);
+                            getPermissions(ace);
                         }
                     });
 
@@ -111,124 +111,6 @@ class AcePropertiesHelper {
 
         Dialog hrefDialog = hrefAlertDialogBuilder.create();
         hrefDialog.show();
-    }
-
-    private void getResourceTypes(final OcSecurityAce ace, final OcAceResource aceResource) {
-        AlertDialog.Builder resourceTypesAlertDialogBuilder = new AlertDialog.Builder(activity);
-
-        LinearLayout layout = new LinearLayout(activity);
-        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        layout.setOrientation(LinearLayout.VERTICAL);
-
-        final EditText input = new EditText(activity);
-        layout.addView(input);
-
-        String title = activity.getString(R.string.resourceTypesDialogTitle).replace("?", Integer.toString(resourceNumber));
-        resourceTypesAlertDialogBuilder.setTitle(title);
-        resourceTypesAlertDialogBuilder.setMessage(R.string.resourceTypesDialogMessage);
-        resourceTypesAlertDialogBuilder.setView(layout);
-
-        resourceTypesAlertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String resourceTypes = input.getText().toString().trim();
-                if (!resourceTypes.isEmpty()) {
-                    String[] types = resourceTypes.split(",");
-                    aceResource.setNumberOfResourceTypes(types.length);
-                    for (String resType : types) {
-                        resType = resType.trim();
-                        if (!resType.isEmpty()) {
-                            if (resType.length() > 127) {
-                                resType = resType.substring(0, 127);
-                            }
-                            aceResource.bindResourceType(resType);
-                        }
-                    }
-                }
-
-                getInterfaces(ace, aceResource);
-            }
-        });
-
-        Dialog resourceTypesDialog = resourceTypesAlertDialogBuilder.create();
-        resourceTypesDialog.show();
-    }
-
-    private void getInterfaces(final OcSecurityAce ace, final OcAceResource aceResource) {
-        final Set<Integer> interfaces = new HashSet<>();
-        AlertDialog.Builder interfacesAlertDialogBuilder = new AlertDialog.Builder(activity);
-        String title = activity.getString(R.string.interfacesDialogTitle).replace("?", Integer.toString(resourceNumber));
-        interfacesAlertDialogBuilder.setTitle(title);
-        interfacesAlertDialogBuilder.setMultiChoiceItems(R.array.interfaces, null, new DialogInterface.OnMultiChoiceClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                if (isChecked) {
-                    interfaces.add(which);
-                } else {
-                    if (interfaces.contains(which)) {
-                        interfaces.remove(which);
-                    }
-                }
-            }
-        });
-
-        interfacesAlertDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (!interfaces.isEmpty()) {
-                    for (int iface : interfaces) {
-                        switch (iface) {
-                            case 0:
-                                aceResource.bindInterface(OCInterfaceMask.BASELINE);
-                                break;
-                            case 1:
-                                aceResource.bindInterface(OCInterfaceMask.LL);
-                                break;
-                            case 2:
-                                aceResource.bindInterface(OCInterfaceMask.B);
-                                break;
-                            case 3:
-                                aceResource.bindInterface(OCInterfaceMask.R);
-                                break;
-                            case 4:
-                                aceResource.bindInterface(OCInterfaceMask.RW);
-                                break;
-                            case 5:
-                                aceResource.bindInterface(OCInterfaceMask.A);
-                                break;
-                            case 6:
-                                aceResource.bindInterface(OCInterfaceMask.S);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-
-                AlertDialog.Builder moreResourcesAlertDialogBuilder = new AlertDialog.Builder(activity);
-                moreResourcesAlertDialogBuilder.setTitle(R.string.addMoreResourcesDialogMessage);
-
-                moreResourcesAlertDialogBuilder.setPositiveButton("Yes"/*android.R.string.yes*/, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        getProperties(ace);
-                    }
-                });
-
-                moreResourcesAlertDialogBuilder.setNegativeButton("No"/*android.R.string.no*/, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        getPermissions(ace);
-                    }
-                });
-
-                Dialog moreResourcesDialog = moreResourcesAlertDialogBuilder.create();
-                moreResourcesDialog.show();
-            }
-        });
-
-        Dialog interfacesDialog = interfacesAlertDialogBuilder.create();
-        interfacesDialog.show();
     }
 
     private void getPermissions(final OcSecurityAce ace) {
