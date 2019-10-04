@@ -23,19 +23,34 @@
 #include "oc_obt.h"
 %}
 
-%rename(OCSecurityAce) oc_sec_ace_t;
-/* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_t */
-%nodefaultctor oc_sec_ace_t;
-%nodefaultdtor oc_sec_ace_t;
-
+/*******************Begin oc_acl_common.h*****************/
+/*
+ * NOTE: currently We only expose enums and structs from oc_acl_common.h
+ * This is why we are not currently using an independent swig interface file. It
+ * would just create an empty Java class. If any functions are exposed this should
+ * be moved to its own interface file.
+ */
+%ignore oc_sec_acl_s;
+%rename(OCAceConnectionType) oc_ace_connection_type_t;
+%rename(OCAceWildcard) oc_ace_wildcard_t;
+%ignore oc_ace_permissions_t;
 %rename(OCAceResource) oc_ace_res_t;
 /* We are relying on the iotivity-lite library to create and destry instances of oc_ace_res_t */
 %nodefaultctor oc_ace_res_t;
 %nodefaultdtor oc_ace_res_t;
-
-%rename(OCAceConnectionType) oc_ace_connection_type_t;
-%rename(OCAceWildcard) oc_ace_wildcard_t;
-%ignore oc_ace_permissions_t;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_ace_subject_type_t */
+%rename(OCAceSubjectType) oc_ace_subject_type_t;
+%nodefaultctor oc_ace_subject_type_t;
+%nodefaultdtor oc_ace_subject_type_t;
+%rename(OCAceSubject) oc_ace_subject_t;
+%nodefaultctor oc_ace_subject_t;
+%nodefaultdtor oc_ace_subject_t;
+%rename(OCAceSubjectRole) oc_ace_subject_t_role;
+%rename(OCSecurityAce) oc_sec_ace_t;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_t */
+%nodefaultctor oc_sec_ace_t;
+%nodefaultdtor oc_sec_ace_t;
+/*******************End oc_acl_common.h*****************/
 
 %ignore oc_obt_init;
 %rename(init) jni_obt_init;

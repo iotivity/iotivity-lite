@@ -514,6 +514,7 @@ void jni_reset() {
 %rename(resourceBindResourceInterface) oc_resource_bind_resource_interface;
 %rename(resourceSetDefaultInterface) oc_resource_set_default_interface;
 %rename(resourceBindResourceType) oc_resource_bind_resource_type;
+%rename(deviceBindResourceType) oc_device_bind_resource_type;
 %rename(processBaselineInterface) oc_process_baseline_interface;
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_new_collection "/**
