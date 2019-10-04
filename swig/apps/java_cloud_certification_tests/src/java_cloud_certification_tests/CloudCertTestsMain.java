@@ -149,6 +149,7 @@ public class CloudCertTestsMain {
             System.err.println("Failed to setup Storage Config.");
         }
 
+        OCMain.setConResAnnounced(false);
         OCBufferSettings.setMaxAppDataSize(6000);
         InitHandler initHandler = new InitHandler();
         int init_ret = OCMain.mainInit(initHandler);
