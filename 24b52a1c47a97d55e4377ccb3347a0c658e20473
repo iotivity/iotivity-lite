@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "e57a7391_e3690200",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ad7b9bf_b1b41a14",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 22
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da80b3d9_0a4b7b93",
         "filename": "include/oc_easysetup_enrollee.h",
         "patchSetId": 2
@@ -68,6 +92,30 @@
       "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2b70001_80d26a30",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da80b3d9_0a4b7b93",
+      "range": {
+        "startLine": 46,
+        "startChar": 33,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "f21f648a_e1a5d64f",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33431b03_3bdd9887",
+      "range": {
+        "startLine": 62,
+        "startChar": 32,
+        "endLine": 62,
+        "endChar": 34
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5555be6_bb6530d2",
         "filename": "include/oc_easysetup_enrollee.h",
         "patchSetId": 2
@@ -114,6 +186,30 @@
       "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01709eb5_6fcf1be3",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d5555be6_bb6530d2",
+      "range": {
+        "startLine": 73,
+        "startChar": 15,
+        "endLine": 73,
+        "endChar": 31
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -186,6 +282,78 @@
     },
     {
       "key": {
+        "uuid": "5add4aae_a4d4f424",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "58587cad_005e9eb4",
+      "range": {
+        "startLine": 91,
+        "startChar": 46,
+        "endLine": 91,
+        "endChar": 64
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36db92f3_7d45723b",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56eedae0_10a5a19b",
+      "range": {
+        "startLine": 91,
+        "startChar": 29,
+        "endLine": 91,
+        "endChar": 44
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aff9c2c_aa95fa6f",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "029a87f5_b94a965e",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 11
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2e6e3c7_39f3062c",
         "filename": "include/oc_easysetup_enrollee.h",
         "patchSetId": 2
@@ -206,6 +374,30 @@
       "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7ed0de5_ab263cae",
+        "filename": "include/oc_easysetup_enrollee.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1239
+      },
+      "writtenOn": "2019-10-04T12:27:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2e6e3c7_39f3062c",
+      "range": {
+        "startLine": 92,
+        "startChar": 29,
+        "endLine": 92,
+        "endChar": 56
+      },
+      "revId": "24b52a1c47a97d55e4377ccb3347a0c658e20473",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
