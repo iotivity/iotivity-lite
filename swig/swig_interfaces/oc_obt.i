@@ -23,19 +23,15 @@
 #include "oc_obt.h"
 %}
 
-%rename(OCSecurityAce) oc_sec_ace_s;
-/* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_s */
-%nodefaultctor oc_sec_ace_s;
-%nodefaultdtor oc_sec_ace_s;
-/* This will cause SWIG to wrap oc_sec_ace_s, even though oc_obt does not know anything about what is inside it */
-struct oc_sec_ace_s{ };
+%rename(OCSecurityAce) oc_sec_ace_t;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_sec_ace_t */
+%nodefaultctor oc_sec_ace_t;
+%nodefaultdtor oc_sec_ace_t;
 
-%rename(OCAceResource) oc_ace_res_s;
-/* We are relying on the iotivity-lite library to create and destry instances of oc_ace_res_s */
-%nodefaultctor oc_ace_res_s;
-%nodefaultdtor oc_ace_res_s;
-/* This will cause SWIG to wrap oc_ace_res_s, even though oc_obt does not know anything about what is inside it */
-struct oc_ace_res_s{ };
+%rename(OCAceResource) oc_ace_res_t;
+/* We are relying on the iotivity-lite library to create and destry instances of oc_ace_res_t */
+%nodefaultctor oc_ace_res_t;
+%nodefaultdtor oc_ace_res_t;
 
 %rename(OCAceConnectionType) oc_ace_connection_type_t;
 %rename(OCAceWildcard) oc_ace_wildcard_t;
@@ -623,46 +619,6 @@ void jni_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
 #endif /* OC_SECURITY */
 }
 %}
-%ignore oc_obt_ace_resource_set_num_rt;
-%rename(aceResourceSetNumRt) jni_obt_ace_resource_set_num_rt;
-%inline %{
-void jni_obt_ace_resource_set_num_rt(oc_ace_res_t *resource, int num_resources)
-{
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY)
-  oc_obt_ace_resource_set_num_rt(resource, num_resources);
-#else
-  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
-#endif /* OC_SECURITY */
-}
-%}
-%ignore oc_obt_ace_resource_bind_rt;
-%rename(aceResourceBindRt) jni_obt_ace_resource_bind_rt;
-%inline %{
-void jni_obt_ace_resource_bind_rt(oc_ace_res_t *resource, const char *rt)
-{
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY)
-  oc_obt_ace_resource_bind_rt(resource, rt);
-#else
-  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
-#endif /* OC_SECURITY */
-}
-%}
-%ignore oc_obt_ace_resource_bind_if;
-%rename(aceResourceBindIf) jni_obt_ace_resource_bind_if;
-%inline %{
-void jni_obt_ace_resource_bind_if(oc_ace_res_t *resource,
-                                  oc_interface_mask_t iface_mask)
-{
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY)
-  oc_obt_ace_resource_bind_if(resource, iface_mask);
-#else
-  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
-#endif /* OC_SECURITY */
-}
-%}
 %ignore oc_obt_ace_resource_set_wc;
 %rename(aceResourceSetWc) jni_obt_ace_resource_set_wc;
 %inline %{
@@ -763,4 +719,5 @@ int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status
 }
 %}
 
+%include "oc_acl_common.h"
 %include "oc_obt.h";

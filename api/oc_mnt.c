@@ -52,7 +52,7 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   if (oc_rep_get_bool(request->request_payload, "fr", &fr)) {
     if (fr) {
 #ifdef OC_SECURITY
-      if (oc_pstat_reset_device(request->resource->device)) {
+      if (oc_pstat_reset_device(request->resource->device, false)) {
         success = true;
       }
 #else  /* OC_SECURITY */

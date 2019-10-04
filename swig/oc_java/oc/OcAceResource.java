@@ -24,32 +24,4 @@ public class OcAceResource {
             OCObt.aceResourceSetWc(nativeResource, wildcard);
         }
     }
-
-    public void setNumberOfResourceTypes(int numRts) {
-        if (nativeResource != null) {
-            OCObt.aceResourceSetNumRt(nativeResource, numRts);
-        }
-    }
-
-    public void bindResourceType(String rt) {
-        if (nativeResource != null) {
-            OCObt.aceResourceBindRt(nativeResource, rt);
-        }
-    }
-
-    public void bindResourceTypes(String[] rts) {
-        if (nativeResource != null) {
-            OCObt.aceResourceSetNumRt(nativeResource, rts.length);
-            for (String rt : rts) {
-                OCObt.aceResourceBindRt(nativeResource, rt);
-            }
-        }
-    }
-
-    // iface is one of OCInterfaceMask
-    public void bindInterface(int iface) {
-        if (nativeResource != null) {
-            OCObt.aceResourceBindIf(nativeResource, iface);
-        }
-    }
 }

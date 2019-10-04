@@ -380,6 +380,37 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 }
 
 static void
+oc_device_bind_rt(size_t device_index, const char *rt)
+{
+  oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+  oc_string_array_t types;
+
+  memcpy(&types, &r->types, sizeof(oc_string_array_t));
+
+  size_t num_types = oc_string_array_get_allocated_size(types);
+  num_types++;
+
+  memset(&r->types, 0, sizeof(oc_string_array_t));
+  oc_new_string_array(&r->types, num_types);
+  size_t i;
+  for (i = 0; i < num_types; i++) {
+    if (i == 0) {
+      oc_string_array_add_item(r->types, rt);
+    } else {
+      oc_string_array_add_item(r->types,
+                               oc_string_array_get_item(types, (i - 1)));
+    }
+  }
+  oc_free_string_array(&types);
+}
+
+void
+oc_device_bind_resource_type(size_t device, const char *type)
+{
+  oc_device_bind_rt(device, type);
+}
+
+static void
 oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
 {

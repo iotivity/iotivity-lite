@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2018 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,13 +139,6 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-
-#ifdef OC_CLIENT
-static const int psk_priority[2] = {
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
-};
-#endif /* OC_CLIENT */
-
 static const int default_priority[8] = {
 #else  /* OC_PKI */
 static const int default_priority[2] = {
@@ -163,6 +156,10 @@ static const int default_priority[2] = {
 };
 
 #ifdef OC_CLIENT
+static const int psk_priority[2] = {
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+
 static const int anon_ecdh_priority[2] = {
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256, 0
 };
@@ -188,6 +185,7 @@ static const int otm_priority[3] = {
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
+
 static const int cloud_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 0
@@ -1655,7 +1653,7 @@ read_application_data(oc_tls_peer_t *peer)
 #ifdef OC_PKI
       if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
-        oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal);
+        oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal, peer);
       } else
 #endif /* OC_PKI */
       {

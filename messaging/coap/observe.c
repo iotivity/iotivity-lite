@@ -481,8 +481,7 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
   while (obs != NULL) {
     if (obs->endpoint.device == device &&
         (reset ||
-         !oc_sec_check_acl(OC_GET, obs->resource,
-                           obs->resource->default_interface, &obs->endpoint))) {
+         !oc_sec_check_acl(OC_GET, obs->resource, &obs->endpoint))) {
       coap_observer_t *o = obs;
       coap_packet_t notification[1];
 #ifdef OC_TCP

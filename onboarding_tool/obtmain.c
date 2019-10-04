@@ -118,8 +118,10 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "OBT", "ocf.2.0.2",
-                       "ocf.res.1.3.0", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.0.5",
+                       "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
+  oc_device_bind_resource_type(0, "oic.d.ams");
+  oc_device_bind_resource_type(0, "oic.d.cms");
   return ret;
 }
 
@@ -1128,61 +1130,6 @@ provision_ace2(void)
       }
     }
 
-    PRINT("Enter number of resource types [0-None]: ");
-    SCANF("%d", &c);
-    if (c > 0 && c <= MAX_NUM_RT) {
-      oc_obt_ace_resource_set_num_rt(res, c);
-
-      char rt[128];
-      int j = 0;
-      while (j < c) {
-        PRINT("Enter resource type [%d]: ", j + 1);
-        SCANF("%127s", rt);
-        oc_obt_ace_resource_bind_rt(res, rt);
-        j++;
-      }
-    }
-    PRINT("Enter number of interfaces [0-None]");
-    SCANF("%d", &c);
-    if (c > 0 && c <= 7) {
-      int j = 0;
-      while (j < c) {
-        int k;
-        PRINT("\n[1]: oic.if.baseline\n[2]: oic.if.ll\n[3]: oic.if.b\n[4]: "
-              "oic.if.r\n[5]: oic.if.rw\n[6]: oic.if.a\n[7]: oic.if.s\n");
-        PRINT("\nSelect interface [%d]:", j + 1);
-        SCANF("%d", &k);
-        switch (k) {
-        case 1:
-          oc_obt_ace_resource_bind_if(res, OC_IF_BASELINE);
-          break;
-        case 2:
-          oc_obt_ace_resource_bind_if(res, OC_IF_LL);
-          break;
-        case 3:
-          oc_obt_ace_resource_bind_if(res, OC_IF_B);
-          break;
-        case 4:
-          oc_obt_ace_resource_bind_if(res, OC_IF_R);
-          break;
-        case 5:
-          oc_obt_ace_resource_bind_if(res, OC_IF_RW);
-          break;
-        case 6:
-          oc_obt_ace_resource_bind_if(res, OC_IF_A);
-          break;
-        case 7:
-          oc_obt_ace_resource_bind_if(res, OC_IF_S);
-          break;
-        default:
-          break;
-        }
-        j++;
-      }
-    } else if (c < 0 || c > 7) {
-      PRINT("\nWARNING: Invalid number of interfaces.. skipping interface "
-            "selection\n");
-    }
     i++;
   }
 

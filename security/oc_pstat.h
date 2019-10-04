@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2016-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-bool oc_pstat_reset_device(size_t device);
+bool oc_pstat_reset_device(size_t device, bool self_reset);
 
 void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
 
