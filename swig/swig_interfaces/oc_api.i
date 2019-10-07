@@ -1336,7 +1336,13 @@ bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  return oc_init_put(uri, endpoint, query, handler, qos, jcb);
+  bool returnValue = oc_init_put(uri, endpoint, query, handler, qos, jcb);
+  if (returnValue == false) {
+    jni_mutex_unlock(jni_sync_lock);
+    OC_DBG("JNI - initPut failed releasing jni_sync_lock");
+    OC_DBG("JNI: - unlock %s\n", __func__);
+  }
+  return returnValue;
 }
 %}
 
@@ -1360,7 +1366,13 @@ bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *quer
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  return oc_init_post(uri, endpoint, query, handler, qos, jcb);
+  bool returnValue = oc_init_post(uri, endpoint, query, handler, qos, jcb);
+  if (returnValue == false) {
+    jni_mutex_unlock(jni_sync_lock);
+    OC_DBG("JNI - initPost failed releasing jni_sync_lock");
+    OC_DBG("JNI: - unlock %s\n", __func__);
+  }
+  return returnValue
 }
 %}
 
