@@ -468,7 +468,7 @@ obt_rdp_3(oc_client_response_t *data)
 
   /** 3) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid = { 0 };
+  oc_uuid_t dev_uuid = { { 0 } };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
