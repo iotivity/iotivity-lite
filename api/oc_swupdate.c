@@ -401,6 +401,8 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
         memcmp(oc_string(rep->name), "nv", 2) == 0) {
       if (oc_string_len(s->nv) > 0) {
         oc_free_string(&s->nv);
+      }
+      if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->nv, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
       }
@@ -409,6 +411,8 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
       if (oc_string_len(s->purl) > 0) {
         oc_free_string(&s->purl);
+      }
+      if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->purl, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
       }
@@ -417,6 +421,8 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
         memcmp(oc_string(rep->name), "signed", 6) == 0) {
       if (oc_string_len(s->signage) > 0) {
         oc_free_string(&s->signage);
+      }
+      if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->signage, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
       }
@@ -485,11 +491,13 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     if (oc_string_len(rep->name) == 2 &&
         memcmp(oc_string(rep->name), "nv", 2) == 0) {
       /* Read-only property */
+
       error_state = true;
     }
     if (oc_string_len(rep->name) == 4 &&
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
       if (rep->type != OC_REP_STRING) {
+
         error_state = true;
       }
       if (oc_string_len(rep->value.string) >= 63) {
