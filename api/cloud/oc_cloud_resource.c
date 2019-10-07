@@ -63,7 +63,6 @@ cloud_response(oc_cloud_context_t *ctx)
     (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
   oc_rep_set_text_string(
     root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
-  oc_rep_set_text_string(root, at, "");
   oc_rep_set_int(root, clec, (int)ctx->last_error);
 
   const char *cps = cps_to_str(ctx->cps);
@@ -92,12 +91,14 @@ get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 static bool
 cloud_update_from_request(oc_cloud_context_t *ctx, oc_request_t *request)
 {
+  uint8_t required = 0;
   bool changed = false;
   cloud_conf_update_t data;
   memset(&data, 0, sizeof(data));
 
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_ACCESSTOKEN,
                         &data.access_token, &data.access_token_len)) {
+    required |= 0x01;
     changed = true;
   }
 
@@ -108,17 +109,23 @@ cloud_update_from_request(oc_cloud_context_t *ctx, oc_request_t *request)
 
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER,
                         &data.ci_server, &data.ci_server_len)) {
+    required |= 0x02;
     changed = true;
   }
 
   // OCF 2.0 spec version added sid property.
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_SERVERID, &data.sid,
                         &data.sid_len)) {
+    required |= 0x04;
     changed = true;
   }
 
   if (changed) {
-    cloud_update_by_resource(ctx, &data);
+    if (required == 7) {
+      cloud_update_by_resource(ctx, &data);
+    } else {
+      changed = false;
+    }
   }
 
   return changed;
@@ -158,7 +165,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   bool changed = cloud_update_from_request(ctx, request);
   cloud_response(ctx);
   oc_send_response(request,
-                   changed ? OC_STATUS_CHANGED : OC_STATUS_NOT_MODIFIED);
+                   changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST);
 }
 
 void
