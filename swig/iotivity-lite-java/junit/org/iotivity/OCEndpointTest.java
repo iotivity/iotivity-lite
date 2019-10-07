@@ -174,4 +174,30 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
     }
 
+    @Test
+    public void test_throw_exception_on_setDi_when_endpoint_null() {
+        try {
+            OCUuid testUuid = OCUuidUtil.generateUuid();
+            OCEndpointUtil.setDi(null, testUuid);
+            fail("The call to setDi when endpoint is null should thow an exception.");
+        } catch (Exception e) {
+            assertEquals( e.getClass(), NullPointerException.class);
+            assertEquals(e.getMessage(), "OCEndpoint cannot be null.");
+        }
+    }
+
+    @Test
+    public void test_throw_exception_on_setDi_when_di_null() {
+        try {
+            String[] uri = new String[1];
+            // IPV4 with port and uri
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint("coaps://10.211.55.3:56789/a/light", uri);
+            assertNotNull(ep);
+            OCEndpointUtil.setDi(ep, null);
+            fail("The call to setDi when di is null should thow an exception.");
+        } catch (Exception e) {
+            assertEquals( e.getClass(), NullPointerException.class);
+            assertEquals(e.getMessage(), "OCUuid cannot be null.");
+        }
+    }
 }
