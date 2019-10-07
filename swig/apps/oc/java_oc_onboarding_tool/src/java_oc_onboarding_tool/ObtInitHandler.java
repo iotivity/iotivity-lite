@@ -19,8 +19,10 @@ public class ObtInitHandler implements OCMainInitHandler {
         if (ret >= 0) {
             OcDevice device = new OcDevice("/oic/d", "oic.d.dots", "OBT", "ocf.2.0.5", "ocf.res.1.0.0,ocf.sh.1.0.0");
             ret |= obtPlatform.addDevice(device);
-            OCMain.deviceBindResourceType(0, "oic.d.ams");
-            OCMain.deviceBindResourceType(0, "oic.d.cms");
+            // Note: device must be added to platform before additional resource
+            // types can be added
+            device.bindResourceType("oic.d.ams");
+            device.bindResourceType("oic.d.ams");
         }
 
         return ret;
