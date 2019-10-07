@@ -3,7 +3,7 @@
 2) Perform the build:
 Run export BOARD=native && make CLIENT=1 (or make SERVER=1)
 CLIENT=1/SERVER=1 selects the client_riot/server_riot sample.
-Add DEBUG=1 to include debug output from IoTivity-Constrained.
+Add DEBUG=1 to include debug output from IoTivity-Lite.
 
 3) Setup a tap interface:
 sudo ip tuntap add tap0 mode tap user ${USER}
