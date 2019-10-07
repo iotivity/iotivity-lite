@@ -104,6 +104,10 @@ public class OcDevice {
         return collections.toArray(new OcCollection[0]);
     }
 
+    public void bindResourceType(String rt) {
+        OCMain.deviceBindResourceType(deviceIndex, rt);
+    }
+
     int getDeviceIndex() {
         return deviceIndex;
     }
