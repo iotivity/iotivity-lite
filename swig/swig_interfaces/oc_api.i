@@ -1372,7 +1372,7 @@ bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *quer
     OC_DBG("JNI - initPost failed releasing jni_sync_lock");
     OC_DBG("JNI: - unlock %s\n", __func__);
   }
-  return returnValue
+  return returnValue;
 }
 %}
 
