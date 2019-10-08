@@ -10,7 +10,13 @@ public class OCEndpointTest {
     public void testStringToEndpoint() {
         String[] uri = new String[1];
         // IPV4 with port and uri
-        OCEndpoint ep = OCEndpointUtil.stringToEndpoint("coaps://10.211.55.3:56789/a/light", uri);
+        OCEndpoint ep = null;
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps://10.211.55.3:56789/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV4, ep.getFlags() & OCTransportFlags.IPV4);
         assertEquals(OCTransportFlags.SECURED, ep.getFlags() & OCTransportFlags.SECURED);
@@ -21,7 +27,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6
-        ep = OCEndpointUtil.stringToEndpoint("coap://[ff02::158]", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coap://[ff02::158]", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertNotEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -33,7 +44,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6 with uri
-        ep = OCEndpointUtil.stringToEndpoint("coaps://[ff02::158]/a/light", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps://[ff02::158]/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -45,7 +61,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPV6 with port and uri
-        ep = OCEndpointUtil.stringToEndpoint("coaps://[fe80::12]:2439/a/light", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps://[fe80::12]:2439/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -62,7 +83,13 @@ public class OCEndpointTest {
     public void testStringToEndpoint_dns_lookup() {
         String[] uri = new String[1];
         // dns lookup
-        OCEndpoint ep = OCEndpointUtil.stringToEndpoint("coap://openconnectivity.org", uri);
+        OCEndpoint ep = null;
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coap://openconnectivity.org", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertTrue(OCTransportFlags.IPV4 == (ep.getFlags() & OCTransportFlags.IPV4) ||
                 OCTransportFlags.IPV6 == (ep.getFlags() & OCTransportFlags.IPV6));
@@ -73,7 +100,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // dns lookup with uri
-        ep = OCEndpointUtil.stringToEndpoint("coap://openconnectivity.org/alpha", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coap://openconnectivity.org/alpha", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertTrue(OCTransportFlags.IPV4 == (ep.getFlags() & OCTransportFlags.IPV4) ||
                 OCTransportFlags.IPV6 == (ep.getFlags() & OCTransportFlags.IPV6));
@@ -84,7 +116,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // dns lookup with port and uri
-        ep = OCEndpointUtil.stringToEndpoint("coaps://openconnectivity.org:3456/alpha", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps://openconnectivity.org:3456/alpha", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertTrue(OCTransportFlags.IPV4 == (ep.getFlags() & OCTransportFlags.IPV4) ||
                 OCTransportFlags.IPV6 == (ep.getFlags() & OCTransportFlags.IPV6));
@@ -100,7 +137,13 @@ public class OCEndpointTest {
     public void testStringToEndpoint_tcp() {
         String[] uri = new String[1];
         // IPv4 over tcp and uri
-        OCEndpoint ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://10.211.55.3/a/light", uri);
+        OCEndpoint ep = null;
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://10.211.55.3/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV4, ep.getFlags() & OCTransportFlags.IPV4);
         assertEquals(OCTransportFlags.SECURED, ep.getFlags() & OCTransportFlags.SECURED);
@@ -111,7 +154,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPv4 over tcp and port
-        ep = OCEndpointUtil.stringToEndpoint("coap+tcp://1.2.3.4:2568", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coap+tcp://1.2.3.4:2568", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV4, (ep.getFlags() & OCTransportFlags.IPV4));
         assertNotEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -122,7 +170,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp  
-        ep = OCEndpointUtil.stringToEndpoint("coap+tcp://[ff02::158]", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coap+tcp://[ff02::158]", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertNotEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -134,7 +187,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp with uri
-        ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://[ff02::158]/a/light", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://[ff02::158]/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -146,7 +204,12 @@ public class OCEndpointTest {
         OCEndpointUtil.freeEndpoint(ep);
 
         // IPv6 over tcp with port and uri 
-        ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://[fe80::12]:2439/a/light", uri);
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://[fe80::12]:2439/a/light", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertEquals(OCTransportFlags.IPV6, (ep.getFlags() & OCTransportFlags.IPV6));
         assertEquals(OCTransportFlags.SECURED, (ep.getFlags() & OCTransportFlags.SECURED));
@@ -163,7 +226,13 @@ public class OCEndpointTest {
     public void testStringToEndpoint_tcp_and_dns_lookup() {
         String[] uri = new String[1];
         // dns lookup over tcp with port
-        OCEndpoint ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://openconnectivity.org:3456", uri);
+        OCEndpoint ep = null;
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("coaps+tcp://openconnectivity.org:3456", uri);
+        } catch (OCEndpointParseException e) {
+            e.printStackTrace();
+            fail("stringToEndpoint threw exception when it was not expected.");
+        }
         assertNotNull(ep);
         assertTrue(OCTransportFlags.IPV4 == (ep.getFlags() & OCTransportFlags.IPV4) ||
                 OCTransportFlags.IPV6 == (ep.getFlags() & OCTransportFlags.IPV6));
@@ -199,5 +268,33 @@ public class OCEndpointTest {
             assertEquals( e.getClass(), NullPointerException.class);
             assertEquals(e.getMessage(), "OCUuid cannot be null.");
         }
+    }
+
+    @Test
+    public void test_throw_parse_exception_stringToEndpoint() {
+        String[] uri = new String[1];
+        OCEndpoint ep = null;
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("", uri);
+            fail("The call stringToEndpoint should throw an exception");
+        } catch (OCEndpointParseException e) {
+            assertEquals("String cannot be parced.", e.getMessage());
+        }
+
+        try {
+            // will fail does not have `://`
+            ep = OCEndpointUtil.stringToEndpoint("coaps+tcp", uri);
+            fail("The call stringToEndpoint should throw an exception");
+        } catch (OCEndpointParseException e) {
+            assertEquals("String cannot be parced.", e.getMessage());
+        }
+
+        try {
+            ep = OCEndpointUtil.stringToEndpoint("foobar", uri);
+            fail("The call stringToEndpoint should throw an exception");
+        } catch (OCEndpointParseException e) {
+            assertEquals("String cannot be parced.", e.getMessage());
+        }
+        assertNull(ep);
     }
 }
