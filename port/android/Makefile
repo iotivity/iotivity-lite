@@ -187,8 +187,8 @@ ifeq ($(TCP),1)
 	CFLAGS += -DOC_TCP
 endif
 
-CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
-		    libiotivity-constrained-client-server.a
+CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
+		    libiotivity-lite-client-server.a
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES)
 
@@ -216,68 +216,68 @@ ${OBJDIR}/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
-libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
-libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
-server: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+client: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-smart_lock: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+smart_lock: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-temp_sensor: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+temp_sensor: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-simpleserver: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+simpleserver: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleclient: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+simpleclient: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-client_collections_linux: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client_collections_linux: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_collections_linux: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_collections_linux: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_block_linux: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client_block_linux: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_block_linux: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_block_linux: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+smart_home_server_linux: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_server: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+multi_device_server: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_client: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+multi_device_client: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_linux: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
-	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+cloud_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
+	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
-cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
-	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
+	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
-${OBT}: libiotivity-constrained-client.a
-	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+${OBT}: libiotivity-lite-client.a
+	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_multithread_linux: libiotivity-constrained-server.a
-	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_multithread_linux: libiotivity-lite-server.a
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_multithread_linux: libiotivity-constrained-client.a
-	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client_multithread_linux: libiotivity-lite-client.a
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))

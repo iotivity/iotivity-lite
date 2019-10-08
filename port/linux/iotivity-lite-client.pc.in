@@ -17,9 +17,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: iotivity-constrained-client
-Description: Iotivity constrained client library
+Name: iotivity-lite-client
+Description: Iotivity lite client library
 Version: @version@
 Libs.private: -lm -pthread
-Cflags: -I${includedir}/iotivity-constrained -DOC_CLIENT @extra_cflags@
-Libs: -L${libdir} -liotivity-constrained-client
+Cflags: -I${includedir}/iotivity-lite -DOC_CLIENT @extra_cflags@
+Libs: -L${libdir} -liotivity-lite-client

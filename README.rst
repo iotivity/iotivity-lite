@@ -150,7 +150,7 @@ Setup source tree
 
 Grab source and dependencies using:
 
-``git clone --recursive https://github.com/iotivity/iotivity-constrained.git``
+``git clone --recursive https://github.com/iotivity/iotivity-lite.git``
 
 Building sample applications on Linux
 -------------------------------------
