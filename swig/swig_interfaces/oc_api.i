@@ -1488,6 +1488,10 @@ void jni_free_server_endpoints(oc_endpoint_t *endpoints) {
 
 %rename(closeSession) oc_close_session;
 %rename(OCRole) oc_role_t;
+%nodefaultctor oc_role_t;
+%nodefaultdtor oc_role_t;
+%immutable oc_role_t::role;
+%immutable oc_role_t::authority;
 %ignore oc_get_all_roles;
 %rename(getAllRoles) jni_get_all_roles;
 %inline %{
