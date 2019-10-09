@@ -29,6 +29,8 @@ swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/
 
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_introspection_wrap.c ../swig_interfaces/oc_introspection.i
 
+swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_cred_wrap.c ../swig_interfaces/oc_cred.i
+
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
 then
   echo Building wrapper for linux clock
