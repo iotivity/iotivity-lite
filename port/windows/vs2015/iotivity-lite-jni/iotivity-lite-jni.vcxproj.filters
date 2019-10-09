@@ -46,6 +46,9 @@
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.c">
       <Filter>c_wrap</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cred_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -107,6 +110,9 @@
       <Filter>swig_interfaces</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_session_events.i">
+      <Filter>swig_interfaces</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cred.i">
       <Filter>swig_interfaces</Filter>
     </CustomBuild>
   </ItemGroup>
