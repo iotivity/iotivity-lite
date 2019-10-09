@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62c4d89a_bb71d664",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-09T03:50:22Z",
+      "side": 1,
+      "message": "parsed",
+      "revId": "4d8a59a31aa2e40572565d3214a1435cb1e58133",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e56a73ed_47d52d71",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-09T03:50:22Z",
+      "side": 1,
+      "message": "parsed",
+      "revId": "4d8a59a31aa2e40572565d3214a1435cb1e58133",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
