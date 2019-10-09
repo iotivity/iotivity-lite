@@ -24,6 +24,7 @@
 #else
 #error "Unsupported OS"
 #endif
+#include "oc_client_state.h"
 #include "util/oc_list.h"
 #include <jni.h>
 
@@ -182,5 +183,13 @@ JavaVM *get_jvm();
 JNIEnv *get_jni_env(jint *getEnvResult);
 
 void release_jni_env(jint getEnvResult);
+
+/*
+ * oc_discovery_handler responsible for calling the java OCDiscoveryHandler
+ */
+oc_discovery_flags_t jni_oc_discovery_handler_callback(
+  const char *anchor, const char *uri, oc_string_array_t types,
+  oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+  oc_resource_properties_t bm, void *user_data);
 
 #endif /* OC_IOTIVITY_LITE_H */
