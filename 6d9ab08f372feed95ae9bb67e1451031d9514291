@@ -34,6 +34,24 @@
       "revId": "6d9ab08f372feed95ae9bb67e1451031d9514291",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e2323c5_bc23d2fd",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-09T17:21:55Z",
+      "side": 1,
+      "message": "perfect",
+      "parentUuid": "17db7873_0f233cb0",
+      "revId": "6d9ab08f372feed95ae9bb67e1451031d9514291",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
