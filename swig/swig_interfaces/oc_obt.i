@@ -2,9 +2,12 @@
 %module OCObt
 %include "typemaps.i"
 %include "iotivity.swg"
+%include "enums.swg"
+%javaconst(1);
 
 %import "oc_api.i"
 %import "oc_uuid.i"
+%import "oc_cred.i"
 
 %pragma(java) jniclasscode=%{
   static {
