@@ -16,6 +16,24 @@
       "revId": "fdf0013b3a87f5781f86322e07a7076e0ad9bdb3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1355d4e1_2c0bc5ce",
+        "filename": "swig/oc_java/OCEndpointParceException.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-09T00:33:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1835af94_3cc3e9d6",
+      "revId": "fdf0013b3a87f5781f86322e07a7076e0ad9bdb3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
