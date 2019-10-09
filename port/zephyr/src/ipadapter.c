@@ -54,7 +54,7 @@ static struct sockaddr_in6 dtls_addr6;
 #define MY_DTLS_PORT (56789)
 #endif /* OC_SECURITY */
 static oc_endpoint_t *eps;
-/* For synchronizing the network receive thread with IoTivity-Constrained's
+/* For synchronizing the network receive thread with IoTivity-Lite's
  * event loop.
  */
 static struct k_sem sem;

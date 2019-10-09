@@ -17,9 +17,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: iotivity-constrained-server
-Description: Iotivity constrained server library
+Name: iotivity-lite-server
+Description: Iotivity lite server library
 Version: @version@
 Libs.private: -lm -pthread
-Cflags: -I${includedir}/iotivity-constrained -DOC_SERVER @extra_cflags@
-Libs: -L${libdir} -liotivity-constrained-server
+Cflags: -I${includedir}/iotivity-lite -DOC_SERVER @extra_cflags@
+Libs: -L${libdir} -liotivity-lite-server

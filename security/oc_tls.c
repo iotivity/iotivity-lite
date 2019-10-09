@@ -310,6 +310,32 @@ oc_tls_remove_peer(oc_endpoint_t *endpoint)
   }
 }
 
+bool
+oc_tls_is_pin_otm_supported(size_t device)
+{
+  (void)device;
+  if (random_pin.cb) {
+    return true;
+  }
+  return false;
+}
+
+#ifdef OC_PKI
+bool
+oc_tls_is_cert_otm_supported(size_t device)
+{
+  oc_x509_crt_t *crt = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  while (crt) {
+    if (crt->device == device &&
+        crt->cred->credusage == OC_CREDUSAGE_MFG_CERT) {
+      return true;
+    }
+    crt = crt->next;
+  }
+  return false;
+}
+#endif /* OC_PKI */
+
 static void
 oc_tls_handler_schedule_read(oc_tls_peer_t *peer)
 {

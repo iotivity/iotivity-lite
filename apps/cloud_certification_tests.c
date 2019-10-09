@@ -20,6 +20,7 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_pki.h"
 #include "port/oc_clock.h"
 #include "rd_client.h"
 #include <pthread.h>
@@ -27,12 +28,11 @@
 #include <stdio.h>
 
 // define application specific values.
-static const char *spec_version = "ocf.1.0.0";
-static const char *data_model_version = "ocf.res.1.0.0";
+static const char *spec_version = "ocf.2.0.5";
+static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
-static const char *resource_rt = "core.light";
-static const char *device_rt = "oic.d.cloudDevice";
-static const char *device_name = "Cloud Device";
+static const char *device_rt = "oic.d.switch";
+static const char *device_name = "Cloud Switch";
 
 static const char *manufacturer = "ocfcloud.com";
 
@@ -67,9 +67,10 @@ display_menu(void)
   PRINT("[4] Cloud DeRegister\n");
   PRINT("[5] Cloud Refresh Token\n");
   PRINT("[6] Publish Resources\n");
+  PRINT("[7] Send Ping\n");
   PRINT("-----------------------------------------------\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[7] Exit\n");
+  PRINT("[8] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
@@ -312,102 +313,122 @@ cloud_register(void)
   }
 }
 
-struct light_t
+static void
+ping_handler(oc_client_response_t *data)
 {
-  bool state;
-  int power;
-};
-
-struct light_t light1 = { 0 };
-struct light_t light2 = { 0 };
+  (void)data;
+  PRINT("\nReceived Pong\n");
+}
 
 static void
-get_handler(oc_request_t *request, oc_interface_mask_t interface,
-            void *user_data)
+cloud_send_ping(void)
 {
-  struct light_t *light = (struct light_t *)user_data;
+  PRINT("\nEnter receiving endpoint: ");
+  char addr[256];
+  SCANF("%255s", addr);
+  char endpoint_string[256];
+  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  oc_string_t ep_string;
+  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_endpoint_t endpoint;
+  int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
+  oc_free_string(&ep_string);
+  if (ret < 0) {
+    PRINT("\nERROR parsing endpoint string\n");
+    return;
+  }
 
-  printf("get_handler:\n");
+  if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
+    PRINT("\nSuccessfully issued Ping request\n");
+    return;
+  }
 
+  PRINT("\nERROR issuing Ping request\n");
+}
+
+struct switch_t
+{
+  bool state;
+};
+
+struct switch_t bswitch = { 0 };
+
+static void
+get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
+  (void)user_data;
+  PRINT("GET_switch:\n");
   oc_rep_start_root_object();
-  switch (interface) {
+  switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
   /* fall through */
-  case OC_IF_RW:
-    oc_rep_set_boolean(root, state, light->state);
-    oc_rep_set_int(root, power, light->power);
-    oc_rep_set_text_string(root, name, "Light");
+  case OC_IF_A:
+    oc_rep_set_boolean(root, value, bswitch.state);
     break;
   default:
     break;
   }
   oc_rep_end_root_object();
+
   oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
-post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *user_data)
+post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
 {
-  struct light_t *light = (struct light_t *)user_data;
   (void)iface_mask;
-  printf("post_handler:\n");
+  (void)user_data;
+  PRINT("POST_switch:\n");
+  bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    char *key = oc_string(rep->name);
-    printf("key: %s ", key);
-    if (key && !strcmp(key, "state")) {
-      switch (rep->type) {
-      case OC_REP_BOOL:
-        light->state = rep->value.boolean;
-        printf("value: %d\n", light->state);
-        break;
-      default:
-        oc_send_response(request, OC_STATUS_BAD_REQUEST);
-        return;
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      state = rep->value.boolean;
+      break;
+    default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
       }
-    } else if (key && !strcmp(key, "power")) {
-      switch (rep->type) {
-      case OC_REP_INT:
-        light->power = rep->value.integer;
-        printf("value: %d\n", light->power);
-        break;
-      default:
-        oc_send_response(request, OC_STATUS_BAD_REQUEST);
-        return;
-      }
+      bad_request = true;
+      break;
     }
     rep = rep->next;
   }
-  oc_send_response(request, OC_STATUS_CHANGED);
-  oc_notify_observers(request->resource);
+
+  if (!bad_request) {
+    bswitch.state = state;
+  }
+
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, value, bswitch.state);
+  oc_rep_end_root_object();
+
+  if (!bad_request) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
 }
 
 static void
 register_resources(void)
 {
-  res1 = oc_new_resource(NULL, "/light/1", 1, 0);
-  oc_resource_bind_resource_type(res1, resource_rt);
-  oc_resource_bind_resource_interface(res1, OC_IF_RW);
-  oc_resource_set_default_interface(res1, OC_IF_RW);
+  res1 = oc_new_resource(NULL, "/switch/1", 1, 0);
+  oc_resource_bind_resource_type(res1, "oic.r.switch.binary");
+  oc_resource_bind_resource_interface(res1, OC_IF_A);
+  oc_resource_set_default_interface(res1, OC_IF_A);
   oc_resource_set_discoverable(res1, true);
   oc_resource_set_observable(res1, true);
-  oc_resource_set_request_handler(res1, OC_GET, get_handler, &light1);
-  oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
+  oc_resource_set_request_handler(res1, OC_GET, get_switch, NULL);
+  oc_resource_set_request_handler(res1, OC_POST, post_switch, NULL);
   oc_cloud_add_resource(res1); /* Publish resource to the Cloud RD */
   oc_add_resource(res1);
-
-  res2 = oc_new_resource(NULL, "/light/2", 1, 0);
-  oc_resource_bind_resource_type(res2, resource_rt);
-  oc_resource_bind_resource_interface(res2, OC_IF_RW);
-  oc_resource_set_default_interface(res2, OC_IF_RW);
-  oc_resource_set_discoverable(res2, true);
-  oc_resource_set_observable(res2, true);
-  oc_resource_set_request_handler(res2, OC_GET, get_handler, &light2);
-  oc_resource_set_request_handler(res2, OC_POST, post_handler, &light2);
-  oc_cloud_add_resource(res2); /* Publish resource to the Cloud RD */
-  oc_add_resource(res2);
 }
 
 static void
@@ -426,6 +447,115 @@ handle_signal(int signal)
   quit = 1;
 }
 
+#ifdef OC_SECURITY
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
+  (void)data;
+  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+}
+#endif /* OC_SECURITY */
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
+  FILE *fp = fopen(file_path, "r");
+  if (fp == NULL) {
+    PRINT("ERROR: unable to read PEM\n");
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  long pem_len = ftell(fp);
+  if (pem_len < 0) {
+    PRINT("ERROR: could not obtain length of file\n");
+    fclose(fp);
+    return -1;
+  }
+  if (pem_len > (long)*buffer_len) {
+    PRINT("ERROR: buffer provided too small\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+  *buffer_len = (size_t)pem_len;
+  return 0;
+}
+#endif /* OC_SECURITY && OC_PKI */
+
+void
+factory_presets_cb(size_t device, void *data)
+{
+  (void)device;
+  (void)data;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  char cert[8192];
+  size_t cert_len = 8192;
+  if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  char key[4096];
+  size_t key_len = 4096;
+  if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
+    PRINT("ERROR: unable to read private key");
+    return;
+  }
+
+  int ee_credid = oc_pki_add_mfg_cert(0, (const unsigned char *)cert, cert_len,
+                                      (const unsigned char *)key, key_len);
+
+  if (ee_credid < 0) {
+    PRINT("ERROR installing manufacturer EE cert\n");
+    return;
+  }
+
+  cert_len = 8192;
+  if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int subca_credid = oc_pki_add_mfg_intermediate_cert(
+    0, ee_credid, (const unsigned char *)cert, cert_len);
+
+  if (subca_credid < 0) {
+    PRINT("ERROR installing intermediate CA cert\n");
+    return;
+  }
+
+  cert_len = 8192;
+  if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int rootca_credid =
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+
+  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+#endif /* OC_SECURITY && OC_PKI */
+}
+
 static void *
 ocf_event_thread(void *data)
 {
@@ -442,7 +572,11 @@ ocf_event_thread(void *data)
     return NULL;
   }
   oc_set_con_res_announced(false);
-  oc_set_max_app_data_size(6000);
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
+#ifdef OC_SECURITY
+  oc_set_random_pin_callback(random_pin_cb, NULL);
+#endif /* OC_SECURITY */
+  oc_set_max_app_data_size(16384);
   int init = oc_main_init(&handler);
   if (init < 0)
     return NULL;
@@ -506,6 +640,9 @@ main(void)
       oc_cloud_publish_resources(0);
       break;
     case 7:
+      cloud_send_ping();
+      break;
+    case 8:
       handle_signal(0);
     default:
       break;

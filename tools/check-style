@@ -68,7 +68,7 @@ def check_style(files, only_print):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=
                                      'Format the files in the repository according '
-                                     'with iotivity constrained code style.')
+                                     'with iotivity-lite code style.')
     parser.add_argument('-p', action='store_true', default=False,
                         help='Only print the changes')
 

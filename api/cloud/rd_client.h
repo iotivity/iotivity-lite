@@ -18,7 +18,7 @@
  ****************************************************************************/
 
 /**
-  @brief Resource Directory API of IoTivity-constrained for client.
+  @brief Resource Directory API of IoTivity-Lite for RD clients.
   @file
 */
 

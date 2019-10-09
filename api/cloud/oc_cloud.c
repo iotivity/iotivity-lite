@@ -108,7 +108,7 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
   (void)status;
   (void)data;
   cloud_close_endpoint(ctx->cloud_ep);
-  cloud_store_deinit(&ctx->store);
+  cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
   ctx->cps = 0;
@@ -132,7 +132,7 @@ oc_cloud_reset_context(size_t device)
   }
 #endif /* OC_SECURITY */
 
-  cloud_store_deinit(&ctx->store);
+  cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
   ctx->cps = 0;
@@ -144,7 +144,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
                          const cloud_conf_update_t *data)
 {
   cloud_close_endpoint(ctx->cloud_ep);
-  cloud_store_deinit(&ctx->store);
+  cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   if (data->auth_provider && data->auth_provider_len) {
     cloud_set_string(&ctx->store.auth_provider, data->auth_provider,
@@ -269,7 +269,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   oc_remove_delayed_callback(ctx, start_manager);
   cloud_rd_deinit(ctx);
   cloud_manager_stop(ctx);
-  cloud_store_deinit(&ctx->store);
+  cloud_store_initialize(&ctx->store);
   cloud_close_endpoint(ctx->cloud_ep);
   ctx->cloud_manager = false;
   return 0;
@@ -311,7 +311,7 @@ oc_cloud_shutdown(void)
     if (ctx) {
       cloud_rd_deinit(ctx);
       cloud_manager_stop(ctx);
-      cloud_store_initialize(&ctx->store);
+      cloud_store_deinit(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
       oc_memb_free(&cloud_context_pool, ctx);

@@ -88,7 +88,7 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
                                oc_request_callback_t delete_cb,
                                int num_resource_types, ...);
 
-void oc_core_regen_unique_ids(size_t device);
+void oc_core_gen_unique_ids(size_t device);
 
 bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
 

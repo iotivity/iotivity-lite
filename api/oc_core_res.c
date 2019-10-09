@@ -155,12 +155,9 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 
 #ifdef OC_SECURITY
 void
-oc_core_regen_unique_ids(size_t device)
+oc_core_gen_unique_ids(size_t device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  oc_device_info_t *d = &oc_device_info[device];
-  oc_gen_uuid(&doxm->deviceuuid);
-  memcpy(d->di.id, doxm->deviceuuid.id, 16);
+  oc_device_info_t *d = oc_core_get_device_info(device);
   oc_gen_uuid(&d->piid);
   oc_gen_uuid(&oc_platform_info.pi);
 }
@@ -553,11 +550,12 @@ oc_core_is_DCR(oc_resource_t *resource, size_t device)
 
   size_t DCRs_end = device_resources + OCF_D, i;
   for (i = device_resources + 1; i <= DCRs_end; i++) {
-    if (i == (device_resources + OCF_INTROSPECTION_WK) ||
-        i == (device_resources + OCF_INTROSPECTION_DATA)) {
-      continue;
-    }
     if (resource == &core_resources[i]) {
+      if (i == (device_resources + OCF_INTROSPECTION_WK) ||
+          i == (device_resources + OCF_INTROSPECTION_DATA) ||
+          i == (device_resources + OCF_CON)) {
+        return false;
+      }
       return true;
     }
   }

@@ -232,6 +232,7 @@ oc_main_init(const oc_handler_t *handler)
 #ifdef OC_SECURITY
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
+    oc_sec_load_unique_ids(device);
     oc_sec_load_pstat(device);
     oc_sec_load_doxm(device);
     oc_sec_load_cred(device);
@@ -240,7 +241,6 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_sp(device);
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
-    oc_sec_load_unique_ids(device);
   }
 #endif
 

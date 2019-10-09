@@ -15,12 +15,12 @@
 */
 
 /**
-  @brief Main API of IoTivity-constrained for client and server.
+  @brief Main API of IoTivity-Lite for client and server.
   @file
 */
 
 /**
-  \mainpage IoTivity-constrained API
+  \mainpage IoTivity-Lite API
 
   The file \link oc_api.h\endlink is the main entry for all
   server and client related OCF functions.

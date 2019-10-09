@@ -609,7 +609,7 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-// oc_set_mtu_size(50000);
+  oc_set_max_app_data_size(16384);
 
 #ifdef OC_SECURITY
   oc_storage_config("./smart_home_server_linux_creds");
