@@ -5,6 +5,7 @@
 
 %import "oc_api.i"
 %import "oc_uuid.i"
+%import "oc_cred.i"
 
 %pragma(java) jniclasscode=%{
   static {
