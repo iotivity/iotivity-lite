@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93912f50_e6f1cc7f",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-09T17:12:17Z",
+      "side": 1,
+      "message": "Is it possible to include the bad string in the message?",
+      "revId": "6d9ab08f372feed95ae9bb67e1451031d9514291",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
