@@ -264,6 +264,26 @@ int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callbac
 }
 %}
 
+%ignore oc_obt_discover_all_resources;
+%rename (discoverAllResources) jni_obt_discover_all_resources;
+%inline %{
+int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_discover_all_resources(uuid, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY */
+  return return_value;
+}
+%}
+
 /* code and typemaps for mapping the oc_obt_device_status_cb_t to the java OCObtDeviceStatusHandler */
 %{
 static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_data)
