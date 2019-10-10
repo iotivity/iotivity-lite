@@ -99,10 +99,12 @@ display_menu(void)
   PRINT("[16] DELETE cred by credid\n");
   PRINT("[17] RETRIEVE /oic/sec/acl2\n");
   PRINT("[18] DELETE ace by aceid\n");
+  PRINT("[19] RETRIEVE own creds\n");
+  PRINT("[20] DELETE own cred by credid\n");
 #ifdef OC_PKI
-  PRINT("[19] Provision role RW access to NCRs\n");
-  PRINT("[20] Provision identity certificate\n");
-  PRINT("[21] Provision role certificate\n");
+  PRINT("[21] Provision role RW access to NCRs\n");
+  PRINT("[22] Provision identity certificate\n");
+  PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
@@ -710,9 +712,8 @@ retrieve_acl2_rsrc(void)
 }
 
 static void
-retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
+display_cred_rsrc(oc_sec_creds_t *creds)
 {
-  (void)data;
   if (creds) {
     PRINT("\n/oic/sec/cred:\n");
     oc_sec_cred_t *cr = oc_list_head(creds->creds);
@@ -742,12 +743,32 @@ retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
       cr = cr->next;
     }
     PRINT("\n################################################\n");
+  }
+}
 
+static void
+retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
+{
+  (void)data;
+  if (creds) {
+    display_cred_rsrc(creds);
     /* Freeing the creds structure */
     oc_obt_free_creds(creds);
   } else {
     PRINT("\nERROR RETRIEving /oic/sec/cred\n");
   }
+}
+
+static void
+retrieve_own_creds(void)
+{
+  otb_mutex_lock(app_sync_lock);
+  /* The creds returned by oc_obt_retrieve_own_creds() point to
+     internal data structures that store the security context of the OBT.
+     DO NOT free them.
+  */
+  display_cred_rsrc(oc_obt_retrieve_own_creds());
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
@@ -852,6 +873,23 @@ delete_cred_by_credid_cb(int status, void *data)
   } else {
     PRINT("\nERROR DELETing cred\n");
   }
+}
+
+static void
+delete_own_cred_by_credid(void)
+{
+  PRINT("\nEnter credid: ");
+  int credid;
+  SCANF("%d", &credid);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_delete_own_cred_by_credid(credid);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully DELETED cred\n");
+  } else {
+    PRINT("\nERROR DELETing cred\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
 }
 
 static void
@@ -1751,14 +1789,20 @@ main(void)
     case 18:
       delete_ace_by_aceid();
       break;
-#ifdef OC_PKI
     case 19:
-      provision_role_wildcard_ace();
+      retrieve_own_creds();
       break;
     case 20:
+      delete_own_cred_by_credid();
+      break;
+#ifdef OC_PKI
+    case 21:
+      provision_role_wildcard_ace();
+      break;
+    case 22:
       provision_id_cert();
       break;
-    case 21:
+    case 23:
       provision_role_cert();
       break;
     case 96:

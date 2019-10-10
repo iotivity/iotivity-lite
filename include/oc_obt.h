@@ -108,6 +108,9 @@ int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
 
+oc_sec_creds_t *oc_obt_retrieve_own_creds(void);
+int oc_obt_delete_own_cred_by_credid(int credid);
+
 typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *, void *);
 
 int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);

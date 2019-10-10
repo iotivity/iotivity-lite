@@ -2673,6 +2673,23 @@ oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid, oc_obt_status_cb_t cb,
   return 0;
 }
 
+oc_sec_creds_t *
+oc_obt_retrieve_own_creds(void)
+{
+  return oc_sec_get_creds(0);
+}
+
+int
+oc_obt_delete_own_cred_by_credid(int credid)
+{
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, 0);
+  if (cred) {
+    oc_sec_remove_cred(cred, 0);
+    return 0;
+  }
+  return -1;
+}
+
 /* OBT initialization and shutdown */
 int
 oc_obt_init(void)
