@@ -716,6 +716,7 @@ coap_notify_observers(oc_resource_t *resource,
       obs = obs->next;
     } // iterate over observers
   leave_notify_observers:
+    ;
 #ifdef OC_DYNAMIC_ALLOCATION
     if (buffer) {
       free(buffer);
