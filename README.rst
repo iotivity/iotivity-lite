@@ -1,7 +1,7 @@
 Getting Started
 ---------------
 
-IoTivity-Constrained is a lightweight implementation of the
+IoTivity-Lite is a lightweight implementation of the
 `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards
 for the Internet of Things (IoT).
 
@@ -23,21 +23,21 @@ commercial-friendly Apache v2 license.
 Contents
 --------
 
-- `IoTivity-Constrained Architecture`_
+- `IoTivity-Lite Architecture`_
 - `Project directory structure`_
 - `Setup source tree`_
 - `Building sample applications on Linux`_
 - `Framework configuration`_
 
-IoTivity-Constrained Architecture
+IoTivity-Lite Architecture
 ---------------------------------
 
-.. image:: IoTivityConstrained-Arch.png
+.. image:: IoTivityLite-Arch.png
    :scale: 100%
-   :alt: IoTivity-Constrained Architecture
+   :alt: IoTivity-Lite Architecture
    :align: center
 
-IoTivity-Constrained's design presents the following features:
+IoTivity-Lite's design presents the following features:
 
 - **OS agnostic core**: This cross-platform core (written in pure C)
   encompasses the APIs, OCF resource model, protocol, security features,
@@ -150,7 +150,7 @@ Setup source tree
 
 Grab source and dependencies using:
 
-``git clone --recursive https://github.com/iotivity/iotivity-constrained.git``
+``git clone --recursive https://github.com/iotivity/iotivity-lite.git``
 
 Building sample applications on Linux
 -------------------------------------
@@ -178,7 +178,7 @@ Building sample applications on Windows
 ---------------------------------------
 
 A Visual Studio project file can be found in
-``port/windows/vs2015/IoTivity-Constrained.sln``. Open the solution file in
+``port/windows/vs2015/IoTivity-Lite.sln``. Open the solution file in
 Visual Studio 2015 or newer. If the version of Visual Studio is newer a prompt
 should pop up asking if you would like to upgrade the visual studio project
 files. Agree to upgrade the files.

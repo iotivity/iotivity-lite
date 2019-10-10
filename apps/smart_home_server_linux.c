@@ -32,7 +32,7 @@ static double temp = 5.0, temp_K = (5.0 + 273.15), temp_F = (5.0 * 9 / 5 + 32),
 typedef enum { C = 100, F, K } units_t;
 units_t temp_units = C;
 static bool switch_state;
-
+const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
 static int
 app_init(void)
 {
@@ -40,6 +40,12 @@ app_init(void)
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+
+  if (err >= 0) {
+    oc_uuid_t my_uuid;
+    oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
+    oc_set_immutable_device_identifier(0, &my_uuid);
+  }
   return err;
 }
 
@@ -609,7 +615,7 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-// oc_set_mtu_size(50000);
+  oc_set_max_app_data_size(16384);
 
 #ifdef OC_SECURITY
   oc_storage_config("./smart_home_server_linux_creds");

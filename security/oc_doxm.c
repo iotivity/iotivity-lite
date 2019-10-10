@@ -17,7 +17,7 @@
 #ifdef OC_SECURITY
 
 #include "oc_doxm.h"
-#include "oc_acl.h"
+#include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pstat.h"
@@ -59,6 +59,23 @@ oc_sec_doxm_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+static void
+evaluate_supported_oxms(size_t device)
+{
+  doxm[device].oxms[0] = OC_OXMTYPE_JW;
+  doxm[device].oxms[1] = -1;
+  doxm[device].oxms[2] = -1;
+  doxm[device].num_oxms = 1;
+  if (oc_tls_is_pin_otm_supported(device)) {
+    doxm[device].oxms[doxm[device].num_oxms++] = OC_OXMTYPE_RDP;
+  }
+#ifdef OC_PKI
+  if (oc_tls_is_cert_otm_supported(device)) {
+    doxm[device].oxms[doxm[device].num_oxms++] = OC_OXMTYPE_MFG_CERT;
+  }
+#endif /* OC_PKI */
+}
+
 void
 oc_sec_doxm_default(size_t device)
 {
@@ -71,28 +88,25 @@ oc_sec_doxm_default(size_t device)
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
-  oc_core_regen_unique_ids(device);
+  /* Generate a new temporary device UUID */
+  oc_device_info_t *d = oc_core_get_device_info(device);
+  oc_gen_uuid(&doxm[device].deviceuuid);
+  memcpy(d->di.id, doxm[device].deviceuuid.id, 16);
   oc_sec_dump_doxm(device);
 }
 
 void
-oc_sec_encode_doxm(size_t device)
+oc_sec_encode_doxm(size_t device, bool to_storage)
 {
-#ifdef OC_PKI
-  int oxms[3] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP, OC_OXMTYPE_MFG_CERT };
-#else  /* OC_PKI */
-  int oxms[2] = { OC_OXMTYPE_JW, OC_OXMTYPE_RDP };
-#endif /* !OC_PKI */
   char uuid[37];
   oc_rep_start_root_object();
   oc_process_baseline_interface(
     oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
-/* oxms */
-#ifdef OC_PKI
-  oc_rep_set_int_array(root, oxms, oxms, 3);
-#else  /* OC_PKI */
-  oc_rep_set_int_array(root, oxms, oxms, 2);
-#endif /* !OC_PKI */
+  /* oxms */
+  if (!to_storage) {
+    evaluate_supported_oxms(device);
+    oc_rep_set_int_array(root, oxms, doxm[device].oxms, doxm[device].num_oxms);
+  }
   /* oxmsel */
   oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);
   /* sct */
@@ -136,7 +150,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         oc_ignore_request(request);
       }
     } else {
-      oc_sec_encode_doxm(device);
+      oc_sec_encode_doxm(device, false);
       oc_send_response(request, OC_STATUS_OK);
     }
   } break;
@@ -170,9 +184,24 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     /* oxmsel and sct */
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "oxmsel", 6) == 0) {
-        if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set oxmsel property only in RFOTM");
-          return false;
+        if (!from_storage) {
+          if (ps->s != OC_DOS_RFOTM) {
+            OC_ERR("oc_doxm: Can set oxmsel property only in RFOTM");
+            return false;
+          } else {
+            evaluate_supported_oxms(device);
+            int oxm = 0;
+            while (oxm < doxm[device].num_oxms) {
+              if (doxm[device].oxms[oxm] == (int)t->value.integer) {
+                break;
+              }
+              oxm++;
+            }
+            if (oxm == doxm[device].num_oxms) {
+              OC_ERR("oc_doxm: Attempting to select an unsupported OXM");
+              return false;
+            }
+          }
         }
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(t->name), "sct", 3) == 0) {
@@ -256,17 +285,6 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
                  memcmp(oc_string(rep->name), "devowneruuid", 12) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
                        &doxm[device].devowneruuid);
-        if (!from_storage) {
-          int i;
-          for (i = 0; i < 16; i++) {
-            if (doxm[device].devowneruuid.id[i] != 0) {
-              break;
-            }
-          }
-          if (i != 16) {
-            oc_core_regen_unique_ids(device);
-          }
-        }
       } else if (len == 10 &&
                  memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string), &doxm[device].rowneruuid);

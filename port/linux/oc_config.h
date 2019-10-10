@@ -26,15 +26,16 @@ typedef uint64_t oc_clock_time_t;
 #define OC_SESSION_EVENTS
 
 /* Add support for software update */
-//#define OC_SOFTWARE_UPDATE
+//#define OC_SOFTWARE_UPDATE or run "make" with SWUPDATE=1
+/* Add support for the oic.if.create interface in Collections */
+//#define OC_COLLECTIONS_IF_CREATE or run "make" with CREATE=1
+/* Add support for the maintenance resource */
+//#define OC_MNT or run "make" with MNT=1
 
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_LOOKUP_IPV6
-/* Add support for the oic.if.create interface in Collections */
-#define OC_COLLECTIONS_IF_CREATE
-/* Add support for the maintenance resource */
-#define OC_MNT
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS

@@ -21,7 +21,7 @@
 #include "oc_uuid.h"
 #include <stdint.h>
 
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_ri.h"
 
 #ifdef __cplusplus

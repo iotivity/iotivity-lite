@@ -19,9 +19,9 @@
 #ifndef OC_OBT_H
 #define OC_OBT_H
 
-#include "oc_acl_common.h"
+#include "oc_acl.h"
 #include "oc_api.h"
-#include "oc_cred_common.h"
+#include "oc_cred.h"
 #include "oc_pki.h"
 #include "oc_uuid.h"
 
@@ -50,6 +50,9 @@ int oc_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                    void *data);
 int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                                   void *data);
+
+int oc_obt_discover_all_resources(oc_uuid_t *uuid,
+                                  oc_discovery_handler_t handler, void *data);
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);
@@ -104,6 +107,23 @@ int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
 int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
+
+oc_sec_creds_t *oc_obt_retrieve_own_creds(void);
+int oc_obt_delete_own_cred_by_credid(int credid);
+
+typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *, void *);
+
+int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);
+void oc_obt_free_creds(oc_sec_creds_t *creds);
+int oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
+                                 oc_obt_status_cb_t cb, void *data);
+
+typedef void (*oc_obt_acl_cb_t)(oc_sec_acl_t *, void *);
+
+int oc_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data);
+void oc_obt_free_acl(oc_sec_acl_t *acl);
+int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
+                               oc_obt_status_cb_t cb, void *data);
 
 #ifdef __cplusplus
 }

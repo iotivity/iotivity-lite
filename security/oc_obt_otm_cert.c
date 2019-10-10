@@ -22,8 +22,8 @@
 
 #include "oc_core_res.h"
 #include "oc_obt.h"
-#include "security/oc_acl.h"
-#include "security/oc_cred.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
@@ -468,7 +468,7 @@ obt_cert_5(oc_client_response_t *data)
 
   /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid = { 0 };
+  oc_uuid_t dev_uuid = { { 0 } };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
@@ -578,10 +578,21 @@ obt_cert_2(oc_client_response_t *data)
     goto err_obt_cert_2;
   }
 
-  char *icv = NULL;
-  size_t icv_len = 0;
-  if (oc_rep_get_string(data->payload, "icv", &icv, &icv_len)) {
-    /* TODO: Record icv here */
+  int64_t *oxms = NULL;
+  size_t oxms_len = 0;
+
+  if (oc_rep_get_int_array(data->payload, "oxms", &oxms, &oxms_len)) {
+    size_t i;
+    for (i = 0; i < oxms_len; i++) {
+      if (oxms[i] == OC_OXMTYPE_MFG_CERT) {
+        break;
+      }
+    }
+
+    if (i == oxms_len) {
+      goto err_obt_cert_2;
+    }
+
     /**  2) post doxm oxmsel=2
      */
     oc_device_t *device = o->device;
@@ -602,7 +613,7 @@ err_obt_cert_2:
 
 /*
   OTM sequence:
-  1) get /oic/d
+  1) get doxm
   2) post doxm oxmsel=2
   3) <Open-TLS_ECDSA_with_Mfg_Cert>+post pstat om=4
   4) post doxm devowneruuid
@@ -644,10 +655,10 @@ oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
   o->cb.data = data;
   o->device = device;
 
-  /**  1) get /oic/d
+  /**  1) get doxm
    */
   oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/d", ep, NULL, &obt_cert_2, HIGH_QOS, o)) {
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &obt_cert_2, HIGH_QOS, o)) {
     oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }

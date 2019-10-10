@@ -13,7 +13,7 @@ DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
 DESTDIR ?= /usr/local
-install_bin_dir?=${DESTDIR}/opt/iotivity-constrained/bin/
+install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
@@ -114,6 +114,14 @@ LIBS?= -lm -pthread -lrt
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
+ifeq ($(CREATE),1)
+	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
+endif
+
+ifeq ($(MNT),1)
+	EXTRA_CFLAGS += -DOC_MNT
+endif
+
 ifeq ($(SWUPDATE),1)
 	SAMPLES += smart_home_server_with_mock_swupdate
 endif
@@ -192,12 +200,12 @@ endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
-CONSTRAINED_LIBS = libiotivity-constrained-server.a libiotivity-constrained-client.a \
-		   libiotivity-constrained-server.so libiotivity-constrained-client.so \
-		   libiotivity-constrained-client-server.so libiotivity-constrained-client-server.a
+CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
+		   libiotivity-lite-server.so libiotivity-lite-client.so \
+		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a
 
-PC = iotivity-constrained-client.pc iotivity-constrained-server.pc \
-     iotivity-constrained-client-server.pc
+PC = iotivity-lite-client.pc iotivity-lite-server.pc \
+     iotivity-lite-client-server.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(SWIG)
 
@@ -213,36 +221,36 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
-apitest: $(API_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $^ -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -L$(OUT_DIR) -L$(GTEST_DIR)/make -l:gtest_main.a -liotivity-constrained-client-server -lpthread
+apitest: $(API_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+	$(CXX) $^ -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -L$(OUT_DIR) -L$(GTEST_DIR)/make -l:gtest_main.a -liotivity-lite-client-server -lpthread
 
 $(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -c
 
-securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c
 
-platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(CLOUD_TEST_OBJ_DIR)/%.o: $(CLOUD_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -I$(ROOT_DIR)/service/cloud/src -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
-cloudtest: $(CLOUD_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+cloudtest: $(CLOUD_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(MESSAGING_HEADERS) -c $< -o $@
 
-messagingtest: $(MESSAGING_TEST_OBJ_FILES) libiotivity-constrained-client-server.a | $(GTEST)
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-constrained-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
+messagingtest: $(MESSAGING_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 copy_pki_certs:
 	@mkdir -p pki_certs
@@ -274,103 +282,103 @@ obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
 
-libiotivity-constrained-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
 
-libiotivity-constrained-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
 
-libiotivity-constrained-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
 
-libiotivity-constrained-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-libiotivity-constrained-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
-libiotivity-constrained-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
 
-server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_linux.c
+server: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_linux.c
+client: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-smart_lock: libiotivity-constrained-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
+smart_lock: libiotivity-lite-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-temp_sensor: libiotivity-constrained-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux.c
+temp_sensor: libiotivity-lite-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/temp_sensor_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-simpleserver: libiotivity-constrained-server.a $(ROOT_DIR)/apps/simpleserver.c
+simpleserver: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleserver.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleserver_pki: libiotivity-constrained-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
+simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleclient: libiotivity-constrained-client.a $(ROOT_DIR)/apps/simpleclient.c
+simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleclient.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-client_collections_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_collections_linux.c
+client_collections_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_collections_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_collections_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_collections_linux.c
+server_collections_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_collections_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/server_collections_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_block_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_block_linux.c
-	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+client_block_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_block_linux.c
+	${CC} -o $@ ../../apps/client_block_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_block_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_block_linux.c
-	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+server_block_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_block_linux.c
+	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs
+smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_with_mock_swupdate: libiotivity-constrained-server.a $(ROOT_DIR)/apps/smart_home_server_with_mock_swupdate.cpp
+smart_home_server_with_mock_swupdate: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_with_mock_swupdate.cpp
 	@mkdir -p $@_creds
-	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-constrained-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
+	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
 
-multi_device_server: libiotivity-constrained-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
+multi_device_server: libiotivity-lite-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/multi_device_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-multi_device_client: libiotivity-constrained-client.a $(ROOT_DIR)/apps/multi_device_client_linux.c
+multi_device_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/multi_device_client_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_linux: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
+cloud_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
+	${CC} -o $@ ../../apps/cloud_linux.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
-cloud_tests: libiotivity-constrained-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
+cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-constrained-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
-${OBT}: libiotivity-constrained-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
+${OBT}: libiotivity-lite-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-server_multithread_linux: libiotivity-constrained-server.a $(ROOT_DIR)/apps/server_multithread_linux.c
+server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_multithread_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-constrained-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/server_multithread_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-client_multithread_linux: libiotivity-constrained-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
+client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-constrained-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
+iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
@@ -379,7 +387,7 @@ iotivity-constrained-server.pc: iotivity-constrained-server.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
-iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
+iotivity-lite-client.pc: iotivity-lite-client.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
@@ -388,25 +396,7 @@ iotivity-constrained-client.pc: iotivity-constrained-client.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
-iotivity-constrained-client-server.pc: iotivity-constrained-client-server.pc.in
-	$(SED) > $@ < $< \
-		-e 's,@prefix@,$(prefix),' \
-		-e 's,@exec_prefix@,$(exec_prefix),' \
-		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
-
-iotivity-constrained-rd-client.pc: iotivity-constrained-rd-client.pc.in
-	$(SED) > $@ < $< \
-		-e 's,@prefix@,$(prefix),' \
-		-e 's,@exec_prefix@,$(exec_prefix),' \
-		-e 's,@libdir@,$(libdir),' \
-		-e 's,@includedir@,$(includedir),' \
-		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
-
-iotivity-constrained-cloud.pc: iotivity-constrained-cloud.pc.in
+iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
 		-e 's,@exec_prefix@,$(exec_prefix),' \
@@ -450,19 +440,19 @@ distclean: cleanall
 install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(bindir)
 	$(INSTALL) -d $(libdir)
-	$(INSTALL) -d $(includedir)/iotivity-constrained
-	$(INSTALL) -d $(includedir)/iotivity-constrained/port
-	$(INSTALL) -d $(includedir)/iotivity-constrained/util
-	$(INSTALL) -d $(includedir)/iotivity-constrained/util/pt
-	$(INSTALL) -d $(includedir)/iotivity-constrained/messaging/coap
-	$(INSTALL) -d $(includedir)/iotivity-constrained/deps/tinycbor/src/
+	$(INSTALL) -d $(includedir)/iotivity-lite
+	$(INSTALL) -d $(includedir)/iotivity-lite/port
+	$(INSTALL) -d $(includedir)/iotivity-lite/util
+	$(INSTALL) -d $(includedir)/iotivity-lite/util/pt
+	$(INSTALL) -d $(includedir)/iotivity-lite/messaging/coap
+	$(INSTALL) -d $(includedir)/iotivity-lite/deps/tinycbor/src/
 	$(INSTALL) -d $(pkgconfigdir)
-	$(INSTALL) -m 644 $(HEADERS) $(includedir)/iotivity-constrained/
-	$(INSTALL) -m 644 $(HEADERS_PORT) $(includedir)/iotivity-constrained/port
-	$(INSTALL) -m 644 $(HEADERS_UTIL) $(includedir)/iotivity-constrained/util
-	$(INSTALL) -m 644 $(HEADERS_UTIL_PT) $(includedir)/iotivity-constrained/util/pt
-	$(INSTALL) -m 644 $(HEADERS_COAP) $(includedir)/iotivity-constrained/messaging/coap
-	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-constrained/deps/tinycbor/src
+	$(INSTALL) -m 644 $(HEADERS) $(includedir)/iotivity-lite/
+	$(INSTALL) -m 644 $(HEADERS_PORT) $(includedir)/iotivity-lite/port
+	$(INSTALL) -m 644 $(HEADERS_UTIL) $(includedir)/iotivity-lite/util
+	$(INSTALL) -m 644 $(HEADERS_UTIL_PT) $(includedir)/iotivity-lite/util/pt
+	$(INSTALL) -m 644 $(HEADERS_COAP) $(includedir)/iotivity-lite/messaging/coap
+	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-lite/deps/tinycbor/src
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
 # Installing the samples
@@ -475,22 +465,22 @@ TESTS = \
 	tests/server_init_linux_test \
 	tests/client_get_linux_test
 
-tests/client_init_linux_test: libiotivity-constrained-client.a
+tests/client_init_linux_test: libiotivity-lite-client.a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/client_init_linux.c \
-		libiotivity-constrained-client.a \
+		libiotivity-lite-client.a \
 		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
-tests/server_init_linux_test: libiotivity-constrained-server.a
+tests/server_init_linux_test: libiotivity-lite-server.a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/server_init_linux.c \
-		libiotivity-constrained-server.a \
+		libiotivity-lite-server.a \
 		-DOC_SERVER $(CFLAGS) $(LIBS)
 
-tests/client_get_linux_test: libiotivity-constrained-client-server.a
+tests/client_get_linux_test: libiotivity-lite-client-server.a
 	@mkdir -p $(@D)
 	$(CC) -o $@ ../../tests/client_get_linux.c \
-		libiotivity-constrained-client-server.a -DOC_SERVER \
+		libiotivity-lite-client-server.a -DOC_SERVER \
 		-DOC_CLIENT $(CFLAGS) $(LIBS)
 
 check: $(TESTS)

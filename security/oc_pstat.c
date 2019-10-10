@@ -19,10 +19,10 @@
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/oc_main.h"
 #include "messaging/coap/observe.h"
-#include "oc_acl.h"
+#include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_roles.h"
 #include "oc_sp.h"
@@ -43,7 +43,6 @@ static oc_sec_pstat_t *pstat;
 #else /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-static bool store_unique_ids = true;
 
 void
 oc_sec_pstat_free(void)
@@ -166,7 +165,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 #endif /* OC_SERVER */
-    store_unique_ids = true;
 #ifdef OC_SERVER
 #if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
     oc_rt_factory_free_created_resources(device);
@@ -429,14 +427,6 @@ oc_sec_encode_pstat(size_t device)
   oc_rep_end_root_object();
 }
 
-static oc_event_callback_retval_t
-dump_unique_ids(void *data)
-{
-  size_t device = (size_t)data;
-  oc_sec_dump_unique_ids(device);
-  return OC_EVENT_DONE;
-}
-
 #ifdef OC_SOFTWARE_UPDATE
 static void
 oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
@@ -558,11 +548,6 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
     if (!from_storage && transition_state) {
       bool transition_success =
         oc_pstat_handle_state(&ps, device, from_storage, false);
-      if (transition_success && ps.s == OC_DOS_RFNOP && store_unique_ids) {
-        size_t d = (size_t)device;
-        oc_ri_add_timed_event_callback_ticks((void *)d, &dump_unique_ids, 0);
-        store_unique_ids = false;
-      }
       return transition_success;
     }
     memcpy(&pstat[device], &ps, sizeof(oc_sec_pstat_t));

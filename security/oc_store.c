@@ -16,9 +16,9 @@
 
 #ifdef OC_SECURITY
 #include "oc_store.h"
-#include "oc_acl.h"
+#include "oc_acl_internal.h"
 #include "oc_core_res.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_keypair.h"
 #include "oc_pstat.h"
@@ -429,7 +429,7 @@ oc_sec_dump_doxm(size_t device)
 
   /* doxm */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_doxm(device);
+  oc_sec_encode_doxm(device, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d", size);

@@ -15,12 +15,12 @@
 */
 
 /**
-  @brief Main API of IoTivity-constrained for client and server.
+  @brief Main API of IoTivity-Lite for client and server.
   @file
 */
 
 /**
-  \mainpage IoTivity-constrained API
+  \mainpage IoTivity-Lite API
 
   The file \link oc_api.h\endlink is the main entry for all
   server and client related OCF functions.
@@ -435,6 +435,8 @@ bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
 #endif /* OC_TCP */
 
 /** Common operations */
+
+void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
 
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);

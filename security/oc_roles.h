@@ -18,7 +18,7 @@
 #define OC_ROLES_H
 
 #include "oc_api.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "security/oc_tls.h"
 
 #ifdef __cplusplus

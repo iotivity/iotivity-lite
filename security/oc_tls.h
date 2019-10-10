@@ -20,7 +20,7 @@
 #include "mbedtls/ssl.h"
 #include "oc_uuid.h"
 #include "port/oc_connectivity.h"
-#include "security/oc_cred.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_keypair.h"
 #include "util/oc_etimer.h"
 #include "util/oc_list.h"
@@ -84,6 +84,10 @@ void oc_tls_select_identity_cert_chain(int credid);
 void oc_tls_select_psk_ciphersuite(void);
 void oc_tls_select_anon_ciphersuite(void);
 void oc_tls_select_cloud_ciphersuite(void);
+
+/* Internal interface for checking supported OTMs */
+bool oc_tls_is_pin_otm_supported(size_t device);
+bool oc_tls_is_cert_otm_supported(size_t device);
 
 /* Internal interface for generating a random PIN */
 void oc_tls_generate_random_pin(void);

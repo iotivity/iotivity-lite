@@ -85,7 +85,7 @@ app_init(void)
 {
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.4.0",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.0.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   return err;
 }
@@ -308,7 +308,6 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-  oc_set_mtu_size(16384);
   oc_set_max_app_data_size(16384);
 
 #ifdef OC_SECURITY

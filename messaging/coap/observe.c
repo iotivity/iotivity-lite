@@ -56,7 +56,7 @@
 
 #include "oc_buffer.h"
 #ifdef OC_SECURITY
-#include "security/oc_acl.h"
+#include "security/oc_acl_internal.h"
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
@@ -355,7 +355,6 @@ coap_notify_collection_observers(oc_resource_t *resource,
                        response_buf->response_length);
     }
 
-    coap_set_status_code(notification, response_buf->code);
     if (notification->code < BAD_REQUEST_4_00 && obs->resource->num_observers) {
       coap_set_header_observe(notification, (obs->obs_counter)++);
       observe_counter++;
@@ -716,7 +715,7 @@ coap_notify_observers(oc_resource_t *resource,
       }     //! separate response
       obs = obs->next;
     } // iterate over observers
-  leave_notify_observers:
+  leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
     if (buffer) {
       free(buffer);

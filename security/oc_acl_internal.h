@@ -17,7 +17,7 @@
 #ifndef OC_ACL_H
 #define OC_ACL_H
 
-#include "oc_acl_common.h"
+#include "oc_acl.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "port/oc_log.h"

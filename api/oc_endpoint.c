@@ -51,19 +51,26 @@ oc_new_endpoint(void)
 void
 oc_free_endpoint(oc_endpoint_t *endpoint)
 {
-  oc_memb_free(&oc_endpoints_s, endpoint);
+  if (endpoint) {
+    oc_memb_free(&oc_endpoints_s, endpoint);
+  }
 }
 
 void
 oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di)
 {
-  memcpy(endpoint->di.id, di->id, 16);
+  if (endpoint && di) {
+    memcpy(endpoint->di.id, di->id, 16);
+  }
 }
 
 #ifdef OC_IPV4
 static void
 oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
+  if (!endpoint || !endpoint_str) {
+    return;
+  }
   char ip[OC_IPV4_ADDRSTRLEN + 6];
   uint8_t *addr = endpoint->addr.ipv4.address;
   sprintf(ip, "%u.%u.%u.%u:%u", addr[0], addr[1], addr[2], addr[3],
@@ -88,6 +95,9 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 static void
 oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
+  if (!endpoint || !endpoint_str) {
+    return;
+  }
   uint8_t *addr = endpoint->addr.ipv6.address;
   char ip[OC_IPV6_ADDRSTRLEN + 8];
   int addr_idx = 0, str_idx = 0, start_zeros = 0, last_zeros = OC_IPV6_ADDRLEN,
@@ -183,6 +193,9 @@ oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 static void
 oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
+  if (!address || !endpoint) {
+    return;
+  }
   uint8_t *addr = endpoint->addr.ipv4.address;
   size_t str_idx = 0, addr_idx = 0;
   char *next_seg;
@@ -270,6 +283,9 @@ low_nibble:
 static void
 oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
+  if (!address || !endpoint) {
+    return;
+  }
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
   int str_idx = 0, addr_idx = 0, split = -1;
@@ -469,7 +485,7 @@ int
 oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                       oc_string_t *uri)
 {
-  if (endpoint) {
+  if (endpoint && endpoint_str) {
     memset(endpoint, 0, sizeof(oc_endpoint_t));
     return oc_parse_endpoint_string(endpoint_str, endpoint, uri);
   }
@@ -547,6 +563,9 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 void
 oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
 {
+  if (!ep) {
+    return;
+  }
   oc_endpoint_t *e = oc_connectivity_get_endpoints(ep->device);
   enum transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;
   while (e) {

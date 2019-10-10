@@ -39,13 +39,13 @@
 #include "api/oc_main.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/observe.h"
-#include "oc_acl.h"
+#include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_client_state.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_endpoint.h"
 #include "oc_pstat.h"
@@ -309,6 +309,32 @@ oc_tls_remove_peer(oc_endpoint_t *endpoint)
     oc_tls_free_peer(peer, false);
   }
 }
+
+bool
+oc_tls_is_pin_otm_supported(size_t device)
+{
+  (void)device;
+  if (random_pin.cb) {
+    return true;
+  }
+  return false;
+}
+
+#ifdef OC_PKI
+bool
+oc_tls_is_cert_otm_supported(size_t device)
+{
+  oc_x509_crt_t *crt = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  while (crt) {
+    if (crt->device == device &&
+        crt->cred->credusage == OC_CREDUSAGE_MFG_CERT) {
+      return true;
+    }
+    crt = crt->next;
+  }
+  return false;
+}
+#endif /* OC_PKI */
 
 static void
 oc_tls_handler_schedule_read(oc_tls_peer_t *peer)

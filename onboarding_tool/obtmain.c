@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
 #if defined(_WIN32)
@@ -72,7 +73,7 @@ static int quit;
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nOCF 2.0 "
+  PRINT("\n\n################################################\nOCF 2.x "
         "Onboarding Tool\n################################################\n");
   PRINT("[0] Display this menu\n");
   PRINT("-----------------------------------------------\n");
@@ -82,23 +83,33 @@ display_menu(void)
   PRINT("[4] Discover owned devices\n");
   PRINT("[5] Discover owned devices in the realm-local IPv6 scope\n");
   PRINT("[6] Discover owned devices in the site-local IPv6 scope\n");
+  PRINT("[7] Discover all resources on the device\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[7] Just-Works Ownership Transfer Method\n");
-  PRINT("[8] Request Random PIN from device for OTM\n");
-  PRINT("[9] Random PIN Ownership Transfer Method\n");
+  PRINT("[8] Just-Works Ownership Transfer Method\n");
+  PRINT("[9] Request Random PIN from device for OTM\n");
+  PRINT("[10] Random PIN Ownership Transfer Method\n");
 #ifdef OC_PKI
-  PRINT("[10] Manufacturer Certificate based Ownership Transfer Method\n");
+  PRINT("[11] Manufacturer Certificate based Ownership Transfer Method\n");
 #endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
-  PRINT("[11] Provision pair-wise credentials\n");
-  PRINT("[12] Provision ACE2\n");
-  PRINT("[13] Provision auth-crypt RW access to NCRs\n");
+  PRINT("[12] Provision pair-wise credentials\n");
+  PRINT("[13] Provision ACE2\n");
+  PRINT("[14] Provision auth-crypt RW access to NCRs\n");
+  PRINT("[15] RETRIEVE /oic/sec/cred\n");
+  PRINT("[16] DELETE cred by credid\n");
+  PRINT("[17] RETRIEVE /oic/sec/acl2\n");
+  PRINT("[18] DELETE ace by aceid\n");
+  PRINT("[19] RETRIEVE own creds\n");
+  PRINT("[20] DELETE own cred by credid\n");
 #ifdef OC_PKI
-  PRINT("[14] Provision role RW access to NCRs\n");
-  PRINT("[15] Provision identity certificate\n");
-  PRINT("[16] Provision role certificate\n");
+  PRINT("[21] Provision role RW access to NCRs\n");
+  PRINT("[22] Provision identity certificate\n");
+  PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
+#ifdef OC_PKI
+  PRINT("[96] Install new manufacturer trust anchor\n");
+#endif /* OC_PKI */
   PRINT("[97] RESET device\n");
   PRINT("[98] RESET OBT\n");
   PRINT("-----------------------------------------------\n");
@@ -204,54 +215,41 @@ ocf_event_thread(void *data)
 #endif
 
 /* App utility functions */
-static bool
-remove_device_from_list(oc_uuid_t *uuid, oc_list_t list)
-{
-  device_handle_t *device = (device_handle_t *)oc_list_head(list);
-  while (device != NULL) {
-    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
-      oc_list_remove(list, device);
-      oc_memb_free(&device_handles, device);
-      return true;
-    }
-    device = device->next;
-  }
-  return false;
-}
-
-static bool
+static device_handle_t *
 is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
     if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
-      return true;
+      return device;
     }
     device = device->next;
   }
-  return false;
+  return NULL;
 }
 
 static bool
 add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
 {
-  if (is_device_in_list(uuid, list)) {
-    return true;
-  }
+  device_handle_t *device = is_device_in_list(uuid, list);
 
-  device_handle_t *device = oc_memb_alloc(&device_handles);
   if (!device) {
-    return false;
+    device = oc_memb_alloc(&device_handles);
+    if (!device) {
+      return false;
+    }
+    memcpy(device->uuid.id, uuid->id, 16);
+    oc_list_add(list, device);
   }
 
-  memcpy(device->uuid.id, uuid->id, 16);
   if (device_name) {
-    strncpy(device->device_name, device_name, 63);
-    device->device_name[64 - 1] = '\0';
+    size_t len = strlen(device_name);
+    len = (len > 63) ? 63 : len;
+    strncpy(device->device_name, device_name, len);
+    device->device_name[len] = '\0';
   } else {
     device->device_name[0] = '\0';
   }
-  oc_list_add(list, device);
   return true;
 }
 
@@ -355,16 +353,18 @@ discover_unowned_devices(uint8_t scope)
 static void
 otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 {
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    add_device_to_list(uuid, (const char *)data, owned_devices);
+    oc_list_add(owned_devices, device);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
+    oc_memb_free(&device_handles, device);
   }
-  free(data);
 }
 
 static void
@@ -400,22 +400,17 @@ otm_rdp(void)
   SCANF("%10s", pin);
 
   otb_mutex_lock(app_sync_lock);
-  char *d_name =
-    (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
-  if (d_name) {
-    strcpy(d_name, devices[c]->device_name);
-  }
   int ret = oc_obt_perform_random_pin_otm(
-    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, d_name);
+    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
   } else {
-    free(d_name);
     PRINT("\nERROR issuing request to perform Random PIN OTM\n");
   }
-  /* Having issued an OTM request, remove this item from the unowned device list
-   */
-  remove_device_from_list(&devices[c]->uuid, unowned_devices);
 
   otb_mutex_unlock(app_sync_lock);
 }
@@ -478,16 +473,18 @@ request_random_pin(void)
 static void
 otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 {
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
-    add_device_to_list(uuid, data, owned_devices);
+    oc_list_add(owned_devices, device);
   } else {
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
+    oc_memb_free(&device_handles, device);
   }
-  free(data);
 }
 
 static void
@@ -519,23 +516,17 @@ otm_cert(void)
   }
 
   otb_mutex_lock(app_sync_lock);
-  char *d_name =
-    (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
-  if (d_name) {
-    strcpy(d_name, devices[c]->device_name);
-  }
 
-  int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, d_name);
+  int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
   } else {
     PRINT("\nERROR issuing request to perform ownership transfer\n");
-    free(d_name);
   }
-
-  /* Having issued an OTM request, remove this item from the unowned device list
-   */
-  remove_device_from_list(&devices[c]->uuid, unowned_devices);
 
   otb_mutex_unlock(app_sync_lock);
 }
@@ -544,17 +535,18 @@ otm_cert(void)
 static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  (void)data;
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
-    add_device_to_list(uuid, (const char *)data, owned_devices);
+    oc_list_add(owned_devices, device);
   } else {
+    oc_memb_free(&device_handles, device);
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
   }
-  free(data);
 }
 
 static void
@@ -587,24 +579,359 @@ otm_just_works(void)
 
   otb_mutex_lock(app_sync_lock);
 
-  char *d_name =
-    (char *)malloc(sizeof(char) * (strlen(devices[c]->device_name) + 1));
-  if (d_name) {
-    strcpy(d_name, devices[c]->device_name);
-  }
-  int ret =
-    oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb, d_name);
+  int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
+                                          devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
   } else {
-    free(d_name);
     PRINT("\nERROR issuing request to perform ownership transfer\n");
   }
 
-  /* Having issued an OTM request, remove this item from the unowned device list
-   */
-  remove_device_from_list(&devices[c]->uuid, unowned_devices);
+  otb_mutex_unlock(app_sync_lock);
+}
 
+static void
+retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
+{
+  (void)data;
+  if (acl) {
+    PRINT("\n/oic/sec/acl2:\n");
+    oc_sec_ace_t *ac = oc_list_head(acl->subjects);
+    PRINT("\n################################################\n");
+    while (ac) {
+      PRINT("aceid: %d\n", ac->aceid);
+      if (ac->subject_type == OC_SUBJECT_UUID) {
+        char uuid[37];
+        oc_uuid_to_str(&ac->subject.uuid, uuid, 37);
+        PRINT("subject: %s\n", uuid);
+      } else if (ac->subject_type == OC_SUBJECT_ROLE) {
+        PRINT("Roleid_role: %s\n", oc_string(ac->subject.role.role));
+        if (oc_string_len(ac->subject.role.authority) > 0) {
+          PRINT("Roleid_authority: %s\n",
+                oc_string(ac->subject.role.authority));
+        }
+      } else if (ac->subject_type == OC_SUBJECT_CONN) {
+        PRINT("connection type: ");
+        if (ac->subject.conn == OC_CONN_AUTH_CRYPT) {
+          PRINT("auth-crypt\n");
+        } else {
+          PRINT("anon-clear\n");
+        }
+      }
+      PRINT("Permissions: ");
+      if (ac->permission & OC_PERM_CREATE) {
+        PRINT(" C ");
+      }
+      if (ac->permission & OC_PERM_RETRIEVE) {
+        PRINT(" R ");
+      }
+      if (ac->permission & OC_PERM_UPDATE) {
+        PRINT(" U ");
+      }
+      if (ac->permission & OC_PERM_DELETE) {
+        PRINT(" D ");
+      }
+      if (ac->permission & OC_PERM_NOTIFY) {
+        PRINT(" N ");
+      }
+      PRINT("\n");
+      PRINT("Resources: ");
+      oc_ace_res_t *res = oc_list_head(ac->resources);
+      while (res) {
+        if (oc_string_len(res->href) > 0) {
+          PRINT(" %s ", oc_string(res->href));
+        } else if (res->wildcard != 0) {
+          switch (res->wildcard) {
+          case OC_ACE_WC_ALL:
+            PRINT(" * ");
+            break;
+          case OC_ACE_WC_ALL_SECURED:
+            PRINT(" + ");
+            break;
+          case OC_ACE_WC_ALL_PUBLIC:
+            PRINT(" - ");
+            break;
+          default:
+            break;
+          }
+        }
+        res = res->next;
+      }
+      ac = ac->next;
+      PRINT("\n-----\n");
+    }
+    PRINT("\n################################################\n");
+
+    /* Freeing the ACL structure */
+    oc_obt_free_acl(acl);
+  } else {
+    PRINT("\nERROR RETRIEving /oic/sec/acl2\n");
+  }
+}
+
+static void
+retrieve_acl2_rsrc(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_retrieve_acl(&devices[c]->uuid, retrieve_acl2_rsrc_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to RETRIEVE /oic/sec/acl2\n");
+  } else {
+    PRINT("\nERROR issuing request to RETRIEVE /oic/sec/acl2\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+display_cred_rsrc(oc_sec_creds_t *creds)
+{
+  if (creds) {
+    PRINT("\n/oic/sec/cred:\n");
+    oc_sec_cred_t *cr = oc_list_head(creds->creds);
+    PRINT("\n################################################\n");
+    while (cr) {
+      char uuid[37];
+      oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
+      PRINT("credid: %d\n", cr->credid);
+      PRINT("subjectuuid: %s\n", uuid);
+      PRINT("credtype: %s\n", oc_cred_credtype_string(cr->credtype));
+#ifdef OC_PKI
+      PRINT("credusage: %s\n", oc_cred_read_credusage(cr->credusage));
+      if (oc_string_len(cr->publicdata.data) > 0) {
+        PRINT("publicdata_encoding: %s\n",
+              oc_cred_read_encoding(cr->publicdata.encoding));
+      }
+#endif /* OC_PKI */
+      PRINT("privatedata_encoding: %s\n",
+            oc_cred_read_encoding(cr->privatedata.encoding));
+      if (oc_string_len(cr->role.role) > 0) {
+        PRINT("roleid_role: %s\n", oc_string(cr->role.role));
+      }
+      if (oc_string_len(cr->role.authority) > 0) {
+        PRINT("roleid_authority: %s\n", oc_string(cr->role.authority));
+      }
+      PRINT("\n-----\n");
+      cr = cr->next;
+    }
+    PRINT("\n################################################\n");
+  }
+}
+
+static void
+retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
+{
+  (void)data;
+  if (creds) {
+    display_cred_rsrc(creds);
+    /* Freeing the creds structure */
+    oc_obt_free_creds(creds);
+  } else {
+    PRINT("\nERROR RETRIEving /oic/sec/cred\n");
+  }
+}
+
+static void
+retrieve_own_creds(void)
+{
+  otb_mutex_lock(app_sync_lock);
+  /* The creds returned by oc_obt_retrieve_own_creds() point to
+     internal data structures that store the security context of the OBT.
+     DO NOT free them.
+  */
+  display_cred_rsrc(oc_obt_retrieve_own_creds());
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+retrieve_cred_rsrc(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_retrieve_creds(&devices[c]->uuid, retrieve_cred_rsrc_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to RETRIEVE /oic/sec/cred\n");
+  } else {
+    PRINT("\nERROR issuing request to RETRIEVE /oic/sec/cred\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+delete_ace_by_aceid_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully DELETEd ace\n");
+  } else {
+    PRINT("\nERROR DELETing ace\n");
+  }
+}
+
+static void
+delete_ace_by_aceid(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  PRINT("\nEnter aceid: ");
+  int aceid;
+  SCANF("%d", &aceid);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_delete_ace_by_aceid(&devices[c]->uuid, aceid,
+                                       delete_ace_by_aceid_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to DELETE /oic/sec/acl2\n");
+  } else {
+    PRINT("\nERROR issuing request to DELETE /oic/sec/acl2\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+delete_cred_by_credid_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully DELETEd cred\n");
+  } else {
+    PRINT("\nERROR DELETing cred\n");
+  }
+}
+
+static void
+delete_own_cred_by_credid(void)
+{
+  PRINT("\nEnter credid: ");
+  int credid;
+  SCANF("%d", &credid);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_delete_own_cred_by_credid(credid);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully DELETED cred\n");
+  } else {
+    PRINT("\nERROR DELETing cred\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+delete_cred_by_credid(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  PRINT("\nEnter credid: ");
+  int credid;
+  SCANF("%d", &credid);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_delete_cred_by_credid(&devices[c]->uuid, credid,
+                                         delete_cred_by_credid_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to DELETE /oic/sec/cred\n");
+  } else {
+    PRINT("\nERROR issuing request to DELETE /oic/sec/cred\n");
+  }
   otb_mutex_unlock(app_sync_lock);
 }
 
@@ -615,7 +942,7 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
-  remove_device_from_list(uuid, owned_devices);
+  oc_memb_free(&device_handles, data);
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed hard RESET to device %s\n", di);
@@ -653,9 +980,11 @@ reset_device(void)
   }
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, NULL);
+  int ret =
+    oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform hard RESET\n");
+    oc_list_remove(owned_devices, devices[c]);
   } else {
     PRINT("\nERROR issuing request to perform hard RESET\n");
   }
@@ -792,7 +1121,6 @@ provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned rold * ACE to device %s\n", di);
   } else {
-    remove_device_from_list(uuid, owned_devices);
     PRINT("\nERROR provisioning ACE to device %s\n", di);
   }
 }
@@ -922,7 +1250,6 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
   } else {
-    remove_device_from_list(uuid, owned_devices);
     PRINT("\nERROR provisioning ACE to device %s\n", di);
   }
 }
@@ -982,7 +1309,6 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned ACE to device %s\n", di);
   } else {
-    remove_device_from_list(uuid, owned_devices);
     PRINT("\nERROR provisioning ACE to device %s\n", di);
   }
 }
@@ -1036,6 +1362,12 @@ provision_ace2(void)
     PRINT("[%d]: %s - %s\n", i + 3, di, device->device_name);
     i++;
     device = device->next;
+
+    if (!device) {
+      oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
+      PRINT("[%d]: %s - (OBT)\n", i + 3, di);
+      i++;
+    }
   }
   PRINT("\nSelect subject: ");
   SCANF("%d", &sub);
@@ -1047,7 +1379,11 @@ provision_ace2(void)
 
   oc_sec_ace_t *ace = NULL;
   if (sub > 2) {
-    ace = oc_obt_new_ace_for_subject(&devices[sub - 3]->uuid);
+    if (sub == (i + 2)) {
+      ace = oc_obt_new_ace_for_subject(oc_core_get_device_id(0));
+    } else {
+      ace = oc_obt_new_ace_for_subject(&devices[sub - 3]->uuid);
+    }
   } else {
     if (sub == 0) {
       ace = oc_obt_new_ace_for_connection(OC_CONN_ANON_CLEAR);
@@ -1129,7 +1465,6 @@ provision_ace2(void)
         }
       }
     }
-
     i++;
   }
 
@@ -1212,6 +1547,37 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
+#ifdef OC_PKI
+static void
+install_trust_anchor(void)
+{
+  char cert[8192];
+  size_t cert_len = 0;
+  PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+
+  while (cert_len < 4 ||
+         (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0)) {
+    int c = getchar();
+    if (c == EOF) {
+      PRINT("ERROR processing input.. aborting\n");
+      return;
+    }
+    cert[cert_len] = (char)c;
+    cert_len++;
+  }
+
+  cert_len -= 4;
+  cert[cert_len - 1] = '\0';
+
+  int rootca_credid =
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+}
+#endif /* OC_PKI */
+
 void
 factory_presets_cb(size_t device, void *data)
 {
@@ -1253,6 +1619,71 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+static oc_discovery_flags_t
+resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
+                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                   oc_resource_properties_t bm, void *user_data)
+{
+  (void)user_data;
+  (void)iface_mask;
+  (void)bm;
+  (void)types;
+  PRINT("anchor %s, uri : %s\n", anchor, uri);
+  oc_free_server_endpoints(endpoint);
+  return OC_CONTINUE_DISCOVERY;
+}
+
+static void
+discover_resources(void)
+{
+  if (oc_list_length(unowned_devices) == 0 &&
+      oc_list_length(owned_devices) == 0) {
+    PRINT("\nPlease Re-discover devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nUnowned Devices:\n");
+  device = (device_handle_t *)oc_list_head(unowned_devices);
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+
+  PRINT("\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_discover_all_resources(&devices[c]->uuid, resource_discovery, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued resource discovery request\n");
+  } else {
+    PRINT("\nERROR issuing resource discovery request\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
 int
 main(void)
 {
@@ -1277,6 +1708,7 @@ main(void)
   oc_storage_config("./onboarding_tool_creds");
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_con_res_announced(false);
+  oc_set_max_app_data_size(16384);
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
@@ -1320,37 +1752,61 @@ main(void)
       discover_owned_devices(0x05);
       break;
     case 7:
-      otm_just_works();
+      discover_resources();
       break;
     case 8:
-      request_random_pin();
+      otm_just_works();
       break;
     case 9:
+      request_random_pin();
+      break;
+    case 10:
       otm_rdp();
       break;
 #ifdef OC_PKI
-    case 10:
+    case 11:
       otm_cert();
       break;
 #endif /* OC_PKI */
-    case 11:
+    case 12:
       provision_credentials();
       break;
-    case 12:
+    case 13:
       provision_ace2();
       break;
-    case 13:
+    case 14:
       provision_authcrypt_wildcard_ace();
       break;
-#ifdef OC_PKI
-    case 14:
-      provision_role_wildcard_ace();
-      break;
     case 15:
-      provision_id_cert();
+      retrieve_cred_rsrc();
       break;
     case 16:
+      delete_cred_by_credid();
+      break;
+    case 17:
+      retrieve_acl2_rsrc();
+      break;
+    case 18:
+      delete_ace_by_aceid();
+      break;
+    case 19:
+      retrieve_own_creds();
+      break;
+    case 20:
+      delete_own_cred_by_credid();
+      break;
+#ifdef OC_PKI
+    case 21:
+      provision_role_wildcard_ace();
+      break;
+    case 22:
+      provision_id_cert();
+      break;
+    case 23:
       provision_role_cert();
+      break;
+    case 96:
+      install_trust_anchor();
       break;
 #endif /* OC_PKI */
     case 97:

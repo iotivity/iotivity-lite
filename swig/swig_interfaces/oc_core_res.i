@@ -157,16 +157,6 @@ oc_device_info_t * jni_oc_core_add_new_device1(const char *uri, const char *rt,
 /* TODO get oc_core_populate_resource working */
 %ignore oc_core_populate_resource;
 //%rename (populateResource) oc_core_populate_resource;
-%ignore oc_core_regen_unique_ids;
-%rename (regenUniqueIds) jni_core_regen_unique_ids;
-%inline %{
-void jni_core_regen_unique_ids(size_t device) {
-  OC_DBG("JNI: %s\n", __func__);
-  #ifdef OC_SECURITY
-  oc_core_regen_unique_ids(device);
-  #endif /* OC_SECURITY */
-}
-%}
 %rename (filterResourceByRt) oc_filter_resource_by_rt;
 %rename (isDCR) oc_core_is_DCR;
 

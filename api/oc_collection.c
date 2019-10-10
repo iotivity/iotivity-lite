@@ -25,7 +25,7 @@
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #include "util/oc_memb.h"
 #ifdef OC_SECURITY
-#include "security/oc_acl.h"
+#include "security/oc_acl_internal.h"
 #endif /* OC_SECURITY */
 
 OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);

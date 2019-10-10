@@ -20,7 +20,7 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/x509_crt.h"
 #include "oc_certs.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_connectivity.h"

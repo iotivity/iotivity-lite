@@ -23,9 +23,9 @@
 #include "oc_obt.h"
 %}
 
-/*******************Begin oc_acl_common.h*****************/
+/*******************Begin oc_acl.h*****************/
 /*
- * NOTE: currently We only expose enums and structs from oc_acl_common.h
+ * NOTE: currently We only expose enums and structs from oc_acl.h
  * This is why we are not currently using an independent swig interface file. It
  * would just create an empty Java class. If any functions are exposed this should
  * be moved to its own interface file.
@@ -50,7 +50,7 @@
 /* We are relying on the iotivity-lite library to create and destroy instances of oc_sec_ace_t */
 %nodefaultctor oc_sec_ace_t;
 %nodefaultdtor oc_sec_ace_t;
-/*******************End oc_acl_common.h*****************/
+/*******************End oc_acl.h*****************/
 
 %ignore oc_obt_init;
 %rename(init) jni_obt_init;
@@ -734,5 +734,5 @@ int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status
 }
 %}
 
-%include "oc_acl_common.h"
+%include "oc_acl.h"
 %include "oc_obt.h";

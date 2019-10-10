@@ -20,7 +20,7 @@
 #ifdef OC_SECURITY
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
-#include "security/oc_cred.h"
+#include "security/oc_cred_internal.h"
 
 #ifdef __cplusplus
 extern "C"
