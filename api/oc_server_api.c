@@ -19,6 +19,10 @@
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 
+#ifdef OC_SECURITY
+#include "security/oc_store.h"
+#endif /* OC_SECURITY */
+
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
@@ -78,6 +82,20 @@ void
 oc_ignore_request(oc_request_t *request)
 {
   request->response->response_buffer->code = OC_IGNORE;
+}
+
+void
+oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid)
+{
+  if (piid && device < oc_core_get_num_devices()) {
+    oc_device_info_t *info = oc_core_get_device_info(device);
+    if (info) {
+      memcpy(info->piid.id, piid->id, sizeof(oc_uuid_t));
+#ifdef OC_SECURITY
+      oc_sec_dump_unique_ids(device);
+#endif /* OC_SECURITY */
+    }
+  }
 }
 
 void
