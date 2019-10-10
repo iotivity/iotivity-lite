@@ -227,10 +227,6 @@ oc_resource_t *oc_ri_get_app_resources(void);
 oc_resource_t *oc_ri_alloc_resource(void);
 bool oc_ri_add_resource(oc_resource_t *resource);
 bool oc_ri_delete_resource(oc_resource_t *resource);
-
-#ifdef OC_MAX_NUM_COLLECTIONS
-#define OC_COLLECTIONS
-#endif /* OC_MAX_NUM_COLLECTIONS */
 #endif /* OC_SERVER */
 
 void oc_ri_free_resource_properties(oc_resource_t *resource);
