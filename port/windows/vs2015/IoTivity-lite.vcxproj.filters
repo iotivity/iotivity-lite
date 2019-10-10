@@ -558,10 +558,10 @@
     <ClInclude Include="..\..\..\security\oc_sp.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_acl.h">
+    <ClInclude Include="..\..\..\security\oc_acl_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_cred.h">
+    <ClInclude Include="..\..\..\security\oc_cred_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_doxm.h">
@@ -608,6 +608,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_acl.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_cloud.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_cred.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_swupdate.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

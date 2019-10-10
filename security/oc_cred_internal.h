@@ -17,7 +17,7 @@
 #ifndef OC_CRED_H
 #define OC_CRED_H
 
-#include "oc_cred_common.h"
+#include "oc_cred.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include <stdint.h>

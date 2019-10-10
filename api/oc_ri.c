@@ -53,7 +53,7 @@
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
-#include "security/oc_acl.h"
+#include "security/oc_acl_internal.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 

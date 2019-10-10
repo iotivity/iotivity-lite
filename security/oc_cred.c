@@ -16,12 +16,12 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_cred.h"
 #include "oc_api.h"
 #include "oc_base64.h"
 #include "oc_certs.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
+#include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_keypair.h"
 #include "oc_pstat.h"

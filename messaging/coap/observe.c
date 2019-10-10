@@ -56,7 +56,7 @@
 
 #include "oc_buffer.h"
 #ifdef OC_SECURITY
-#include "security/oc_acl.h"
+#include "security/oc_acl_internal.h"
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 

@@ -21,8 +21,8 @@
 
 #include "oc_core_res.h"
 #include "oc_obt.h"
-#include "security/oc_acl.h"
-#include "security/oc_cred.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"

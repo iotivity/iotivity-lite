@@ -19,9 +19,9 @@
 #ifndef OC_OBT_H
 #define OC_OBT_H
 
-#include "oc_acl_common.h"
+#include "oc_acl.h"
 #include "oc_api.h"
-#include "oc_cred_common.h"
+#include "oc_cred.h"
 #include "oc_pki.h"
 #include "oc_uuid.h"
 

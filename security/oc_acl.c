@@ -16,12 +16,12 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_acl.h"
+#include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
-#include "oc_cred.h"
+#include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"

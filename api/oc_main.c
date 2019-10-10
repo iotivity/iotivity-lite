@@ -35,8 +35,8 @@
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
 #ifdef OC_SECURITY
-#include "security/oc_acl.h"
-#include "security/oc_cred.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"

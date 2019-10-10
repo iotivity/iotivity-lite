@@ -219,6 +219,7 @@
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
+    <ClInclude Include="..\..\..\include\oc_acl.h" />
     <ClInclude Include="..\..\..\include\oc_api.h" />
     <ClInclude Include="..\..\..\include\oc_base64.h" />
     <ClInclude Include="..\..\..\include\oc_blockwise.h" />
@@ -226,8 +227,10 @@
     <ClInclude Include="..\..\..\include\oc_buffer_settings.h" />
     <ClInclude Include="..\..\..\include\oc_client_state.h" />
     <ClInclude Include="..\..\..\include\oc_clock_util.h" />
+    <ClInclude Include="..\..\..\include\oc_cloud.h" />
     <ClInclude Include="..\..\..\include\oc_collection.h" />
     <ClInclude Include="..\..\..\include\oc_core_res.h" />
+    <ClInclude Include="..\..\..\include\oc_cred.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
     <ClInclude Include="..\..\..\include\oc_endpoint.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
@@ -241,6 +244,7 @@
     <ClInclude Include="..\..\..\include\oc_session_events.h" />
     <ClInclude Include="..\..\..\include\oc_session_state.h" />
     <ClInclude Include="..\..\..\include\oc_signal_event_loop.h" />
+    <ClInclude Include="..\..\..\include\oc_swupdate.h" />
     <ClInclude Include="..\..\..\include\oc_uuid.h" />
     <ClInclude Include="..\..\..\include\server_introspection.dat.h" />
     <ClInclude Include="..\..\..\messaging\coap\coap.h" />
@@ -251,9 +255,9 @@
     <ClInclude Include="..\..\..\messaging\coap\oc_coap.h" />
     <ClInclude Include="..\..\..\messaging\coap\separate.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions.h" />
-    <ClInclude Include="..\..\..\security\oc_acl.h" />
+    <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
     <ClInclude Include="..\..\..\security\oc_certs.h" />
-    <ClInclude Include="..\..\..\security\oc_cred.h" />
+    <ClInclude Include="..\..\..\security\oc_cred_internal.h" />
     <ClInclude Include="..\..\..\security\oc_csr.h" />
     <ClInclude Include="..\..\..\security\oc_doxm.h" />
     <ClInclude Include="..\..\..\security\oc_keypair.h" />
