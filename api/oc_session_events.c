@@ -83,7 +83,7 @@ oc_process_session_event(void)
 
   if (oc_list_length(session_end_events) > 0) {
     oc_set_delayed_callback(NULL, &free_session_state_delayed,
-                            SESSION_STATE_FREE_DELAY_SECS);
+                            (uint16_t)SESSION_STATE_FREE_DELAY_SECS);
   }
 }
 

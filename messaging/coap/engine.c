@@ -385,7 +385,7 @@ coap_receive(oc_message_t *msg)
           OC_DBG("no block options; processing regular request");
 #ifdef OC_TCP
           if ((msg->endpoint.flags & TCP &&
-               incoming_block_len <= OC_MAX_APP_DATA_SIZE) ||
+               incoming_block_len <= (uint32_t)OC_MAX_APP_DATA_SIZE) ||
               (!(msg->endpoint.flags & TCP) &&
                incoming_block_len <= block1_size)) {
 #else  /* OC_TCP */

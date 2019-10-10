@@ -680,7 +680,6 @@ obt_rrdp_2(oc_client_response_t *data)
 
     /**  2) post doxm oxmsel=1
      */
-    oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
     oc_device_t *device = o->device;
     oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
     if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rrdp_3, HIGH_QOS, o)) {
