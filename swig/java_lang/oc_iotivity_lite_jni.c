@@ -81,7 +81,13 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCCoreInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocCoreInitPlatformHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocCoreInitPlatformHandlerClass);
 
-    jclass ocConWriteHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCConWriteHandler");
+    jclass ocCredsClass = JCALL1(FindClass, jenv, "org/iotivity/OCCreds");
+    assert(ocCredsClass);
+    cls_OCCreds = (jclass)(JCALL1(NewGlobalRef, jenv, ocCredsClass));
+    JCALL1(DeleteLocalRef, jenv, ocCredsClass);
+
+    jclass ocConWriteHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCConWriteHandler");
     assert(ocConWriteHandlerClass);
     cls_OCConWriteHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocConWriteHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocConWriteHandlerClass);
@@ -169,7 +175,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCUuid = (jclass)(JCALL1(NewGlobalRef, jenv, ocUuidClass));
     JCALL1(DeleteLocalRef, jenv, ocUuidClass);
 
-    jclass ocObtDiscoveryHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCObtDiscoveryHandler");
+    jclass ocObtCredsHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCObtCredsHandler");
+    assert(ocObtCredsHandlerClass);
+    cls_OCObtCredsHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocObtCredsHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocObtCredsHandlerClass);
+
+    jclass ocObtDiscoveryHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCObtDiscoveryHandler");
     assert(ocObtDiscoveryHandlerClass);
     cls_OCObtDiscoveryHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocObtDiscoveryHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocObtDiscoveryHandlerClass);
