@@ -140,12 +140,16 @@ jclass cls_OCTriggerHandler;
 
 jclass cls_OCCoreAddDeviceHandler;
 jclass cls_OCCoreInitPlatformHandler;
+jclass cls_OCCreds;
 jclass cls_OCEndpoint;
 jclass cls_OCUuid;
+jclass cls_OCObtAclHandler;
+jclass cls_OCObtCredsHandler;
 jclass cls_OCObtDiscoveryHandler;
 jclass cls_OCObtDeviceStatusHandler;
 jclass cls_OCObtStatusHandler;
 jclass cls_OCCloudHandler;
+jclass cls_OCSecurityAcl;
 
 /*
  * This struct used to hold information needed for java callbacks.
