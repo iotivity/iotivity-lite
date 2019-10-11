@@ -277,7 +277,8 @@ public class OCEndpointTest {
         try {
             ep = OCEndpointUtil.stringToEndpoint("", uri);
             fail("The call stringToEndpoint should throw an exception");
-        } catch (OCEndpointParseException e) {
+        } catch (Exception e) {
+            assertEquals(OCEndpointParseException.class, e.getClass());
             assertEquals("The \"\" string cannot be parsed.", e.getMessage());
         }
 
@@ -285,15 +286,24 @@ public class OCEndpointTest {
             // will fail does not have `://`
             ep = OCEndpointUtil.stringToEndpoint("coaps+tcp", uri);
             fail("The call stringToEndpoint should throw an exception");
-        } catch (OCEndpointParseException e) {
+        } catch (Exception e) {
+            assertEquals(OCEndpointParseException.class, e.getClass());
             assertEquals("The \"coaps+tcp\" string cannot be parsed.", e.getMessage());
         }
 
         try {
             ep = OCEndpointUtil.stringToEndpoint("foobar", uri);
             fail("The call stringToEndpoint should throw an exception");
-        } catch (OCEndpointParseException e) {
+        } catch (Exception e) {
+            assertEquals(OCEndpointParseException.class, e.getClass());
             assertEquals("The \"foobar\" string cannot be parsed.", e.getMessage());
+        }
+        try {
+            ep = OCEndpointUtil.stringToEndpoint(null, uri);
+            fail("The call stringToEndpoint should throw an exception");
+        } catch (Exception e) {
+            assertEquals(OCEndpointParseException.class, e.getClass());
+            assertEquals("The (null) string cannot be parsed.", e.getMessage());
         }
         assertNull(ep);
     }
