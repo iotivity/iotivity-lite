@@ -757,5 +757,35 @@ int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status
 }
 %}
 
+%ignore oc_obt_retrieve_own_creds;
+%rename (retrieveOwnCreds) jni_obt_retrieve_own_creds;
+%inline %{
+oc_sec_creds_t *jni_obt_retrieve_own_creds(void)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_retrieve_own_creds();
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_delete_own_cred_by_credid;
+%rename(deleteOwnCredByCredid) jni_obt_delete_own_cred_by_credid;
+%inline %{
+int jni_obt_delete_own_cred_by_credid(int credid)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_delete_own_cred_by_credid(credid);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
 %include "oc_acl.h"
 %include "oc_obt.h";

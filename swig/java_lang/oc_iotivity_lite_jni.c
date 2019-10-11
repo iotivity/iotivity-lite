@@ -169,7 +169,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCUuid = (jclass)(JCALL1(NewGlobalRef, jenv, ocUuidClass));
     JCALL1(DeleteLocalRef, jenv, ocUuidClass);
 
-    jclass ocObtDiscoveryHandlerClass = JCALL1(FindClass, jenv, "org/iotivity/OCObtDiscoveryHandler");
+    jclass ocObtCredsHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCObtCredsHandler");
+    assert(ocObtCredsHandlerClass);
+    cls_OCObtCredsHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocObtCredsHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocObtCredsHandlerClass);
+
+    jclass ocObtDiscoveryHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCObtDiscoveryHandler");
     assert(ocObtDiscoveryHandlerClass);
     cls_OCObtDiscoveryHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocObtDiscoveryHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocObtDiscoveryHandlerClass);
