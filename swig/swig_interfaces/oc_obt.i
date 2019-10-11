@@ -33,7 +33,7 @@
  * would just create an empty Java class. If any functions are exposed this should
  * be moved to its own interface file.
  */
-%ignore oc_sec_acl_s;
+%rename(OCSecurityAcl) oc_sec_acl_s;
 %rename(OCAceConnectionType) oc_ace_connection_type_t;
 %rename(OCAceWildcard) oc_ace_wildcard_t;
 %ignore oc_ace_permissions_t;
@@ -757,5 +757,222 @@ int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status
 }
 %}
 
+%ignore oc_obt_retrieve_own_creds;
+%rename (retrieveOwnCreds) jni_obt_retrieve_own_creds;
+%inline %{
+oc_sec_creds_t *jni_obt_retrieve_own_creds(void)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_retrieve_own_creds();
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  return NULL;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_delete_own_cred_by_credid;
+%rename(deleteOwnCredByCredid) jni_obt_delete_own_cred_by_credid;
+%inline %{
+int jni_obt_delete_own_cred_by_credid(int credid)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_delete_own_cred_by_credid(credid);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+/* code and typemaps for mapping the oc_obt_creds_cb_t to the java OCObtCredsHandler */
+%{
+void jni_obt_creds_cb(struct oc_sec_creds_t *creds, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  assert(cls_OCObtCredsHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+        (data->jenv),
+        cls_OCObtCredsHandler,
+        "handler",
+        "(Lorg/iotivity/OCCreds;)V");
+  assert(mid_handler);
+
+  assert(cls_OCCreds);
+  const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCCreds, "<init>", "(JZ)V");
+  assert(mid_OCCreds_init);
+
+  JCALL3(CallVoidMethod,
+        (data->jenv),
+        data->jcb_obj,
+        mid_handler,
+        JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)creds, false));
+
+  release_jni_env(getEnvResult);
+}
+%}
+
+%ignore oc_obt_creds_cb_t;
+%typemap(jni)    oc_obt_creds_cb_t callback "jobject";
+%typemap(jtype)  oc_obt_creds_cb_t callback "OCObtCredsHandler";
+%typemap(jstype) oc_obt_creds_cb_t callback "OCObtCredsHandler";
+%typemap(javain) oc_obt_creds_cb_t callback "$javainput";
+%typemap(in,numinputs=1) (oc_obt_creds_cb_t callback, jni_callback_data *jcb)
+{
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+    // TODO figure out the lifetime of the oc_obt_creds_cb_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_obt_creds_cb;
+  $2 = user_data;
+}
+
+%ignore oc_obt_retrieve_creds;
+%rename(retrieveCreds) jni_obt_retrieve_creds;
+%inline %{
+int jni_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_retrieve_creds(subject, callback, jcb);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_free_creds;
+%rename(freeCreds) jni_obt_free_creds;
+%inline %{
+void jni_obt_free_creds(oc_sec_creds_t *creds)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_free_creds(creds);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_delete_cred_by_credid;
+%rename(deleteCredByCredid) jni_obt_delete_cred_by_credid;
+%inline %{
+int jni_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
+                                 oc_obt_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_delete_cred_by_credid(uuid, credid, callback, jcb);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+/* code and typemaps for mapping the oc_obt_acl_cb_t to the java OCObtAclHandler */
+%{
+void jni_obt_acl_cb(oc_sec_acl_t *acl, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  assert(cls_OCObtAclHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+        (data->jenv),
+        cls_OCObtAclHandler,
+        "handler",
+        "(Lorg/iotivity/OCSecurityAcl;)V");
+  assert(mid_handler);
+
+  assert(cls_OCSecurityAcl);
+  const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCSecurityAcl, "<init>", "(JZ)V");
+  assert(mid_OCCreds_init);
+
+  JCALL3(CallVoidMethod,
+        (data->jenv),
+        data->jcb_obj,
+        mid_handler,
+        JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)acl, false));
+
+  release_jni_env(getEnvResult);
+}
+%}
+
+%ignore oc_obt_creds_cb_t;
+%typemap(jni)    oc_obt_acl_cb_t callback "jobject";
+%typemap(jtype)  oc_obt_acl_cb_t callback "OCObtAclHandler";
+%typemap(jstype) oc_obt_acl_cb_t callback "OCObtAclHandler";
+%typemap(javain) oc_obt_acl_cb_t callback "$javainput";
+%typemap(in,numinputs=1) (oc_obt_acl_cb_t callback, jni_callback_data *jcb)
+{
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+    // TODO figure out the lifetime of the oc_obt_creds_cb_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_obt_acl_cb;
+  $2 = user_data;
+}
+
+%ignore oc_obt_retrieve_acl;
+%rename(retrieveAcl) jni_obt_retrieve_acl;
+%inline %{
+int jni_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_retrieve_acl(uuid, callback, jcb);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_free_acl;
+%rename(freeAcl) jni_obt_free_acl;
+%inline %{
+void jni_obt_free_acl(oc_sec_acl_t *acl)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_obt_free_acl(acl);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_delete_ace_by_aceid;
+%rename(deleteAceByAceId) jni_obt_delete_ace_by_aceid;
+%inline %{
+int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
+                               oc_obt_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_obt_delete_ace_by_aceid(uuid, aceid, callback, jcb);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
 %include "oc_acl.h"
 %include "oc_obt.h";

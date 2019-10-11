@@ -1490,6 +1490,7 @@ bool jni_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_secon
 %}
 
 // common operations
+%rename(setImmutableDeviceIdentifier) oc_set_immutable_device_identifier;
 /* Code and typemaps for mapping the oc_set_delayed_callback to the java OCTriggerHandler */
 %{
 oc_event_callback_retval_t jni_oc_trigger_handler(void* cb_data) {
