@@ -1,6 +1,8 @@
 Getting Started
 ---------------
 
+NHS TEST EDIT; throwaway to confirm I have permissions on the Lite repo.
+
 IoTivity-Lite is a lightweight implementation of the
 `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards
 for the Internet of Things (IoT).
@@ -196,10 +198,10 @@ defaults to using: dynamic memory allocation, OCF security layer is enabled and
 built, and IPv4 support is included in the build.
 
 To change the build options the properties page for each project must be modified
-Right click on the project select ``Properties`` find 
+Right click on the project select ``Properties`` find
 ``C/C++`` > ``Preprocessor`` > ``Preprocessor Definitions`` find the macro
 associated with the feature you wish to enable or disable. For example to
-disable the OCF security layer find and delete ``OC_SECURITY`` from the 
+disable the OCF security layer find and delete ``OC_SECURITY`` from the
 ``Preprocessor Definitions``. The ``Preprocessor Definitions`` must match for
 all projects for them to build and run. Due to the difficulty keeping all the
 projects matching it is recommended to avoid modifying the
