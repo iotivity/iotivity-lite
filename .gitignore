@@ -14,9 +14,9 @@ port/android/onboarding_tool
 port/android/server_multithread_linux
 port/android/client_multithread_linux
 port/android/smart_lock
-port/android/libiotivity-constrained-client.*
-port/android/libiotivity-constrained-server.*
-port/android/libiotivity-constrained-client-server.*
+port/android/libiotivity-lite-client.*
+port/android/libiotivity-lite-server.*
+port/android/libiotivity-lite-client-server.*
 port/android/*.so
 
 port/linux/client
