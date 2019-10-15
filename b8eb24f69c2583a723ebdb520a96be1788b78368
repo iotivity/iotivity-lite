@@ -69,6 +69,24 @@
       "revId": "b8eb24f69c2583a723ebdb520a96be1788b78368",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dce5102_532ba360",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 5
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-15T16:17:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "820ed871_58899724",
+      "revId": "b8eb24f69c2583a723ebdb520a96be1788b78368",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
