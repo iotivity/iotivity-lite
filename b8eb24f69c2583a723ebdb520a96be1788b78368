@@ -16,6 +16,23 @@
       "revId": "b8eb24f69c2583a723ebdb520a96be1788b78368",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5301ef91_04d2015c",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 5
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-15T16:05:04Z",
+      "side": 1,
+      "message": "suggest deleteCredByCredId (like deleteAceByAceId)",
+      "revId": "b8eb24f69c2583a723ebdb520a96be1788b78368",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
