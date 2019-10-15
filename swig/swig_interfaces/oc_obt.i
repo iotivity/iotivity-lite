@@ -34,6 +34,12 @@
  * be moved to its own interface file.
  */
 %rename(OCSecurityAcl) oc_sec_acl_s;
+%ignore oc_sec_acl_s::OC_LIST_STRUCT(subjects);
+%extend oc_sec_acl_s {
+  oc_sec_ace_t *getSubjectsListHead() {
+    return (oc_sec_ace_t *)oc_list_head(self->subjects);
+  }
+}
 %rename(OCAceConnectionType) oc_ace_connection_type_t;
 %rename(OCAceWildcard) oc_ace_wildcard_t;
 %ignore oc_ace_permissions_t;
@@ -48,8 +54,26 @@
 %rename(OCAceSubject) oc_ace_subject_t;
 %nodefaultctor oc_ace_subject_t;
 %nodefaultdtor oc_ace_subject_t;
-%rename(OCAceSubjectRole) oc_ace_subject_t_role;
+//%rename(OCAceSubjectRole) oc_ace_subject_t_role;
+%ignore oc_ace_subject_t_role;
+%extend oc_ace_subject_t {
+  oc_string_t getRole() {
+    return self->role.role;
+  }
+
+  oc_string_t getAuthority() {
+    return self->role.authority;
+  }
+}
 %rename(OCSecurityAce) oc_sec_ace_t;
+%ignore oc_sec_ace_t::OC_LIST_STRUCT(resources);
+%extend oc_sec_ace_t {
+  oc_ace_res_t *getResourcesListHead() {
+    return oc_list_head(self->resources);
+  }
+}
+%rename(subjectType) oc_sec_ace_t::subject_type;
+%rename(OCSecurityAcl) oc_sec_acl_s;
 /* We are relying on the iotivity-lite library to create and destroy instances of oc_sec_ace_t */
 %nodefaultctor oc_sec_ace_t;
 %nodefaultdtor oc_sec_ace_t;
@@ -805,16 +829,23 @@ void jni_obt_creds_cb(struct oc_sec_creds_t *creds, void *user_data)
         "(Lorg/iotivity/OCCreds;)V");
   assert(mid_handler);
 
-  assert(cls_OCCreds);
-  const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCCreds, "<init>", "(JZ)V");
-  assert(mid_OCCreds_init);
+  if (creds) {
+    assert(cls_OCCreds);
+    const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCCreds, "<init>", "(JZ)V");
+    assert(mid_OCCreds_init);
 
-  JCALL3(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)creds, false));
-
+    JCALL3(CallVoidMethod,
+          (data->jenv),
+          data->jcb_obj,
+          mid_handler,
+          JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)creds, false));
+  } else {
+    JCALL3(CallVoidMethod,
+          (data->jenv),
+          data->jcb_obj,
+          mid_handler,
+          NULL);
+  }
   release_jni_env(getEnvResult);
 }
 %}
@@ -843,7 +874,12 @@ int jni_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t callback, jni_c
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
-  return oc_obt_retrieve_creds(subject, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_retrieve_creds(subject, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
   return -1;
@@ -873,7 +909,12 @@ int jni_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
-  return oc_obt_delete_cred_by_credid(uuid, credid, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_delete_cred_by_credid(uuid, credid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
   return -1;
@@ -900,14 +941,14 @@ void jni_obt_acl_cb(oc_sec_acl_t *acl, void *user_data)
   assert(mid_handler);
 
   assert(cls_OCSecurityAcl);
-  const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCSecurityAcl, "<init>", "(JZ)V");
-  assert(mid_OCCreds_init);
+  const jmethodID mid_OCSecurityAcl_init = JCALL3(GetMethodID, (data->jenv), cls_OCSecurityAcl, "<init>", "(JZ)V");
+  assert(mid_OCSecurityAcl_init);
 
   JCALL3(CallVoidMethod,
         (data->jenv),
         data->jcb_obj,
         mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)acl, false));
+        JCALL4(NewObject, (data->jenv), cls_OCSecurityAcl, mid_OCSecurityAcl_init, (jlong)acl, false));
 
   release_jni_env(getEnvResult);
 }
@@ -937,11 +978,16 @@ int jni_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t callback, jni_callback
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
-  return oc_obt_retrieve_acl(uuid, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_retrieve_acl(uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
-  return -1;
+  int return_value = -1;
 #endif /* OC_SECURITY */
+  return return_value;
 }
 %}
 
@@ -967,7 +1013,12 @@ int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
-  return oc_obt_delete_ace_by_aceid(uuid, aceid, callback, jcb);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_delete_ace_by_aceid(uuid, aceid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
   return -1;
