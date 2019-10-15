@@ -32,6 +32,11 @@
 %rename(ownerCred) oc_sec_cred_t::owner_cred;
 %rename(OCCredRole) oc_sec_cred_t_role;
 %rename(OCCreds) oc_sec_creds_t;
+%extend oc_sec_creds_t {
+  oc_sec_cred_t *getCredsListHead() {
+    return oc_list_head(self->creds);
+  }
+}
 
 %rename(readCredusage) oc_cred_read_credusage;
 %rename(readEncoding) oc_cred_read_encoding;
