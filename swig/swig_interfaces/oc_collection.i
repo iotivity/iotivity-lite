@@ -12,11 +12,16 @@
 %}
 
 /*******************Begin oc_collection.h*******************/
-%ignore oc_link_params_t;
+%rename(OCLinkParams) oc_link_params_t;
 typedef struct oc_link_s oc_link_t;
 %rename(OCLink) oc_link_s;
 %ignore oc_link_s::OC_LIST_STRUCT(params);
-%ignore oc_rt_t;
+%extend oc_link_s {
+  oc_link_params_t *getParamsListHead() {
+    return oc_list_head(self->params);
+  }
+}
+%rename(OCResourceType) oc_rt_t;
 typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::get_handler;
 %ignore oc_collection_s::put_handler;
@@ -24,8 +29,25 @@ typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::delete_handler;
 %rename (numLinks) oc_collection_s::num_links;
 %ignore oc_collection_s::OC_LIST_STRUCT(mandatory_rts);
+// TODO convert to array of strings.
+%extend oc_collection_s {
+  oc_rt_t *getMandatoryResourceTypesListHead() {
+    return oc_list_head(self->mandatory_rts);
+  }
+}
 %ignore oc_collection_s::OC_LIST_STRUCT(supported_rts);
+// TODO conver to array of strings
+%extend oc_collection_s {
+  oc_rt_t *getSupportedResourceTypesListHead() {
+    return oc_list_head(self->supported_rts);
+  }
+}
 %ignore oc_collection_s::OC_LIST_STRUCT(links);
+%extend oc_collection_s {
+  oc_link_t *getLinksListHead() {
+    return oc_list_head(self->links);
+  }
+}
 %rename(OCCollection) oc_collection_s;
 %rename(handleCollectionRequest) oc_handle_collection_request;
 %rename(newCollection) oc_collection_alloc;
