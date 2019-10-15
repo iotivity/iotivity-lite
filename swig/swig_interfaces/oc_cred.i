@@ -29,9 +29,16 @@
 %rename(OCEncoding) oc_sec_encoding_t;
 %rename(OCCredData) oc_cred_data_t;
 %rename(OCCred) oc_sec_cred_t;
+%ignore oc_sec_cred_t::ctx;
 %rename(ownerCred) oc_sec_cred_t::owner_cred;
 %rename(OCCredRole) oc_sec_cred_t_role;
 %rename(OCCreds) oc_sec_creds_t;
+%ignore oc_sec_creds_t::OC_LIST_STRUCT(creds);
+%extend oc_sec_creds_t {
+  oc_sec_cred_t *getCredsListHead() {
+    return oc_list_head(self->creds);
+  }
+}
 
 %rename(readCredusage) oc_cred_read_credusage;
 %rename(readEncoding) oc_cred_read_encoding;
