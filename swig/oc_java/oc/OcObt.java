@@ -36,6 +36,9 @@ public class OcObt {
         return OCObt.discoverOwnedDevicesSiteLocalIPv6(ownedDeviceHandler);
     }
 
+    public int discoverAllResources(OCUuid uuid, OCDiscoveryHandler discoverHandler) {
+        return OCObt.discoverAllResources(uuid, discoverHandler);
+    }
     public int performJustWorksOtm(OCUuid uuid, OCObtDeviceStatusHandler otmJustWorksHandler) {
         return OCObt.performJustWorksOtm(uuid, otmJustWorksHandler);
     }
@@ -77,6 +80,38 @@ public class OcObt {
 
     public int provisionAuthWildcardAce(OCUuid uuid, OCObtDeviceStatusHandler provisionAceHandler) {
         return OCObt.provisionAuthWildcardAce(uuid, provisionAceHandler);
+    }
+
+    public OCCreds retrieveOwnCreds() {
+        return OCObt.retrieveOwnCreds();
+    }
+
+    public int deleteOwnCredByCredId(int credid){
+        return OCObt.deleteOwnCredByCredId(credid);
+    }
+
+    public int retrieveCreds(OCUuid subjectUuid, OCObtCredsHandler obtCredsHandler) {
+        return OCObt.retrieveCreds(subjectUuid, obtCredsHandler);
+    }
+
+    public void freeCreds(OCCreds creds) {
+        OCObt.freeCreds(creds);
+    }
+
+    public int deleteCredByCredId(OCUuid uuid, int credid, OCObtStatusHandler obtStatusHandler) {
+        return OCObt.deleteCredByCredId(uuid, credid, obtStatusHandler);
+    }
+
+    public int retrieveAcl(OCUuid uuid, OCObtAclHandler obtAclHandler) {
+        return OCObt.retrieveAcl(uuid, obtAclHandler);
+    }
+
+    public void freeAcl(OCSecurityAcl acl) {
+        OCObt.freeAcl(acl);
+    }
+
+    public int deleteAceByAceId(OCUuid uuid, int aceid, OCObtStatusHandler obtStatusHandler) {
+        return OCObt.deleteAceByAceId(uuid, aceid, obtStatusHandler);
     }
 
     public int deviceHardReset(OCUuid uuid, OCObtDeviceStatusHandler resetDeviceHandler) {
