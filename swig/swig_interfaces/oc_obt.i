@@ -34,6 +34,12 @@
  * be moved to its own interface file.
  */
 %rename(OCSecurityAcl) oc_sec_acl_s;
+%ignore oc_sec_acl_s::OC_LIST_STRUCT(subjects);
+%extend oc_sec_acl_s {
+  oc_sec_ace_t *getSubjectsListHead() {
+    return oc_list_head(self->subjects);
+  }
+}
 %rename(OCAceConnectionType) oc_ace_connection_type_t;
 %rename(OCAceWildcard) oc_ace_wildcard_t;
 %ignore oc_ace_permissions_t;
@@ -50,6 +56,14 @@
 %nodefaultdtor oc_ace_subject_t;
 %rename(OCAceSubjectRole) oc_ace_subject_t_role;
 %rename(OCSecurityAce) oc_sec_ace_t;
+%ignore oc_sec_ace_t::OC_LIST_STRUCT(resources);
+%extend oc_sec_ace_t {
+  oc_ace_res_t *getResourcesListHead() {
+    return oc_list_head(self->resources);
+  }
+}
+%rename(subjectType) oc_sec_ace_t::subject_type;
+%rename(OCSecurityAcl) oc_sec_acl_s;
 /* We are relying on the iotivity-lite library to create and destroy instances of oc_sec_ace_t */
 %nodefaultctor oc_sec_ace_t;
 %nodefaultdtor oc_sec_ace_t;
