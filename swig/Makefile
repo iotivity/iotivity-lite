@@ -85,6 +85,7 @@ endif
 
 ifneq ($(PKI),0)
 	EXTRA_FLAG += -DOC_PKI
+	SWIG_CFLAG += -DOC_PKI
 endif
 
 ifeq ($(TCP),1)
