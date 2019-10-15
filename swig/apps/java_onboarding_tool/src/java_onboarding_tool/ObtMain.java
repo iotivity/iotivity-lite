@@ -1,5 +1,9 @@
 package java_onboarding_tool;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.LinkedHashSet;
@@ -10,8 +14,12 @@ import org.iotivity.OCAceConnectionType;
 import org.iotivity.OCAcePermissionsMask;
 import org.iotivity.OCAceResource;
 import org.iotivity.OCAceWildcard;
+import org.iotivity.OCCred;
+import org.iotivity.OCCredUtil;
+import org.iotivity.OCCreds;
 import org.iotivity.OCMain;
 import org.iotivity.OCObt;
+import org.iotivity.OCPki;
 import org.iotivity.OCRole;
 import org.iotivity.OCSecurityAce;
 import org.iotivity.OCStorage;
@@ -57,7 +65,7 @@ public class ObtMain {
     public static void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
-        menu.append("OCF 2.0 Onboarding Tool\n");
+        menu.append("OCF 2.x Onboarding Tool\n");
         menu.append("################################################\n");
         menu.append("[0] Display this menu\n");
         menu.append("------------------------------------------------\n");
@@ -67,19 +75,27 @@ public class ObtMain {
         menu.append("[4] Discover owned devices\n");
         menu.append("[5] Discover owned devices in the realm-local IPv6 scope\n");
         menu.append("[6] Discover owned devices in the site-local IPv6 scope\n");
+        menu.append("[7] Discover all resources on the device\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[7] Just-Works Ownership Transfer Method\n");
-        menu.append("[8] Request Random PIN from device for OTM\n");
-        menu.append("[9] Random PIN Ownership Transfer Method\n");
-        menu.append("[10] Manufacturer Certificate based Ownership Transfer Method\n");
+        menu.append("[8] Just-Works Ownership Transfer Method\n");
+        menu.append("[9] Request Random PIN from device for OTM\n");
+        menu.append("[10] Random PIN Ownership Transfer Method\n");
+        menu.append("[11] Manufacturer Certificate based Ownership Transfer Method\n");
         menu.append("------------------------------------------------\n");
-        menu.append("[11] Provision pair-wise credentials\n");
-        menu.append("[12] Provision ACE2\n");
-        menu.append("[13] Provision auth-crypt RW access to NCRs\n");
-        menu.append("[14] Provision role RW access to NCRs\n");
-        menu.append("[15] Provision identity certificate\n");
-        menu.append("[16] Provision role certificate\n");
+        menu.append("[12] Provision pair-wise credentials\n");
+        menu.append("[13] Provision ACE2\n");
+        menu.append("[14] Provision auth-crypt RW access to NCRs\n");
+        menu.append("[15] RETRIEVE /oic/sec/cred\n");
+        menu.append("[16] DELETE cred by credid\n");
+        menu.append("[17] RETRIEVE /oic/sec/acl2\n");
+        menu.append("[18] DELETE ace by aceid\n");
+        menu.append("[19] RETRIEVE own creds\n");
+        menu.append("[20] DELETE own cred by credid\n");
+        menu.append("[21] Provision role RW access to NCRs\n");
+        menu.append("[22] Provision identity certificate\n");
+        menu.append("[23] Provision role certificate\n");
         menu.append("------------------------------------------------\n");
+        menu.append("[96] Install new manufacturer trust anchor\n");
         menu.append("[97] RESET device\n");
         menu.append("[98] RESET OBT\n");
         menu.append("------------------------------------------------\n");
@@ -124,6 +140,49 @@ public class ObtMain {
             if (0 > OCObt.discoverOwnedDevicesSiteLocalIPv6(ownedDeviceHandler)) {
                 System.err.println("ERROR discovering owned Devices site local IPv6.");
             }
+        }
+    }
+
+    public static void discoverResources()
+    {
+        if(unownedDevices.isEmpty() && ownedDevices.isEmpty()) {
+            System.out.println("\nPlease Re-discover devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder devicesMenu = new StringBuilder();
+        devicesMenu.append("\nMy Devices:\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        OCFDeviceInfo[] uds = unownedDevices.toArray(new OCFDeviceInfo[unownedDevices.size()]);
+        OCFDeviceInfo[] devices = new OCFDeviceInfo[(ods.length + uds.length)];
+        System.arraycopy(ods, 0, devices, 0, ods.length);
+        System.arraycopy(uds, 0, devices, ods.length, uds.length);
+        for (OCFDeviceInfo od : ods) {
+            devicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            i++;
+        }
+        devicesMenu.append("\n\nUnowned Devices:\n");
+        for (OCFDeviceInfo ud : uds) {
+            devicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(ud.uuid) + " - " + ud.name + "\n");
+            i++;
+        }
+        devicesMenu.append("\n\nSelect device: ");
+        System.out.print(devicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = OCObt.discoverAllResources(devices[userInput].uuid, new ResourceDiscovery());
+        if (ret >= 0)
+        {
+            System.out.println("\nSuccessfully issued resource discovery request");
+        } else {
+            System.out.println("\nERROR issuing resource discovery request");
         }
     }
 
@@ -540,6 +599,195 @@ public class ObtMain {
         }
     }
 
+    public static void displayCredentialResource(OCCreds creds)
+    {
+        if (creds != null) {
+            System.out.println("\n/oic/sec/cred:");
+            OCCred cr = creds.getCredsListHead(); //TODO must add method to get credListHead
+            System.out.println("\n################################################");
+            while (cr != null) {
+              System.out.println("credid: " + cr.getCredId());
+              System.out.println("subjectuuid: " + OCUuidUtil.uuidToString(cr.getSubjectUuid()));
+              System.out.println("credtype: " + OCCredUtil.credTypeString(cr.getCredType()));
+              // In The C sample this section is only for OC_PKI we don't have build flags in Java
+              // TODO add empty Get function for Credusage is OC_PKI not supported.
+              System.out.println("credusage: " + OCCredUtil.readCredusage(cr.getCredUsage()));
+              if (cr.getPublicData() != null &&
+                  cr.getPublicData().getData() != null &&
+                  !cr.getPublicData().getData().isEmpty()) {
+                System.out.println("publicdata_encoding: " + OCCredUtil.readEncoding((cr.getPublicData().getEncoding())));
+              }
+              // End of OC_PKI section
+              System.out.println("privatedata_encoding: " + OCCredUtil.readEncoding(cr.getPrivateData().getEncoding()));
+              if (cr.getRole() != null && !cr.getRole().isEmpty()) {
+                  System.out.println("roleid_role: " + cr.getRole());
+              }
+              if (cr.getAuthority() != null && !cr.getAuthority().isEmpty()) {
+                System.out.println("roleid_authority: " + cr.getAuthority());
+              }
+              System.out.println("\n-----");
+              cr = cr.getNext();
+            }
+            System.out.println("\n################################################");
+          }
+    }
+
+    public static void retrieveCredentialResource()
+    {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("My Devices:\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = OCObt.retrieveCreds(ods[userInput].uuid, new RetrieveCredentialResourceHandler());
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to RETRIEVE /oic/sec/cred");
+        } else {
+            System.out.println("\nERROR issuing request to RETRIEVE /oic/sec/cred");
+        }
+    }
+
+    public static void deleteCredetialByCredentialId()
+    {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("My Devices:\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        System.out.println("\nEnter credid: ");
+        int credid = scanner.nextInt();
+
+        int ret = OCObt.deleteCredByCredId(ods[userInput].uuid, credid, new DeleteCredentialIdHandler());
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to DELETE /oic/sec/cred");
+        } else {
+            System.out.println("\nERROR issuing request to DELETE /oic/sec/cred");
+        }
+    }
+
+    public static void retrieveAce2Resource()
+    {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("My Devices:\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        int ret = OCObt.retrieveAcl(ods[userInput].uuid, new RetrieveAcl2Handler());
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to RETRIEVE /oic/sec/acl2");
+        } else {
+            System.out.println("\nERROR issuing request to RETRIEVE /oic/sec/acl2");
+        }
+    }
+
+    public static void deleteAceByAceId()
+    {
+        if (ownedDevices.isEmpty()) {
+            System.out.println("\n\nPlease Re-Discover Owned devices");
+            return;
+        }
+
+        int i = 0;
+
+        StringBuilder ownedDevicesMenu = new StringBuilder();
+        ownedDevicesMenu.append("My Devices:\n");
+        OCFDeviceInfo[] ods = ownedDevices.toArray(new OCFDeviceInfo[ownedDevices.size()]);
+        for (OCFDeviceInfo od : ods) {
+            ownedDevicesMenu.append("[" + i + "]: " + OCUuidUtil.uuidToString(od.uuid) + " - " + od.name + "\n");
+            i++;
+        }
+        ownedDevicesMenu.append("\nSelect device: ");
+        System.out.print(ownedDevicesMenu);
+
+        int userInput = scanner.nextInt();
+        if (userInput < 0 || userInput >= i) {
+            System.out.println("ERROR: Invalid selection");
+            return;
+        }
+
+        System.out.println("\nEnter aceid: ");
+        int aceid = scanner.nextInt();
+
+        int ret = OCObt.deleteAceByAceId(ods[userInput].uuid, aceid, new DeleteAceByAceIdHandler());
+        if (ret >= 0) {
+            System.out.println("\nSuccessfully issued request to DELETE /oic/sec/acl2");
+        } else {
+            System.out.println("\nERROR issuing request to DELETE /oic/sec/acl2");
+        }
+    }
+
+    public static void retrieveOwnCredentials()
+    {
+        displayCredentialResource(OCObt.retrieveOwnCreds());
+    }
+
+    public static void deleteOwnCredentialByCredentialId()
+    {
+        System.out.println("\nEnter credid: ");
+        int credid = scanner.nextInt();
+
+        int ret = OCObt.deleteOwnCredByCredId(credid);
+        if (ret >= 0) {
+          System.out.println("\nSuccessfully DELETED cred");
+        } else {
+          System.out.println("\nERROR DELETING cred");
+        }
+    }
+
     public static void provisionRoleWildcardAce() {
         if (ownedDevices.isEmpty()) {
             System.out.println("\n\nNo devices to provision.. Please Re-Discover Owned devices");
@@ -678,6 +926,29 @@ public class ObtMain {
         }
     }
 
+    public static void installTrustAnchor()
+    {
+        System.out.println("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+        ByteArrayOutputStream certBuffer = new ByteArrayOutputStream();
+        while(true) {
+            String userInput = scanner.next();
+            if(userInput.equals("done")) {
+                break;
+            }
+            try {
+                certBuffer.write(userInput.getBytes());
+            } catch (IOException e) {
+                System.out.println("ERROR reading input. No root certificate installed.");
+                return;
+            }
+        }
+
+        int rootCaCredintialId = OCPki.addMfgTrustAnchor(0, certBuffer.toByteArray());
+        if(rootCaCredintialId < 0) {
+            System.out.println("ERROR installing root certificate.");
+        }
+    }
+
     public static void resetDevice() {
         if (ownedDevices.isEmpty()) {
             System.out.println("\n\nPlease Re-Discover Owned devices");
@@ -771,39 +1042,61 @@ public class ObtMain {
                 discoverOwnedDevices(2);
                 break;
             case 7:
+                discoverResources();
+            case 8:
                 otmJustWorks();
                 break;
-            case 8:
+            case 9:
                 requestRandomPin();
                 break;
-            case 9:
+            case 10:
                 otmRandomPin();
                 break;
-            case 10:
+            case 11:
                 otmCertificate();
                 break;
-            case 11:
+            case 12:
                 provisionCredentials();
                 break;
-            case 12:
+            case 13:
                 provisionAce2();
                 break;
-            case 13:
+            case 14:
                 provisionAuthWildcardAce();
                 break;
-            case 14:
-                provisionRoleWildcardAce();
-                break;
             case 15:
-                provisionIdCertificate();
+                retrieveCredentialResource();
                 break;
             case 16:
+                deleteCredetialByCredentialId();
+                break;
+            case 17:
+                retrieveAce2Resource();
+                break;
+            case 18:
+                deleteAceByAceId();
+                break;
+            case 19:
+                retrieveOwnCredentials();
+                break;
+            case 20:
+                deleteOwnCredentialByCredentialId();
+                break;
+            case 21:
+                provisionRoleWildcardAce();
+                break;
+            case 22:
+                provisionIdCertificate();
+                break;
+            case 23:
                 provisionRoleCertificate();
+                break;
+            case 96:
+                installTrustAnchor();
                 break;
             case 97:
                 resetDevice();
                 break;
-
             case 98:
                 resetOBT();
                 break;
