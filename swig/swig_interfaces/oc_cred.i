@@ -29,9 +29,35 @@
 %rename(OCEncoding) oc_sec_encoding_t;
 %rename(OCCredData) oc_cred_data_t;
 %rename(OCCred) oc_sec_cred_t;
+%ignore role;
+%ignore oc_sec_cred_t_role;
+%inline %{
+typedef struct role role;
+%}
+%rename(privateData) oc_sec_cred_t::privatedata;
+%rename(publicData) oc_sec_cred_t::publicdata;
+%rename(credUsage) oc_sec_cred_t::credusage;
+%ignore oc_sec_cred_t::ctx;
+%rename(credId) credid;
+%rename(credType) oc_sec_cred_t::credtype;
+%rename(subjectUuid) subjectuuid;
 %rename(ownerCred) oc_sec_cred_t::owner_cred;
-%rename(OCCredRole) oc_sec_cred_t_role;
+%extend oc_sec_cred_t {
+  oc_string_t getRole() {
+    return self->role.role;
+  }
+
+  oc_string_t getAuthority() {
+    return self->role.authority;
+  }
+}
 %rename(OCCreds) oc_sec_creds_t;
+%ignore oc_sec_creds_t::OC_LIST_STRUCT(creds);
+%extend oc_sec_creds_t {
+  oc_sec_cred_t *getCredsListHead() {
+    return oc_list_head(self->creds);
+  }
+}
 
 %rename(readCredusage) oc_cred_read_credusage;
 %rename(readEncoding) oc_cred_read_encoding;
