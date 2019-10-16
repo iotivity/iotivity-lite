@@ -22,6 +22,30 @@
       "revId": "8470d230179ec2d11bc4d617863a74b55cacd45c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22b3cf7b_69bf00e6",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/ObtMain.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T17:03:53Z",
+      "side": 1,
+      "message": "what if the user just supplied the path to the file with the certificate and it is read similar to the factory presets.",
+      "parentUuid": "d0d6496f_916281a9",
+      "range": {
+        "startLine": 925,
+        "startChar": 0,
+        "endLine": 926,
+        "endChar": 75
+      },
+      "revId": "8470d230179ec2d11bc4d617863a74b55cacd45c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
