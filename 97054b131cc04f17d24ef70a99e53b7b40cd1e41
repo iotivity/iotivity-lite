@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14df3c62_e30ede0c",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/RetrieveAcl2Handler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RETRIEVING",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f345614_660090b8",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/RetrieveCredintialResourceHandler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RetrieveCredintialResourceHandler -\u003e RetrieveCredentialResourceHandler (file will need rename)",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a88a48c8_9fb3f276",
+        "filename": "swig/apps/java_onboarding_tool/src/java_onboarding_tool/RetrieveCredintialResourceHandler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RETRIEVING",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "291c2132_ac073a2e",
+        "filename": "swig/apps/oc/java_oc_onboarding_tool/src/java_oc_onboarding_tool/RetrieveAcl2Handler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RETRIEVING",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2da10ea1_6bc8b996",
+        "filename": "swig/apps/oc/java_oc_onboarding_tool/src/java_oc_onboarding_tool/RetrieveCredintialResourceHandler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RetrieveCredintialResourceHandler -\u003e RetrieveCredentialResourceHandler (file will need rename)",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8697b77_1d77769d",
+        "filename": "swig/apps/oc/java_oc_onboarding_tool/src/java_oc_onboarding_tool/RetrieveCredintialResourceHandler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-16T22:24:55Z",
+      "side": 1,
+      "message": "RETRIEVING",
+      "revId": "97054b131cc04f17d24ef70a99e53b7b40cd1e41",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
