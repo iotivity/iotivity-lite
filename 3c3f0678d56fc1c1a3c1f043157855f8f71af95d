@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d73c4cd_e9cde0ea",
+        "filename": "apps/cloud_windows.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-18T18:06:00Z",
+      "side": 1,
+      "message": "I am wondering if it would be a better idea to make a single cloud_server.c that combines the Windows and Linux sample into a single file.\n\nThe files are mostly the same except for the threading code and include headers.\n\nThese differences can be handled using #ifdefs (reference the onboarding tool code)\n\n  // Example of what I am talking about.\n  #if defined(_WIN32)\n  #include \u003cwindows.h\u003e\n  #elif defined(__linux__)\n  #include \u003cpthread.h\u003e\n  #else\n  #error \"Unsupported OS\"\n  #endif \n\nthe word interface can simply be changed to iface for both windows and linux. Instead of doing the cast to int for the lite power we can simply change the light power to int64_t.\n\nI personally feel this would reduce maintenance since we don\u0027t need to update two samples for any change.",
+      "revId": "3c3f0678d56fc1c1a3c1f043157855f8f71af95d",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
