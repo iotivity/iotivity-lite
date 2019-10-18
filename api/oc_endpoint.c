@@ -493,6 +493,34 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 }
 
 int
+oc_endpoint_string_to_uri(oc_string_t *endpoint_str, oc_string_t *uri)
+{
+  if (!endpoint_str)
+    return -1;
+
+  const char *address = NULL;
+
+  address = strstr(oc_string(*endpoint_str), "://") + 3;
+  if(!address) {
+    return -1;
+  }
+  // 3 is string length of "://"
+  address += 3;
+
+  size_t len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+
+  /* Extract a uri path if available */
+  const char *u = NULL;
+  if (uri) {
+    u = memchr(address, '/', len);
+    if (u) {
+      oc_new_string(uri, u, (len - (u - address)));
+    }
+  }
+  return 0;
+}
+
+int
 oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 {
   if (!endpoint || !(endpoint->flags & IPV6)) {
