@@ -492,6 +492,60 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   return -1;
 }
 
+static int
+oc_parse_endpoint_uri(oc_string_t *endpoint_str, oc_string_t *uri)
+{
+  if (!endpoint_str)
+    return -1;
+
+  const char *address = NULL;
+  size_t len = oc_string_len(*endpoint_str);
+#ifdef OC_TCP
+  if (len > strlen(OC_SCHEME_COAPS_TCP) &&
+      memcmp(OC_SCHEME_COAPS_TCP, oc_string(*endpoint_str),
+             strlen(OC_SCHEME_COAPS_TCP)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS_TCP);
+  } else if (len > strlen(OC_SCHEME_COAP_TCP) &&
+             memcmp(OC_SCHEME_COAP_TCP, oc_string(*endpoint_str),
+                    strlen(OC_SCHEME_COAP_TCP)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP_TCP);
+  } else
+#endif
+    if (len > strlen(OC_SCHEME_COAPS) &&
+        memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
+               strlen(OC_SCHEME_COAPS)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS);
+  } else if (len > strlen(OC_SCHEME_COAP) &&
+             memcmp(OC_SCHEME_COAP, oc_string(*endpoint_str),
+                    strlen(OC_SCHEME_COAP)) == 0) {
+    address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAP);
+  } else {
+    return -1;
+  }
+
+  len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+
+  /* Extract a uri path if requested and available */
+  const char *u = NULL;
+  if (uri) {
+    u = memchr(address, '/', len);
+    if (u) {
+      oc_new_string(uri, u, (len - (u - address)));
+    }
+  }
+
+  return 0;
+}
+
+int
+oc_endpoint_string_to_uri(oc_string_t *endpoint_str, oc_string_t *uri)
+{
+  if (endpoint_str) {
+    return oc_parse_endpoint_uri(endpoint_str, uri);
+  }
+  return -1;
+}
+
 int
 oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 {
