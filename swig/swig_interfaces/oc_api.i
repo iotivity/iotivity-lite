@@ -706,15 +706,20 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
                                        "(Lorg/iotivity/OCRequest;I)V");
   assert(mid_handler);
 
-  assert(cls_OCRequest);
-  const jmethodID mid_OCRequest_init = JCALL3(GetMethodID, (data->jenv), cls_OCRequest, "<init>", "(JZ)V");
-  assert(mid_OCRequest_init);
+  jobject jrequest = NULL;
+  jmethodID mid_OCRequest_init = NULL;
+  if (request) {
+    assert(cls_OCRequest);
+    const jmethodID mid_OCRequest_init = JCALL3(GetMethodID, (data->jenv), cls_OCRequest, "<init>", "(JZ)V");
+    assert(mid_OCRequest_init);
+    jrequest = JCALL4(NewObject, (data->jenv), cls_OCRequest, mid_OCRequest_init, (jlong)request, false);
+  }
   JCALL4(CallVoidMethod,
          (data->jenv),
          data->jcb_obj,
          mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCRequest, mid_OCRequest_init, (jlong)request, false),
-        (jint)interfaces);
+         jrequest,
+         (jint)interfaces);
 
   if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
     jni_list_remove(data);
@@ -767,16 +772,19 @@ void jni_oc_get_properties_callback(oc_resource_t *resource, oc_interface_mask_t
                                        "(Lorg/iotivity/OCResource;I)V");
   assert(mid_handler);
 
-
-  assert(cls_OCResource);
-  const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
-  assert(mid_OCResource_init);
+  jobject jresource = NULL;
+  if (resource) {
+    assert(cls_OCResource);
+    const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
+    assert(mid_OCResource_init);
+    jresource = JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false);
+  }
   JCALL4(CallVoidMethod,
          (data->jenv),
          data->jcb_obj,
          mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false),
-        (jint)iface_mask);
+         jresource,
+         (jint)iface_mask);
 
   if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
     jni_list_remove(data);
@@ -818,22 +826,31 @@ bool jni_oc_set_properties_callback(oc_resource_t *resource, oc_rep_t *rep, void
                                        "(Lorg/iotivity/OCResource;Lorg/iotivity/OCRepresentation;)Z");
   assert(mid_handler);
 
-  assert(cls_OCResource);
-  const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
-  assert(mid_OCResource_init);
-  assert(cls_OCRepresentation);
-  const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
-                                                     (data->jenv),
-                                                     cls_OCRepresentation, "<init>",
-                                                     "(JZ)V");
-  assert(mid_OCRepresentation_init);
+  jobject jresource = NULL;
+  if (resource) {
+    assert(cls_OCResource);
+    const jmethodID mid_OCResource_init = JCALL3(GetMethodID, (data->jenv), cls_OCResource, "<init>", "(JZ)V");
+    assert(mid_OCResource_init);
+    jresource = JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false);
+  }
+
+  jobject jrep = NULL;
+  if (rep) {
+    assert(cls_OCRepresentation);
+    const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
+                                                       (data->jenv),
+                                                       cls_OCRepresentation, "<init>",
+                                                       "(JZ)V");
+    assert(mid_OCRepresentation_init);
+    jrep = JCALL4(NewObject, (data->jenv), cls_OCRepresentation, mid_OCRepresentation_init, (jlong)rep, false);
+  }
 
   bool returnValue = JCALL4(CallBooleanMethod,
-         (data->jenv),
-         data->jcb_obj,
-         mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCResource, mid_OCResource_init, (jlong)resource, false),
-        JCALL4(NewObject, (data->jenv), cls_OCRepresentation, mid_OCRepresentation_init, (jlong)rep, false));
+                            (data->jenv),
+                            data->jcb_obj,
+                            mid_handler,
+                            jresource,
+                            jrep);
 
   if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
     jni_list_remove(data);
@@ -923,23 +940,25 @@ void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
                                        "(JLorg/iotivity/OCRepresentation;)V");
   assert(mid_handler);
 
-  assert(cls_OCRepresentation);
-  const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
-                                                     (oc_con_write_cb_data.jenv),
-                                                     cls_OCRepresentation, "<init>",
-                                                     "(JZ)V");
-  assert(mid_OCRepresentation_init);
-  JCALL4(CallVoidMethod,
-         (oc_con_write_cb_data.jenv),
+  jobject jrep = NULL;
+  if (rep) {
+    assert(cls_OCRepresentation);
+    const jmethodID mid_OCRepresentation_init = JCALL3(GetMethodID,
+                                                       (oc_con_write_cb_data.jenv),
+                                                       cls_OCRepresentation, "<init>",
+                                                       "(JZ)V");
+    assert(mid_OCRepresentation_init);
+    jrep = JCALL4(NewObject, (oc_con_write_cb_data.jenv),
+                  cls_OCRepresentation,
+                  mid_OCRepresentation_init,
+                  (jlong)rep,
+                  false);
+  }
+  JCALL4(CallVoidMethod, (oc_con_write_cb_data.jenv),
          oc_con_write_cb_data.jcb_obj,
          mid_handler,
          (jlong)device_index,
-         JCALL4(NewObject,
-                (oc_con_write_cb_data.jenv),
-                cls_OCRepresentation,
-                mid_OCRepresentation_init,
-                (jlong)rep, false)
-         );
+         jrep);
 }
 %}
 %typemap(jni)    oc_con_write_cb_t callback "jobject";
@@ -1175,20 +1194,6 @@ void jni_oc_response_handler(oc_client_response_t *response)
   data->jenv = get_jni_env(&getEnvResult);
   assert(data->jenv);
 
-  assert(cls_OCClientResponse);
-  const jmethodID mid_OCClientResponse_init = JCALL3(GetMethodID,
-                                                     (data->jenv),
-                                                     cls_OCClientResponse,
-                                                     "<init>",
-                                                     "(JZ)V");
-  assert(mid_OCClientResponse_init);
-  jobject jresponse = JCALL4(NewObject,
-                             (data->jenv),
-                             cls_OCClientResponse,
-                             mid_OCClientResponse_init,
-                             (jlong)response,
-                             false);
-
   assert(cls_OCResponseHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
                                        (data->jenv),
@@ -1196,6 +1201,23 @@ void jni_oc_response_handler(oc_client_response_t *response)
                                        "handler",
                                        "(Lorg/iotivity/OCClientResponse;)V");
   assert(mid_handler);
+
+  jobject jresponse = NULL;
+  if (response) {
+    assert(cls_OCClientResponse);
+    const jmethodID mid_OCClientResponse_init = JCALL3(GetMethodID,
+                                                       (data->jenv),
+                                                       cls_OCClientResponse,
+                                                       "<init>",
+                                                       "(JZ)V");
+    assert(mid_OCClientResponse_init);
+    jresponse = JCALL4(NewObject, (data->jenv),
+                       cls_OCClientResponse,
+                       mid_OCClientResponse_init,
+                       (jlong)response,
+                       false);
+  }
+
   JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jresponse);
 
   release_jni_env(getEnvResult);

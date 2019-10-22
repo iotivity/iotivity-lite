@@ -127,28 +127,36 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
         "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;)V");
   assert(mid_handler);
 
-  assert(cls_OCUuid);
-  const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
-  assert(mid_OCUuid_init);
+  jobject juuid = NULL;
+  if (uuid) {
+    assert(cls_OCUuid);
+    const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
+    assert(mid_OCUuid_init);
 
-  assert(cls_OCEndpoint);
-  const jmethodID mid_OCEndpoint_init = JCALL3(GetMethodID,
-        (data->jenv),
-        cls_OCEndpoint,
-        "<init>",
-        "(JZ)V");
+    /* make copy of uuid that will be owned by Java code */
+    oc_uuid_t *new_uuid = malloc(sizeof(oc_uuid_t));
+    memcpy(new_uuid->id, uuid->id, 16);
+
+    juuid = JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)new_uuid, true);
+  }
+
+  jobject jeps = NULL;
+  if (eps) {
+    assert(cls_OCEndpoint);
+    const jmethodID mid_OCEndpoint_init = JCALL3(GetMethodID,
+                                                 (data->jenv),
+                                                 cls_OCEndpoint,
+                                                 "<init>",
+                                                 "(JZ)V");
   assert(mid_OCEndpoint_init);
 
-  /* make copy of uuid that will be owned by Java code */
-  oc_uuid_t *juuid = malloc(sizeof(oc_uuid_t));
-  memcpy(juuid->id, uuid->id, 16);
-
-  JCALL4(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false));
+  jeps = JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false);
+  }
+  JCALL4(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         juuid,
+         jeps);
 
   release_jni_env(getEnvResult);
 }
@@ -329,20 +337,24 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
         "(Lorg/iotivity/OCUuid;I)V");
   assert(mid_handler);
 
-  assert(cls_OCUuid);
-  const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
-  assert(mid_OCUuid_init);
+  jobject juuid = NULL;
+  if (uuid) {
+    assert(cls_OCUuid);
+    const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
+    assert(mid_OCUuid_init);
 
-  /* make copy of uuid that will be owned by Java code */
-  oc_uuid_t *juuid = malloc(sizeof(oc_uuid_t));
-  memcpy(juuid->id, uuid->id, 16);
+    /* make copy of uuid that will be owned by Java code */
+    oc_uuid_t *new_uuid = malloc(sizeof(oc_uuid_t));
+    memcpy(new_uuid->id, uuid->id, 16);
 
-  JCALL4(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true),
-        (jint) status);
+    juuid = JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)juuid, true);
+  }
+
+  JCALL4(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         juuid,
+         (jint) status);
 
   release_jni_env(getEnvResult);
 }
@@ -829,23 +841,19 @@ void jni_obt_creds_cb(struct oc_sec_creds_t *creds, void *user_data)
         "(Lorg/iotivity/OCCreds;)V");
   assert(mid_handler);
 
+  jobject jcreds = NULL;
   if (creds) {
     assert(cls_OCCreds);
     const jmethodID mid_OCCreds_init = JCALL3(GetMethodID, (data->jenv), cls_OCCreds, "<init>", "(JZ)V");
     assert(mid_OCCreds_init);
 
-    JCALL3(CallVoidMethod,
-          (data->jenv),
-          data->jcb_obj,
-          mid_handler,
-          JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)creds, false));
-  } else {
-    JCALL3(CallVoidMethod,
-          (data->jenv),
-          data->jcb_obj,
-          mid_handler,
-          NULL);
+    jcreds = JCALL4(NewObject, (data->jenv), cls_OCCreds, mid_OCCreds_init, (jlong)creds, false);
   }
+  JCALL3(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         jcreds);
+
   release_jni_env(getEnvResult);
 }
 %}
@@ -940,15 +948,19 @@ void jni_obt_acl_cb(oc_sec_acl_t *acl, void *user_data)
         "(Lorg/iotivity/OCSecurityAcl;)V");
   assert(mid_handler);
 
-  assert(cls_OCSecurityAcl);
-  const jmethodID mid_OCSecurityAcl_init = JCALL3(GetMethodID, (data->jenv), cls_OCSecurityAcl, "<init>", "(JZ)V");
-  assert(mid_OCSecurityAcl_init);
+  jobject jacl = NULL;
+  if (acl) {
+    assert(cls_OCSecurityAcl);
+    const jmethodID mid_OCSecurityAcl_init = JCALL3(GetMethodID, (data->jenv), cls_OCSecurityAcl, "<init>", "(JZ)V");
+    assert(mid_OCSecurityAcl_init);
 
-  JCALL3(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        JCALL4(NewObject, (data->jenv), cls_OCSecurityAcl, mid_OCSecurityAcl_init, (jlong)acl, false));
+    jacl = JCALL4(NewObject, (data->jenv), cls_OCSecurityAcl, mid_OCSecurityAcl_init, (jlong)acl, false);
+  }
+
+  JCALL3(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         jacl);
 
   release_jni_env(getEnvResult);
 }
