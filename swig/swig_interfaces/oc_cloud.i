@@ -46,23 +46,26 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 
   // convert oc_cloud_context_t to java org.iotivity.OCCloudContext so it can
   // be passed upto the handler method.
-  assert(cls_OCCloudContext);
-  const jmethodID mid_OCOCCloudContext_init = JCALL3(GetMethodID,
-                                                     (data->jenv),
-                                                     cls_OCCloudContext, "<init>",
-                                                     "(JZ)V");
-  assert(mid_OCOCCloudContext_init);
+  jobject jctx = NULL;
+  if (ctx) {
+    assert(cls_OCCloudContext);
+    const jmethodID mid_OCOCCloudContext_init = JCALL3(GetMethodID, (data->jenv),
+                                                       cls_OCCloudContext,
+                                                       "<init>",
+                                                       "(JZ)V");
+    assert(mid_OCOCCloudContext_init);
+    jctx = JCALL4(NewObject, (data->jenv),
+                  cls_OCCloudContext,
+                  mid_OCOCCloudContext_init,
+                  (jlong)ctx,
+                  false);
+  }
 
-  JCALL4(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        JCALL4(NewObject,
-                (data->jenv),
-                cls_OCCloudContext,
-                mid_OCOCCloudContext_init,
-                (jlong)ctx, false),
-        (jint) status);
+  JCALL4(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         jctx,
+         (jint) status);
 
   if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
     jni_list_remove(data);
