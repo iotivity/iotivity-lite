@@ -33,6 +33,13 @@ extern "C"
 /* Worst case timeout for all onboarding/provisioning sequences */
 #define OBT_CB_TIMEOUT (15)
 
+typedef enum {
+  OC_OBT_OTM_JW = 0,
+  OC_OBT_RDP,
+  OC_OBT_OTM_RDP,
+  OC_OBT_OTM_CERT
+} oc_obt_otm_t;
+
 /* Used for tracking owned/unowned devices in oc_obt's internal caches */
 typedef struct oc_device_t
 {
@@ -73,6 +80,7 @@ typedef struct oc_otm_ctx_t
   struct oc_otm_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
+  oc_obt_otm_t otm;
 } oc_otm_ctx_t;
 
 /* Context to be maintained over dos transition sequence */
@@ -153,13 +161,6 @@ typedef struct oc_acedel_ctx_t
   int aceid;
 } oc_acedel_ctx_t;
 
-typedef enum {
-  OC_OBT_OTM_JW = 0,
-  OC_OBT_RDP,
-  OC_OBT_OTM_RDP,
-  OC_OBT_OTM_CERT
-} oc_obt_otm_t;
-
 oc_endpoint_t *oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint);
 oc_endpoint_t *oc_obt_get_secure_endpoint(oc_endpoint_t *endpoint);
 
@@ -170,7 +171,7 @@ bool oc_obt_is_owned_device(oc_uuid_t *uuid);
 oc_dostype_t oc_obt_parse_dos(oc_rep_t *rep);
 
 oc_otm_ctx_t *oc_obt_alloc_otm_ctx(void);
-void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
+void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx);
 
