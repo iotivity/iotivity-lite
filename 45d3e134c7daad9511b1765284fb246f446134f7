@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9005389d_f5965955",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 20
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-22T22:00:52Z",
+      "side": 1,
+      "message": "this change actually gives me a little concern. Not for this code but other locations we create a new object that is passed back to Java.  If the C version of the object is NULL it will still successfully create the object with the SWIG_cPtr just being NULL causing segfaults instead of NullPointerException. this makes me want to walk the code and do the same check any where we call \"NewObject\"\n\nJust adding this comment here for any feedback.",
+      "range": {
+        "startLine": 832,
+        "startChar": 0,
+        "endLine": 848,
+        "endChar": 3
+      },
+      "revId": "45d3e134c7daad9511b1765284fb246f446134f7",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
