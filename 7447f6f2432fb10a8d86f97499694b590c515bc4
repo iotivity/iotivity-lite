@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94e86f6e_b0125697",
+        "filename": "patches/01_mbedtls_dynamic-content-length_p1.patch",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 313
+      },
+      "writtenOn": "2019-10-22T17:17:30Z",
+      "side": 0,
+      "message": "Can you explain briefly why this patch, and other dcl patches, are deleted entirely?  Is it already included in 2.16, or is this going to be re-added when dynamic content length support is added?",
+      "revId": "7447f6f2432fb10a8d86f97499694b590c515bc4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
