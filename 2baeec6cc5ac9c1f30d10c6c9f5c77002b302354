@@ -16,6 +16,24 @@
       "revId": "2baeec6cc5ac9c1f30d10c6c9f5c77002b302354",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4abafefc_965bf578",
+        "filename": "patches/02_mbedtls_ocf-microsoft.patch",
+        "patchSetId": 12
+      },
+      "lineNbr": 1341,
+      "author": {
+        "id": 8401
+      },
+      "writtenOn": "2019-10-23T15:51:18Z",
+      "side": 1,
+      "message": "In recent mbedTLS version the verify_with_profile() routine is redone, verify_top() and verify_child() were removed. The update is nonobvious and need to be investigated to be merged properly, so I\u0027ve decided to keep the former code in case of enabled EXPANDED_SUBJECT_ALT_NAME_SUPPORT meanwhile.",
+      "parentUuid": "c3d50e95_8f353c82",
+      "revId": "2baeec6cc5ac9c1f30d10c6c9f5c77002b302354",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
