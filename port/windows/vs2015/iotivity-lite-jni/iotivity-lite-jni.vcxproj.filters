@@ -115,6 +115,9 @@
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cred.i">
       <Filter>swig_interfaces</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_swupdate.i">
+      <Filter>swig_interfaces</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h">
