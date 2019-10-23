@@ -68,6 +68,9 @@
     <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i">
       <Filter>swig_interfaces</Filter>
     </None>
+    <None Include="..\..\..\..\swig\swig_interfaces\oc_swupdate.i">
+      <Filter>swig_interfaces</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_api.i">
