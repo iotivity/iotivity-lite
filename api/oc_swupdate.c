@@ -34,12 +34,19 @@ void oc_create_swupdate_resource(size_t device);
 void oc_swupdate_encode(oc_interface_mask_t interfaces, size_t device);
 void oc_swupdate_decode(oc_rep_t *rep, size_t device);
 
-static const oc_swupdate_cb_t *cb;
+typedef struct oc_software_update_cb_t
+{
+  const oc_swupdate_cb_t *cb;
+  void *data;
+} swupdate_cb_t;
+
+static swupdate_cb_t cb;
 
 void
-oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
+oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl, void *user_data)
 {
-  cb = swupdate_impl;
+  cb.cb = swupdate_impl;
+  cb.data = user_data;
 }
 
 #define SVR_TAG_MAX (32)
@@ -242,19 +249,19 @@ oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device)
   oc_swupdate_t *s = &sw[device];
   s->swupdateaction = action;
   if (action == OC_SWUPDATE_ISAC) {
-    if (cb && cb->check_new_version &&
-        cb->check_new_version(device, oc_string(s->purl), oc_string(s->nv)) <
-          0) {
+    if (cb.cb && cb.cb->check_new_version &&
+        cb.cb->check_new_version(device, oc_string(s->purl), oc_string(s->nv),
+                                 cb.data) < 0) {
       OC_ERR("could not check for availability of new version of software");
     }
   } else if (action == OC_SWUPDATE_ISVV) {
-    if (cb && cb->download_update &&
-        cb->download_update(device, oc_string(s->purl)) < 0) {
+    if (cb.cb && cb.cb->download_update &&
+        cb.cb->download_update(device, oc_string(s->purl), cb.data) < 0) {
       OC_ERR("could not download new software update");
     }
   } else if (action == OC_SWUPDATE_UPGRADE) {
-    if (cb && cb->perform_upgrade &&
-        cb->perform_upgrade(device, oc_string(s->purl)) < 0) {
+    if (cb.cb && cb.cb->perform_upgrade &&
+        cb.cb->perform_upgrade(device, oc_string(s->purl), cb.data) < 0) {
       OC_ERR("could not initiate a software update");
     }
   }
@@ -433,7 +440,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
     }
     if (oc_string_len(rep->name) == 14 &&
         memcmp(oc_string(rep->name), "swupdateresult", 14) == 0) {
-      s->swupdateresult = rep->value.integer;
+      s->swupdateresult = (int)rep->value.integer;
     }
     if (oc_string_len(rep->name) == 13 &&
         memcmp(oc_string(rep->name), "swupdatestate", 13) == 0) {
@@ -563,7 +570,8 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
   if (action != OC_SWUPDATE_IDLE && action <= OC_SWUPDATE_UPGRADE && !purl) {
     error_state = true;
   }
-  if (purl && (!cb || !cb->validate_purl || (cb->validate_purl(purl) < 0))) {
+  if (purl && (!cb.cb || !cb.cb->validate_purl ||
+               (cb.cb->validate_purl(purl, cb.data) < 0))) {
     error_state = true;
   }
   /* if the input is ok, then process the input document and assign the global

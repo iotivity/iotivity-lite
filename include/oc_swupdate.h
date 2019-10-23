@@ -47,13 +47,15 @@ void oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result);
 
 typedef struct
 {
-  int (*validate_purl)(const char *url);
-  int (*check_new_version)(size_t device, const char *url, const char *version);
-  int (*download_update)(size_t device, const char *url);
-  int (*perform_upgrade)(size_t device, const char *url);
+  int (*validate_purl)(const char *url, void *user_data);
+  int (*check_new_version)(size_t device, const char *url, const char *version,
+                           void *user_data);
+  int (*download_update)(size_t device, const char *url, void *user_data);
+  int (*perform_upgrade)(size_t device, const char *url, void *user_data);
 } oc_swupdate_cb_t;
 
-void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl);
+void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl,
+                          void *user_data);
 
 #ifdef __cplusplus
 }

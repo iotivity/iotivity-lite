@@ -391,6 +391,12 @@
     <ClCompile Include="..\..\..\api\oc_mnt.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_resource_factory.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_swupdate.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -620,6 +626,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_swupdate.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_resource_factory.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_swupdate_internal.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
