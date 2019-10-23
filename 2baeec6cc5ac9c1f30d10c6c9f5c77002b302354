@@ -34,6 +34,24 @@
       "revId": "2baeec6cc5ac9c1f30d10c6c9f5c77002b302354",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dae4468d_76d0208e",
+        "filename": "patches/02_mbedtls_ocf-microsoft.patch",
+        "patchSetId": 12
+      },
+      "lineNbr": 1341,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-23T16:19:37Z",
+      "side": 1,
+      "message": "Oleksii,\n\nDid you try testing the stack without re-adding this bit?\n\nThough mbedTLS has updated the flow, is there any reason why our code and usages wouldn\u0027t \ncontinue to work as before under their new scheme?\n\nI just worry about us deviating even further from the upstream, and if this change is something we can avoid, that would be great.",
+      "parentUuid": "4abafefc_965bf578",
+      "revId": "2baeec6cc5ac9c1f30d10c6c9f5c77002b302354",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }

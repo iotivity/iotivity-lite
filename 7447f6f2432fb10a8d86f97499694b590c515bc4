@@ -52,6 +52,24 @@
       "revId": "7447f6f2432fb10a8d86f97499694b590c515bc4",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb85deca_4d5fc81c",
+        "filename": "patches/01_mbedtls_dynamic-content-length_p1.patch",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-23T16:19:37Z",
+      "side": 0,
+      "message": "Oleksii,\n\nIf I\u0027m not mistaken you\u0027d picked out this DCL bit from some mbedTLS fork last year to lower runtime memory use. Is that right?\n\nI was curious if that fork was still being maintained, or if you were planning to rebase that \ncode yourself to 2.16.2?",
+      "parentUuid": "a7a4ac89_0ad940a2",
+      "revId": "7447f6f2432fb10a8d86f97499694b590c515bc4",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
