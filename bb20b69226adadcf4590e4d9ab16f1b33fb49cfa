@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51af810d_b59e7a91",
+        "filename": "security/oc_acl.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-23T03:27:23Z",
+      "side": 1,
+      "message": "I don\u0027t see the reason for the datatype change here.",
+      "revId": "bb20b69226adadcf4590e4d9ab16f1b33fb49cfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0982f82_59be99ff",
+        "filename": "security/oc_acl.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-23T03:27:23Z",
+      "side": 1,
+      "message": "I don\u0027t see the reason for the datatype change here.",
+      "revId": "bb20b69226adadcf4590e4d9ab16f1b33fb49cfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a856ab4_43a48f89",
+        "filename": "security/oc_acl.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-23T03:27:23Z",
+      "side": 1,
+      "message": "I the data type was not changed above there would be no need to cast here.",
+      "revId": "bb20b69226adadcf4590e4d9ab16f1b33fb49cfa",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
