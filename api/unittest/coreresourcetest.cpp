@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_api.h"
 #include "oc_helpers.h"

@@ -45,6 +45,7 @@
  * This file is part of the Contiki operating system.
  */
 
+#include "oc_config.h"
 #include "transactions.h"
 #include "api/oc_main.h"
 #include "observe.h"

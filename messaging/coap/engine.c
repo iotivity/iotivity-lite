@@ -45,6 +45,7 @@
  * This file is part of the Contiki operating system.
  */
 
+#include "oc_config.h"
 #include "engine.h"
 #include <stdio.h>
 #include <stdlib.h>

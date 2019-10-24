@@ -48,6 +48,7 @@
 #ifndef OBSERVE_H
 #define OBSERVE_H
 
+#include "oc_config.h"
 #include "coap.h"
 #include "oc_ri.h"
 #include "transactions.h"

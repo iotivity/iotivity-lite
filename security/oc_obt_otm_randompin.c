@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #ifndef OC_DYNAMIC_ALLOCATION
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"

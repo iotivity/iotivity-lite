@@ -14,12 +14,12 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_certs.h"
-#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"

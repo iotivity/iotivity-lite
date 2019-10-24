@@ -17,6 +17,7 @@
 #ifndef OC_TLS_H
 #define OC_TLS_H
 
+#include "oc_config.h"
 #include "mbedtls/ssl.h"
 #include "oc_uuid.h"
 #include "port/oc_connectivity.h"

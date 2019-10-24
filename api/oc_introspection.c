@@ -14,6 +14,7 @@
  // limitations under the License.
  */
 
+#include "oc_config.h"
 #include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"

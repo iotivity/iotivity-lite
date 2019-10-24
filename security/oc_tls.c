@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #include <stdarg.h>
 #include <stdint.h>
@@ -43,6 +44,7 @@
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_client_state.h"
+#include "oc_certs.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"

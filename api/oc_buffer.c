@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "messaging/coap/engine.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_network_events_mutex.h"

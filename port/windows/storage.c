@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "port/oc_storage.h"
 
 #ifdef OC_SECURITY

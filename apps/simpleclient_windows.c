@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "oc_api.h"
 #include "port/oc_clock.h"
 #include <signal.h>

@@ -15,6 +15,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #define WIN32_LEAN_AND_MEAN
 #include <ws2tcpip.h>
 #include <iphlpapi.h>

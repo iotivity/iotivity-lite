@@ -16,6 +16,7 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#include "oc_config.h"
 #ifdef OC_CLOUD
 
 #include "rd_client.h"

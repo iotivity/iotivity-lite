@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */

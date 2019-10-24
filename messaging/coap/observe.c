@@ -46,7 +46,6 @@
  */
 
 #include "oc_config.h"
-
 #ifdef OC_SERVER
 
 #include "observe.h"

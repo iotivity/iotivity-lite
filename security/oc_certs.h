@@ -17,6 +17,7 @@
 #ifndef OC_CERTS_H
 #define OC_CERTS_H
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"

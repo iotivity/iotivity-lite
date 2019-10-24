@@ -14,9 +14,11 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
+#include "messaging/coap/observe.h"
 #include "oc_api.h"
 
 #ifdef OC_SECURITY
