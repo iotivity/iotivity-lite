@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "831befb1_d84b406e",
+        "filename": "security/oc_obt_otm_randompin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-10-24T09:38:27Z",
+      "side": 1,
+      "message": "Could you please use OC_CLIENT define",
+      "range": {
+        "startLine": 611,
+        "startChar": 33,
+        "endLine": 611,
+        "endChar": 36
+      },
+      "revId": "31c8b51021d67cd7589618a92cbfdb2c5911fb34",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
