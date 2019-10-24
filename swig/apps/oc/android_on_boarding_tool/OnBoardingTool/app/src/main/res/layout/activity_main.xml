@@ -10,20 +10,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.iotivity.onboardingtool.OnBoardingActivity">
 
-    <Button
-        android:id="@+id/reset_obt"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:enabled="true"
-        android:text="@string/resetObt" />
-
     <RadioGroup
         android:id="@+id/radio_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="false"
         android:layout_alignParentTop="false"
-        android:layout_below="@+id/reset_obt"
         android:orientation="horizontal">
 
         <RadioButton
@@ -100,11 +92,43 @@
         android:enabled="false"
         android:text="@string/refresh" />
 
-    <ListView
-        android:id="@+id/list_view"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/refresh_button"
-        android:layout_weight="1" />
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/refresh_button"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/retrieve_own_credentials"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/list_view"
+            android:enabled="true"
+            android:text="@string/retrieveOwnCredentials" />
+
+        <Button
+            android:id="@+id/install_trust_anchor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/retrieve_own_credentials"
+            android:enabled="true"
+            android:text="@string/installTrustAnchor" />
+
+        <Button
+            android:id="@+id/reset_obt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/install_trust_anchor"
+            android:enabled="true"
+            android:text="@string/resetObt" />
+
+    </LinearLayout>
 
 </RelativeLayout>

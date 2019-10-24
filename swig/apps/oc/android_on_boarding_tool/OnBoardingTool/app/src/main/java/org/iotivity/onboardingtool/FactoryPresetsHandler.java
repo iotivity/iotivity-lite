@@ -39,7 +39,7 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
         }
 
         int rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa1);
-        System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
+        Log.d(TAG, "addMfgTrustAnchor() result = " + rootCaCredId);
         if (rootCaCredId < 0) {
             Log.e(TAG, "Error installing root ca1 certificate");
             return;
@@ -52,7 +52,7 @@ public class FactoryPresetsHandler implements OCFactoryPresetsHandler {
         }
 
         rootCaCredId = OCPki.addMfgTrustAnchor(deviceIndex, rootCa2);
-        System.out.println("addMfgTrustAnchor() result = " + rootCaCredId);
+        Log.d(TAG, "addMfgTrustAnchor() result = " + rootCaCredId);
         if (rootCaCredId < 0) {
             Log.e(TAG, "Error installing root ca2 certificate");
             return;
