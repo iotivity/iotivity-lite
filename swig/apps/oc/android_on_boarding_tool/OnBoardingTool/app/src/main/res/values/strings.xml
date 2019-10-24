@@ -7,8 +7,12 @@
     <string name="unownedRealm">Unowned Realm-local IPv6</string>
     <string name="unownedSite">Unowned Site-local IPv6</string>
     <string name="refresh">Refresh</string>
+    <string name="retrieveOwnCredentials">Retrieve Own Credentials</string>
+    <string name="deleteCredential">Delete Credential</string>
+    <string name="installTrustAnchor">Install new manufacturer trust anchor</string>
     <string name="resetObt">Reset On Boarding Tool</string>
     <string name="resetMessage">Note: All owned devices will no longer be discoverable</string>
+    <string name="discoveredResources">Discovered Resources</string>
     <string name="enterPin">Enter PIN</string>
     <string name="selectDevice">Select device for pairing</string>
     <string name="selectAceSubject">Select subject or device</string>
@@ -29,15 +33,19 @@
     <string name="addMoreResourcesDialogMessage">Add more resources to this ACE?</string>
     <string name="permissionsDialogTitle">Select ACE Permissions (if any)</string>
     <string-array name="unownedDeviceActions">
+        <item>Discover Resources</item>
         <item>Just-Works Ownership Transfer Method</item>
         <item>Request Random PIN from device for OTM</item>
         <item>Random PIN Ownership Transfer Method</item>
         <item>Manufacturer Certificate based Ownership Transfer Method</item>
     </string-array>
     <string-array name="ownedDeviceActions">
+        <item>Discover Resources</item>
         <item>Provision pair-wise credentials</item>
         <item>Provision ACE2</item>
         <item>Provision auth-crypt RW access to NCRs</item>
+        <item>Retrieve /oic/sec/cred</item>
+        <item>Retrieve /oic/sec/acl2</item>
         <item>Provision role RW access to NCRs</item>
         <item>Provision identity certificate</item>
         <item>Provision role certificate</item>

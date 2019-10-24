@@ -16,9 +16,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.iotivity.OCCred;
+import org.iotivity.OCCredUtil;
+import org.iotivity.OCCreds;
 import org.iotivity.OCUuidUtil;
 import org.iotivity.oc.OcAnonSecurityAce;
 import org.iotivity.oc.OcAuthSecurityAce;
@@ -30,6 +34,7 @@ import org.iotivity.oc.OcSubjectSecurityAce;
 import org.iotivity.oc.OcUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class OnBoardingActivity extends AppCompatActivity {
 
@@ -45,6 +50,8 @@ public class OnBoardingActivity extends AppCompatActivity {
     private RadioButton unownedRealmRadioButton;
     private RadioButton ownedSiteRadioButton;
     private RadioButton unownedSiteRadioButton;
+    private Button retrieveOwnCredsButton;
+    private Button intstallTrustAnchorButton;
     private Button resetObtButton;
     private Button refreshButton;
     private ListView listView;
@@ -80,7 +87,35 @@ public class OnBoardingActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             switch (which) {
-                                case 0: // Provision pair-wise credentials
+                                case 0: // Discover resources
+                                    AlertDialog.Builder discoverResourcesDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    discoverResourcesDialogBuilder.setTitle(R.string.discoveredResources);
+
+                                    ListView resourceListView = new ListView(OnBoardingActivity.this);
+                                    ArrayList<String> resourceList = new ArrayList<>();
+                                    final ArrayAdapter<String> resourceAdapter = new ArrayAdapter<>(OnBoardingActivity.this, android.R.layout.simple_list_item_1, android.R.id.text1, resourceList);
+                                    resourceListView.setAdapter(resourceAdapter);
+                                    discoverResourcesDialogBuilder.setView(resourceListView);
+
+                                    Dialog discoverResourcesDialog = discoverResourcesDialogBuilder.create();
+                                    discoverResourcesDialog.show();
+
+                                    new Thread(new Runnable() {
+                                        public void run() {
+                                            if (obt.discoverAllResources(OCUuidUtil.stringToUuid(uuid), new ResourceDiscoveryHandler(OnBoardingActivity.this, resourceAdapter)) < 0) {
+                                                final String msg = "Error issuing resource discovery request for uuid " + uuid;
+                                                Log.d(TAG, msg);
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }).start();
+                                    break;
+
+                                case 1: // Provision pair-wise credentials
                                     AlertDialog.Builder selectDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     selectDialogBuilder.setTitle(R.string.selectDevice);
                                     final String[] secondDeviceList = new String[ownedDeviceList.size()];
@@ -112,7 +147,7 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     provisionPairDialog.show();
                                     break;
 
-                                case 1: // Provision ACE2
+                                case 2: // Provision ACE2
                                     AlertDialog.Builder aceDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     aceDialogBuilder.setTitle(R.string.selectAceSubject);
                                     final String[] aceSubjectList = new String[ownedDeviceList.size() + 3];
@@ -226,7 +261,7 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     provisionAceDialog.show();
                                     break;
 
-                                case 2: // Provision auth-crypt RW access to NCRs
+                                case 3: // Provision auth-crypt RW access to NCRs
                                     AlertDialog.Builder authCryptRwDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     authCryptRwDialogBuilder.setTitle(uuid);
                                     authCryptRwDialogBuilder.setMessage(getResources().getStringArray(R.array.ownedDeviceActions)[which]);
@@ -260,7 +295,96 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     authCryptRwDialog.show();
                                     break;
 
-                                case 3: // Provision role RW access to NCRs
+                                case 4: // Retrieve /oic/sec/cred
+                                    AlertDialog.Builder retrieveCredsDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    retrieveCredsDialogBuilder.setTitle("/oic/sec/cred");
+
+                                    ListView credsListView = new ListView(OnBoardingActivity.this);
+
+                                    final ArrayList<HashMap<String, String>> credsList = new ArrayList<>();
+                                    final SimpleAdapter credsAdapter = new SimpleAdapter(OnBoardingActivity.this, credsList, R.layout.creds_multi_line,
+                                            new String[]{"line1", "line2", "line3", "line4", "line5", "line6", "line7", "line8"},
+                                            new int[]{R.id.line_1, R.id.line_2, R.id.line_3, R.id.line_4, R.id.line_5, R.id.line_6, R.id.line_7, R.id.line_8});
+
+                                    credsListView.setAdapter(credsAdapter);
+
+                                    credsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                        @Override
+                                        public void onItemClick(AdapterView<?> parent, View view, int position, final long id) {
+                                            Object item = credsAdapter.getItem((int) id);
+                                            if ((item instanceof HashMap) && (item != null)) {
+                                                HashMap<String, String> lines = (HashMap) item;
+                                                String line = lines.get("line1");
+                                                if (line != null) {
+                                                    final String credId = line.substring(4);
+                                                    Log.d(TAG, "Credential Id = " + credId);
+                                                    try {
+                                                        final int credentialId = Integer.parseInt(credId);
+
+                                                        AlertDialog.Builder deleteCredDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                                        deleteCredDialogBuilder.setTitle(credId);
+                                                        deleteCredDialogBuilder.setMessage(getString(R.string.deleteCredential));
+
+                                                        deleteCredDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                int status = obt.deleteCredByCredId(OCUuidUtil.stringToUuid(uuid), credentialId, new DeleteCredentialHandler(OnBoardingActivity.this));
+                                                                String msg = (status >= 0) ?
+                                                                        "Successfully deleted credential " + credId:
+                                                                        "Error deleting credential " + credId + ", status = " + status;
+                                                                Log.d(TAG, msg);
+                                                                Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                                if (status >= 0) {
+                                                                    credsList.remove((int)id);
+                                                                    credsAdapter.notifyDataSetChanged();
+                                                                }
+                                                            }
+                                                        });
+
+                                                        deleteCredDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                            }
+                                                        });
+
+                                                        Dialog deleteCredDialog = deleteCredDialogBuilder.create();
+                                                        deleteCredDialog.show();
+
+                                                    } catch (NumberFormatException e) {
+                                                        String msg = "Error parsing credential id " + credId;
+                                                        Log.d(TAG, msg);
+                                                        Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    retrieveCredsDialogBuilder.setView(credsListView);
+
+                                    Dialog retrieveCredsDialog = retrieveCredsDialogBuilder.create();
+                                    retrieveCredsDialog.show();
+
+                                    new Thread(new Runnable() {
+                                        public void run() {
+                                            if (obt.retrieveCreds(OCUuidUtil.stringToUuid(uuid), new RetrieveCredentialHandler(OnBoardingActivity.this, credsAdapter, credsList)) < 0) {
+                                                final String msg = "Error issuing request to retrieve /oic/sec/cred for uuid " + uuid;
+                                                Log.d(TAG, msg);
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }).start();
+                                    break;
+
+                                case 5: // Retrieve /oic/sec/acl2
+                                    // TODO:
+                                    break;
+
+                                case 6: // Provision role RW access to NCRs
                                     AlertDialog.Builder roleDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
 
                                     LinearLayout layout = new LinearLayout(OnBoardingActivity.this);
@@ -340,7 +464,7 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     roleDialog.show();
                                     break;
 
-                                case 4: // Provision identity certificate
+                                case 7: // Provision identity certificate
                                     AlertDialog.Builder idCertDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     idCertDialogBuilder.setTitle(uuid);
                                     idCertDialogBuilder.setMessage(getResources().getStringArray(R.array.ownedDeviceActions)[which]);
@@ -374,12 +498,12 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     idCertDialog.show();
                                     break;
 
-                                case 5: // Provision role certificate
+                                case 8: // Provision role certificate
                                     RoleCertificateHelper roleCertificateHelper = new RoleCertificateHelper(OnBoardingActivity.this, obt, uuid, new ProvisionRoleCertificateHandler(OnBoardingActivity.this));
                                     roleCertificateHelper.getRoles(null); // calls provisionRoleCertificate()
                                     break;
 
-                                case 6: // Reset Device
+                                case 9: // Reset Device
                                     AlertDialog.Builder resetDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     resetDialogBuilder.setTitle(uuid);
                                     resetDialogBuilder.setMessage(getResources().getStringArray(R.array.ownedDeviceActions)[which]);
@@ -442,10 +566,38 @@ public class OnBoardingActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             switch (which) {
-                                case 0: // Just Works OTM
+                                case 0: // Discover resources
+                                    AlertDialog.Builder discoverResourcesDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    discoverResourcesDialogBuilder.setTitle(R.string.discoveredResources);
+
+                                    ListView resourceListView = new ListView(OnBoardingActivity.this);
+                                    ArrayList<String> resourceList = new ArrayList<>();
+                                    final ArrayAdapter<String> resourceAdapter = new ArrayAdapter<>(OnBoardingActivity.this, android.R.layout.simple_list_item_1, android.R.id.text1, resourceList);
+                                    resourceListView.setAdapter(resourceAdapter);
+                                    discoverResourcesDialogBuilder.setView(resourceListView);
+
+                                    Dialog discoverResourcesDialog = discoverResourcesDialogBuilder.create();
+                                    discoverResourcesDialog.show();
+
+                                    new Thread(new Runnable() {
+                                        public void run() {
+                                            if (obt.discoverAllResources(OCUuidUtil.stringToUuid(uuid), new ResourceDiscoveryHandler(OnBoardingActivity.this, resourceAdapter)) < 0) {
+                                                final String msg = "Error issuing resource discovery request for uuid " + uuid;
+                                                Log.d(TAG, msg);
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }).start();
+                                    break;
+
+                                case 1: // Just Works OTM
                                     AlertDialog.Builder justWorksOtmDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     justWorksOtmDialogBuilder.setTitle(uuid);
-                                    justWorksOtmDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[0]);
+                                    justWorksOtmDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[which]);
 
                                     justWorksOtmDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
@@ -478,10 +630,10 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     justWorksOtmDialog.show();
                                     break;
 
-                                case 1: // Generate Random Pin
+                                case 2: // Generate Random Pin
                                     AlertDialog.Builder generateRandomPinDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     generateRandomPinDialogBuilder.setTitle(uuid);
-                                    generateRandomPinDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[1]);
+                                    generateRandomPinDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[which]);
 
                                     generateRandomPinDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
@@ -512,7 +664,7 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     generateRandomPinDialog.show();
                                     break;
 
-                                case 2: // Random Pin OTM
+                                case 3: // Random Pin OTM
                                     LinearLayout layout = new LinearLayout(OnBoardingActivity.this);
                                     layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                                     layout.setOrientation(LinearLayout.VERTICAL);
@@ -561,10 +713,10 @@ public class OnBoardingActivity extends AppCompatActivity {
                                     randomPinOtmDialog.show();
                                     break;
 
-                                case 3: // Manufacturer Certificate OTM
+                                case 4: // Manufacturer Certificate OTM
                                     AlertDialog.Builder mfgCertOtmDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
                                     mfgCertOtmDialogBuilder.setTitle(uuid);
-                                    mfgCertOtmDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[3]);
+                                    mfgCertOtmDialogBuilder.setMessage(getResources().getStringArray(R.array.unownedDeviceActions)[which]);
 
                                     mfgCertOtmDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
@@ -866,6 +1018,139 @@ public class OnBoardingActivity extends AppCompatActivity {
 
                     unownedSiteRadioButton.callOnClick();
                 }
+            }
+        });
+
+        retrieveOwnCredsButton = (Button) findViewById(R.id.retrieve_own_credentials);
+        retrieveOwnCredsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder retrieveOwnCredsDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                retrieveOwnCredsDialogBuilder.setTitle("/oic/sec/cred");
+
+                ListView ownCredsListView = new ListView(OnBoardingActivity.this);
+
+                final ArrayList<HashMap<String, String>> ownCredsList = new ArrayList<>();
+                final SimpleAdapter ownCredsAdapter = new SimpleAdapter(OnBoardingActivity.this, ownCredsList, R.layout.creds_multi_line,
+                        new String[]{"line1", "line2", "line3", "line4", "line5", "line6", "line7", "line8"},
+                        new int[]{R.id.line_1, R.id.line_2, R.id.line_3, R.id.line_4, R.id.line_5, R.id.line_6, R.id.line_7, R.id.line_8});
+
+                ownCredsListView.setAdapter(ownCredsAdapter);
+
+                ownCredsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, final long id) {
+                        Object item = ownCredsAdapter.getItem((int) id);
+                        if ((item instanceof HashMap) && (item != null)) {
+                            HashMap<String, String> lines = (HashMap) item;
+                            String line = lines.get("line1");
+                            if (line != null) {
+                                final String credId = line.substring(4);
+                                Log.d(TAG, "Credential Id = " + credId);
+                                try {
+                                    final int credentialId = Integer.parseInt(credId);
+
+                                    AlertDialog.Builder deleteOwnCredDialogBuilder = new AlertDialog.Builder(OnBoardingActivity.this);
+                                    deleteOwnCredDialogBuilder.setTitle(credId);
+                                    deleteOwnCredDialogBuilder.setMessage(getString(R.string.deleteCredential));
+
+                                    deleteOwnCredDialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            int status = obt.deleteOwnCredByCredId(credentialId);
+                                            String msg = (status >= 0) ?
+                                                    "Successfully deleted credential " + credId:
+                                                    "Error deleting credential " + credId + ", status = " + status;
+                                            Log.d(TAG, msg);
+                                            Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                            if (status >= 0) {
+                                                ownCredsList.remove((int)id);
+                                                ownCredsAdapter.notifyDataSetChanged();
+                                            }
+                                        }
+                                    });
+
+                                    deleteOwnCredDialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                        }
+                                    });
+
+                                    Dialog deleteOwnCredDialog = deleteOwnCredDialogBuilder.create();
+                                    deleteOwnCredDialog.show();
+
+                                } catch (NumberFormatException e) {
+                                    String msg = "Error parsing credential id " + credId;
+                                    Log.d(TAG, msg);
+                                    Toast.makeText(OnBoardingActivity.this, msg, Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        }
+                    }
+                });
+
+                retrieveOwnCredsDialogBuilder.setView(ownCredsListView);
+
+                OCCreds ocCreds = obt.retrieveOwnCreds();
+                if (ocCreds != null) {
+                    OCCred cred = ocCreds.getCredsListHead();
+                    while (cred != null) {
+                        HashMap<String, String> item = new HashMap<>();
+
+                        String line = "Id: " + Integer.toString(cred.getCredId());
+                        item.put("line1", line);
+                        Log.d(TAG, line);
+
+                        line = "Subject UUID: " + OCUuidUtil.uuidToString(cred.getSubjectUuid());
+                        item.put("line2", line);
+                        Log.d(TAG, line);
+
+                        line = "Type: " + OCCredUtil.credTypeString(cred.getCredType());
+                        Log.d(TAG, line);
+                        item.put("line3", line);
+
+                        line = "Usage: " + OCCredUtil.readCredusage(cred.getCredUsage());
+                        item.put("line4", line);
+                        Log.d(TAG, line);
+
+                        line = "Public Data Encoding: ";
+                        if ((cred.getPublicData() != null) && (cred.getPublicData().getData() != null) && (!cred.getPublicData().getData().isEmpty())) {
+                            line += OCCredUtil.readEncoding((cred.getPublicData().getEncoding()));
+                        } else {
+                            line += "<None>";
+                        }
+                        item.put("line5", line);
+                        Log.d(TAG, line);
+
+                        line = "Private Data Encoding: " + OCCredUtil.readEncoding((cred.getPrivateData().getEncoding()));
+                        item.put("line6", line);
+                        Log.d(TAG, line);
+
+                        line = "Role: ";
+                        if (cred.getRole() != null && !cred.getRole().isEmpty()) {
+                            line += cred.getRole();
+                        } else {
+                            line += "<None>";
+                        }
+                        item.put("line7", line);
+                        Log.d(TAG, line);
+
+                        line = "Authority: ";
+                        if (cred.getAuthority() != null && !cred.getAuthority().isEmpty()) {
+                            line += cred.getAuthority();
+                        } else {
+                            line += "<None>";
+                        }
+                        item.put("line8", line);
+                        Log.d(TAG, line);
+
+                        ownCredsList.add(item);
+                        cred = cred.getNext();
+                    }
+                }
+
+                Dialog retrieveOwnCredsDialog = retrieveOwnCredsDialogBuilder.create();
+                retrieveOwnCredsDialog.show();
             }
         });
 
