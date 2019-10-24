@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #include "oc_pstat.h"
 #include "api/cloud/oc_cloud_internal.h"

@@ -19,6 +19,7 @@
 #ifndef OC_LOG_H
 #define OC_LOG_H
 
+#include "oc_config.h"
 #include <stdio.h>
 
 #ifdef __cplusplus

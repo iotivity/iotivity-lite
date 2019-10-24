@@ -15,11 +15,11 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+#include "oc_config.h"
 #ifdef OC_CLOUD
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
-#include "oc_config.h"
 #include "oc_core_res.h"
 
 #define OC_RSRVD_RES_TYPE_COAPCLOUDCONF "oic.r.coapcloudconf"

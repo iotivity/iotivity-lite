@@ -17,6 +17,7 @@
 #ifndef OC_COAP_H
 #define OC_COAP_H
 
+#include "oc_config.h"
 #include "separate.h"
 #include "util/oc_list.h"
 

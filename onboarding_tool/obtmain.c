@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_obt.h"

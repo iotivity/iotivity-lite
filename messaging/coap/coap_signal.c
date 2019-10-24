@@ -20,6 +20,7 @@
 #include "coap.h"
 #include "transactions.h"
 #include <string.h>
+#include "oc_config.h"
 
 #ifdef OC_TCP
 static void

@@ -19,6 +19,7 @@
 #ifndef COAP_SIGANAL_H
 #define COAP_SIGANAL_H
 
+#include "oc_config.h"
 #include "oc_endpoint.h"
 
 #ifdef __cplusplus

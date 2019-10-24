@@ -15,6 +15,7 @@
  * limitations under the License.
  *
  ******************************************************************/
+#include "oc_config.h"
 #ifdef OC_CLOUD
 
 #include "oc_api.h"

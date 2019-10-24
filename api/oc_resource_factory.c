@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include <oc_config.h>
 #include "oc_collection.h"
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \

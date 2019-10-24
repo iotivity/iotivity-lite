@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 
+#include "oc_config.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_collection.h"

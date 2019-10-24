@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "oc_config.h"
 #include "util/oc_etimer.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -26,6 +27,7 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#include "messaging/coap/observe.h"
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */

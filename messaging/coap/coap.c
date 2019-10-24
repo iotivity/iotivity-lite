@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "oc_config.h"
 #include "coap.h"
 #include "transactions.h"
 

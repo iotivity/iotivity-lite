@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
 #ifdef OC_TCP
