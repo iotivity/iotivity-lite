@@ -1,43 +1,43 @@
-From bb5fb3eddc3c63eb059b3e7043f147925188b505 Mon Sep 17 00:00:00 2001
-From: Kevin Kane <kkane@microsoft.com>
+From 320d5ae73e09d31439fe22a4fba6fd20f0404a22 Mon Sep 17 00:00:00 2001
+From: Kishen Maloor <kishen.maloor@intel.com>
 Date: Fri, 20 Apr 2018 14:37:12 +0300
 Subject: [PATCH] ocf Microsoft
 
 ---
  include/mbedtls/certs.h                    |   5 +
- include/mbedtls/config.h                   |  18 +-
- include/mbedtls/net_sockets.h              |  19 +-
- include/mbedtls/ssl.h                      |  47 +++
- include/mbedtls/ssl_internal.h             |  11 +
+ include/mbedtls/config.h                   |  18 +--
+ include/mbedtls/net_sockets.h              |  19 ++-
+ include/mbedtls/ssl.h                      |  47 ++++++
+ include/mbedtls/ssl_internal.h             |  11 ++
  include/mbedtls/x509.h                     |   2 +-
- include/mbedtls/x509_crt.h                 |  44 ++
+ include/mbedtls/x509_crt.h                 |  44 ++++++
  library/asn1write.c                        |   5 +-
  library/bignum.c                           |   6 +-
  library/ctr_drbg.c                         |   2 +-
  library/ecp.c                              |   2 +-
  library/entropy_poll.c                     |  15 +-
  library/md.c                               |   3 +-
- library/net_sockets.c                      |  34 +-
+ library/net_sockets.c                      |  34 ++---
  library/pkcs5.c                            |   5 +-
- library/pkparse.c                          |  53 +--
+ library/pkparse.c                          |  53 +++----
  library/rsa.c                              |   3 +
- library/ssl_cli.c                          |  22 +-
+ library/ssl_cli.c                          |  22 ++-
  library/ssl_srv.c                          |  10 +-
- library/ssl_tls.c                          |  77 +++-
+ library/ssl_tls.c                          |  77 ++++++++--
  library/version_features.c                 |   3 +
- library/x509.c                             |  42 +-
+ library/x509.c                             |  42 +++++-
  library/x509_create.c                      |   8 +-
  library/x509_crl.c                         |   2 +-
- library/x509_crt.c                         | 630 ++++++++++++++++++++++++++++-
- library/x509write_crt.c                    |  57 +++
- programs/ssl/ssl_client2.c                 |  74 ++++
- programs/ssl/ssl_server2.c                 |  74 ++++
- programs/x509/cert_write.c                 | 176 ++++++++
- tests/ssl-opt.sh                           |  18 +
- tests/suites/test_suite_x509parse.data     |  16 +
- tests/suites/test_suite_x509write.data     |  12 +
- tests/suites/test_suite_x509write.function | 125 ++++++
- 33 files changed, 1513 insertions(+), 107 deletions(-)
+ library/x509_crt.c                         | 232 ++++++++++++++++++++++++++++-
+ library/x509write_crt.c                    |  57 +++++++
+ programs/ssl/ssl_client2.c                 |  74 +++++++++
+ programs/ssl/ssl_server2.c                 |  74 +++++++++
+ programs/x509/cert_write.c                 | 176 ++++++++++++++++++++++
+ tests/ssl-opt.sh                           |  18 +++
+ tests/suites/test_suite_x509parse.data     |  16 ++
+ tests/suites/test_suite_x509write.data     |  12 ++
+ tests/suites/test_suite_x509write.function | 125 ++++++++++++++++
+ 33 files changed, 1114 insertions(+), 108 deletions(-)
 
 diff --git a/include/mbedtls/certs.h b/include/mbedtls/certs.h
 index 179ebbb..a185336 100644
@@ -1065,7 +1065,7 @@ index 00f8545..19d7236 100644
      int is_pem = 0;
  
 diff --git a/library/x509_crt.c b/library/x509_crt.c
-index 97e1d72..9421d06 100644
+index 97e1d72..06b95b7 100644
 --- a/library/x509_crt.c
 +++ b/library/x509_crt.c
 @@ -65,6 +65,7 @@
@@ -1308,453 +1308,50 @@ index 97e1d72..9421d06 100644
  
  #define PRINT_ITEM(i)                           \
      {                                           \
-@@ -2437,7 +2596,7 @@ static void x509_crt_verify_name( const mbedtls_x509_crt *crt,
+@@ -2432,17 +2591,40 @@ static void x509_crt_verify_name( const mbedtls_x509_crt *crt,
+                                   uint32_t *flags )
+ {
+     const mbedtls_x509_name *name;
++#if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
++    const mbedtls_x509_general_names *cur;
++#else
+     const mbedtls_x509_sequence *cur;
++#endif
+     size_t cn_len = strlen( cn );
  
      if( crt->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME )
      {
 -        for( cur = &crt->subject_alt_names; cur != NULL; cur = cur->next )
++#if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
++        for( cur = (const mbedtls_x509_general_names *)&crt->subject_alt_names; cur != NULL; cur = cur->next )
++        {
++	    /* Only consider dNSName subject alternative names for this check; ignore other types. */
++	    if ( cur->general_name.name_type == MBEDTLS_X509_GENERALNAME_DNSNAME )
++	    {
++	        if ( cur->general_name.dns_name.len == cn_len &&
++		     x509_memcasecmp( cn, cur->general_name.dns_name.p, cn_len ) == 0 )
++		  break;
++
++	         if ( cur->general_name.dns_name.len > 2 &&
++		      memcmp( cur->general_name.dns_name.p, "*.", 2 ) == 0 &&
++		      x509_check_wildcard( cn, &cur->general_name.dns_name ) == 0 )
++	         {
++		   break;
++		 }
++	    }
++      }
++#else
 +        for( cur = (const mbedtls_x509_sequence *)&crt->subject_alt_names; cur != NULL; cur = cur->next )
          {
              if( x509_crt_check_cn( &cur->buf, cn, cn_len ) == 0 )
                  break;
-@@ -2509,6 +2668,428 @@ int mbedtls_x509_crt_verify( mbedtls_x509_crt *crt,
- /*
-  * Verify the certificate validity (user-chosen profile, not restartable)
-  */
-+#if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
-+
-+static int x509_crt_verify_top(
-+                mbedtls_x509_crt *child, mbedtls_x509_crt *trust_ca,
-+                mbedtls_x509_crl *ca_crl,
-+                const mbedtls_x509_crt_profile *profile,
-+                int path_cnt, int self_cnt, uint32_t *flags,
-+                int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
-+                void *p_vrfy )
-+{
-+    int ret;
-+    uint32_t ca_flags = 0;
-+    int check_path_cnt;
-+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-+    const mbedtls_md_info_t *md_info;
-+    mbedtls_x509_crt *future_past_ca = NULL;
-+
-+    if( mbedtls_x509_time_is_past( &child->valid_to ) )
-+        *flags |= MBEDTLS_X509_BADCERT_EXPIRED;
-+
-+    if( mbedtls_x509_time_is_future( &child->valid_from ) )
-+        *flags |= MBEDTLS_X509_BADCERT_FUTURE;
-+
-+    if( x509_profile_check_md_alg( profile, child->sig_md ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_MD;
-+
-+    if( x509_profile_check_pk_alg( profile, child->sig_pk ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_PK;
-+
-+    /*
-+     * Child is the top of the chain. Check against the trust_ca list.
-+     */
-+    *flags |= MBEDTLS_X509_BADCERT_NOT_TRUSTED;
-+
-+    md_info = mbedtls_md_info_from_type( child->sig_md );
-+    if( md_info == NULL )
-+    {
-+        /*
-+         * Cannot check 'unknown', no need to try any CA
-+         */
-+        trust_ca = NULL;
-+    }
-+    else
-+        mbedtls_md( md_info, child->tbs.p, child->tbs.len, hash );
-+
-+    for( /* trust_ca */ ; trust_ca != NULL; trust_ca = trust_ca->next )
-+    {
-+        if( x509_crt_check_parent( child, trust_ca, path_cnt == 0 ) != 0 )
-+            continue;
-+
-+        check_path_cnt = path_cnt + 1;
-+
-+        /*
-+         * Reduce check_path_cnt to check against if top of the chain is
-+         * the same as the trusted CA
-+         */
-+        if( child->subject_raw.len == trust_ca->subject_raw.len &&
-+            memcmp( child->subject_raw.p, trust_ca->subject_raw.p,
-+                            child->issuer_raw.len ) == 0 )
-+        {
-+            check_path_cnt--;
-+        }
-+
-+        /* Self signed certificates do not count towards the limit */
-+        if( trust_ca->max_pathlen > 0 &&
-+            trust_ca->max_pathlen < check_path_cnt - self_cnt )
-+        {
-+            continue;
-+        }
-+
-+        if( mbedtls_pk_verify_ext( child->sig_pk, child->sig_opts, &trust_ca->pk,
-+                           child->sig_md, hash, mbedtls_md_get_size( md_info ),
-+                           child->sig.p, child->sig.len ) != 0 )
-+        {
-+            continue;
-+        }
-+
-+        if( mbedtls_x509_time_is_past( &trust_ca->valid_to ) ||
-+            mbedtls_x509_time_is_future( &trust_ca->valid_from ) )
-+        {
-+            if ( future_past_ca == NULL )
-+                future_past_ca = trust_ca;
-+
-+            continue;
-+        }
-+
-+        break;
-+    }
-+
-+    if( trust_ca != NULL || ( trust_ca = future_past_ca ) != NULL )
-+    {
-+        /*
-+         * Top of chain is signed by a trusted CA
-+         */
-+        *flags &= ~MBEDTLS_X509_BADCERT_NOT_TRUSTED;
-+
-+        if( x509_profile_check_key( profile, &trust_ca->pk ) != 0 )
-+            *flags |= MBEDTLS_X509_BADCERT_BAD_KEY;
-+    }
-+
-+    /*
-+     * If top of chain is not the same as the trusted CA send a verify request
-+     * to the callback for any issues with validity and CRL presence for the
-+     * trusted CA certificate.
-+     */
-+    if( trust_ca != NULL &&
-+        ( child->subject_raw.len != trust_ca->subject_raw.len ||
-+          memcmp( child->subject_raw.p, trust_ca->subject_raw.p,
-+                            child->issuer_raw.len ) != 0 ) )
-+    {
-+#if defined(MBEDTLS_X509_CRL_PARSE_C)
-+        /* Check trusted CA's CRL for the chain's top crt */
-+        *flags |= x509_crt_verifycrl( child, trust_ca, ca_crl, profile );
-+#else
-+        ((void) ca_crl);
+         }
+-
 +#endif
-+
-+        if( mbedtls_x509_time_is_past( &trust_ca->valid_to ) )
-+            ca_flags |= MBEDTLS_X509_BADCERT_EXPIRED;
-+
-+        if( mbedtls_x509_time_is_future( &trust_ca->valid_from ) )
-+            ca_flags |= MBEDTLS_X509_BADCERT_FUTURE;
-+
-+        if( NULL != f_vrfy )
-+        {
-+            if( ( ret = f_vrfy( p_vrfy, trust_ca, path_cnt + 1,
-+                                &ca_flags ) ) != 0 )
-+            {
-+                return( ret );
-+            }
-+        }
-+    }
-+
-+    /* Call callback on top cert */
-+    if( NULL != f_vrfy )
-+    {
-+        if( ( ret = f_vrfy( p_vrfy, child, path_cnt, flags ) ) != 0 )
-+            return( ret );
-+    }
-+
-+    *flags |= ca_flags;
-+
-+    return( 0 );
-+}
-+
-+static int x509_crt_verify_child(
-+                mbedtls_x509_crt *child, mbedtls_x509_crt *parent,
-+                mbedtls_x509_crt *trust_ca, mbedtls_x509_crl *ca_crl,
-+                const mbedtls_x509_crt_profile *profile,
-+                int path_cnt, int self_cnt, uint32_t *flags,
-+                int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
-+                void *p_vrfy )
-+{
-+    int ret;
-+    uint32_t parent_flags = 0;
-+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-+    mbedtls_x509_crt *grandparent;
-+    const mbedtls_md_info_t *md_info;
-+
-+    /* Counting intermediate self signed certificates */
-+    if( ( path_cnt != 0 ) && x509_name_cmp( &child->issuer, &child->subject ) == 0 )
-+        self_cnt++;
-+
-+    /* path_cnt is 0 for the first intermediate CA */
-+    if( 1 + path_cnt > MBEDTLS_X509_MAX_INTERMEDIATE_CA )
-+    {
-+        /* return immediately as the goal is to avoid unbounded recursion */
-+        return( MBEDTLS_ERR_X509_FATAL_ERROR );
-+    }
-+
-+    if( mbedtls_x509_time_is_past( &child->valid_to ) )
-+        *flags |= MBEDTLS_X509_BADCERT_EXPIRED;
-+
-+    if( mbedtls_x509_time_is_future( &child->valid_from ) )
-+        *flags |= MBEDTLS_X509_BADCERT_FUTURE;
-+
-+    if( x509_profile_check_md_alg( profile, child->sig_md ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_MD;
-+
-+    if( x509_profile_check_pk_alg( profile, child->sig_pk ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_PK;
-+
-+    md_info = mbedtls_md_info_from_type( child->sig_md );
-+    if( md_info == NULL )
-+    {
-+        /*
-+         * Cannot check 'unknown' hash
-+         */
-+        *flags |= MBEDTLS_X509_BADCERT_NOT_TRUSTED;
-+    }
-+    else
-+    {
-+        mbedtls_md( md_info, child->tbs.p, child->tbs.len, hash );
-+
-+        if( x509_profile_check_key( profile, &parent->pk ) != 0 )
-+            *flags |= MBEDTLS_X509_BADCERT_BAD_KEY;
-+
-+        if( mbedtls_pk_verify_ext( child->sig_pk, child->sig_opts, &parent->pk,
-+                           child->sig_md, hash, mbedtls_md_get_size( md_info ),
-+                           child->sig.p, child->sig.len ) != 0 )
-+        {
-+            *flags |= MBEDTLS_X509_BADCERT_NOT_TRUSTED;
-+        }
-+    }
-+
-+#if defined(MBEDTLS_X509_CRL_PARSE_C)
-+    /* Check trusted CA's CRL for the given crt */
-+    *flags |= x509_crt_verifycrl(child, parent, ca_crl, profile );
-+#endif
-+
-+    /* Look for a grandparent in trusted CAs */
-+    for( grandparent = trust_ca;
-+         grandparent != NULL;
-+         grandparent = grandparent->next )
-+    {
-+        if( x509_crt_check_parent( parent, grandparent,
-+                                   path_cnt == 0 ) == 0 )
-+            break;
-+    }
-+
-+    if( grandparent != NULL )
-+    {
-+        ret = x509_crt_verify_top( parent, grandparent, ca_crl, profile,
-+                                path_cnt + 1, self_cnt, &parent_flags, f_vrfy, p_vrfy );
-+        if( ret != 0 )
-+            return( ret );
-+    }
-+    else
-+    {
-+        /* Look for a grandparent upwards the chain */
-+        for( grandparent = parent->next;
-+             grandparent != NULL;
-+             grandparent = grandparent->next )
-+        {
-+            /* +2 because the current step is not yet accounted for
-+             * and because max_pathlen is one higher than it should be.
-+             * Also self signed certificates do not count to the limit. */
-+            if( grandparent->max_pathlen > 0 &&
-+                grandparent->max_pathlen < 2 + path_cnt - self_cnt )
-+            {
-+                continue;
-+            }
-+
-+            if( x509_crt_check_parent( parent, grandparent,
-+                                       path_cnt == 0 ) == 0 )
-+                break;
-+        }
-+
-+        /* Is our parent part of the chain or at the top? */
-+        if( grandparent != NULL )
-+        {
-+            ret = x509_crt_verify_child( parent, grandparent, trust_ca, ca_crl,
-+                                         profile, path_cnt + 1, self_cnt, &parent_flags,
-+                                         f_vrfy, p_vrfy );
-+            if( ret != 0 )
-+                return( ret );
-+        }
-+        else
-+        {
-+            ret = x509_crt_verify_top( parent, trust_ca, ca_crl, profile,
-+                                       path_cnt + 1, self_cnt, &parent_flags,
-+                                       f_vrfy, p_vrfy );
-+            if( ret != 0 )
-+                return( ret );
-+        }
-+    }
-+
-+    /* child is verified to be a child of the parent, call verify callback */
-+    if( NULL != f_vrfy )
-+        if( ( ret = f_vrfy( p_vrfy, child, path_cnt, flags ) ) != 0 )
-+            return( ret );
-+
-+    *flags |= parent_flags;
-+
-+    return( 0 );
-+}
-+
-+int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
-+                     mbedtls_x509_crt *trust_ca,
-+                     mbedtls_x509_crl *ca_crl,
-+                     const mbedtls_x509_crt_profile *profile,
-+                     const char *cn, uint32_t *flags,
-+                     int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
-+                     void *p_vrfy )
-+{
-+    size_t cn_len;
-+    int ret;
-+    int pathlen = 0, selfsigned = 0;
-+    mbedtls_x509_crt *parent;
-+    mbedtls_x509_name *name;
-+    mbedtls_x509_general_names *cur = NULL;
-+    mbedtls_pk_type_t pk_type;
-+
-+    *flags = 0;
-+
-+    if( profile == NULL )
-+    {
-+        ret = MBEDTLS_ERR_X509_BAD_INPUT_DATA;
-+        goto exit;
-+    }
-+
-+    if( cn != NULL )
-+    {
-+        name = &crt->subject;
-+        cn_len = strlen( cn );
-+
-+        if( crt->ext_types & MBEDTLS_X509_EXT_SUBJECT_ALT_NAME )
-+        {
-+            cur = &crt->subject_alt_names;
-+
-+            while( cur != NULL )
-+            {
-+                /* Only consider dNSName subject alternative names for this check; ignore other types. */
-+                if ( cur->general_name.name_type == MBEDTLS_X509_GENERALNAME_DNSNAME )
-+                {
-+                    if ( cur->general_name.dns_name.len == cn_len &&
-+                        x509_memcasecmp( cn, cur->general_name.dns_name.p, cn_len ) == 0 )
-+                        break;
-+
-+                    if ( cur->general_name.dns_name.len > 2 &&
-+                        memcmp( cur->general_name.dns_name.p, "*.", 2 ) == 0 &&
-+                        x509_check_wildcard( cn, &cur->general_name.dns_name ) == 0 )
-+                    {
-+                        break;
-+                    }
-+                }
-+                cur = cur->next;
-+            }
-+
-+            if( cur == NULL )
-+                *flags |= MBEDTLS_X509_BADCERT_CN_MISMATCH;
-+        }
-+        else
-+        {
-+            while( name != NULL )
-+            {
-+                if( MBEDTLS_OID_CMP( MBEDTLS_OID_AT_CN, &name->oid ) == 0 )
-+                {
-+                    if( name->val.len == cn_len &&
-+                        x509_memcasecmp( name->val.p, cn, cn_len ) == 0 )
-+                        break;
-+
-+                    if( name->val.len > 2 &&
-+                        memcmp( name->val.p, "*.", 2 ) == 0 &&
-+                        x509_check_wildcard( cn, &name->val ) == 0 )
-+                        break;
-+                }
-+
-+                name = name->next;
-+            }
-+
-+            if( name == NULL )
-+                *flags |= MBEDTLS_X509_BADCERT_CN_MISMATCH;
-+        }
-+    }
-+
-+    /* Check the type and size of the key */
-+    pk_type = mbedtls_pk_get_type( &crt->pk );
-+
-+    if( x509_profile_check_pk_alg( profile, pk_type ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_PK;
-+
-+    if( x509_profile_check_key( profile, &crt->pk ) != 0 )
-+        *flags |= MBEDTLS_X509_BADCERT_BAD_KEY;
-+
-+    /* Look for a parent in trusted CAs */
-+    for( parent = trust_ca; parent != NULL; parent = parent->next )
-+    {
-+        if( x509_crt_check_parent( crt, parent, pathlen == 0 ) == 0 )
-+            break;
-+    }
-+
-+    if( parent != NULL )
-+    {
-+        ret = x509_crt_verify_top( crt, parent, ca_crl, profile,
-+                                   pathlen, selfsigned, flags, f_vrfy, p_vrfy );
-+        if( ret != 0 )
-+            goto exit;
-+    }
-+    else
-+    {
-+        /* Look for a parent upwards the chain */
-+        for( parent = crt->next; parent != NULL; parent = parent->next )
-+            if( x509_crt_check_parent( crt, parent, pathlen == 0 ) == 0 )
-+                break;
-+
-+        /* Are we part of the chain or at the top? */
-+        if( parent != NULL )
-+        {
-+            ret = x509_crt_verify_child( crt, parent, trust_ca, ca_crl, profile,
-+                                         pathlen, selfsigned, flags, f_vrfy, p_vrfy );
-+            if( ret != 0 )
-+                goto exit;
-+        }
-+        else
-+        {
-+            ret = x509_crt_verify_top( crt, trust_ca, ca_crl, profile,
-+                                       pathlen, selfsigned, flags, f_vrfy, p_vrfy );
-+            if( ret != 0 )
-+                goto exit;
-+        }
-+    }
-+
-+exit:
-+    /* prevent misuse of the vrfy callback - VERIFY_FAILED would be ignored by
-+     * the SSL module for authmode optional, but non-zero return from the
-+     * callback means a fatal error so it shouldn't be ignored */
-+    if( ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED )
-+        ret = MBEDTLS_ERR_X509_FATAL_ERROR;
-+
-+    if( ret != 0 )
-+    {
-+        *flags = (uint32_t) -1;
-+        return( ret );
-+    }
-+
-+    if( *flags != 0 )
-+        return( MBEDTLS_ERR_X509_CERT_VERIFY_FAILED );
-+
-+    return( 0 );
-+}
-+#else
- int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
-                      mbedtls_x509_crt *trust_ca,
-                      mbedtls_x509_crl *ca_crl,
-@@ -2520,6 +3101,7 @@ int mbedtls_x509_crt_verify_with_profile( mbedtls_x509_crt *crt,
-     return( mbedtls_x509_crt_verify_restartable( crt, trust_ca, ca_crl,
-                 profile, cn, flags, f_vrfy, p_vrfy, NULL ) );
- }
-+#endif
- 
- /*
-  * Verify the certificate validity, with profile, restartable version
-@@ -2622,6 +3204,10 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+         if( cur == NULL )
+             *flags |= MBEDTLS_X509_BADCERT_CN_MISMATCH;
+     }
+@@ -2622,6 +2804,10 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
      mbedtls_x509_crt *cert_prv;
      mbedtls_x509_name *name_cur;
      mbedtls_x509_name *name_prv;
@@ -1765,7 +1362,7 @@ index 97e1d72..9421d06 100644
      mbedtls_x509_sequence *seq_cur;
      mbedtls_x509_sequence *seq_prv;
  
-@@ -2664,6 +3250,38 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+@@ -2664,6 +2850,38 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
              mbedtls_free( seq_prv );
          }
  
@@ -1804,7 +1401,7 @@ index 97e1d72..9421d06 100644
          seq_cur = cert_cur->subject_alt_names.next;
          while( seq_cur != NULL )
          {
-@@ -2673,7 +3291,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+@@ -2673,7 +2891,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
                                        sizeof( mbedtls_x509_sequence ) );
              mbedtls_free( seq_prv );
          }
