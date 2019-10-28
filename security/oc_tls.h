@@ -82,7 +82,9 @@ void oc_tls_select_cert_ciphersuite(void);
 void oc_tls_select_mfg_cert_chain(int credid);
 void oc_tls_select_identity_cert_chain(int credid);
 void oc_tls_select_psk_ciphersuite(void);
+#ifdef OC_JW
 void oc_tls_select_anon_ciphersuite(void);
+#endif /* OC_JW */
 void oc_tls_select_cloud_ciphersuite(void);
 
 /* Internal interface for checking supported OTMs */
