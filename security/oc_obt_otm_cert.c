@@ -633,7 +633,7 @@ int
 oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                         void *data)
 {
-  OC_DBG("In oc_obt_perform_just_works_otm");
+  OC_DBG("In oc_obt_perform_cert_otm");
 
   oc_device_t *device = oc_obt_get_cached_device_handle(uuid);
   if (!device) {
