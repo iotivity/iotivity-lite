@@ -54,9 +54,11 @@ int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
 int oc_obt_discover_all_resources(oc_uuid_t *uuid,
                                   oc_discovery_all_handler_t handler,
                                   void *data);
+#ifdef OC_JW
 /* Perform ownership transfer */
 int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                                   void *data);
+#endif /* OC_JW */
 int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                               void *data);
 int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,

@@ -34,7 +34,9 @@
 #include <stdlib.h>
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
+#ifdef OC_JW
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
+#endif /* OC_JW */
 #define OXM_RANDOM_DEVICE_PIN "oic.sec.doxm.rdp"
 #define OXM_MANUFACTURER_CERTIFICATE "oic.sec.doxm.mfgcert"
 
@@ -1199,18 +1201,21 @@ post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     oc_uuid_to_str(&doxm->deviceuuid, deviceuuid, 37);
     oc_uuid_to_str(&owner->subjectuuid, owneruuid, 37);
     oc_alloc_string(&owner->privatedata.data, 17);
-    if (doxm->oxmsel == OC_OXMTYPE_JW) {
-      success = oc_sec_derive_owner_psk(
-        request->origin, (const uint8_t *)OXM_JUST_WORKS,
-        strlen(OXM_JUST_WORKS), doxm->deviceuuid.id, 16, owner->subjectuuid.id,
-        16, oc_cast(owner->privatedata.data, uint8_t), 16);
-    } else if (doxm->oxmsel == OC_OXMTYPE_RDP) {
+    if (doxm->oxmsel == OC_OXMTYPE_RDP) {
       success = oc_sec_derive_owner_psk(
         request->origin, (const uint8_t *)OXM_RANDOM_DEVICE_PIN,
         strlen(OXM_RANDOM_DEVICE_PIN), doxm->deviceuuid.id, 16,
         owner->subjectuuid.id, 16, oc_cast(owner->privatedata.data, uint8_t),
         16);
     }
+#ifdef OC_JW
+    else if (doxm->oxmsel == OC_OXMTYPE_JW) {
+      success = oc_sec_derive_owner_psk(
+        request->origin, (const uint8_t *)OXM_JUST_WORKS,
+        strlen(OXM_JUST_WORKS), doxm->deviceuuid.id, 16, owner->subjectuuid.id,
+        16, oc_cast(owner->privatedata.data, uint8_t), 16);
+    }
+#endif /* OC_JW */
 #ifdef OC_PKI
     else if (doxm->oxmsel == OC_OXMTYPE_MFG_CERT) {
       success = oc_sec_derive_owner_psk(
