@@ -85,7 +85,9 @@ display_menu(void)
   PRINT("[6] Discover owned devices in the site-local IPv6 scope\n");
   PRINT("[7] Discover all resources on the device\n");
   PRINT("-----------------------------------------------\n");
+#ifdef OC_JW
   PRINT("[8] Just-Works Ownership Transfer Method\n");
+#endif /* OC_JW */
   PRINT("[9] Request Random PIN from device for OTM\n");
   PRINT("[10] Random PIN Ownership Transfer Method\n");
 #ifdef OC_PKI
@@ -532,6 +534,7 @@ otm_cert(void)
 }
 #endif /* OC_PKI */
 
+#ifdef OC_JW
 static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
@@ -593,6 +596,7 @@ otm_just_works(void)
 
   otb_mutex_unlock(app_sync_lock);
 }
+#endif /* OC_JW */
 
 static void
 retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
@@ -1754,9 +1758,11 @@ main(void)
     case 7:
       discover_resources();
       break;
+#ifdef OC_JW
     case 8:
       otm_just_works();
       break;
+#endif /* OC_JW */
     case 9:
       request_random_pin();
       break;
