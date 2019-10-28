@@ -31,7 +31,9 @@ extern "C"
 #endif
 
 typedef enum oc_sec_doxmtype_t {
+#ifdef OC_JW
   OC_OXMTYPE_JW = 0,
+#endif /* OC_JW */
   OC_OXMTYPE_RDP = 1,
   OC_OXMTYPE_MFG_CERT = 2
 } oc_sec_oxmtype_t;
