@@ -11,6 +11,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 SECURE ?= 1
 PKI ?= 1
+JW ?= 0
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
@@ -163,8 +164,14 @@ ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
+ifeq ($(JW), 1)
+	EXTRA_CFLAGS += -DOC_JW
+endif
 ifeq ($(DYNAMIC),1)
-	SRC += ../../security/oc_obt.c ../../security/oc_obt_otm_justworks.c ../../security/oc_obt_otm_randompin.c ../../security/oc_obt_otm_cert.c ../../security/oc_obt_certs.c
+	SRC += ../../security/oc_obt.c ../../security/oc_obt_otm_randompin.c ../../security/oc_obt_otm_cert.c ../../security/oc_obt_certs.c
+ifeq ($(JW), 1)
+	SRC += ../../security/oc_obt_otm_justworks.c
+endif
 	SAMPLES += ${OBT}
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
