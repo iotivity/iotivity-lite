@@ -62,10 +62,16 @@ oc_sec_doxm_init(void)
 static void
 evaluate_supported_oxms(size_t device)
 {
+#ifdef OC_JW
   doxm[device].oxms[0] = OC_OXMTYPE_JW;
   doxm[device].oxms[1] = -1;
   doxm[device].oxms[2] = -1;
   doxm[device].num_oxms = 1;
+#else
+  doxm[device].oxms[0] = -1;
+  doxm[device].oxms[1] = -1;
+  doxm[device].num_oxms = 0;
+#endif /* OC_JW*/
   if (oc_tls_is_pin_otm_supported(device)) {
     doxm[device].oxms[doxm[device].num_oxms++] = OC_OXMTYPE_RDP;
   }
@@ -79,7 +85,11 @@ evaluate_supported_oxms(size_t device)
 void
 oc_sec_doxm_default(size_t device)
 {
+#ifdef OC_JW
   doxm[device].oxmsel = 0;
+#else
+  doxm[device].oxmsel = 1;
+#endif /* OC_JW*/
 #ifdef OC_PKI
   doxm[device].sct = 9;
 #else  /* OC_PKI */

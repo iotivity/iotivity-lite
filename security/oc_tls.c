@@ -160,9 +160,11 @@ static const int psk_priority[2] = {
   MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
 };
 
+#ifdef OC_JW
 static const int anon_ecdh_priority[2] = {
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256, 0
 };
+#endif /*.OC_JW.*/
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
@@ -996,12 +998,14 @@ oc_tls_select_psk_ciphersuite(void)
   ciphers = (int *)psk_priority;
 }
 
+#ifdef OC_JW
 void
 oc_tls_select_anon_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting anon ECDH ciphersuite priority");
   ciphers = (int *)anon_ecdh_priority;
 }
+#endif /*.OC_JW.*/
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
