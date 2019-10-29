@@ -42,8 +42,42 @@ extern "C"
 {
 #endif
 
+/**
+ * Call back handlers that are invoked in response to oc_main_init()
+ *
+ * @see oc_main_init
+ */
 typedef struct
 {
+  /**
+   * Device initialization callback that is invoked to initialize the platform
+   * and device(s).
+   *
+   * At a minimum the platform should be initialized and at least one device
+   * added.
+   *
+   *  - oc_init_platform()
+   *  - oc_add_device()
+   *
+   * Multiple devices can be added by making multiple calls to oc_add_device().
+   *
+   * Other actions may be taken in the init handler
+   *  - The immutable device identifier can be set `piid`
+   *    (a.k.a Protocol Independent ID) oc_set_immutable_device_identifier()
+   *  - Set introspection data oc_set_introspection_data()
+   *  - Set up an interrupt handler oc_activate_interrupt_handler()
+   *  - Initialize application specific variables
+   *
+   * @return
+   *  - 0 to indicate success initializing the application
+   *  - Any non-zero value. Recommend using return values less than zero
+   *
+   * @see oc_activate_interrupt_handler
+   * @see oc_add_device
+   * @see oc_init_platform
+   * @see oc_set_immutable_device_identifier
+   * @see oc_set_introspection_data
+   */
   int (*init)(void);
   void (*signal_event_loop)(void);
 
@@ -59,6 +93,35 @@ typedef struct
 typedef void (*oc_init_platform_cb_t)(void *data);
 typedef void (*oc_add_device_cb_t)(void *data);
 
+/**
+ * Register and call handler functions responsible for controlling the
+ * IoTivity-lite stack.
+ *
+ * This will initialize the IoTivity-lite stack.
+ *
+ * Before initializing the stack, a few setup functions may need to be called
+ * before calling oc_main_init those functions are:
+ *
+ * - oc_set_con_res_announced()
+ * - oc_set_factory_presets_cb()
+ * - oc_set_max_app_data_size()
+ * - oc_set_random_pin_callback()
+ * - oc_storage_config()
+ *
+ * Not all of the listed functions must be called before calling oc_main_init.
+ *
+ * @param handler struct containing pointers callback handler functions
+ *                responsible for controlling the IoTivity-lite application
+ * @return
+ *  - `0` if stack has been initialized successfully
+ *  - a negative number if there is an error in stack initialization
+ *
+ * @see oc_set_con_res_announced
+ * @see oc_set_factory_presets_cb
+ * @see oc_set_max_app_data_size
+ * @see oc_set_random_pin_callback
+ * @see oc_storage_config
+ */
 int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
@@ -142,10 +205,6 @@ void oc_process_baseline_interface(oc_resource_t *resource);
    bind with this resource (e.g. by invoking
    \c oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)). Must
    be 1 or higher.
-  @param num_supported_rts number of resource types in links included in the
-   collection
-  @param num_mandatory_rts number of mandatory resource types if any in links
-   included in the collection
   @param device The internal device that should carry this collection.
    This is typically 0.
   @return A pointer to the new collection (actually oc_collection_t*)
