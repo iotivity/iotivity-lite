@@ -81,33 +81,39 @@ oc_endpoint_t *
 oc_connectivity_get_endpoints(size_t device)
 {
   (void)device;
+  const otNetifAddress *address;
 
-  if (!eps) {
-    const otNetifAddress *address = otIp6GetUnicastAddresses(ot_instance);
-    oc_endpoint_t *prev = NULL;
-    while (address) {
-      oc_endpoint_t *ep = oc_new_endpoint();
-      if (!ep) {
-        return eps;
-      }
-      if (!eps) {
-        eps = ep;
-      }
-      if (prev) {
-        prev->next = ep;
-      } else {
-        prev = ep;
-      }
-      ep->flags = IPV6;
-      memcpy(ep->addr.ipv6.address, address->mAddress.mFields.m8,
-             OT_IP6_ADDRESS_SIZE);
-      ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
-      ep->device = 0;
+  // We want our endpoints to use the latest IP addresses from OpenThread.
+  // Therefore, we must first free the list of endpoints.
+  while (eps) {
+    oc_endpoint_t *next_endpoint;
+    next_endpoint = eps->next;
+    oc_free_endpoint(eps);
+    eps = next_endpoint;
+  }
 
-      OC_DBG("Endpoint");
-      OC_LOGipaddr(*ep);
-      address = address->mNext;
+  address = otIp6GetUnicastAddresses(OT_INSTANCE);
+  while (address) {
+    oc_endpoint_t *ep = oc_new_endpoint();
+    // No more memory left for endpoints, so return the list.
+    if (!ep) {
+      return eps;
     }
+    // Save the head of the list, if it hasn't been saved yet.
+    if (!eps) {
+      eps = ep;
+    }
+
+    // Populate the contents of the endpoint.
+    ep->flags = IPV6;
+    memcpy(ep->addr.ipv6.address, address->mAddress.mFields.m8,
+           OT_IP6_ADDRESS_SIZE);
+    ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
+    ep->device = 0;
+
+    OC_DBG("Endpoint");
+    OC_LOGipaddr(*ep);
+    address = address->mNext;
   }
   return eps;
 }

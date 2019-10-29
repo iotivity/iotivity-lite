@@ -855,7 +855,7 @@ coap_tcp_compute_message_length(void *packet, size_t option_length,
   if (total_length < COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN) {
     OC_DBG("-TCP Len < COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN(%d) ",
            COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN);
-    *len = total_length;
+    *len = (uint8_t)total_length;
     goto exit;
   }
 
@@ -884,10 +884,10 @@ coap_tcp_compute_message_length(void *packet, size_t option_length,
   *extended_len = total_length - COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
 
 exit:
-  OC_DBG("-Size of options : %ld Total length of CoAP_TCP message "
-         "(Options+Payload) : %ld ",
+  OC_DBG("-Size of options : %zd Total length of CoAP_TCP message "
+         "(Options+Payload) : %zd ",
          option_length, total_length);
-  OC_DBG("-COAP_TCP header len field : %u Extended length : %ld ", *len,
+  OC_DBG("-COAP_TCP header len field : %u Extended length : %zd ", *len,
          *extended_len);
 }
 /*---------------------------------------------------------------------------*/
@@ -918,7 +918,7 @@ coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
     }
   }
 
-  OC_DBG("message_length : %ld, num_extended_length_bytes : %u",
+  OC_DBG("message_length : %zd, num_extended_length_bytes : %u",
          *message_length, *num_extended_length_bytes);
 }
 #endif /* OC_TCP */
@@ -1731,7 +1731,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
   coap_pkt->payload = (uint8_t *)payload;
 #ifdef OC_TCP
   if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
-    coap_pkt->payload_len = length;
+    coap_pkt->payload_len = (uint32_t)length;
   } else
 #endif /* OC_TCP */
   {

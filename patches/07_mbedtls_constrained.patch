@@ -1,8 +1,8 @@
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 79eedffdd..cbbb03291 100644
+index 79eedffdd..774aef4cb 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,2817 +1,148 @@
+@@ -1,2817 +1,150 @@
 -/**
 - * \file config.h
 - *
@@ -131,6 +131,8 @@ index 79eedffdd..cbbb03291 100644
 +/* System support */
 +#define MBEDTLS_PLATFORM_C
 +#define MBEDTLS_PLATFORM_MEMORY
++#define MBEDTLS_PLATFORM_SNPRINTF_ALT
++#define MBEDTLS_PLATFORM_STD_SNPRINTF snprintf
 +
 +#ifdef OC_DYNAMIC_ALLOCATION
 +#include <stdlib.h>

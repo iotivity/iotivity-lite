@@ -159,7 +159,7 @@ static int
 cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
 {
   oc_rep_t *t = rep;
-  int len = 0;
+  size_t len = 0;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -190,7 +190,7 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
       break;
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
-        store->status = t->value.integer;
+        store->status = (uint8_t)t->value.integer;
       } else {
         OC_ERR("[CLOUD_STORE] Unknown property %s", oc_string(t->name));
         return -1;

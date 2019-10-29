@@ -436,7 +436,7 @@ multi_scope_ipv6_multicast(oc_client_cb_t *cb4, uint8_t scope, const char *uri,
                            void *user_data)
 {
   if (!uri || !handler) {
-    return NULL;
+    return false;
   }
 
   oc_make_ipv6_endpoint(mcast, IPV6 | DISCOVERY, 5683, 0xff, scope, 0, 0, 0, 0,
@@ -508,7 +508,7 @@ dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
 {
   if (!endpoint) {
     OC_ERR("require valid endpoint");
-    return NULL;
+    return false;
   }
 
   oc_client_handler_t client_handler;

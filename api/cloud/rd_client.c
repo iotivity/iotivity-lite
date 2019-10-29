@@ -23,6 +23,7 @@
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "port/oc_log.h"
+#include <inttypes.h>
 #include <stdlib.h>
 
 #define RD_PUBLISH_TTL 86400
@@ -130,7 +131,7 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   snprintf(uri_query, 255, "di=%s", id);
   while (links) {
     snprintf(uri_query + strlen(uri_query), (255 - strlen(uri_query)),
-             "&ins=%ld", links->ins);
+             "&ins=%" PRId64 "", links->ins);
     links = links->next;
   }
 

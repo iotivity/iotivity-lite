@@ -94,7 +94,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -128,7 +128,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -159,7 +159,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -186,7 +186,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -250,6 +250,7 @@
     <ClInclude Include="..\..\..\include\oc_uuid.h" />
     <ClInclude Include="..\..\..\include\server_introspection.dat.h" />
     <ClInclude Include="..\..\..\messaging\coap\coap.h" />
+    <ClInclude Include="..\..\..\messaging\coap\coap_signal.h" />
     <ClInclude Include="..\..\..\messaging\coap\conf.h" />
     <ClInclude Include="..\..\..\messaging\coap\constants.h" />
     <ClInclude Include="..\..\..\messaging\coap\engine.h" />
@@ -288,7 +289,11 @@
     <ClInclude Include="..\..\oc_network_events_mutex.h" />
     <ClInclude Include="..\..\oc_random.h" />
     <ClInclude Include="..\..\oc_storage.h" />
+    <ClInclude Include="..\ipcontext.h" />
+    <ClInclude Include="..\mutex.h" />
+    <ClInclude Include="..\network_addresses.h" />
     <ClInclude Include="..\oc_config.h" />
+    <ClInclude Include="..\tcpadapter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\api\c-timestamp\timestamp_compare.c" />
@@ -395,6 +400,7 @@
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborencoder_close_container_checked.c" />
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborparser.c" />
     <ClCompile Include="..\..\..\messaging\coap\coap.c" />
+    <ClCompile Include="..\..\..\messaging\coap\coap_signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\engine.c" />
     <ClCompile Include="..\..\..\messaging\coap\observe.c" />
     <ClCompile Include="..\..\..\messaging\coap\separate.c" />
@@ -429,8 +435,11 @@
     <ClCompile Include="..\abort.c" />
     <ClCompile Include="..\clock.c" />
     <ClCompile Include="..\ipadapter.c" />
+    <ClCompile Include="..\mutex.c" />
+    <ClCompile Include="..\network_addresses.c" />
     <ClCompile Include="..\random.c" />
     <ClCompile Include="..\storage.c" />
+    <ClCompile Include="..\tcpadapter.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\security\oc_pstat.c.diff" />
