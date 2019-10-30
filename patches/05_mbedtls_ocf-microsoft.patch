@@ -1,11 +1,10 @@
-From 320d5ae73e09d31439fe22a4fba6fd20f0404a22 Mon Sep 17 00:00:00 2001
+From 81f06a9c96ffa533b367d168e48d47d17671afd0 Mon Sep 17 00:00:00 2001
 From: Kishen Maloor <kishen.maloor@intel.com>
 Date: Fri, 20 Apr 2018 14:37:12 +0300
 Subject: [PATCH] ocf Microsoft
 
 ---
  include/mbedtls/certs.h                    |   5 +
- include/mbedtls/config.h                   |  18 +--
  include/mbedtls/net_sockets.h              |  19 ++-
  include/mbedtls/ssl.h                      |  47 ++++++
  include/mbedtls/ssl_internal.h             |  11 ++
@@ -21,7 +20,7 @@ Subject: [PATCH] ocf Microsoft
  library/pkcs5.c                            |   5 +-
  library/pkparse.c                          |  53 +++----
  library/rsa.c                              |   3 +
- library/ssl_cli.c                          |  22 ++-
+ library/ssl_cli.c                          |  13 +-
  library/ssl_srv.c                          |  10 +-
  library/ssl_tls.c                          |  77 ++++++++--
  library/version_features.c                 |   3 +
@@ -37,7 +36,7 @@ Subject: [PATCH] ocf Microsoft
  tests/suites/test_suite_x509parse.data     |  16 ++
  tests/suites/test_suite_x509write.data     |  12 ++
  tests/suites/test_suite_x509write.function | 125 ++++++++++++++++
- 33 files changed, 1114 insertions(+), 108 deletions(-)
+ 32 files changed, 1107 insertions(+), 88 deletions(-)
 
 diff --git a/include/mbedtls/certs.h b/include/mbedtls/certs.h
 index 179ebbb..a185336 100644
@@ -55,49 +54,6 @@ index 179ebbb..a185336 100644
  /* Config-dependent dispatch between EC and RSA
   * (RSA if enabled, otherwise EC) */
  
-diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index f6ef4ec..654f972 100644
---- a/include/mbedtls/config.h
-+++ b/include/mbedtls/config.h
-@@ -962,21 +962,6 @@
- #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
- 
- /**
-- * \def MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-- *
-- * Enable the ECDHE-ANON based ciphersuite modes in SSL / TLS.
-- *
-- * Requires: MBEDTLS_ECDH_C
-- *
-- *
-- * This enables the following ciphersuites (if other requisites are
-- * enabled as well):
-- *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
-- */
--#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
--
--
--/**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-  *
-  * Enable the ECDHE-ECDSA based ciphersuite modes in SSL / TLS.
-@@ -1581,7 +1566,7 @@
-  *
-  * Comment this macro to disable support for SSL session tickets
-  */
--//#define MBEDTLS_SSL_SESSION_TICKETS
-+#define MBEDTLS_SSL_SESSION_TICKETS
- 
- /**
-  * \def MBEDTLS_SSL_EXPORT_KEYS
-@@ -1848,7 +1833,6 @@
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA
-- *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
-  *
-  * PEM_PARSE uses AES for decrypting encrypted keys.
-  */
 diff --git a/include/mbedtls/net_sockets.h b/include/mbedtls/net_sockets.h
 index 4c7ef00..19d2285 100644
 --- a/include/mbedtls/net_sockets.h
@@ -143,10 +99,10 @@ index 4c7ef00..19d2285 100644
  mbedtls_net_context;
  
 diff --git a/include/mbedtls/ssl.h b/include/mbedtls/ssl.h
-index fae852e..ef236a0 100644
+index d31f6cd..3a5268a 100644
 --- a/include/mbedtls/ssl.h
 +++ b/include/mbedtls/ssl.h
-@@ -898,6 +898,12 @@ struct mbedtls_ssl_config
+@@ -897,6 +897,12 @@ struct mbedtls_ssl_config
      mbedtls_ssl_key_cert *key_cert; /*!< own certificate/key pair(s)        */
      mbedtls_x509_crt *ca_chain;     /*!< trusted CAs                        */
      mbedtls_x509_crl *ca_crl;       /*!< trusted CAs CRLs                   */
@@ -159,7 +115,7 @@ index fae852e..ef236a0 100644
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
  #if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
-@@ -2062,6 +2068,47 @@ void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
+@@ -2061,6 +2067,47 @@ void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
  int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
                                mbedtls_x509_crt *own_cert,
                                mbedtls_pk_context *pk_key );
@@ -678,7 +634,7 @@ index af1a878..66cf905 100644
      *p++ = (unsigned char)( 0x08 + oid_size + hashlen );
      *p++ = MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED;
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index 9a49586..fcabe1e 100644
+index afced7a..7a5e153 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
 @@ -443,7 +443,14 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
@@ -715,43 +671,8 @@ index 9a49586..fcabe1e 100644
          n++;
      }
  #endif
-@@ -2544,13 +2551,15 @@ start_processing:
- #if defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED)
-     if( mbedtls_ssl_ciphersuite_uses_server_signature( ciphersuite_info ) )
-     {
-+#if !defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
-         size_t sig_len, hashlen;
-         unsigned char hash[64];
--        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
--        mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
-         unsigned char *params = ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl );
-         size_t params_len = p - params;
-         void *rs_ctx = NULL;
-+#endif
-+        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
-+        mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
- 
-         /*
-          * Handle the digitally-signed structure
-@@ -2600,7 +2609,7 @@ start_processing:
-         {
-             goto exit;
-         }
--#endif
-+#else
-         /*
-          * Read signature
-          */
-@@ -2701,6 +2710,7 @@ start_processing:
- #endif
-             return( ret );
-         }
-+#endif /* MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
-     }
- #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
- 
 diff --git a/library/ssl_srv.c b/library/ssl_srv.c
-index 5665cfd..a48953e 100644
+index bc77f80..520051c 100644
 --- a/library/ssl_srv.c
 +++ b/library/ssl_srv.c
 @@ -743,7 +743,15 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
@@ -772,7 +693,7 @@ index 5665cfd..a48953e 100644
              MBEDTLS_SSL_DEBUG_MSG( 3, ( "certificate mismatch: "
                                  "(extended) key usage extension" ) );
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index 88273a3..367172f 100644
+index 38690fa..6ed4f48 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
 @@ -1561,11 +1561,18 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
@@ -826,7 +747,7 @@ index 88273a3..367172f 100644
      msg->next = NULL;
  
      /* Append to the current flight */
-@@ -5790,6 +5803,13 @@ crt_verify:
+@@ -5786,6 +5799,13 @@ crt_verify:
          if( mbedtls_ssl_check_cert_usage( ssl->session_negotiate->peer_cert,
                                   ciphersuite_info,
                                   ! ssl->conf->endpoint,
@@ -840,7 +761,7 @@ index 88273a3..367172f 100644
                                   &ssl->session_negotiate->verify_result ) != 0 )
          {
              MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad certificate (usage extensions)" ) );
-@@ -7273,6 +7293,28 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
+@@ -7269,6 +7289,28 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
      return( ssl_append_key_cert( &conf->key_cert, own_cert, pk_key ) );
  }
  
@@ -869,7 +790,7 @@ index 88273a3..367172f 100644
  void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
                                 mbedtls_x509_crt *ca_chain,
                                 mbedtls_x509_crl *ca_crl )
-@@ -7596,14 +7638,14 @@ const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl )
+@@ -7592,14 +7634,14 @@ const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl )
  
  void mbedtls_ssl_conf_max_version( mbedtls_ssl_config *conf, int major, int minor )
  {
@@ -888,7 +809,7 @@ index 88273a3..367172f 100644
  }
  
  #if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
-@@ -9138,6 +9180,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
+@@ -9134,6 +9176,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
              }
  #endif
  
@@ -902,7 +823,7 @@ index 88273a3..367172f 100644
      /*
       * Preset-specific defaults
       */
-@@ -9461,6 +9510,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
+@@ -9457,6 +9506,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
  int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
                            const mbedtls_ssl_ciphersuite_t *ciphersuite,
                            int cert_endpoint,
@@ -911,7 +832,7 @@ index 88273a3..367172f 100644
                            uint32_t *flags )
  {
      int ret = 0;
-@@ -9477,6 +9528,10 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -9473,6 +9524,10 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
      ((void) cert);
      ((void) cert_endpoint);
      ((void) flags);
@@ -922,7 +843,7 @@ index 88273a3..367172f 100644
  #endif
  
  #if defined(MBEDTLS_X509_CHECK_KEY_USAGE)
-@@ -9529,13 +9584,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -9524,13 +9579,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
  #if defined(MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE)
      if( cert_endpoint == MBEDTLS_SSL_IS_SERVER )
      {
@@ -941,10 +862,10 @@ index 88273a3..367172f 100644
  
      if( mbedtls_x509_crt_check_extended_key_usage( cert, ext_oid, ext_len ) != 0 )
 diff --git a/library/version_features.c b/library/version_features.c
-index 88335d3..6367a1c 100644
+index 24143d0..6afbb91 100644
 --- a/library/version_features.c
 +++ b/library/version_features.c
-@@ -540,6 +540,9 @@ static const char *features[] = {
+@@ -537,6 +537,9 @@ static const char *features[] = {
  #if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
      "MBEDTLS_X509_RSASSA_PSS_SUPPORT",
  #endif /* MBEDTLS_X509_RSASSA_PSS_SUPPORT */
