@@ -151,20 +151,18 @@ Onboarding and Provisioning
 =================================================
 ### Runing the onboarding tool
 
-At this time there are two versions of the onboarding tool.  The C version and the Java version.
-The versions are identical. The exception being that the C version is currently built only for
-Linux. While the Java version is available for both windows and Linux.  It does not matter which
-version of the onboarding tool.
+At this time there are three versions of the onboarding tool.  The command line C version, the
+command line Java version, and the GUI Android version. Both command line versions are identical.
+It does not matter which version of the onboarding tool is used.
 
 The C version of the onboarding tool can be found in `<iotivity-lite>/port/linux` see Linux build
 instructions.
 
-A Java version of the onboarding-tool that will run on Windows or Linux can be found
-
-A sample server and client can be found in `<iotivity-lite>/swig/apps/java_onboarding_tool`
+A Java version of the onboarding-tool can be found in `<iotivity-lite>/swig/apps/java_onboarding_tool`
 
 Assuming you have already followed the `Building for Linux` or `Building for Windows` build
-instructions the following commands can be used to build and run the onboarding tool.
+instructions the following commands can be used to build and run the Java version of the onboarding
+tool.
 
 Linux:
 
@@ -176,6 +174,11 @@ Windows
     sh build-onboarding-tool-lite.sh
     run-onboarding-tool-lite.cmd
 
+The Android version of the onboarding tool can be found in
+`<iotivity-lite>/swig/apps/oc/android_on_boarding_tool`
+
+It is built and installed using the same instructions as other Android samples documented above.
+
 ### Simple Step-by-Step guide for onboarding and provisioning
 
 This guide assumes you are starting one discoverable device at a time. Multiple devices can be
@@ -185,48 +188,23 @@ figure out which UUID belongs to which device.
 Once you have successfully onboarded the samples the first time using the following step-by-step
 options feel free to RESET the devices and play around with different provisioning options.
 
+The below steps use the command line version of the onboarding tool. The steps for the Android
+onboarding tool is very similar but is not described here.
+
 ### (Step 1) Onboard and Provision the Server
 
+There are multiple methods to onboard and provision server and client samples.  Below is given one
+of the many possible ways the this could be done.
+
  - start the server sample
- - start onboarding tool it will print the following menu:
-
-```
-    ################################################
-    OCF 1.3 Onboarding Tool
-    ################################################
-    [0] Display this menu
-    -----------------------------------------------
-    [1] Discover un-owned devices
-    [2] Discover owned devices
-    -----------------------------------------------
-    [3] Take ownership of device (Just-works)
-    [4] Provision pair-wise credentials
-    [5] Provision ACE2
-    -----------------------------------------------
-    [6] RESET device
-    -----------------------------------------------
-    [9] Exit
-    ################################################
-    
-    Select option:
-```
-
- - Type `1` **Enter** to _Discover un-owned devices_ this should display a something similar to
-   this
-
-    Discovered unowned device: c3e5c231-9f95-4859-6d11-87f40b1977d5 at:
-    [fe80:0000:0000:0000:05a8:81bd:23cf:3882]:59584
-    [fe80:0000:0000:0000:05a8:81bd:23cf:3882]:59585
-
- - Type `3` **Enter** to _Take ownership of device_
+ - start onboarding tool it will print a menu with many option
+ - Type `1` **Enter** to _Discover un-owned devices_
+ - Type `8` **Enter** to _Take ownership of device_
    - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
-     device from the list.  The following should be displayed
-
-    Successfully issued request to perform ownership transfer
-
- - Type `2` **Enter** to _Discover owned devices_ the device you just took ownership of should be
+     device from the list.
+ - Type `4` **Enter** to _Discover owned devices_ the device you just took ownership of should be
    listed.
- - Type `5` **Enter** to _Provision ACE2_. There are many ways to properly provision the device.
+ - Type `13` **Enter** to _Provision ACE2_. There are many ways to properly provision the device.
    This will give instruction for using wildcard provisioning.
    - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
      device from the list.
@@ -241,61 +219,22 @@ options feel free to RESET the devices and play around with different provisioni
      **Enter** for DELETE, and `1` **Enter** for NOTIFY.
    - `Successfully issued request to provision ACE` should be printed on the screen upon success
 
-Example output from following the above listed commands:
-
-    Provision ACL2
-    My Devices:
-    [0]: 33cd6782-00f3-49db-624e-fda26e945c8d
-
-
-    Select device for provisioning: 0
-
-    Subjects:
-    [0]: anon-clear
-    [1]: auth-crypt
-    [2]: 33cd6782-00f3-49db-624e-fda26e945c8d
-
-    Select subject: 1
-
-    Enter number of resources in this ACE: 1
-
-    Resource properties
-    Have resource href? [0-No, 1-Yes]: 0
-
-    Set wildcard resource? [0-No, 1-Yes]: 1
-    [1]: All resources
-    [2]: All discoverable resources
-    [3]: All non-discoverable resources
-
-    Select wildcard resource: 2
-    Enter number of resource types [0-None]: 0
-    Enter number of interfaces [0-None]0
-
-    Set ACE2 permissions
-    CREATE [0-No, 1-Yes]: 0
-    RETRIEVE [0-No, 1-Yes]: 1
-    UPDATE [0-No, 1-Yes]: 1
-    DELETE [0-No, 1-Yes]: 0
-    NOTIFY [0-No, 1-Yes]: 1
-
-    Successfully issued request to provision ACE
-
 ### (Step 2) Onboard the client
  - start the client sample
  - Type `1` **Enter** to _Discover un-owned devices_
- - Type `3` **Enter** to _Take ownership of device_
+ - Type `8` **Enter** to _Take ownership of device_
    - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
      device from the list.
   - Type `2` **Enter** to _Discover owned devices_ the server and client should be listed
 
 ### (Step 3) Pair Server and Client
-  - Type `4` **Enter** to _Provision pair-wise credentials_
+  - Type `12` **Enter** to _Provision pair-wise credentials_
   - Type `0` **Enter** `1` **Enter** to pair the client and server. If you have multiple owned
     devices you will have to select the correct devices from the list.
 
 ### (Step 4) Restart and Test
-The samples should be onboarded and provisioned. Restart the server and client they should discover
-each other and run without difficulty.
+The samples should be onboarded and provisioned. Restart the server and then the client they should
+discover each other and run without difficulty.
 
 Building Custom Android Applications
 =================================================
