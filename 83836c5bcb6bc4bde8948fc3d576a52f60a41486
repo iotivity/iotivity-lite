@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "964396c2_984cd8ba",
+        "filename": "patches/05_mbedtls_ocf-microsoft.patch",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 14436
+      },
+      "writtenOn": "2019-10-30T15:49:52Z",
+      "side": 1,
+      "message": "This #endif needs to be moved below \u0027mbedtls_test_cli_crt_rsa_len\u0027, or they do not match up",
+      "revId": "83836c5bcb6bc4bde8948fc3d576a52f60a41486",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
