@@ -47,8 +47,8 @@ public class GetLightResponseHandler implements OCResponseHandler {
         PutLightResponseHandler putLight = new PutLightResponseHandler(activity, light);
         if (OcUtils.initPut(light.serverUri, light.serverEndpoint, null, putLight, OCQos.LOW_QOS)) {
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
-            root.setBoolean("state", true);
-            root.setLong("power", 15);
+            root.setBoolean("value", true);
+            root.setLong("dimmingSetting", 15);
             root.done();
 
             if (OcUtils.doPut()) {

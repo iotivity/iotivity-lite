@@ -22,8 +22,8 @@ public class GetLight implements OCRequestHandler {
             /* fall through */
         }
         case OCInterfaceMask.RW: {
-            OCRep.setBoolean(root, "state", Light.state);
-            OCRep.setLong(root, "power", Light.power);
+            OCRep.setBoolean(root, "value", Light.state);
+            OCRep.setLong(root, "dimmingSetting", Light.power);
             OCRep.setTextString(root, "name", Light.name);
             break;
         }

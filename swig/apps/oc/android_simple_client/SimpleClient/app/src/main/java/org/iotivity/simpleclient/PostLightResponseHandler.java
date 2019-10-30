@@ -34,8 +34,8 @@ public class PostLightResponseHandler implements OCResponseHandler {
         Post2LightResponseHandler postLight = new Post2LightResponseHandler(activity, light);
         if (OcUtils.initPost(light.serverUri, light.serverEndpoint, null, postLight, OCQos.LOW_QOS)) {
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
-            root.setBoolean("state", true);
-            root.setLong("power", 55);
+            root.setBoolean("value", true);
+            root.setLong("dimmingSetting", 55);
             root.done();
 
             if (OcUtils.doPost()) {

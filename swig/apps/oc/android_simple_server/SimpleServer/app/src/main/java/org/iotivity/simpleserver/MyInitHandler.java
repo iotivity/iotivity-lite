@@ -45,7 +45,7 @@ public class MyInitHandler implements OCMainInitHandler {
     public void registerResources() {
         Log.d(TAG, "inside MyInitHandler.registerResources()");
 
-        String[] resourceTypes = new String[]{"core.light", "core.brightlight"};
+        String[] resourceTypes = new String[]{"oic.r.switch.binary", "oic.r.light.dimming"};
         int[] interfaceMasks = new int[]{OCInterfaceMask.RW};
 
         OcResource resource = new OcResource(device, "light", "/a/light", resourceTypes, interfaceMasks);

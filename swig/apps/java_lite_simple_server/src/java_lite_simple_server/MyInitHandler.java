@@ -22,8 +22,8 @@ public class MyInitHandler implements OCMainInitHandler {
     public void registerResources() {
         System.out.println("inside MyInitHandler.registerResources()");
         OCResource resource = OCMain.newResource("", "/a/light", (short) 2, 0);
-        OCMain.resourceBindResourceType(resource, "core.light");
-        OCMain.resourceBindResourceType(resource, "core.brightlight");
+        OCMain.resourceBindResourceType(resource, "oic.r.switch.binary");
+        OCMain.resourceBindResourceType(resource, "oic.r.light.dimming");
         OCMain.resourceBindResourceInterface(resource, OCInterfaceMask.RW);
         OCMain.resourceSetDefaultInterface(resource, OCInterfaceMask.RW);
         OCMain.resourceSetDiscoverable(resource, true);

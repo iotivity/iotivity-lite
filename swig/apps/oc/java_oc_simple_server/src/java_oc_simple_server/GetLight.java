@@ -24,8 +24,8 @@ public class GetLight implements OCRequestHandler {
             root.processBaselineInterface(request.getResource());
             /* fall through */
         case OCInterfaceMask.RW:
-            root.setBoolean("state", light.getState());
-            root.setLong("power", light.getPower());
+            root.setBoolean("value", light.getState());
+            root.setLong("dimmingSetting", light.getPower());
             root.setTextString("name", light.getName());
             break;
         default:

@@ -34,7 +34,7 @@ public class MyInitHandler implements OCMainInitHandler {
     public void requestEntry() {
         System.out.println("inside MyInitHandler.requestEntry()");
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler();
-        OcUtils.doIPDiscovery("core.light", discoveryHandler);
+        OcUtils.doIPDiscovery("oic.r.switch.binary", discoveryHandler);
         OcUtils.doIPDiscovery("oic.wk.col", discoveryHandler);
     }
 }

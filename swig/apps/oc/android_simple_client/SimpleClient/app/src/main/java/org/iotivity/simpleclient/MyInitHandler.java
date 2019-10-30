@@ -42,6 +42,6 @@ public class MyInitHandler implements OCMainInitHandler {
     public void requestEntry() {
         Log.d(TAG, "inside MyInitHandler.requestEntry()");
         MyDiscoveryHandler discoveryHandler = new MyDiscoveryHandler(activity);
-        OcUtils.doIPDiscovery("core.light", discoveryHandler);
+        OcUtils.doIPDiscovery("oic.r.switch.binary", discoveryHandler);
     }
 }

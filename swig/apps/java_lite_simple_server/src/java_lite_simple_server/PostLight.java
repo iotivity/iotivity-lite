@@ -41,8 +41,8 @@ public class PostLight implements OCRequestHandler {
         }
 
         CborEncoder root = OCRep.beginRootObject();
-        OCRep.setBoolean(root, "state", Light.state);
-        OCRep.setLong(root, "power", Light.power);
+        OCRep.setBoolean(root, "value", Light.state);
+        OCRep.setLong(root, "dimmingSetting", Light.power);
         OCRep.endRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
