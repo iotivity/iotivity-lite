@@ -1,4 +1,4 @@
-From 5eb443d2b80adbd6d093b0906d672f32e4fedd5a Mon Sep 17 00:00:00 2001
+From c8a092d5e162174c53b1f86a44d1c6801b50e4d4 Mon Sep 17 00:00:00 2001
 From: Oleksii Beketov <ol.beketov@samsung.com>
 Date: Fri, 20 Apr 2018 14:36:35 +0300
 Subject: [PATCH] ocf Samsung
@@ -6,15 +6,14 @@ Subject: [PATCH] ocf Samsung
 ---
  include/mbedtls/check_config.h     |   5 +
  include/mbedtls/compat-1.3.h       |   5 +
- include/mbedtls/config.h           |  18 ++-
  include/mbedtls/ssl.h              |   3 +-
  include/mbedtls/ssl_ciphersuites.h |   6 +-
  library/ssl_ciphersuites.c         |  18 +++
- library/ssl_cli.c                  | 135 +++++++++++++-----
+ library/ssl_cli.c                  | 142 +++++++++++++-----
  library/ssl_srv.c                  | 285 +++++++++++++++++++++++++++----------
  library/ssl_tls.c                  |  13 +-
  library/version_features.c         |   3 +
- 10 files changed, 373 insertions(+), 118 deletions(-)
+ 9 files changed, 361 insertions(+), 119 deletions(-)
 
 diff --git a/include/mbedtls/check_config.h b/include/mbedtls/check_config.h
 index b86e580..ed904fe 100644
@@ -62,51 +61,8 @@ index a58b472..2b2203e 100644
  #define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA MBEDTLS_TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
  #define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
  #define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 MBEDTLS_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
-diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 654f972..f6ef4ec 100644
---- a/include/mbedtls/config.h
-+++ b/include/mbedtls/config.h
-@@ -962,6 +962,21 @@
- #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
- 
- /**
-+ * \def MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-+ *
-+ * Enable the ECDHE-ANON based ciphersuite modes in SSL / TLS.
-+ *
-+ * Requires: MBEDTLS_ECDH_C
-+ *
-+ *
-+ * This enables the following ciphersuites (if other requisites are
-+ * enabled as well):
-+ *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
-+ */
-+#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-+
-+
-+/**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-  *
-  * Enable the ECDHE-ECDSA based ciphersuite modes in SSL / TLS.
-@@ -1566,7 +1581,7 @@
-  *
-  * Comment this macro to disable support for SSL session tickets
-  */
--#define MBEDTLS_SSL_SESSION_TICKETS
-+//#define MBEDTLS_SSL_SESSION_TICKETS
- 
- /**
-  * \def MBEDTLS_SSL_EXPORT_KEYS
-@@ -1833,6 +1848,7 @@
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256
-  *      MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA
-+ *      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256
-  *
-  * PEM_PARSE uses AES for decrypting encrypted keys.
-  */
 diff --git a/include/mbedtls/ssl.h b/include/mbedtls/ssl.h
-index d31f6cd..fae852e 100644
+index 3a5268a..ef236a0 100644
 --- a/include/mbedtls/ssl.h
 +++ b/include/mbedtls/ssl.h
 @@ -391,7 +391,8 @@ union mbedtls_ssl_premaster_secret
@@ -194,10 +150,10 @@ index 518f7dd..3d97b55 100644
  
          default:
 diff --git a/library/ssl_cli.c b/library/ssl_cli.c
-index afced7a..9a49586 100644
+index 7a5e153..fcabe1e 100644
 --- a/library/ssl_cli.c
 +++ b/library/ssl_cli.c
-@@ -2023,7 +2023,8 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
+@@ -2030,7 +2030,8 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
      defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
      defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
      defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
@@ -207,7 +163,7 @@ index afced7a..9a49586 100644
  static int ssl_check_server_ecdh_params( const mbedtls_ssl_context *ssl )
  {
      const mbedtls_ecp_curve_info *curve_info;
-@@ -2060,11 +2061,13 @@ static int ssl_check_server_ecdh_params( const mbedtls_ssl_context *ssl )
+@@ -2067,11 +2068,13 @@ static int ssl_check_server_ecdh_params( const mbedtls_ssl_context *ssl )
            MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED ||
@@ -223,7 +179,7 @@ index afced7a..9a49586 100644
  static int ssl_parse_server_ecdh_params( mbedtls_ssl_context *ssl,
                                           unsigned char **p,
                                           unsigned char *end )
-@@ -2100,47 +2103,80 @@ static int ssl_parse_server_ecdh_params( mbedtls_ssl_context *ssl,
+@@ -2107,47 +2110,80 @@ static int ssl_parse_server_ecdh_params( mbedtls_ssl_context *ssl,
  }
  #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
@@ -328,7 +284,7 @@ index afced7a..9a49586 100644
  }
  #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
  
-@@ -2465,10 +2501,12 @@ start_processing:
+@@ -2472,10 +2508,12 @@ start_processing:
            MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED */
  #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
      defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) ||                     \
@@ -343,7 +299,7 @@ index afced7a..9a49586 100644
      {
          if( ssl_parse_server_ecdh_params( ssl, &p, end ) != 0 )
          {
-@@ -2481,7 +2519,8 @@ start_processing:
+@@ -2488,7 +2526,8 @@ start_processing:
      else
  #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED ||
@@ -353,7 +309,25 @@ index afced7a..9a49586 100644
  #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
      {
-@@ -2555,6 +2594,13 @@ start_processing:
+@@ -2512,13 +2551,15 @@ start_processing:
+ #if defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED)
+     if( mbedtls_ssl_ciphersuite_uses_server_signature( ciphersuite_info ) )
+     {
++#if !defined(MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED)
+         size_t sig_len, hashlen;
+         unsigned char hash[64];
+-        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
+-        mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
+         unsigned char *params = ssl->in_msg + mbedtls_ssl_hs_hdr_len( ssl );
+         size_t params_len = p - params;
+         void *rs_ctx = NULL;
++#endif
++        mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
++        mbedtls_pk_type_t pk_alg = MBEDTLS_PK_NONE;
+ 
+         /*
+          * Handle the digitally-signed structure
+@@ -2562,6 +2603,13 @@ start_processing:
              return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
          }
  
@@ -363,11 +337,19 @@ index afced7a..9a49586 100644
 +        {
 +            goto exit;
 +        }
-+#endif
++#else
          /*
           * Read signature
           */
-@@ -2674,7 +2720,12 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
+@@ -2662,6 +2710,7 @@ start_processing:
+ #endif
+             return( ret );
+         }
++#endif /* MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED */
+     }
+ #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
+ 
+@@ -2681,7 +2730,12 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
  
      MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse certificate request" ) );
  
@@ -381,7 +363,7 @@ index afced7a..9a49586 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
          ssl->state++;
-@@ -2696,7 +2747,12 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
+@@ -2703,7 +2757,12 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
  
      MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse certificate request" ) );
  
@@ -395,7 +377,7 @@ index afced7a..9a49586 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate request" ) );
          ssl->state++;
-@@ -2939,11 +2995,13 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
+@@ -2946,11 +3005,13 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
  #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
      defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
      defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
@@ -411,7 +393,7 @@ index afced7a..9a49586 100644
      {
          /*
           * ECDH key exchange -- send client public value
-@@ -3009,7 +3067,8 @@ ecdh_calc_secret:
+@@ -3016,7 +3077,8 @@ ecdh_calc_secret:
  #endif /* MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED ||
@@ -421,7 +403,7 @@ index afced7a..9a49586 100644
  #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
      if( mbedtls_ssl_ciphersuite_uses_psk( ciphersuite_info ) )
      {
-@@ -3198,7 +3257,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
+@@ -3205,7 +3267,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
@@ -431,7 +413,7 @@ index afced7a..9a49586 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
          ssl->state++;
-@@ -3241,7 +3301,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
+@@ -3248,7 +3311,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
@@ -442,10 +424,10 @@ index afced7a..9a49586 100644
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
          ssl->state++;
 diff --git a/library/ssl_srv.c b/library/ssl_srv.c
-index bc77f80..5665cfd 100644
+index 520051c..a48953e 100644
 --- a/library/ssl_srv.c
 +++ b/library/ssl_srv.c
-@@ -2696,6 +2696,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
+@@ -2704,6 +2704,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
@@ -453,7 +435,7 @@ index bc77f80..5665cfd 100644
          authmode == MBEDTLS_SSL_VERIFY_NONE )
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate request" ) );
-@@ -2953,8 +2954,10 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
+@@ -2961,8 +2962,10 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
      {
@@ -466,7 +448,7 @@ index bc77f80..5665cfd 100644
      }
  #endif /* MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED ||
            MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED */
-@@ -3259,101 +3262,231 @@ curve_matching_done:
+@@ -3267,101 +3270,231 @@ curve_matching_done:
   * that do not include a ServerKeyExchange message, do nothing. Either
   * way, if successful, move on to the next step in the SSL state
   * machine. */
@@ -767,7 +749,7 @@ index bc77f80..5665cfd 100644
  }
  
  static int ssl_write_server_hello_done( mbedtls_ssl_context *ssl )
-@@ -3782,11 +3915,13 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
+@@ -3790,11 +3923,13 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
  #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||                     \
      defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ||                   \
      defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||                      \
@@ -783,7 +765,7 @@ index bc77f80..5665cfd 100644
      {
          if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
                                        p, end - p) ) != 0 )
-@@ -4002,7 +4137,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
+@@ -4010,7 +4145,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
@@ -793,7 +775,7 @@ index bc77f80..5665cfd 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
          ssl->state++;
-@@ -4034,6 +4170,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
+@@ -4042,6 +4178,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE ||
@@ -802,10 +784,10 @@ index bc77f80..5665cfd 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate verify" ) );
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index 38690fa..88273a3 100644
+index 6ed4f48..367172f 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
-@@ -5285,7 +5285,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
+@@ -5298,7 +5298,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
@@ -815,7 +797,7 @@ index 38690fa..88273a3 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
          ssl->state++;
-@@ -5305,7 +5306,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
+@@ -5318,7 +5319,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
@@ -825,7 +807,7 @@ index 38690fa..88273a3 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
          ssl->state++;
-@@ -5331,7 +5333,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
+@@ -5344,7 +5346,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
@@ -835,7 +817,7 @@ index 38690fa..88273a3 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate" ) );
          ssl->state++;
-@@ -5657,7 +5660,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
+@@ -5670,7 +5673,8 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
      if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
          ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
@@ -845,7 +827,7 @@ index 38690fa..88273a3 100644
      {
          MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip parse certificate" ) );
          ssl->state++;
-@@ -9503,6 +9507,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -9558,6 +9562,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
              case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
              case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
              case MBEDTLS_KEY_EXCHANGE_ECJPAKE:
@@ -854,7 +836,7 @@ index 38690fa..88273a3 100644
          }
      }
 diff --git a/library/version_features.c b/library/version_features.c
-index 24143d0..88335d3 100644
+index 6afbb91..6367a1c 100644
 --- a/library/version_features.c
 +++ b/library/version_features.c
 @@ -372,6 +372,9 @@ static const char *features[] = {
