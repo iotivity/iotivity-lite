@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bf778fb_54d4a8df",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-30T18:37:43Z",
+      "side": 1,
+      "message": "invoked",
+      "range": {
+        "startLine": 46,
+        "startChar": 31,
+        "endLine": 46,
+        "endChar": 37
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02b936de_55783a61",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-30T18:37:43Z",
+      "side": 1,
+      "message": "Can remove \"the\"",
+      "range": {
+        "startLine": 46,
+        "startChar": 53,
+        "endLine": 46,
+        "endChar": 56
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a40fac2_a37c8214",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-30T18:37:43Z",
+      "side": 1,
+      "message": "Would this automatically link to oc_main_init() below, or do we need to add something to the markup preceding oc_main_init()?",
+      "range": {
+        "startLine": 46,
+        "startChar": 57,
+        "endLine": 46,
+        "endChar": 69
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
