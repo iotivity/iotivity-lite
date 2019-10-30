@@ -68,6 +68,101 @@
       "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4966eeac_44377da3",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-30T23:38:09Z",
+      "side": 1,
+      "message": "it will if we add `()` to the end of the function doxygen knows it is a function and will create a link.  I will also add a @see which is added to a \"see also\" section of the generated documentation.",
+      "parentUuid": "3a40fac2_a37c8214",
+      "range": {
+        "startLine": 46,
+        "startChar": 57,
+        "endLine": 46,
+        "endChar": 69
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9cec6a5_77894234",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-30T23:38:09Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "02b936de_55783a61",
+      "range": {
+        "startLine": 46,
+        "startChar": 53,
+        "endLine": 46,
+        "endChar": 56
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db3aceed_e0b38a39",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-30T23:38:09Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "3bf778fb_54d4a8df",
+      "range": {
+        "startLine": 46,
+        "startChar": 31,
+        "endLine": 46,
+        "endChar": 37
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b9ffd5_049455be",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-10-30T23:38:09Z",
+      "side": 1,
+      "message": "Kishen, let me know if there are other functions that should be added to this list.  At this point in time most of the functions are not yet documented. This means no link is generated for the documentation.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 31
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
