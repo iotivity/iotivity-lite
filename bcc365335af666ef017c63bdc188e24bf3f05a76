@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e6911793_ed9611cb",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-30T20:04:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5edf0aa6_02ebd8f1",
+      "range": {
+        "startLine": 26,
+        "startChar": 51,
+        "endLine": 26,
+        "endChar": 73
+      },
+      "revId": "bcc365335af666ef017c63bdc188e24bf3f05a76",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9301588_f7c7b13e",
         "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/PostLight.java",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "bcc365335af666ef017c63bdc188e24bf3f05a76",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe1fa900_59c94317",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/PostLight.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-10-30T20:04:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9301588_f7c7b13e",
+      "range": {
+        "startLine": 45,
+        "startChar": 29,
+        "endLine": 45,
+        "endChar": 39
+      },
+      "revId": "bcc365335af666ef017c63bdc188e24bf3f05a76",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
