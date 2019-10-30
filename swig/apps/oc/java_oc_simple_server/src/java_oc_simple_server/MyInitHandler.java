@@ -54,7 +54,7 @@ public class MyInitHandler implements OCMainInitHandler {
     public void registerResources() {
         System.out.println("inside MyInitHandler.registerResources()");
 
-        String[] resourceTypes = new String[] { "core.light", "core.brightlight" };
+        String[] resourceTypes = new String[] { "oic.r.switch.binary", "oic.r.light.brightness" };
         int[] interfaceMasks = new int[] { OCInterfaceMask.RW };
 
         OcResource resource0 = new OcResource(device, "light0", "/a/light/0", resourceTypes, interfaceMasks);

@@ -39,8 +39,8 @@ public class GetLightResponseHandler implements OCResponseHandler {
         if (OcUtils.initPut(light.getServerUri(), light.getServerEndpoint(), null, putLight, OCQos.LOW_QOS)) {
 
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
-            root.setBoolean("state", true);
-            root.setLong("power", 15);
+            root.setBoolean("value", true);
+            root.setLong("brightness", 15);
             root.done();
 
             if (OcUtils.doPut()) {

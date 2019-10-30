@@ -27,8 +27,8 @@ public class PostLightResponseHandler implements OCResponseHandler {
         if (OcUtils.initPost(light.getServerUri(), light.getServerEndpoint(), null, postLight, OCQos.LOW_QOS)) {
 
             OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
-            root.setBoolean("state", true);
-            root.setLong("power", 55);
+            root.setBoolean("value", true);
+            root.setLong("brightness", 55);
             root.done();
 
             if (OcUtils.doPost()) {

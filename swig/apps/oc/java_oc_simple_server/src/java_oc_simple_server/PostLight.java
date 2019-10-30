@@ -42,8 +42,8 @@ public class PostLight implements OCRequestHandler {
         }
 
         OcCborEncoder root = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ROOT);
-        root.setBoolean("state", light.getState());
-        root.setLong("power", light.getPower());
+        root.setBoolean("value", light.getState());
+        root.setLong("brightness", light.getPower());
         root.done();
 
         OcUtils.sendResponse(request, OCStatus.OC_STATUS_CHANGED);

@@ -92,7 +92,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
         System.out.println("\tresource properties: " + properties_found);
 
         for (String type: types) {
-            if(type.equals("core.light")) {
+            if(type.equals("oic.r.switch.binary")) {
                 Light.serverEndpoint = endpoint;
                 Light.serverUri = uri;
                 System.out.println("\tResource " + Light.serverUri + " hosted at endpoint(s):");

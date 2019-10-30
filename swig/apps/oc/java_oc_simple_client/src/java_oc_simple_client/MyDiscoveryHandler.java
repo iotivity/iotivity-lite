@@ -82,10 +82,10 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
         System.out.println("\tresource properties: " + properties_found);
 
         for (String type : types) {
-            if (type.equals("core.light") || type.equals("oic.wk.col")) {
+            if (type.equals("oic.r.switch.binary") || type.equals("oic.wk.col")) {
                 StringBuilder msg = new StringBuilder();
                 OcfServer server;
-                if (type.equals("core.light")) {
+                if (type.equals("oic.r.switch.binary")) {
                     server = new Light();
                 } else {
                     server = new OcfServer();

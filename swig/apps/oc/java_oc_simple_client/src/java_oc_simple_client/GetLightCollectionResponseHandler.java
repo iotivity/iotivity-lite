@@ -80,16 +80,16 @@ public class GetLightCollectionResponseHandler implements OCResponseHandler {
             OcCborEncoder link = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ARRAY_ITEM, links);
             link.setTextString("href", "/light/1");
             OcCborEncoder light = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.OBJECT, link, "rep");
-            light.setLong("power", 10);
-            light.setBoolean("state", true);
+            light.setLong("brightness", 10);
+            light.setBoolean("value", true);
             light.done();
             link.done();
 
             link = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.ARRAY_ITEM, links);
             link.setTextString("href", "/light/2");
             light = OcCborEncoder.createOcCborEncoder(OcCborEncoder.EncoderType.OBJECT, link, "rep");
-            light.setLong("power", 20);
-            light.setBoolean("state", false);
+            light.setLong("brightness", 20);
+            light.setBoolean("value", false);
             light.done();
             link.done();
 

@@ -95,7 +95,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
         activity.msg("\tresource properties: " + propertiesFound);
 
         for (String type : types) {
-            if (type.equals("core.light")) {
+            if (type.equals("oic.r.switch.binary")) {
                 light = new Light();
                 light.serverEndpoint = endpoint;
                 light.serverUri = uri;
