@@ -49,7 +49,34 @@ extern "C"
  */
 typedef struct
 {
-
+  /**
+   * Handler that is invoked to initialize the platform and device.
+   *
+   * At a minimum the platform should be initialized and at least one device
+   * should be added.
+   *
+   *  - oc_init_platform()
+   *  - oc_add_device()
+   *
+   * Multiple devices can be added by making multiple calls to oc_add_device().
+   *
+   * Other actions may be taken in the init handler
+   *  - The immutable device identifier can be set `piid`
+   *    (a.k.a Protocol Independent ID) oc_set_immutable_device_identifier()
+   *  - Set introspection data oc_set_introspection_data()
+   *  - Set up an interrupt handler oc_activate_interrupt_handler()
+   *  - Initialize application specific variables
+   *
+   * @return
+   *  - 0 to indicate success initializing the application
+   *  - Any non-zero value. Recommend using return values less than zero
+   *
+   * @see oc_activate_interrupt_handler
+   * @see oc_add_device
+   * @see oc_init_platform
+   * @see oc_set_immutable_device_identifier
+   * @see oc_set_introspection_data
+   */
   int (*init)(void);
   void (*signal_event_loop)(void);
 
