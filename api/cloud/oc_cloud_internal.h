@@ -28,8 +28,7 @@
 #include "oc_cloud.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct cloud_conf_update_t

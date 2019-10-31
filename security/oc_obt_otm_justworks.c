@@ -222,7 +222,7 @@ obt_jw_11(oc_client_response_t *data)
   }
 
   /**  11) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
-    */
+   */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
