@@ -30,13 +30,12 @@ typedef struct ifaddr_t
 } ifaddr_t;
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  ifaddr_t *get_network_addresses();
+ifaddr_t *get_network_addresses();
 
-  void free_network_addresses(ifaddr_t *ifaddr);
+void free_network_addresses(ifaddr_t *ifaddr);
 
 #ifdef __cplusplus
 }

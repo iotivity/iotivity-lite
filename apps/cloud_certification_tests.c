@@ -560,10 +560,10 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_storage_config("./cloud_tests_creds");
 
