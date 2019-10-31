@@ -163,6 +163,30 @@
       "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df062c12_cafbe5cf",
+        "filename": "include/oc_api.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T02:22:08Z",
+      "side": 1,
+      "message": "Well, ideally we\u0027d want everything covered :-)\n\nBut do what you can now. For e.g., many oc_do_xxx() calls might all derive off a single piece of text so that may be quick to add.\n\nAnyhow, we can gradually improve the coverage.\n\nThanks!",
+      "parentUuid": "36b9ffd5_049455be",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 31
+      },
+      "revId": "9bfabbb6292f1315cf0a00ec024c1852eabb58f3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
