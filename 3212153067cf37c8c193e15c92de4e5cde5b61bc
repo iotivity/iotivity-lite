@@ -2,6 +2,98 @@
   "comments": [
     {
       "key": {
+        "uuid": "bf8dc139_a344c329",
+        "filename": "swig/swig_interfaces/iotivity.swg",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T23:15:28Z",
+      "side": 1,
+      "message": "It seems that changing this to $1.ptr gets rid of many warnings of the form:\n\niotivity-lite-java/jni/oc_cloud_wrap.c:761:8: warning: address of \u0027result\u0027 will\n      always evaluate to \u0027true\u0027 [-Wpointer-bool-conversion]\n  if (\u0026result) {",
+      "range": {
+        "startLine": 121,
+        "startChar": 6,
+        "endLine": 121,
+        "endChar": 9
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4b1be33_d73e7ba0",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T23:15:28Z",
+      "side": 1,
+      "message": "Is this necessary? \n\nIt seems to generate a bunch of unused code leading to warnings.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 24
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3935cb2c_75f665e4",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T23:15:28Z",
+      "side": 1,
+      "message": "Can probably remove this? Seems to be superfluous.",
+      "range": {
+        "startLine": 710,
+        "startChar": 0,
+        "endLine": 710,
+        "endChar": 38
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24d981f5_5e3217d8",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T23:15:28Z",
+      "side": 1,
+      "message": "Is this necessary? \n\nIt seems to generate a bunch of unused code leading to warnings.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 24
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0a838912_5c508746",
         "filename": "swig/swig_interfaces/oc_endpoint.i",
         "patchSetId": 3
@@ -13,6 +105,29 @@
       "writtenOn": "2019-10-31T22:10:17Z",
       "side": 1,
       "message": "It looks like we don\u0027t free arg1 over here after throwing the exception. Could you check? \n\nBy the way, I\u0027d spotted this upon examining the generated code some days ago while chasing down OTGC issues. \n\nHave you guys checked all other instances where a sequence terminates prematurely to confirm that we\u0027re freeing strings (not sure if we allocate any other types of objects in the swig interfaces)",
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a76f3c2_7aa0a000",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T23:15:28Z",
+      "side": 1,
+      "message": "Should this simply be made (char *)?\n\nIn the generated code, I see that it creates a char * for this argument, and because the existing directive casts to (const char *) and assigns to a char *, the compiler returns the warning:\n\niotivity-lite-java/jni/oc_obt_wrap.c:1245:10: warning: assigning to \u0027char *\u0027\n\n      from \u0027const char *\u0027 discards qualifiers\n\n      [-Wincompatible-pointer-types-discards-qualifiers]\n\n    arg2 \u003d (char const *)(*jenv)-\u003eGetStringUTFChars(jenv, jarg2, 0);",
+      "range": {
+        "startLine": 425,
+        "startChar": 8,
+        "endLine": 425,
+        "endChar": 16
+      },
       "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
