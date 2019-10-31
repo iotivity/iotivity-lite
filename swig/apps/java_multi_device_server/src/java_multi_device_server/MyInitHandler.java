@@ -8,7 +8,7 @@ public class MyInitHandler implements OCMainInitHandler {
         System.out.println("inside MyInitHandler.initialize()");
 
         int ret = OCMain.initPlatform("Refrigerator");
-        ret |= OCMain.addDevice("/oic/d", "oic.d.refrigeration", "My fridge", "ocf.1.0.0", "ocf.res.1.0.0");
+        ret |= OCMain.addDevice("/oic/d", "oic.d.refrigerator", "My fridge", "ocf.1.0.0", "ocf.res.1.0.0");
         ret |= OCMain.addDevice("/oic/d", "oic.d.thermostat", "My thermostat", "ocf.1.0.0", "ocf.res.1.0.0");
 
         // Initialize fridge device values
