@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a838912_5c508746",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-10-31T22:10:17Z",
+      "side": 1,
+      "message": "It looks like we don\u0027t free arg1 over here after throwing the exception. Could you check? \n\nBy the way, I\u0027d spotted this upon examining the generated code some days ago while chasing down OTGC issues. \n\nHave you guys checked all other instances where a sequence terminates prematurely to confirm that we\u0027re freeing strings (not sure if we allocate any other types of objects in the swig interfaces)",
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
