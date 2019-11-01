@@ -420,7 +420,7 @@ int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
 
 /* For oc_obt_perform_random_pin_otm use Java String as the pin input.
    Use the Java String length to input the pin_len */
-%typemap(in,numinputs=1) (const char *pin, size_t pin_len)
+%typemap(in,numinputs=1) (char *pin, size_t pin_len)
 {
   $1 = ($1_type)JCALL2(GetStringUTFChars, jenv, $input, 0);
   $2 = ($2_type)JCALL1(GetStringUTFLength, jenv, $input);
@@ -433,7 +433,7 @@ int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
 %ignore oc_obt_perform_random_pin_otm;
 %rename(performRandomPinOtm) jni_obt_perform_random_pin_otm;
 %inline %{
-int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, const char *pin, size_t pin_len,
+int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, char *pin, size_t pin_len,
                                    oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);

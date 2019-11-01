@@ -707,7 +707,6 @@ void jni_oc_request_callback(oc_request_t *request, oc_interface_mask_t interfac
   assert(mid_handler);
 
   jobject jrequest = NULL;
-  jmethodID mid_OCRequest_init = NULL;
   if (request) {
     assert(cls_OCRequest);
     const jmethodID mid_OCRequest_init = JCALL3(GetMethodID, (data->jenv), cls_OCRequest, "<init>", "(JZ)V");
