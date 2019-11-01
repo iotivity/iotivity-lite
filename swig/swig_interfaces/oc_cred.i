@@ -96,12 +96,86 @@ typedef struct role role;
   }
 }
 
-%rename(readCredusage) oc_cred_read_credusage;
-%rename(readEncoding) oc_cred_read_encoding;
-%apply oc_string_t *INPUT { oc_string_t *credusage_string };
-%rename(parseCredusage) oc_cred_parse_credusage;
-%apply oc_string_t *INPUT { oc_string_t *encoding_string };
-%rename(parseEncoding) oc_cred_parse_encoding;
-%rename(credTypeString) oc_cred_credtype_string;
+%ignore oc_cred_read_credusage;
+%rename(readCredUsage) jni_cred_read_credusage;
+%inline %{
+const char * jni_cred_read_credusage(oc_sec_credusage_t credusage)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  const char *return_value = oc_cred_read_credusage(credusage);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning \"None\" as default.", __func__);
+  const char *return_value = "None";
+#endif /* OC_SECURITY and OC_PKI */
+  return return_value;
+}
+%}
+
+%ignore oc_cred_read_encoding;
+%rename(readEncoding) jni_cred_read_encoding;
+%inline %{
+const char *jni_cred_read_encoding(oc_sec_encoding_t encoding)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  const char *return_value = oc_cred_read_encoding(encoding);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning \"Unknown\" as default.", __func__);
+  const char *return_value = "Unknown";
+#endif /* OC_SECURITY */
+  return return_value;
+}
+%}
+
+%apply oc_string_t *INPUT { oc_string_t *credusageString };
+%ignore oc_cred_parse_credusage;
+%rename(parseCredUsage) jni_cred_parse_credusage;
+%inline %{
+oc_sec_credusage_t jni_cred_parse_credusage(oc_string_t *credusageString)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_sec_credusage_t return_value = oc_cred_parse_credusage(credusageString);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning OC_CREDUSAGE_NULL(0) as default.", __func__);
+  oc_sec_credusage_t return_value = OC_CREDUSAGE_NULL;
+#endif /* OC_SECURITY and OC_PKI */
+  return return_value;
+}
+%}
+
+%apply oc_string_t *INPUT { oc_string_t *encodingString };
+%ignore oc_cred_parse_encoding;
+%rename(parseEncoding) jni_cred_parse_encoding;
+%inline %{
+oc_sec_encoding_t jni_cred_parse_encoding(oc_string_t *encodingString)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  oc_sec_encoding_t return_value = oc_cred_parse_encoding(encodingString);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning OC_ENCODING_UNSUPPORTED(0) as default.", __func__);
+  oc_sec_encoding_t return_value = OC_ENCODING_UNSUPPORTED;
+#endif /* OC_SECURITY */
+  return return_value;
+}
+%}
+
+%ignore oc_cred_credtype_string;
+%rename(credTypeString) jni_cred_credtype_string;
+%inline %{
+const char *jni_cred_credtype_string(oc_sec_credtype_t credType)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  const char *return_value = oc_cred_credtype_string(credType);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning \"Unknown\" as default.", __func__);
+  const char *return_value = "Unknown";
+#endif /* OC_SECURITY */
+  return return_value;
+}
+%}
 
 %include "oc_cred.h"
