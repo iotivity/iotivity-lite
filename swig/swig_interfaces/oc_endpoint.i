@@ -120,9 +120,99 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 }
 %}
 
-
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
+%apply oc_string_t *INPUT { oc_string_t *endpointStr };
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
+
+%{
+#ifdef __cplusplus
+extern "C"
+#endif
+static int oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
+{
+  if (!endpoint_str) {
+    return -1;
+  }
+  if (!path) {
+    return -1;
+  }
+
+  const char *address = NULL;
+
+  address = strstr(oc_string(*endpoint_str), "://");
+  if(!address) {
+    return -1;
+  }
+  // 3 is string length of "://"
+  address += 3;
+
+  size_t len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+
+  // the smallest possible address is '0' anything smaller is invalid.
+  if(len < 1) {
+    return -1;
+  }
+  /* Extract a uri path if available */
+  const char *path_start = NULL;
+  const char *query_start = NULL;
+
+  path_start = memchr(address, '/', len);
+  if (path_start) {
+    query_start = memchr((address + (path_start - address)), '?', (len - (path_start - address)));
+    if (query_start) {
+      oc_new_string(path, path_start, (query_start - path_start));
+    } else {
+      oc_new_string(path, path_start, (len - (path_start - address)));
+    }
+  } else {
+    // no path found return an empty string
+    oc_new_string(path, "", 0);
+  }
+  return 0;
+}
+%}
+
+%javaexception("OCEndpointParseException") endpointStringParsePath {
+  if (!jarg1) {
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
+    return $null;
+  }
+  $action
+  if(!result) {
+    OC_DBG("JNI: String can not be parsed.");
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+  }
+}
+%newobject endpointStringParsePath;
+%inline %{
+char* endpointStringParsePath(oc_string_t *endpointStr)
+{
+  char *return_value;
+  oc_string_t path;
+  if(0 == oc_endpoint_string_parse_path(endpointStr, &path))
+  {
+    return_value = (char *)malloc(oc_string_len(path) + 1);
+    strncpy(return_value, oc_string(path), oc_string_len(path));
+    return_value[oc_string_len(path)] = '\0';
+    oc_free_string(&path);
+    return return_value;
+  } else {
+   oc_free_string(&path);
+   return NULL;
+  }
+}
+%}
+
 
 %javaexception("OCEndpointParseException") jni_string_to_endpoint {
   if (!jarg1) {
@@ -149,10 +239,10 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 %ignore oc_string_to_endpoint;
 %rename(stringToEndpoint) jni_string_to_endpoint;
 %inline %{
-oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
+oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str) {
   OC_DBG("JNI: %s\n", __func__);
   oc_endpoint_t *ep = oc_new_endpoint();
-  if(oc_string_to_endpoint(endpoint_str, ep, uri) < 0) {
+  if(oc_string_to_endpoint(endpoint_str, ep, NULL) < 0) {
     OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
     oc_free_endpoint(ep);
     return NULL;
