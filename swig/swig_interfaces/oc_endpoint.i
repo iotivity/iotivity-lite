@@ -120,9 +120,114 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 }
 %}
 
-
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
+%apply oc_string_t *INPUT { oc_string_t *endpointStr };
 %apply oc_string_t *OUTPUT { oc_string_t *uri };
+
+//%typemap(jni)    jstring endpointStringToUri "jstring";
+//%typemap(jtype)  jstring endpointStringToUri "String";
+//%typemap(jstype) jstring endpointStringToUri "String";
+//%typemap(javain) jstring endpointStringToUri "$javainput";
+//%native(endpointStringToUri) jstring endpointStringToUri(oc_string_t *endpointStr);
+%{
+#ifdef __cplusplus
+extern "C"
+#endif
+static int oc_endpoint_string_to_uri(oc_string_t *endpoint_str, oc_string_t *uri)
+{
+  if (!endpoint_str)
+    return -1;
+
+  const char *address = NULL;
+
+  address = strstr(oc_string(*endpoint_str), "://") + 3;
+  if(!address) {
+    return -1;
+  }
+  // 3 is string length of "://"
+  address += 3;
+
+  size_t len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+
+  /* Extract a uri path if available */
+  const char *u = NULL;
+  if (uri) {
+    u = memchr(address, '/', len);
+    if (u) {
+      oc_new_string(uri, u, (len - (u - address)));
+    } else {
+      oc_new_string(uri, "", 0);
+    }
+  }
+  return 0;
+}
+/*
+#ifdef __cplusplus
+extern "C"
+#endif
+SWIGEXPORT jstring JNICALL Java_org_iotivity_OCEndpointUtilJNI_endpointStringToUri(JNIEnv *jenv, jclass jcls, jstring jarg1) {
+  jstring jresult = 0 ;
+  oc_string_t *arg1 = (oc_string_t *) 0 ;
+  char const *temp1 ;
+  oc_string_t temp_oc_string1 ;
+
+  (void)jenv;
+  (void)jcls;
+  temp1 = 0;
+  arg1 = &temp_oc_string1;
+  if (jarg1) {
+    temp1 = (*jenv)->GetStringUTFChars(jenv, jarg1, 0);
+    oc_new_string(arg1, temp1, (*jenv)->GetStringUTFLength(jenv, jarg1));
+    if (arg1 && !arg1->ptr) {
+      oc_free_string(arg1);
+      return 0;
+    }
+  }
+  oc_string_t uri;
+  int return_value = oc_endpoint_string_to_uri(arg1, &uri);
+  if(return_value == 0) {
+    jresult = JCALL1(NewStringUTF, jenv, oc_string(uri));
+    oc_free_string(&uri);
+  } else { //throw OCEndpointParseException
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+	jresult = JCALL1(NewStringUTF, jenv, "ERROR");
+  }
+
+  if (arg1 && arg1->ptr) {
+    (*jenv)->ReleaseStringUTFChars(jenv, jarg1, temp1);
+    oc_free_string(arg1);
+  }
+  return jresult;
+} */
+%}
+
+%inline %{
+char* endpointStringToUri(oc_string_t *endpointStr)
+{
+  char * return_value;
+  oc_string_t uri;
+  if(0 == oc_endpoint_string_to_uri(endpointStr, &uri))
+  {
+    return_value = (char *)malloc(oc_string_len(uri) + 1);
+    strncpy(return_value, oc_string(uri), oc_string_len(uri));
+    return_value[oc_string_len(uri)] = '\0';
+    oc_free_string(&uri);
+    return return_value;
+  } else {
+   oc_free_string(&uri);
+   return NULL;
+  }
+}
+%}
+
 
 %javaexception("OCEndpointParseException") jni_string_to_endpoint {
   if (!jarg1) {
@@ -150,10 +255,10 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 %ignore oc_string_to_endpoint;
 %rename(stringToEndpoint) jni_string_to_endpoint;
 %inline %{
-oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
+oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str) {
   OC_DBG("JNI: %s\n", __func__);
   oc_endpoint_t *ep = oc_new_endpoint();
-  if(oc_string_to_endpoint(endpoint_str, ep, uri) < 0) {
+  if(oc_string_to_endpoint(endpoint_str, ep, NULL) < 0) {
     OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
     oc_free_endpoint(ep);
     return NULL;
