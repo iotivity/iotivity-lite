@@ -372,6 +372,7 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\pkwrite.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\pk_wrap.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform.c" />
+    <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\ripemd160.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\rsa.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\rsa_internal.c" />
