@@ -143,7 +143,6 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
     JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
     oc_free_string(&exception_message_part1);
     oc_free_string(&exception_message);
-    return $null;
   }
 }
 /* TODO figure out a clean way to return the uri param not as an array value */
