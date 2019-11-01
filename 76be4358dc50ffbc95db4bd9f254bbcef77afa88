@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7eccc19a_f3dc367c",
+        "filename": "include/oc_api.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-01T21:11:35Z",
+      "side": 1,
+      "message": "I think you can just say \"Device initialization callbacks\".",
+      "parentUuid": "09aea4b6_439d811a",
+      "range": {
+        "startLine": 53,
+        "startChar": 5,
+        "endLine": 53,
+        "endChar": 13
+      },
+      "revId": "76be4358dc50ffbc95db4bd9f254bbcef77afa88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a60fbc32_6d542b04",
         "filename": "include/oc_api.h",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-31T16:49:01Z",
       "side": 1,
       "message": "When I was testing introspection I setup the introspection data in the init callback.\n\nI have been wondering if it would make more since to actually set the introspection data in the register_resources callback.\n\nIntrospection data could be valid here but most likely at this point in the program it describing resources that would not have been registered.  I don\u0027t know if that could possibly create a race condition that a client could read the introspection then try to call code from the introspection instantly.\n\nMaybe this should be moved.",
+      "range": {
+        "startLine": 66,
+        "startChar": 31,
+        "endLine": 66,
+        "endChar": 56
+      },
+      "revId": "76be4358dc50ffbc95db4bd9f254bbcef77afa88",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d97d38a5_bcd1ad79",
+        "filename": "include/oc_api.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-01T21:11:35Z",
+      "side": 1,
+      "message": "I think this shouldn\u0027t matter because oc_set_introspection_data() is just writing the IDD to storage. We\u0027re already clear that storage needs to be configured before calling oc_main_init().\nSo, I think the set_IDD call could technically happen anytime. Right?",
+      "parentUuid": "a60fbc32_6d542b04",
       "range": {
         "startLine": 66,
         "startChar": 31,
