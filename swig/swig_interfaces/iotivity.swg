@@ -118,7 +118,7 @@
 }
 
 %typemap(out, noblock=1) oc_string_t {
-  if (&$1) {
+  if ($1.ptr) {
     $result = JCALL1(NewStringUTF, jenv, (const char *)oc_string($1));
   }
 }
