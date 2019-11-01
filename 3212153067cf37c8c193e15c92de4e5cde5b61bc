@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eeabe510_b61f830d",
+        "filename": "swig/swig_interfaces/iotivity.swg",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf8dc139_a344c329",
+      "range": {
+        "startLine": 121,
+        "startChar": 6,
+        "endLine": 121,
+        "endChar": 9
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4b1be33_d73e7ba0",
         "filename": "swig/swig_interfaces/oc_api.i",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-10-31T23:15:28Z",
       "side": 1,
       "message": "Is this necessary? \n\nIt seems to generate a bunch of unused code leading to warnings.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 24
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa6cb4c7_25945697",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "This is used to enable reading and writing the oc_client_cb_t.token[COAP_TOKEN_LEN] value.\n\nWe use 3 of the generated functions.  Unfortunately this does result in a bunch of unused code also being generated. So far I have not found a way to prevent the unused code warnings.",
+      "parentUuid": "f4b1be33_d73e7ba0",
       "range": {
         "startLine": 4,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e050a37c_37e63347",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3935cb2c_75f665e4",
+      "range": {
+        "startLine": 710,
+        "startChar": 0,
+        "endLine": 710,
+        "endChar": 38
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24d981f5_5e3217d8",
         "filename": "swig/swig_interfaces/oc_endpoint.i",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2019-10-31T23:15:28Z",
       "side": 1,
       "message": "Is this necessary? \n\nIt seems to generate a bunch of unused code leading to warnings.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 24
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "822c28c6_68de09b5",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "Once again this is used to read and write an array value in this case it is reading and writing\noc_ipv6_addr_t.address[16]\noc_ipv4_addr_t.address[4]\noc_le_addr_t.address[6]",
+      "parentUuid": "24d981f5_5e3217d8",
       "range": {
         "startLine": 5,
         "startChar": 0,
@@ -111,6 +207,24 @@
     },
     {
       "key": {
+        "uuid": "5002fc58_3f974faf",
+        "filename": "swig/swig_interfaces/oc_endpoint.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "I double checked the output and I can just remove the \"return $null;\" and the code will do the proper cleanup. for arg1 as well as some other temporary code.\n\nGood catch.\n\nI have tried to catch any sequence that terminates prematurely.  It possible others have been missed but I will make a point of doing another pass through the code.",
+      "parentUuid": "0a838912_5c508746",
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a76f3c2_7aa0a000",
         "filename": "swig/swig_interfaces/oc_obt.i",
         "patchSetId": 3
@@ -131,6 +245,30 @@
       "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8cc1b4f8_fa5a92bd",
+        "filename": "swig/swig_interfaces/oc_obt.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-01T01:22:42Z",
+      "side": 1,
+      "message": "I will change the value of const char* pin to char* pin and it will resolve the issue.",
+      "parentUuid": "1a76f3c2_7aa0a000",
+      "range": {
+        "startLine": 425,
+        "startChar": 8,
+        "endLine": 425,
+        "endChar": 16
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
