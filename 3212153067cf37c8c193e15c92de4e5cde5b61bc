@@ -269,6 +269,29 @@
       "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba0c047_741ffe2f",
+        "filename": "swig/swig_interfaces/oc_ri.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-02T01:03:19Z",
+      "side": 1,
+      "message": "Can we disable setters for oc_resource_s::types for e.g.?\nIn oc_api_wrap.c, I see a setter for this property which is an oc_string_array_t, and while the framework knows how to allocate and populate an oc_string_array_t from a String[], in this instance, I don\u0027t see that oc_string_array_t being bound to the \"types\" property in oc_resource_t. \n\nIs it a problem that we allow such an API in the Java layer? This feels kind of similar to that OCRole case.\n\nMore generally, it seems that SWIG automatically places setters in areas where they may not be truly usable in Java. So, we may want to comb through the SWIG interfaces to identify what shouldn\u0027t be exposed and disable them.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 34
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
