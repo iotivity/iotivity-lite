@@ -55,6 +55,7 @@
 #include "oc_buffer.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_audit.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
@@ -102,20 +103,21 @@ check_if_duplicate(uint16_t mid, uint8_t device)
 }
 
 static void
-coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
+coap_send_empty_response(coap_message_type_t type, uint16_t mid, uint8_t code,
+                         oc_endpoint_t *endpoint)
 {
-  coap_packet_t ack[1];
-  coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
-  if (ack_message) {
-    memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
-    size_t len = coap_serialize_message(ack, ack_message->data);
+  coap_packet_t msg[1];
+  coap_udp_init_message(msg, type, code, mid);
+  oc_message_t *message = oc_internal_allocate_outgoing_message();
+  if (message) {
+    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
+    size_t len = coap_serialize_message(msg, message->data);
     if (len > 0) {
-      ack_message->length = len;
-      coap_send_message(ack_message);
+      message->length = len;
+      coap_send_message(message);
     }
-    if (ack_message->ref_count == 0) {
-      oc_message_unref(ack_message);
+    if (message->ref_count == 0) {
+      oc_message_unref(message);
     }
   }
 }
@@ -500,7 +502,8 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_CLIENT */
 
       if (message->type == COAP_TYPE_CON) {
-        coap_send_empty_ack(message->mid, &msg->endpoint);
+        coap_send_empty_response(COAP_TYPE_ACK, message->mid, 0,
+                                 &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
       } else if (message->type == COAP_TYPE_RST) {
 #ifdef OC_SERVER
@@ -656,6 +659,34 @@ coap_receive(oc_message_t *msg)
       }
 #endif /* OC_CLIENT */
     }
+  } else {
+    char** aux = (char**) malloc(3*sizeof(char*));
+    const size_t LINE_WIDTH = 240;
+
+    aux[0] = (char*) malloc(LINE_WIDTH);
+    uint8_t* address = (msg->endpoint).addr.ipv6.address;
+    uint16_t port = (msg->endpoint).addr.ipv6.port;
+    snprintf(aux[0], LINE_WIDTH, "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d",
+                      address[ 0], address[ 1], address[ 2], address[ 3], 
+                      address[ 4], address[ 5], address[ 6], address[ 7], 
+                      address[ 8], address[ 9], address[10], address[11], 
+                      address[12], address[13], address[14], address[15], port);
+
+    aux[1] = (char*) malloc(LINE_WIDTH);
+    snprintf(aux[1], LINE_WIDTH, "[%02x:%02x:%02x:%02x]", msg->data[0], msg->data[1], msg->data[2], msg->data[3]);
+
+    aux[2] = (char*) malloc(LINE_WIDTH);
+    size_t pos = 0;
+    size_t i = 0;
+    while (i < msg->length && pos < LINE_WIDTH) {
+      if (i != 0) {
+        pos += snprintf(aux[2]+pos, LINE_WIDTH-pos, ":");
+      }
+      pos += snprintf(aux[2]+pos, LINE_WIDTH-pos, "%02x", msg->data[i]);
+      ++i;
+    }
+
+    oc_audit_log("COMM-1", "Unexpected CoAP command", 0x40, 2, aux, 3);
   }
 
 init_reset_message:
@@ -677,35 +708,31 @@ init_reset_message:
 #endif /* OC_BLOCK_WISE */
 
 send_message:
-  if (coap_status_code == COAP_NO_ERROR
-#ifdef OC_SECURITY
-      || coap_status_code == CLOSE_ALL_TLS_SESSIONS
-#endif /* OC_SECURITY */
-      ) {
-    if (transaction) {
-      if (response->type != COAP_TYPE_RST && message->token_len) {
-        if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
+  if (coap_status_code == CLEAR_TRANSACTION) {
+    coap_clear_transaction(transaction);
+  } else if (transaction) {
+    if (response->type != COAP_TYPE_RST && message->token_len) {
+      if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
+        coap_set_token(response, message->token, message->token_len);
+      }
+#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
+      else {
+        oc_blockwise_response_state_t *b =
+          (oc_blockwise_response_state_t *)response_buffer;
+        if (b && b->observe_seq != -1) {
+          int i = 0;
+          uint32_t r;
+          while (i < COAP_TOKEN_LEN) {
+            r = oc_random_value();
+            memcpy(response->token + i, &r, sizeof(r));
+            i += sizeof(r);
+          }
+          response->token_len = (uint8_t)i;
+        } else {
           coap_set_token(response, message->token, message->token_len);
         }
-#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
-        else {
-          oc_blockwise_response_state_t *b =
-            (oc_blockwise_response_state_t *)response_buffer;
-          if (b && b->observe_seq != -1) {
-            int i = 0;
-            uint32_t r;
-            while (i < COAP_TOKEN_LEN) {
-              r = oc_random_value();
-              memcpy(response->token + i, &r, sizeof(r));
-              i += sizeof(r);
-            }
-            response->token_len = (uint8_t)i;
-          } else {
-            coap_set_token(response, message->token, message->token_len);
-          }
-        }
-#endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
+#endif /* OC_CLIENT && OC_BLOCK_WISE */
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
       if (transaction->message->length > 0) {
@@ -714,8 +741,10 @@ send_message:
         coap_clear_transaction(transaction);
       }
     }
-  } else if (coap_status_code == CLEAR_TRANSACTION) {
-    coap_clear_transaction(transaction);
+  } else {
+    coap_send_empty_response(COAP_TYPE_RST, message->mid, coap_status_code,
+                             &msg->endpoint);
+    return coap_status_code;
   }
 
 #ifdef OC_SECURITY
