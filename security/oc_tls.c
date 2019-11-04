@@ -41,6 +41,7 @@
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
+#include "oc_audit.h"
 #include "oc_buffer.h"
 #include "oc_client_state.h"
 #include "oc_config.h"
@@ -1041,6 +1042,15 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     }
   } else if (oc_certs_validate_end_entity_cert(crt) < 0) {
     OC_ERR("failed to verify end entity cert");
+    uint8_t* address = (*peer).endpoint.addr.ipv6.address;
+    uint16_t port = (*peer).endpoint.addr.ipv6.port;
+    char* message = (char*) malloc(55);
+    snprintf(message, 55, "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d\n",
+		      address[ 0], address[ 1], address[ 2], address[ 3], 
+                      address[ 4], address[ 5], address[ 6], address[ 7], 
+                      address[ 8], address[ 9], address[10], address[11], 
+                      address[12], address[13], address[14], address[15], port);
+    oc_audit_log("DLTS handshake failed", 0, 0, &message, 1);
     return -1;
   }
 
