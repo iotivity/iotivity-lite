@@ -445,6 +445,9 @@
     <ClCompile Include="..\mutex.c">
       <Filter>Port</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
