@@ -38,16 +38,29 @@
 %ignore oc_properties_cb_t_cb;
 
 %rename(OCResource) oc_resource_s;
+%immutable oc_resource_s::next;
+%immutable oc_resource_s::device;
+%immutable oc_resource_s::name;
+%immutable oc_resource_s::uri;
+%immutable oc_resource_s::types;
+%immutable oc_resource_s::interfaces;
 %rename("%(lowercamelcase)s") default_interface;
+%immutable oc_resource_s::default_interface;
+%immutable oc_resource_s::properties;
 // handlers are added to the code using the mainInit function and are not expected to be read by Java code
 %ignore oc_resource_s::get_handler;
 %ignore oc_resource_s::put_handler;
 %ignore oc_resource_s::post_handler;
 %ignore oc_resource_s::delete_handler;
+%rename("%(lowercamelcase)s") num_observers;
+%immutable oc_resource_s::num_observers;
+%rename("%(lowercamelcase)s") num_links;
+%immutable oc_resource_s::num_links;
+%rename("%(lowercamelcase)s") observe_period_seconds;
+%immutable oc_resource_s::observe_period_seconds;
+// get/set properties callbacks are not expected to be read or writen directly to by Java code.
 %ignore oc_resource_s::get_properties;
 %ignore oc_resource_s::set_properties;
-%rename("%(lowercamelcase)s") observe_period_seconds;
-%rename("%(lowercamelcase)s") num_observers;
 
 %rename(OCEventCallbackResult) oc_event_callback_retval_t;
 %ignore oc_event_callback_s;

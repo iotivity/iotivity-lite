@@ -14,7 +14,6 @@ public class TestRunner {
         Result result = junit.run(
                 OCMainTest.class,
                 OCRepresentationTest.class,
-                OCResourceTest.class,
                 OCUuidTest.class);
         if (result.getFailureCount() > 0) {
           System.out.println("Test failed.");
