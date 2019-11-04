@@ -54,6 +54,8 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_audit.h"
+#include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
@@ -852,6 +854,34 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
+
+      char** aux = (char**) malloc(4*sizeof(char*));
+      const size_t LINE_WIDTH = 80;
+
+      aux[0] = (char*) malloc(LINE_WIDTH);
+      uint8_t* address = (*endpoint).addr.ipv6.address;
+      uint16_t port = (*endpoint).addr.ipv6.port;
+      snprintf(aux[0], LINE_WIDTH, "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]:%d\n",
+		      address[ 0], address[ 1], address[ 2], address[ 3], 
+                      address[ 4], address[ 5], address[ 6], address[ 7], 
+                      address[ 8], address[ 9], address[10], address[11], 
+                      address[12], address[13], address[14], address[15], port);
+
+      aux[1] = (char*) malloc(LINE_WIDTH);
+      oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+      oc_uuid_to_str(&peer->uuid, aux[1], LINE_WIDTH);
+
+
+      aux[2] = (char*) malloc(oc_string_len(resource->uri));
+      memcpy(aux[2], oc_string(resource->uri), oc_string_len(resource->uri));
+
+      aux[3] = (char*) malloc(LINE_WIDTH);
+      const char* method_str_val[] = { "GET", "POST", "PUT", "DELETE" };
+      const char* state_str_val[] = { "RESET", "RFOTM", "RFPRO", "RFNOP", "SRESET" };
+      int state = oc_sec_get_pstat(endpoint->device)->s;
+      snprintf(aux[3], LINE_WIDTH, "attempt to %s, when device is in %s\n", method_str_val[method], state_str_val[state]);
+
+      oc_audit_log("Access Denied", 0x01, 2, aux, 4);
     } else
 #endif /* OC_SECURITY */
     {
