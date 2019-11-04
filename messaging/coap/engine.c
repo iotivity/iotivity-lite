@@ -55,6 +55,7 @@
 #include "oc_buffer.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_audit.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
@@ -656,6 +657,10 @@ coap_receive(oc_message_t *msg)
       }
 #endif /* OC_CLIENT */
     }
+  } else {
+    //OC_LOGipaddr(msg->endpoint); // TODO add IP data to aux
+    //OC_LOGbytes(msg->data, msg->length); // TODO add hex-encoded header+options data to aux
+    oc_audit_log("COMM-1", "Unexpected CoAP command", 0x40, 2, NULL, 0);
   }
 
 init_reset_message:
