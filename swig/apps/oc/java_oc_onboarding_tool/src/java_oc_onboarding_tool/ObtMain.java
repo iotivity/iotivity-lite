@@ -609,7 +609,7 @@ public class ObtMain {
               System.out.println("credtype: " + OCCredUtil.credTypeString(cr.getCredType()));
               // In The C sample this section is only for OC_PKI we don't have build flags in Java
               // TODO add empty Get function for Credusage is OC_PKI not supported.
-              System.out.println("credusage: " + OCCredUtil.readCredusage(cr.getCredUsage()));
+              System.out.println("credusage: " + OCCredUtil.readCredUsage(cr.getCredUsage()));
               if (cr.getPublicData() != null &&
                   cr.getPublicData().getData() != null &&
                   !cr.getPublicData().getData().isEmpty()) {

@@ -37,7 +37,7 @@ public class CredentialListHelper {
             Log.d(TAG, line);
             item.put("line3", line);
 
-            line = "Usage: " + OCCredUtil.readCredusage(cred.getCredUsage());
+            line = "Usage: " + OCCredUtil.readCredUsage(cred.getCredUsage());
             item.put("line4", line);
             Log.d(TAG, line);
 
