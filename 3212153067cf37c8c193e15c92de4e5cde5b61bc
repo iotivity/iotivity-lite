@@ -292,6 +292,30 @@
       "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7083e6e_c4de7e89",
+        "filename": "swig/swig_interfaces/oc_ri.i",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-04T17:34:13Z",
+      "side": 1,
+      "message": "SWIG by default generates getters and setters for all of the values in a struct unless specifically instructed not to generate them.  I will update this so the setters are not generated. It is as simple as marking the struct parameter as `%immutable` see line 32 above.\n\nI typically don\u0027t override the setter unless I know it should not be changed by the library user.",
+      "parentUuid": "0ba0c047_741ffe2f",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 34
+      },
+      "revId": "3212153067cf37c8c193e15c92de4e5cde5b61bc",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
