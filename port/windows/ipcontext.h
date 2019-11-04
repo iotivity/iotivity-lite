@@ -28,84 +28,82 @@
 #include <ws2tcpip.h>
 
 #ifdef __cplusplus
-extern "C"
+extern "C" {
+#endif
+
+typedef enum {
+  ADAPTER_STATUS_NONE = 0, /* Nothing happens */
+  ADAPTER_STATUS_ACCEPT,   /* Receiving no meaningful data */
+  ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
+  ADAPTER_STATUS_ERROR     /* Error */
+} adapter_receive_state_t;
+
+#ifdef OC_TCP
+typedef struct tcp_context_t
 {
-#endif
-
-  typedef enum
-  {
-    ADAPTER_STATUS_NONE = 0, /* Nothing happens */
-    ADAPTER_STATUS_ACCEPT,   /* Receiving no meaningful data */
-    ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
-    ADAPTER_STATUS_ERROR     /* Error */
-  } adapter_receive_state_t;
-
-#ifdef OC_TCP
-  typedef struct tcp_context_t
-  {
-    struct sockaddr_storage server;
-    SOCKET server_sock;
-    uint16_t port;
-    WSAEVENT server_event;
+  struct sockaddr_storage server;
+  SOCKET server_sock;
+  uint16_t port;
+  WSAEVENT server_event;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure;
-    SOCKET secure_sock;
-    uint16_t tls_port;
-    WSAEVENT secure_event;
+  struct sockaddr_storage secure;
+  SOCKET secure_sock;
+  uint16_t tls_port;
+  WSAEVENT secure_event;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    struct sockaddr_storage server4;
-    SOCKET server4_sock;
-    uint16_t port4;
-    WSAEVENT server4_event;
+  struct sockaddr_storage server4;
+  SOCKET server4_sock;
+  uint16_t port4;
+  WSAEVENT server4_event;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure4;
-    SOCKET secure4_sock;
-    uint16_t tls4_port;
-    WSAEVENT secure4_event;
+  struct sockaddr_storage secure4;
+  SOCKET secure4_sock;
+  uint16_t tls4_port;
+  WSAEVENT secure4_event;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-    HANDLE signal_event;
-    HANDLE event_thread_handle;
-    DWORD event_thread;
-  } tcp_context_t;
+  HANDLE signal_event;
+  HANDLE event_thread_handle;
+  DWORD event_thread;
+} tcp_context_t;
 #endif
 
-  typedef struct ip_context_t
-  {
-    struct ip_context_t *next;
-    OC_LIST_STRUCT(eps);
-    struct sockaddr_storage mcast;
-    struct sockaddr_storage server;
-    SOCKET mcast_sock;
-    SOCKET server_sock;
-    uint16_t port;
+typedef struct ip_context_t
+{
+  struct ip_context_t *next;
+  OC_LIST_STRUCT(eps);
+  struct sockaddr_storage mcast;
+  struct sockaddr_storage server;
+  SOCKET mcast_sock;
+  SOCKET server_sock;
+  uint16_t port;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure;
-    SOCKET secure_sock;
-    uint16_t dtls_port;
+  struct sockaddr_storage secure;
+  SOCKET secure_sock;
+  uint16_t dtls_port;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    struct sockaddr_storage mcast4;
-    struct sockaddr_storage server4;
-    SOCKET mcast4_sock;
-    SOCKET server4_sock;
-    uint16_t port4;
+  struct sockaddr_storage mcast4;
+  struct sockaddr_storage server4;
+  SOCKET mcast4_sock;
+  SOCKET server4_sock;
+  uint16_t port4;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure4;
-    SOCKET secure4_sock;
-    uint16_t dtls4_port;
+  struct sockaddr_storage secure4;
+  SOCKET secure4_sock;
+  uint16_t dtls4_port;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #ifdef OC_TCP
-    tcp_context_t tcp;
+  tcp_context_t tcp;
 #endif
-    HANDLE event_thread_handle;
-    HANDLE event_server_handle;
-    DWORD event_thread;
-    BOOL terminate;
-    size_t device;
-  } ip_context_t;
+  HANDLE event_thread_handle;
+  HANDLE event_server_handle;
+  DWORD event_thread;
+  BOOL terminate;
+  size_t device;
+} ip_context_t;
 
 #ifdef __cplusplus
 }

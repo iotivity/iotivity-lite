@@ -55,9 +55,10 @@ cloud_response(oc_cloud_context_t *ctx)
 {
   oc_rep_start_root_object();
   oc_process_baseline_interface(ctx->cloud_conf);
-  oc_rep_set_text_string(root, apn, (oc_string(ctx->store.auth_provider) != NULL
-                                       ? oc_string(ctx->store.auth_provider)
-                                       : ""));
+  oc_rep_set_text_string(root, apn,
+                         (oc_string(ctx->store.auth_provider) != NULL
+                            ? oc_string(ctx->store.auth_provider)
+                            : ""));
   oc_rep_set_text_string(
     root, cis,
     (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
