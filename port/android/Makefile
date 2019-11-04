@@ -109,7 +109,7 @@ DTLS= \
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c				\
 	ssl_srv.c	ssl_ticket.c			ssl_tls.c	rsa_internal.c				\
 	x509write_csr.c			x509write_crt.c			x509_create.c				\
-	x509_csr.c
+	x509_csr.c	platform_util.c
 
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
