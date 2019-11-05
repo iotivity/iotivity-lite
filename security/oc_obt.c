@@ -2639,6 +2639,7 @@ oc_obt_init(void)
     oc_sec_dump_doxm(0);
     oc_sec_dump_cred(0);
     oc_sec_dump_acl(0);
+    oc_sec_dump_ael(0);
 
 #ifdef OC_PKI
     uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
