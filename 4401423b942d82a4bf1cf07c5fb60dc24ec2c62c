@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7c5de566_1382e0c9",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07ad4a6e_2eab43e2",
+      "range": {
+        "startLine": 102,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 54
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47d478b8_de487338",
         "filename": "swig/README.md",
         "patchSetId": 4
@@ -45,6 +69,30 @@
       "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "382ad6a4_15d3ab9a",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Windows has the same dependencies as Linux.  C compiler, swig, JDK, and git. I I have updated the document I hope it is clearer.",
+      "parentUuid": "47d478b8_de487338",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 12
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d19b4aee_bb366297",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a10d5db_cb2aada9",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 70
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0feba14c_ea6b6e7d",
         "filename": "swig/README.md",
         "patchSetId": 4
@@ -91,6 +163,30 @@
       "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1ccd9c4_e50ed489",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0feba14c_ea6b6e7d",
+      "range": {
+        "startLine": 264,
+        "startChar": 14,
+        "endLine": 264,
+        "endChar": 25
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "5a62e500_890167aa",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc7a5543_2824632f",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 322,
+        "endChar": 37
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2c57e77_4cb2485f",
         "filename": "swig/README.md",
         "patchSetId": 4
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "a02ce109_e149e6b6",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2c57e77_4cb2485f",
+      "range": {
+        "startLine": 516,
+        "startChar": 1,
+        "endLine": 586,
+        "endChar": 3
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7b1022e_2819ed3c",
         "filename": "swig/README.md",
         "patchSetId": 4
@@ -151,6 +295,30 @@
       "writtenOn": "2019-11-05T01:54:33Z",
       "side": 1,
       "message": "Why don\u0027t we simply move this to the root level README?",
+      "range": {
+        "startLine": 588,
+        "startChar": 0,
+        "endLine": 594,
+        "endChar": 69
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9bf8884_2211b45f",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-05T22:27:36Z",
+      "side": 1,
+      "message": "I personally want this left in. I will also add this to the root level README.",
+      "parentUuid": "a7b1022e_2819ed3c",
       "range": {
         "startLine": 588,
         "startChar": 0,
