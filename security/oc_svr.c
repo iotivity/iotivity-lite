@@ -27,6 +27,7 @@
 #include "oc_ri.h"
 #include "oc_sp.h"
 #include "port/oc_log.h"
+#include "oc_ael.h"
 
 void
 oc_sec_create_svr(void)
@@ -35,6 +36,7 @@ oc_sec_create_svr(void)
   oc_sec_pstat_init();
   oc_sec_cred_init();
   oc_sec_acl_init();
+  oc_sec_ael_init();
 
 #ifdef OC_PKI
   oc_sec_sp_init();
@@ -53,6 +55,9 @@ oc_sec_create_svr(void)
                               OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
                               get_acl, 0, post_acl, delete_acl, 1,
                               "oic.r.acl2");
+    oc_core_populate_resource(OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_BASELINE,
+                              OC_IF_BASELINE, OC_DISCOVERABLE, get_ael, 0,
+                              post_ael, 0, 1, "oic.r.ael");
     oc_core_populate_resource(OCF_SEC_CRED, i, "/oic/sec/cred", OC_IF_BASELINE,
                               OC_IF_BASELINE, OC_DISCOVERABLE | OC_SECURE,
                               get_cred, 0, post_cred, delete_cred, 1,
