@@ -22,6 +22,14 @@ public class OcUtils {
         return OCMain.doIPDiscoveryAtEndpoint(rt, handler, endpoint);
     }
 
+    public static boolean doIPDiscoveryAll(OCDiscoveryAllHandler handler) {
+        return OCMain.doIPDiscoveryAll(handler);
+    }
+
+    public static boolean doIPDiscoveryAllAtEndpoint(OCDiscoveryAllHandler handler, OCEndpoint endpoint) {
+        return OCMain.doIPDiscoveryAllAtEndpoint(handler, endpoint);
+    }
+
     public static boolean doGet(String uri, OCEndpoint endpoint, String query, OCResponseHandler handler, OCQos qos) {
         return OCMain.doGet(uri, endpoint, query, handler, qos);
     }
