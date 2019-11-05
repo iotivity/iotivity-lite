@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f098e294_a92e8b07",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Can remove this line.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 73
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca5b1c51_c1084dfb",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "recommended",
+      "range": {
+        "startLine": 33,
+        "startChar": 30,
+        "endLine": 33,
+        "endChar": 39
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca56fb6c_fea29ff5",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Can remove this line.",
+      "range": {
+        "startLine": 34,
+        "startChar": 25,
+        "endLine": 35,
+        "endChar": 18
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cad6719a_9a930809",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Can remove this. If the README under port/android has this, that could be taken out as well.",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 31
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df1e0f93_8e7b3e20",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Is this an alternative to using the VS build above?",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1348c7ca_3b615051",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Can we move this into the root-level README?",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 47
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2423a950_d4e5ac46",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T23:01:51Z",
+      "side": 1,
+      "message": "Move this to the bottom of the root-level README.",
+      "range": {
+        "startLine": 388,
+        "startChar": 0,
+        "endLine": 394,
+        "endChar": 69
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
