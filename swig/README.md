@@ -1,8 +1,8 @@
 Java Language binding for IoTivity-Lite using SWIG
--------------------------------------------------
+=================================================
 
 Introduction
-=================================================
+-------------------------------------------------
 A tool called SWIG is used to generate Java language bindings for IoTivity-Lite.  SWIG is an
 interface compiler that connects programs written in C and C++ with other languages such as Java.
 
@@ -19,22 +19,35 @@ is just a thin layer on top of IoTivity-Lite C code any programs developed using
 expected to be as stable as the underlying C code.
 
 Getting Started
-=================================================
+-------------------------------------------------
 To use this code you will need the following:
   - git version control system
-  - A local copy of IoTivity-Lite
-  - SWIG installed on your local system
+  - A local copy of IoTivity-lite
+  - SWIG installed on your local system (version 3.0 recommended)
   - Java Development kit.
   - C build tool for your desired system
 
-### Get git
-It can be installed on Ubuntu Linux using the following command.
+The SWIG output should work with Java 6 and newer.  The Output has been tested against OpenJDK 1.8.
+Due to licensing changes the output is no longer tested against Oracle Java.
 
-    sudo apt-get install git
+Currently SWIG version 3.0 is recommend.  SWIG version 4.0 came out during the  development of the
+Java language bindings.  We decided to stick with the 3.0 version till the initial release of the
+code is completed. Users are welcome to use a newer version as long as they are aware it has not
+been tested.
 
-Git can be obtained for Windows [here](https://git-scm.com/download/win).
+Instructions for Android
+-------------------------------------------------
+Instructions for Android can be found <iotivity-lite>/port/android/README.md
 
-### Get IoTivity-Lite
+Instructions for Linux
+-------------------------------------------------
+### Install build tools
+- git, swig, Java Development kit, make, and C compiler
+
+    sudo apt-get install git swig build-essential openjdk-8-jdk make
+
+- A local copy of IoTivity-lite
+
 Checkout IoTivity-Lite git project run the following command to get a anonymous copy of
 iotivity-lite.  Checkout the SWIG branch.
 
@@ -54,123 +67,278 @@ The Linux Foundation ID can then be used to log into the Gerrit server for IoTiv
 Follow the instructions [here](https://wiki.iotivity.org/how_to_use_gerrit) to gain push access
 to the project.
 
-### Get SWIG
-SWIG can be downloaded [here](http://swig.org/download.html).
+### Build Java language bindings
+Navigate to `<iotivity-lite>/port/linux`
 
-SWIG can be installed on Ubuntu Linux using the following command.
+    make IPV4=1 DEBUG=1 JAVA=1 IDD=1
 
-    sudo apt-get install swig
+If make fails check see the Verify installation of needed tools section.
+ 
+### Building and Running Samples
+A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
 
-The code was developed using SWIG version 3.0.  It has not been tested against SWIG version 4.0 that
-was released when the swig branch was being developed.  Developers are welcome to use SWIG v4.0 and
-share their experiences.
+The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
+following commands.
 
-### Get Java Development Kit
-The SWIG output should work with Java 6 and newer.  The Output has been tested against OpenJDK 1.8.
-Due to licensing changes the output is no longer tested against Oracle Java.
+    ./build-simple-server-lite.sh
+    ./run-simple-server-lite.sh
 
-Oracle Java 8 JDK can be
-[downloaded here](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
+following commands.
 
-AdoptOpenJDK can be [downloaded here](https://adoptopenjdk.net/installation.html)
+    ./build-simple-client-lite.sh
+    ./run-simple-client-lite.sh
 
-On Ubuntu Linux OpenJDK can be downloaded using the following command.
+The Onboarding tool sample is in `java_onboarding_tool`. To build and run the onboarding tool
+execute the following commands.
 
-    #To find out the avalible versions of OpenJDK
-    apt-cache search openjdk
-    sudo apt-get install openjdk-8-jdk
-    # You may wish to choose a different version of openjdk
-    # if you have installed multiple versions of Java you may need to switch
-    # the active version using the update-java-alternatives tool.
-    sudo apt-get install java-common
-    update-java-alternatives
+    ./build-onboarding-tool-lite.sh
+    ./run-onboarding-tool-lite.sh
 
-On Fedora Linux Install OpenJDK can be done using the following command
 
-    sudo dnf install java-1.8.0-openjdk.x86_64
-    # or use dnf install <openjdk-package-name>
-    # if you have installed multiple versions of Java you may need to switch
-    # the active version
-    sudo alternatives --config java
+See the Simple Step-by-Step guide for onboarding and provisioning section below for step-by-step
+instructions to onboard and test the samples.
 
-To find different version of OpenJDK use the following command so see which
-versions are available
+Instructions for Windows
+-------------------------------------------------
+### Install build tools
+ - Git can be obtained for Windows [here](https://git-scm.com/download/win).
+ - SWIG can be downloaded [here](http://swig.org/download.html).
+ - Java Development Kit (JDK) choose one (AdoptOpenJDK recommended)<br />
+   AdoptOpenJDK can be [downloaded here](https://adoptopenjdk.net/installation.html)<br />
+   Oracle Java 8 JDK can be
+   [downloaded here](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+ - Download Visual Studio [here](https://visualstudio.microsoft.com/).
+ 
+   For development on Windows Visual Studio 2015 was used.  The Visual Studio solution files have
+   been tested in newer versions of Visual Studio and have been found to work.  Visual studio IDE
+   Community edition and Visual Studio Code should work but have not personally been tested.
 
-    apt-cache search openjdk
+### Build Java language bindings
+Build the JNI shared library:
 
-### C Build tools
-#### Android
-##### Android SDK tools
-Download the [Android SDK command line tools](https://developer.android.com/studio#downloads)
+Navigate to `<iotivity-lite>/port/windows/vs2015` open the Visual Studio solution
+`IoTivity-Lite.sln` file in Visual Studio.
 
-run `sdkmanager` found in the `tools/bin` directory to install the platform-tools and Android platform
+Select the desired build options: Release/Debug, x86/x64.  Note the x86/x64 must match the
+architecture of the Java VM installed on the system.  In the Solution Explorer right click
+on the `iotivity-lite-jni` project.  Select the `Build` option.
 
-    ./sdkmanager "platform-tools" "platforms;android-23"
+This will build
+  - `IoTivity-Constrained.lib`
+  - swig generated wraper code
+  - `iotivity-lite-jni.dll`
 
-if behind a proxy use the proxy connection options
+On success the Output window should show:
 
-    ./sdkmanager --proxy=<http|socks> --proxy_host=<host address> --proxy_port=<number> "platform-tools" "platforms;android-23"
+    ========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
 
-##### Android NDK
-Download the [Android NDK](https://developer.android.com/ndk/downloads/index.html)
+Build `iotivity-lite.jar` file from `<iotivity-lite>/swig/java_lang` run:
 
-Unzip downloaded package.
+    sh build-iotivity-lite.sh
 
-    cd <NDK>/build/tools
-    sudo apt-get install python
-    ./make_standalone_toolchain.py --arch <architecture> --api <level> --install-dir <path>
+If build fails see the Verify installation of needed tools section.
 
-valid values for `--arch`
- - arm
- - arm64
- - x86
- - x86_64
+### Building and Running Samples
+A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
 
-The `make_standalone_toolchain` script only supports api level 16 and newer. We recommend using api
-level 23 or newer.
+The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
+following commands.
 
-For example:
+    sh build-simple-server-lite.sh
+    run-simple-server-lite.cmd
 
-    ./make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
+The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
+following commands.
 
-Note: running the `make_standalone_toolchain.py` script may print a WARNING stating it is no longer
-necessary.  This is expected.  At this time the make files expect the stand alone tool chain.
+    sh build-simple-client-lite.sh
+    run-simple-client-lite.cmd
 
-For further setup see:
+The Onboarding tool sample is in `java_onboarding_tool`. To build and run the onboarding tool
+execute the following commands.
 
-https://developer.android.com/ndk/guides/standalone_toolchain.html
+    sh build-onboarding-tool-lite.sh
+    run-onboarding-tool-lite.cmd
 
-##### Android Studio (optional)
-Developers wishing to use Android Studio can find details here:
+See the Simple Step-by-Step guide for onboarding and provisioning section below for step-by-step
+instructions to onboard and test the samples.
 
-[Android Studio](https://developer.android.com/studio)
+### Windows specific build issues
+Visual Studio does not know how to properly rebuild when the swig interface files have been change
+(i.e. *.i and *.swg files found in the swig_interfaces directory) if any of these files are updated.
+The **Rebuild** option must be used to build the output or the swig output will not be updated or
+`sh build_swig.sh` can be run from the ``<iotivity-lite>/swig/java_lang` directory and then run
+**Build**.
 
-#### Linux
-For Ubuntu Linux GCC compiler was used
+Visual Studio does not clean the *.java output files even on a clean or rebuild.  The files may
+manually be deleted from the `<iotivity-lite>/swig/iotivity-lite-java/src/org` directory or
+`sh build_swig.sh` can be run from the ``<iotivity-lite>/swig/java_lang` directory.
 
-    sudo apt-get build-essential
+Onboarding and Provisioning
+-------------------------------------------------
+### Runing the onboarding tool
 
-#### Windows
-For development on Windows Visual Studio 2015 was used.  The Visual Studio solution files have
-been tested in newer version of Visual Studio and have been found to work.  Visual studio IDE
-Community edition and Visual Studio Code should work but have not personally been tested.
+At this time there are three versions of the onboarding tool.  The command line C version, the
+command line Java version, and the GUI Android version. Both command line versions are identical.
+It does not matter which version of the onboarding tool is used.
 
-Download Visual Studio [here](https://visualstudio.microsoft.com/).
+The C version of the onboarding tool can be found in `<iotivity-lite>/port/linux` see Linux build
+instructions.
 
-### Make
+A Java version of the onboarding-tool can be found in `<iotivity-lite>/swig/apps/java_onboarding_tool`
 
-    sudo apt-get install make
+The instructions assuming you have already followed the `Building for Linux` or `Building for Windows`
+instructions and can already run the Java version of the onboarding tool.
 
-### Verify installation of needed tools
-The scripts used assume all the needed tools are on PATH and are accessible without knowing the
-location of the tool.
+### Simple Step-by-Step guide for onboarding and provisioning
+
+This guide assumes you are starting one discoverable device at a time. Multiple devices can be
+discovered and onboarded at the same time however it becomes the responsibility of the user to
+figure out which UUID belongs to which device.
+
+Once you have successfully onboarded the samples the first time using the following step-by-step
+options feel free to RESET the devices and play around with different provisioning options.
+
+The below steps use the command line version of the onboarding tool. The steps for the Android
+onboarding tool is very similar but is not described here.
+
+### (Step 1) Onboard and Provision the Server
+
+There are multiple methods to onboard and provision server and client samples.  Below is given one
+of the many possible ways the this could be done.
+
+ - start the server sample
+ - start onboarding tool it will print a menu with many option
+ - Type `1` **Enter** to _Discover un-owned devices_
+ - Type `8` **Enter** to _Take ownership of device_
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+ - Type `4` **Enter** to _Discover owned devices_ the device you just took ownership of should be
+   listed.
+ - Type `13` **Enter** to _Provision ACE2_. There are many ways to properly provision the device.
+   This will give instruction for using wildcard provisioning.
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+   - Type `1` **Enter** for an _auth-crypt_ ACE
+   - Type `1` **Enter** in response to `Enter number of resources in this ACE:`
+   - Type `0` **Enter** in response to `Have resource href? [0-No, 1-Yes]:`
+   - Type `1` **Enter** in response to `Set wildcard resource? [0-No, 1-Yes]:`
+   - Type `2` **Enter** to select the `All discoverable resources` option
+   - Type `0` **Enter** in response to `Enter number of resource types [0-None]:`
+   - Type `0` **Enter** in response to `Enter number of interfaces [0-None]`
+   - Type `0` **Enter** for CREATE, `1` **Enter** for RETRIEVE, `1` **Enter** for UPDATE, `0`
+     **Enter** for DELETE, and `1` **Enter** for NOTIFY.
+   - `Successfully issued request to provision ACE` should be printed on the screen upon success
+
+### (Step 2) Onboard the client
+ - start the client sample
+ - Type `1` **Enter** to _Discover un-owned devices_
+ - Type `8` **Enter** to _Take ownership of device_
+   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+  - Type `2` **Enter** to _Discover owned devices_ the server and client should be listed
+
+### (Step 3) Pair Server and Client
+  - Type `12` **Enter** to _Provision pair-wise credentials_
+  - Type `0` **Enter** `1` **Enter** to pair the client and server. If you have multiple owned
+    devices you will have to select the correct devices from the list.
+
+### (Step 4) Restart and Test
+The samples should be onboarded and provisioned. Restart the server and then the client they should
+discover each other and run without difficulty.
+
+Layout of swig directory
+-------------------------------------------------
+This contains an overview of the contents of the `<iotivity-lite>/swig` directory.  With a
+summary of the contents of each directory.
+
+    swig
+    +-- apps
+    |   +-- android_simple_client
+    |   +-- android_simple_server
+    |   +-- java_lite_simple_client
+    |   |   +-- src
+    |   +-- java_lite_simple_server
+    |   |   +-- src
+    |   +-- oc
+    +-- iotivity-lite-java
+    |   +-- junit
+    |   +-- src
+    +-- java_lang
+    +-- oc_java
+    |   +-- oc
+    +-- swig_interfaces
+
+- `apps`<br />
+  Contains multiple samples.  The `java_lite` samples have been run and tested on Windows and Linux.
+  The `android` samples are the same samples with a really light UI for Android OS. The `java_lite`
+  samples also contain project files for the Eclipse IDE if users wish to import the samples into
+  that IDE. The `java_onboarding_tool` is a bear bones tool for onboarding and provisioning samples
+  that have been built with security.
+
+  The `oc` directory is a collection of samples that take advantage of the org.iotivity.oc package
+  which is a layer built on top of the output generated by swig that gives the code a more object
+  oriented feel and usage.
+- `iotivity-lite-java`<br />
+  Contains unit test code in the `junit` directory as well as an empty `src` directory.  The
+  `src` directory will be populated with `*.java` files when the SWIG build commands are run.
+  This also contains project files for the Eclipse IDE if user wishes to import the
+  iotivity-lite code into Eclipse.
+- `java_lang`<br />
+  Contains build scripts that may be used to generate the Java language binding using SWIG.  Most of
+  the scripts have been incorporated with make or Visual Studio and no longer need to be called.
+- `oc_java`<br />
+  Contains Java files that are used by the SWIG output but not not generated as part of the SWIG
+  build process.  Most of the files are Java interfaces used to handle callbacks and bitmask
+  values.
+
+  The `oc` directory contains a layer ontop of the swig generated output that is more object oriented
+  than the output from swig.
+- `swig_interfaces`<br />
+  Contains the input files for the swig builder.  These files contain instructions for the SWIG
+  builder.  They tell swig which header files are being processed.  It instructs swig how to rename
+  files from a C style name with underscores to a Java like lower camel case name.  It also
+  instructs swig how to work with data types that it does not understand by default.  Data types
+  like `oc_string_t`.  It also contains code that works around the fact that Java does not have a
+  preprocessor so must handle many of the C macros differently.
+
+Eclipse project files
+-------------------------------------------------
+Where possible command line build scripts have been provided for building and running the code.
+However much of the development was done using the Eclipse IDE.  The project files have been
+committed so other developers can take advantage of the Eclipse IDE if they wish.
+
+To open the project files:
+ - Open Eclipse
+ - select `File->Import..`
+ - select `General->Existing Projects into Workspace`
+ - click `Next>` button
+ - click the `Browse..` button next to the `Select root directory:` text box
+ - browse to the `<iotivity-lite>\swig` directory click `OK`
+ - make sure the checkbox for the desired projects is checked.  Click `Finish`
+
+Run the unit tests by right clicking on `iotivity-lite` project select `Run As -> JUnit Test`.
+Selecting `Run As -> Java Application` will run the command line version of the unit tests.
+
+Run samples by right clicking on the sample select
+`Run As -> Java Application`.
+
+If the code was previously built using the command-line build scripts you may get build warnings
+indicating some class files can not be found.  Select `Project -> Clean...`.  Then right click on
+the `iotivity-lite` project and select `Refresh`.  This should force the project to rebuild the
+all the class files associated with the `iotivity-lite.jar` file.
+
+Verify installation of needed tools
+-------------------------------------------------
+If issues are encountered when trying to build the code verify the tools can be found. The scripts
+assume all the needed tools are on PATH and are accessible without knowing the location of the tool.
 
 Run the following to verify each tool.  At this time there are no known issues limiting users to
 the same version of the tools as were used for development.  Feel free to use the latest version of
 all the development tools.
 
 ---
-bash shell (windows only) For me this was installed with git
+bash shell (windows only) this should be installed with git
 
     sh --version
 
@@ -215,378 +383,10 @@ example of expected output
 
     javac 1.8.0_191
 
-Building IoTivity-Lite libraries
-=================================================
-### Building for Android
-Navigate to `<iotivity-lite>/android/port`
-
-    cd <iotivity-lite>/android/port
-
-The Makefile uses then the Android NDK that was installed in the **Android NDK** section above.
-
-Either set ANDROID_API and ANDROID_BASE in the Makefile or invoke like this:
-
-    make NDK_HOME=/opt/android-ndk ANDROID_API=23
-
-Example Usage:
-
-    make IPV4=1 DEBUG=1
-
-or
-
-    make NDK_HOME=~/android-arm-23 ANDROID_API=23 IPV4=1 DEBUG=1
-
-Copy the libiotivity-lite-jni.so to the appropriate jniLibs sub-directories for each project:
-
-    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
-    cp libiotivity-lite-jni.so ../../swig/apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
-
-The Makefile also contains a version of these same build instructions.
-
-### Building for Linux
-Navigate to `<iotivity-lite>/port/linux`
-
-    make IPV4=1 DEBUG=1 JAVA=1 IDD=1
-
-### Building for Windows
-Build the JNI shared library:
-
-Navigate to `<iotivity-lite>/port/windows/vs2015` open the Visual Studio solution
-`IoTivity-Lite.sln` file in Visual Studio.
-
-Select the desired build options: Release/Debug, x86/x64.  Note the x86/x64 must match the
-architecture of the Java VM that will be reading the library.  For example above when we run
-`java -version` we get `Java HotSpot(TM) 64-Bit Server VM` this means we must select the x64
-architecture for the build options.  In the Solution Explorer right click on the
-`iotivity-lite-jni` project.  Select the `Build` option.
-
-This will build
-  - `IoTivity-Constrained.lib`
-  - swig generated wraper code
-  - `iotivity-lite-jni.dll`
-
-On success the Output window should show:
-
-    ========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
-
-Build `iotivity-lite.jar` file:
-
-    sh build-iotivity-lite.sh
-
-Testing and Verifying
-=================================================
-All samples have the default out of the box behavior of IoTivity which means they are are not
-onboarded or provisioned.  The default security will prevent the samples from communicating with
-one another until onboarding and provisioning has been completed.  See the following section
-**Onboarding and Provisioning** for instructions on using the onboarding tool that is part of
-IoTivity-Lite.
-
-### Building and Running Samples Android
-A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
-
-Note that gradlew will require a `local.properties` to exist or ANDROID_HOME to be defined.  An
-installation of Android Studio should create the `local.properties` file.
-
-example:
-
-    export ANDROID_HOME=~/Android/sdk
-
-To resolve any proxy issues reference [gradle user guide for proxy](https://docs.gradle.org/current/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy)
-
-The server sample is in `android_simple_server/SimpleServer`.  To build and install the sample
-execute the following command:
-
-### Method 1
-    ./gradlew installDebug
-
-### Method 2
-    ./gradlew assembleDebug
-
-To install
-
-    cd app/build/outputs/apk
-    adb install app-armeabi-debug.apk
-
-The client sample is in `android_simple_client/SimpleClient`.  To build and install the sample
-execute the following command:
-
-### Method 1
-    ./gradlew installDebug
-
-### Method 2
-    ./gradlew assembleDebug
-
-To install
-
-    cd app/build/outputs/apk
-    adb install app-armeabi-debug.apk
-
-### Building and Running Samples Linux
-A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
-
-The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
-following commands.
-
-    ./build-simple-server-lite.sh
-    ./run-simple-server-lite.sh
-
-The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
-following commands.
-
-    ./build-simple-client-lite.sh
-    ./run-simple-client-lite.sh
-
-### Building and Running Samples Windows
-A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
-
-The server sample is in `java_lite_simple_server`.  To build and run the sample execute the
-following commands.
-
-    sh build-simple-server-lite.sh
-    run-simple-server-lite.cmd
-
-The client sample is in `java_lite_simple_client`.  To build and run the sample execute the
-following commands.
-
-    sh build-simple-client-lite.sh
-    run-simple-client-lite.cmd
-
-Onboarding and Provisioning
-=================================================
-### Runing the onboarding tool
-
-At this time there are three versions of the onboarding tool.  The command line C version, the
-command line Java version, and the GUI Android version. Both command line versions are identical.
-It does not matter which version of the onboarding tool is used.
-
-The C version of the onboarding tool can be found in `<iotivity-lite>/port/linux` see Linux build
-instructions.
-
-A Java version of the onboarding-tool can be found in `<iotivity-lite>/swig/apps/java_onboarding_tool`
-
-Assuming you have already followed the `Building for Linux` or `Building for Windows` build
-instructions the following commands can be used to build and run the Java version of the onboarding
-tool.
-
-Linux:
-
-    build-onboarding-tool-lite.sh
-    run-onboarding-tool-lite.sh
-
-Windows
-
-    sh build-onboarding-tool-lite.sh
-    run-onboarding-tool-lite.cmd
-
-The Android version of the onboarding tool can be found in
-`<iotivity-lite>/swig/apps/oc/android_on_boarding_tool`
-
-It is built and installed using the same instructions as other Android samples documented above.
-
-### Simple Step-by-Step guide for onboarding and provisioning
-
-This guide assumes you are starting one discoverable device at a time. Multiple devices can be
-discovered and onboarded at the same time however it becomes the responsibility of the user to
-figure out which UUID belongs to which device.
-
-Once you have successfully onboarded the samples the first time using the following step-by-step
-options feel free to RESET the devices and play around with different provisioning options.
-
-The below steps use the command line version of the onboarding tool. The steps for the Android
-onboarding tool is very similar but is not described here.
-
-### (Step 1) Onboard and Provision the Server
-
-There are multiple methods to onboard and provision server and client samples.  Below is given one
-of the many possible ways the this could be done.
-
- - start the server sample
- - start onboarding tool it will print a menu with many option
- - Type `1` **Enter** to _Discover un-owned devices_
- - Type `8` **Enter** to _Take ownership of device_
-   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
-     device from the list.
- - Type `4` **Enter** to _Discover owned devices_ the device you just took ownership of should be
-   listed.
- - Type `13` **Enter** to _Provision ACE2_. There are many ways to properly provision the device.
-   This will give instruction for using wildcard provisioning.
-   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
-     device from the list.
-   - Type `1` **Enter** for an _auth-crypt_ ACE
-   - Type `1` **Enter** in response to `Enter number of resources in this ACE:`
-   - Type `0` **Enter** in response to `Have resource href? [0-No, 1-Yes]:`
-   - Type `1` **Enter** in response to `Set wildcard resource? [0-No, 1-Yes]:`
-   - Type `2` **Enter** to select the `[2]: All discoverable resources` option
-   - Type `0` **Enter** in response to `Enter number of resource types [0-None]:`
-   - Type `0` **Enter** in response to `Enter number of interfaces [0-None]`
-   - Type `0` **Enter** for CREATE, `1` **Enter** for RETRIEVE, `1` **Enter** for UPDATE, `0`
-     **Enter** for DELETE, and `1` **Enter** for NOTIFY.
-   - `Successfully issued request to provision ACE` should be printed on the screen upon success
-
-### (Step 2) Onboard the client
- - start the client sample
- - Type `1` **Enter** to _Discover un-owned devices_
- - Type `8` **Enter** to _Take ownership of device_
-   - Type `0` **Enter**. If you have multiple unowned devices you will have to select the correct
-     device from the list.
-  - Type `2` **Enter** to _Discover owned devices_ the server and client should be listed
-
-### (Step 3) Pair Server and Client
-  - Type `12` **Enter** to _Provision pair-wise credentials_
-  - Type `0` **Enter** `1` **Enter** to pair the client and server. If you have multiple owned
-    devices you will have to select the correct devices from the list.
-
-### (Step 4) Restart and Test
-The samples should be onboarded and provisioned. Restart the server and then the client they should
-discover each other and run without difficulty.
-
-Layout of swig folder
-=================================================
-This contains an overview of the contents of the `<iotivity-lite>/swig` directory.  With a
-summary of the contents of each directory.
-
-    swig
-    +-- apps
-    |   +-- android_simple_client
-    |   +-- android_simple_server
-    |   +-- java_lite_simple_client
-    |   |   +-- src
-    |   +-- java_lite_simple_server
-    |   |   +-- src
-    +-- iotivity-lite-java
-    |   +-- junit
-    |   +-- src
-    +-- java_lang
-    +-- oc_java
-    +-- swig_interfaces
-
-- `apps`<br />
-  Contains to client server samples.  The `java_lite` samples have been run and tested on Windows
-  and Linux.  The `android` samples are the same samples with a really light UI for Android OS.
-  The `java_lite` samples also contain project files for the Eclipse IDE if users wish to import
-  the samples into that IDE. The `java_onboarding_tool` is a bear bones tool for onboarding and
-  provisioning samples that have been built with security.
-- `iotivity-lite-java`<br />
-  Contains unit test code in the `junit` directory as well as an empty `src` directory.  The
-  `src` directory will be populated with `*.java` files when the SWIG build commands are run.
-  This also contains project files for the Eclipse IDE if user wishes to import the
-  iotivity-lite code into Eclipse.
-- `java_lang`<br />
-  Contains build scripts needed to generate the Java language binding using SWIG.  With the
-  exception of the scripts for building and running the samples all commands given in this README
-  are run from the `java_lang` directory.
-- `oc_java`<br />
-  Contains Java files that are used by the SWIG output but not not generated as part of the SWIG
-  build process.  Most of the files are Java interfaces used to handle callbacks and bitmask
-  values.
-- `swig_interfaces`<br />
-  Contains the input files for the swig builder.  These files contain instructions for the SWIG
-  builder.  It tells it which header files are being processed.  It instructs swig how to rename
-  files from a C style name with underscores to a Java like lower camel case name.  It also
-  instructs swig how to work with data types that it does not understand by default.  Data types
-  like `oc_string_t`.  It also contains code that works around the fact that Java does not have a
-  preprocessor so must handle many of the C macros differently.
-
-Eclipse project files
-=================================================
-Where possible command line build scripts have been provided for building and running the code.
-However much of the development was done using the Eclipse IDE.  The project files have been
-committed so other developers can take advantage of the Eclipse IDE if they wish.
-
-To open the project files:
- - Open Eclipse
- - select `File->Import..`
- - select `General->Existing Projects into Workspace`
- - click `Next>` button
- - click the `Browse..` button next to the `Select root directory:` text box
- - browse to the `<iotivity-lite>\swig` directory click `OK`
- - make sure the checkbox for the desired projects is checked.  Click `Finish`
-
-Run the unit tests by right clicking on `iotivity-lite` project select `Run As -> JUnit Test`.
-Selecting `Run As -> Java Application` will run the command line version of the unit tests.
-
-Run samples by right clicking on the sample select
-`Run As -> Java Application`.
-
-If the code was previously built using the command-line build scripts you may get build warnings
-indicating some class files can not be found.  Select `Project -> Clean...`.  Then right click on
-the `iotivity-lite` project and select `Refresh`.  This should force the project to rebuild the
-all the class files associated with the `iotivity-lite.jar` file.
-
-Building Custom Android Applications
-=================================================
-These libraries and examples were built with Android API 23.  When creating a new Android project you
-can choose the API level.  In building these examples, the native code libraries were copied to specific
-directories in the project.  The project structure is:
-
-```
-    project/
-    +--libs/
-    |  +-- iotivity-lite.jar
-    +--src/
-       +-- main/
-           +-- AndroidManifest.xml
-           +-- java/
-           +-- jniLibs/
-               +-- armeabi/
-               |   +-- libiotivity-lite-jni.so.so
-               +-- x86-64/
-                   +-- libiotivity-lite-jni.so.so
-```
-
-This structure is reflected in the app `build.gradle` file:
-
-```
-    android {
-        .
-        .
-        .
-        sourceSets {
-            main {
-                jniLibs.srcDirs = ["src/main/jniLibs", "$buildDir/native-libs"]
-            }
-        }
-        splits {
-            abi {
-                enable true
-                reset()
-                include 'x86_64', 'armeabi'
-                universalApk false
-            }
-        }
-    }
-    
-    dependencies {
-        compile fileTree(dir: 'libs', include: ['*.jar'])
-        .
-        .
-        .
-    }
-```
-
-To allow these example applications to work, permissions had to be granted in the `AndroidManifest.xml` file.
-
-```
-    <manifest ...>
-    
-        <uses-permission android:name="android.permission.INTERNET"/>
-        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-        <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-        <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-        <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
-        
-        <application
-            .
-            .
-            .
-        </application>
-    
-    </manifest>
-```
+If any tools are not found make sure the location of the tool is added to the system PATH.
 
 Send Feedback
-=================================================
+-------------------------------------------------
 Questions
 [IoTivity-Lite Developer Mailing List](https://iotivity-dev@lists.iotivity.org)
 
