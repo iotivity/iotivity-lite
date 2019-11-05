@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07ad4a6e_2eab43e2",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Can we point people to the Android docs under port/android instead of duplicating it here?",
+      "range": {
+        "startLine": 102,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 54
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47d478b8_de487338",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "What are all the dependencies on Windows?",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 153,
+        "endChar": 12
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a10d5db_cb2aada9",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Can remove this too.",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 244,
+        "endChar": 70
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0feba14c_ea6b6e7d",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Lite?",
+      "range": {
+        "startLine": 264,
+        "startChar": 14,
+        "endLine": 264,
+        "endChar": 25
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc7a5543_2824632f",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Can remove this?",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 322,
+        "endChar": 37
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2c57e77_4cb2485f",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Can move this into the Android doc if its not already there?",
+      "range": {
+        "startLine": 516,
+        "startChar": 1,
+        "endLine": 586,
+        "endChar": 3
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7b1022e_2819ed3c",
+        "filename": "swig/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-05T01:54:33Z",
+      "side": 1,
+      "message": "Why don\u0027t we simply move this to the root level README?",
+      "range": {
+        "startLine": 588,
+        "startChar": 0,
+        "endLine": 594,
+        "endChar": 69
+      },
+      "revId": "4401423b942d82a4bf1cf07c5fb60dc24ec2c62c",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
