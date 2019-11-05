@@ -594,6 +594,8 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
       type = OCF_SEC_PSTAT;
     } else if (memcmp(uri + skip, "oic/sec/acl2", 12) == 0) {
       type = OCF_SEC_ACL;
+    } else if (memcmp(uri + skip, "oic/sec/ael", 11) == 0) {
+      type = OCF_SEC_AEL;
     } else if (memcmp(uri + skip, "oic/sec/cred", 12) == 0) {
       type = OCF_SEC_CRED;
     }
