@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a1fc309d_a8e7aff8",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f098e294_a92e8b07",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 73
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca5b1c51_c1084dfb",
         "filename": "swig/README.md",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "c25cd45b_63c619aa",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca56fb6c_fea29ff5",
+      "range": {
+        "startLine": 34,
+        "startChar": 25,
+        "endLine": 35,
+        "endChar": 18
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cad6719a_9a930809",
         "filename": "swig/README.md",
         "patchSetId": 1
@@ -91,6 +139,30 @@
       "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4b189c7_7e70b706",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cad6719a_9a930809",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 31
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "30fc87fa_93653e7c",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "I have not yet figured out how to integrate the Java build with Visual Studio. This is an extra step that is required in addition to the Visual Studio build.\n\nIf the project is imported into Eclipse see \"Eclipse project files\" below then eclipse can be used instead of the shell script.",
+      "parentUuid": "df1e0f93_8e7b3e20",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 29
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1348c7ca_3b615051",
         "filename": "swig/README.md",
         "patchSetId": 1
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "a56cbc4a_6edfe731",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "1348c7ca_3b615051",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 47
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2423a950_d4e5ac46",
         "filename": "swig/README.md",
         "patchSetId": 1
@@ -160,6 +280,30 @@
       "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ce108e9_f28d7fa0",
+        "filename": "swig/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T00:13:47Z",
+      "side": 1,
+      "message": "I don\u0027t think it hurts to have the send feedback section repeated in both README files so I placed it in both.",
+      "parentUuid": "2423a950_d4e5ac46",
+      "range": {
+        "startLine": 388,
+        "startChar": 0,
+        "endLine": 394,
+        "endChar": 69
+      },
+      "revId": "cb06f609f859c68ea4630f712ed2185ba4f53811",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
