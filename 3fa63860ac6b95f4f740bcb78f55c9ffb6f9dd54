@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8f4b437f_dfd61582",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T18:19:56Z",
+      "side": 1,
+      "message": "I had to look at the code for a while to remember why I used to calloc vs. the version bellow.\n\nIts been some time since I wrote this but if I remember correctly the dynamic allocated version would return a valid JSON string even if the input string buffer was too small.  While the non-dynamic allocated version may create an invalid JSON string because it can not check the return value of oc_base64_encode it just writes it directly to the buffer.\n\nI will double check.",
+      "parentUuid": "595829b5_a917dd17",
+      "range": {
+        "startLine": 671,
+        "startChar": 0,
+        "endLine": 685,
+        "endChar": 31
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bdeb835d_e6fa3fca",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-06T04:36:30Z",
       "side": 1,
       "message": "If the root-level container is an array of objects, then rep-\u003ename will be empty.\nSo, put this inside the if-block:\n\nif (oc_string_len(rep-\u003ename) \u003e 0) {\n\n...\n\n}",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80ec01b1_3b2bf07c",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T18:19:56Z",
+      "side": 1,
+      "message": "I did not know the root object could be an object_array.  I will update thanks.\n\nI may contact you to figure out how to make a root level object_array.",
+      "parentUuid": "bdeb835d_e6fa3fca",
       "range": {
         "startLine": 729,
         "startChar": 0,
@@ -82,6 +130,24 @@
       "writtenOn": "2019-11-06T04:36:30Z",
       "side": 1,
       "message": "The root-level container could also be an array of objects. So, add:\n\nbool object_array \u003d (rep-\u003etype \u003d\u003d OC_REP_OBJECT)?true:false;",
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d40fd8e4_18192b16",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-06T18:19:56Z",
+      "side": 1,
+      "message": "I did not know the root object could be an object_array.  I will update thanks.",
+      "parentUuid": "848549e7_3f9ae251",
       "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
