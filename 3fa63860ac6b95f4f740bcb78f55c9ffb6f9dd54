@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "4eef1c60_0aefd0aa",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T18:47:01Z",
+      "side": 1,
+      "message": "Forgot to add: you would use oc_rep_start_links_array()/end_links_array() and define objects in that array. Some 3-4 years ago, the primary use case for root-level object arrays was to return an array of links through the links-list interface. So, I\u0027d named it as such. Perhaps we could call it \"root_array\" instead. The primary reason it felt \"hacky\" was that I reused this construct to return a root-level object array that was not technically an array of links (in the collections batch response).",
+      "parentUuid": "abf7253c_230b754e",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bd2f1cd9_200c524b",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
