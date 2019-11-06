@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b84a2e2_1bd02b57",
+        "filename": "port/android/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T23:48:49Z",
+      "side": 1,
+      "message": "Can remove this.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 31
+      },
+      "revId": "83b8872d38ead0d80dc6d4ef5ff34a02ce42cc52",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
