@@ -50,6 +50,7 @@
 
 #include "coap.h"
 #include "oc_ri.h"
+#include "oc_collection.h"
 #include "transactions.h"
 #include "util/oc_list.h"
 

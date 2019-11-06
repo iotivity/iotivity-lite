@@ -781,13 +781,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   if (!cur_resource && !bad_request) {
     request_obj.resource = cur_resource =
       oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
+  }
 
 #if defined(OC_COLLECTIONS)
-    if (cur_resource && oc_check_if_collection(cur_resource)) {
-      resource_is_collection = true;
-    }
-#endif /* OC_COLLECTIONS */
+  if (cur_resource && oc_check_if_collection(cur_resource)) {
+    resource_is_collection = true;
   }
+#endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
 
   if (cur_resource) {
@@ -982,8 +982,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
             while (links) {
               if (links->resource &&
                   links->resource->properties & OC_OBSERVABLE) {
-                if (!oc_sec_check_acl(OC_GET, links->resource,
-                                      endpoint)) {
+                if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
                   set_observe_option = false;
                   break;
                 }

@@ -103,6 +103,18 @@ typedef enum {
 #ifdef OC_SOFTWARE_UPDATE
   OCF_SW_UPDATE,
 #endif /* OC_SOFTWARE_UPDATE */
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#ifdef OC_WIFI_EASYSETUP
+  OCF_ES,
+  OCF_ES_WIFI,
+  OCF_ES_DEVICE,
+#endif /* OC_WIFI_EASYSETUP */
+#ifdef OC_ESIM_EASYSETUP
+  OCF_EES,
+  OCF_EES_RSP,
+  OCF_EES_RSP_CAP,
+#endif /* OC_ESM_EASYSETUP */
+#endif /* OC_COLLECTIONS && OC_SERVER */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
@@ -148,8 +160,7 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
 
 typedef struct oc_properties_cb_t
 {
-  union
-  {
+  union {
     oc_set_properties_cb_t set_props;
     oc_get_properties_cb_t get_props;
   } cb;
@@ -178,9 +189,6 @@ struct oc_resource_s
   oc_properties_cb_t get_properties;
   oc_properties_cb_t set_properties;
 };
-
-typedef struct oc_link_s oc_link_t;
-typedef struct oc_collection_s oc_collection_t;
 
 typedef enum {
   OC_EVENT_DONE = 0,

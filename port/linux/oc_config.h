@@ -24,7 +24,8 @@ typedef uint64_t oc_clock_time_t;
 #define OC_NETWORK_MONITOR
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
-
+#define OC_WIFI_EASYSETUP
+#define OC_ESIM_EASYSETUP
 /* Add support for software update */
 //#define OC_SOFTWARE_UPDATE or run "make" with SWUPDATE=1
 /* Add support for the oic.if.create interface in Collections */

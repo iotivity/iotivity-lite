@@ -27,6 +27,7 @@
 
 #include "oc_client_state.h"
 #include "oc_ri.h"
+#include "oc_collection.h"
 
 #ifdef __cplusplus
 extern "C"

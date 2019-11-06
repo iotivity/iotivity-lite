@@ -89,6 +89,10 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
                                oc_request_callback_t delete_cb,
                                int num_resource_types, ...);
 
+void oc_core_populate_collection(int core_resource, size_t device_index,
+                                 const char *uri, int properties,
+                                 int num_resource_types, ...);
+
 bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
 
 bool oc_core_is_DCR(oc_resource_t *resource, size_t device);

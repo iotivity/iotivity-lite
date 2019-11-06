@@ -34,14 +34,14 @@ typedef struct oc_link_params_t
   oc_string_t value;
 } oc_link_params_t;
 
-struct oc_link_s
+typedef struct oc_link_t
 {
-  struct oc_link_s *next;
+  struct oc_link_t *next;
   oc_resource_t *resource;
   int64_t ins;
   oc_string_array_t rel;
   OC_LIST_STRUCT(params);
-};
+} oc_link_t;
 
 typedef struct oc_rt_t
 {
@@ -49,9 +49,9 @@ typedef struct oc_rt_t
   oc_string_t rt;
 } oc_rt_t;
 
-struct oc_collection_s
+typedef struct oc_collection_t
 {
-  struct oc_collection_s *next;
+  struct oc_collection_t *next;
   size_t device;
   oc_string_t name;
   oc_string_t uri;
@@ -68,7 +68,7 @@ struct oc_collection_s
   OC_LIST_STRUCT(mandatory_rts);
   OC_LIST_STRUCT(supported_rts);
   OC_LIST_STRUCT(links);
-};
+} oc_collection_t;
 
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t iface_mask,
