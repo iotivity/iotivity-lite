@@ -24,8 +24,7 @@
 #include "oc_session_events.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**

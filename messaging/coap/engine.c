@@ -77,7 +77,7 @@ extern bool oc_ri_invoke_coap_entity_handler(
   void *request, void *response, oc_blockwise_state_t **request_state,
   oc_blockwise_state_t **response_state, uint16_t block2_size,
   oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE */
+#else /* OC_BLOCK_WISE */
 extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              uint8_t *buffer,
                                              oc_endpoint_t *endpoint);
@@ -426,7 +426,7 @@ coap_receive(oc_message_t *msg)
         if (oc_ri_invoke_coap_entity_handler(message, response, &request_buffer,
                                              &response_buffer, block2_size,
                                              &msg->endpoint)) {
-#else  /* OC_BLOCK_WISE */
+#else /* OC_BLOCK_WISE */
         if (oc_ri_invoke_coap_entity_handler(message, response,
                                              transaction->message->data +
                                                COAP_MAX_HEADER_SIZE,
@@ -681,7 +681,7 @@ send_message:
 #ifdef OC_SECURITY
       || coap_status_code == CLOSE_ALL_TLS_SESSIONS
 #endif /* OC_SECURITY */
-      ) {
+  ) {
     if (transaction) {
       if (response->type != COAP_TYPE_RST && message->token_len) {
         if (message->code >= COAP_GET && message->code <= COAP_DELETE) {

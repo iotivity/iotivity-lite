@@ -2012,7 +2012,7 @@ decode_cred(oc_rep_t *rep, oc_sec_creds_t *creds)
                   || (len == 10 &&
                       memcmp(oc_string(cred->name), "publicdata", 10) == 0)
 #endif /* OC_PKI */
-                    ) {
+              ) {
                 while (data != NULL) {
                   switch (data->type) {
                   case OC_REP_STRING: {
@@ -2081,9 +2081,8 @@ decode_cred(oc_rep_t *rep, oc_sec_creds_t *creds)
                       memcmp(oc_string(data->name), "role", 4) == 0) {
                     oc_new_string(&cr->role.role, oc_string(data->value.string),
                                   oc_string_len(data->value.string));
-                  } else if (len == 9 &&
-                             memcmp(oc_string(data->name), "authority", 9) ==
-                               0) {
+                  } else if (len == 9 && memcmp(oc_string(data->name),
+                                                "authority", 9) == 0) {
                     oc_new_string(&cr->role.role, oc_string(data->value.string),
                                   oc_string_len(data->value.string));
                   }
