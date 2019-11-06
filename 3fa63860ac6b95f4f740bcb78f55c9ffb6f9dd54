@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "595829b5_a917dd17",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T04:36:30Z",
+      "side": 1,
+      "message": "Why do we need this? Can\u0027t we just use the non-dynamic version below? It would be good to avoid the calloc().",
+      "range": {
+        "startLine": 671,
+        "startChar": 0,
+        "endLine": 685,
+        "endChar": 31
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdeb835d_e6fa3fca",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T04:36:30Z",
+      "side": 1,
+      "message": "If the root-level container is an array of objects, then rep-\u003ename will be empty.\nSo, put this inside the if-block:\n\nif (oc_string_len(rep-\u003ename) \u003e 0) {\n\n...\n\n}",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd2f1cd9_200c524b",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T04:36:30Z",
+      "side": 1,
+      "message": "Change to:\n\nobject_array?\"[\\n\":\"{\\n\"\n\nRepeat for the other 3 cases below.",
+      "range": {
+        "startLine": 980,
+        "startChar": 61,
+        "endLine": 980,
+        "endChar": 67
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "848549e7_3f9ae251",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-06T04:36:30Z",
+      "side": 1,
+      "message": "The root-level container could also be an array of objects. So, add:\n\nbool object_array \u003d (rep-\u003etype \u003d\u003d OC_REP_OBJECT)?true:false;",
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
