@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e20b1860_a42d79f4",
+        "filename": "port/linux/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-11-06T15:00:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64a18a79_e09a6b54",
+      "revId": "544c6cbd55443ad2cdd02978e8adb422aa0aa1f9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e113a4d_d9c98a4a",
         "filename": "security/oc_ael.c",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2019-11-06T12:52:40Z",
       "side": 1,
       "message": "why is the strndup function not used?",
+      "range": {
+        "startLine": 369,
+        "startChar": 0,
+        "endLine": 369,
+        "endChar": 27
+      },
+      "revId": "544c6cbd55443ad2cdd02978e8adb422aa0aa1f9",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e25e107a_e74f2fd2",
+        "filename": "security/oc_ael.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-11-06T15:00:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e113a4d_d9c98a4a",
       "range": {
         "startLine": 369,
         "startChar": 0,
