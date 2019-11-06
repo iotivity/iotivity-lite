@@ -11,6 +11,8 @@ swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/
 
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_collection_wrap.c ../swig_interfaces/oc_collection.i
 
+swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -o ../iotivity-lite-java/jni/oc_connectivity_wrap.c ../swig_interfaces/oc_connectivity.i
+
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_endpoint_wrap.c ../swig_interfaces/oc_endpoint.i
 
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_pki_wrap.c ../swig_interfaces/oc_pki.i
