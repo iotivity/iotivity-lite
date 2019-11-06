@@ -34,6 +34,24 @@
       "revId": "326103d5bc271e44b45f264d14adab18a7b5cd99",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d79a349f_98ace85d",
+        "filename": "swig/swig_interfaces/oc_connectivity.i",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-06T22:07:36Z",
+      "side": 1,
+      "message": "Ok, my mistake... thought it was a function call.",
+      "parentUuid": "e9694576_b108bad2",
+      "revId": "326103d5bc271e44b45f264d14adab18a7b5cd99",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
