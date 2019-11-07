@@ -5,11 +5,10 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  typedef uint64_t oc_clock_time_t;
+typedef uint64_t oc_clock_time_t;
 #define strncasecmp _strnicmp
 /* Sets one clock tick to 1 ms */
 #define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)

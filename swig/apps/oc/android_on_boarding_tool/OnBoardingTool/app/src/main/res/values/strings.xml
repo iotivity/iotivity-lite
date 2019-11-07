@@ -1,0 +1,78 @@
+<resources>
+    <string name="app_name">On Boarding Tool</string>
+    <string name="owned">Owned</string>
+    <string name="ownedRealm">Owned Realm-local IPv6</string>
+    <string name="ownedSite">Owned Site-local IPv6</string>
+    <string name="unowned">Unowned</string>
+    <string name="unownedRealm">Unowned Realm-local IPv6</string>
+    <string name="unownedSite">Unowned Site-local IPv6</string>
+    <string name="refresh">Refresh</string>
+    <string name="retrieveOwnCredentials">Retrieve Own Credentials</string>
+    <string name="deleteCredential">Delete Credential</string>
+    <string name="deleteAce">Delete Ace</string>
+    <string name="installTrustAnchor">Install new manufacturer trust anchor</string>
+    <string name="trustAnchorMessage">Paste certificate here</string>
+    <string name="resetObt">Reset On Boarding Tool</string>
+    <string name="resetMessage">Note: All owned devices will no longer be discoverable</string>
+    <string name="discoveredResources">Discovered Resources</string>
+    <string name="enterPin">Enter PIN</string>
+    <string name="selectDevice">Select device for pairing</string>
+    <string name="selectAceSubject">Select subject or device</string>
+    <string name="aceAnonClear">anon-clear</string>
+    <string name="aceAuthCrypt">auth-crypt</string>
+    <string name="aceRole">role</string>
+    <string name="roleDialogTitle">Role</string>
+    <string name="roleDialogMessage">Enter role (cannot be empty)</string>
+    <string name="authorityDialogTitle">Authority</string>
+    <string name="authorityDialogMessage">Enter authority or leave blank if no authority</string>
+    <string name="addMoreRolesDialogMessage">Add more roles?</string>
+    <string name="hrefDialogTitle">Resource ? Href Property</string>
+    <string name="hrefDialogMessage">Enter href property (eg. /a/light) or leave blank if no href</string>
+    <string name="wildcardDialogTitle">Resource ? Wildcard Property</string>
+    <string name="resourceTypesDialogTitle">Resource ? Resource Types Property</string>
+    <string name="resourceTypesDialogMessage">Enter comma separated list of resource types, or leave blank if no resource types</string>
+    <string name="interfacesDialogTitle">Select Resource ? Interfaces (if any)</string>
+    <string name="addMoreResourcesDialogMessage">Add more resources to this ACE?</string>
+    <string name="permissionsDialogTitle">Select ACE Permissions (if any)</string>
+    <string-array name="unownedDeviceActions">
+        <item>Discover Resources</item>
+        <item>Just-Works Ownership Transfer Method</item>
+        <item>Request Random PIN from device for OTM</item>
+        <item>Random PIN Ownership Transfer Method</item>
+        <item>Manufacturer Certificate based Ownership Transfer Method</item>
+    </string-array>
+    <string-array name="ownedDeviceActions">
+        <item>Discover Resources</item>
+        <item>Provision pair-wise credentials</item>
+        <item>Provision ACE2</item>
+        <item>Provision auth-crypt RW access to NCRs</item>
+        <item>Retrieve /oic/sec/cred</item>
+        <item>Retrieve /oic/sec/acl2</item>
+        <item>Provision role RW access to NCRs</item>
+        <item>Provision identity certificate</item>
+        <item>Provision role certificate</item>
+        <item>Reset device (Hard Reset)</item>
+    </string-array>
+    <string-array name="wildcardOptions">
+        <item>No wildcard resources</item>
+        <item>All NCRs \'*\'</item>
+        <item>All NCRs with >=1 secured endpoint \'+\'</item>
+        <item>All NCRs with >=1 unsecured endpoint \'-\'</item>
+    </string-array>
+    <string-array name="interfaces">
+        <item>oic.if.baseline</item>
+        <item>oic.if.ll</item>
+        <item>oic.if.b</item>
+        <item>oic.if.r</item>
+        <item>oic.if.rw</item>
+        <item>oic.if.a</item>
+        <item>oic.if.s</item>
+    </string-array>
+    <string-array name="permissions">
+        <item>CREATE</item>
+        <item>RETRIEVE</item>
+        <item>UPDATE</item>
+        <item>DELETE</item>
+        <item>NOTIFY</item>
+    </string-array>
+</resources>
