@@ -26,6 +26,10 @@ public class OcRepresentation {
         return nativeRepresentation.getName();
     }
 
+    public OCType getType() {
+        return nativeRepresentation.getType();
+    }
+
     public boolean getBoolean() throws OcCborException {
         Boolean returnValue = getValue().getBool();
         if (returnValue != null) {
