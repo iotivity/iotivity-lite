@@ -23,14 +23,13 @@
 #include "windows.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-  HANDLE mutex_new(void);
-  void mutex_lock(HANDLE m);
-  void mutex_unlock(HANDLE m);
-  void mutex_free(HANDLE m);
+HANDLE mutex_new(void);
+void mutex_lock(HANDLE m);
+void mutex_unlock(HANDLE m);
+void mutex_free(HANDLE m);
 
 #ifdef __cplusplus
 }

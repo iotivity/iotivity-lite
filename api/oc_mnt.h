@@ -17,9 +17,10 @@
 #ifndef OC_MNT_INTERNAL_H
 #define OC_MNT_INTERNAL_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
