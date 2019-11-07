@@ -628,7 +628,7 @@ coap_notify_observers(oc_resource_t *resource,
 #ifdef OC_TCP
           if (!(obs->endpoint.flags & TCP) &&
               response_buf->response_length > obs->block2_size) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
           if (response_buf->response_length > obs->block2_size) {
 #endif /* !OC_TCP */
             notification->type = COAP_TYPE_CON;
@@ -715,8 +715,7 @@ coap_notify_observers(oc_resource_t *resource,
       }     //! separate response
       obs = obs->next;
     } // iterate over observers
-  leave_notify_observers:
-    ;
+  leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
     if (buffer) {
       free(buffer);
