@@ -7,8 +7,6 @@ rm ../iotivity-lite-java/jni/*.c
 rm ../iotivity-lite-java/src/org/iotivity/*.java
 rm ../iotivity-lite-java/src/org/iotivity/oc/*.java
 
-swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_obt_wrap.c ../swig_interfaces/oc_obt.i
-
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_uuid_wrap.c ../swig_interfaces/oc_uuid.i
 
 swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../../include/ -o ../iotivity-lite-java/jni/oc_collection_wrap.c ../swig_interfaces/oc_collection.i
@@ -34,15 +32,18 @@ swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/
 if [ "$#" -ge 1 ] && [ "$1" = "linux" ]
 then
   echo Building wrapper for linux clock
+  swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/linux -o ../iotivity-lite-java/jni/oc_obt_wrap.c ../swig_interfaces/oc_obt.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/linux -o ../iotivity-lite-java/jni/oc_api_wrap.c ../swig_interfaces/oc_api.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -D__linux__ -I../.. -I../../port/linux -o ../iotivity-lite-java/jni/oc_clock_wrap.c ../swig_interfaces/oc_clock.i
 elif [ "$#" -ge 1 ] && [ "$1" = "android" ]
 then
   echo Building wrapper for android clock
+  swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/android -o ../iotivity-lite-java/jni/oc_obt_wrap.c ../swig_interfaces/oc_obt.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/android -o ../iotivity-lite-java/jni/oc_api_wrap.c ../swig_interfaces/oc_api.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -D__linux__ -I../.. -I../../port/android -o ../iotivity-lite-java/jni/oc_clock_wrap.c ../swig_interfaces/oc_clock.i
 else
   echo Building wrapper for windows clock
+  swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/windows -o ../iotivity-lite-java/jni/oc_obt_wrap.c ../swig_interfaces/oc_obt.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -I../.. -I../../include/ -I../../port/windows -o ../iotivity-lite-java/jni/oc_api_wrap.c ../swig_interfaces/oc_api.i
   swig -java -package org.iotivity -outdir ../iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I../.. -I../../port/windows -o ../iotivity-lite-java/jni/oc_clock_wrap.c ../swig_interfaces/oc_clock.i
 fi

@@ -64,6 +64,8 @@ The Linux Foundation ID can then be used to log into the Gerrit server for IoTiv
 Follow the instructions [here](https://wiki.iotivity.org/how_to_use_gerrit) to gain push access
 to the project.
 
+
+
 ### Build Java language bindings
 Navigate to `<iotivity-lite>/port/linux`
 
@@ -111,6 +113,9 @@ Instructions for Windows
    been tested in newer versions of Visual Studio and have been found to work.  Visual studio IDE
    Community edition and Visual Studio Code should work but have not personally been tested.
 
+Set JAVA_HOME environment variable to point to the Java Development kit. This is required so Make
+can find the jni.h header files.
+
 ### Build Java language bindings
 Build the JNI shared library:
 
@@ -119,7 +124,11 @@ Navigate to `<iotivity-lite>/port/windows/vs2015` open the Visual Studio solutio
 
 Select the desired build options: Release/Debug, x86/x64.  Note the x86/x64 must match the
 architecture of the Java VM installed on the system.  In the Solution Explorer right click
-on the `iotivity-lite-jni` project.  Select the `Build` option.
+on the `iotivity-lite-jni` project.  Select the `Rebuild` option (even on the first build).
+
+**Important:** The first time the `iotivity-lite-jni` project is built the `Rebuild` option must be
+used. There is a known issue that the project does not properly detect that the order the *_wrap.c
+files are generated when using the `build` option.
 
 This will build
   - `IoTivity-lite.lib`
@@ -313,7 +322,29 @@ example of expected output
 
     javac 1.8.0_191
 
+---
+
+Check JAVA_HOME environment variable
+(Windows)
+
+    echo %JAVA_HOME%
+
+example of expected output
+
+    C:\Program Files\AdoptOpenJDK\jdk-8.0.202.08
+
+(Linux)
+
+    echo $JAVA_HOME
+
+example of expected output
+
+    /usr/lib/jvm/java-1.8.0/
+
+---
 If any tools are not found make sure the location of the tool is added to the system PATH.
+
+If JAVA_HOME is not found add it to your environment variables.
 
 Send Feedback
 -------------------------------------------------
