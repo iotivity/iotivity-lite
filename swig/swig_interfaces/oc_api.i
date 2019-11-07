@@ -509,6 +509,17 @@ void jni_reset() {
 }
 %}
 
+%ignore oc_reset_device;
+%rename(resetDevice) jni_reset_device;
+%inline %{
+void jni_reset_device(size_t device) {
+  OC_DBG("JNI: %s\n", __func__);
+  #ifdef OC_SECURITY
+  oc_reset_device(device);
+  #endif /* OC_SECURITY */
+}
+%}
+
 // server side
 %rename(newResource) oc_new_resource;
 %rename(resourceBindResourceInterface) oc_resource_bind_resource_interface;
